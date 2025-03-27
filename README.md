@@ -1,18 +1,5 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/539e8f41-564f-4a0a-bf12-5745f07e400b
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/539e8f41-564f-4a0a-bf12-5745f07e400b) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+# Welcome to your mauritanian management project for local material
+'est une solution de gestion de projet pour une entreprise utilise des materiaux locaux . technologie flutter mobile, NestJS backend via API restfull, base de données postgresql. géolocalisation des batiments et des projets et sources de matériaux  
 
 **Use your preferred IDE**
 
