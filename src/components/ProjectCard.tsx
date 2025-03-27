@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -18,6 +17,10 @@ export interface ProjectData {
   endDate?: string;
   thumbnail: string;
   teamSize: number;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface ProjectCardProps {
@@ -76,6 +79,11 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
               <div className="flex items-center text-sm text-adrar-600">
                 <MapPin className="h-4 w-4 mr-2 text-terracotta-500" />
                 <span>{project.location}</span>
+                {project.coordinates && (
+                  <span className="ml-1 text-xs text-adrar-500">
+                    ({project.coordinates.latitude.toFixed(2)}, {project.coordinates.longitude.toFixed(2)})
+                  </span>
+                )}
               </div>
               
               <div className="flex items-center text-sm text-adrar-600">

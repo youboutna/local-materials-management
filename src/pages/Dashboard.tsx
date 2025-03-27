@@ -1,151 +1,160 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar, Clock, TrendingUp, AlertCircle, CheckCircle2, Users, PieChart, Layers, DollarSign, Database } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import StatusBadge from '@/components/StatusBadge';
-import ProgressIndicator from '@/components/ProgressIndicator';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { ArrowRight, Building, MapPin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ProgressIndicator from '@/components/ProgressIndicator';
 
-// Sample data for dashboard
-const projectStats = [
-  {
-    title: 'Projets actifs',
-    value: 7,
-    icon: <Layers className="h-5 w-5 text-blue-500" />,
-    change: '+2 ce mois',
-    trend: 'up',
-  },
-  {
-    title: 'Budget total',
-    value: '56.8M MRU',
-    icon: <DollarSign className="h-5 w-5 text-green-500" />,
-    change: '+12% depuis janvier',
-    trend: 'up',
-  },
-  {
-    title: 'Matériaux utilisés',
-    value: '1,240 tonnes',
-    icon: <Database className="h-5 w-5 text-purple-500" />,
-    change: '52% pierre, 48% argile',
-    trend: 'neutral',
-  },
-  {
-    title: 'Personnel mobilisé',
-    value: '142',
-    icon: <Users className="h-5 w-5 text-amber-500" />,
-    change: '+15 la semaine dernière',
-    trend: 'up',
-  },
-];
+interface ProjectData {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  status: 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+  progress: number;
+  budget: number;
+  startDate: string;
+  endDate?: string;
+  thumbnail: string;
+  teamSize: number;
+}
 
-const budgetData = [
-  { name: 'Jan', prévu: 2500000, réel: 2700000 },
-  { name: 'Fév', prévu: 3200000, réel: 3100000 },
-  { name: 'Mar', prévu: 4100000, réel: 3900000 },
-  { name: 'Avr', prévu: 3800000, réel: 4200000 },
-  { name: 'Mai', prévu: 4500000, réel: 4300000 },
-  { name: 'Juin', prévu: 4200000, réel: 4800000 },
-];
-
-const activeProjects = [
+// Sample projects data
+const projectsData: ProjectData[] = [
   {
     id: '1',
     title: 'Restauration du Fort d\'Atar',
-    status: 'en cours' as const,
+    description: 'Reconstruction des murs historiques avec la pierre locale d\'Atar, préservant les techniques de construction traditionnelles.',
+    location: 'Atar, Adrar',
+    status: 'en cours',
     progress: 65,
-    budget: '12.5M MRU',
-    dueDate: '30 juin 2024',
-    alert: false,
+    budget: 12500000,
+    startDate: '2023-08-15',
+    endDate: '2024-06-30',
+    thumbnail: '/img/project1.jpg',
+    teamSize: 18
   },
   {
     id: '2',
     title: 'Centre Culturel en Argile',
-    status: 'en attente' as const,
+    description: 'Construction d\'un centre culturel utilisant les techniques traditionnelles d\'argile améliorées pour une meilleure durabilité.',
+    location: 'Nouakchott',
+    status: 'en attente',
     progress: 25,
-    budget: '8.75M MRU',
-    dueDate: '15 déc. 2024',
-    alert: true,
-    alertMessage: 'Retard dans l\'approvisionnement',
+    budget: 8750000,
+    startDate: '2023-11-10',
+    thumbnail: '/img/project2.jpg',
+    teamSize: 12
   },
   {
     id: '3',
+    title: 'École Communautaire Durable',
+    description: 'École construite avec des matériaux locaux, optimisée pour le climat désertique et respectueuse des traditions architecturales.',
+    location: 'Kiffa, Assaba',
+    status: 'terminé',
+    progress: 100,
+    budget: 5300000,
+    startDate: '2023-02-20',
+    endDate: '2023-12-15',
+    thumbnail: '/img/project3.jpg',
+    teamSize: 15
+  },
+  {
+    id: '4',
     title: 'Rénovation Bibliothèque Nationale',
-    status: 'en cours' as const,
+    description: 'Restauration de la façade et des structures intérieures en utilisant les techniques traditionnelles de construction en pierre.',
+    location: 'Nouakchott',
+    status: 'en cours',
     progress: 42,
-    budget: '14.2M MRU',
-    dueDate: '10 sept. 2024',
-    alert: false,
+    budget: 14200000,
+    startDate: '2023-09-05',
+    endDate: '2024-10-20',
+    thumbnail: '/img/project4.jpg',
+    teamSize: 22
   },
   {
-    id: '4',
+    id: '5',
     title: 'Maisons écologiques Nouadhibou',
-    status: 'en cours' as const,
+    description: 'Construction de 15 maisons écologiques utilisant principalement l\'argile locale et les techniques traditionnelles.',
+    location: 'Nouadhibou',
+    status: 'en cours',
     progress: 78,
-    budget: '5.6M MRU',
-    dueDate: '22 août 2024',
-    alert: false,
+    budget: 5600000,
+    startDate: '2023-05-12',
+    endDate: '2024-08-30',
+    thumbnail: '/img/project5.jpg',
+    teamSize: 14
   },
   {
-    id: '5',
+    id: '6',
     title: 'Musée des Arts Traditionnels',
-    status: 'suspendu' as const,
+    description: 'Création d\'un musée dédié aux arts traditionnels mauritaniens avec une architecture emblématique en pierre d\'Atar.',
+    location: 'Atar, Adrar',
+    status: 'suspendu',
     progress: 35,
-    budget: '9.8M MRU',
-    dueDate: '5 nov. 2024',
-    alert: true,
-    alertMessage: 'Financement en attente',
-  },
-];
-
-const recentActivities = [
-  {
-    id: '1',
-    type: 'update',
-    project: 'Restauration du Fort d\'Atar',
-    description: 'Livraison de 25 tonnes de pierre d\'Atar',
-    time: 'Il y a 2 heures',
-    icon: <TrendingUp className="h-4 w-4 text-blue-500" />,
+    budget: 9800000,
+    startDate: '2023-03-22',
+    endDate: '2024-11-15',
+    thumbnail: '/img/project6.jpg',
+    teamSize: 20
   },
   {
-    id: '2',
-    type: 'alert',
-    project: 'Centre Culturel en Argile',
-    description: 'Retard dans l\'approvisionnement en argile',
-    time: 'Il y a 5 heures',
-    icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
+    id: '7',
+    title: 'Centre de Formation Artisanale',
+    description: 'Établissement dédié à la formation aux techniques de construction traditionnelles pour préserver les savoir-faire locaux.',
+    location: 'Rosso',
+    status: 'en attente',
+    progress: 10,
+    budget: 7300000,
+    startDate: '2023-12-01',
+    endDate: '2025-01-30',
+    thumbnail: '/img/project7.jpg',
+    teamSize: 8
   },
   {
-    id: '3',
-    type: 'completion',
-    project: 'École Communautaire Durable',
-    description: 'Phase de fondation terminée',
-    time: 'Hier',
-    icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+    id: '8',
+    title: 'Réhabilitation Place Publique',
+    description: 'Réaménagement d\'une place publique historique en utilisant les matériaux locaux pour créer un espace communautaire.',
+    location: 'Nouakchott',
+    status: 'terminé',
+    progress: 100,
+    budget: 3900000,
+    startDate: '2023-01-15',
+    endDate: '2023-09-30',
+    thumbnail: '/img/project8.jpg',
+    teamSize: 12
   },
   {
-    id: '4',
-    type: 'update',
-    project: 'Maisons écologiques Nouadhibou',
-    description: 'Recrutement de 5 nouveaux artisans',
-    time: 'Il y a 2 jours',
-    icon: <Users className="h-4 w-4 text-purple-500" />,
-  },
-  {
-    id: '5',
-    type: 'alert',
-    project: 'Musée des Arts Traditionnels',
-    description: 'Suspension temporaire des travaux',
-    time: 'Il y a 3 jours',
-    icon: <AlertCircle className="h-4 w-4 text-red-500" />,
-  },
+    id: '9',
+    title: 'Observatoire Astronomique',
+    description: 'Construction d\'un observatoire astronomique dans le désert, avec une architecture intégrant les matériaux locaux.',
+    location: 'Chinguetti',
+    status: 'en cours',
+    progress: 55,
+    budget: 11200000,
+    startDate: '2023-07-10',
+    endDate: '2024-12-20',
+    thumbnail: '/img/project9.jpg',
+    teamSize: 16
+  }
 ];
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [projects, setProjects] = useState<ProjectData[]>(projectsData);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading of projects
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -153,7 +162,7 @@ const Dashboard = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Dashboard Header */}
+          {/* Header */}
           <div className="mb-8">
             <motion.h1 
               initial={{ opacity: 0, y: -20 }}
@@ -169,227 +178,139 @@ const Dashboard = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-adrar-600"
             >
-              Vue d'ensemble des projets et des indicateurs clés
+              Suivez l'état d'avancement de vos projets et l'utilisation des matériaux locaux
             </motion.p>
           </div>
           
-          {/* Dashboard Tabs */}
-          <Tabs 
-            defaultValue="overview" 
-            value={activeTab} 
-            onValueChange={setActiveTab}
-            className="space-y-6"
-          >
-            <TabsList className="grid grid-cols-3 md:w-[400px] bg-sandstone-100">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-white">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="projects" className="data-[state=active]:bg-white">Projets</TabsTrigger>
-              <TabsTrigger value="budget" className="data-[state=active]:bg-white">Budget</TabsTrigger>
-            </TabsList>
-            
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {projectStats.map((stat, index) => (
-                  <motion.div
-                    key={stat.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="border-none shadow-elegant hover:shadow-soft transition-all">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-adrar-500 mb-1">{stat.title}</p>
-                            <p className="text-2xl font-semibold text-adrar-800">{stat.value}</p>
-                          </div>
-                          <div className="bg-sandstone-100 p-3 rounded-full">
-                            {stat.icon}
-                          </div>
-                        </div>
-                        <div className="mt-3 flex items-center text-xs">
-                          {stat.trend === 'up' && (
-                            <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                          )}
-                          {stat.trend === 'down' && (
-                            <TrendingUp className="h-3 w-3 text-red-500 mr-1 transform rotate-180" />
-                          )}
-                          <span className={`text-${stat.trend === 'up' ? 'green' : stat.trend === 'down' ? 'red' : 'gray'}-500`}>
-                            {stat.change}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+          {/* Loading state */}
+          {loading ? (
+            <div className="text-center py-16">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-xl text-adrar-700 mb-4"
+              >
+                Chargement des projets...
+              </motion.div>
+              <div className="w-24 h-1 bg-gray-300 rounded-full overflow-hidden mx-auto">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 0.7, ease: "easeInOut", repeat: Infinity }}
+                  className="h-full bg-terracotta-500"
+                />
               </div>
-              
-              {/* Active Projects and Recent Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Active Projects */}
-                <Card className="lg:col-span-2 border-none shadow-elegant">
-                  <CardHeader>
-                    <CardTitle>Projets actifs</CardTitle>
-                    <CardDescription>Suivi des projets en cours de réalisation</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {activeProjects.slice(0, 3).map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                          className="p-4 rounded-lg bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-medium text-adrar-800">{project.title}</h3>
-                            <StatusBadge status={project.status} />
-                          </div>
-                          
-                          <ProgressIndicator progress={project.progress} className="mb-3" />
-                          
-                          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-adrar-600">
-                            <div className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1 text-terracotta-500" />
-                              <span>{project.budget}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1 text-terracotta-500" />
-                              <span>Échéance: {project.dueDate}</span>
-                            </div>
-                            {project.alert && (
-                              <div className="flex items-center text-amber-500 w-full mt-1">
-                                <AlertCircle className="h-4 w-4 mr-1" />
-                                <span>{project.alertMessage}</span>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                      
-                      <div className="pt-2 text-center">
-                        <button className="text-terracotta-500 hover:text-terracotta-600 font-medium text-sm flex items-center justify-center mx-auto">
-                          Voir tous les projets
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Recent Activity */}
-                <Card className="border-none shadow-elegant">
-                  <CardHeader>
-                    <CardTitle>Activités récentes</CardTitle>
-                    <CardDescription>Dernières mises à jour et alertes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentActivities.map((activity, index) => (
-                        <motion.div
-                          key={activity.id}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                          className="flex gap-3"
-                        >
-                          <div className={`rounded-full p-2 mt-0.5 h-8 w-8 flex items-center justify-center flex-shrink-0 ${
-                            activity.type === 'alert' 
-                              ? 'bg-amber-100' 
-                              : activity.type === 'completion' 
-                              ? 'bg-green-100' 
-                              : 'bg-blue-100'
-                          }`}>
-                            {activity.icon}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-adrar-800">
-                              {activity.project}
-                            </p>
-                            <p className="text-sm text-adrar-600">
-                              {activity.description}
-                            </p>
-                            <p className="text-xs text-adrar-400 flex items-center mt-1">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {activity.time}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Budget Overview */}
+            </div>
+          ) : (
+            /* Dashboard content */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Project Overview */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <Card className="border-none shadow-elegant">
-                  <CardHeader>
-                    <CardTitle>Aperçu du budget</CardTitle>
-                    <CardDescription>Comparaison des coûts prévus et réels</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={budgetData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="name" />
-                          <YAxis 
-                            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} 
-                            width={70}
-                          />
-                          <Tooltip 
-                            formatter={(value) => [`${(Number(value) / 1000000).toFixed(2)}M MRU`, undefined]}
-                            labelFormatter={(label) => `Mois: ${label}`}
-                            contentStyle={{ 
-                              backgroundColor: 'white', 
-                              border: 'none',
-                              borderRadius: '0.5rem',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' 
-                            }}
-                          />
-                          <Bar dataKey="prévu" fill="#9b87f5" radius={[4, 4, 0, 0]} name="Budget prévu" />
-                          <Bar dataKey="réel" fill="#B85C38" radius={[4, 4, 0, 0]} name="Dépenses réelles" />
-                        </BarChart>
-                      </ResponsiveContainer>
+                <Card className="h-full">
+                  <CardContent className="flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-adrar-800 mb-2">
+                        Aperçu des projets
+                      </h3>
+                      <p className="text-adrar-600 text-sm">
+                        État d'avancement général des projets en cours
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      {projects.map((project) => (
+                        <div key={project.id} className="mb-4">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium text-adrar-700">{project.title}</span>
+                            <span className="text-xs text-adrar-500">{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} />
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
               </motion.div>
-            </TabsContent>
-            
-            {/* Projects Tab - Just a placeholder for now */}
-            <TabsContent value="projects" className="space-y-6">
-              <Card className="border-none shadow-elegant">
-                <CardHeader>
-                  <CardTitle>Tous les projets</CardTitle>
-                  <CardDescription>Vue détaillée de tous les projets en cours</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-adrar-600">Contenu détaillé des projets à implémenter</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Budget Tab - Just a placeholder for now */}
-            <TabsContent value="budget" className="space-y-6">
-              <Card className="border-none shadow-elegant">
-                <CardHeader>
-                  <CardTitle>Gestion budgétaire</CardTitle>
-                  <CardDescription>Analyse détaillée des budgets et dépenses</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-adrar-600">Contenu détaillé du budget à implémenter</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              
+              {/* Active Projects */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Card className="h-full">
+                  <CardContent className="flex flex-col">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-adrar-800 mb-2">
+                        Projets actifs
+                      </h3>
+                      <p className="text-adrar-600 text-sm">
+                        Suivez les projets actuellement en cours
+                      </p>
+                    </div>
+                    <div>
+                      {projects
+                        .filter((project) => project.status === 'en cours')
+                        .map((project) => (
+                          <div key={project.id} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-none">
+                            <div>
+                              <h4 className="text-sm font-medium text-adrar-700">{project.title}</h4>
+                              <p className="text-xs text-adrar-500">{project.location}</p>
+                            </div>
+                            <Link to={`/projects/${project.id}`}>
+                              <Button size="sm" className="bg-terracotta-500 hover:bg-terracotta-600">
+                                Voir <ArrowRight className="ml-2 h-4 w-4" />
+                              </Button>
+                            </Link>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              {/* Material Usage */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Card className="h-full">
+                  <CardContent>
+                    <h3 className="text-lg font-semibold text-adrar-800 mb-2">
+                      Utilisation des matériaux
+                    </h3>
+                    <p className="text-adrar-600 text-sm">
+                      Consultez les statistiques sur l'utilisation des matériaux locaux
+                    </p>
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-adrar-700">Pierre d'Atar</span>
+                        <span className="text-xs text-adrar-500">75%</span>
+                      </div>
+                      <ProgressIndicator progress={75} size="sm" showPercentage={false} />
+                      
+                      <div className="flex items-center justify-between mb-2 mt-4">
+                        <span className="text-sm text-adrar-700">Argile</span>
+                        <span className="text-xs text-adrar-500">45%</span>
+                      </div>
+                      <ProgressIndicator progress={45} size="sm" showPercentage={false} />
+                      
+                      <div className="flex items-center justify-between mb-2 mt-4">
+                        <span className="text-sm text-adrar-700">Bois local</span>
+                        <span className="text-xs text-adrar-500">20%</span>
+                      </div>
+                      <ProgressIndicator progress={20} size="sm" showPercentage={false} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+          )}
         </div>
       </main>
       
