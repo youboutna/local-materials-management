@@ -2,12 +2,16 @@
 import { useState, useEffect } from 'react';
 import { ProjectData } from '@/components/ProjectCard';
 import { SortOption } from '@/components/projects/ProjectFilters';
+import { useNavigate } from 'react-router-dom';
 
 export const useProjectsFilter = (projects: ProjectData[]) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>(projects);
+  const [searchResults, setSearchResults] = useState<ProjectData[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   
   // Handle filtering and sorting whenever inputs change
   useEffect(() => {
@@ -22,6 +26,13 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
           project.description.toLowerCase().includes(query) ||
           project.location.toLowerCase().includes(query)
       );
+      
+      // Update search results
+      setSearchResults(result);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
     }
     
     // Apply status filter
@@ -51,6 +62,19 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setFilteredProjects(result);
   }, [searchQuery, statusFilter, sortOption, projects]);
 
+  // Function to handle clicking on a search result
+  const handleSelectSearchResult = (projectId: string) => {
+    setSearchQuery('');
+    setShowSearchResults(false);
+    navigate(`/projects/${projectId}`);
+  };
+
+  // Function to clear search
+  const clearSearch = () => {
+    setSearchQuery('');
+    setShowSearchResults(false);
+  };
+
   return {
     searchQuery,
     setSearchQuery,
@@ -58,6 +82,10 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setStatusFilter,
     sortOption,
     setSortOption,
-    filteredProjects
+    filteredProjects,
+    searchResults,
+    showSearchResults,
+    handleSelectSearchResult,
+    clearSearch
   };
 };

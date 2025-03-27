@@ -10,7 +10,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Plus, ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react';
+import { 
+  Search, 
+  Plus, 
+  ArrowDownWideNarrow, 
+  ArrowUpWideNarrow, 
+  X,
+  ArrowRight
+} from 'lucide-react';
+import { ProjectData } from '@/components/ProjectCard';
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { useEffect, useRef, useState } from 'react';
 
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
 
@@ -21,6 +43,10 @@ interface ProjectFiltersProps {
   setStatusFilter: (status: string) => void;
   sortOption: SortOption;
   setSortOption: (option: SortOption) => void;
+  searchResults?: ProjectData[];
+  showSearchResults?: boolean;
+  handleSelectSearchResult?: (projectId: string) => void;
+  clearSearch?: () => void;
 }
 
 const ProjectFilters = ({
@@ -29,8 +55,45 @@ const ProjectFilters = ({
   statusFilter,
   setStatusFilter,
   sortOption,
-  setSortOption
+  setSortOption,
+  searchResults = [],
+  showSearchResults = false,
+  handleSelectSearchResult = () => {},
+  clearSearch = () => {}
 }: ProjectFiltersProps) => {
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Close the dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    if (e.target.value) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  };
+  
+  // Handle search result click
+  const handleResultClick = (projectId: string) => {
+    handleSelectSearchResult(projectId);
+    setOpen(false);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -40,14 +103,54 @@ const ProjectFilters = ({
     >
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-          <Input
-            placeholder="Rechercher un projet..."
-            className="pl-9 border-sandstone-200 focus-visible:ring-terracotta-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="relative flex-grow" ref={inputRef}>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+            <Input
+              placeholder="Rechercher un projet..."
+              className="pl-9 border-sandstone-200 focus-visible:ring-terracotta-500"
+              value={searchQuery}
+              onChange={handleInputChange}
+            />
+            {searchQuery && (
+              <button 
+                onClick={clearSearch}
+                className="absolute right-3 top-3"
+              >
+                <X className="h-4 w-4 text-adrar-400 hover:text-adrar-700" />
+              </button>
+            )}
+          </div>
+          
+          {/* Search Results Dropdown */}
+          {open && searchResults.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full bg-white border border-sandstone-200 rounded-md shadow-md">
+              <div className="p-2 max-h-64 overflow-y-auto">
+                <p className="text-xs text-adrar-500 mb-2 px-2">
+                  {searchResults.length} résultat{searchResults.length > 1 ? 's' : ''} trouvé{searchResults.length > 1 ? 's' : ''}
+                </p>
+                {searchResults.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex items-center px-3 py-2 hover:bg-sandstone-50 rounded-md cursor-pointer"
+                    onClick={() => handleResultClick(project.id)}
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-adrar-800">{project.title}</p>
+                      <p className="text-xs text-adrar-500 truncate">{project.description}</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-terracotta-500 ml-2" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {open && searchResults.length === 0 && searchQuery && (
+            <div className="absolute z-10 mt-1 w-full bg-white border border-sandstone-200 rounded-md shadow-md p-4 text-center">
+              <p className="text-adrar-500">Aucun résultat pour "{searchQuery}"</p>
+            </div>
+          )}
         </div>
         
         {/* Status Filter */}

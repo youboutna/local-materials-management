@@ -17,7 +17,11 @@ const Projects = () => {
     setStatusFilter,
     sortOption,
     setSortOption,
-    filteredProjects
+    filteredProjects,
+    searchResults,
+    showSearchResults,
+    handleSelectSearchResult,
+    clearSearch
   } = useProjectsFilter(projectsData);
 
   return (
@@ -37,6 +41,10 @@ const Projects = () => {
             setStatusFilter={setStatusFilter}
             sortOption={sortOption}
             setSortOption={setSortOption}
+            searchResults={searchResults}
+            showSearchResults={showSearchResults}
+            handleSelectSearchResult={handleSelectSearchResult}
+            clearSearch={clearSearch}
           />
           
           {/* Projects Grid or Empty State */}
