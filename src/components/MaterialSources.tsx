@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building } from 'lucide-react';
+import { Building, MapPin } from 'lucide-react';
 
 interface MaterialSource {
   id: string;
