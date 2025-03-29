@@ -1,213 +1,201 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Layers } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { AlertCircle } from 'lucide-react';
 
-// Fix for default marker icons in Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+// Fix for Leaflet marker icon issue
+// This is needed because Leaflet's default marker icons use relative URLs
+// which don't work properly when bundled by Vite/Webpack
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 
-type Location = {
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Define the location type
+interface MapLocation {
   id: string;
   name: string;
-  type: 'project' | 'material';
+  type: 'project' | 'material' | 'supplier';
   latitude: number;
   longitude: number;
+}
+
+// Props for the ProjectMap component
+interface ProjectMapProps {
+  locations: MapLocation[];
+  className?: string;
+}
+
+// Define Google Maps container style
+const containerStyle = {
+  width: '100%',
+  height: '400px',
+  borderRadius: '0.75rem',
 };
 
-type MapProvider = 'openstreetmap' | 'google';
-
-const GoogleMapComponent = ({ 
-  locations, 
-  apiKey 
-}: { 
-  locations: Location[];
-  apiKey: string;
-}) => {
+const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
+  const [mapProvider, setMapProvider] = useState<'openstreetmap' | 'google'>('openstreetmap');
+  const [googleApiKey, setGoogleApiKey] = useState<string>('');
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState<boolean>(false);
+  const [dialogApiKey, setDialogApiKey] = useState<string>('');
+  
+  // Calculate the center point based on the locations
+  const center = locations.length > 0
+    ? [locations[0].latitude, locations[0].longitude] as [number, number]
+    : [18.079052, -15.965634] as [number, number]; // Default: Nouakchott
+  
+  // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: apiKey || ''
+    googleMapsApiKey: googleApiKey || '',
   });
-
-  const mapCenter = {
-    lat: locations.length > 0 
-      ? locations[0].latitude 
-      : 18.0735, // Default to a location in Mauritania
-    lng: locations.length > 0 
-      ? locations[0].longitude 
-      : -15.9582
+  
+  const handleSaveApiKey = () => {
+    setGoogleApiKey(dialogApiKey);
+    setShowApiKeyDialog(false);
   };
-  
-  if (!isLoaded || !apiKey) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-adrar-600">Chargement Google Maps...</p>
-      </div>
-    );
-  }
 
   return (
-    <GoogleMap
-      mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '0.5rem' }}
-      center={mapCenter}
-      zoom={5}
-    >
-      {locations.map(location => (
-        <GoogleMarker
-          key={location.id}
-          position={{ lat: location.latitude, lng: location.longitude }}
-          title={location.name}
-          icon={{
-            url: location.type === 'project' 
-              ? 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-              : 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
-          }}
-        />
-      ))}
-    </GoogleMap>
-  );
-};
-
-const OpenStreetMapComponent = ({ locations }: { locations: Location[] }) => {
-  const mapCenter: [number, number] = locations.length > 0 
-    ? [locations[0].latitude, locations[0].longitude] 
-    : [18.0735, -15.9582]; // Default to a location in Mauritania
-
-  return (
-    <MapContainer 
-      center={mapCenter} 
-      zoom={5} 
-      style={{ width: '100%', height: '100%', borderRadius: '0.5rem' }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {locations.map(location => (
-        <Marker 
-          key={location.id} 
-          position={[location.latitude, location.longitude]}
-        >
-          <Popup>
-            <div>
-              <p className="font-bold">{location.name}</p>
-              <p className="text-xs">{location.type === 'project' ? 'Projet' : 'Source de matériaux'}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
-  );
-};
-
-const ProjectMap = ({
-  locations = [],
-  className
-}: {
-  locations?: Array<{id: string, name: string, type: 'project' | 'material', latitude: number, longitude: number}>,
-  className?: string
-}) => {
-  const [mapProvider, setMapProvider] = useState<MapProvider>('openstreetmap');
-  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>('');
-  
-  return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex items-center text-adrar-800 font-serif">
-          <MapPin className="mr-2 h-5 w-5 text-terracotta-500" />
-          Carte des projets et matériaux
-        </CardTitle>
+    <div className={`rounded-xl overflow-hidden shadow-elegant ${className}`}>
+      <div className="p-4 bg-white border-b border-gray-100 flex justify-between items-center">
+        <h3 className="font-serif text-lg text-adrar-800">Localisation</h3>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="ml-auto">
-              <Layers className="h-4 w-4 mr-2" />
-              Changer de carte
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setMapProvider('openstreetmap')}>
-              OpenStreetMap
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setMapProvider('google')}>
-              Google Maps
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="relative">
-          {mapProvider === 'google' && (
-            <div className="mb-4">
-              <label htmlFor="google-maps-key" className="block text-sm font-medium text-adrar-700 mb-1">
-                Clé API Google Maps (temporaire)
-              </label>
-              <input
-                id="google-maps-key"
-                type="text"
-                value={googleMapsApiKey}
-                onChange={(e) => setGoogleMapsApiKey(e.target.value)}
-                placeholder="Entrez votre clé API Google Maps"
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
-              />
-              <p className="mt-1 text-xs text-adrar-500">
-                Obtenir une clé sur <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-terracotta-500 hover:underline">Google Cloud Console</a>
-              </p>
-            </div>
-          )}
-
-          <div className="h-80 rounded-lg overflow-hidden border border-gray-200">
-            {mapProvider === 'openstreetmap' ? (
-              <OpenStreetMapComponent locations={locations} />
-            ) : (
-              <GoogleMapComponent 
-                locations={locations} 
-                apiKey={googleMapsApiKey} 
-              />
-            )}
-          </div>
-
-          {/* Location list */}
-          <div className="mt-4">
-            <h3 className="font-medium text-adrar-700 mb-2">Emplacements ({locations.length})</h3>
-            {locations.length > 0 ? (
-              <ul className="space-y-2">
-                {locations.map(location => (
-                  <li key={location.id} className="flex items-start p-2 rounded-md bg-white border border-gray-100 shadow-sm">
-                    <MapPin className={`mr-2 h-4 w-4 mt-0.5 ${location.type === 'project' ? 'text-terracotta-500' : 'text-green-500'}`} />
-                    <div>
-                      <p className="font-medium text-adrar-700">{location.name}</p>
-                      <p className="text-xs text-adrar-500">
-                        {location.type === 'project' ? 'Projet' : 'Source de matériaux'} - 
-                        Lat: {location.latitude.toFixed(4)}, Long: {location.longitude.toFixed(4)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-adrar-500">Aucun emplacement à afficher</p>
-            )}
-          </div>
+        <div className="flex space-x-2">
+          <Button
+            variant={mapProvider === 'openstreetmap' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setMapProvider('openstreetmap')}
+            className="text-sm"
+          >
+            OpenStreetMap
+          </Button>
+          
+          <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant={mapProvider === 'google' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  if (!googleApiKey) {
+                    setShowApiKeyDialog(true);
+                  } else {
+                    setMapProvider('google');
+                  }
+                }}
+                className="text-sm"
+              >
+                Google Maps
+              </Button>
+            </DialogTrigger>
+            
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Clé API Google Maps</DialogTitle>
+              </DialogHeader>
+              
+              <div className="py-4">
+                <Label htmlFor="apiKey">Clé API</Label>
+                <Input 
+                  id="apiKey" 
+                  value={dialogApiKey} 
+                  onChange={(e) => setDialogApiKey(e.target.value)}
+                  placeholder="Entrez votre clé API Google Maps"
+                  className="mt-2"
+                />
+                <p className="text-xs text-gray-500 mt-2 flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Vous pouvez obtenir une clé API sur le site <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">Google Cloud Console</a>.
+                  </span>
+                </p>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button onClick={handleSaveApiKey}>Enregistrer</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <div className="h-[400px] bg-gray-100">
+        {mapProvider === 'openstreetmap' && (
+          <MapContainer 
+            center={center}
+            zoom={13} 
+            style={{ width: '100%', height: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            />
+            
+            {locations.map(location => (
+              <Marker 
+                key={location.id}
+                position={[location.latitude, location.longitude]}
+              >
+                <Popup>
+                  <div className="p-1">
+                    <h3 className="font-bold">{location.name}</h3>
+                    <p className="text-sm text-gray-600">Type: {location.type}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        )}
+        
+        {mapProvider === 'google' && isLoaded && googleApiKey && (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={{ lat: center[0], lng: center[1] }}
+            zoom={13}
+          >
+            {locations.map(location => (
+              <GoogleMarker
+                key={location.id}
+                position={{ lat: location.latitude, lng: location.longitude }}
+                title={location.name}
+              />
+            ))}
+          </GoogleMap>
+        )}
+        
+        {mapProvider === 'google' && (!isLoaded || !googleApiKey) && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="mb-4 text-adrar-600">
+                {!googleApiKey ? 'Veuillez configurer votre clé API Google Maps' : 'Chargement de Google Maps...'}
+              </p>
+              {!googleApiKey && (
+                <Button 
+                  onClick={() => setShowApiKeyDialog(true)}
+                  className="bg-terracotta-500 hover:bg-terracotta-600"
+                >
+                  Configurer la clé API
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
