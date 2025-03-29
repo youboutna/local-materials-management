@@ -48,6 +48,19 @@ const containerStyle = {
   borderRadius: '0.75rem',
 };
 
+// Fix TypeScript issues with react-leaflet
+interface CustomMapContainerProps {
+  center: [number, number];
+  zoom: number;
+  style: React.CSSProperties;
+  children: React.ReactNode;
+}
+
+interface CustomTileLayerProps {
+  url: string;
+  attribution: string;
+}
+
 const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
   const [mapProvider, setMapProvider] = useState<'openstreetmap' | 'google'>('openstreetmap');
   const [googleApiKey, setGoogleApiKey] = useState<string>('');
@@ -137,12 +150,13 @@ const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             style={{ width: '100%', height: '100%' }}
-            center={center as any}
-            zoom={13}
+            {...{center, zoom: 13} as unknown as CustomMapContainerProps}
           >
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              {...{
+                url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              } as unknown as CustomTileLayerProps}
             />
             
             {locations.map(location => (
