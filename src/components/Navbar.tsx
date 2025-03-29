@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronDown, User, LogOut } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -49,6 +49,7 @@ const Navbar = () => {
     { title: 'Projets', path: '/projects' },
     { title: 'Tableau de bord', path: '/dashboard' },
     { title: 'Matériaux', path: '/materials' },
+    { title: 'Utilisateurs', path: '/users', adminOnly: true },
   ];
 
   const handleSignOut = async () => {
@@ -65,6 +66,16 @@ const Navbar = () => {
     return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
   };
 
+  // Filter links based on user role
+  const filteredLinks = navLinks.filter(link => {
+    if (link.adminOnly) {
+      // For now, show admin links to all authenticated users
+      // In the future, you can check user.user_metadata.role === 'admin'
+      return !!user;
+    }
+    return true;
+  });
+
   return (
     <nav className={navbarClasses}>
       <div className="container mx-auto px-4 lg:px-8">
@@ -80,7 +91,7 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+            {filteredLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -119,6 +130,13 @@ const Navbar = () => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => navigate('/users')}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Utilisateurs</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={handleSignOut}
@@ -161,7 +179,7 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 px-2 bg-white/95 backdrop-blur-md animate-slide-down rounded-b-lg">
             <div className="flex flex-col space-y-3">
-              {navLinks.map((link) => (
+              {filteredLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
