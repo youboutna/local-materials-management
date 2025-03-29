@@ -16,15 +16,46 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, User, Lock, Mail, Phone, ArrowRight } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/contexts/AuthContext';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const loginSchema = z.object({
+  email: z.string().email("Format d'email invalide"),
+  password: z.string().min(1, "Le mot de passe est requis"),
+  rememberMe: z.boolean().default(false),
+});
+
+const registerSchema = z.object({
+  fullName: z.string().min(1, "Le nom complet est requis"),
+  email: z.string().email("Format d'email invalide"),
+  phone: z.string().min(1, "Le numéro de téléphone est requis"),
+  nationalId: z.string().min(1, "L'identifiant national est requis"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: "Vous devez accepter les conditions d'utilisation" }),
+  }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Auth = () => {
   // Get query parameters
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, signUp, user } = useAuth();
   const queryParams = new URLSearchParams(location.search);
   const initialMode = queryParams.get('mode') === 'register' ? 'register' : 'login';
   
@@ -32,121 +63,71 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Form values
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [nationalId, setNationalId] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  
-  // Error states
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [fullNameError, setFullNameError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [nationalIdError, setNationalIdError] = useState('');
+  // Login form
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
+  });
+
+  // Register form
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      phone: '',
+      nationalId: '',
+      password: '',
+      acceptTerms: false,
+    },
+  });
   
   // Update URL when tab changes
   useEffect(() => {
     navigate(`/auth?mode=${mode}`, { replace: true });
   }, [mode, navigate]);
-  
-  // Validation
-  const validateEmail = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      setEmailError('L\'email est requis');
-      return false;
-    } else if (!emailRegex.test(email)) {
-      setEmailError('Format d\'email invalide');
-      return false;
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
     }
-    setEmailError('');
-    return true;
-  };
+  }, [user, navigate]);
   
-  const validatePassword = () => {
-    if (!password) {
-      setPasswordError('Le mot de passe est requis');
-      return false;
-    } else if (mode === 'register' && password.length < 8) {
-      setPasswordError('Le mot de passe doit contenir au moins 8 caractères');
-      return false;
-    }
-    setPasswordError('');
-    return true;
-  };
-  
-  const validateFullName = () => {
-    if (mode === 'register' && !fullName) {
-      setFullNameError('Le nom complet est requis');
-      return false;
-    }
-    setFullNameError('');
-    return true;
-  };
-  
-  const validatePhone = () => {
-    const phoneRegex = /^\d+$/;
-    if (mode === 'register' && !phone) {
-      setPhoneError('Le numéro de téléphone est requis');
-      return false;
-    } else if (mode === 'register' && !phoneRegex.test(phone)) {
-      setPhoneError('Le numéro de téléphone doit contenir uniquement des chiffres');
-      return false;
-    }
-    setPhoneError('');
-    return true;
-  };
-  
-  const validateNationalId = () => {
-    if (mode === 'register' && !nationalId) {
-      setNationalIdError('L\'identifiant national est requis');
-      return false;
-    }
-    setNationalIdError('');
-    return true;
-  };
-  
-  const validateForm = () => {
-    const isEmailValid = validateEmail();
-    const isPasswordValid = validatePassword();
-    const isFullNameValid = validateFullName();
-    const isPhoneValid = validatePhone();
-    const isNationalIdValid = validateNationalId();
-    
-    return isEmailValid && isPasswordValid && isFullNameValid && isPhoneValid && isNationalIdValid;
-  };
-  
-  // Form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+  // Login form submission
+  const onLoginSubmit = async (values: LoginFormValues) => {
     setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signIn(values.email, values.password);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
       setLoading(false);
-      
-      if (mode === 'login') {
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue sur la plateforme Materials Management.",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Inscription réussie",
-          description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
-        });
-        setMode('login');
-      }
-    }, 1500);
+    }
+  };
+  
+  // Register form submission
+  const onRegisterSubmit = async (values: RegisterFormValues) => {
+    setLoading(true);
+    try {
+      await signUp(
+        values.email, 
+        values.password, 
+        values.fullName, 
+        values.phone, 
+        values.nationalId
+      );
+      setMode('login');
+    } catch (error) {
+      console.error("Registration error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Animated background patterns
@@ -202,234 +183,281 @@ const Auth = () => {
             
             {/* Login Form */}
             <TabsContent value="login" className="m-0">
-              <form onSubmit={handleSubmit}>
-                <CardHeader>
-                  <CardTitle className="text-2xl font-serif text-center text-adrar-800">
-                    Bienvenue
-                  </CardTitle>
-                  <CardDescription className="text-center">
-                    Connectez-vous à votre compte pour continuer
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        className={`pl-10 ${emailError ? 'border-red-500' : 'border-input'}`}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onBlur={validateEmail}
-                        required
-                      />
-                    </div>
-                    {emailError && <p className="text-xs text-red-500">{emailError}</p>}
-                  </div>
-                  
-                  {/* Password */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="password">Mot de passe</Label>
-                      <a href="#" className="text-xs text-terracotta-500 hover:text-terracotta-600">
-                        Mot de passe oublié?
-                      </a>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        className={`pl-10 ${passwordError ? 'border-red-500' : 'border-input'}`}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onBlur={validatePassword}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-3 text-adrar-400 hover:text-adrar-600"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {passwordError && <p className="text-xs text-red-500">{passwordError}</p>}
-                  </div>
-                  
-                  {/* Remember Me */}
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
+                  <CardHeader>
+                    <CardTitle className="text-2xl font-serif text-center text-adrar-800">
+                      Bienvenue
+                    </CardTitle>
+                    <CardDescription className="text-center">
+                      Connectez-vous à votre compte pour continuer
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Email */}
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input 
+                                placeholder="votre@email.com" 
+                                className="pl-10" 
+                                {...field} 
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <label
-                      htmlFor="remember"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-adrar-600"
+                    
+                    {/* Password */}
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex justify-between">
+                            <FormLabel>Mot de passe</FormLabel>
+                            <a href="#" className="text-xs text-terracotta-500 hover:text-terracotta-600">
+                              Mot de passe oublié?
+                            </a>
+                          </div>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className="pl-10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              className="absolute right-3 top-3 text-adrar-400 hover:text-adrar-600"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Remember Me */}
+                    <FormField
+                      control={loginForm.control}
+                      name="rememberMe"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="leading-none">
+                            <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-adrar-600">
+                              Se souvenir de moi
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter className="flex flex-col">
+                    <Button 
+                      type="submit"
+                      className="w-full bg-terracotta-500 hover:bg-terracotta-600 text-white"
+                      disabled={loading}
                     >
-                      Se souvenir de moi
-                    </label>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col">
-                  <Button 
-                    type="submit"
-                    className="w-full bg-terracotta-500 hover:bg-terracotta-600 text-white"
-                    disabled={loading}
-                  >
-                    {loading ? 'Connexion en cours...' : 'Se connecter'}
-                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-                </CardFooter>
-              </form>
+                      {loading ? 'Connexion en cours...' : 'Se connecter'}
+                      {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
             </TabsContent>
             
             {/* Register Form */}
             <TabsContent value="register" className="m-0">
-              <form onSubmit={handleSubmit}>
-                <CardHeader>
-                  <CardTitle className="text-2xl font-serif text-center text-adrar-800">
-                    Créer un compte
-                  </CardTitle>
-                  <CardDescription className="text-center">
-                    Créez votre compte pour gérer vos projets
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Full Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Nom complet</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="fullName"
-                        placeholder="Votre nom complet"
-                        className={`pl-10 ${fullNameError ? 'border-red-500' : 'border-input'}`}
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        onBlur={validateFullName}
-                        required
-                      />
-                    </div>
-                    {fullNameError && <p className="text-xs text-red-500">{fullNameError}</p>}
-                  </div>
-                  
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="register-email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        className={`pl-10 ${emailError ? 'border-red-500' : 'border-input'}`}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onBlur={validateEmail}
-                        required
-                      />
-                    </div>
-                    {emailError && <p className="text-xs text-red-500">{emailError}</p>}
-                  </div>
-                  
-                  {/* Phone */}
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="phone"
-                        placeholder="Numéro de téléphone"
-                        className={`pl-10 ${phoneError ? 'border-red-500' : 'border-input'}`}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        onBlur={validatePhone}
-                        required
-                      />
-                    </div>
-                    {phoneError && <p className="text-xs text-red-500">{phoneError}</p>}
-                  </div>
-                  
-                  {/* National ID */}
-                  <div className="space-y-2">
-                    <Label htmlFor="nationalId">Identifiant national</Label>
-                    <Input
-                      id="nationalId"
-                      placeholder="Numéro d'identité national"
-                      className={nationalIdError ? 'border-red-500' : 'border-input'}
-                      value={nationalId}
-                      onChange={(e) => setNationalId(e.target.value)}
-                      onBlur={validateNationalId}
-                      required
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
+                  <CardHeader>
+                    <CardTitle className="text-2xl font-serif text-center text-adrar-800">
+                      Créer un compte
+                    </CardTitle>
+                    <CardDescription className="text-center">
+                      Créez votre compte pour gérer vos projets
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Full Name */}
+                    <FormField
+                      control={registerForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom complet</FormLabel>
+                          <div className="relative">
+                            <User className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input
+                                placeholder="Votre nom complet"
+                                className="pl-10"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {nationalIdError && <p className="text-xs text-red-500">{nationalIdError}</p>}
-                  </div>
-                  
-                  {/* Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">Mot de passe</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                      <Input
-                        id="register-password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        className={`pl-10 ${passwordError ? 'border-red-500' : 'border-input'}`}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onBlur={validatePassword}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-3 text-adrar-400 hover:text-adrar-600"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {passwordError && <p className="text-xs text-red-500">{passwordError}</p>}
-                    <p className="text-xs text-adrar-500">
-                      Le mot de passe doit contenir au moins 8 caractères
-                    </p>
-                  </div>
-                  
-                  {/* Terms */}
-                  <div className="flex items-start space-x-2 mt-4">
-                    <Checkbox id="terms" required className="mt-1" />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-adrar-600"
+                    
+                    {/* Email */}
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input
+                                type="email"
+                                placeholder="votre@email.com"
+                                className="pl-10"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Phone */}
+                    <FormField
+                      control={registerForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone</FormLabel>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input
+                                placeholder="Numéro de téléphone"
+                                className="pl-10"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* National ID */}
+                    <FormField
+                      control={registerForm.control}
+                      name="nationalId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Identifiant national</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Numéro d'identité national"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Password */}
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mot de passe</FormLabel>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+                            <FormControl>
+                              <Input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className="pl-10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <button
+                              type="button"
+                              className="absolute right-3 top-3 text-adrar-400 hover:text-adrar-600"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                          <p className="text-xs text-adrar-500">
+                            Le mot de passe doit contenir au moins 8 caractères
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Terms */}
+                    <FormField
+                      control={registerForm.control}
+                      name="acceptTerms"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="leading-none">
+                            <FormLabel className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-adrar-600">
+                              J'accepte les{" "}
+                              <a href="/terms" className="text-terracotta-500 hover:text-terracotta-600 underline">
+                                conditions d'utilisation
+                              </a>{" "}
+                              et la{" "}
+                              <a href="/privacy" className="text-terracotta-500 hover:text-terracotta-600 underline">
+                                politique de confidentialité
+                              </a>
+                            </FormLabel>
+                            <FormMessage />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter className="flex flex-col">
+                    <Button 
+                      type="submit"
+                      className="w-full bg-terracotta-500 hover:bg-terracotta-600 text-white"
+                      disabled={loading}
                     >
-                      J'accepte les{" "}
-                      <a href="/terms" className="text-terracotta-500 hover:text-terracotta-600 underline">
-                        conditions d'utilisation
-                      </a>{" "}
-                      et la{" "}
-                      <a href="/privacy" className="text-terracotta-500 hover:text-terracotta-600 underline">
-                        politique de confidentialité
-                      </a>
-                    </label>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col">
-                  <Button 
-                    type="submit"
-                    className="w-full bg-terracotta-500 hover:bg-terracotta-600 text-white"
-                    disabled={loading}
-                  >
-                    {loading ? 'Inscription en cours...' : 'S\'inscrire'}
-                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-                </CardFooter>
-              </form>
+                      {loading ? 'Inscription en cours...' : 'S\'inscrire'}
+                      {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
             </TabsContent>
           </Tabs>
         </Card>

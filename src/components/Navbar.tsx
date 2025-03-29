@@ -1,14 +1,26 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   // Track scroll position
   useEffect(() => {
@@ -38,6 +50,20 @@ const Navbar = () => {
     { title: 'Tableau de bord', path: '/dashboard' },
     { title: 'Matériaux', path: '/materials' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth?mode=login');
+  };
+
+  const getUserInitials = () => {
+    if (!user || !user.user_metadata?.full_name) return 'U';
+    
+    const fullName = user.user_metadata.full_name;
+    const nameParts = fullName.split(' ');
+    if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
+    return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+  };
 
   return (
     <nav className={navbarClasses}>
@@ -70,18 +96,52 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons or User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/auth?mode=login">
-              <Button variant="outline" className="border-terracotta-500 text-terracotta-500 hover:bg-terracotta-500 hover:text-white">
-                Connexion
-              </Button>
-            </Link>
-            <Link to="/auth?mode=register">
-              <Button className="bg-terracotta-500 text-white hover:bg-terracotta-600">
-                Inscription
-              </Button>
-            </Link>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10 bg-terracotta-100 text-terracotta-700 hover:bg-terracotta-200 transition-colors">
+                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.user_metadata?.full_name || 'Utilisateur'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Se déconnecter</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/auth?mode=login">
+                  <Button variant="outline" className="border-terracotta-500 text-terracotta-500 hover:bg-terracotta-500 hover:text-white">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=register">
+                  <Button className="bg-terracotta-500 text-white hover:bg-terracotta-600">
+                    Inscription
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -116,16 +176,44 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="pt-4 flex flex-col space-y-2 border-t border-sandstone-100">
-                <Link to="/auth?mode=login" className="w-full">
-                  <Button variant="outline" className="w-full border-terracotta-500 text-terracotta-500 hover:bg-terracotta-500 hover:text-white">
-                    Connexion
-                  </Button>
-                </Link>
-                <Link to="/auth?mode=register" className="w-full">
-                  <Button className="w-full bg-terracotta-500 text-white hover:bg-terracotta-600">
-                    Inscription
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <div className="px-4 py-2 flex items-center space-x-3">
+                      <Avatar className="h-8 w-8 bg-terracotta-100 text-terracotta-700">
+                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium leading-none">
+                          {user.user_metadata?.full_name || 'Utilisateur'}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center justify-center"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Se déconnecter
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth?mode=login" className="w-full">
+                      <Button variant="outline" className="w-full border-terracotta-500 text-terracotta-500 hover:bg-terracotta-500 hover:text-white">
+                        Connexion
+                      </Button>
+                    </Link>
+                    <Link to="/auth?mode=register" className="w-full">
+                      <Button className="w-full bg-terracotta-500 text-white hover:bg-terracotta-600">
+                        Inscription
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

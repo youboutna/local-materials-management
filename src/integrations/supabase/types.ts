@@ -9,7 +9,144 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      materials: {
+        Row: {
+          available_quantity: number
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image: string | null
+          name: string
+          origin_location: string | null
+          price_per_unit: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          available_quantity?: number
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image?: string | null
+          name: string
+          origin_location?: string | null
+          price_per_unit: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          available_quantity?: number
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image?: string | null
+          name?: string
+          origin_location?: string | null
+          price_per_unit?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_materials: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          project_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          project_id: string
+          quantity: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          project_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_materials_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          budget: number
+          coordinates_latitude: number | null
+          coordinates_longitude: number | null
+          created_at: string
+          description: string
+          end_date: string | null
+          id: string
+          location: string
+          progress: number
+          start_date: string
+          status: string
+          team_size: number
+          thumbnail: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          id?: string
+          location: string
+          progress?: number
+          start_date: string
+          status: string
+          team_size: number
+          thumbnail?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          location?: string
+          progress?: number
+          start_date?: string
+          status?: string
+          team_size?: number
+          thumbnail?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

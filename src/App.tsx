@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { AuthProvider } from '@/contexts/AuthContext';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
@@ -31,47 +32,49 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        
-        {/* Loading overlay */}
-        {loading && (
-          <div className="fixed inset-0 bg-adrar-900 flex flex-col items-center justify-center z-50">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-white text-2xl font-serif mb-4"
-            >
-              Materials Management
-            </motion.div>
-            <div className="w-32 h-1 bg-gray-700 rounded-full overflow-hidden">
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          
+          {/* Loading overlay */}
+          {loading && (
+            <div className="fixed inset-0 bg-adrar-900 flex flex-col items-center justify-center z-50">
               <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-                className="h-full bg-terracotta-500"
-              />
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-white text-2xl font-serif mb-4"
+              >
+                Materials Management
+              </motion.div>
+              <div className="w-32 h-1 bg-gray-700 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                  className="h-full bg-terracotta-500"
+                />
+              </div>
             </div>
-          </div>
-        )}
-        
-        <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/new" element={<ProjectCreate />} />
-              <Route path="/projects/:id" element={<ProjectDetail />} />
-              <Route path="/materials" element={<Materials />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
-        </BrowserRouter>
-      </TooltipProvider>
+          )}
+          
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/new" element={<ProjectCreate />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/materials" element={<Materials />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AnimatePresence>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
