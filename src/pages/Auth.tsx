@@ -43,8 +43,10 @@ const registerSchema = z.object({
   phone: z.string().min(1, "Le numéro de téléphone est requis"),
   nationalId: z.string().min(1, "L'identifiant national est requis"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Vous devez accepter les conditions d'utilisation" }),
+  acceptTerms: z.boolean({
+    required_error: "Vous devez accepter les conditions d'utilisation"
+  }).refine(val => val === true, {
+    message: "Vous devez accepter les conditions d'utilisation"
   }),
 });
 

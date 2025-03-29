@@ -136,9 +136,9 @@ const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
       <div className="h-[400px] bg-gray-100">
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
-            center={center}
-            zoom={13} 
             style={{ width: '100%', height: '100%' }}
+            center={center as any}
+            zoom={13}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
