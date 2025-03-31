@@ -1,42 +1,43 @@
 
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
 
 @Entity({ name: "materials" })
 export class Material {
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  description: string;
+  description!: string;
 
   @Column()
-  category: string;
+  category!: string;
 
   @Column()
-  unit: string;
+  unit!: string;
 
   @Column({ name: "price_per_unit" })
-  pricePerUnit: number;
+  pricePerUnit!: number;
 
   @Column({ name: "available_quantity" })
-  availableQuantity: number;
+  availableQuantity!: number;
 
   @Column({ nullable: true })
-  image: string;
+  image!: string;
 
   @Column({ name: "origin_location", nullable: true })
-  originLocation: string;
+  originLocation!: string;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.material)
-  projectMaterials: ProjectMaterial[];
+  projectMaterials!: ProjectMaterial[];
 
   @CreateDateColumn({ name: "created_at" })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date;
+  updatedAt!: Date;
 }

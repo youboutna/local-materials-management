@@ -1,56 +1,57 @@
 
+import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
 
 @Entity({ name: "projects" })
 export class Project {
   @PrimaryGeneratedColumn("uuid")
-  id: string;
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  description: string;
+  description!: string;
 
   @Column()
-  location: string;
+  location!: string;
 
   @Column()
-  status: string;
+  status!: string;
 
   @Column()
-  progress: number;
+  progress!: number;
 
   @Column()
-  budget: number;
+  budget!: number;
 
   @Column({ name: "start_date" })
-  startDate: Date;
+  startDate!: Date;
 
   @Column({ name: "end_date", nullable: true })
-  endDate: Date | null;
+  endDate!: Date | null;
 
   @Column()
-  thumbnail: string;
+  thumbnail!: string;
 
   @Column({ name: "team_size" })
-  teamSize: number;
+  teamSize!: number;
 
   @Column({ name: "coordinates_latitude", nullable: true })
-  coordinatesLatitude: number | null;
+  coordinatesLatitude!: number | null;
 
   @Column({ name: "coordinates_longitude", nullable: true })
-  coordinatesLongitude: number | null;
+  coordinatesLongitude!: number | null;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project)
-  projectMaterials: ProjectMaterial[];
+  projectMaterials!: ProjectMaterial[];
 
   @CreateDateColumn({ name: "created_at" })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   // Helper method to transform to ProjectData interface
   toProjectData() {
