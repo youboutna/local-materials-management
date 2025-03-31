@@ -6,10 +6,12 @@ import ProjectsHeader from '@/components/projects/ProjectsHeader';
 import ProjectFilters from '@/components/projects/ProjectFilters';
 import ProjectsGrid from '@/components/projects/ProjectsGrid';
 import EmptyProjectsState from '@/components/projects/EmptyProjectsState';
-import { projectsData } from '@/data/projectsData';
 import { useProjectsFilter } from '@/hooks/useProjectsFilter';
+import { useProjects } from '@/hooks/useProjects';
 
 const Projects = () => {
+  const { projects, loading } = useProjects();
+  
   const {
     searchQuery,
     setSearchQuery,
@@ -22,7 +24,22 @@ const Projects = () => {
     showSearchResults,
     handleSelectSearchResult,
     clearSearch
-  } = useProjectsFilter(projectsData);
+  } = useProjectsFilter(projects);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-adrar-600">Chargement des projets...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

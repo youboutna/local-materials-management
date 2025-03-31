@@ -1,34 +1,42 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Users, Banknote, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Banknote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { projectsData } from '@/data/projectsData';
 import StatusBadge from '@/components/StatusBadge';
 import ProgressIndicator from '@/components/ProgressIndicator';
 import { Button } from '@/components/ui/button';
 import ProjectMap from '@/components/ProjectMap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useProjects } from '@/hooks/useProjects';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { getProject } = useProjects();
 
   useEffect(() => {
-    const foundProject = projectsData.find(p => p.id === id);
-    
-    if (foundProject) {
-      setProject(foundProject);
-    } else {
-      console.error(`404 Error: User attempted to access non-existent route: /projects/${id}`);
-    }
-    
-    setLoading(false);
-  }, [id]);
+    const fetchProject = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      const projectData = await getProject(id);
+      
+      if (projectData) {
+        setProject(projectData);
+      } else {
+        console.error(`404 Error: User attempted to access non-existent route: /projects/${id}`);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchProject();
+  }, [id, getProject]);
 
   if (loading) {
     return (

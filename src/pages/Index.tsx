@@ -1,5 +1,4 @@
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, Building, Shield, Users, Briefcase } from 'lucide-react';
@@ -8,48 +7,8 @@ import Hero from '@/components/Hero';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProjectCard from '@/components/ProjectCard';
-
-// Sample data for featured projects
-const featuredProjects = [
-  {
-    id: '1',
-    title: 'Restauration du Fort d\'Atar',
-    description: 'Reconstruction des murs historiques avec la pierre locale d\'Atar, préservant les techniques de construction traditionnelles.',
-    location: 'Atar, Adrar',
-    status: 'en cours' as const,
-    progress: 65,
-    budget: 12500000,
-    startDate: '2023-08-15',
-    endDate: '2024-06-30',
-    thumbnail: '/img/project1.jpg',
-    teamSize: 18
-  },
-  {
-    id: '2',
-    title: 'Centre Culturel en Argile',
-    description: 'Construction d\'un centre culturel utilisant les techniques traditionnelles d\'argile améliorées pour une meilleure durabilité.',
-    location: 'Nouakchott',
-    status: 'en attente' as const,
-    progress: 25,
-    budget: 8750000,
-    startDate: '2023-11-10',
-    thumbnail: '/img/project2.jpg',
-    teamSize: 12
-  },
-  {
-    id: '3',
-    title: 'École Communautaire Durable',
-    description: 'École construite avec des matériaux locaux, optimisée pour le climat désertique et respectueuse des traditions architecturales.',
-    location: 'Kiffa, Assaba',
-    status: 'terminé' as const,
-    progress: 100,
-    budget: 5300000,
-    startDate: '2023-02-20',
-    endDate: '2023-12-15',
-    thumbnail: '/img/project3.jpg',
-    teamSize: 15
-  }
-];
+import { useProjects } from '@/hooks/useProjects';
+import { ProjectData } from '@/components/ProjectCard';
 
 // Benefits section data
 const benefits = [
@@ -80,6 +39,19 @@ const Index = () => {
   const featuredSectionRef = useRef<HTMLDivElement>(null);
   const benefitsSectionRef = useRef<HTMLDivElement>(null);
   const ctaSectionRef = useRef<HTMLDivElement>(null);
+  
+  const [featuredProjects, setFeaturedProjects] = useState<ProjectData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { projects } = useProjects();
+
+  useEffect(() => {
+    // Filter to get only 3 featured projects once projects data is loaded
+    if (projects.length > 0) {
+      const featured = projects.slice(0, 3);
+      setFeaturedProjects(featured);
+      setLoading(false);
+    }
+  }, [projects]);
 
   useEffect(() => {
     // Add image preload logic if needed
@@ -260,15 +232,21 @@ const Index = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProjects.map((project, index) => (
-              <ProjectCard 
-                key={project.id} 
-                project={project}
-                index={index}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProjects.map((project, index) => (
+                <ProjectCard 
+                  key={project.id} 
+                  project={project}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
       

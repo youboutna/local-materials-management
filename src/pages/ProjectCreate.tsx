@@ -28,7 +28,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { projectsData } from '@/data/projectsData';
+import { useProjects } from '@/hooks/useProjects';
 
 // Form schema using Zod
 const formSchema = z.object({
@@ -58,6 +58,7 @@ const formSchema = z.object({
 const ProjectCreate = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createProject } = useProjects();
   
   // Form definition using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -74,39 +75,34 @@ const ProjectCreate = () => {
   });
 
   // Form submission handler
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
-    // Simulating API call
-    setTimeout(() => {
-      // Create a new project ID (simple increment for demo purposes)
-      const newId = String(projectsData.length + 1);
+    try {
+      // Calculate progress based on status
+      const progress = values.status === 'terminé' ? 100 : 
+                       values.status === 'en cours' ? 25 : 0;
       
-      // Add the new project to the projectsData array
-      const newProject = {
-        id: newId,
+      // Create the new project
+      await createProject({
         title: values.title,
         description: values.description,
         location: values.location,
         status: values.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-        progress: values.status === 'terminé' ? 100 : values.status === 'en cours' ? 25 : 0,
+        progress: progress,
         budget: values.budget,
         startDate: values.startDate,
-        thumbnail: '/img/project-placeholder.jpg', // Using a placeholder image
-        teamSize: values.teamSize,
-      };
-      
-      projectsData.push(newProject);
-      
-      // Show success toast and navigate to projects list
-      toast({
-        title: "Projet créé",
-        description: `Le projet "${values.title}" a été créé avec succès.`,
+        thumbnail: '/img/project-placeholder.jpg',
+        teamSize: values.teamSize
       });
       
       navigate('/projects');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      // Toast notification is already handled in the createProject function
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   }
 
   return (

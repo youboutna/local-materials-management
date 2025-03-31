@@ -69,7 +69,7 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     navigate(`/projects/${projectId}`);
   };
 
-  // Function to clear search
+  // Clear search
   const clearSearch = () => {
     setSearchQuery('');
     setShowSearchResults(false);
