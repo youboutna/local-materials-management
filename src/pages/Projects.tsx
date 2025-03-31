@@ -7,10 +7,10 @@ import ProjectFilters from '@/components/projects/ProjectFilters';
 import ProjectsGrid from '@/components/projects/ProjectsGrid';
 import EmptyProjectsState from '@/components/projects/EmptyProjectsState';
 import { useProjectsFilter } from '@/hooks/useProjectsFilter';
-import { useTypeOrmProjects } from '@/hooks/useTypeOrmProjects';
+import { useProjects } from '@/hooks/projects/useProjects';
 
 const Projects = () => {
-  const { projects, loading } = useTypeOrmProjects();
+  const { projects, loading } = useProjects();
   
   const {
     searchQuery,
