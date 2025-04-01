@@ -5,26 +5,26 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } fro
 @Entity({ name: "profiles" })
 export class Profile {
   @PrimaryColumn("uuid")
-  id!: string;
+  id: string = "";
 
   @Column({ nullable: true })
-  full_name!: string;
+  full_name: string = "";
 
   @Column({ nullable: true })
-  phone!: string;
+  phone: string = "";
 
   @Column({ nullable: true })
-  national_id!: string;
+  national_id: string = "";
 
   @Column({ nullable: true })
-  role!: string;
+  role: string = "";
 
   @Column({ name: "avatar_url", nullable: true })
-  avatarUrl!: string;
+  avatarUrl: string = "";
 
   @CreateDateColumn({ name: "created_at", nullable: true })
-  createdAt!: Date;
+  createdAt: Date = new Date();
 
   @UpdateDateColumn({ name: "updated_at", nullable: true })
-  updatedAt!: Date;
+  updatedAt: Date = new Date();
 }

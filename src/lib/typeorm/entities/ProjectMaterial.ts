@@ -7,28 +7,28 @@ import { Material } from "./Material";
 @Entity({ name: "project_materials" })
 export class ProjectMaterial {
   @PrimaryGeneratedColumn("uuid")
-  id!: string;
+  id: string = "";
 
   @Column()
-  quantity!: number;
+  quantity: number = 0;
 
   @Column({ name: "project_id" })
-  projectId!: string;
+  projectId: string = "";
 
   @Column({ name: "material_id" })
-  materialId!: string;
+  materialId: string = "";
 
   @ManyToOne(() => Project, (project) => project.projectMaterials)
   @JoinColumn({ name: "project_id" })
-  project!: Project;
+  project: Project = new Project();
 
   @ManyToOne(() => Material, (material) => material.projectMaterials)
   @JoinColumn({ name: "material_id" })
-  material!: Material;
+  material: Material = new Material();
 
   @CreateDateColumn({ name: "created_at" })
-  createdAt!: Date;
+  createdAt: Date = new Date();
 
   @UpdateDateColumn({ name: "updated_at" })
-  updatedAt!: Date;
+  updatedAt: Date = new Date();
 }
