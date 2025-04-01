@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { projectsData } from "@/data/projectsData";
-import { toast } from '@/hooks/use-toast';
 
 /**
  * Loads sample project data from the local data file to Supabase
@@ -21,12 +20,7 @@ export const loadProjectsToSupabase = async () => {
 
     // If there are already projects in the database, don't add more
     if (existingProjects && existingProjects.length > 0) {
-      toast({
-        title: "Projets déjà chargés",
-        description: `${existingProjects.length} projets existent déjà dans la base de données.`,
-        variant: "default",
-        className: "bg-adrar-100 border-adrar-300 text-adrar-800",
-      });
+      console.log(`${existingProjects.length} projects already exist in the database.`);
       return existingProjects.length;
     }
 

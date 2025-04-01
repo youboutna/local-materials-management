@@ -29,6 +29,12 @@ const LoadDataButton = ({
           description: `${result} projets ont été ajoutés avec succès.`,
           className: "bg-adrar-100 border-adrar-300 text-adrar-800",
         });
+      } else {
+        toast({
+          title: "Information",
+          description: "Aucun nouveau projet n'a été ajouté à la base de données.",
+          variant: "default",
+        });
       }
     } catch (error) {
       console.error("Error loading data:", error);
