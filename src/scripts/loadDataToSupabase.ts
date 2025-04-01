@@ -21,7 +21,7 @@ export const loadProjectsToSupabase = async () => {
     // If there are already projects in the database, don't add more
     if (existingProjects && existingProjects.length > 0) {
       console.log(`${existingProjects.length} projects already exist in the database.`);
-      return existingProjects.length;
+      return 0;
     }
 
     // Transform the project data to match the database schema
@@ -51,9 +51,9 @@ export const loadProjectsToSupabase = async () => {
       throw error;
     }
 
-    console.log("Projects loaded successfully:", data);
+    console.log("Projects loaded successfully:", data?.length || 0);
     
-    return data.length;
+    return data?.length || 0;
   } catch (error) {
     console.error("Error loading projects to Supabase:", error);
     throw error;
