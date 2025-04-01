@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +8,7 @@
 
 @layer base {
   :root {
-    --background: 40 33% 98%;
+    --background: 36 33% 97%;
     --foreground: 217 33% 17%;
 
     --card: 0 0% 100%;
@@ -16,16 +17,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 27 53% 48%;
+    --primary: 28 58% 42%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 26 30% 92%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 28 58% 90%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,14 +38,14 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 36 33% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-primary: 28 58% 42%;
+    --sidebar-primary-foreground: 36 33% 97%;
+    --sidebar-accent: 28 58% 90%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 26 13% 85%;
+    --sidebar-ring: 28 58% 42%;
   }
 
   .dark {
@@ -57,7 +58,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 28 58% 42%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -89,7 +90,7 @@
   
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-image: url('/img/subtle-pattern.png');
+    background-image: url('/img/subtle-sand-pattern.png');
     background-size: 400px;
     background-attachment: fixed;
     background-blend-mode: overlay;
@@ -119,28 +120,28 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-sandstone-300 rounded-full;
+    @apply bg-adrar-300 rounded-full;
     transition: all 300ms ease-in-out;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-sandstone-400;
+    @apply bg-adrar-400;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-terracotta-500 text-white hover:bg-terracotta-600 px-6 py-3 rounded-md;
+    @apply bg-adrar-600 text-white hover:bg-adrar-700 px-6 py-3 rounded-md;
     transition: all 300ms ease-in-out;
   }
   
   .btn-secondary {
-    @apply bg-adrar-500 text-white hover:bg-adrar-600 px-6 py-3 rounded-md;
+    @apply bg-terracotta-500 text-white hover:bg-terracotta-600 px-6 py-3 rounded-md;
     transition: all 300ms ease-in-out;
   }
   
   .btn-outline {
-    @apply border border-terracotta-500 text-terracotta-500 hover:bg-terracotta-500 hover:text-white px-6 py-3 rounded-md;
+    @apply border border-adrar-500 text-adrar-600 hover:bg-adrar-500 hover:text-white px-6 py-3 rounded-md;
     transition: all 300ms ease-in-out;
   }
   
@@ -155,6 +156,20 @@
   
   .section {
     @apply py-16 md:py-24;
+  }
+
+  /* Adrar-specific elements */
+  .adrar-border-pattern {
+    @apply border-2 border-adrar-400;
+    background-image: url('/img/adrar-pattern.png');
+    background-size: 100px;
+    background-position: center;
+    background-blend-mode: overlay;
+  }
+  
+  .desert-card {
+    @apply bg-gradient-to-b from-sandstone-50 to-sandstone-100 rounded-xl shadow-elegant;
+    border: 1px solid rgba(200, 183, 155, 0.2);
   }
 }
 

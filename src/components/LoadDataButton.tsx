@@ -30,7 +30,7 @@ const LoadDataButton = ({
     <Button
       variant={variant}
       size={size}
-      className={className}
+      className={`${className} bg-adrar-600 hover:bg-adrar-700 text-ivory-100`}
       onClick={handleLoadData}
       disabled={loading}
     >

@@ -5,6 +5,7 @@ import { toast } from '@/hooks/use-toast';
 
 /**
  * Loads sample project data from the local data file to Supabase
+ * This includes traditional construction projects from the Adrar region
  */
 export const loadProjectsToSupabase = async () => {
   try {
@@ -22,6 +23,8 @@ export const loadProjectsToSupabase = async () => {
       toast({
         title: "Projets déjà chargés",
         description: `${existingProjects.length} projets existent déjà dans la base de données.`,
+        variant: "default",
+        className: "bg-adrar-100 border-adrar-300 text-adrar-800",
       });
       return existingProjects.length;
     }
@@ -55,6 +58,8 @@ export const loadProjectsToSupabase = async () => {
     toast({
       title: "Projets chargés avec succès",
       description: `${data.length} projets ont été ajoutés à la base de données.`,
+      variant: "default",
+      className: "bg-adrar-100 border-adrar-300 text-adrar-800",
     });
 
     return data.length;
