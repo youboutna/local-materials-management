@@ -15,6 +15,7 @@ export const loadProjectsToSupabase = async () => {
       .select('title');
 
     if (fetchError) {
+      console.error("Error checking existing projects:", fetchError);
       throw fetchError;
     }
 
@@ -52,24 +53,15 @@ export const loadProjectsToSupabase = async () => {
       .select();
 
     if (error) {
+      console.error("Error inserting projects:", error);
       throw error;
     }
 
-    toast({
-      title: "Projets chargés avec succès",
-      description: `${data.length} projets ont été ajoutés à la base de données.`,
-      variant: "default",
-      className: "bg-adrar-100 border-adrar-300 text-adrar-800",
-    });
-
+    console.log("Projects loaded successfully:", data);
+    
     return data.length;
   } catch (error) {
     console.error("Error loading projects to Supabase:", error);
-    toast({
-      title: "Erreur",
-      description: "Impossible de charger les projets dans la base de données.",
-      variant: "destructive",
-    });
-    return 0;
+    throw error;
   }
 };

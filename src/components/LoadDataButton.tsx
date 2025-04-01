@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { loadProjectsToSupabase } from '@/scripts/loadDataToSupabase';
 import { DatabaseIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface LoadDataButtonProps {
   variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
@@ -16,11 +17,26 @@ const LoadDataButton = ({
   className = ''
 }: LoadDataButtonProps) => {
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleLoadData = async () => {
     setLoading(true);
     try {
-      await loadProjectsToSupabase();
+      const result = await loadProjectsToSupabase();
+      if (result > 0) {
+        toast({
+          title: "Données chargées",
+          description: `${result} projets ont été ajoutés avec succès.`,
+          className: "bg-adrar-100 border-adrar-300 text-adrar-800",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors du chargement des données.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
