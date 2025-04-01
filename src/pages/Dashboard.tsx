@@ -1,175 +1,231 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { ArrowRight, Building, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProgressIndicator from '@/components/ProgressIndicator';
-import { useProjects } from '@/hooks/useProjects';
-import { ProjectData } from '@/components/ProjectCard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import LoadDataButton from '@/components/LoadDataButton';
 
 const Dashboard = () => {
-  const { projects, loading } = useProjects();
-  
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth?mode=login');
+      toast({
+        title: "Accès restreint",
+        description: "Veuillez vous connecter pour accéder au tableau de bord.",
+        variant: "destructive"
+      });
+    }
+  }, [user, navigate, toast]);
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
+          <div className="flex flex-wrap justify-between items-center mb-6">
             <motion.h1 
+              className="text-3xl font-bold text-adrar-900 font-serif"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl font-serif font-bold text-adrar-800"
             >
               Tableau de bord
             </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-adrar-600"
-            >
-              Suivez l'état d'avancement de vos projets et l'utilisation des matériaux locaux
-            </motion.p>
+            <div className="space-x-2">
+              <LoadDataButton 
+                variant="outline" 
+                className="border-terracotta-300 text-terracotta-600 hover:bg-terracotta-50"
+              />
+            </div>
           </div>
           
-          {/* Loading state */}
-          {loading ? (
-            <div className="text-center py-16">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-xl text-adrar-700 mb-4"
-              >
-                Chargement des projets...
-              </motion.div>
-              <div className="w-24 h-1 bg-gray-300 rounded-full overflow-hidden mx-auto">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 0.7, ease: "easeInOut", repeat: Infinity }}
-                  className="h-full bg-terracotta-500"
-                />
-              </div>
-            </div>
-          ) : (
-            /* Dashboard content */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Project Overview */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-adrar-800 mb-2 mt-6">
-                        Aperçu des projets
-                      </h3>
-                      <p className="text-adrar-600 text-sm">
-                        État d'avancement général des projets en cours
-                      </p>
-                    </div>
-                    <div className="mt-4">
-                      {projects.map((project) => (
-                        <div key={project.id} className="mb-4">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm font-medium text-adrar-700">{project.title}</span>
-                            <span className="text-xs text-adrar-500">{project.progress}%</span>
-                          </div>
-                          <Progress value={project.progress} />
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="border-l-4 border-l-terracotta-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Projets en cours</CardTitle>
+                <CardDescription>Statut général</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">4</span>
+                  <span className="ml-2 text-sm text-gray-500">projets actifs</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-adrar-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Budget total</CardTitle>
+                <CardDescription>Ressources financières</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">42.5M</span>
+                  <span className="ml-2 text-sm text-gray-500">MRU</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-sandstone-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Équipe</CardTitle>
+                <CardDescription>Personnel de projet</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">27</span>
+                  <span className="ml-2 text-sm text-gray-500">membres</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Matériaux</CardTitle>
+                <CardDescription>Ressources disponibles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">12</span>
+                  <span className="ml-2 text-sm text-gray-500">types</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl font-serif">
+                  <BarChart3 className="h-5 w-5 mr-2 text-terracotta-600" />
+                  Progression des projets
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-80">
+                {/* Chart placeholder */}
+                <div className="h-full w-full bg-gradient-to-br from-terracotta-100 to-white flex items-center justify-center rounded-lg border border-dashed border-terracotta-300">
+                  <span className="text-terracotta-400 text-sm font-medium">Statistiques de progression</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-xl font-serif">
+                  <div className="flex items-center">
+                    <CheckSquare className="h-5 w-5 mr-2 text-terracotta-600" />
+                    Projets récents
+                  </div>
+                  <Link to="/projects">
+                    <Button variant="ghost" size="sm" className="text-terracotta-600 hover:text-terracotta-700 -mr-2">
+                      <span className="text-xs mr-1">Voir tout</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: "Rénovation École Primaire", location: "Atar", date: "Déc 2023" },
+                    { name: "Puits Communautaire", location: "Chinguetti", date: "Jan 2024" },
+                    { name: "Centre de Formation", location: "Nouakchott", date: "Fév 2024" }
+                  ].map((project, i) => (
+                    <div key={i} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="bg-terracotta-100 p-2 rounded-md mr-3">
+                        <CheckSquare className="h-5 w-5 text-terracotta-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-adrar-800">{project.name}</h4>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span className="mr-3">{project.location}</span>
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>{project.date}</span>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              
-              {/* Active Projects */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="flex flex-col">
-                    <div className="mb-4 mt-6">
-                      <h3 className="text-lg font-semibold text-adrar-800 mb-2">
-                        Projets actifs
-                      </h3>
-                      <p className="text-adrar-600 text-sm">
-                        Suivez les projets actuellement en cours
-                      </p>
-                    </div>
-                    <div>
-                      {projects
-                        .filter((project) => project.status === 'en cours')
-                        .map((project) => (
-                          <div key={project.id} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-none">
-                            <div>
-                              <h4 className="text-sm font-medium text-adrar-700">{project.title}</h4>
-                              <p className="text-xs text-adrar-500">{project.location}</p>
-                            </div>
-                            <Link to={`/projects/${project.id}`}>
-                              <Button size="sm" className="bg-terracotta-500 hover:bg-terracotta-600">
-                                Voir <ArrowRight className="ml-2 h-4 w-4" />
-                              </Button>
-                            </Link>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              
-              {/* Material Usage */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="mt-6">
-                    <h3 className="text-lg font-semibold text-adrar-800 mb-2">
-                      Utilisation des matériaux
-                    </h3>
-                    <p className="text-adrar-600 text-sm">
-                      Consultez les statistiques sur l'utilisation des matériaux locaux
-                    </p>
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-adrar-700">Pierre d'Atar</span>
-                        <span className="text-xs text-adrar-500">75%</span>
                       </div>
-                      <ProgressIndicator progress={75} size="sm" showPercentage={false} />
-                      
-                      <div className="flex items-center justify-between mb-2 mt-4">
-                        <span className="text-sm text-adrar-700">Argile</span>
-                        <span className="text-xs text-adrar-500">45%</span>
-                      </div>
-                      <ProgressIndicator progress={45} size="sm" showPercentage={false} />
-                      
-                      <div className="flex items-center justify-between mb-2 mt-4">
-                        <span className="text-sm text-adrar-700">Bois local</span>
-                        <span className="text-xs text-adrar-500">20%</span>
-                      </div>
-                      <ProgressIndicator progress={20} size="sm" showPercentage={false} />
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          )}
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl font-serif">
+                  <Users className="h-5 w-5 mr-2 text-adrar-600" />
+                  Activité de l'équipe
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: "Ahmed Mahmoud", action: "a mis à jour le projet 'Centre de Formation'", time: "Il y a 2h" },
+                    { name: "Fatima Diallo", action: "a ajouté un nouveau matériau", time: "Il y a 5h" },
+                    { name: "Mohamed Ould", action: "a complété la phase 1 du projet 'Puits Communautaire'", time: "Hier" }
+                  ].map((activity, i) => (
+                    <div key={i} className="flex items-start pb-4 border-b border-gray-100 last:border-0">
+                      <div className="bg-adrar-100 h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium text-adrar-800 mr-3">
+                        {activity.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="text-sm">
+                          <span className="font-medium text-adrar-800">{activity.name}</span>
+                          {' '}
+                          <span className="text-gray-600">{activity.action}</span>
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl font-serif">
+                  <MapPin className="h-5 w-5 mr-2 text-adrar-600" />
+                  Distribution des projets
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-80">
+                {/* Map placeholder */}
+                <div className="h-full w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
+                  <span className="text-adrar-400 text-sm font-medium">Carte de distribution des projets</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </main>
       
