@@ -21,7 +21,7 @@ export const projectsData: ProjectData[] = [
     title: 'Extension pour une école complète deux classes',
     description: 'Construction de deux nouvelles salles de classe avec équipements modernes pour répondre à la demande croissante.',
     location: 'T-Adrar',
-    status: 'planifié',
+    status: 'en cours',  // Changed from 'planifié' to 'en cours'
     progress: 15,
     budget: 4500000,
     startDate: '2025-01-15',
@@ -73,7 +73,7 @@ export const projectsData: ProjectData[] = [
     title: 'Acquisition machines Vibrairie avec pédagogie',
     description: 'Équipement de laboratoire technique pour la formation professionnelle.',
     location: 'Centre de formation ETR',
-    status: 'planifié',
+    status: 'en cours',  // Changed from 'planifié' to 'en cours'
     progress: 10,
     budget: 6500000,
     startDate: '2025-04-01',
