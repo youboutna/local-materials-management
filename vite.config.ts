@@ -12,24 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      plugins: [
-        ["@swc/plugin-styled-components", {}],
-      ],
-      swcOptions: {
-        jsc: {
-          target: "es2021",
-          parser: {
-            syntax: "typescript",
-            tsx: true,
-            decorators: true,
-          },
-          transform: {
-            decoratorVersion: "2022-03",
-            legacyDecorator: true,
-            decoratorMetadata: true,
-          },
-        },
-      },
+      tsDecorators: true, // Enable TypeScript decorators support
     }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
@@ -37,5 +20,9 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  // Configuration to support TypeORM decorators
+  esbuild: {
+    target: 'es2020',
   },
 }));
