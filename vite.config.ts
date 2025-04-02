@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       tsDecorators: true, // Enable TypeScript decorators support
+      plugins: [
+        ['@swc/plugin-styled-components', {}]
+      ]
     }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),

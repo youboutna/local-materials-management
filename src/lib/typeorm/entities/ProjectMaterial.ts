@@ -9,13 +9,13 @@ export class ProjectMaterial {
   @PrimaryGeneratedColumn("uuid")
   id: string = "";
 
-  @Column()
+  @Column("int")
   quantity: number = 0;
 
-  @Column({ name: "project_id" })
+  @Column({ name: "project_id", type: "uuid" })
   projectId: string = "";
 
-  @Column({ name: "material_id" })
+  @Column({ name: "material_id", type: "uuid" })
   materialId: string = "";
 
   @ManyToOne(() => Project, (project) => project.projectMaterials)
@@ -26,9 +26,9 @@ export class ProjectMaterial {
   @JoinColumn({ name: "material_id" })
   material: Material = new Material();
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date = new Date();
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt: Date = new Date();
 }

@@ -8,36 +8,36 @@ export class Material {
   @PrimaryGeneratedColumn("uuid")
   id: string = "";
 
-  @Column()
+  @Column("varchar")
   name: string = "";
 
-  @Column()
+  @Column("text")
   description: string = "";
 
-  @Column()
+  @Column("varchar")
   category: string = "";
 
-  @Column()
+  @Column("varchar")
   unit: string = "";
 
-  @Column({ name: "price_per_unit" })
+  @Column({ name: "price_per_unit", type: "decimal" })
   pricePerUnit: number = 0;
 
-  @Column({ name: "available_quantity" })
+  @Column({ name: "available_quantity", type: "int" })
   availableQuantity: number = 0;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "varchar" })
   image: string = "";
 
-  @Column({ name: "origin_location", nullable: true })
+  @Column({ name: "origin_location", nullable: true, type: "varchar" })
   originLocation: string = "";
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.material)
   projectMaterials: ProjectMaterial[] = [];
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date = new Date();
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt: Date = new Date();
 }

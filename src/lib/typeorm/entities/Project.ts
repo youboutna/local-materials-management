@@ -8,49 +8,49 @@ export class Project {
   @PrimaryGeneratedColumn("uuid")
   id: string = "";
 
-  @Column()
+  @Column("varchar")
   title: string = "";
 
-  @Column()
+  @Column("text")
   description: string = "";
 
-  @Column()
+  @Column("varchar")
   location: string = "";
 
-  @Column()
+  @Column("varchar")
   status: string = "";
 
-  @Column()
+  @Column("int")
   progress: number = 0;
 
-  @Column()
+  @Column("decimal")
   budget: number = 0;
 
-  @Column({ name: "start_date" })
+  @Column({ name: "start_date", type: "date" })
   startDate: Date = new Date();
 
-  @Column({ name: "end_date", nullable: true })
+  @Column({ name: "end_date", type: "date", nullable: true })
   endDate: Date | null = null;
 
-  @Column()
+  @Column("varchar")
   thumbnail: string = "";
 
-  @Column({ name: "team_size" })
+  @Column({ name: "team_size", type: "int" })
   teamSize: number = 0;
 
-  @Column({ name: "coordinates_latitude", nullable: true })
+  @Column({ name: "coordinates_latitude", type: "float", nullable: true })
   coordinatesLatitude: number | null = null;
 
-  @Column({ name: "coordinates_longitude", nullable: true })
+  @Column({ name: "coordinates_longitude", type: "float", nullable: true })
   coordinatesLongitude: number | null = null;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project)
   projectMaterials: ProjectMaterial[] = [];
 
-  @CreateDateColumn({ name: "created_at" })
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date = new Date();
 
-  @UpdateDateColumn({ name: "updated_at" })
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt: Date = new Date();
 
   // Helper method to transform to ProjectData interface

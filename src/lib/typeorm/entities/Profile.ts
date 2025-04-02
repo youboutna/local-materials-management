@@ -7,24 +7,24 @@ export class Profile {
   @PrimaryColumn("uuid")
   id: string = "";
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "varchar" })
   full_name: string = "";
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "varchar" })
   phone: string = "";
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "varchar" })
   national_id: string = "";
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "varchar" })
   role: string = "";
 
-  @Column({ name: "avatar_url", nullable: true })
+  @Column({ name: "avatar_url", nullable: true, type: "varchar" })
   avatarUrl: string = "";
 
-  @CreateDateColumn({ name: "created_at", nullable: true })
+  @CreateDateColumn({ name: "created_at", nullable: true, type: "timestamp" })
   createdAt: Date = new Date();
 
-  @UpdateDateColumn({ name: "updated_at", nullable: true })
+  @UpdateDateColumn({ name: "updated_at", nullable: true, type: "timestamp" })
   updatedAt: Date = new Date();
 }
