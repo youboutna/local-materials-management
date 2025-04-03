@@ -15,10 +15,13 @@ export const AppDataSource = new DataSource({
   password: "postgres_password", // This is a placeholder. Use environment variables in production
   database: "postgres",
   synchronize: false, // Set to false in production
-  logging: true,
+  logging: false, // Reduce noise in console
   entities: [Project, Material, ProjectMaterial, Profile],
+  ssl: true, // Enable SSL for secure connection
   extra: {
-    ssl: true
+    ssl: {
+      rejectUnauthorized: false // Required to connect to some cloud providers
+    }
   }
 });
 
