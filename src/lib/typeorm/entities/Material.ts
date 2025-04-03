@@ -6,38 +6,38 @@ import { ProjectMaterial } from "./ProjectMaterial";
 @Entity({ name: "materials" })
 export class Material {
   @PrimaryGeneratedColumn("uuid")
-  id: string = "";
+  id!: string;
 
   @Column("varchar")
-  name: string = "";
+  name!: string;
 
   @Column("text")
-  description: string = "";
+  description!: string;
 
   @Column("varchar")
-  category: string = "";
+  category!: string;
 
   @Column("varchar")
-  unit: string = "";
+  unit!: string;
 
   @Column({ name: "price_per_unit", type: "decimal" })
-  pricePerUnit: number = 0;
+  pricePerUnit!: number;
 
   @Column({ name: "available_quantity", type: "int" })
-  availableQuantity: number = 0;
+  availableQuantity!: number;
 
   @Column({ nullable: true, type: "varchar" })
-  image: string = "";
+  image!: string;
 
   @Column({ name: "origin_location", nullable: true, type: "varchar" })
-  originLocation: string = "";
+  originLocation!: string;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.material)
-  projectMaterials: ProjectMaterial[] = [];
+  projectMaterials!: ProjectMaterial[];
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
-  createdAt: Date = new Date();
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
-  updatedAt: Date = new Date();
+  updatedAt!: Date;
 }

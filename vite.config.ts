@@ -13,9 +13,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       tsDecorators: true, // Enable TypeScript decorators support
-      plugins: [
-        ['@swc/plugin-styled-components', {}]
-      ]
     }),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
@@ -25,6 +22,11 @@ export default defineConfig(({ mode }) => ({
     },
   },
   // Configuration to support TypeORM decorators
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
   esbuild: {
     target: 'es2020',
   },

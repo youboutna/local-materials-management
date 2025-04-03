@@ -6,8 +6,7 @@ import { Material } from "./entities/Material";
 import { ProjectMaterial } from "./entities/ProjectMaterial";
 import { Profile } from "./entities/Profile";
 
-// For development purposes, we're using the same database as Supabase
-// In production, you might want to use a different connection
+// Setup proper connection options that work in browser environment
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "huttgbybeuzeikaqfvam.supabase.co",
@@ -18,8 +17,9 @@ export const AppDataSource = new DataSource({
   synchronize: false, // Set to false in production
   logging: true,
   entities: [Project, Material, ProjectMaterial, Profile],
-  subscribers: [],
-  migrations: [],
+  extra: {
+    ssl: true
+  }
 });
 
 // Initialize the data source
