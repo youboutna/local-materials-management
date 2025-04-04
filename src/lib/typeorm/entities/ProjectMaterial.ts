@@ -9,7 +9,7 @@ export class ProjectMaterial {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column("int")
+  @Column({ type: "int" })
   quantity!: number;
 
   @Column({ name: "project_id", type: "uuid" })

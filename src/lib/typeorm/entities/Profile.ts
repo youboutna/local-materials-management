@@ -4,7 +4,7 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } fro
 
 @Entity({ name: "profiles" })
 export class Profile {
-  @PrimaryColumn("uuid")
+  @PrimaryColumn({ type: "uuid" })
   id!: string;
 
   @Column({ nullable: true, type: "varchar" })

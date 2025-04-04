@@ -8,16 +8,16 @@ export class Material {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   name!: string;
 
-  @Column("text")
+  @Column({ type: "text" })
   description!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   category!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   unit!: string;
 
   @Column({ name: "price_per_unit", type: "decimal" })

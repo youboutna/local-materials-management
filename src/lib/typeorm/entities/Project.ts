@@ -8,22 +8,22 @@ export class Project {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   title!: string;
 
-  @Column("text")
+  @Column({ type: "text" })
   description!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   location!: string;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   status!: string;
 
-  @Column("int")
+  @Column({ type: "int" })
   progress!: number;
 
-  @Column("decimal")
+  @Column({ type: "decimal" })
   budget!: number;
 
   @Column({ name: "start_date", type: "date" })
@@ -32,7 +32,7 @@ export class Project {
   @Column({ name: "end_date", type: "date", nullable: true })
   endDate!: Date | null;
 
-  @Column("varchar")
+  @Column({ type: "varchar" })
   thumbnail!: string;
 
   @Column({ name: "team_size", type: "int" })
