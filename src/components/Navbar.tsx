@@ -39,8 +39,8 @@ const Navbar = () => {
   const navbarClasses = cn(
     'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
     {
-      'py-6 bg-transparent': !isScrolled && !isMobileMenuOpen,
-      'py-3 bg-white/90 backdrop-blur-md shadow-elegant': isScrolled || isMobileMenuOpen,
+      'py-6 bg-sandstone-50/80 backdrop-blur-md': !isScrolled && !isMobileMenuOpen,
+      'py-3 bg-white/95 backdrop-blur-md shadow-elegant': isScrolled || isMobileMenuOpen,
     }
   );
 
@@ -96,10 +96,10 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-terracotta-500",
+                  "text-sm font-medium transition-colors px-4 py-2 rounded-md hover:bg-sandstone-100",
                   location.pathname === link.path
-                    ? "text-terracotta-500"
-                    : "text-adrar-600"
+                    ? "bg-sandstone-100 text-terracotta-600"
+                    : "text-adrar-600 hover:text-terracotta-500"
                 )}
               >
                 {link.title}
@@ -112,13 +112,13 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-terracotta-50">
                     <Avatar className="h-10 w-10 bg-terracotta-100 text-terracotta-700 hover:bg-terracotta-200 transition-colors">
                       <AvatarFallback>{getUserInitials()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56 bg-white/95 backdrop-blur-md" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
@@ -186,8 +186,8 @@ const Navbar = () => {
                   className={cn(
                     "py-2 px-4 text-sm font-medium rounded-md",
                     location.pathname === link.path
-                      ? "bg-sandstone-100 text-terracotta-500"
-                      : "text-adrar-600 hover:bg-sandstone-50"
+                      ? "bg-sandstone-200 text-terracotta-500"
+                      : "text-adrar-600 hover:bg-sandstone-100"
                   )}
                 >
                   {link.title}
