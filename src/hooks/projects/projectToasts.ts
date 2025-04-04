@@ -1,11 +1,10 @@
-
 import { toast } from '@/hooks/use-toast';
 
 export const projectToasts = {
   connectionError: () => {
     toast({
-      title: "Erreur",
-      description: "La connexion à la base de données n'est pas initialisée.",
+      title: "Erreur de connexion",
+      description: "TypeORM n'est pas compatible avec l'environnement du navigateur. L'application utilise Supabase à la place.",
       variant: "destructive",
     });
   },
@@ -73,15 +72,17 @@ export const projectToasts = {
   
   supabaseUpdateNotImplemented: () => {
     toast({
-      title: "Information",
-      description: "La mise à jour via Supabase n'est pas encore implémentée.",
+      title: "Fonctionnalité non disponible",
+      description: "La mise à jour via Supabase n'est pas encore implémentée. TypeORM n'est pas disponible dans le navigateur.",
+      variant: "default",
     });
   },
   
   supabaseDeleteNotImplemented: () => {
     toast({
-      title: "Information",
-      description: "La suppression via Supabase n'est pas encore implémentée.",
+      title: "Fonctionnalité non disponible",
+      description: "La suppression via Supabase n'est pas encore implémentée. TypeORM n'est pas disponible dans le navigateur.",
+      variant: "default",
     });
   }
 };

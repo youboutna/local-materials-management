@@ -25,13 +25,21 @@ const LoadDataButton = ({
   const handleLoadData = async () => {
     setLoading(true);
     try {
-      // This loads data to Supabase (regardless of USE_TYPEORM setting)
+      if (USE_TYPEORM) {
+        toast({
+          title: "Information",
+          description: "TypeORM n'est pas compatible avec l'environnement du navigateur. Utilisation de Supabase à la place.",
+          variant: "default",
+        });
+      }
+      
+      // This loads data to Supabase
       const result = await loadProjectsToSupabase();
       
       if (result > 0) {
         toast({
           title: "Données chargées",
-          description: `${result} projets ont été ajoutés avec succès.`,
+          description: `${result} projets ont été ajoutés avec succès à Supabase.`,
           className: "bg-adrar-100 border-adrar-300 text-adrar-800",
         });
       } else {

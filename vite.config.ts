@@ -11,9 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      tsDecorators: true, // Enable TypeScript decorators support
-    }),
+    react(),
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
@@ -24,17 +22,5 @@ export default defineConfig(({ mode }) => ({
   define: {
     // Add polyfills for browser environment
     'process.env': {},
-  },
-  // Configuration to properly support TypeORM decorators
-  optimizeDeps: {
-    esbuildOptions: {
-      target: 'es2020',
-    },
-  },
-  esbuild: {
-    target: 'es2020',
-    supported: {
-      'decorators': true
-    },
   },
 }));

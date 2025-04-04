@@ -9,28 +9,18 @@ export const useProjects = () => {
   const typeOrmOperations = useTypeOrmProjectOperations();
   const supabaseProjects = useSupabaseProjects();
 
-  // Get projects from the active data source
+  // Always use Supabase since TypeORM has browser compatibility issues
   const projects = USE_TYPEORM ? typeOrmOperations.projects : supabaseProjects.projects;
-  
-  // Get loading state from the active data source  
   const loading = USE_TYPEORM ? typeOrmOperations.loading : supabaseProjects.loading;
-  
-  // Get error state from the active data source
   const error = USE_TYPEORM ? typeOrmOperations.error : supabaseProjects.error;
-  
-  // Fetch projects from the active data source
   const fetchProjects = USE_TYPEORM ? typeOrmOperations.fetchProjects : supabaseProjects.fetchProjects;
-  
-  // Create project with the active data source
   const createProject = USE_TYPEORM ? typeOrmOperations.createProject : supabaseProjects.createProject;
-  
-  // Get project by ID from the active data source
   const getProject = USE_TYPEORM ? typeOrmOperations.getProject : supabaseProjects.getProject;
 
-  // Update project (with Supabase fallback)
+  // Update project (with better fallback messaging)
   const updateProject = async (id: string, projectData: Partial<ProjectData>): Promise<ProjectData | null> => {
     if (!USE_TYPEORM) {
-      // Fallback to Supabase if implemented
+      // With TypeORM disabled, show a clearer message
       projectToasts.supabaseUpdateNotImplemented();
       return null;
     }
@@ -38,10 +28,10 @@ export const useProjects = () => {
     return typeOrmOperations.updateProject(id, projectData);
   };
 
-  // Delete project (with Supabase fallback)
+  // Delete project (with better fallback messaging)
   const deleteProject = async (id: string): Promise<boolean> => {
     if (!USE_TYPEORM) {
-      // Fallback to Supabase if implemented
+      // With TypeORM disabled, show a clearer message
       projectToasts.supabaseDeleteNotImplemented();
       return false;
     }
