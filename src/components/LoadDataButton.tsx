@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { loadProjectsToSupabase } from '@/scripts/loadDataToSupabase';
@@ -70,7 +69,7 @@ const LoadDataButton = ({
     <Button
       variant={variant}
       size={size}
-      className={`${className} bg-adrar-600 hover:bg-adrar-700 text-ivory-100`}
+      className={className}
       onClick={handleLoadData}
       disabled={loading}
     >

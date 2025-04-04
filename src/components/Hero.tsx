@@ -48,13 +48,13 @@ const Hero = () => {
         
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 animate-fade-in delay-300">
           <Link to="/projects">
-            <Button className="bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-md px-8 py-6 text-lg group flex items-center">
+            <Button className="rounded-md px-8 py-6 text-lg group flex items-center">
               Découvrir nos projets
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
           <Link to="/auth?mode=register">
-            <Button variant="outline" className="border-white text-white hover:bg-white hover:text-adrar-800 rounded-md px-8 py-6 text-lg">
+            <Button variant="outline" className="rounded-md px-8 py-6 text-lg">
               Créer un compte
             </Button>
           </Link>
