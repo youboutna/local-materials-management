@@ -26,7 +26,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 28 58% 90%;
+    --accent: 28 58% 85%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -38,11 +38,11 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 36 33% 97%;
+    --sidebar-background: 36 33% 92%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 28 58% 42%;
     --sidebar-primary-foreground: 36 33% 97%;
-    --sidebar-accent: 28 58% 90%;
+    --sidebar-accent: 28 58% 80%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 26 13% 85%;
     --sidebar-ring: 28 58% 42%;
@@ -102,7 +102,7 @@
   
   /* Glass effect for components */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20;
+    @apply bg-white/90 backdrop-blur-md border border-white/20;
   }
   
   /* Smooth transitions */
@@ -170,6 +170,15 @@
   .desert-card {
     @apply bg-gradient-to-b from-sandstone-50 to-sandstone-100 rounded-xl shadow-elegant;
     border: 1px solid rgba(200, 183, 155, 0.2);
+  }
+  
+  /* Menu items and links */
+  .menu-link {
+    @apply text-adrar-700 hover:text-terracotta-600 font-medium transition-colors;
+  }
+  
+  .menu-item-active {
+    @apply bg-sandstone-200 text-terracotta-600 font-medium;
   }
 }
 
