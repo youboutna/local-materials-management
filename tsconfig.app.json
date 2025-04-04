@@ -15,11 +15,15 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "strict": false,
+    "strict": true,  // Enabling strict mode for better type checking
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
+
+    /* Decorators (required for TypeORM) */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     "baseUrl": ".",
     "paths": {

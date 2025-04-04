@@ -27,7 +27,7 @@ export class Material {
   availableQuantity!: number;
 
   @Column({ nullable: true, type: "varchar" })
-  image!: string;
+  image?: string;  // Made it optional
 
   @Column({ name: "origin_location", nullable: true, type: "varchar" })
   originLocation!: string;

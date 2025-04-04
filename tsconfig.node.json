@@ -1,22 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2023"],
-    "module": "ESNext",
-    "skipLibCheck": true,
+    "target": "ES2022",          // Align target with the ES version you're aiming for
+    "lib": ["ES2022"],           // Align lib to ES2022, which is consistent with your target
+    "module": "ESNext",          // Ensure support for modern module syntax
+    "skipLibCheck": true,        // Skip type checking of declaration files to improve build performance
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler", // Keep if using bundlers like Vite
+    "allowImportingTsExtensions": true, 
     "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
+    "moduleDetection": "force",   
+    "noEmit": true,              // No output, just type checking
 
     /* Linting */
-    "strict": true,
+    "strict": true,              // Keep strict type checking enabled
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Decorators (necessary for TypeORM, etc.) */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["vite.config.ts"]
 }

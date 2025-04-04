@@ -14,6 +14,13 @@
     "skipLibCheck": true,
     "allowJs": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "experimentalDecorators": true,  // Enable support for decorators
+    "emitDecoratorMetadata": true,   // Emit metadata for decorators (necessary for TypeORM)
+    "module": "ESNext",              // Use ESNext for modern module syntax
+    "moduleResolution": "Node",      // Ensure correct resolution of modules
+    "target": "ESNext",              // Set target to ESNext for better compatibility with modern JS
+    "esModuleInterop": true,         // Allow default imports from modules that don't have a default export
+    "jsx": "react-jsx"               // Enable JSX support for React (for React 17+)
   }
 }
