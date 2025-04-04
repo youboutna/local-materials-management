@@ -11,8 +11,12 @@ export class ProjectRepository {
     this.repository = AppDataSource.getRepository(Project);
   }
 
-  static async create(): Promise<ProjectRepository> {
-    await initializeDataSource();
+  static async create(): Promise<ProjectRepository | null> {
+    const dataSource = await initializeDataSource();
+    if (!dataSource) {
+      console.error("Could not initialize data source");
+      return null;
+    }
     return new ProjectRepository();
   }
 

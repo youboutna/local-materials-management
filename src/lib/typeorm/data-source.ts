@@ -38,6 +38,7 @@ export const initializeDataSource = async () => {
     return dataSource;
   } catch (error) {
     console.error("Error during Data Source initialization:", error);
-    throw error;
+    // Instead of throwing the error, return null to prevent app from crashing
+    return null;
   }
 };

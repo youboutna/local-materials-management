@@ -15,10 +15,17 @@ export const useTypeOrmProjectOperations = () => {
     const initRepository = async () => {
       try {
         const repo = await ProjectRepository.create();
-        setProjectRepository(repo);
+        if (repo) {
+          setProjectRepository(repo);
+        } else {
+          throw new Error('Failed to initialize repository');
+        }
       } catch (err) {
         console.error('Failed to initialize TypeORM repository:', err);
         setError('Failed to initialize database connection');
+      } finally {
+        // Set loading to false even if initialization fails
+        setLoading(false);
       }
     };
     
