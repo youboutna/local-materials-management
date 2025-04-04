@@ -21,7 +21,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Configuration to support TypeORM decorators
+  define: {
+    // Add polyfills for browser environment
+    'process.env': {},
+  },
+  // Configuration to properly support TypeORM decorators
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020',
@@ -29,5 +33,8 @@ export default defineConfig(({ mode }) => ({
   },
   esbuild: {
     target: 'es2020',
+    supported: {
+      'decorators': true
+    },
   },
 }));

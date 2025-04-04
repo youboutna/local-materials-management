@@ -6,7 +6,7 @@ import { Material } from "./entities/Material";
 import { ProjectMaterial } from "./entities/ProjectMaterial";
 import { Profile } from "./entities/Profile";
 
-// Setup proper connection options that work in browser environment
+// Create a data source configuration that's compatible with browser environments
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "huttgbybeuzeikaqfvam.supabase.co",
@@ -14,25 +14,28 @@ export const AppDataSource = new DataSource({
   username: "postgres",
   password: "postgres_password", // This is a placeholder. Use environment variables in production
   database: "postgres",
-  synchronize: false, // Set to false in production
-  logging: false, // Reduce noise in console
+  synchronize: false,
+  logging: false,
   entities: [Project, Material, ProjectMaterial, Profile],
-  ssl: true, // Enable SSL for secure connection
+  ssl: true,
   extra: {
     ssl: {
-      rejectUnauthorized: false // Required to connect to some cloud providers
+      rejectUnauthorized: false
     }
   }
 });
 
-// Initialize the data source
+// Initialize the data source with better error handling
 export const initializeDataSource = async () => {
-  try {
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-      console.log("Data Source has been initialized!");
-    }
+  if (AppDataSource.isInitialized) {
+    console.log("Data Source is already initialized");
     return AppDataSource;
+  }
+  
+  try {
+    const dataSource = await AppDataSource.initialize();
+    console.log("Data Source has been initialized successfully");
+    return dataSource;
   } catch (error) {
     console.error("Error during Data Source initialization:", error);
     throw error;
