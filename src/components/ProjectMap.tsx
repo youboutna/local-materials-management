@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, MapPin } from 'lucide-react';
 
 // Fix for Leaflet marker icon issue
 // This is needed because Leaflet's default marker icons use relative URLs
@@ -27,18 +27,24 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Define the location type
-interface MapLocation {
+export interface MapLocation {
   id: string;
   name: string;
   type: 'project' | 'material' | 'supplier';
   latitude: number;
   longitude: number;
+  status?: string;
+  region?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Props for the ProjectMap component
 interface ProjectMapProps {
   locations: MapLocation[];
   className?: string;
+  filteredLocations?: MapLocation[];
+  showFilters?: boolean;
 }
 
 // Define Google Maps container style
@@ -52,7 +58,7 @@ const containerStyle = {
 interface CustomMapContainerProps {
   center: [number, number];
   zoom: number;
-  style: React.CSSProperties;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -61,15 +67,23 @@ interface CustomTileLayerProps {
   attribution: string;
 }
 
-const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
+const ProjectMap = ({ 
+  locations, 
+  className = '',
+  filteredLocations,
+  showFilters = false 
+}: ProjectMapProps) => {
   const [mapProvider, setMapProvider] = useState<'openstreetmap' | 'google'>('openstreetmap');
   const [googleApiKey, setGoogleApiKey] = useState<string>('');
   const [showApiKeyDialog, setShowApiKeyDialog] = useState<boolean>(false);
   const [dialogApiKey, setDialogApiKey] = useState<string>('');
   
+  // Use filtered locations if provided, otherwise use all locations
+  const displayLocations = filteredLocations || locations;
+  
   // Calculate the center point based on the locations
-  const center = locations.length > 0
-    ? [locations[0].latitude, locations[0].longitude] as [number, number]
+  const center = displayLocations.length > 0
+    ? [displayLocations[0].latitude, displayLocations[0].longitude] as [number, number]
     : [18.079052, -15.965634] as [number, number]; // Default: Nouakchott
   
   // Load Google Maps API
@@ -81,6 +95,22 @@ const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
   const handleSaveApiKey = () => {
     setGoogleApiKey(dialogApiKey);
     setShowApiKeyDialog(false);
+  };
+
+  // Get marker color based on location type or status
+  const getMarkerColor = (location: MapLocation) => {
+    if (location.type === 'material') return 'blue';
+    if (location.type === 'supplier') return 'green';
+    
+    // For projects, color based on status
+    switch(location.status) {
+      case 'en cours': return 'orange';
+      case 'terminé': return 'green';
+      case 'en attente': return 'gray';
+      case 'suspendu': return 'red';
+      case 'annulé': return 'black';
+      default: return 'red';
+    }
   };
 
   return (
@@ -149,25 +179,60 @@ const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
       <div className="h-[400px] bg-gray-100">
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
-            style={{ width: '100%', height: '100%' }}
-            {...{center, zoom: 13} as unknown as CustomMapContainerProps}
+            className="w-full h-full"
+            center={center}
+            zoom={13}
+            scrollWheelZoom={true}
           >
             <TileLayer
-              {...{
-                url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-              } as unknown as CustomTileLayerProps}
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             />
             
-            {locations.map(location => (
+            {displayLocations.map(location => (
               <Marker 
                 key={location.id}
                 position={[location.latitude, location.longitude]}
+                icon={L.divIcon({
+                  html: `
+                    <div style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      width: 30px;
+                      height: 30px;
+                      background-color: ${getMarkerColor(location)};
+                      border-radius: 50%;
+                      border: 2px solid white;
+                      color: white;
+                      font-size: 18px;
+                    ">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                    </div>
+                  `,
+                  className: "",
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 30],
+                })}
               >
                 <Popup>
                   <div className="p-1">
                     <h3 className="font-bold">{location.name}</h3>
                     <p className="text-sm text-gray-600">Type: {location.type}</p>
+                    {location.status && (
+                      <p className="text-sm text-gray-600">Statut: {location.status}</p>
+                    )}
+                    {location.region && (
+                      <p className="text-sm text-gray-600">Wilaya: {location.region}</p>
+                    )}
+                    {location.startDate && (
+                      <p className="text-sm text-gray-600">
+                        Période: {location.startDate} {location.endDate ? `- ${location.endDate}` : ''}
+                      </p>
+                    )}
                   </div>
                 </Popup>
               </Marker>
@@ -181,7 +246,7 @@ const ProjectMap = ({ locations, className = '' }: ProjectMapProps) => {
             center={{ lat: center[0], lng: center[1] }}
             zoom={13}
           >
-            {locations.map(location => (
+            {displayLocations.map(location => (
               <GoogleMarker
                 key={location.id}
                 position={{ lat: location.latitude, lng: location.longitude }}

@@ -111,7 +111,7 @@ export class ProjectRepository {
   async delete(id: string): Promise<boolean> {
     try {
       const result = await this.repository.delete(id);
-      return result.affected !== undefined && result.affected > 0;
+      return result.affected !== null && result.affected > 0;
     } catch (error) {
       console.error(`Error deleting project with id ${id}:`, error);
       throw error;
