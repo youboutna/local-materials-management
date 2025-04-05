@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { DEV_MODE, DEV_USER } from '@/config/constants';
 
 type AuthContextType = {
   user: User | null;
@@ -11,17 +12,23 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
   signOut: () => Promise<void>;
+  isDevelopmentMode: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(DEV_MODE ? DEV_USER as unknown as User : null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!DEV_MODE);
   const { toast } = useToast();
 
   useEffect(() => {
+    if (DEV_MODE) {
+      console.log('🛠️ Development mode active: Authentication is bypassed');
+      return;
+    }
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -44,6 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Connexion automatique en mode développement",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -70,6 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string, nationalId: string) => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Inscription automatique en mode développement",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({ 
@@ -106,6 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Déconnexion simulée en mode développement",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       await supabase.auth.signOut();
@@ -131,7 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    isDevelopmentMode: DEV_MODE
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

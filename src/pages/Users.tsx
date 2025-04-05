@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,23 +23,48 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { UserPlus, Search, User, Edit, Trash2 } from 'lucide-react';
+import { DEV_MODE } from '@/config/constants';
 
 // Define types for profile data
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
+// Mock profiles for development mode
+const DEV_PROFILES: Profile[] = [
+  {
+    id: "dev-user-id",
+    full_name: "Développeur Test",
+    role: "admin",
+    phone: "123456789",
+    national_id: "DEV12345",
+    avatar_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "dev-user-id-2",
+    full_name: "Marie Diallo",
+    role: "user",
+    phone: "987654321",
+    national_id: "DEV54321",
+    avatar_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
 const Users = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [profiles, setProfiles] = useState<Profile[]>(isDevelopmentMode ? DEV_PROFILES : []);
+  const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
   // Check if user is authenticated
   useEffect(() => {
-    if (!user) {
+    if (!user && !isDevelopmentMode) {
       navigate('/auth?mode=login');
       toast({
         title: "Accès restreint",
@@ -48,10 +72,15 @@ const Users = () => {
         variant: "destructive"
       });
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, isDevelopmentMode]);
 
   // Fetch profiles
   useEffect(() => {
+    if (isDevelopmentMode) {
+      console.log('Using mock profiles in development mode');
+      return;
+    }
+
     const fetchProfiles = async () => {
       try {
         setLoading(true);
@@ -81,7 +110,7 @@ const Users = () => {
     if (user) {
       fetchProfiles();
     }
-  }, [user, toast]);
+  }, [user, toast, isDevelopmentMode]);
 
   const handleViewDetails = (profile: Profile) => {
     setSelectedUser(profile);
@@ -107,6 +136,12 @@ const Users = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {isDevelopmentMode && (
+        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
+          🛠️ Mode développement actif
+        </div>
+      )}
       
       <main className="flex-grow container mx-auto px-4 py-24">
         <motion.div

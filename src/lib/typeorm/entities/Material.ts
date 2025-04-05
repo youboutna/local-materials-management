@@ -20,14 +20,14 @@ export class Material {
   @Column({ type: "varchar" })
   unit!: string;
 
-  @Column({ name: "price_per_unit", type: "decimal" })
+  @Column({ name: "price_per_unit", type: "decimal", precision: 10, scale: 2 })
   pricePerUnit!: number;
 
   @Column({ name: "available_quantity", type: "int" })
   availableQuantity!: number;
 
   @Column({ nullable: true, type: "varchar" })
-  image?: string;  // Made it optional
+  image?: string;
 
   @Column({ name: "origin_location", nullable: true, type: "varchar" })
   originLocation!: string;

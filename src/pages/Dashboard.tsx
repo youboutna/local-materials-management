@@ -11,14 +11,15 @@ import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3 } from 'luc
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LoadDataButton from '@/components/LoadDataButton';
+import { DEV_MODE } from '@/config/constants';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isDevelopmentMode } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !isDevelopmentMode) {
       navigate('/auth?mode=login');
       toast({
         title: "Accès restreint",
@@ -26,11 +27,17 @@ const Dashboard = () => {
         variant: "destructive"
       });
     }
-  }, [user, navigate, toast]);
+  }, [user, navigate, toast, isDevelopmentMode]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Navbar />
+      
+      {isDevelopmentMode && (
+        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
+          🛠️ Mode développement actif
+        </div>
+      )}
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">

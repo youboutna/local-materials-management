@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -30,6 +29,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DEV_MODE } from '@/config/constants';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email("Format d'email invalide"),
@@ -54,10 +55,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Auth = () => {
-  // Get query parameters
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, isDevelopmentMode } = useAuth();
+  const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
   const initialMode = queryParams.get('mode') === 'register' ? 'register' : 'login';
   
@@ -65,7 +66,6 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // Login form
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -75,7 +75,6 @@ const Auth = () => {
     },
   });
 
-  // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -88,22 +87,34 @@ const Auth = () => {
     },
   });
   
-  // Update URL when tab changes
   useEffect(() => {
     navigate(`/auth?mode=${mode}`, { replace: true });
   }, [mode, navigate]);
 
-  // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (isDevelopmentMode) {
+      toast({
+        title: "Mode développement actif",
+        description: "L'authentification est contournée en mode développement. Cliquez sur 'Se connecter' pour simuler une connexion.",
+        duration: 5000,
+      });
+    }
+  }, [isDevelopmentMode, toast]);
   
-  // Login form submission
-  const onLoginSubmit = async (values: LoginFormValues) => {
+  const onLoginSubmit = async (values: any) => {
     setLoading(true);
     try {
+      if (isDevelopmentMode) {
+        navigate('/dashboard');
+        return;
+      }
+
       await signIn(values.email, values.password);
       navigate('/dashboard');
     } catch (error) {
@@ -113,10 +124,18 @@ const Auth = () => {
     }
   };
   
-  // Register form submission
-  const onRegisterSubmit = async (values: RegisterFormValues) => {
+  const onRegisterSubmit = async (values: any) => {
     setLoading(true);
     try {
+      if (isDevelopmentMode) {
+        toast({
+          title: "Inscription simulée",
+          description: "En mode développement, l'inscription est simulée. Vous pouvez vous connecter directement.",
+        });
+        setMode('login');
+        return;
+      }
+
       await signUp(
         values.email, 
         values.password, 
@@ -132,7 +151,6 @@ const Auth = () => {
     }
   };
   
-  // Animated background patterns
   const backgroundPatterns = [
     { top: '10%', left: '5%', size: '300px', delay: 0 },
     { top: '50%', right: '8%', size: '250px', delay: 0.1 },
@@ -143,8 +161,13 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
+      {isDevelopmentMode && (
+        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
+          🛠️ Mode développement actif
+        </div>
+      )}
+      
       <main className="flex-grow flex items-center justify-center py-20 px-4 relative overflow-hidden bg-gray-50">
-        {/* Animated background patterns */}
         {backgroundPatterns.map((pattern, index) => (
           <motion.div
             key={index}
@@ -183,7 +206,6 @@ const Auth = () => {
               </TabsTrigger>
             </TabsList>
             
-            {/* Login Form */}
             <TabsContent value="login" className="m-0">
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
@@ -196,7 +218,6 @@ const Auth = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Email */}
                     <FormField
                       control={loginForm.control}
                       name="email"
@@ -218,7 +239,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Password */}
                     <FormField
                       control={loginForm.control}
                       name="password"
@@ -253,7 +273,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Remember Me */}
                     <FormField
                       control={loginForm.control}
                       name="rememberMe"
@@ -288,7 +307,6 @@ const Auth = () => {
               </Form>
             </TabsContent>
             
-            {/* Register Form */}
             <TabsContent value="register" className="m-0">
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
@@ -301,7 +319,6 @@ const Auth = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Full Name */}
                     <FormField
                       control={registerForm.control}
                       name="fullName"
@@ -323,7 +340,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Email */}
                     <FormField
                       control={registerForm.control}
                       name="email"
@@ -346,7 +362,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Phone */}
                     <FormField
                       control={registerForm.control}
                       name="phone"
@@ -368,7 +383,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* National ID */}
                     <FormField
                       control={registerForm.control}
                       name="nationalId"
@@ -386,7 +400,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Password */}
                     <FormField
                       control={registerForm.control}
                       name="password"
@@ -419,7 +432,6 @@ const Auth = () => {
                       )}
                     />
                     
-                    {/* Terms */}
                     <FormField
                       control={registerForm.control}
                       name="acceptTerms"
