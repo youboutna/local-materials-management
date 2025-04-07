@@ -1,3 +1,4 @@
+
 // This is a stub file to fix TypeScript errors. We don't need to modify this file's functionality,
 // but need to make it compile without errors.
 
@@ -250,7 +251,8 @@ const ProjectDetail = () => {
                 name: project.title,
                 type: 'project',
                 latitude: project.coordinates.latitude,
-                longitude: project.coordinates.longitude
+                longitude: project.coordinates.longitude,
+                status: project.status
               }
             ]} 
           />

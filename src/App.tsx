@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectCreate from "./pages/ProjectCreate";
+import ProjectEdit from "./pages/ProjectEdit";
 import Materials from "./pages/Materials";
 import Users from "./pages/Users";
 import Auth from "./pages/Auth";
@@ -69,6 +70,7 @@ const App = () => {
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/new" element={<ProjectCreate />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/projects/:id/edit" element={<ProjectEdit />} />
               <Route path="/materials" element={<Materials />} />
               <Route path="/users" element={<Users />} />
               <Route path="/auth" element={<Auth />} />
