@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -108,7 +109,7 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
               </div>
             </div>
             
-            <ProgressIndicator progress={project.progress} />
+            <ProgressIndicator value={project.progress} />
           </div>
         </div>
       </Link>
