@@ -1,4 +1,3 @@
-
 import { Repository } from "typeorm";
 import { Project } from "../entities/Project";
 import { AppDataSource, initializeDataSource } from "../data-source";
@@ -111,10 +110,10 @@ export class ProjectRepository {
   async delete(id: string): Promise<boolean> {
     try {
       const result = await this.repository.delete(id);
-      return result.affected !== null && result.affected > 0;
+      return result.affected ? result.affected > 0 : false;
     } catch (error) {
-      console.error(`Error deleting project with id ${id}:`, error);
-      throw error;
+      console.error('Error deleting project:', error);
+      return false;
     }
   }
 }

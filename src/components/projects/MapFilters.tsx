@@ -21,7 +21,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Filter, MapPin, Check, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MapLocation } from '@/components/ProjectMap';
 
@@ -54,6 +54,16 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+
+  // Handle date selection for start date
+  const handleStartDateSelect = (date: Date | undefined) => {
+    setStartDate(date || null);
+  };
+  
+  // Handle date selection for end date
+  const handleEndDateSelect = (date: Date | undefined) => {
+    setEndDate(date || null);
+  };
 
   // Apply filters and update parent component
   const applyFilters = () => {
@@ -218,7 +228,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     <Calendar
                       mode="single"
                       selected={startDate || undefined}
-                      onSelect={setStartDate}
+                      onSelect={handleStartDateSelect}
                       initialFocus
                       locale={fr}
                     />
@@ -239,7 +249,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     <Calendar
                       mode="single"
                       selected={endDate || undefined}
-                      onSelect={setEndDate}
+                      onSelect={handleEndDateSelect}
                       initialFocus
                       locale={fr}
                     />

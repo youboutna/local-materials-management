@@ -1,4 +1,3 @@
-
 // This is a stub file to fix TypeScript errors. We don't need to modify this file's functionality,
 // but need to make it compile without errors.
 
@@ -16,7 +15,12 @@ import {
   Calendar, 
   Users, 
   DollarSign,
-  ArrowLeft
+  ArrowLeft,
+  Clock,
+  Eye,
+  MapPin,
+  Trash,
+  UserCheck
 } from 'lucide-react';
 import ProjectMap from '@/components/ProjectMap';
 import { 
