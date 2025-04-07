@@ -1,4 +1,3 @@
-
 import { useProjects as useSupabaseProjects } from '@/hooks/useProjects';
 import { useTypeOrmProjectOperations } from './useTypeOrmProjectOperations';
 import { USE_TYPEORM } from './constants';
@@ -39,17 +38,16 @@ export const useProjects = () => {
       if (projectData.endDate !== undefined) dbData.end_date = projectData.endDate;
       if (projectData.teamSize !== undefined) dbData.team_size = projectData.teamSize;
       
-      // Handle coordinates
+      // Handle coordinates - properly handle null coordinates case
       if (projectData.coordinates) {
         dbData.coordinates_latitude = projectData.coordinates.latitude;
         dbData.coordinates_longitude = projectData.coordinates.longitude;
-      } else if (projectData.coordinates === undefined) {
-        // Do nothing, don't update coordinates
-      } else {
+      } else if (projectData.coordinates === null) {
         // projectData.coordinates is explicitly null, set both to null
         dbData.coordinates_latitude = null;
         dbData.coordinates_longitude = null;
       }
+      // If projectData.coordinates is undefined, we don't update the coordinates
 
       const { data, error } = await supabase
         .from('projects')

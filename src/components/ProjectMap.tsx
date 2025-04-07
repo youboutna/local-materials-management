@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, MapContainerProps } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -56,6 +56,13 @@ const containerStyle = {
 
 // Type for center to help TypeScript understand what we're passing to Leaflet
 type LatLngTuple = [number, number];
+
+// Create a SetViewOnUpdate component to handle setting the map view
+const SetViewOnUpdate = ({ center }: { center: LatLngTuple }) => {
+  const map = useMap();
+  map.setView(center, map.getZoom());
+  return null;
+};
 
 const ProjectMap = ({ 
   locations, 
@@ -170,10 +177,12 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
-            center={center}
             zoom={13}
-            scrollWheelZoom
+            scrollWheelZoom={true}
           >
+            {/* UseSetViewOnUpdate component to set the view */}
+            <SetViewOnUpdate center={center} />
+            
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -183,7 +192,7 @@ const ProjectMap = ({
               <Marker 
                 key={location.id}
                 position={[location.latitude, location.longitude] as LatLngTuple}
-                icon={L.divIcon({
+                icon={new L.DivIcon({
                   html: `
                     <div style="
                       display: flex;
