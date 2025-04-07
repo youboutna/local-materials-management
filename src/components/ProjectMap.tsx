@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, MapContainerProps } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -54,6 +54,9 @@ const containerStyle = {
   borderRadius: '0.75rem',
 };
 
+// Type for center to help TypeScript understand what we're passing to Leaflet
+type LatLngTuple = [number, number];
+
 const ProjectMap = ({ 
   locations, 
   className = '',
@@ -70,8 +73,8 @@ const ProjectMap = ({
   
   // Calculate the center point based on the locations
   const center = displayLocations.length > 0
-    ? [displayLocations[0].latitude, displayLocations[0].longitude] as [number, number]
-    : [18.079052, -15.965634] as [number, number]; // Default: Nouakchott
+    ? [displayLocations[0].latitude, displayLocations[0].longitude] as LatLngTuple
+    : [18.079052, -15.965634] as LatLngTuple; // Default: Nouakchott
   
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
@@ -169,7 +172,7 @@ const ProjectMap = ({
             className="w-full h-full"
             center={center}
             zoom={13}
-            scrollWheelZoom={true}
+            scrollWheelZoom
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -179,7 +182,7 @@ const ProjectMap = ({
             {displayLocations.map(location => (
               <Marker 
                 key={location.id}
-                position={[location.latitude, location.longitude]}
+                position={[location.latitude, location.longitude] as LatLngTuple}
                 icon={L.divIcon({
                   html: `
                     <div style="

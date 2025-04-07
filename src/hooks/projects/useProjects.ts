@@ -43,7 +43,10 @@ export const useProjects = () => {
       if (projectData.coordinates) {
         dbData.coordinates_latitude = projectData.coordinates.latitude;
         dbData.coordinates_longitude = projectData.coordinates.longitude;
-      } else if (projectData.coordinates === null) {
+      } else if (projectData.coordinates === undefined) {
+        // Do nothing, don't update coordinates
+      } else {
+        // projectData.coordinates is explicitly null, set both to null
         dbData.coordinates_latitude = null;
         dbData.coordinates_longitude = null;
       }

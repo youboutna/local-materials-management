@@ -25,12 +25,15 @@ const projectSchema = z.object({
   startDate: z.string(),
   endDate: z.string().optional(),
   teamSize: z.number().int().positive('Le nombre de membres doit être positif'),
-  // Coordinates are optional
+  // Use a more flexible coordinates schema that allows null values
   coordinates: z.object({
-    latitude: z.number(),
-    longitude: z.number()
+    latitude: z.number().optional(),
+    longitude: z.number().optional()
   }).optional().nullable()
 });
+
+// Define the type for our form values
+type ProjectFormValues = z.infer<typeof projectSchema>;
 
 const ProjectEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +43,7 @@ const ProjectEdit = () => {
   const navigate = useNavigate();
 
   // Set up form with validation
-  const form = useForm<z.infer<typeof projectSchema>>({
+  const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       title: '',
@@ -101,12 +104,22 @@ const ProjectEdit = () => {
   }, [id, getProject, navigate, form]);
 
   // Handle form submission
-  const onSubmit = async (data: z.infer<typeof projectSchema>) => {
+  const onSubmit = async (data: ProjectFormValues) => {
     if (!id) return;
     
     setSubmitting(true);
     try {
-      const updatedProject = await updateProject(id, data);
+      // Convert the form data to ProjectData format
+      const projectDataToUpdate: Partial<ProjectData> = {
+        ...data,
+        // Handle coordinates explicitly to ensure type compatibility
+        coordinates: data.coordinates ? {
+          latitude: data.coordinates.latitude ?? 0,
+          longitude: data.coordinates.longitude ?? 0
+        } : undefined
+      };
+
+      const updatedProject = await updateProject(id, projectDataToUpdate);
       if (updatedProject) {
         toast({
           title: "Modifications enregistrées",
@@ -355,15 +368,18 @@ const ProjectEdit = () => {
                         {...field}
                         value={field.value ?? ''}
                         onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : null;
+                          const value = e.target.value ? Number(e.target.value) : undefined;
                           field.onChange(value);
-                          if (value === null) {
-                            const { coordinates, ...rest } = form.getValues();
-                            if (!coordinates || coordinates.longitude === null) {
-                              form.setValue('coordinates', null);
-                            }
-                          } else if (!form.getValues().coordinates) {
-                            form.setValue('coordinates', { latitude: value, longitude: null });
+                          
+                          // Update the form's coordinates object
+                          const currentCoords = form.getValues().coordinates;
+                          if (!value && (!currentCoords || !currentCoords.longitude)) {
+                            form.setValue('coordinates', null);
+                          } else {
+                            form.setValue('coordinates', {
+                              latitude: value,
+                              longitude: currentCoords?.longitude
+                            });
                           }
                         }}
                       />
@@ -390,15 +406,18 @@ const ProjectEdit = () => {
                         {...field}
                         value={field.value ?? ''}
                         onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : null;
+                          const value = e.target.value ? Number(e.target.value) : undefined;
                           field.onChange(value);
-                          if (value === null) {
-                            const { coordinates, ...rest } = form.getValues();
-                            if (!coordinates || coordinates.latitude === null) {
-                              form.setValue('coordinates', null);
-                            }
-                          } else if (!form.getValues().coordinates) {
-                            form.setValue('coordinates', { latitude: null, longitude: value });
+                          
+                          // Update the form's coordinates object
+                          const currentCoords = form.getValues().coordinates;
+                          if (!value && (!currentCoords || !currentCoords.latitude)) {
+                            form.setValue('coordinates', null);
+                          } else {
+                            form.setValue('coordinates', {
+                              latitude: currentCoords?.latitude,
+                              longitude: value
+                            });
                           }
                         }}
                       />
