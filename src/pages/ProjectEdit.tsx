@@ -29,7 +29,7 @@ const projectSchema = z.object({
   coordinates: z.object({
     latitude: z.number(),
     longitude: z.number()
-  }).optional()
+  }).optional().nullable()
 });
 
 const ProjectEdit = () => {
@@ -52,7 +52,7 @@ const ProjectEdit = () => {
       startDate: '',
       endDate: undefined,
       teamSize: 1,
-      coordinates: undefined
+      coordinates: null
     }
   });
 
@@ -75,7 +75,7 @@ const ProjectEdit = () => {
             startDate: projectData.startDate,
             endDate: projectData.endDate,
             teamSize: projectData.teamSize,
-            coordinates: projectData.coordinates
+            coordinates: projectData.coordinates || null
           });
         } else {
           toast({
@@ -353,17 +353,17 @@ const ProjectEdit = () => {
                         step="0.000001"
                         placeholder="Ex: 18.079052" 
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          const value = e.target.value ? Number(e.target.value) : null;
                           field.onChange(value);
-                          if (!value) {
+                          if (value === null) {
                             const { coordinates, ...rest } = form.getValues();
-                            if (coordinates?.longitude === undefined) {
-                              form.setValue('coordinates', undefined);
+                            if (!coordinates || coordinates.longitude === null) {
+                              form.setValue('coordinates', null);
                             }
                           } else if (!form.getValues().coordinates) {
-                            form.setValue('coordinates', { latitude: value, longitude: undefined });
+                            form.setValue('coordinates', { latitude: value, longitude: null });
                           }
                         }}
                       />
@@ -388,17 +388,17 @@ const ProjectEdit = () => {
                         step="0.000001"
                         placeholder="Ex: -15.965634" 
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
+                          const value = e.target.value ? Number(e.target.value) : null;
                           field.onChange(value);
-                          if (!value) {
+                          if (value === null) {
                             const { coordinates, ...rest } = form.getValues();
-                            if (coordinates?.latitude === undefined) {
-                              form.setValue('coordinates', undefined);
+                            if (!coordinates || coordinates.latitude === null) {
+                              form.setValue('coordinates', null);
                             }
                           } else if (!form.getValues().coordinates) {
-                            form.setValue('coordinates', { latitude: undefined, longitude: value });
+                            form.setValue('coordinates', { latitude: null, longitude: value });
                           }
                         }}
                       />

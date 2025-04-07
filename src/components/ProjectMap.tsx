@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, MapContainerProps } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -167,7 +167,7 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
-            center={[center[0], center[1]]}
+            center={center}
             zoom={13}
             scrollWheelZoom={true}
           >
