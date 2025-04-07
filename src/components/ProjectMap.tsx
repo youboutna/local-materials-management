@@ -177,45 +177,14 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
+            center={center}
             zoom={13}
             scrollWheelZoom={true}
           >
-            {/* UseSetViewOnUpdate component to set the view */}
-            <SetViewOnUpdate center={center} />
-            
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            />
-            
             {displayLocations.map(location => (
               <Marker 
                 key={location.id}
                 position={[location.latitude, location.longitude] as LatLngTuple}
-                icon={new L.DivIcon({
-                  html: `
-                    <div style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      width: 30px;
-                      height: 30px;
-                      background-color: ${getMarkerColor(location)};
-                      border-radius: 50%;
-                      border: 2px solid white;
-                      color: white;
-                      font-size: 18px;
-                    ">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                    </div>
-                  `,
-                  className: "",
-                  iconSize: [30, 30],
-                  iconAnchor: [15, 30],
-                })}
               >
                 <Popup>
                   <div className="p-1">
@@ -236,6 +205,11 @@ const ProjectMap = ({
                 </Popup>
               </Marker>
             ))}
+            
+            <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
           </MapContainer>
         )}
         
