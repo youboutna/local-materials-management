@@ -72,13 +72,13 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     let filtered = [...locations];
     
     // Apply status filter
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== ""){
       filtered = filtered.filter(loc => loc.status === statusFilter);
       newActiveFilters.push(`Statut: ${statusFilter}`);
     }
     
     // Apply region filter
-    if (regionFilter) {
+    if (regionFilter && regionFilter!== "")) {
       filtered = filtered.filter(loc => loc.region === regionFilter);
       newActiveFilters.push(`Wilaya: ${regionFilter}`);
     }
