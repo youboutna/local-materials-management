@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { AlertCircle, MapPin } from 'lucide-react';
+import { AlertCircle, MapPin, Compass, Navigation } from 'lucide-react';
 
 // Fix for Leaflet marker icon issue
 // This is needed because Leaflet's default marker icons use relative URLs
@@ -45,6 +45,8 @@ interface ProjectMapProps {
   className?: string;
   filteredLocations?: MapLocation[];
   showFilters?: boolean;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  selectable?: boolean;
 }
 
 // Define Google Maps container style
@@ -64,11 +66,52 @@ const SetMapView = ({ center, zoom }: { center: LatLngTuple, zoom: number }) => 
   return null;
 };
 
+// Component to add geolocation control
+const GeolocationControl = ({ onSuccess }: { onSuccess: (lat: number, lng: number) => void }) => {
+  const map = useMap();
+  
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.flyTo([latitude, longitude], 15);
+          onSuccess(latitude, longitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  };
+  
+  return (
+    <div className="leaflet-top leaflet-right" style={{ marginTop: '60px' }}>
+      <div className="leaflet-control leaflet-bar">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="bg-white hover:bg-gray-100"
+          onClick={handleGetLocation}
+          title="Get your current location"
+        >
+          <Navigation className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const ProjectMap = ({ 
   locations, 
   className = '',
   filteredLocations,
-  showFilters = false 
+  showFilters = false,
+  onLocationSelect,
+  selectable = false
 }: ProjectMapProps) => {
   const [mapProvider, setMapProvider] = useState<'openstreetmap' | 'google'>('openstreetmap');
   const [googleApiKey, setGoogleApiKey] = useState<string>('');
@@ -92,6 +135,13 @@ const ProjectMap = ({
   const handleSaveApiKey = () => {
     setGoogleApiKey(dialogApiKey);
     setShowApiKeyDialog(false);
+  };
+
+  // Handle map click for selecting location
+  const handleMapClick = (lat: number, lng: number) => {
+    if (selectable && onLocationSelect) {
+      onLocationSelect(lat, lng);
+    }
   };
 
   // Get marker color based on location type or status
@@ -211,6 +261,12 @@ const ProjectMap = ({
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            
+            {/* Add geolocation control */}
+            <GeolocationControl 
+              onSuccess={(lat, lng) => handleMapClick(lat, lng)} 
+            />
+            
           </MapContainer>
         )}
         
@@ -219,6 +275,11 @@ const ProjectMap = ({
             mapContainerStyle={containerStyle}
             center={{ lat: center[0], lng: center[1] }}
             zoom={13}
+            onClick={selectable && onLocationSelect ? (e) => {
+              if (e.latLng) {
+                handleMapClick(e.latLng.lat(), e.latLng.lng());
+              }
+            } : undefined}
           >
             {displayLocations.map(location => (
               <GoogleMarker
