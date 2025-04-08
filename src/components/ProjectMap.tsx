@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -56,13 +55,6 @@ const containerStyle = {
 
 // Type for center to help TypeScript understand what we're passing to Leaflet
 type LatLngTuple = [number, number];
-
-// Create a SetViewOnUpdate component to handle setting the map view
-const SetViewOnUpdate = ({ center }: { center: LatLngTuple }) => {
-  const map = useMap();
-  map.setView(center, map.getZoom());
-  return null;
-};
 
 const ProjectMap = ({ 
   locations, 
@@ -143,11 +135,11 @@ const ProjectMap = ({
               </Button>
             </DialogTrigger>
             
+            <DialogHeader>
+              <DialogTitle>Clé API Google Maps</DialogTitle>
+            </DialogHeader>
+            
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Clé API Google Maps</DialogTitle>
-              </DialogHeader>
-              
               <div className="py-4">
                 <Label htmlFor="apiKey">Clé API</Label>
                 <Input 
@@ -177,9 +169,10 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
-            center={center}
-            zoom={13}
             scrollWheelZoom={true}
+            whenCreated={(mapInstance) => {
+              mapInstance.setView(center, 13);
+            }}
           >
             {displayLocations.map(location => (
               <Marker 
@@ -207,7 +200,6 @@ const ProjectMap = ({
             ))}
             
             <TileLayer
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </MapContainer>
