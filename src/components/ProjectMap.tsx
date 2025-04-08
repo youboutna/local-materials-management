@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
@@ -169,7 +170,6 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
-            scrollWheelZoom={true}
             whenCreated={(mapInstance) => {
               mapInstance.setView(center, 13);
             }}
