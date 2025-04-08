@@ -33,7 +33,7 @@ const Hero = () => {
       
       <div className="container mx-auto px-4 relative z-10 text-center">
         <div className="inline-block px-3 py-1 rounded-full bg-terracotta-500 bg-opacity-90 text-white text-xs tracking-wider mb-6 animate-fade-in">
-          GESTION DE MATÉRIAUX LOCAUX
+          GESTION DE MATÉRIAUX 
         </div>
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6 animate-slide-down">
@@ -43,7 +43,7 @@ const Hero = () => {
         
         <p className="max-w-2xl mx-auto text-lg text-ivory-100 mb-10 animate-fade-in delay-200">
           Suivez vos projets de construction utilisant la pierre d'Atar et l'argile mauritanienne. 
-          Notre solution optimise la gestion des matériaux locaux et préserve les techniques traditionnelles.
+          Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles.
         </p>
         
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 animate-fade-in delay-300">
