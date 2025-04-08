@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -56,6 +56,13 @@ const containerStyle = {
 
 // Type for center to help TypeScript understand what we're passing to Leaflet
 type LatLngTuple = [number, number];
+
+// Custom component to set the view of the map
+const SetMapView = ({ center, zoom }: { center: LatLngTuple, zoom: number }) => {
+  const map = useMap();
+  map.setView(center, zoom);
+  return null;
+};
 
 const ProjectMap = ({ 
   locations, 
@@ -170,10 +177,12 @@ const ProjectMap = ({
         {mapProvider === 'openstreetmap' && (
           <MapContainer 
             className="w-full h-full"
-            whenCreated={(mapInstance) => {
-              mapInstance.setView(center, 13);
+            whenReady={(mapInstance) => {
+              mapInstance.target.setView(center, 13);
             }}
           >
+            <SetMapView center={center} zoom={13} />
+            
             {displayLocations.map(location => (
               <Marker 
                 key={location.id}
