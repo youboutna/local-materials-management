@@ -78,7 +78,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     }
     
     // Apply region filter
-    if (regionFilter && regionFilter!== "")) {
+    if (regionFilter && regionFilter!== "") {
       filtered = filtered.filter(loc => loc.region === regionFilter);
       newActiveFilters.push(`Wilaya: ${regionFilter}`);
     }
