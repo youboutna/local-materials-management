@@ -1,4 +1,4 @@
-# Welcome to your mauritanian management project for local material
+# Welcome to your mauritanian management project for local material, by hadratech
 'est une solution de gestion de projet pour une entreprise utilise des materiaux locaux . technologie flutter mobile, NestJS backend via API restfull, base de données postgresql. géolocalisation des batiments et des projets et sources de matériaux  
 
 **Use your preferred IDE**
