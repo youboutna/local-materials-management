@@ -122,6 +122,8 @@ const Footer = () => {
             <p className="text-gray-400 text-sm">
               &copy; {new Date().getFullYear()} Materials Management. Tous droits réservés.
             </p>
+            <a href="https://hadratech.com/nous-contacter/" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+                <contact hadratech className="h-4 w-4" />
             <div className="mt-4 md:mt-0">
               <img 
                 src="/img/payments.png"
