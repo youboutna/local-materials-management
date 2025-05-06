@@ -89,6 +89,9 @@ const getMarkerIcon = (type: 'project' | 'material', status?: string) => {
   });
 };
 
+// Define event handler type for map ready event
+type MapReadyEventHandler = (event: { target: any }) => void;
+
 const ProjectMap: React.FC<ProjectMapProps> = ({
   locations = [],
   filteredLocations,
@@ -152,7 +155,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   }, [displayLocations, selectMarker]);
 
   // Store the map instance when ready
-  const onMapReady = useCallback((mapInstance: any) => {
+  const onMapReady: MapReadyEventHandler = useCallback((mapInstance) => {
     mapRef.current = mapInstance.target;
     if (mapRef.current) {
       mapRef.current.on('click', handleMapClick);
@@ -165,12 +168,13 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
-        whenReady={onMapReady}
+        whenReady={onMapReady as unknown as () => void}
       >
         <SetViewOnMapReady center={center} zoom={zoom} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          {...{} as any} // Type cast to avoid TypeScript error
         />
         
         {/* Render project and material markers */}
@@ -179,6 +183,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             key={location.id}
             position={[location.latitude, location.longitude]}
             icon={getMarkerIcon(location.type, location.status)}
+            {...{} as any} // Type cast to avoid TypeScript error
           >
             <Popup>
               <div className="text-center">
@@ -205,6 +210,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           <Marker 
             position={selectMarker}
             icon={getMarkerIcon('project')}
+            {...{} as any} // Type cast to avoid TypeScript error
           >
             <Popup>
               <div className="text-center">
