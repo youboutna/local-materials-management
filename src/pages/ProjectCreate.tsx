@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -37,7 +36,7 @@ import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/components/ProjectMap';
-import MaterialSelector from '@/components/MaterialSelector';
+import MaterialFormSection from '@/components/MaterialFormSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Interface for selected materials
@@ -420,7 +419,7 @@ const ProjectCreate = () => {
                 
                 <TabsContent value="materials">
                   <div className="mb-4">
-                    <MaterialSelector 
+                    <MaterialFormSection 
                       selectedMaterials={selectedMaterials}
                       onChange={handleMaterialsChange}
                     />

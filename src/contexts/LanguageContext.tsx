@@ -1,177 +1,167 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// Define available languages
 export type Language = 'fr' | 'ar' | 'en';
 
-// Define language context type
-type LanguageContextType = {
+interface LanguageContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (language: Language) => void;
   t: (key: string) => string;
-};
+}
 
-// Create the context
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Define translations
-type Translations = {
-  [key in Language]: {
-    [key: string]: string;
-  };
-};
-
-// All translations for the application
-const translations: Translations = {
+const translations = {
   fr: {
-    // General
-    'app.name': 'Matériaux Durables',
-    'app.description': 'Gestion des ressources locales et projets durables',
-    
-    // Navigation
+    'app.name': 'Gestion de Projets',
+    'app.description': 'Système de gestion des projets et matériaux',
     'nav.home': 'Accueil',
     'nav.projects': 'Projets',
     'nav.materials': 'Matériaux',
     'nav.users': 'Utilisateurs',
-    'nav.dashboard': 'Tableau de bord',
-    'nav.login': 'Se connecter',
-    'nav.logout': 'Déconnexion',
-    
-    // Materials page
-    'materials.title': 'Matériaux Locaux',
-    'materials.subtitle': 'Gestion des ressources et sources de matériaux de construction locaux',
-    'materials.search': 'Rechercher un matériau ou une source...',
-    'materials.add': 'Nouvelle source',
-    'materials.types': 'Types de matériaux locaux',
-    
-    // Project page
+    'nav.login': 'Connexion',
+    'nav.profile': 'Profil',
+    'auth.login': 'Connexion',
+    'auth.register': 'Inscription',
+    'auth.email': 'Email',
+    'auth.password': 'Mot de passe',
+    'auth.name': 'Nom complet',
+    'auth.submit': 'Soumettre',
+    'roles.admin': 'Administrateur',
+    'roles.developer': 'Développeur',
+    'roles.project_manager': 'Chef de Projet',
+    'roles.director': 'Directeur',
     'projects.title': 'Projets',
-    'projects.subtitle': 'Gestion des projets de construction durables',
+    'projects.new': 'Nouveau Projet',
     'projects.search': 'Rechercher un projet...',
-    'projects.add': 'Nouveau projet',
-    'projects.all': 'Tous les projets',
-    
-    // Status
-    'status.inProgress': 'En cours',
-    'status.completed': 'Terminé',
-    'status.pending': 'En attente',
-    'status.suspended': 'Suspendu',
-    'status.cancelled': 'Annulé',
-    
-    // Roles
-    'role.admin': 'Administrateur',
-    'role.dev': 'Développeur',
-    'role.projectManager': 'Chef de projet',
-    'role.director': 'Directeur d\'établissement',
+    'projects.status.all': 'Tous',
+    'projects.status.active': 'En cours',
+    'projects.status.completed': 'Terminé',
+    'projects.status.pending': 'En attente',
+    'projects.sort.newest': 'Plus récent',
+    'projects.sort.oldest': 'Plus ancien',
+    'projects.sort.name': 'Nom',
+    'projects.empty': 'Aucun projet trouvé',
+    'materials.title': 'Matériaux',
+    'materials.new': 'Nouveau Matériau',
+    'materials.name': 'Nom',
+    'materials.category': 'Catégorie',
+    'materials.price': 'Prix unitaire',
+    'materials.quantity': 'Quantité',
+    'materials.unit': 'Unité',
+    'materials.description': 'Description',
   },
   ar: {
-    // General
-    'app.name': 'المواد المستدامة',
-    'app.description': 'إدارة الموارد المحلية والمشاريع المستدامة',
-    
-    // Navigation
+    'app.name': 'إدارة المشاريع',
+    'app.description': 'نظام إدارة المشاريع والمواد',
     'nav.home': 'الرئيسية',
     'nav.projects': 'المشاريع',
     'nav.materials': 'المواد',
-    'nav.users': 'المستخدمين',
-    'nav.dashboard': 'لوحة التحكم',
+    'nav.users': 'المستخدمون',
     'nav.login': 'تسجيل الدخول',
-    'nav.logout': 'تسجيل الخروج',
-    
-    // Materials page
-    'materials.title': 'المواد المحلية',
-    'materials.subtitle': 'إدارة الموارد ومصادر مواد البناء المحلية',
-    'materials.search': 'ابحث عن مادة أو مصدر...',
-    'materials.add': 'مصدر جديد',
-    'materials.types': 'أنواع المواد المحلية',
-    
-    // Project page
+    'nav.profile': 'الملف الشخصي',
+    'auth.login': 'تسجيل الدخول',
+    'auth.register': 'التسجيل',
+    'auth.email': 'البريد الإلكتروني',
+    'auth.password': 'كلمة المرور',
+    'auth.name': 'الاسم الكامل',
+    'auth.submit': 'إرسال',
+    'roles.admin': 'مسؤول',
+    'roles.developer': 'مطور',
+    'roles.project_manager': 'مدير مشروع',
+    'roles.director': 'مدير',
     'projects.title': 'المشاريع',
-    'projects.subtitle': 'إدارة مشاريع البناء المستدامة',
-    'projects.search': 'ابحث عن مشروع...',
-    'projects.add': 'مشروع جديد',
-    'projects.all': 'كل المشاريع',
-    
-    // Status
-    'status.inProgress': 'قيد التنفيذ',
-    'status.completed': 'مكتمل',
-    'status.pending': 'قيد الانتظار',
-    'status.suspended': 'معلق',
-    'status.cancelled': 'ملغى',
-    
-    // Roles
-    'role.admin': 'مسؤول',
-    'role.dev': 'مطور',
-    'role.projectManager': 'مدير المشروع',
-    'role.director': 'مدير المؤسسة',
+    'projects.new': 'مشروع جديد',
+    'projects.search': 'البحث عن مشروع...',
+    'projects.status.all': 'الكل',
+    'projects.status.active': 'قيد التنفيذ',
+    'projects.status.completed': 'مكتمل',
+    'projects.status.pending': 'قيد الانتظار',
+    'projects.sort.newest': 'الأحدث',
+    'projects.sort.oldest': 'الأقدم',
+    'projects.sort.name': 'الاسم',
+    'projects.empty': 'لم يتم العثور على مشاريع',
+    'materials.title': 'المواد',
+    'materials.new': 'مادة جديدة',
+    'materials.name': 'الاسم',
+    'materials.category': 'الفئة',
+    'materials.price': 'سعر الوحدة',
+    'materials.quantity': 'الكمية',
+    'materials.unit': 'الوحدة',
+    'materials.description': 'الوصف',
   },
   en: {
-    // General
-    'app.name': 'Sustainable Materials',
-    'app.description': 'Management of local resources and sustainable projects',
-    
-    // Navigation
+    'app.name': 'Project Management',
+    'app.description': 'Project and Material Management System',
     'nav.home': 'Home',
     'nav.projects': 'Projects',
     'nav.materials': 'Materials',
     'nav.users': 'Users',
-    'nav.dashboard': 'Dashboard',
     'nav.login': 'Login',
-    'nav.logout': 'Logout',
-    
-    // Materials page
-    'materials.title': 'Local Materials',
-    'materials.subtitle': 'Management of resources and local construction materials sources',
-    'materials.search': 'Search for a material or source...',
-    'materials.add': 'New source',
-    'materials.types': 'Types of local materials',
-    
-    // Project page
+    'nav.profile': 'Profile',
+    'auth.login': 'Login',
+    'auth.register': 'Register',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.name': 'Full Name',
+    'auth.submit': 'Submit',
+    'roles.admin': 'Administrator',
+    'roles.developer': 'Developer',
+    'roles.project_manager': 'Project Manager',
+    'roles.director': 'Director',
     'projects.title': 'Projects',
-    'projects.subtitle': 'Management of sustainable construction projects',
+    'projects.new': 'New Project',
     'projects.search': 'Search for a project...',
-    'projects.add': 'New project',
-    'projects.all': 'All projects',
-    
-    // Status
-    'status.inProgress': 'In Progress',
-    'status.completed': 'Completed',
-    'status.pending': 'Pending',
-    'status.suspended': 'Suspended',
-    'status.cancelled': 'Cancelled',
-    
-    // Roles
-    'role.admin': 'Administrator',
-    'role.dev': 'Developer',
-    'role.projectManager': 'Project Manager',
-    'role.director': 'Establishment Director',
+    'projects.status.all': 'All',
+    'projects.status.active': 'In Progress',
+    'projects.status.completed': 'Completed',
+    'projects.status.pending': 'Pending',
+    'projects.sort.newest': 'Newest',
+    'projects.sort.oldest': 'Oldest',
+    'projects.sort.name': 'Name',
+    'projects.empty': 'No projects found',
+    'materials.title': 'Materials',
+    'materials.new': 'New Material',
+    'materials.name': 'Name',
+    'materials.category': 'Category',
+    'materials.price': 'Unit Price',
+    'materials.quantity': 'Quantity',
+    'materials.unit': 'Unit',
+    'materials.description': 'Description',
   }
 };
 
-// Provider component
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Get saved language from localStorage or default to French
-  const [language, setLanguageState] = useState<Language>(() => {
-    const savedLanguage = localStorage.getItem('language');
-    return (savedLanguage as Language) || 'fr';
-  });
+  const [language, setLanguage] = useState<Language>('fr');
 
-  // Update language in localStorage when it changes
+  // Load saved language from localStorage on component mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && ['fr', 'ar', 'en'].includes(savedLanguage)) {
+      setLanguage(savedLanguage);
+      
+      // Set text direction based on language
+      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
+      
+      // Add language class to body for additional styling if needed
+      document.body.className = `lang-${savedLanguage}`;
+    }
+  }, []);
+
+  // Save language to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('language', language);
-    // For RTL language support (Arabic)
+    
+    // Set text direction based on language
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
+    
+    // Update language class on body
+    document.body.className = `lang-${language}`;
   }, [language]);
-
-  // Function to set language
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-  };
 
   // Translation function
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    return translations[language][key as keyof typeof translations[typeof language]] || key;
   };
 
   return (
@@ -181,10 +171,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   );
 };
 
-// Custom hook to use the language context
 export const useLanguage = (): LanguageContextType => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;

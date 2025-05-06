@@ -28,12 +28,15 @@ import { DEV_MODE } from '@/config/constants';
 // Define types for profile data
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
+// Define role type for TypeScript
+type UserRole = 'admin' | 'developer' | 'project_manager' | 'director';
+
 // Mock profiles for development mode
 const DEV_PROFILES: Profile[] = [
   {
     id: "dev-user-id",
     full_name: "Développeur Test",
-    role: "patient", // Updated from "admin"
+    role: "admin", // Updated role
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -43,7 +46,7 @@ const DEV_PROFILES: Profile[] = [
   {
     id: "dev-user-id-2",
     full_name: "Marie Diallo",
-    role: "patient", // Updated from "user"
+    role: "developer", // Updated role
     phone: "987654321",
     national_id: "DEV54321",
     avatar_url: null,
@@ -223,11 +226,15 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          profile.role === 'practitioner' 
-                            ? 'bg-terracotta-100 text-terracotta-800' 
-                            : 'bg-sandstone-100 text-adrar-700'
+                          profile.role === 'admin' 
+                            ? 'bg-red-100 text-red-800' 
+                            : profile.role === 'developer'
+                            ? 'bg-blue-100 text-blue-800'
+                            : profile.role === 'project_manager'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-purple-100 text-purple-800'
                         }`}>
-                          {profile.role || 'patient'}
+                          {profile.role || 'user'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">

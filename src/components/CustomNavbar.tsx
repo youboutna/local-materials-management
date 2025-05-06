@@ -2,13 +2,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CustomNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -47,9 +49,12 @@ const CustomNavbar = () => {
             {/* Language Switcher */}
             <LanguageSwitcher />
 
-            {/* Login Button */}
-            <Button className="bg-terracotta-500 hover:bg-terracotta-600">
-              {t('nav.login')}
+            {/* Login/Profile Button */}
+            <Button asChild className="bg-terracotta-500 hover:bg-terracotta-600">
+              <Link to={user ? "/profile" : "/auth"}>
+                <LogIn className="mr-2 h-4 w-4" />
+                {user ? t('nav.profile') : t('nav.login')}
+              </Link>
             </Button>
           </nav>
 
@@ -104,8 +109,11 @@ const CustomNavbar = () => {
                 <LanguageSwitcher />
               </div>
               
-              <Button className="w-full bg-terracotta-500 hover:bg-terracotta-600">
-                {t('nav.login')}
+              <Button asChild className="w-full bg-terracotta-500 hover:bg-terracotta-600">
+                <Link to={user ? "/profile" : "/auth"} onClick={() => setIsMenuOpen(false)}>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  {user ? t('nav.profile') : t('nav.login')}
+                </Link>
               </Button>
             </nav>
           </div>
