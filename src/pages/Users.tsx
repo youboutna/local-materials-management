@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -24,19 +25,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { UserPlus, Search, User, Edit, Trash2 } from 'lucide-react';
 import { DEV_MODE } from '@/config/constants';
+import RoleBadge from '@/components/RoleBadge';
 
 // Define types for profile data
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-// Define role type for TypeScript
+// Define custom role type that aligns with the database enum
 type UserRole = 'admin' | 'developer' | 'project_manager' | 'director';
 
-// Mock profiles for development mode
-const DEV_PROFILES: Profile[] = [
+// Mock profiles for development mode with roles that align with our custom type
+const DEV_PROFILES: Omit<Profile, 'role'> & { role: UserRole }[] = [
   {
     id: "dev-user-id",
     full_name: "Développeur Test",
-    role: "admin", // Updated role
+    role: "admin" as UserRole,
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -46,7 +48,7 @@ const DEV_PROFILES: Profile[] = [
   {
     id: "dev-user-id-2",
     full_name: "Marie Diallo",
-    role: "developer", // Updated role
+    role: "developer" as UserRole,
     phone: "987654321",
     national_id: "DEV54321",
     avatar_url: null,
@@ -59,10 +61,12 @@ const Users = () => {
   const { toast } = useToast();
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<Profile[]>(isDevelopmentMode ? DEV_PROFILES : []);
+  const [profiles, setProfiles] = useState<(Omit<Profile, 'role'> & { role: UserRole })[]>(
+    isDevelopmentMode ? DEV_PROFILES : []
+  );
   const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<(Omit<Profile, 'role'> & { role: UserRole }) | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
   // Check if user is authenticated
@@ -97,7 +101,12 @@ const Users = () => {
         }
 
         if (data) {
-          setProfiles(data);
+          // Map database profiles to our custom type with role casting
+          const mappedProfiles = data.map(profile => ({
+            ...profile,
+            role: (profile.role || 'admin') as unknown as UserRole
+          }));
+          setProfiles(mappedProfiles);
         }
       } catch (error: any) {
         toast({
@@ -115,7 +124,7 @@ const Users = () => {
     }
   }, [user, toast, isDevelopmentMode]);
 
-  const handleViewDetails = (profile: Profile) => {
+  const handleViewDetails = (profile: (Omit<Profile, 'role'> & { role: UserRole })) => {
     setSelectedUser(profile);
     setIsDetailOpen(true);
   };
@@ -225,17 +234,7 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">{profile.phone || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          profile.role === 'admin' 
-                            ? 'bg-red-100 text-red-800' 
-                            : profile.role === 'developer'
-                            ? 'bg-blue-100 text-blue-800'
-                            : profile.role === 'project_manager'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {profile.role || 'user'}
-                        </span>
+                        <RoleBadge role={profile.role as UserRole} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
@@ -282,14 +281,10 @@ const Users = () => {
                   )}
                 </Avatar>
                 <h3 className="text-xl font-medium">{selectedUser.full_name || 'Utilisateur sans nom'}</h3>
+                <RoleBadge role={selectedUser.role as UserRole} />
               </div>
               
               <div className="space-y-4">
-                <div>
-                  <Label className="text-muted-foreground">Rôle</Label>
-                  <p className="font-medium">{selectedUser.role || 'patient'}</p>
-                </div>
-                
                 <div>
                   <Label className="text-muted-foreground">Téléphone</Label>
                   <p className="font-medium">{selectedUser.phone || '-'}</p>

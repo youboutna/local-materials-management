@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -86,7 +85,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
         title: language === 'fr' ? "Attention" : language === 'ar' ? "تنبيه" : "Warning",
         description: language === 'fr' ? "Aucun matériau n'est disponible" : 
                      language === 'ar' ? "لا توجد مواد متاحة" : "No materials available",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }

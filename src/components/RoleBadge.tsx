@@ -3,7 +3,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type RoleType = 'admin' | 'developer' | 'project_manager' | 'director';
+// Define the custom role type that matches what we're using in the Users component
+export type RoleType = 'admin' | 'developer' | 'project_manager' | 'director';
 
 interface RoleBadgeProps {
   role: RoleType;
