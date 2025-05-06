@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { Icon, LeafletMouseEvent } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Define map location type
@@ -107,13 +107,13 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   const displayLocations = filteredLocations || locations;
 
   // Handle map click for location selection
-  const handleMapClick = (e: any) => {
+  const handleMapClick = useCallback((e: LeafletMouseEvent) => {
     if (selectable && onLocationSelect) {
       const { lat, lng } = e.latlng;
       setSelectMarker([lat, lng]);
       onLocationSelect(lat, lng);
     }
-  };
+  }, [selectable, onLocationSelect]);
 
   // Get current location
   const getCurrentLocation = () => {
@@ -152,10 +152,12 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   }, [displayLocations, selectMarker]);
 
   // Store the map instance when ready
-  const whenMapReady = (mapInstance: any) => {
+  const onMapReady = useCallback((mapInstance: any) => {
     mapRef.current = mapInstance.target;
-    mapRef.current.on('click', handleMapClick);
-  };
+    if (mapRef.current) {
+      mapRef.current.on('click', handleMapClick);
+    }
+  }, [handleMapClick]);
 
   return (
     <div className={`relative h-full w-full rounded-lg overflow-hidden border border-gray-300 ${className || ''}`}>
@@ -163,7 +165,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
-        whenReady={whenMapReady}
+        whenReady={onMapReady}
       >
         <SetViewOnMapReady center={center} zoom={zoom} />
         <TileLayer
