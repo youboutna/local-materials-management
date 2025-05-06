@@ -165,8 +165,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   return (
     <div className={`relative h-full w-full rounded-lg overflow-hidden border border-gray-300 ${className || ''}`}>
       <MapContainer 
-        center={center}
-        zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         whenReady={onMapReady as unknown as () => void}
       >
