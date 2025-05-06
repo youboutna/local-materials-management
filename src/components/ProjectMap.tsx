@@ -151,9 +151,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     }
   }, [displayLocations, selectMarker]);
 
-  // Handler for when the map is ready
-  const whenReady = (map: any) => {
-    mapRef.current = map.target;
+  // Store the map instance when ready
+  const whenMapReady = (mapInstance: any) => {
+    mapRef.current = mapInstance.target;
     mapRef.current.on('click', handleMapClick);
   };
 
@@ -163,7 +163,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
-        whenReady={whenReady}
+        whenReady={whenMapReady}
       >
         <SetViewOnMapReady center={center} zoom={zoom} />
         <TileLayer
