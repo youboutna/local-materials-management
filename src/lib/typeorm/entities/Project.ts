@@ -3,6 +3,8 @@ import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
 
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+
 @Entity({ name: "projects" })
 export class Project {
   @PrimaryGeneratedColumn("uuid")
@@ -18,7 +20,7 @@ export class Project {
   location!: string;
 
   @Column({ type: "varchar" })
-  status!: string;
+  status!: ProjectStatus;
 
   @Column({ type: "int" })
   progress!: number;
@@ -44,7 +46,7 @@ export class Project {
   @Column({ name: "coordinates_longitude", type: "float", nullable: true })
   coordinatesLongitude!: number | null;
 
-  @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project)
+  @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project, { cascade: true })
   projectMaterials!: ProjectMaterial[];
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
@@ -60,7 +62,7 @@ export class Project {
       title: this.title,
       description: this.description,
       location: this.location,
-      status: this.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+      status: this.status,
       progress: this.progress,
       budget: this.budget,
       startDate: this.startDate.toISOString().split('T')[0],

@@ -18,11 +18,11 @@ export class ProjectMaterial {
   @Column({ name: "material_id", type: "uuid" })
   materialId!: string;
 
-  @ManyToOne(() => Project, (project) => project.projectMaterials)
+  @ManyToOne(() => Project, (project) => project.projectMaterials, { onDelete: 'CASCADE' })
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @ManyToOne(() => Material, (material) => material.projectMaterials)
+  @ManyToOne(() => Material, (material) => material.projectMaterials, { onDelete: 'NO ACTION' })
   @JoinColumn({ name: "material_id" })
   material!: Material;
 

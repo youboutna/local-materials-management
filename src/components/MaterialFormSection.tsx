@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -85,7 +86,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
         title: language === 'fr' ? "Attention" : language === 'ar' ? "تنبيه" : "Warning",
         description: language === 'fr' ? "Aucun matériau n'est disponible" : 
                      language === 'ar' ? "لا توجد مواد متاحة" : "No materials available",
-        variant: "destructive",
+        variant: "destructive", // Changed from "warning" to "destructive" to fix the type error
       });
       return;
     }
@@ -139,7 +140,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
   };
 
   // Get material details by ID
-  const getMaterialById = (materialId: string, materials: Material[] = []) => {
+  const getMaterialById = (materialId: string) => {
     return materials.find(material => material.id === materialId);
   };
 
@@ -266,11 +267,6 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
       </CardContent>
     </Card>
   );
-};
-
-// Get material details by ID
-const getMaterialById = (materialId: string, materials: Material[] = []) => {
-  return materials.find(material => material.id === materialId);
 };
 
 export default MaterialFormSection;
