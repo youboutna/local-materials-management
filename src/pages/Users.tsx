@@ -33,7 +33,7 @@ const DEV_PROFILES: Profile[] = [
   {
     id: "dev-user-id",
     full_name: "Développeur Test",
-    role: "admin",
+    role: "patient", // Updated from "admin"
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -43,7 +43,7 @@ const DEV_PROFILES: Profile[] = [
   {
     id: "dev-user-id-2",
     full_name: "Marie Diallo",
-    role: "user",
+    role: "patient", // Updated from "user"
     phone: "987654321",
     national_id: "DEV54321",
     avatar_url: null,
@@ -223,11 +223,11 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          profile.role === 'admin' 
+                          profile.role === 'practitioner' 
                             ? 'bg-terracotta-100 text-terracotta-800' 
                             : 'bg-sandstone-100 text-adrar-700'
                         }`}>
-                          {profile.role || 'utilisateur'}
+                          {profile.role || 'patient'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -280,7 +280,7 @@ const Users = () => {
               <div className="space-y-4">
                 <div>
                   <Label className="text-muted-foreground">Rôle</Label>
-                  <p className="font-medium">{selectedUser.role || 'utilisateur'}</p>
+                  <p className="font-medium">{selectedUser.role || 'patient'}</p>
                 </div>
                 
                 <div>

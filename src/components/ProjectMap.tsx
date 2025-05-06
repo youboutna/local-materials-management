@@ -12,6 +12,9 @@ export interface MapLocation {
   latitude: number;
   longitude: number;
   status?: 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+  region?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Define map props
@@ -21,6 +24,8 @@ interface ProjectMapProps {
   onLocationSelect?: (latitude: number, longitude: number) => void;
   defaultCenter?: [number, number];
   defaultZoom?: number;
+  filteredLocations?: MapLocation[];
+  className?: string;
 }
 
 // SetViewOnMapReady component to set the view when map is ready
@@ -86,15 +91,20 @@ const getMarkerIcon = (type: 'project' | 'material', status?: string) => {
 
 const ProjectMap: React.FC<ProjectMapProps> = ({
   locations = [],
+  filteredLocations,
   selectable = false,
   onLocationSelect,
   defaultCenter = [20.5279, -10.0309], // Default to Mauritania center
-  defaultZoom = 6
+  defaultZoom = 6,
+  className
 }) => {
   const [center, setCenter] = useState<[number, number]>(defaultCenter);
   const [zoom, setZoom] = useState<number>(defaultZoom);
   const [selectMarker, setSelectMarker] = useState<[number, number] | null>(null);
   const mapRef = useRef<any>(null);
+  
+  // Use filteredLocations if provided, otherwise use all locations
+  const displayLocations = filteredLocations || locations;
 
   // Handle map click for location selection
   const handleMapClick = (e: any) => {
@@ -131,29 +141,29 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
   // Set map view based on locations
   useEffect(() => {
-    if (locations.length > 0 && !selectMarker) {
+    if (displayLocations.length > 0 && !selectMarker) {
       // If there's only one location, center on it
-      if (locations.length === 1) {
-        setCenter([locations[0].latitude, locations[0].longitude]);
+      if (displayLocations.length === 1) {
+        setCenter([displayLocations[0].latitude, displayLocations[0].longitude]);
         setZoom(13);
       } 
       // If there are multiple locations, we could implement a bounding box here
     }
-  }, [locations, selectMarker]);
+  }, [displayLocations, selectMarker]);
 
   // Handler for when the map is ready
-  const handleMapReady = (mapInstance: any) => {
-    mapRef.current = mapInstance;
-    mapInstance.on('click', handleMapClick);
+  const whenReady = (map: any) => {
+    mapRef.current = map.target;
+    mapRef.current.on('click', handleMapClick);
   };
 
   return (
-    <div className="relative h-full w-full rounded-lg overflow-hidden border border-gray-300">
+    <div className={`relative h-full w-full rounded-lg overflow-hidden border border-gray-300 ${className || ''}`}>
       <MapContainer 
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
-        whenReady={handleMapReady}
+        whenReady={whenReady}
       >
         <SetViewOnMapReady center={center} zoom={zoom} />
         <TileLayer
@@ -162,7 +172,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         />
         
         {/* Render project and material markers */}
-        {locations.map(location => (
+        {displayLocations.map(location => (
           <Marker 
             key={location.id}
             position={[location.latitude, location.longitude]}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -479,8 +478,8 @@ const Auth = () => {
                       <CardTitle className="text-2xl font-serif text-center text-adrar-800">
                         Connexion par téléphone
                       </CardTitle>
-                      <CardDescription className="text-center">
-                        Entrez votre numéro de téléphone pour recevoir un code
+                      <CardDescription>
+                        Format international avec code pays (ex: +222)
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -501,9 +500,6 @@ const Auth = () => {
                               </FormControl>
                             </div>
                             <FormMessage />
-                            <FormDescription>
-                              Format international avec code pays (ex: +222)
-                            </FormDescription>
                           </FormItem>
                         )}
                       />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -126,8 +125,9 @@ const Projects = () => {
               {mapLocations.length > 0 ? (
                 <div className="h-[600px]">
                   <ProjectMap 
-                    locations={mapLocations}
-                    filteredLocations={filteredMapLocations}
+                    locations={filteredMapLocations}
+                    defaultCenter={[20.5279, -10.0309]}
+                    defaultZoom={6}
                     className="h-full"
                   />
                 </div>
