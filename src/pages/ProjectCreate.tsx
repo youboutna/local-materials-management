@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation } from 'lucide-react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -34,7 +34,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/components/ProjectMap';
 
@@ -93,13 +93,18 @@ const ProjectCreate = () => {
 
   // Handle location selection from map
   const handleLocationSelect = (latitude: number, longitude: number) => {
-    form.setValue("coordinates", { latitude, longitude });
+    // Make sure we're setting coordinates with non-optional values
+    form.setValue("coordinates", { 
+      latitude: latitude,
+      longitude: longitude
+    });
+    
     setMapLocation({
       id: "new-project",
       name: form.getValues("title") || "Nouveau projet",
       type: "project",
-      latitude,
-      longitude,
+      latitude: latitude,
+      longitude: longitude,
       status: form.getValues("status") as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
     });
   };
@@ -113,6 +118,12 @@ const ProjectCreate = () => {
       const progress = values.status === 'terminé' ? 100 : 
                        values.status === 'en cours' ? 25 : 0;
       
+      // Prepare coordinates for the API
+      const projectCoordinates = values.coordinates ? {
+        latitude: values.coordinates.latitude as number,
+        longitude: values.coordinates.longitude as number
+      } : undefined;
+      
       // Create the new project
       await createProject({
         title: values.title,
@@ -124,7 +135,7 @@ const ProjectCreate = () => {
         startDate: values.startDate,
         thumbnail: '/img/project-placeholder.jpg',
         teamSize: values.teamSize,
-        coordinates: values.coordinates
+        coordinates: projectCoordinates
       });
       
       navigate('/projects');

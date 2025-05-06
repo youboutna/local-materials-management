@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { DEV_MODE, DEV_USER } from '@/config/constants';
 
 type AuthContextType = {
@@ -12,6 +12,10 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, phone: string, nationalId: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<{ success: boolean; error?: string; }>;
+  verifyPhoneOTP: (phone: string, token: string) => Promise<void>;
+  signInWithNationalId: (nationalId: string, password: string) => Promise<void>;
   isDevelopmentMode: boolean;
 };
 
@@ -156,6 +160,164 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Connexion Google simulée en mode développement",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback'
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Erreur de connexion Google",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sign in with phone number
+  const signInWithPhone = async (phone: string): Promise<{ success: boolean; error?: string; }> => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Connexion par téléphone simulée en mode développement",
+      });
+      return { success: true };
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      
+      if (error) {
+        toast({
+          title: "Erreur de connexion",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { success: false, error: error.message };
+      }
+      
+      toast({
+        title: "Code envoyé",
+        description: "Un code de vérification a été envoyé à votre numéro de téléphone.",
+      });
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Phone sign in error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify phone OTP
+  const verifyPhoneOTP = async (phone: string, token: string) => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Vérification OTP simulée en mode développement",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms',
+      });
+      
+      if (error) {
+        toast({
+          title: "Erreur de vérification",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
+      toast({
+        title: "Vérification réussie",
+        description: "Vous êtes maintenant connecté.",
+      });
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sign in with National ID (custom implementation)
+  const signInWithNationalId = async (nationalId: string, password: string) => {
+    if (DEV_MODE) {
+      toast({
+        title: "Mode développement",
+        description: "Connexion par ID National simulée en mode développement",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // First, find the user with this national ID using a Supabase function or query
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('national_id', nationalId)
+        .single();
+      
+      if (error || !data) {
+        toast({
+          title: "Erreur de connexion",
+          description: "ID National non trouvé ou invalide.",
+          variant: "destructive"
+        });
+        throw new Error("ID National non trouvé");
+      }
+      
+      // Then, get the user's email from auth.users table (this would require a secure server function)
+      // For this example, we'll assume the user has already signed up with email+password
+      // and we're just matching their national ID to their account
+      
+      toast({
+        title: "ID National vérifié",
+        description: "Veuillez vous connecter avec votre email et mot de passe.",
+      });
+    } catch (error) {
+      console.error('National ID sign in error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     user,
     session,
@@ -163,6 +325,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
+    signInWithPhone,
+    verifyPhoneOTP,
+    signInWithNationalId,
     isDevelopmentMode: DEV_MODE
   };
 
