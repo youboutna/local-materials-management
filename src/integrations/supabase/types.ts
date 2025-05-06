@@ -9,16 +9,228 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      materials: {
+        Row: {
+          available_quantity: number
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image: string | null
+          name: string
+          origin_location: string | null
+          price_per_unit: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          available_quantity?: number
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image?: string | null
+          name: string
+          origin_location?: string | null
+          price_per_unit: number
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          available_quantity?: number
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image?: string | null
+          name?: string
+          origin_location?: string | null
+          price_per_unit?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          national_id: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          national_id?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      project_materials: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          project_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          project_id: string
+          quantity: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          project_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_materials_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          budget: number
+          coordinates_latitude: number | null
+          coordinates_longitude: number | null
+          created_at: string
+          description: string
+          end_date: string | null
+          id: string
+          location: string
+          progress: number
+          start_date: string
+          status: string
+          team_size: number
+          thumbnail: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          budget: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          id?: string
+          location: string
+          progress?: number
+          start_date: string
+          status: string
+          team_size: number
+          thumbnail?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          id?: string
+          location?: string
+          progress?: number
+          start_date?: string
+          status?: string
+          team_size?: number
+          thumbnail?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reimbursement_requests: {
+        Row: {
+          amount: number
+          created_at: string | null
+          documents: Json | null
+          id: string
+          insurance_company_id: string | null
+          patient_id: string | null
+          practitioner_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          insurance_company_id?: string | null
+          patient_id?: string | null
+          practitioner_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          insurance_company_id?: string | null
+          patient_id?: string | null
+          practitioner_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "insurance_company" | "practitioner" | "patient"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +345,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["insurance_company", "practitioner", "patient"],
+    },
   },
 } as const
