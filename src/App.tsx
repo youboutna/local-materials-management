@@ -13,25 +13,30 @@ import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from './contexts/LanguageContext';
+import { AuthProvider } from './contexts/AuthContext';
+import Auth from './pages/Auth';
 
 function App() {
   return (
     <LanguageProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/projects/new" element={<ProjectCreate />} />
-          <Route path="/projects/:id/edit" element={<ProjectEdit />} />
-          <Route path="/materials" element={<Materials />} />
-          <Route path="/materials/new" element={<MaterialCreate />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/projects/new" element={<ProjectCreate />} />
+            <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+            <Route path="/materials" element={<Materials />} />
+            <Route path="/materials/new" element={<MaterialCreate />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
