@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -5,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Plus, Building, MapPin } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProjectMap from '@/components/ProjectMap';
 import MaterialSources from '@/components/MaterialSources';
+import CustomNavbar from '@/components/CustomNavbar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Sample data for material sources
 const materialSourcesData = [
@@ -85,6 +87,7 @@ const mapLocations = [
 const Materials = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredSources, setFilteredSources] = useState(materialSourcesData);
+  const { t } = useLanguage();
   
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +109,7 @@ const Materials = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+      <CustomNavbar />
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
@@ -118,7 +121,7 @@ const Materials = () => {
               transition={{ duration: 0.5 }}
               className="text-3xl font-serif font-bold text-adrar-800"
             >
-              Matériaux Locaux
+              {t('materials.title')}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: -20 }}
@@ -126,7 +129,7 @@ const Materials = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-adrar-600"
             >
-              Gestion des ressources et sources de matériaux de construction locaux
+              {t('materials.subtitle')}
             </motion.p>
           </div>
           
@@ -141,7 +144,7 @@ const Materials = () => {
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
                 <Input
-                  placeholder="Rechercher un matériau ou une source..."
+                  placeholder={t('materials.search')}
                   className="pl-9 border-sandstone-200 focus-visible:ring-terracotta-500"
                   value={searchQuery}
                   onChange={handleSearch}
@@ -151,7 +154,7 @@ const Materials = () => {
               <Link to="/materials/new">
                 <Button className="bg-terracotta-500 hover:bg-terracotta-600 w-full md:w-auto">
                   <Plus className="mr-2 h-4 w-4" />
-                  Nouvelle source
+                  {t('materials.add')}
                 </Button>
               </Link>
             </div>
@@ -187,7 +190,7 @@ const Materials = () => {
             className="mt-8"
           >
             <h2 className="text-2xl font-serif font-bold text-adrar-800 mb-6">
-              Types de matériaux locaux
+              {t('materials.types')}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

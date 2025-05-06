@@ -37,6 +37,14 @@ import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/components/ProjectMap';
+import MaterialSelector from '@/components/MaterialSelector';
+import { supabase } from '@/integrations/supabase/client';
+
+// Interface for selected materials
+interface SelectedMaterial {
+  materialId: string;
+  quantity: number;
+}
 
 // Form schema using Zod
 const formSchema = z.object({
@@ -72,6 +80,7 @@ const ProjectCreate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("form");
   const { createProject } = useProjects();
+  const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
   
   // Form definition using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -109,6 +118,11 @@ const ProjectCreate = () => {
     });
   };
 
+  // Handle materials selection change
+  const handleMaterialsChange = (materials: SelectedMaterial[]) => {
+    setSelectedMaterials(materials);
+  };
+
   // Form submission handler
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -125,7 +139,7 @@ const ProjectCreate = () => {
       } : undefined;
       
       // Create the new project
-      await createProject({
+      const projectResult = await createProject({
         title: values.title,
         description: values.description,
         location: values.location,
@@ -137,6 +151,30 @@ const ProjectCreate = () => {
         teamSize: values.teamSize,
         coordinates: projectCoordinates
       });
+      
+      // If project creation was successful and we have materials
+      if (projectResult && selectedMaterials.length > 0) {
+        // Prepare materials for batch insert
+        const projectMaterials = selectedMaterials.map(material => ({
+          project_id: projectResult.id,
+          material_id: material.materialId,
+          quantity: material.quantity
+        }));
+        
+        // Insert project materials
+        const { error: materialsError } = await supabase
+          .from('project_materials')
+          .insert(projectMaterials);
+        
+        if (materialsError) {
+          console.error('Error adding materials to project:', materialsError);
+          toast({
+            title: "Attention",
+            description: "Le projet a été créé mais certains matériaux n'ont pas pu être associés.",
+            variant: "destructive",
+          });
+        }
+      }
       
       navigate('/projects');
     } catch (error) {
@@ -171,8 +209,9 @@ const ProjectCreate = () => {
               <h1 className="text-2xl font-serif text-adrar-800 mb-6">Créer un nouveau projet</h1>
               
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="form">Formulaire</TabsTrigger>
+                  <TabsTrigger value="materials">Matériaux</TabsTrigger>
                   <TabsTrigger value="map">Carte</TabsTrigger>
                 </TabsList>
                 
@@ -358,7 +397,15 @@ const ProjectCreate = () => {
                         />
                       </div>
                       
-                      <div className="flex justify-end pt-4">
+                      <div className="flex justify-between pt-4">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => setActiveTab("materials")}
+                        >
+                          Ajouter des matériaux
+                        </Button>
+                        
                         <Button 
                           type="submit" 
                           className="bg-terracotta-500 hover:bg-terracotta-600"
@@ -369,6 +416,33 @@ const ProjectCreate = () => {
                       </div>
                     </form>
                   </Form>
+                </TabsContent>
+                
+                <TabsContent value="materials">
+                  <div className="mb-4">
+                    <MaterialSelector 
+                      selectedMaterials={selectedMaterials}
+                      onChange={handleMaterialsChange}
+                    />
+                    
+                    <div className="flex justify-between mt-6">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setActiveTab("form")}
+                      >
+                        Retour au formulaire
+                      </Button>
+                      
+                      <Button 
+                        type="button" 
+                        className="bg-terracotta-500 hover:bg-terracotta-600"
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Création en cours...' : 'Créer le projet'}
+                      </Button>
+                    </div>
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="map">
