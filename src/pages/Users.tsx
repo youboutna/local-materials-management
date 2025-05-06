@@ -25,20 +25,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { UserPlus, Search, User, Edit, Trash2 } from 'lucide-react';
 import { DEV_MODE } from '@/config/constants';
-import RoleBadge from '@/components/RoleBadge';
+import RoleBadge, { RoleType } from '@/components/RoleBadge';
 
 // Define types for profile data
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-// Define custom role type that aligns with the database enum
-type UserRole = 'admin' | 'developer' | 'project_manager' | 'director';
+// Define user profile type that includes our custom role
+type UserProfile = Omit<Profile, 'role'> & { role: RoleType };
 
 // Mock profiles for development mode with roles that align with our custom type
-const DEV_PROFILES: Omit<Profile, 'role'> & { role: UserRole }[] = [
+const DEV_PROFILES: UserProfile[] = [
   {
     id: "dev-user-id",
     full_name: "Développeur Test",
-    role: "admin" as UserRole,
+    role: "admin",
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
@@ -48,7 +48,7 @@ const DEV_PROFILES: Omit<Profile, 'role'> & { role: UserRole }[] = [
   {
     id: "dev-user-id-2",
     full_name: "Marie Diallo",
-    role: "developer" as UserRole,
+    role: "developer",
     phone: "987654321",
     national_id: "DEV54321",
     avatar_url: null,
@@ -61,12 +61,12 @@ const Users = () => {
   const { toast } = useToast();
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<(Omit<Profile, 'role'> & { role: UserRole })[]>(
+  const [profiles, setProfiles] = useState<UserProfile[]>(
     isDevelopmentMode ? DEV_PROFILES : []
   );
   const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedUser, setSelectedUser] = useState<(Omit<Profile, 'role'> & { role: UserRole }) | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
   // Check if user is authenticated
@@ -104,7 +104,8 @@ const Users = () => {
           // Map database profiles to our custom type with role casting
           const mappedProfiles = data.map(profile => ({
             ...profile,
-            role: (profile.role || 'admin') as unknown as UserRole
+            // Cast database role to our RoleType, defaulting to 'admin' if null
+            role: (profile.role as unknown as RoleType) || 'admin'
           }));
           setProfiles(mappedProfiles);
         }
@@ -124,7 +125,7 @@ const Users = () => {
     }
   }, [user, toast, isDevelopmentMode]);
 
-  const handleViewDetails = (profile: (Omit<Profile, 'role'> & { role: UserRole })) => {
+  const handleViewDetails = (profile: UserProfile) => {
     setSelectedUser(profile);
     setIsDetailOpen(true);
   };
@@ -234,7 +235,7 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">{profile.phone || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <RoleBadge role={profile.role as UserRole} />
+                        <RoleBadge role={profile.role} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
@@ -281,7 +282,7 @@ const Users = () => {
                   )}
                 </Avatar>
                 <h3 className="text-xl font-medium">{selectedUser.full_name || 'Utilisateur sans nom'}</h3>
-                <RoleBadge role={selectedUser.role as UserRole} />
+                <RoleBadge role={selectedUser.role} />
               </div>
               
               <div className="space-y-4">

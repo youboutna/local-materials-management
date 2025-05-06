@@ -139,7 +139,7 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
   };
 
   // Get material details by ID
-  const getMaterialById = (materialId: string) => {
+  const getMaterialById = (materialId: string, materials: Material[] = []) => {
     return materials.find(material => material.id === materialId);
   };
 
@@ -266,6 +266,11 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
       </CardContent>
     </Card>
   );
+};
+
+// Get material details by ID
+const getMaterialById = (materialId: string, materials: Material[] = []) => {
+  return materials.find(material => material.id === materialId);
 };
 
 export default MaterialFormSection;
