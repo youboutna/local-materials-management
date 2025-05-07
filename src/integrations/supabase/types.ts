@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      inspections: {
+        Row: {
+          comments: string | null
+          created_at: string
+          date: string
+          documents: Json | null
+          id: string
+          inspector: string
+          progress_at_inspection: number
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          date: string
+          documents?: Json | null
+          id?: string
+          inspector: string
+          progress_at_inspection: number
+          project_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          date?: string
+          documents?: Json | null
+          id?: string
+          inspector?: string
+          progress_at_inspection?: number
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials: {
         Row: {
           available_quantity: number
@@ -50,6 +97,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          inspection_id: string | null
+          payment_date: string
+          payment_method: string
+          progress_at_payment: number
+          project_id: string
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          inspection_id?: string | null
+          payment_date: string
+          payment_method: string
+          progress_at_payment: number
+          project_id: string
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          inspection_id?: string | null
+          payment_date?: string
+          payment_method?: string
+          progress_at_payment?: number
+          project_id?: string
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

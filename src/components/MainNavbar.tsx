@@ -3,13 +3,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useContext } from 'react';
-import { LanguageContext } from '@/contexts/LanguageContext';
+import { LanguageContext, Language } from '@/contexts/LanguageContext';
 import { Globe, Database } from 'lucide-react';
 
 const MainNavbar = () => {
-  const { language, setLanguage } = useContext(LanguageContext);
+  const { language, setLanguage } = useContext(LanguageContext) as { 
+    language: Language, 
+    setLanguage: (lang: Language) => void 
+  };
 
-  const handleLanguageChange = (newLanguage: 'fr' | 'en' | 'ar') => {
+  const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
       setLanguage(newLanguage);
     }
