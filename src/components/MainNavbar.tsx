@@ -2,15 +2,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useContext } from 'react';
-import { LanguageContext, Language } from '@/contexts/LanguageContext';
+import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { Globe, Database } from 'lucide-react';
+import LanguageSwitcher from './LanguageSwitcher';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const MainNavbar = () => {
-  const { language, setLanguage } = useContext(LanguageContext) as { 
-    language: Language, 
-    setLanguage: (lang: Language) => void 
-  };
+  const { language, setLanguage, t } = useLanguage();
 
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
@@ -25,63 +31,73 @@ const MainNavbar = () => {
           Construction ERP
         </Link>
         
-        <div className="flex items-center gap-4">
-          {/* Language Switcher */}
-          <div className="relative group">
-            <Button 
-              variant="ghost" 
-              className="text-white hover:text-gray-200"
-              size="sm"
-            >
-              <Globe className="h-4 w-4 mr-2" />
-              {language === 'fr' ? 'Français' : language === 'en' ? 'English' : 'العربية'}
-            </Button>
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden group-hover:block">
-              <div className="py-1">
-                <button 
-                  onClick={() => handleLanguageChange('fr')} 
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList className="gap-2">
+            <NavigationMenuItem>
+              <Link to="/projects">
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
                 >
-                  Français
-                </button>
-                <button 
-                  onClick={() => handleLanguageChange('en')} 
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  {t('nav.projects') || 'Projets'}
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <Link to="/materials">
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
                 >
-                  English
-                </button>
-                <button 
-                  onClick={() => handleLanguageChange('ar')} 
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  {t('nav.materials') || 'Matériaux'}
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <Link to="/dashboard">
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
                 >
-                  العربية
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Database Settings */}
-          <Link to="/database-settings">
-            <Button 
-              variant="ghost" 
-              className="text-white hover:text-gray-200"
-              size="sm"
-            >
-              <Database className="h-4 w-4 mr-2" />
-              Base de données
-            </Button>
-          </Link>
-          
-          {/* Account or Login Button */}
-          <Link to="/auth">
-            <Button 
-              variant="secondary"
-              size="sm"
-            >
-              Se connecter
-            </Button>
-          </Link>
-        </div>
+                  Dashboard
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <LanguageSwitcher />
+            </NavigationMenuItem>
+            
+            {/* Database Settings */}
+            <NavigationMenuItem>
+              <Link to="/database-settings">
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                >
+                  <Database className="h-4 w-4 mr-2" />
+                  Base de données
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+        
+        {/* Account or Login Button */}
+        <Link to="/auth">
+          <Button 
+            variant="secondary"
+            size="sm"
+          >
+            {t('nav.login') || 'Se connecter'}
+          </Button>
+        </Link>
       </div>
     </header>
   );

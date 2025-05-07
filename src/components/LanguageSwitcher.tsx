@@ -22,12 +22,12 @@ const LanguageSwitcher: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 gap-1">
-          <Globe className="h-4 w-4" />
-          <span className="hidden md:inline-flex">{languages.find(lang => lang.code === language)?.flag}</span>
+        <Button variant="ghost" size="sm" className="text-white hover:text-gray-200">
+          <Globe className="h-4 w-4 mr-2" />
+          {language === 'fr' ? 'Français' : language === 'en' ? 'English' : 'العربية'}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-white">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
