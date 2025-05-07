@@ -1,0 +1,63 @@
+
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { PaymentTransferForm } from './PaymentTransferForm';
+import { ProjectWithPayments } from '@/types/project';
+import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
+
+interface PaymentDialogProps {
+  project: ProjectWithPayments;
+  onPaymentComplete?: () => void;
+}
+
+export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps) {
+  const [open, setOpen] = useState(false);
+  const { mutateAsync: createPayment, isPending } = useCreateProjectPayment();
+
+  const handleSuccess = async (paymentData: any) => {
+    try {
+      await createPayment({
+        projectId: project.id,
+        payment: {
+          amount: paymentData.amount,
+          paymentDate: paymentData.paymentDate.toISOString(),
+          paymentMethod: paymentData.paymentMethod,
+        }
+      });
+      setOpen(false);
+      if (onPaymentComplete) onPaymentComplete();
+    } catch (error) {
+      console.error('Failed to create payment:', error);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Effectuer un paiement</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Paiement du projet</DialogTitle>
+          <DialogDescription>
+            {project.title}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <PaymentTransferForm 
+            project={project} 
+            onSuccess={handleSuccess} 
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

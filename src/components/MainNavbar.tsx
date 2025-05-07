@@ -1,105 +1,83 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Settings, Database, Translate } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useContext } from 'react';
+import { LanguageContext } from '@/contexts/LanguageContext';
+import { Globe, Database } from 'lucide-react';
 
-const MainNavbar: React.FC = () => {
-  const location = useLocation();
-  const { language, changeLanguage, t } = useLanguage();
-  
-  // Function to determine if a link is active
-  const isActive = (path: string) => location.pathname === path;
+const MainNavbar = () => {
+  const { language, setLanguage } = useContext(LanguageContext);
+
+  const handleLanguageChange = (newLanguage: 'fr' | 'en' | 'ar') => {
+    if (setLanguage) {
+      setLanguage(newLanguage);
+    }
+  };
 
   return (
-    <header className="fixed w-full bg-white shadow-sm z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="font-serif text-xl font-medium text-adrar-800">
-              Adrar Construction
-            </Link>
-            <nav className="hidden md:flex ml-10 space-x-8">
-              <Link 
-                to="/dashboard" 
-                className={`font-medium ${isActive('/dashboard') 
-                  ? 'text-terracotta-600' 
-                  : 'text-adrar-600 hover:text-adrar-900'}`}
-              >
-                {t('navigation.dashboard')}
-              </Link>
-              <Link 
-                to="/projects" 
-                className={`font-medium ${isActive('/projects') 
-                  ? 'text-terracotta-600' 
-                  : 'text-adrar-600 hover:text-adrar-900'}`}
-              >
-                {t('navigation.projects')}
-              </Link>
-              <Link 
-                to="/materials" 
-                className={`font-medium ${isActive('/materials') 
-                  ? 'text-terracotta-600' 
-                  : 'text-adrar-600 hover:text-adrar-900'}`}
-              >
-                {t('navigation.materials')}
-              </Link>
-              <Link 
-                to="/users" 
-                className={`font-medium ${isActive('/users') 
-                  ? 'text-terracotta-600' 
-                  : 'text-adrar-600 hover:text-adrar-900'}`}
-              >
-                {t('navigation.users')}
-              </Link>
-            </nav>
+    <header className="bg-adrar-700 text-white py-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <Link to="/" className="text-xl font-bold">
+          Construction ERP
+        </Link>
+        
+        <div className="flex items-center gap-4">
+          {/* Language Switcher */}
+          <div className="relative group">
+            <Button 
+              variant="ghost" 
+              className="text-white hover:text-gray-200"
+              size="sm"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              {language === 'fr' ? 'Français' : language === 'en' ? 'English' : 'العربية'}
+            </Button>
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg overflow-hidden z-20 hidden group-hover:block">
+              <div className="py-1">
+                <button 
+                  onClick={() => handleLanguageChange('fr')} 
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Français
+                </button>
+                <button 
+                  onClick={() => handleLanguageChange('en')} 
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  English
+                </button>
+                <button 
+                  onClick={() => handleLanguageChange('ar')} 
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  العربية
+                </button>
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            {/* Language Switcher */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center">
-                  <Translate className="h-4 w-4 mr-1" />
-                  <span className="capitalize">{language}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => changeLanguage('en')}>
-                  English
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => changeLanguage('fr')}>
-                  Français
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => changeLanguage('ar')}>
-                  العربية
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {/* Database Settings */}
-            <Link to="/admin/database">
-              <Button variant="ghost" size="sm">
-                <Database className="h-4 w-4 mr-1" />
-                {t('navigation.database')}
-              </Button>
-            </Link>
-            
-            {/* Settings */}
-            <Link to="/settings">
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4 mr-1" />
-                {t('navigation.settings')}
-              </Button>
-            </Link>
-          </div>
+          {/* Database Settings */}
+          <Link to="/database-settings">
+            <Button 
+              variant="ghost" 
+              className="text-white hover:text-gray-200"
+              size="sm"
+            >
+              <Database className="h-4 w-4 mr-2" />
+              Base de données
+            </Button>
+          </Link>
+          
+          {/* Account or Login Button */}
+          <Link to="/auth">
+            <Button 
+              variant="secondary"
+              size="sm"
+            >
+              Se connecter
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
