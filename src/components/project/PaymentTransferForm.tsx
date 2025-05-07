@@ -20,13 +20,15 @@ const paymentSchema = z.object({
   paymentMethod: z.enum(['virement_bancaire', 'chèque', 'mobile_money']),
 });
 
+type PaymentFormData = z.infer<typeof paymentSchema>;
+
 type PaymentTransferFormProps = {
   project: ProjectWithPayments;
-  onSuccess: () => void;
+  onSuccess: (data: PaymentFormData) => void;
 };
 
 export function PaymentTransferForm({ project, onSuccess }: PaymentTransferFormProps) {
-  const form = useForm<z.infer<typeof paymentSchema>>({
+  const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       amount: 0,
@@ -35,7 +37,7 @@ export function PaymentTransferForm({ project, onSuccess }: PaymentTransferFormP
     },
   });
 
-  const onSubmit = (values: z.infer<typeof paymentSchema>) => {
+  const onSubmit = (values: PaymentFormData) => {
     const validation = PaymentValidator.validatePaymentTransfer(project, values.amount);
     
     if (!validation.valid) {
@@ -52,7 +54,7 @@ export function PaymentTransferForm({ project, onSuccess }: PaymentTransferFormP
       title: 'Paiement traité avec succès',
       description: `Transfert de ${values.amount.toLocaleString()} MRU approuvé`,
     });
-    onSuccess();
+    onSuccess(values);
   };
 
   const maxAllowedAmount = PaymentValidator.calculateAllowedAmount(project);
