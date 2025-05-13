@@ -19,6 +19,7 @@ import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
 import Users from '@/pages/Users';
 import UserProfile from '@/pages/UserProfile';
+import Settings from '@/pages/Settings';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Create a client
@@ -87,6 +88,11 @@ function App() {
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <UserProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute requiredRoles={['admin']}>
+                    <Settings />
                   </ProtectedRoute>
                 } />
                 

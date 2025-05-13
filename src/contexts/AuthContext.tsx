@@ -1,9 +1,8 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DEV_MODE, DEV_USER } from '@/config/constants';
+import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 
 type AuthContextType = {
   user: User | null;
@@ -22,7 +21,10 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(DEV_MODE ? DEV_USER as unknown as User : null);
+  const activeDevRole = getActiveDevRole();
+  const [user, setUser] = useState<User | null>(DEV_MODE ? 
+    {...DEV_USER, user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}} as unknown as User 
+    : null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(!DEV_MODE);
   const { toast } = useToast();
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (DEV_MODE) {
       console.log('🛠️ Development mode active: Authentication is bypassed');
+      console.log(`🛠️ Using role: ${activeDevRole.role}`);
       return;
     }
 
