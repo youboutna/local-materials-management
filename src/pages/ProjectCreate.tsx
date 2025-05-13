@@ -120,6 +120,7 @@ const ProjectCreate = () => {
   // Handle materials selection change
   const handleMaterialsChange = (materials: SelectedMaterial[]) => {
     setSelectedMaterials(materials);
+    console.log("Materials updated:", materials);
   };
 
   // Form submission handler
@@ -153,6 +154,8 @@ const ProjectCreate = () => {
       
       // If project creation was successful and we have materials
       if (projectResult && selectedMaterials.length > 0) {
+        console.log("Adding materials to project:", selectedMaterials);
+        
         // Prepare materials for batch insert
         const projectMaterials = selectedMaterials.map(material => ({
           project_id: projectResult.id,
@@ -172,8 +175,15 @@ const ProjectCreate = () => {
             description: "Le projet a été créé mais certains matériaux n'ont pas pu être associés.",
             variant: "destructive",
           });
+        } else {
+          console.log("Materials successfully added to project");
         }
       }
+      
+      toast({
+        title: "Projet créé",
+        description: `Le projet "${values.title}" a été créé avec succès.`,
+      });
       
       navigate('/projects');
     } catch (error) {

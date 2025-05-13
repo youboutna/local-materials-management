@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Define types for our component
 interface Material {
@@ -48,6 +49,11 @@ const MaterialSelector = ({ selectedMaterials, onChange }: MaterialSelectorProps
         setMaterials(data || []);
       } catch (error) {
         console.error('Error fetching materials:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les matériaux. Veuillez réessayer plus tard.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
