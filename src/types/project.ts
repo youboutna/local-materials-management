@@ -22,10 +22,16 @@ export interface ProjectWithPayments {
 export interface Payment {
   id: string;
   amount: number;
-  paymentDate: string;
-  paymentMethod: string;
+  payment_date: string;
+  payment_method: string;
   progress_at_payment: number;
   transaction_id: string;
+  
+  // Add these aliases for backwards compatibility
+  get paymentDate(): string { return this.payment_date; }
+  get paymentMethod(): string { return this.payment_method; }
+  get progressAtPayment(): number { return this.progress_at_payment; }
+  get transactionId(): string { return this.transaction_id; }
 }
 
 export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';
@@ -36,6 +42,6 @@ export interface Inspection {
   status: InspectionStatus | string;
   inspector: string;
   progress_at_inspection: number;
-  comments?: string;
+  comments?: string | null;
   documents?: any[];
 }

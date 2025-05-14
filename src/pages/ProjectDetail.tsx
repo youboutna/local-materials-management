@@ -16,7 +16,7 @@ import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { InspectionReportCard } from '@/components/project/InspectionReportCard';
 import { useProjectPayments } from '@/hooks/useProjectPayments';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments, Payment, Inspection } from '@/types/project';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -48,10 +48,13 @@ export default function ProjectDetail() {
         }
         
         // Fetch payments for this project
-        const payments = await fetchPayments();
+        let payments: Payment[] = [];
+        if (id) {
+          payments = await fetchPayments();
+        }
         
         // Fetch inspections for this project
-        const { data: inspections, error: inspectionsError } = await supabase
+        const { data: inspectionsData, error: inspectionsError } = await supabase
           .from('inspections')
           .select('*')
           .eq('project_id', id)
@@ -60,6 +63,17 @@ export default function ProjectDetail() {
         if (inspectionsError) {
           console.error("Error fetching inspections:", inspectionsError);
         }
+        
+        // Convert inspection data to match our interface
+        const inspections: Inspection[] = inspectionsData ? inspectionsData.map((item: any) => ({
+          id: item.id,
+          date: item.date,
+          status: item.status,
+          inspector: item.inspector,
+          progress_at_inspection: item.progress_at_inspection,
+          comments: item.comments,
+          documents: item.documents
+        })) : [];
         
         // Fetch project materials
         const { data: materials, error: materialsError } = await supabase
@@ -79,8 +93,8 @@ export default function ProjectDetail() {
         // Combine all data into a single project object
         setProject({
           ...projectData,
-          payments: payments || [],
-          inspections: inspections || []
+          payments: payments,
+          inspections: inspections
         });
         
       } catch (error) {
@@ -163,6 +177,10 @@ export default function ProjectDetail() {
   const totalMaterialsCost = projectMaterials.reduce((total, item) => {
     return total + (item.quantity * (item.material?.price_per_unit || 0));
   }, 0);
+  
+  // Use project.status as is, without type checking for now, we will ensure
+  // it's properly typed in the backend
+  const projectStatus = project.status;
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -284,7 +302,7 @@ export default function ProjectDetail() {
                                 latitude: project.coordinates.latitude,
                                 longitude: project.coordinates.longitude,
                                 type: 'project',
-                                status: project.status
+                                status: projectStatus
                               }]} 
                               interactive={true} 
                             />
@@ -360,7 +378,7 @@ export default function ProjectDetail() {
               <TabsContent value="payments" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="md:col-span-2">
-                    <PaymentHistory project={project} />
+                    <PaymentHistory payments={project.payments} />
                   </div>
                   <div>
                     <Card>

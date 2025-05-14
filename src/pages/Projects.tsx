@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -76,7 +77,7 @@ const Projects = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <ProjectsHeader />
+          <ProjectsHeader title="Projets" />
           
           {/* View Toggle Tabs */}
           <Tabs defaultValue="list" className="mt-6 mb-6">

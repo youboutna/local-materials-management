@@ -22,13 +22,13 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
   const [open, setOpen] = useState(false);
   const { mutateAsync: createPayment, isPending } = useCreateProjectPayment();
 
-  const handleSuccess = async (paymentData: any) => {
+  const handleSubmit = async (paymentData: any) => {
     try {
       await createPayment({
         projectId: project.id,
         payment: {
           amount: paymentData.amount,
-          paymentDate: paymentData.paymentDate.toISOString(),
+          paymentDate: paymentData.paymentDate,
           paymentMethod: paymentData.paymentMethod,
         }
       });
@@ -54,7 +54,8 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
         <div className="mt-4">
           <PaymentTransferForm 
             project={project} 
-            onSuccess={handleSuccess} 
+            onSubmit={handleSubmit} 
+            isSubmitting={isPending}
           />
         </div>
       </DialogContent>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Trash, FileText, Progress } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
+import { Progress } from '@/components/ui/progress';
 
 // Define types for our component
 interface Material {

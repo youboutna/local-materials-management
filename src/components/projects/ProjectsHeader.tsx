@@ -10,7 +10,7 @@ interface ProjectsHeaderProps {
 }
 
 export default function ProjectsHeader({
-  title,
+  title = "Projets",  // Default value added
   description,
   addButton = true,
 }: ProjectsHeaderProps) {

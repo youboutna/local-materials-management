@@ -36,12 +36,12 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
               <div>
                 <p className="font-medium">{payment.amount.toLocaleString()} MRU</p>
                 <p className="text-sm text-muted-foreground">
-                  {format(new Date(payment.paymentDate), 'dd/MM/yyyy')} • {payment.paymentMethod}
+                  {format(new Date(payment.payment_date), 'dd/MM/yyyy')} • {payment.payment_method}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium">#{payment.transactionId}</p>
-                <p className="text-xs text-muted-foreground">Progression: {payment.progressAtPayment}%</p>
+                <p className="text-sm font-medium">#{payment.transaction_id}</p>
+                <p className="text-xs text-muted-foreground">Progression: {payment.progress_at_payment}%</p>
               </div>
             </div>
           ))}

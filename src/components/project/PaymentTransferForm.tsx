@@ -25,7 +25,6 @@ import { ProjectWithPayments } from '@/types/project';
 import { PaymentValidator } from '@/services/paymentValidation';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
 
 interface PaymentTransferFormProps {
@@ -120,7 +119,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
         </div>
         
         {paymentStatus === "inspection_required" && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <Alert variant="destructive" className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800">Inspection requise</AlertTitle>
             <AlertDescription className="text-amber-700">
@@ -131,7 +130,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
         )}
         
         {paymentStatus === "requires_changes" && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <Alert variant="destructive" className="bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800">Paiement limité</AlertTitle>
             <AlertDescription className="text-amber-700">
