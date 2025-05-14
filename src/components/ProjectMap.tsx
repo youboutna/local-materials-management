@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { divIcon, LatLngExpression, Icon, DivIcon } from 'leaflet';
+import { divIcon, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
@@ -39,10 +39,12 @@ const ProjectMap = ({
 }: ProjectMapProps) => {
   const [activeLocation, setActiveLocation] = useState<MapLocation | null>(null);
 
-  const customIcon = (status?: ProjectStatus): DivIcon => {
+  const customIcon = (status?: ProjectStatus, locationType: 'project' | 'material' = 'project') => {
     let color = 'gray';
 
-    if (status) {
+    if (locationType === 'material') {
+      color = '#e67e22'; // Distinctive color for materials
+    } else if (status) {
       switch (status) {
         case 'en cours':
           color = 'blue';
@@ -91,7 +93,7 @@ const ProjectMap = ({
 
   return (
     <MapContainer
-      center={defaultCenter as LatLngExpression}
+      center={defaultCenter as LatLngTuple}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
@@ -104,8 +106,8 @@ const ProjectMap = ({
       {locations.map(location => (
         <Marker
           key={location.id}
-          position={[location.latitude, location.longitude] as LatLngExpression}
-          icon={customIcon(location.status)}
+          position={[location.latitude, location.longitude] as LatLngTuple}
+          icon={customIcon(location.status, location.type)}
           eventHandlers={{
             click: () => {
               setActiveLocation(location);
@@ -115,7 +117,11 @@ const ProjectMap = ({
           <Popup>
             <div>
               <h3>{location.name}</h3>
+              <p>{location.type === 'material' ? 'Source de matériau' : 'Projet'}</p>
               <p>{location.region || ''}</p>
+              {location.type === 'project' && location.startDate && (
+                <p>Date de début: {location.startDate}</p>
+              )}
             </div>
           </Popup>
         </Marker>

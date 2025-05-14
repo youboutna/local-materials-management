@@ -26,6 +26,33 @@ export class ProjectMaterial {
   @JoinColumn({ name: "material_id" })
   material!: Material;
 
+  // Helper method to transform ProjectMaterial to MapLocation
+  toMapLocation(materialName: string, originLocation?: string) {
+    // Extract coordinates from the origin location string (if available)
+    // Format expected: "Location Name, Lat: 20.5169, Long: -13.0499"
+    let latitude = 0;
+    let longitude = 0;
+    
+    if (originLocation) {
+      const latMatch = originLocation.match(/Lat:\s*(-?\d+(\.\d+)?)/i);
+      const longMatch = originLocation.match(/Long:\s*(-?\d+(\.\d+)?)/i);
+      
+      if (latMatch && longMatch) {
+        latitude = parseFloat(latMatch[1]);
+        longitude = parseFloat(longMatch[1]);
+      }
+    }
+    
+    return {
+      id: this.id,
+      name: materialName,
+      type: 'material' as const,
+      latitude: latitude,
+      longitude: longitude,
+      region: originLocation?.split(',')[0] || ''
+    };
+  }
+
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
 
