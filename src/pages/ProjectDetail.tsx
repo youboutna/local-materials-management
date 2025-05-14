@@ -49,18 +49,15 @@ export default function ProjectDetail() {
         // Fetch payments for this project
         let payments: Payment[] = [];
         try {
-          // Safe fetch that handles undefined id
-          if (id) {
-            const fetchedPayments = await fetchPayments();
-            payments = fetchedPayments.map(p => ({
-              id: p.id,
-              amount: p.amount,
-              payment_date: p.payment_date,
-              payment_method: p.payment_method,
-              progress_at_payment: p.progress_at_payment,
-              transaction_id: p.transaction_id
-            }));
-          }
+          const fetchedPayments = await fetchPayments();
+          payments = fetchedPayments.map(p => ({
+            id: p.id,
+            amount: p.amount,
+            payment_date: p.payment_date,
+            payment_method: p.payment_method,
+            progress_at_payment: p.progress_at_payment,
+            transaction_id: p.transaction_id
+          }));
         } catch (error) {
           console.error("Error fetching payments:", error);
         }
@@ -69,7 +66,7 @@ export default function ProjectDetail() {
         const { data: inspectionsData, error: inspectionsError } = await supabase
           .from('inspections')
           .select('*')
-          .eq('project_id', id || "")
+          .eq('project_id', id)
           .order('date', { ascending: false });
         
         if (inspectionsError) {
@@ -94,7 +91,7 @@ export default function ProjectDetail() {
             id, quantity,
             material:material_id (id, name, unit, price_per_unit, available_quantity, category)
           `)
-          .eq('project_id', id || "");
+          .eq('project_id', id);
         
         if (materialsError) {
           console.error("Error fetching project materials:", materialsError);

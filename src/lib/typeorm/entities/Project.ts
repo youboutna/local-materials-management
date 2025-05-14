@@ -1,9 +1,8 @@
-
 import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
 
-export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
 
 @Entity({ name: "projects" })
 export class Project {

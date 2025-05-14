@@ -11,7 +11,7 @@ export interface ProjectData {
   title: string;
   description: string;
   location: string;
-  status: 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé';
+  status: 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
   progress: number;
   budget: number;
   startDate: string;
