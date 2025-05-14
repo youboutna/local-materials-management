@@ -49,15 +49,28 @@ export default function ProjectDetail() {
         
         // Fetch payments for this project
         let payments: Payment[] = [];
-        if (id) {
-          payments = await fetchPayments();
+        try {
+          // Safe fetch that handles undefined id
+          if (id) {
+            const fetchedPayments = await fetchPayments();
+            payments = fetchedPayments.map(p => ({
+              id: p.id,
+              amount: p.amount,
+              payment_date: p.payment_date,
+              payment_method: p.payment_method,
+              progress_at_payment: p.progress_at_payment,
+              transaction_id: p.transaction_id
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching payments:", error);
         }
         
         // Fetch inspections for this project
         const { data: inspectionsData, error: inspectionsError } = await supabase
           .from('inspections')
           .select('*')
-          .eq('project_id', id)
+          .eq('project_id', id || "")
           .order('date', { ascending: false });
         
         if (inspectionsError) {
@@ -82,7 +95,7 @@ export default function ProjectDetail() {
             id, quantity,
             material:material_id (id, name, unit, price_per_unit, available_quantity, category)
           `)
-          .eq('project_id', id);
+          .eq('project_id', id || "");
         
         if (materialsError) {
           console.error("Error fetching project materials:", materialsError);
@@ -177,10 +190,6 @@ export default function ProjectDetail() {
   const totalMaterialsCost = projectMaterials.reduce((total, item) => {
     return total + (item.quantity * (item.material?.price_per_unit || 0));
   }, 0);
-  
-  // Use project.status as is, without type checking for now, we will ensure
-  // it's properly typed in the backend
-  const projectStatus = project.status;
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -302,7 +311,7 @@ export default function ProjectDetail() {
                                 latitude: project.coordinates.latitude,
                                 longitude: project.coordinates.longitude,
                                 type: 'project',
-                                status: projectStatus
+                                status: project.status
                               }]} 
                               interactive={true} 
                             />

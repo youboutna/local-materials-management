@@ -26,12 +26,6 @@ export interface Payment {
   payment_method: string;
   progress_at_payment: number;
   transaction_id: string;
-  
-  // Add these aliases for backwards compatibility
-  get paymentDate(): string { return this.payment_date; }
-  get paymentMethod(): string { return this.payment_method; }
-  get progressAtPayment(): number { return this.progress_at_payment; }
-  get transactionId(): string { return this.transaction_id; }
 }
 
 export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';
