@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, MapContainerProps, TileLayerProps, MarkerProps } from 'react-leaflet';
-import { divIcon } from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { divIcon, LatLngExpression, Icon, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
@@ -39,7 +39,7 @@ const ProjectMap = ({
 }: ProjectMapProps) => {
   const [activeLocation, setActiveLocation] = useState<MapLocation | null>(null);
 
-  const customIcon = (status?: ProjectStatus) => {
+  const customIcon = (status?: ProjectStatus): DivIcon => {
     let color = 'gray';
 
     if (status) {
@@ -91,7 +91,7 @@ const ProjectMap = ({
 
   return (
     <MapContainer
-      center={defaultCenter as any}
+      center={defaultCenter as LatLngExpression}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
@@ -99,13 +99,13 @@ const ProjectMap = ({
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'} as any
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       {locations.map(location => (
         <Marker
           key={location.id}
-          position={[location.latitude, location.longitude] as any}
-          icon={customIcon(location.status) as any}
+          position={[location.latitude, location.longitude] as LatLngExpression}
+          icon={customIcon(location.status)}
           eventHandlers={{
             click: () => {
               setActiveLocation(location);
