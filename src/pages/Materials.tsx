@@ -86,7 +86,8 @@ const Materials = () => {
               longitude: Number(project.coordinates_longitude),
               status: project.status as any,
               region: project.location || '',
-              startDate: project.start_date || ''
+              startDate: project.start_date ? String(project.start_date) : undefined,
+              endDate: undefined
             }))
         ];
         
