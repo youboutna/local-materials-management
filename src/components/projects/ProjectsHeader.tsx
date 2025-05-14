@@ -1,27 +1,36 @@
 
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const ProjectsHeader = () => {
+interface ProjectsHeaderProps {
+  title: string;
+  description?: string;
+  addButton?: boolean;
+}
+
+export default function ProjectsHeader({
+  title,
+  description,
+  addButton = true,
+}: ProjectsHeaderProps) {
   return (
-    <div className="mb-8">
-      <motion.h1 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-3xl font-serif font-bold text-adrar-800"
-      >
-        Projets
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="text-adrar-600"
-      >
-        Découvrez nos projets de construction utilisant les matériaux locaux
-      </motion.p>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 className="text-3xl font-serif font-bold text-adrar-900">{title}</h1>
+        {description && (
+          <p className="text-muted-foreground mt-1 text-lg">{description}</p>
+        )}
+      </div>
+      
+      {addButton && (
+        <Link to="/projects/create">
+          <Button className="bg-terracotta-500 hover:bg-terracotta-600">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un projet
+          </Button>
+        </Link>
+      )}
     </div>
   );
-};
-
-export default ProjectsHeader;
+}

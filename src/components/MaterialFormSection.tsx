@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import MaterialSelector from './MaterialSelector';
 
@@ -16,11 +17,13 @@ interface SelectedMaterial {
 interface MaterialFormSectionProps {
   selectedMaterials: SelectedMaterial[];
   onChange: (materials: SelectedMaterial[]) => void;
+  projectBudget?: number;
 }
 
 const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
   selectedMaterials,
-  onChange
+  onChange,
+  projectBudget
 }) => {
   return (
     <Card>
@@ -28,11 +31,15 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
         <CardTitle>
           Matériaux nécessaires
         </CardTitle>
+        <CardDescription>
+          Sélectionnez les matériaux requis pour ce projet
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <MaterialSelector 
           selectedMaterials={selectedMaterials}
           onChange={onChange}
+          projectBudget={projectBudget}
         />
       </CardContent>
     </Card>

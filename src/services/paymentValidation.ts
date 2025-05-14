@@ -38,7 +38,16 @@ export class PaymentValidator {
     if (amount > allowedAmount) {
       return {
         valid: false,
-        message: `Le montant demandé (${amount}) dépasse le paiement autorisé (${allowedAmount}) basé sur le progrès et les inspections du projet`
+        message: `Le montant demandé (${amount.toLocaleString()}) dépasse le paiement autorisé (${allowedAmount.toLocaleString()}) basé sur le progrès et les inspections du projet`
+      };
+    }
+    
+    // Rule 5: Check maximum budget
+    const totalPaid = project.payments ? project.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+    if (totalPaid + amount > project.budget) {
+      return {
+        valid: false,
+        message: `Ce paiement porterait le total des paiements (${(totalPaid + amount).toLocaleString()}) au-delà du budget du projet (${project.budget.toLocaleString()})`
       };
     }
 
@@ -51,7 +60,14 @@ export class PaymentValidator {
     // Apply inspection modifiers
     const inspectionModifier = this.getInspectionModifier(project);
     
-    return baseAmount * inspectionModifier;
+    // Calculate already paid amount
+    const totalPaid = project.payments ? project.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+    
+    // The allowed amount is the modified base amount minus what has already been paid
+    const remainingModifiedBaseAmount = (baseAmount * inspectionModifier) - totalPaid;
+    
+    // Cannot be negative
+    return Math.max(0, remainingModifiedBaseAmount);
   }
 
   private static getInspectionModifier(project: ProjectWithPayments): number {
@@ -63,7 +79,7 @@ export class PaymentValidator {
 
     if (!latestInspection) return 0; // Inspection required but missing
     
-    switch (latestInspection.status) {
+    switch (latestInspection.status as InspectionStatus) {
       case 'approved': return 1.0;
       case 'requires_changes': return 0.5;
       case 'rejected': return 0;
