@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, MapContainerProps, TileLayerProps, MarkerProps } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -91,7 +91,7 @@ const ProjectMap = ({
 
   return (
     <MapContainer
-      center={defaultCenter}
+      center={defaultCenter as any}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
@@ -99,13 +99,13 @@ const ProjectMap = ({
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'} as any
       />
       {locations.map(location => (
         <Marker
           key={location.id}
-          position={[location.latitude, location.longitude]}
-          icon={customIcon(location.status)}
+          position={[location.latitude, location.longitude] as any}
+          icon={customIcon(location.status) as any}
           eventHandlers={{
             click: () => {
               setActiveLocation(location);
