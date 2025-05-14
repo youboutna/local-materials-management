@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { useProjectPayments } from '@/hooks/useProjectPayments';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, Payment, Inspection } from '@/types/project';
 
-export default function ProjectDetail() {
+const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { getProject, deleteProject } = useProjects();
   const [project, setProject] = useState<ProjectWithPayments | null>(null);
@@ -29,12 +29,18 @@ export default function ProjectDetail() {
   const [projectMaterials, setProjectMaterials] = useState<any[]>([]);
   
   useEffect(() => {
-    if (!id) return;
-    
-    async function loadProject() {
+    const fetchProject = async () => {
+      if (!id) {
+        toast({
+          title: "Erreur",
+          description: "ID du projet non trouvé",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setLoading(true);
       try {
-        // Fetch basic project data
         const projectData = await getProject(id);
         
         if (!projectData) {
@@ -46,7 +52,6 @@ export default function ProjectDetail() {
           return;
         }
         
-        // Fetch payments for this project
         let payments: Payment[] = [];
         try {
           const fetchedPayments = await fetchPayments();
@@ -62,7 +67,6 @@ export default function ProjectDetail() {
           console.error("Error fetching payments:", error);
         }
         
-        // Fetch inspections for this project
         const { data: inspectionsData, error: inspectionsError } = await supabase
           .from('inspections')
           .select('*')
@@ -73,8 +77,7 @@ export default function ProjectDetail() {
           console.error("Error fetching inspections:", inspectionsError);
         }
         
-        // Convert inspection data to match our interface
-        const inspections: Inspection[] = inspectionsData ? inspectionsData.map((item: any) => ({
+        const inspections = inspectionsData ? inspectionsData.map((item: any) => ({
           id: item.id,
           date: item.date,
           status: item.status,
@@ -84,7 +87,6 @@ export default function ProjectDetail() {
           documents: item.documents
         })) : [];
         
-        // Fetch project materials
         const { data: materials, error: materialsError } = await supabase
           .from('project_materials')
           .select(`
@@ -95,17 +97,17 @@ export default function ProjectDetail() {
         
         if (materialsError) {
           console.error("Error fetching project materials:", materialsError);
-        } else {
-          setProjectMaterials(materials || []);
         }
         
-        // Combine all data into a single project object
         setProject({
           ...projectData,
-          payments: payments,
-          inspections: inspections
+          payments,
+          inspections
         });
         
+        if (materials) {
+          setProjectMaterials(materials);
+        }
       } catch (error) {
         console.error("Error loading project data:", error);
         toast({
@@ -116,9 +118,9 @@ export default function ProjectDetail() {
       } finally {
         setLoading(false);
       }
-    }
+    };
     
-    loadProject();
+    fetchProject();
   }, [id, getProject, toast, fetchPayments]);
   
   const handleDelete = async () => {
@@ -427,4 +429,6 @@ export default function ProjectDetail() {
       <Footer />
     </div>
   );
-}
+};
+
+export default ProjectDetail;

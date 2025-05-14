@@ -1,10 +1,12 @@
 
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
+
 export interface ProjectWithPayments {
   id: string;
   title: string;
   description: string;
   location: string;
-  status: 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
+  status: ProjectStatus;
   progress: number;
   budget: number;
   startDate: string;

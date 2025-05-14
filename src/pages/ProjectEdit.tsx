@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -19,7 +18,7 @@ const projectSchema = z.object({
   title: z.string().min(3, 'Le titre doit comporter au moins 3 caractères'),
   description: z.string().min(10, 'La description doit comporter au moins 10 caractères'),
   location: z.string().min(2, 'La localisation est requise'),
-  status: z.enum(['en cours', 'terminé', 'en attente', 'suspendu', 'annulé']),
+  status: z.enum(['en cours', 'terminé', 'en attente', 'payé', 'en inspection', 'suspendu', 'annulé']),
   progress: z.number().min(0).max(100),
   budget: z.number().positive('Le budget doit être positif'),
   startDate: z.string(),
@@ -228,6 +227,8 @@ const ProjectEdit = () => {
                         <SelectItem value="en cours">En cours</SelectItem>
                         <SelectItem value="terminé">Terminé</SelectItem>
                         <SelectItem value="en attente">En attente</SelectItem>
+                        <SelectItem value="payé">Payé</SelectItem>
+                        <SelectItem value="en inspection">En inspection</SelectItem>
                         <SelectItem value="suspendu">Suspendu</SelectItem>
                         <SelectItem value="annulé">Annulé</SelectItem>
                       </SelectContent>
