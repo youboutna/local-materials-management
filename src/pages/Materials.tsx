@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -81,11 +82,11 @@ const Materials = () => {
               id: `project-${project.id}`,
               name: project.title,
               type: 'project' as const,
-              latitude: project.coordinates_latitude,
-              longitude: project.coordinates_longitude,
+              latitude: Number(project.coordinates_latitude),
+              longitude: Number(project.coordinates_longitude),
               status: project.status as any,
-              region: project.location,
-              startDate: project.start_date
+              region: project.location || '',
+              startDate: project.start_date || ''
             }))
         ];
         

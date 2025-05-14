@@ -93,7 +93,7 @@ const ProjectMap = ({
 
   return (
     <MapContainer
-      center={defaultCenter as any}
+      center={defaultCenter as LatLngTuple}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
@@ -102,13 +102,12 @@ const ProjectMap = ({
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        as any
       />
       {locations.map(location => (
         <Marker
           key={location.id}
           position={[location.latitude, location.longitude] as LatLngTuple}
-          icon={customIcon(location.status, location.type) as any}
+          icon={customIcon(location.status, location.type)}
           eventHandlers={{
             click: () => {
               setActiveLocation(location);
