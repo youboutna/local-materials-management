@@ -70,7 +70,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPayments })
             <div className="mt-4">
               <p className="text-sm text-muted-foreground">Dernier paiement</p>
               <p className="text-sm font-medium">
-                {project.payments[0].amount.toLocaleString()} MRU ({format(new Date(project.payments[0].paymentDate), 'dd/MM/yyyy')})
+                {project.payments[0].amount.toLocaleString()} MRU ({format(new Date(project.payments[0].payment_date), 'dd/MM/yyyy')})
               </p>
             </div>
           )}

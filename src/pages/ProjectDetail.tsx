@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
@@ -186,7 +185,6 @@ export default function ProjectDetail() {
     );
   }
   
-  // Calculate total materials cost
   const totalMaterialsCost = projectMaterials.reduce((total, item) => {
     return total + (item.quantity * (item.material?.price_per_unit || 0));
   }, 0);
@@ -209,15 +207,15 @@ export default function ProjectDetail() {
           <div className="bg-white rounded-xl shadow-elegant p-6 mb-8">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-serif font-bold text-adrar-900">{project.title}</h1>
+                <h1 className="text-3xl font-serif font-bold text-adrar-900">{project?.title}</h1>
                 <p className="text-lg text-muted-foreground mt-1 flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {project.location}
+                  {project?.location}
                 </p>
               </div>
               
               <div className="flex items-center gap-3">
-                <Link to={`/projects/edit/${project.id}`}>
+                <Link to={`/projects/edit/${project?.id}`}>
                   <Button variant="outline" className="flex items-center gap-2">
                     <Edit className="h-4 w-4" />
                     Modifier
@@ -233,7 +231,7 @@ export default function ProjectDetail() {
                   {isDeleting ? "Suppression..." : "Supprimer"}
                 </Button>
                 
-                <PaymentDialog project={project} />
+                {project && <PaymentDialog project={project} />}
               </div>
             </div>
             
@@ -252,14 +250,14 @@ export default function ProjectDetail() {
                         <CardTitle className="text-lg">Description du projet</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-gray-700 whitespace-pre-line">{project.description}</p>
+                        <p className="text-gray-700 whitespace-pre-line">{project?.description}</p>
                         
                         <div className="grid grid-cols-2 gap-4 mt-6">
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 text-gray-400 mr-2" />
                             <div>
                               <div className="text-sm text-gray-500">Date de début</div>
-                              <div className="font-medium">{new Date(project.startDate).toLocaleDateString()}</div>
+                              <div className="font-medium">{project?.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'}</div>
                             </div>
                           </div>
                           
@@ -267,7 +265,7 @@ export default function ProjectDetail() {
                             <User className="h-5 w-5 text-gray-400 mr-2" />
                             <div>
                               <div className="text-sm text-gray-500">Équipe</div>
-                              <div className="font-medium">{project.teamSize} personnes</div>
+                              <div className="font-medium">{project?.teamSize} personnes</div>
                             </div>
                           </div>
                           
@@ -275,7 +273,7 @@ export default function ProjectDetail() {
                             <Percent className="h-5 w-5 text-gray-400 mr-2" />
                             <div>
                               <div className="text-sm text-gray-500">Progression</div>
-                              <div className="font-medium">{project.progress}%</div>
+                              <div className="font-medium">{project?.progress}%</div>
                             </div>
                           </div>
                           
@@ -283,21 +281,23 @@ export default function ProjectDetail() {
                             <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
                             <div>
                               <div className="text-sm text-gray-500">Budget</div>
-                              <div className="font-medium">{project.budget.toLocaleString()} MRU</div>
+                              <div className="font-medium">{project?.budget.toLocaleString()} MRU</div>
                             </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                     
-                    <ProjectStatusCard project={project} />
-                    <div className="mt-6">
-                      <InspectionReportCard project={project} />
-                    </div>
+                    {project && <ProjectStatusCard project={project} />}
+                    {project && (
+                      <div className="mt-6">
+                        <InspectionReportCard project={project} />
+                      </div>
+                    )}
                   </div>
                   
                   <div>
-                    {project.coordinates && (
+                    {project?.coordinates && (
                       <Card className="mb-6">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg">Localisation</CardTitle>
@@ -354,7 +354,7 @@ export default function ProjectDetail() {
                             </div>
                             
                             <div className="mt-1 text-sm text-gray-500 text-right">
-                              {project.budget > 0 && (
+                              {project?.budget > 0 && (
                                 <>
                                   {((totalMaterialsCost / project.budget) * 100).toFixed(1)}% du budget total
                                 </>
@@ -377,7 +377,7 @@ export default function ProjectDetail() {
                     </CardHeader>
                     <CardContent>
                       <div className="prose max-w-none">
-                        <p>{project.description}</p>
+                        <p>{project?.description}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -398,7 +398,7 @@ export default function ProjectDetail() {
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-gray-500">Budget total:</span>
-                            <span className="font-medium">{project.budget.toLocaleString()} MRU</span>
+                            <span className="font-medium">{project?.budget.toLocaleString()} MRU</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-500">Coût des matériaux:</span>

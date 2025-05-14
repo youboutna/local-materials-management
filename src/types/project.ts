@@ -4,7 +4,7 @@ export interface ProjectWithPayments {
   title: string;
   description: string;
   location: string;
-  status: string;
+  status: 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
   progress: number;
   budget: number;
   startDate: string;
