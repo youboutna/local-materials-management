@@ -19,19 +19,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { ProjectData } from '@/components/ProjectCard';
-import { 
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { useEffect, useRef, useState } from 'react';
 
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
@@ -202,9 +189,9 @@ const ProjectFilters = ({
           </Select>
         </div>
         
-        {/* New Project Button */}
+        {/* New Project Button - use the same path as in ProjectsHeader */}
         <div>
-          <Link to="/projects/new">
+          <Link to="/projects/create">
             <Button className="bg-terracotta-500 hover:bg-terracotta-600 w-full md:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nouveau projet

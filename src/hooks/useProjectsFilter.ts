@@ -17,49 +17,84 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   useEffect(() => {
     let result = [...projects];
     
-    // Apply search filter
+    // Apply search filter if there's a query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
+      const query = searchQuery.toLowerCase().trim();
+      const searchFilteredResults = projects.filter(
         project => 
-          project.title.toLowerCase().includes(query) || 
-          project.description.toLowerCase().includes(query) ||
-          project.location.toLowerCase().includes(query)
+          project.title?.toLowerCase().includes(query) || 
+          project.description?.toLowerCase().includes(query) ||
+          project.location?.toLowerCase().includes(query)
       );
       
       // Update search results
-      setSearchResults(result);
+      setSearchResults(searchFilteredResults);
       setShowSearchResults(true);
+      
+      // Don't modify the filtered projects yet - we'll display the search results in the dropdown
     } else {
       setSearchResults([]);
       setShowSearchResults(false);
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        result = result.filter(project => project.status === statusFilter);
+      }
+      
+      // Apply sorting
+      switch (sortOption) {
+        case 'newest':
+          result.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+          break;
+        case 'oldest':
+          result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+          break;
+        case 'budget-high':
+          result.sort((a, b) => b.budget - a.budget);
+          break;
+        case 'budget-low':
+          result.sort((a, b) => a.budget - b.budget);
+          break;
+        case 'progress':
+          result.sort((a, b) => b.progress - a.progress);
+          break;
+      }
+      
+      setFilteredProjects(result);
     }
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(project => project.status === statusFilter);
+  }, [searchQuery, statusFilter, sortOption, projects]);
+  
+  // Apply filters to projects when search is not active
+  useEffect(() => {
+    if (!searchQuery) {
+      let result = [...projects];
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        result = result.filter(project => project.status === statusFilter);
+      }
+      
+      // Apply sorting
+      switch (sortOption) {
+        case 'newest':
+          result.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+          break;
+        case 'oldest':
+          result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+          break;
+        case 'budget-high':
+          result.sort((a, b) => b.budget - a.budget);
+          break;
+        case 'budget-low':
+          result.sort((a, b) => a.budget - b.budget);
+          break;
+        case 'progress':
+          result.sort((a, b) => b.progress - a.progress);
+          break;
+      }
+      
+      setFilteredProjects(result);
     }
-    
-    // Apply sorting
-    switch (sortOption) {
-      case 'newest':
-        result.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-        break;
-      case 'oldest':
-        result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-        break;
-      case 'budget-high':
-        result.sort((a, b) => b.budget - a.budget);
-        break;
-      case 'budget-low':
-        result.sort((a, b) => a.budget - b.budget);
-        break;
-      case 'progress':
-        result.sort((a, b) => b.progress - a.progress);
-        break;
-    }
-    
-    setFilteredProjects(result);
   }, [searchQuery, statusFilter, sortOption, projects]);
 
   // Function to handle clicking on a search result
