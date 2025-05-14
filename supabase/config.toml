@@ -1,1 +1,23 @@
+
+# This is the Supabase project configuration file
 project_id = "huttgbybeuzeikaqfvam"
+
+# CORS settings to allow requests from all origins in development
+[api]
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[api.cors]
+enabled = true
+allowed_origins = ["*"]
+allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+allowed_headers = ["Authorization", "Content-Type"]
+exposed_headers = ["Content-Range", "X-Total-Count"]
+
+# Add dev environment variable
+[auth]
+enable_signup = true
+site_url = "http://localhost:8080"
+additional_redirect_urls = ["http://localhost:8080/auth/callback"]

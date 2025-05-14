@@ -1,7 +1,19 @@
 
 import "reflect-metadata"; // Import reflect-metadata at the top
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import { DEV_MODE } from './config/constants';
 
-createRoot(document.getElementById("root")!).render(<App />);
+// In development mode, log that authentication is bypassed
+if (DEV_MODE) {
+  console.log('🛠️ Development mode active: Authentication is bypassed');
+}
+
+// Wrap the app with an error boundary to catch and handle errors gracefully
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);

@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { DEV_MODE } from '@/config/constants';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,6 +12,11 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) => {
   const { isAuthenticated, user, loading } = useKeycloakAuth();
   const location = useLocation();
+
+  // In dev mode, we'll always render the children to bypass authentication checks
+  if (DEV_MODE) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     // Display a loading spinner while checking authentication
@@ -23,7 +29,10 @@ const ProtectedRoute = ({ children, requiredRoles = [] }: ProtectedRouteProps) =
 
   // Not authenticated - redirect to login
   if (!isAuthenticated || !user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    // Use a direct redirection for better security
+    // This helps prevent cross-origin issues with React Router
+    window.location.href = '/auth';
+    return null;
   }
 
   // Check for required roles if specified

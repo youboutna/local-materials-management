@@ -129,12 +129,26 @@ const Auth = () => {
   });
   
   useEffect(() => {
-    navigate(`/auth?mode=${mode}`, { replace: true });
+    if (DEV_MODE) {
+      // Use history API directly to avoid security errors in dev mode
+      const newUrl = `/auth?mode=${mode}`;
+      if (window.location.pathname + window.location.search !== newUrl) {
+        window.history.replaceState(null, '', newUrl);
+      }
+    } else {
+      // Only use navigate in production mode
+      navigate(`/auth?mode=${mode}`, { replace: true });
+    }
   }, [mode, navigate]);
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      if (DEV_MODE) {
+        // Use direct window location change to avoid security errors
+        window.location.href = '/dashboard';
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
@@ -152,7 +166,8 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isDevelopmentMode) {
-        navigate('/dashboard');
+        // Avoid navigate in dev mode, use direct location change
+        window.location.href = '/dashboard';
         return;
       }
 
@@ -198,7 +213,7 @@ const Auth = () => {
         title: "Mode développement",
         description: "Connexion Google simulée en mode développement",
       });
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
       return;
     }
 

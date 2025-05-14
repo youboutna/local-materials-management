@@ -1,7 +1,9 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { keycloak, initKeycloak, getUserInfo } from '@/integrations/keycloak/keycloak';
 import { useToast } from '@/hooks/use-toast';
+import { DEV_MODE } from '@/config/constants';
 
 interface KeycloakUser {
   id?: string;
@@ -25,15 +27,31 @@ const KeycloakAuthContext = createContext<KeycloakAuthContextType | undefined>(u
 
 export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<KeycloakUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(!DEV_MODE); // Don't show loading in dev mode
+  const [isAuthenticated, setIsAuthenticated] = useState(DEV_MODE); // Auto-authenticated in dev mode
   const { toast } = useToast();
 
   // Initialize Keycloak
   useEffect(() => {
+    // Skip Keycloak initialization in development mode
+    if (DEV_MODE) {
+      console.log('🛠️ Development mode active: Keycloak authentication is bypassed');
+      setLoading(false);
+      return;
+    }
+
     const init = async () => {
       try {
-        const authenticated = await initKeycloak();
+        // Add error handling with timeouts to prevent hanging
+        const timeoutPromise = new Promise<boolean>((_, reject) => {
+          setTimeout(() => reject(new Error("Keycloak initialization timed out")), 10000);
+        });
+        
+        const authenticated = await Promise.race([
+          initKeycloak(),
+          timeoutPromise
+        ]) as boolean;
+        
         setIsAuthenticated(authenticated);
 
         if (authenticated) {
@@ -129,12 +147,57 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
     init();
   }, [toast]);
 
+  // Safe login function
   const login = () => {
-    keycloak.login();
+    if (DEV_MODE) {
+      console.log('🛠️ Development mode: Login action simulated');
+      // Directly set authenticated in dev mode
+      setIsAuthenticated(true);
+      setUser({
+        id: 'dev-user-id',
+        keycloakId: 'dev-keycloak-id',
+        username: 'dev-user',
+        email: 'dev@example.com',
+        roles: ['patient'],
+        firstName: 'Dev',
+        lastName: 'User'
+      });
+      return;
+    }
+    
+    try {
+      keycloak.login();
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Erreur de connexion',
+        description: 'Impossible de se connecter au service d\'authentification',
+        variant: 'destructive'
+      });
+    }
   };
 
+  // Safe logout function
   const logout = () => {
-    keycloak.logout();
+    if (DEV_MODE) {
+      console.log('🛠️ Development mode: Logout action simulated');
+      setIsAuthenticated(false);
+      setUser(null);
+      // In dev mode, redirect to auth page directly
+      window.location.href = '/auth';
+      return;
+    }
+    
+    try {
+      keycloak.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Erreur de déconnexion',
+        description: 'Impossible de se déconnecter du service d\'authentification',
+        variant: 'destructive'
+      });
+    }
   };
 
   const value = {
