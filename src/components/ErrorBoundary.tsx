@@ -2,7 +2,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -40,7 +40,7 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="flex items-center justify-center h-screen">
           <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
             <Alert variant="destructive" className="mb-6">
-              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Erreur</AlertTitle>
               <AlertDescription>
                 Une erreur s'est produite dans l'application.
