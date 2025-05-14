@@ -1,5 +1,4 @@
 
-
 // Set this to true to bypass authentication in development
 export const DEV_MODE = true;
 
@@ -52,4 +51,3 @@ export const setActiveDevRole = (role: string): void => {
     DEV_USER.user_metadata.role = role;
   }
 };
-
