@@ -34,9 +34,8 @@ import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
-import ProjectMap from '@/components/ProjectMap';
-import { MapLocation } from '@/components/ProjectMap';
-import MaterialFormSection from '@/components/MaterialFormSection';
+import ProjectMap, { MapLocation, ProjectStatus } from '@/components/ProjectMap';
+import { MaterialFormSection } from '@/components/MaterialFormSection';
 import { supabase } from '@/integrations/supabase/client';
 
 // Interface for selected materials
