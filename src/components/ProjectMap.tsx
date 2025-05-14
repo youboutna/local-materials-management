@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { divIcon } from 'leaflet';
@@ -8,12 +9,12 @@ export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'payé' | '
 export interface MapLocation {
   id: string;
   name: string;
-  type: 'project';
+  type: 'project' | 'material';
   latitude: number;
   longitude: number;
-  status: ProjectStatus;
-  region: string;
-  startDate: string;
+  status?: ProjectStatus;
+  region?: string;
+  startDate?: string;
   endDate?: string;
 }
 
@@ -23,39 +24,51 @@ interface ProjectMapProps {
   defaultZoom?: number;
   className?: string;
   interactive?: boolean;
+  selectable?: boolean;
+  onLocationSelect?: (latitude: number, longitude: number) => void;
 }
 
-const ProjectMap = ({ locations, defaultCenter = [0, 0], defaultZoom = 2, className = '', interactive = false }: ProjectMapProps) => {
+const ProjectMap = ({ 
+  locations, 
+  defaultCenter = [0, 0], 
+  defaultZoom = 2, 
+  className = '', 
+  interactive = false,
+  selectable = false,
+  onLocationSelect 
+}: ProjectMapProps) => {
   const [activeLocation, setActiveLocation] = useState<MapLocation | null>(null);
 
-  const customIcon = (status: ProjectStatus) => {
+  const customIcon = (status?: ProjectStatus) => {
     let color = 'gray';
 
-    switch (status) {
-      case 'en cours':
-        color = 'blue';
-        break;
-      case 'terminé':
-        color = 'green';
-        break;
-      case 'en attente':
-        color = 'orange';
-        break;
-      case 'payé':
-        color = 'purple';
-        break;
-      case 'en inspection':
-        color = 'yellow';
-        break;
-      case 'suspendu':
-        color = 'gray';
-        break;
-      case 'annulé':
-        color = 'red';
-        break;
-      default:
-        color = 'gray';
-        break;
+    if (status) {
+      switch (status) {
+        case 'en cours':
+          color = 'blue';
+          break;
+        case 'terminé':
+          color = 'green';
+          break;
+        case 'en attente':
+          color = 'orange';
+          break;
+        case 'payé':
+          color = 'purple';
+          break;
+        case 'en inspection':
+          color = 'yellow';
+          break;
+        case 'suspendu':
+          color = 'gray';
+          break;
+        case 'annulé':
+          color = 'red';
+          break;
+        default:
+          color = 'gray';
+          break;
+      }
     }
 
     return divIcon({
@@ -69,16 +82,20 @@ const ProjectMap = ({ locations, defaultCenter = [0, 0], defaultZoom = 2, classN
     });
   };
 
+  const handleMapClick = (e: any) => {
+    if (selectable && onLocationSelect) {
+      const { lat, lng } = e.latlng;
+      onLocationSelect(lat, lng);
+    }
+  };
+
   return (
     <MapContainer
       center={defaultCenter}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
-      dragging={interactive}
-      doubleClickZoom={interactive}
       scrollWheelZoom={interactive}
-      touchZoom={interactive}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -98,11 +115,17 @@ const ProjectMap = ({ locations, defaultCenter = [0, 0], defaultZoom = 2, classN
           <Popup>
             <div>
               <h3>{location.name}</h3>
-              <p>{location.region}</p>
+              <p>{location.region || ''}</p>
             </div>
           </Popup>
         </Marker>
       ))}
+      {selectable && (
+        <div 
+          onClick={handleMapClick}
+          className="absolute inset-0 z-[400] cursor-crosshair"
+        />
+      )}
     </MapContainer>
   );
 };

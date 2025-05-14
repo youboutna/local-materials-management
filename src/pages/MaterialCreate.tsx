@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -94,7 +93,9 @@ const MaterialCreate = () => {
       name: form.getValues("name") || "Nouvelle source de matériau",
       type: "material",
       latitude: latitude,
-      longitude: longitude
+      longitude: longitude,
+      region: form.getValues("originLocation") || "",
+      startDate: new Date().toISOString().split('T')[0]
     });
   };
 
@@ -326,6 +327,7 @@ const MaterialCreate = () => {
                         locations={mapLocation ? [mapLocation] : []}
                         selectable={true}
                         onLocationSelect={handleLocationSelect}
+                        interactive={true}
                       />
                     </div>
                     

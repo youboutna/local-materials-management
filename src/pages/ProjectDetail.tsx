@@ -310,7 +310,9 @@ const ProjectDetail = () => {
                                 latitude: project.coordinates.latitude,
                                 longitude: project.coordinates.longitude,
                                 type: 'project',
-                                status: project.status
+                                status: project.status,
+                                region: project.location,
+                                startDate: project.startDate
                               }]} 
                               interactive={true} 
                             />

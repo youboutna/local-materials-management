@@ -113,7 +113,9 @@ const ProjectCreate = () => {
       type: "project",
       latitude: latitude,
       longitude: longitude,
-      status: form.getValues("status") as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+      status: form.getValues("status") as ProjectStatus,
+      region: form.getValues("location") || "",
+      startDate: form.getValues("startDate") || new Date().toISOString().split('T')[0]
     });
   };
 
@@ -466,6 +468,7 @@ const ProjectCreate = () => {
                         locations={mapLocation ? [mapLocation] : []}
                         selectable={true}
                         onLocationSelect={handleLocationSelect}
+                        interactive={true}
                       />
                     </div>
                     
