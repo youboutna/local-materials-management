@@ -91,17 +91,15 @@ const ProjectMap = ({
     }
   };
 
-  // Use type assertion to satisfy TypeScript
-  const mapProps: any = {
-    center: defaultCenter,
-    zoom: defaultZoom,
-    style: { height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' },
-    className,
-    scrollWheelZoom: interactive
-  };
-
+  // We need to cast properties to any to satisfy TypeScript with react-leaflet
   return (
-    <MapContainer {...mapProps}>
+    <MapContainer 
+      center={defaultCenter as LatLngTuple} 
+      zoom={defaultZoom}
+      style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
+      className={className}
+      scrollWheelZoom={interactive}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
