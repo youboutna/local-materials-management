@@ -13,6 +13,8 @@ import { ProjectStatusCard } from '@/components/project/ProjectStatusCard';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
 import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { InspectionReportCard } from '@/components/project/InspectionReportCard';
+import { InspectionsList } from '@/components/project/InspectionsList';
+import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { useProjectPayments } from '@/hooks/useProjectPayments';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, Payment, Inspection } from '@/types/project';
@@ -27,6 +29,83 @@ const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { fetchPayments } = useProjectPayments(id || "");
   const [projectMaterials, setProjectMaterials] = useState<any[]>([]);
+  
+  // Add a refreshProjectData function to update the data after creating an inspection
+  const refreshProjectData = async () => {
+    if (!id) return;
+    
+    try {
+      const projectData = await getProject(id);
+      
+      if (!projectData) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails du projet.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      let payments: Payment[] = [];
+      try {
+        const fetchedPayments = await fetchPayments();
+        payments = fetchedPayments.map(p => ({
+          id: p.id,
+          amount: p.amount,
+          payment_date: p.payment_date,
+          payment_method: p.payment_method,
+          progress_at_payment: p.progress_at_payment,
+          transaction_id: p.transaction_id
+        }));
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+      }
+      
+      const { data: inspectionsData, error: inspectionsError } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', id)
+        .order('date', { ascending: false });
+      
+      if (inspectionsError) {
+        console.error("Error fetching inspections:", inspectionsError);
+      }
+      
+      const inspections = inspectionsData ? inspectionsData.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        status: item.status,
+        inspector: item.inspector,
+        progress_at_inspection: item.progress_at_inspection,
+        comments: item.comments,
+        documents: item.documents
+      })) : [];
+      
+      const { data: materials, error: materialsError } = await supabase
+        .from('project_materials')
+        .select(`
+          id, quantity,
+          material:material_id (id, name, unit, price_per_unit, available_quantity, category)
+        `)
+        .eq('project_id', id);
+      
+      if (materialsError) {
+        console.error("Error fetching project materials:", materialsError);
+      }
+      
+      setProject({
+        ...projectData,
+        payments,
+        inspections
+      });
+      
+      if (materials) {
+        setProjectMaterials(materials);
+      }
+    } catch (error) {
+      console.error("Error loading project data:", error);
+    }
+  };
   
   useEffect(() => {
     const fetchProject = async () => {
@@ -213,7 +292,7 @@ const ProjectDetail = () => {
                 </p>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link to={`/projects/edit/${project?.id}`}>
                   <Button variant="outline" className="flex items-center gap-2">
                     <Edit className="h-4 w-4" />
@@ -231,16 +310,19 @@ const ProjectDetail = () => {
                 </Button>
                 
                 {project && <PaymentDialog project={project} />}
+                {project && <InspectionDialog project={project} onInspectionCreated={refreshProjectData} />}
               </div>
             </div>
             
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
                 <TabsTrigger value="details">Détails</TabsTrigger>
+                <TabsTrigger value="inspections">Inspections</TabsTrigger>
                 <TabsTrigger value="payments">Paiements</TabsTrigger>
               </TabsList>
               
+              {/* Overview Tab */}
               <TabsContent value="overview" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -369,6 +451,7 @@ const ProjectDetail = () => {
                 </div>
               </TabsContent>
               
+              {/* Details Tab */}
               <TabsContent value="details" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Implement more detailed views here */}
@@ -385,6 +468,64 @@ const ProjectDetail = () => {
                 </div>
               </TabsContent>
               
+              {/* New Inspections Tab */}
+              <TabsContent value="inspections" className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2">
+                    <InspectionsList projectId={project.id} />
+                  </div>
+                  <div>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Informations sur les inspections</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="font-medium">Processus d'inspection</h4>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Les inspections sont effectuées pour vérifier la qualité et la conformité du projet aux normes établies.
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium">Statuts possibles</h4>
+                            <div className="mt-2 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status="approuvée" className="w-24" />
+                                <span className="text-sm">Le projet répond aux exigences</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status="modifications requises" className="w-24" />
+                                <span className="text-sm">Des corrections sont nécessaires</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status="rejetée" className="w-24" />
+                                <span className="text-sm">Le projet ne répond pas aux exigences</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status="en attente" className="w-24" />
+                                <span className="text-sm">L'inspection est en attente de révision</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="pt-2 border-t">
+                            <h4 className="font-medium">Conseils</h4>
+                            <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                              <li>Préparez tous les documents nécessaires avant l'inspection</li>
+                              <li>Assurez-vous que le site est accessible et sécurisé</li>
+                              <li>Corrigez rapidement les problèmes signalés lors des inspections</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Payments Tab */}
               <TabsContent value="payments" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="md:col-span-2">

@@ -1,7 +1,8 @@
 
 import { cn } from '@/lib/utils';
 
-type StatusType = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
+type StatusType = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé' 
+                | 'approuvée' | 'rejetée' | 'modifications requises';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -58,6 +59,28 @@ const getStatusConfig = (status: StatusType) => {
         textColor: 'text-red-700',
         borderColor: 'border-red-200',
         dotColor: 'bg-red-500',
+      };
+    // Inspection statuses
+    case 'approuvée':
+      return {
+        bgColor: 'bg-green-50',
+        textColor: 'text-green-700',
+        borderColor: 'border-green-200',
+        dotColor: 'bg-green-500',
+      };
+    case 'rejetée':
+      return {
+        bgColor: 'bg-red-50',
+        textColor: 'text-red-700',
+        borderColor: 'border-red-200',
+        dotColor: 'bg-red-500',
+      };
+    case 'modifications requises':
+      return {
+        bgColor: 'bg-amber-50',
+        textColor: 'text-amber-700',
+        borderColor: 'border-amber-200',
+        dotColor: 'bg-amber-500',
       };
     default:
       return {
