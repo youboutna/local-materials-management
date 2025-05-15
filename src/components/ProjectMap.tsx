@@ -91,10 +91,10 @@ const ProjectMap = ({
     }
   };
 
-  // We need to cast properties to any to satisfy TypeScript with react-leaflet
   return (
     <MapContainer 
-      center={defaultCenter as LatLngTuple} 
+      // Cast the center and other props properly for TypeScript
+      center={defaultCenter as any}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
       className={className}
@@ -103,12 +103,15 @@ const ProjectMap = ({
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        // Use any type assertion to satisfy TypeScript
+        {...{} as any}
       />
       {locations.map(location => (
         <Marker
           key={location.id}
           position={[location.latitude, location.longitude] as LatLngTuple}
-          icon={customIcon(location.status, location.type)}
+          // Use any type assertion for icon prop
+          icon={customIcon(location.status, location.type) as any}
           eventHandlers={{
             click: () => {
               setActiveLocation(location);

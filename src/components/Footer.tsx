@@ -18,16 +18,16 @@ const Footer = () => {
               Nous préservons le patrimoine culturel à travers l'innovation technologique.
             </p>
             <div className="flex space-x-3 pt-4">
-              <a href="#" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="#" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
                 <Twitter className="h-4 w-4" />
               </a>
-              <a href="#" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="#" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
                 <Youtube className="h-4 w-4" />
               </a>
             </div>
@@ -107,11 +107,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 mr-2 text-terracotta-400" />
-                <span className="text-gray-300 text-sm">+222 xx xx xx xx</span>
+                <a href="tel:+22200000000" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">+222 xx xx xx xx</a>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 mr-2 text-terracotta-400" />
-                <span className="text-gray-300 text-sm">contact@materialsmanagement.mr</span>
+                <a href="mailto:contact@materialsmanagement.mr" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">contact@materialsmanagement.mr</a>
               </li>
             </ul>
           </div>
@@ -123,7 +123,7 @@ const Footer = () => {
               &copy; {new Date().getFullYear()} Materials Management. Tous droits réservés.
             </p>
             <div className="flex items-center gap-4">
-              <a href="https://hadratech.com/nous-contacter/" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
+              <a href="mailto:contact@materialsmanagement.mr" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
                 <Mail className="h-4 w-4" />
               </a>
               <div className="mt-4 md:mt-0">
