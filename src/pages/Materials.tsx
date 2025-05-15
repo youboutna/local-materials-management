@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -21,6 +22,7 @@ import Footer from '@/components/Footer';
 import ProjectMap from '@/components/ProjectMap';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { supabase } from '@/integrations/supabase/client';
+import { MapLocation } from '@/components/ProjectMap';
 
 // Define the Material type to match what we're getting from Supabase
 interface Material {
@@ -40,7 +42,7 @@ const Materials = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
-  const [mapLocations, setMapLocations] = useState<any[]>([]);
+  const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
 
   useEffect(() => {
     fetchMaterials();
@@ -59,14 +61,16 @@ const Materials = () => {
 
       if (data) {
         setMaterials(data as Material[]);
-        const locations = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          type: 'material' as const,
-          latitude: item.coordinates_latitude ?? 0,
-          longitude: item.coordinates_longitude ?? 0,
-          region: item.origin_location || '',
-        })).filter(item => item.latitude !== 0 && item.longitude !== 0);
+        const locations = data
+          .filter(item => item.coordinates_latitude != null && item.coordinates_longitude != null)
+          .map(item => ({
+            id: item.id,
+            name: item.name,
+            type: 'material' as const,
+            latitude: item.coordinates_latitude ?? 0,
+            longitude: item.coordinates_longitude ?? 0,
+            region: item.origin_location || '',
+          }));
         setMapLocations(locations);
       }
     } catch (error: any) {

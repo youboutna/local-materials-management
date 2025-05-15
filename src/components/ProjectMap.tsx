@@ -93,7 +93,7 @@ const ProjectMap = ({
 
   return (
     <MapContainer 
-      // @ts-ignore - Need to ignore type issues with react-leaflet props
+      // @ts-ignore - Need to ignore all type issues with react-leaflet props
       center={defaultCenter}
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%', cursor: interactive ? 'grab' : 'default' }}
@@ -101,14 +101,14 @@ const ProjectMap = ({
       scrollWheelZoom={interactive}
     >
       <TileLayer
-        // @ts-ignore - Need to ignore type issues with react-leaflet TileLayer props
+        // @ts-ignore - Need to ignore all type issues with react-leaflet TileLayer props
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       {locations.map(location => (
         <Marker
           key={location.id}
-          // @ts-ignore - Need to ignore type issues with react-leaflet Marker props
+          // @ts-ignore - Need to ignore all type issues with react-leaflet Marker props
           position={[location.latitude, location.longitude] as LatLngTuple}
           icon={customIcon(location.status, location.type)}
           eventHandlers={{

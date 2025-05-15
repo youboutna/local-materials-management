@@ -28,7 +28,7 @@ import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
-import ProjectMap from '@/components/ProjectMap';
+import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 
 // Form schema using Zod
 const formSchema = z.object({
@@ -77,7 +77,7 @@ const MaterialCreate = () => {
   });
 
   // Map location state
-  const [mapLocation, setMapLocation] = useState<any | null>(null);
+  const [mapLocation, setMapLocation] = useState<MapLocation | null>(null);
 
   // Handle location selection from map
   const handleLocationSelect = (latitude: number, longitude: number) => {
