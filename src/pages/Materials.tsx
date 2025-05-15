@@ -22,8 +22,21 @@ import ProjectMap from '@/components/ProjectMap';
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { supabase } from '@/integrations/supabase/client';
 
+// Define the Material type to match what we're getting from Supabase
+interface Material {
+  id: string;
+  name: string;
+  category: string;
+  price_per_unit: number;
+  available_quantity: number;
+  image: string | null;
+  origin_location: string | null;
+  coordinates_latitude?: number | null;
+  coordinates_longitude?: number | null;
+}
+
 const Materials = () => {
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
@@ -45,7 +58,7 @@ const Materials = () => {
       }
 
       if (data) {
-        setMaterials(data);
+        setMaterials(data as Material[]);
         const locations = data.map(item => ({
           id: item.id,
           name: item.name,
