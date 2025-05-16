@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments, ProjectStatus } from '@/types/project';
 import { format } from 'date-fns';
 
 export function ProjectStatusCard({ project }: { project: ProjectWithPayments }) {
@@ -11,7 +11,6 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPayments })
       case 'en cours': return 'bg-blue-500';
       case 'terminé': return 'bg-green-500';
       case 'en attente': return 'bg-amber-500';
-      case 'payé': return 'bg-purple-500';
       case 'en inspection': return 'bg-yellow-500';
       case 'suspendu': return 'bg-purple-500';
       case 'annulé': return 'bg-red-500';

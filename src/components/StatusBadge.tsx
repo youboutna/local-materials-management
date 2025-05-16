@@ -1,8 +1,8 @@
 
 import { cn } from '@/lib/utils';
+import { ProjectStatus } from '@/types/project';
 
-export type StatusType = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé' 
-                | 'approuvée' | 'rejetée' | 'modifications requises';
+export type StatusType = ProjectStatus | 'approuvée' | 'rejetée' | 'modifications requises';
 
 interface StatusBadgeProps {
   status: StatusType;

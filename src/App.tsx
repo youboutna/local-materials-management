@@ -1,7 +1,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { KeycloakAuthContextProvider } from './contexts/KeycloakAuthContext';
+import { KeycloakAuthProvider } from './contexts/KeycloakAuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { Toaster } from './components/ui/toaster';
 import Index from './pages/Index';
@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <KeycloakAuthContextProvider>
+      <KeycloakAuthProvider>
         <LanguageProvider>
           <BrowserRouter>
             <Routes>
@@ -57,7 +57,7 @@ function App() {
             <Toaster />
           </BrowserRouter>
         </LanguageProvider>
-      </KeycloakAuthContextProvider>
+      </KeycloakAuthProvider>
     </QueryClientProvider>
   );
 }
