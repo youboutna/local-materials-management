@@ -5,13 +5,14 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Users, ArrowUpRight } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import ProgressIndicator from './ProgressIndicator';
+import { ProjectStatus } from '@/types/project';
 
 export interface ProjectData {
   id: string;
   title: string;
   description: string;
   location: string;
-  status: 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé';
+  status: ProjectStatus;
   progress: number;
   budget: number;
   startDate: string;
@@ -63,7 +64,7 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
               }}
             />
             <div className="absolute top-4 right-4">
-              <StatusBadge status={project.status} />
+              <StatusBadge status={project.status as any} />
             </div>
           </div>
           

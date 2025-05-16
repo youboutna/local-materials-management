@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Select, 
   SelectContent, 
@@ -10,9 +9,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Calendar } from 'lucide-react';
 import { MapLocation } from '@/components/ProjectMap';
+import { ProjectStatus } from '@/types/project';
 
 interface MapFiltersProps {
   locations: MapLocation[];
@@ -69,6 +67,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                 <SelectItem value="en cours">En cours</SelectItem>
                 <SelectItem value="terminé">Terminé</SelectItem>
                 <SelectItem value="en attente">En attente</SelectItem>
+                <SelectItem value="en inspection">En inspection</SelectItem>
                 <SelectItem value="suspendu">Suspendu</SelectItem>
                 <SelectItem value="annulé">Annulé</SelectItem>
               </SelectContent>

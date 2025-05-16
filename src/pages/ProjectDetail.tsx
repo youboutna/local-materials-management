@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
@@ -17,8 +18,9 @@ import { InspectionsList } from '@/components/project/InspectionsList';
 import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { useProjectPayments } from '@/hooks/useProjectPayments';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectWithPayments, Payment, Inspection } from '@/types/project';
+import { ProjectWithPayments, Payment, Inspection, ProjectStatus } from '@/types/project';
 import StatusBadge from '@/components/StatusBadge';
+import { MapLocation } from '@/components/ProjectMap';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -268,6 +270,18 @@ const ProjectDetail = () => {
     return total + (item.quantity * (item.material?.price_per_unit || 0));
   }, 0);
   
+  // Convert project to a MapLocation for use with the ProjectMap component
+  const projectMapLocation: MapLocation | undefined = project.coordinates ? {
+    id: project.id,
+    name: project.title,
+    latitude: project.coordinates.latitude,
+    longitude: project.coordinates.longitude,
+    type: 'project',
+    status: project.status as ProjectStatus,
+    region: project.location,
+    startDate: project.startDate
+  } : undefined;
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
@@ -478,46 +492,60 @@ const ProjectDetail = () => {
                   <div>
                     <Card>
                       <CardHeader>
-                        <CardTitle>Informations sur les inspections</CardTitle>
+                        <CardTitle>Workflow d'inspection</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-medium">Processus d'inspection</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Les inspections sont effectuées pour vérifier la qualité et la conformité du projet aux normes établies.
+                        <div className="space-y-6">
+                          <div className="relative pl-8 pb-8 border-l border-dashed border-muted-foreground/40">
+                            <div className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 bg-blue-50 border border-blue-200 rounded-full flex items-center justify-center">
+                              <span className="text-blue-500 text-xs font-bold">1</span>
+                            </div>
+                            <h3 className="font-medium mb-1">Création d'inspection</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Une inspection est créée pour vérifier l'avancement et la qualité du projet.
                             </p>
                           </div>
                           
-                          <div>
-                            <h4 className="font-medium">Statuts possibles</h4>
-                            <div className="mt-2 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status="approuvée" className="w-24" />
-                                <span className="text-sm">Le projet répond aux exigences</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status="modifications requises" className="w-24" />
-                                <span className="text-sm">Des corrections sont nécessaires</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status="rejetée" className="w-24" />
-                                <span className="text-sm">Le projet ne répond pas aux exigences</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status="en attente" className="w-24" />
-                                <span className="text-sm">L'inspection est en attente de révision</span>
-                              </div>
+                          <div className="relative pl-8 pb-8 border-l border-dashed border-muted-foreground/40">
+                            <div className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center">
+                              <span className="text-amber-500 text-xs font-bold">2</span>
                             </div>
+                            <h3 className="font-medium mb-1">Évaluation sur site</h3>
+                            <p className="text-sm text-muted-foreground">
+                              L'inspecteur visite le chantier et évalue la progression et la qualité du travail.
+                            </p>
                           </div>
                           
-                          <div className="pt-2 border-t">
-                            <h4 className="font-medium">Conseils</h4>
-                            <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                              <li>Préparez tous les documents nécessaires avant l'inspection</li>
-                              <li>Assurez-vous que le site est accessible et sécurisé</li>
-                              <li>Corrigez rapidement les problèmes signalés lors des inspections</li>
-                            </ul>
+                          <div className="relative pl-8 pb-8 border-l border-dashed border-muted-foreground/40">
+                            <div className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 bg-purple-50 border border-purple-200 rounded-full flex items-center justify-center">
+                              <span className="text-purple-500 text-xs font-bold">3</span>
+                            </div>
+                            <h3 className="font-medium mb-1">Rapport et documents</h3>
+                            <p className="text-sm text-muted-foreground">
+                              L'inspecteur prépare un rapport détaillé et joint les documents pertinents.
+                            </p>
+                          </div>
+                          
+                          <div className="relative pl-8">
+                            <div className="absolute top-0 left-0 w-6 h-6 -translate-x-1/2 bg-green-50 border border-green-200 rounded-full flex items-center justify-center">
+                              <span className="text-green-500 text-xs font-bold">4</span>
+                            </div>
+                            <h3 className="font-medium mb-1">Décision finale</h3>
+                            <p className="text-sm text-muted-foreground">
+                              L'inspection est approuvée, rejetée ou nécessite des modifications.
+                            </p>
+                            
+                            <div className="grid grid-cols-3 gap-2 mt-3">
+                              <div className="bg-green-50 p-2 rounded text-center">
+                                <StatusBadge status="approuvée" className="w-full justify-center" />
+                              </div>
+                              <div className="bg-amber-50 p-2 rounded text-center">
+                                <StatusBadge status="modifications requises" className="w-full justify-center" />
+                              </div>
+                              <div className="bg-red-50 p-2 rounded text-center">
+                                <StatusBadge status="rejetée" className="w-full justify-center" />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

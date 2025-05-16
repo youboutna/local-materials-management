@@ -117,8 +117,6 @@ const ProjectMap = ({
   };
 
   const getMarkerIcon = (status: string = 'en attente') => {
-    const color = statusColors[status as keyof typeof statusColors] || 'gray';
-    
     // Using the default icon for now - later could be customized by status
     return customIcon;
   };
@@ -131,12 +129,12 @@ const ProjectMap = ({
     <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
+        center={mapCenter}
+        zoom={mapZoom}
       >
-        <MapView center={mapCenter} zoom={mapZoom} />
-        
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {selectable && interactive && (
@@ -149,10 +147,10 @@ const ProjectMap = ({
               <Marker
                 key={project.id}
                 position={[project.latitude, project.longitude]}
+                icon={getMarkerIcon(project.status)}
                 eventHandlers={{
                   click: () => handleMarkerClick(project.id),
                 }}
-                icon={getMarkerIcon(project.status)}
               >
                 <Popup>
                   <div className="font-medium">{project.name}</div>

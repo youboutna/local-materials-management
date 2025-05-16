@@ -1,139 +1,69 @@
 
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Instagram, Twitter, Facebook, Youtube } from 'lucide-react';
 
 const Footer = () => {
-  return (
-    <footer className="bg-adrar-800 text-white pt-16 pb-8">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Column 1: Logo & Description */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 text-2xl font-serif font-semibold">
-              <span className="text-terracotta-400">Materials</span>
-              <span className="text-white">Management</span>
-            </div>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Solution de gestion de projets spécialisée pour la valorisation des matériaux locaux en Mauritanie.
-              Nous préservons le patrimoine culturel à travers l'innovation technologique.
-            </p>
-            <div className="flex space-x-3 pt-4">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
-                <Facebook className="h-4 w-4" />
-              </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
-                <Youtube className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
+  const currentYear = new Date().getFullYear();
 
-          {/* Column 2: Quick Links */}
+  return (
+    <footer className="mt-auto py-6 md:py-10 bg-white border-t">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="col-span-1 md:col-span-2">
+            <h3 className="font-bold text-lg text-adrar-800 mb-3">À propos</h3>
+            <p className="text-adrar-600 mb-5 max-w-md">
+              Notre plateforme de gestion de projets facilite le suivi et la gestion efficace de projets
+              de construction et d'infrastructure dans toute la Mauritanie.
+            </p>
+            <p className="text-adrar-500 text-sm">
+              © {currentYear} - Tous droits réservés
+            </p>
+          </div>
+          
           <div>
-            <h3 className="text-lg font-serif font-semibold mb-4 text-ivory-300">Liens Rapides</h3>
+            <h3 className="font-bold text-lg text-adrar-800 mb-3">Liens rapides</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Accueil
-                </Link>
-              </li>
-              <li>
-                <Link to="/projects" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Projets
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
+                <Link to="/dashboard" className="text-adrar-600 hover:text-adrar-900">
                   Tableau de bord
                 </Link>
               </li>
               <li>
-                <Link to="/materials" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
+                <Link to="/projects" className="text-adrar-600 hover:text-adrar-900">
+                  Projets
+                </Link>
+              </li>
+              <li>
+                <Link to="/materials" className="text-adrar-600 hover:text-adrar-900">
                   Matériaux
                 </Link>
               </li>
               <li>
-                <Link to="/auth?mode=login" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Connexion
-                </Link>
-              </li>
-              <li>
-                <Link to="/auth?mode=register" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Inscription
+                <Link to="/users" className="text-adrar-600 hover:text-adrar-900">
+                  Utilisateurs
                 </Link>
               </li>
             </ul>
           </div>
-
-          {/* Column 3: Support */}
+          
           <div>
-            <h3 className="text-lg font-serif font-semibold mb-4 text-ivory-300">Support</h3>
+            <h3 className="font-bold text-lg text-adrar-800 mb-3">Légal</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/faq" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Politique de confidentialité
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
+                <Link to="/terms" className="text-adrar-600 hover:text-adrar-900">
                   Conditions d'utilisation
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">
-                  Contactez-nous
+                <Link to="/policy" className="text-adrar-600 hover:text-adrar-900">
+                  Politique de confidentialité
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-adrar-600 hover:text-adrar-900">
+                  Contact
                 </Link>
               </li>
             </ul>
-          </div>
-
-          {/* Column 4: Contact Info */}
-          <div>
-            <h3 className="text-lg font-serif font-semibold mb-4 text-ivory-300">Contact</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <MapPin className="h-5 w-5 mr-2 text-terracotta-400 mt-0.5" />
-                <span className="text-gray-300 text-sm">Nouakchott, Mauritanie</span>
-              </li>
-              <li className="flex items-center">
-                <Phone className="h-5 w-5 mr-2 text-terracotta-400" />
-                <a href="tel:+22200000000" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">+222 xx xx xx xx</a>
-              </li>
-              <li className="flex items-center">
-                <Mail className="h-5 w-5 mr-2 text-terracotta-400" />
-                <a href="mailto:contact@materialsmanagement.mr" className="text-gray-300 hover:text-terracotta-400 transition-colors text-sm">contact@materialsmanagement.mr</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-700 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} Materials Management. Tous droits réservés.
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="mailto:contact@materialsmanagement.mr" className="bg-adrar-700 p-2 rounded-full hover:bg-terracotta-500 transition-colors">
-                <Mail className="h-4 w-4" />
-              </a>
-              <div className="mt-4 md:mt-0">
-                <img 
-                  src="/img/payments.png"
-                  alt="Payment methods"
-                  className="h-8"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>

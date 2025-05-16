@@ -15,7 +15,7 @@ interface InspectionData {
   status: StatusType;
   inspector: string;
   progress_at_inspection: number;
-  comments?: string;
+  comments?: string | null;
   documents?: { name: string; url: string }[];
 }
 
@@ -43,7 +43,18 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
           throw error;
         }
 
-        setInspections(data || []);
+        // Transform data to match InspectionData type
+        const formattedData: InspectionData[] = (data || []).map(item => ({
+          id: item.id,
+          date: item.date,
+          status: item.status as StatusType,
+          inspector: item.inspector,
+          progress_at_inspection: item.progress_at_inspection,
+          comments: item.comments,
+          documents: item.documents as { name: string; url: string }[] | undefined
+        }));
+
+        setInspections(formattedData);
       } catch (error) {
         console.error('Error fetching inspections:', error);
         toast({
