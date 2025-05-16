@@ -45,6 +45,9 @@ const CustomNavbar = () => {
             <Link to="/users" className="text-adrar-700 hover:text-adrar-900">
               {t('nav.users')}
             </Link>
+            <Link to="/settings" className="text-adrar-700 hover:text-adrar-900">
+              Settings
+            </Link>
             
             {/* Language Switcher */}
             <LanguageSwitcher />
@@ -103,6 +106,13 @@ const CustomNavbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 {t('nav.users')}
+              </Link>
+              <Link
+                to="/settings"
+                className="text-adrar-700 hover:text-adrar-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Settings
               </Link>
               
               <div className="py-2">

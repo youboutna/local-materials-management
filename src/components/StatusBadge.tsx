@@ -1,7 +1,7 @@
 
 import { cn } from '@/lib/utils';
 
-type StatusType = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé' 
+export type StatusType = 'en cours' | 'terminé' | 'en attente' | 'payé' | 'en inspection' | 'suspendu' | 'annulé' 
                 | 'approuvée' | 'rejetée' | 'modifications requises';
 
 interface StatusBadgeProps {

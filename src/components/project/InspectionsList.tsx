@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Inspection, InspectionStatus } from '@/types/project';
 import { format } from 'date-fns';
 import { ClipboardList, ChevronDown, ChevronUp } from 'lucide-react';
@@ -33,7 +32,9 @@ export function InspectionsList({ projectId }: InspectionsListProps) {
         throw error;
       }
       
-      setInspections(data || []);
+      // Cast the data to the correct type
+      const typedData = data as unknown as Inspection[];
+      setInspections(typedData || []);
     } catch (error: any) {
       console.error('Error fetching inspections:', error);
       toast({
@@ -50,13 +51,13 @@ export function InspectionsList({ projectId }: InspectionsListProps) {
     fetchInspections();
   }, [projectId]);
   
-  const getStatusText = (status: InspectionStatus): string => {
+  const getStatusText = (status: InspectionStatus): StatusType => {
     switch (status) {
       case 'approved': return 'approuvée';
       case 'requires_changes': return 'modifications requises';
       case 'rejected': return 'rejetée';
       case 'pending': return 'en attente';
-      default: return status;
+      default: return 'en attente';
     }
   };
   

@@ -6,11 +6,12 @@ import { Database, Key, Shield, Cog } from "lucide-react";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DatabaseSettings from '@/components/admin/DatabaseSettings';
+import KeycloakSettings from '@/components/admin/KeycloakSettings';
+import KeycloakConfigurationTab from '@/components/admin/KeycloakConfigurationTab';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { DEV_ROLES, getActiveDevRole, setActiveDevRole } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
-import KeycloakSettings from '@/components/admin/KeycloakSettings';
 
 const Settings = () => {
   const { isDevelopmentMode } = useAuth();
@@ -76,12 +77,15 @@ const Settings = () => {
           )}
           
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3 mb-8">
+            <TabsList className="grid grid-cols-4 mb-8">
               <TabsTrigger value="database" className="flex items-center">
                 <Database className="mr-2 h-4 w-4" /> Database
               </TabsTrigger>
               <TabsTrigger value="keycloak" className="flex items-center">
                 <Key className="mr-2 h-4 w-4" /> Keycloak
+              </TabsTrigger>
+              <TabsTrigger value="keycloak-config" className="flex items-center">
+                <Cog className="mr-2 h-4 w-4" /> Keycloak Config
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center">
                 <Cog className="mr-2 h-4 w-4" /> System
@@ -94,6 +98,10 @@ const Settings = () => {
             
             <TabsContent value="keycloak">
               <KeycloakSettings />
+            </TabsContent>
+            
+            <TabsContent value="keycloak-config">
+              <KeycloakConfigurationTab />
             </TabsContent>
             
             <TabsContent value="system">

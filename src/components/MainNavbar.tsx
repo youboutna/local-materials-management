@@ -34,39 +34,42 @@ const MainNavbar = () => {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
-              <Link to="/projects">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                >
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/projects">
                   {t('nav.projects') || 'Projets'}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <Link to="/materials">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                >
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/materials">
                   {t('nav.materials') || 'Matériaux'}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <Link to="/dashboard">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                >
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/dashboard">
                   Dashboard
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </NavigationMenuItem>
             
             <NavigationMenuItem>
@@ -75,43 +78,46 @@ const MainNavbar = () => {
             
             {/* Settings */}
             <NavigationMenuItem>
-              <Link to="/settings">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                >
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/settings">
                   <Cog className="h-4 w-4 mr-2" />
                   Settings
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </NavigationMenuItem>
             
             {/* Database Settings */}
             <NavigationMenuItem>
-              <Link to="/database-settings">
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                >
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/database-settings">
                   <Database className="h-4 w-4 mr-2" />
                   Base de données
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
         
         {/* Account or Login Button */}
-        <Link to="/auth">
-          <Button 
-            variant="secondary"
-            size="sm"
-          >
+        <Button 
+          variant="secondary"
+          size="sm"
+          asChild
+        >
+          <Link to="/auth">
             {t('nav.login') || 'Se connecter'}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </header>
   );
