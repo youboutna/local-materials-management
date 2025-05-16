@@ -8,9 +8,8 @@ import ProjectsGrid from '@/components/projects/ProjectsGrid';
 import EmptyProjectsState from '@/components/projects/EmptyProjectsState';
 import { useProjectsFilter } from '@/hooks/useProjectsFilter';
 import { useProjects } from '@/hooks/projects/useProjects';
-import ProjectMap from '@/components/ProjectMap';
+import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 import MapFilters from '@/components/projects/MapFilters';
-import { MapLocation } from '@/components/ProjectMap';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, List } from 'lucide-react';
 
@@ -30,7 +29,8 @@ const Projects = () => {
     searchResults,
     showSearchResults,
     handleSelectSearchResult,
-    clearSearch
+    clearSearch,
+    performSearch
   } = useProjectsFilter(projects);
 
   // Convert projects to map locations
@@ -44,7 +44,7 @@ const Projects = () => {
           type: 'project' as const,
           latitude: project.coordinates!.latitude,
           longitude: project.coordinates!.longitude,
-          status: project.status,
+          status: project.status as any,
           region: project.location,
           startDate: project.startDate,
           endDate: project.endDate
@@ -96,7 +96,7 @@ const Projects = () => {
               {/* Filters and Actions */}
               <ProjectFilters 
                 searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
+                setSearchQuery={performSearch} // Use the enhanced search function
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
                 sortOption={sortOption}

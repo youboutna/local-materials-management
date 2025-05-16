@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useProjects } from '@/hooks/useProjects';
@@ -26,7 +26,8 @@ const customIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-const statusColors = {
+// Define status colors
+export const statusColors = {
   'en cours': 'blue',
   'en attente': 'orange',
   'terminé': 'green',
@@ -35,12 +36,44 @@ const statusColors = {
   // Add more statuses as needed
 };
 
-type ProjectMapProps = {
+export type ProjectStatus = 'en cours' | 'en attente' | 'terminé' | 'suspendu' | 'annulé';
+
+export interface MapLocation {
+  id: string;
+  name: string;
+  type: 'project' | 'material' | 'supplier';
+  latitude: number;
+  longitude: number;
+  status?: ProjectStatus;
+  region?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface ProjectMapProps {
   height?: string;
   width?: string;
   selectedProject?: any;
   showAllProjects?: boolean;
   onMarkerClick?: (projectId: string) => void;
+  locations?: MapLocation[];
+  selectable?: boolean;
+  onLocationSelect?: (latitude: number, longitude: number) => void;
+  interactive?: boolean;
+  defaultCenter?: [number, number];
+  defaultZoom?: number;
+  className?: string;
+}
+
+// MapView component to handle map center and zoom changes
+const MapView = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  
+  return null;
 };
 
 const ProjectMap = ({
@@ -49,11 +82,18 @@ const ProjectMap = ({
   selectedProject,
   showAllProjects = false,
   onMarkerClick,
+  locations,
+  selectable = false,
+  onLocationSelect,
+  interactive = false,
+  defaultCenter = [18.0735, -15.9582], // Nouakchott coordinates
+  defaultZoom = 10,
+  className,
 }: ProjectMapProps) => {
-  const { projects, isLoading } = useProjects();
+  const { projects, loading } = useProjects();
   const navigate = useNavigate();
-  const [mapCenter, setMapCenter] = useState<[number, number]>([18.0735, -15.9582]); // Nouakchott coordinates
-  const [mapZoom, setMapZoom] = useState(10);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
+  const [mapZoom, setMapZoom] = useState(defaultZoom);
 
   useEffect(() => {
     if (selectedProject && selectedProject.latitude && selectedProject.longitude) {
@@ -70,28 +110,38 @@ const ProjectMap = ({
     }
   };
 
-  const getMarkerIcon = (status: string) => {
+  const handleMapClick = (e: L.LeafletMouseEvent) => {
+    if (selectable && onLocationSelect) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    }
+  };
+
+  const getMarkerIcon = (status: string = 'en attente') => {
     const color = statusColors[status as keyof typeof statusColors] || 'gray';
     
     // Using the default icon for now - later could be customized by status
     return customIcon;
   };
 
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center h-full">Chargement de la carte...</div>;
   }
 
   return (
-    <div style={{ height, width }} className="border rounded-md overflow-hidden">
+    <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
       <MapContainer 
-        center={mapCenter} 
-        zoom={mapZoom} 
         style={{ height: '100%', width: '100%' }}
       >
+        <MapView center={mapCenter} zoom={mapZoom} />
+        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
         />
+
+        {selectable && interactive && (
+          <div className="leaflet-map-click-handler" onClick={(e) => handleMapClick(e as any)} />
+        )}
 
         {showAllProjects && projects && projects.map((project: any) => {
           if (project.latitude && project.longitude) {
@@ -120,6 +170,28 @@ const ProjectMap = ({
           }
           return null;
         })}
+
+        {locations && locations.map((location) => (
+          <Marker 
+            key={location.id}
+            position={[location.latitude, location.longitude]}
+            icon={getMarkerIcon(location.status)}
+          >
+            <Popup>
+              <div className="font-medium">{location.name}</div>
+              <div className="text-sm text-gray-600">{location.region || ''}</div>
+              {location.type === 'project' && (
+                <Button 
+                  variant="link" 
+                  className="p-0 mt-1 h-auto" 
+                  onClick={() => navigate(`/projects/${location.id}`)}
+                >
+                  Voir le projet
+                </Button>
+              )}
+            </Popup>
+          </Marker>
+        ))}
 
         {selectedProject && selectedProject.latitude && selectedProject.longitude && (
           <Marker 

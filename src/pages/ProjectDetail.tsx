@@ -18,6 +18,7 @@ import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { useProjectPayments } from '@/hooks/useProjectPayments';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, Payment, Inspection } from '@/types/project';
+import StatusBadge from '@/components/StatusBadge';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
