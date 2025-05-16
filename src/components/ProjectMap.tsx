@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useProjects } from '@/hooks/useProjects';
@@ -33,6 +33,7 @@ export const statusColors = {
   'terminé': 'green',
   'suspendu': 'purple',
   'annulé': 'red',
+  'en inspection': 'yellow',
   // Add more statuses as needed
 };
 
@@ -64,6 +65,15 @@ interface ProjectMapProps {
   defaultZoom?: number;
   className?: string;
 }
+
+// Map center updater component
+const MapCenterUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+};
 
 const ProjectMap = ({
   height = '400px',
@@ -118,10 +128,11 @@ const ProjectMap = ({
     <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
-        key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
-        center={mapCenter}
-        zoom={mapZoom}
+        doubleClickZoom={interactive}
+        scrollWheelZoom={interactive}
       >
+        <MapCenterUpdater center={mapCenter} zoom={mapZoom} />
+        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
