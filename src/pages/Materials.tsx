@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,8 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { ProjectStatus, statusColors } from '@/components/ProjectMap';
+import { StatusColors, statusColors } from '@/components/ProjectMap';
 import { Badge } from '@/components/ui/badge';
 
 interface Material {
@@ -41,18 +41,47 @@ interface Material {
   unit: string;
   price_per_unit: number;
   available_quantity: number;
-  origin_location: string;
-  coordinates_latitude: number | null;
-  coordinates_longitude: number | null;
+  origin_location: string | null;
+  coordinates_latitude?: number | null;
+  coordinates_longitude?: number | null;
+  image?: string | null;
 }
 
 const Materials = () => {
   const [search, setSearch] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { t } = useLanguage();
 
-  const { isLoading, error, data: materials } = useQuery({
+  const translateLabel = (key: string): string => {
+    const translations: Record<string, string> = {
+      'materials.title': 'Matériaux',
+      'materials.create': 'Ajouter un matériau',
+      'common.search': 'Recherche',
+      'materials.searchPlaceholder': 'Rechercher par nom, description, catégorie...',
+      'materials.name': 'Nom',
+      'materials.category': 'Catégorie',
+      'materials.quantity': 'Quantité',
+      'materials.location': 'Emplacement',
+      'materials.noLocation': 'Pas d\'emplacement',
+      'common.actions': 'Actions',
+      'common.loading': 'Chargement...',
+      'common.confirmation': 'Êtes-vous sûr(e) ?',
+      'materials.deleteConfirmation': 'Cette action ne peut pas être annulée. Êtes-vous sûr(e) de vouloir supprimer ce matériau ?',
+      'common.cancel': 'Annuler',
+      'common.deleting': 'Suppression...',
+      'common.delete': 'Supprimer',
+      'materials.locationMap': 'Carte des emplacements des matériaux',
+      'materials.deleteSuccess': 'Matériau supprimé avec succès.',
+      'materials.deleteError': 'Erreur lors de la suppression du matériau.'
+    };
+
+    return translations[key] || key;
+  };
+
+  // Helper function to translate text (t)
+  const t = (key: string) => translateLabel(key);
+
+  const { isLoading, error, data: materials } = useQuery<Material[]>({
     queryKey: ['materials'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -63,7 +92,7 @@ const Materials = () => {
       if (error) {
         throw new Error(error.message);
       }
-      return data;
+      return data as Material[];
     }
   });
 
@@ -108,14 +137,14 @@ const Materials = () => {
     id: material.id,
     name: material.name,
     type: 'material' as const,
-    latitude: material.coordinates_latitude || 0, // Default value or handle missing coordinates
+    latitude: material.coordinates_latitude || 0, // Default value if coordinates are missing
     longitude: material.coordinates_longitude || 0,
     region: material.origin_location || undefined
   })).filter(loc => loc.latitude !== 0 && loc.longitude !== 0) : []; // Filter out items without coordinates
 
   if (isLoading) return <div>{t('common.loading') || 'Loading...'}</div>;
 
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {(error as Error).message}</div>;
 
   return (
     <div className="container mx-auto py-10">
@@ -217,10 +246,10 @@ const Materials = () => {
                   className="h-32 w-full rounded overflow-hidden"
                   center={[material.coordinates_latitude, material.coordinates_longitude]} 
                   zoom={13}
+                  scrollWheelZoom={false}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   />
                   <Marker position={[material.coordinates_latitude, material.coordinates_longitude]}></Marker>
                 </MapContainer>

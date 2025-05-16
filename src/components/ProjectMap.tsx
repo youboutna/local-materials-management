@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useProjects } from '@/hooks/useProjects';
@@ -66,14 +66,16 @@ interface ProjectMapProps {
   className?: string;
 }
 
-// Map center updater component
-const MapCenterUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
-  const map = useMap();
+// Create a component to handle map center updates using useMap
+function MapCenterUpdater({ center, zoom }: { center: [number, number], zoom: number }) {
+  const map = L.useMap();
+  
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
+  
   return null;
-};
+}
 
 const ProjectMap = ({
   height = '400px',
@@ -128,11 +130,20 @@ const ProjectMap = ({
     <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
-        doubleClickZoom={interactive}
-        scrollWheelZoom={interactive}
+        zoom={defaultZoom}
+        whenCreated={(mapInstance) => {
+          mapInstance.setView(mapCenter, mapZoom);
+          if (selectable) {
+            mapInstance.on('click', handleMapClick as any);
+          }
+          if (!interactive) {
+            mapInstance.dragging.disable();
+            mapInstance.touchZoom.disable();
+            mapInstance.doubleClickZoom.disable();
+            mapInstance.scrollWheelZoom.disable();
+          }
+        }}
       >
-        <MapCenterUpdater center={mapCenter} zoom={mapZoom} />
-        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

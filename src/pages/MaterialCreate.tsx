@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,13 +20,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectMap from '@/components/ProjectMap';
-import { MapLocation } from '@/components/ProjectMap';
 import { useAuth } from '@/contexts/AuthContext';
-import { MainNavbar } from '@/components/MainNavbar';
-import { Footer } from '@/components/Footer';
+import MainNavbar from '@/components/MainNavbar';
+import Footer from '@/components/Footer';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -38,21 +37,22 @@ const formSchema = z.object({
   unit: z.string().min(1, {
     message: "Veuillez sélectionner une unité.",
   }),
-  price_per_unit: z.number().optional(),
-  available_quantity: z.number().optional(),
+  price_per_unit: z.number().nonnegative().default(0),
+  available_quantity: z.number().nonnegative().default(0),
   origin_location: z.string().optional(),
-  coordinates_latitude: z.number().optional(),
-  coordinates_longitude: z.number().optional(),
+  coordinates_latitude: z.number().nullable().optional(),
+  coordinates_longitude: z.number().nullable().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const MaterialCreate = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { user } = useAuth();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -62,12 +62,12 @@ const MaterialCreate = () => {
       price_per_unit: 0,
       available_quantity: 0,
       origin_location: "",
-      coordinates_latitude: null,
-      coordinates_longitude: null,
+      coordinates_latitude: undefined,
+      coordinates_longitude: undefined,
     },
   });
 
-  async function onSubmit(materialData: z.infer<typeof formSchema>) {
+  async function onSubmit(materialData: FormValues) {
     setIsSubmitting(true);
     try {
       if (!user) {
@@ -81,11 +81,11 @@ const MaterialCreate = () => {
 
       const { data, error } = await supabase.from('materials').insert({
         name: materialData.name,
-        description: materialData.description,
+        description: materialData.description || "",
         category: materialData.category,
         unit: materialData.unit,
-        price_per_unit: materialData.price_per_unit || 0, // Default to 0 if undefined
-        available_quantity: materialData.available_quantity || 0, // Default to 0 if undefined
+        price_per_unit: materialData.price_per_unit,
+        available_quantity: materialData.available_quantity,
         origin_location: materialData.origin_location || null,
         coordinates_latitude: materialData.coordinates_latitude || null,
         coordinates_longitude: materialData.coordinates_longitude || null
@@ -121,15 +121,43 @@ const MaterialCreate = () => {
     form.setValue('coordinates_longitude', lng);
   };
 
-  const showMapLocation = (values: any) => {
-    if (values.coordinates_latitude && values.coordinates_longitude) {
-      return {
-        latitude: values.coordinates_latitude,
-        longitude: values.coordinates_longitude
-      };
-    }
-    return null;
+  const translateLabel = (key: string): string => {
+    const translations: Record<string, string> = {
+      'materials.create.title': 'Créer un nouveau matériau',
+      'materials.create.description': 'Ajoutez les détails du nouveau matériau',
+      'materials.name': 'Nom',
+      'materials.namePlaceholder': 'Nom du matériau',
+      'materials.description': 'Description',
+      'materials.descriptionPlaceholder': 'Description du matériau',
+      'materials.category': 'Catégorie',
+      'materials.selectCategory': 'Sélectionner une catégorie',
+      'materials.building': 'Construction',
+      'materials.electricity': 'Électricité',
+      'materials.plumbing': 'Plomberie',
+      'materials.furniture': 'Mobilier',
+      'materials.unit': 'Unité',
+      'materials.selectUnit': 'Sélectionner une unité',
+      'materials.kg': 'Kilogramme (kg)',
+      'materials.m': 'Mètre (m)',
+      'materials.piece': 'Pièce',
+      'materials.l': 'Litre (l)',
+      'materials.pricePerUnit': 'Prix par unité',
+      'materials.pricePerUnitPlaceholder': 'Prix par unité',
+      'materials.availableQuantity': 'Quantité disponible',
+      'materials.availableQuantityPlaceholder': 'Quantité disponible',
+      'materials.originLocation': 'Lieu d\'origine',
+      'materials.originLocationPlaceholder': 'Lieu d\'origine',
+      'materials.selectLocation': 'Sélectionner un emplacement sur la carte',
+      'materials.selectedLocation': 'Emplacement sélectionné',
+      'common.submitting': 'Envoi en cours...',
+      'common.submit': 'Enregistrer',
+    };
+
+    return translations[key] || key;
   };
+
+  // Helper function to translate text (t)
+  const t = (key: string) => translateLabel(key);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -226,7 +254,12 @@ const MaterialCreate = () => {
                     <FormItem>
                       <FormLabel>{t('materials.pricePerUnit')}</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder={t('materials.pricePerUnitPlaceholder')} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        <Input 
+                          type="number" 
+                          placeholder={t('materials.pricePerUnitPlaceholder')} 
+                          {...field} 
+                          onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -239,7 +272,12 @@ const MaterialCreate = () => {
                     <FormItem>
                       <FormLabel>{t('materials.availableQuantity')}</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder={t('materials.availableQuantityPlaceholder')} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        <Input 
+                          type="number" 
+                          placeholder={t('materials.availableQuantityPlaceholder')} 
+                          {...field} 
+                          onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -270,7 +308,7 @@ const MaterialCreate = () => {
                   />
                   {selectedLocation && (
                     <div className="mt-2 text-sm text-gray-600">
-                      {t('materials.selectedLocation')}: {selectedLocation.lat}, {selectedLocation.lng}
+                      {t('materials.selectedLocation')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                     </div>
                   )}
                 </div>
