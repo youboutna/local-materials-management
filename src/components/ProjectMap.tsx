@@ -118,13 +118,13 @@ const ProjectMap = ({
     <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
       <MapContainer 
         style={{ height: '100%', width: '100%' }}
+        key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
         center={mapCenter}
         zoom={mapZoom}
-        key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         {showAllProjects && projects && projects.map((project: any) => {
@@ -133,7 +133,6 @@ const ProjectMap = ({
               <Marker
                 key={project.id}
                 position={[project.latitude, project.longitude]}
-                icon={getMarkerIcon(project.status)}
                 eventHandlers={{
                   click: () => handleMarkerClick(project.id),
                 }}
@@ -159,7 +158,6 @@ const ProjectMap = ({
           <Marker 
             key={location.id}
             position={[location.latitude, location.longitude]}
-            icon={getMarkerIcon(location.status)}
           >
             <Popup>
               <div className="font-medium">{location.name}</div>
@@ -180,7 +178,6 @@ const ProjectMap = ({
         {selectedProject && selectedProject.latitude && selectedProject.longitude && (
           <Marker 
             position={[selectedProject.latitude, selectedProject.longitude]}
-            icon={getMarkerIcon(selectedProject.status)}
           >
             <Popup>
               <div className="font-medium">{selectedProject.name}</div>

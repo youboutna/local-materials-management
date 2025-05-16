@@ -12,13 +12,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { ArrowLeft, Save, MapPin } from 'lucide-react';
+import { ProjectStatus } from '@/types/project';
 
 // Form validation schema
 const projectSchema = z.object({
   title: z.string().min(3, 'Le titre doit comporter au moins 3 caractères'),
   description: z.string().min(10, 'La description doit comporter au moins 10 caractères'),
   location: z.string().min(2, 'La localisation est requise'),
-  status: z.enum(['en cours', 'terminé', 'en attente', 'payé', 'en inspection', 'suspendu', 'annulé']),
+  status: z.enum(['en cours', 'terminé', 'en attente', 'en inspection', 'suspendu', 'annulé'] as const),
   progress: z.number().min(0).max(100),
   budget: z.number().positive('Le budget doit être positif'),
   startDate: z.string(),
@@ -227,7 +228,6 @@ const ProjectEdit = () => {
                         <SelectItem value="en cours">En cours</SelectItem>
                         <SelectItem value="terminé">Terminé</SelectItem>
                         <SelectItem value="en attente">En attente</SelectItem>
-                        <SelectItem value="payé">Payé</SelectItem>
                         <SelectItem value="en inspection">En inspection</SelectItem>
                         <SelectItem value="suspendu">Suspendu</SelectItem>
                         <SelectItem value="annulé">Annulé</SelectItem>

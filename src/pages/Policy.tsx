@@ -1,111 +1,92 @@
 
-import { ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Policy = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
+      
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <Link to="/">
-            <Button variant="ghost" className="mb-6">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à l'accueil
-            </Button>
-          </Link>
-
           <div className="bg-white rounded-xl shadow-elegant p-8">
-            <h1 className="text-3xl font-serif font-bold text-adrar-900 mb-6">Politique de confidentialité</h1>
+            <h1 className="text-3xl font-serif font-bold text-adrar-900 mb-6">Politique de Confidentialité</h1>
             
-            <div className="prose max-w-none text-adrar-700">
-              <p className="lead">
-                La protection de vos données privées est notre priorité. Cette politique de confidentialité explique comment nous collectons, utilisons, et protégeons vos informations personnelles.
+            <div className="prose prose-adrar max-w-none">
+              <p className="text-lg mb-6">
+                Dernière mise à jour : 16 mai 2025
               </p>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">1. Collecte des informations</h2>
-              <p>
-                Nous recueillons les informations que vous nous fournissez lors de la création de votre compte, de l'utilisation de notre service, ou lorsque vous nous contactez. Ces informations peuvent inclure:
+              <h2 className="text-xl font-semibold mb-4">1. Introduction</h2>
+              <p className="mb-4">
+                Nous nous engageons à protéger la vie privée et les données personnelles de nos utilisateurs. Cette politique de confidentialité explique comment nous recueillons, utilisons, divulguons et protégeons vos informations lorsque vous utilisez notre plateforme de gestion de matériaux et de projets.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Vos données d'identification (nom, prénom, email)</li>
-                <li>Vos coordonnées professionnelles</li>
-                <li>Les informations de paiement et de facturation</li>
-                <li>Les données d'utilisation de notre plateforme</li>
-                <li>Les communications que vous avez avec notre équipe</li>
+              
+              <h2 className="text-xl font-semibold mb-4">2. Informations que nous recueillons</h2>
+              <p className="mb-4">
+                Nous recueillons les types d'informations suivants :
+              </p>
+              <ul className="list-disc pl-6 mb-4">
+                <li>Informations personnelles : nom, adresse e-mail, numéro de téléphone, identifiant national.</li>
+                <li>Informations de compte : identifiants de connexion, préférences et paramètres.</li>
+                <li>Données de projet : détails des projets, matériaux, inspections et paiements.</li>
+                <li>Informations d'utilisation : comment vous interagissez avec notre plateforme, les fonctionnalités utilisées et le temps passé.</li>
               </ul>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">2. Utilisation des données</h2>
-              <p>
-                Nous utilisons les informations collectées pour:
+              <h2 className="text-xl font-semibold mb-4">3. Comment nous utilisons vos informations</h2>
+              <p className="mb-4">
+                Nous utilisons vos informations pour :
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Fournir, maintenir et améliorer nos services</li>
-                <li>Traiter les transactions et envoyer les factures</li>
-                <li>Communiquer avec vous concernant votre compte ou nos services</li>
-                <li>Personnaliser votre expérience utilisateur</li>
-                <li>Analyser l'utilisation de notre plateforme pour l'améliorer</li>
-                <li>Protéger contre les activités frauduleuses ou abusives</li>
+              <ul className="list-disc pl-6 mb-4">
+                <li>Fournir et maintenir nos services.</li>
+                <li>Améliorer, personnaliser et développer notre plateforme.</li>
+                <li>Communiquer avec vous, y compris vous envoyer des mises à jour sur nos services.</li>
+                <li>Assurer la sécurité de notre plateforme.</li>
+                <li>Se conformer aux obligations légales.</li>
               </ul>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">3. Protection des données</h2>
-              <p>
-                La sécurité de vos données personnelles est importante pour nous. Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations contre tout accès, modification, divulgation ou destruction non autorisés.
+              <h2 className="text-xl font-semibold mb-4">4. Partage des informations</h2>
+              <p className="mb-4">
+                Nous ne partageons vos informations personnelles qu'avec :
               </p>
-              
-              <h2 className="text-xl font-semibold mt-8 mb-4">4. Partage des informations</h2>
-              <p>
-                Nous ne vendons, n'échangeons, ni ne transférons vos informations personnelles à des tiers sans votre consentement, sauf:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Pour fournir les services que vous avez demandés</li>
-                <li>Avec nos prestataires de services sous contrat</li>
-                <li>Lorsque nécessaire pour se conformer à la loi</li>
-                <li>Pour protéger nos droits, notre propriété ou notre sécurité</li>
+              <ul className="list-disc pl-6 mb-4">
+                <li>Les membres de votre équipe ou organisation ayant accès au même projet.</li>
+                <li>Nos fournisseurs de services tiers qui nous aident à exploiter notre plateforme.</li>
+                <li>Les autorités légales lorsque nous sommes légalement tenus de le faire.</li>
               </ul>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">5. Vos droits</h2>
-              <p>
-                Conformément aux réglementations applicables, vous disposez de plusieurs droits concernant vos données:
+              <h2 className="text-xl font-semibold mb-4">5. Sécurité des données</h2>
+              <p className="mb-4">
+                Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations personnelles contre l'accès non autorisé, l'altération, la divulgation ou la destruction.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Droit d'accès à vos données personnelles</li>
-                <li>Droit de rectification de vos données</li>
-                <li>Droit à l'effacement de vos données</li>
-                <li>Droit à la limitation du traitement</li>
-                <li>Droit à la portabilité des données</li>
-                <li>Droit d'opposition au traitement</li>
+              
+              <h2 className="text-xl font-semibold mb-4">6. Vos droits</h2>
+              <p className="mb-4">
+                Vous avez le droit de :
+              </p>
+              <ul className="list-disc pl-6 mb-4">
+                <li>Accéder à vos données personnelles.</li>
+                <li>Rectifier vos données personnelles si elles sont inexactes.</li>
+                <li>Demander l'effacement de vos données personnelles.</li>
+                <li>Restreindre ou vous opposer au traitement de vos données.</li>
+                <li>Demander la portabilité de vos données.</li>
               </ul>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">6. Cookies et technologies similaires</h2>
-              <p>
-                Nous utilisons des cookies et technologies similaires pour améliorer votre expérience sur notre site, analyser notre trafic et personnaliser le contenu. Vous pouvez contrôler l'utilisation des cookies via les paramètres de votre navigateur.
+              <h2 className="text-xl font-semibold mb-4">7. Modifications de cette politique</h2>
+              <p className="mb-4">
+                Nous pouvons mettre à jour cette politique de confidentialité périodiquement. Nous vous informerons de tout changement en publiant la nouvelle politique de confidentialité sur cette page.
               </p>
               
-              <h2 className="text-xl font-semibold mt-8 mb-4">7. Modifications de cette politique</h2>
-              <p>
-                Nous pouvons mettre à jour cette politique de confidentialité de temps à autre. Nous vous informerons de tout changement significatif par email ou par une notification sur notre plateforme.
+              <h2 className="text-xl font-semibold mb-4">8. Contact</h2>
+              <p className="mb-4">
+                Si vous avez des questions concernant cette politique de confidentialité, veuillez nous contacter à privacy@materiaux-gestion.mr.
               </p>
-              
-              <h2 className="text-xl font-semibold mt-8 mb-4">8. Nous contacter</h2>
-              <p>
-                Si vous avez des questions concernant cette politique de confidentialité, vous pouvez nous contacter à:
-              </p>
-              <p>
-                <strong>Email:</strong> privacy@example.com<br />
-                <strong>Adresse:</strong> 123 Rue de l'Abri, Nouakchott, Mauritanie
-              </p>
-              
-              <div className="mt-12 text-center text-adrar-500 text-sm">
-                Dernière mise à jour: 16 Mai 2025
-              </div>
             </div>
           </div>
         </div>
       </main>
+      
       <Footer />
     </div>
   );
