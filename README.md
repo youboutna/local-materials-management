@@ -63,7 +63,55 @@ npm run dev
 ## Are you interested by this project?
 -contact hadratech for more information
 
-## How can I deploy this project?
+#  how to deply project 
+
+ll help you deploy this React project on your server. Here's a step-by-step guide to deploy the local-materials-management Portal:
+
+    Build the Project First, you need to build the production version of your React app:
+
+npm run build
+
+This will create a dist folder containing the optimized production build.
+
+    Server Requirements Your server needs:
+
+    A web server (Apache, Nginx, etc.)
+    Node.js (for building)
+    Optional: PostgreSQL if you're using a local database
+
+    Deployment Options
+
+A. Static File Server (Simplest)
+
+    Upload the contents of the dist folder to your server's web root directory
+    Configure your web server to serve index.html for all routes
+
+Example Nginx configuration:
+
+server {
+    listen 80;
+    server_name yourdomain.com;
+    root /var/www/local-materials-management/dist;
+    
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+B. Node.js Server
+
+    Install PM2 or similar process manager
+    Create a simple Express server to serve the static files
+
+    Database Configuration
+
+    If using PostgreSQL, make sure it's installed and running on your server
+    Update the database configuration in the app to point to your local PostgreSQL instance
+    Make sure your database is accessible from your application
+
+    Environment Setup Since you're not using Supabase, ensure your PostgreSQL connection details are properly configured in the DatabaseSettings component.
+
+
 
 Simply open [Lovable](https://lovable.dev/projects/539e8f41-564f-4a0a-bf12-5745f07e400b) and click on Share -> Publish.
 
