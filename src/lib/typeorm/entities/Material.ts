@@ -1,6 +1,12 @@
-
 import "reflect-metadata";
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
 
 @Entity({ name: "materials" })
@@ -30,7 +36,16 @@ export class Material {
   image?: string;
 
   @Column({ name: "origin_location", nullable: true, type: "varchar" })
-  originLocation!: string;
+  originLocation?: string;
+
+  @Column({ name: "minimum_quantity", type: "int", nullable: true })
+  minimumQuantity?: number;
+
+  @Column({ name: "is_active", type: "boolean", default: true })
+  isActive!: boolean;
+
+  @Column({ name: "local_type", type: "varchar", nullable: true })
+  localType?: string;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.material)
   projectMaterials!: ProjectMaterial[];
