@@ -96,33 +96,32 @@ const Materials = () => {
     }
   });
 
-  const deleteMaterialMutation = useMutation(
-    async (id: string) => {
-      const { error } = await supabase
-        .from('materials')
-        .delete()
-        .eq('id', id);
+const deleteMaterialMutation = useMutation<void, Error, string>({
+  mutationFn: async (id: string) => {
+    const { error } = await supabase
+      .from('materials')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        throw new Error(error.message);
-      }
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['materials']);
-        toast({
-          title: t('materials.deleteSuccess') || 'Material deleted successfully.',
-        });
-      },
-      onError: (error: any) => {
-        toast({
-          title: t('materials.deleteError') || 'Error deleting material.',
-          description: error.message,
-          variant: 'destructive',
-        });
-      },
+    if (error) {
+      throw new Error(error.message);
     }
-  );
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries(['materials']);
+    toast({
+      title: t('materials.deleteSuccess') || 'Material deleted successfully.',
+    });
+  },
+  onError: (error) => {
+    toast({
+      title: t('materials.deleteError') || 'Error deleting material.',
+      description: error.message,
+      variant: 'destructive',
+    });
+  },
+});
+
 
   const filteredMaterials = materials
     ? materials.filter(material =>
