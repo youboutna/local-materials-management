@@ -1,6 +1,11 @@
-
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useProjects } from '@/hooks/useProjects';
@@ -23,7 +28,7 @@ const customIcon = L.icon({
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
 
 // Define status colors
@@ -34,10 +39,15 @@ export const statusColors = {
   'suspendu': 'purple',
   'annulé': 'red',
   'en inspection': 'yellow',
-  // Add more statuses as needed
 };
 
-export type ProjectStatus = 'en cours' | 'en attente' | 'terminé' | 'suspendu' | 'annulé' | 'en inspection';
+export type ProjectStatus =
+  | 'en cours'
+  | 'en attente'
+  | 'terminé'
+  | 'suspendu'
+  | 'annulé'
+  | 'en inspection';
 
 export interface MapLocation {
   id: string;
@@ -66,14 +76,14 @@ interface ProjectMapProps {
   className?: string;
 }
 
-// Create a component to handle map center updates using useMap
-function MapCenterUpdater({ center, zoom }: { center: [number, number], zoom: number }) {
-  const map = L.useMap();
-  
+// Update center/zoom dynamically
+function MapCenterUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
-  
+
   return null;
 }
 
@@ -87,17 +97,17 @@ const ProjectMap = ({
   selectable = false,
   onLocationSelect,
   interactive = false,
-  defaultCenter = [18.0735, -15.9582], // Nouakchott coordinates
+  defaultCenter = [18.0735, -15.9582],
   defaultZoom = 10,
   className,
 }: ProjectMapProps) => {
   const { projects, loading } = useProjects();
   const navigate = useNavigate();
   const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
-  const [mapZoom, setMapZoom] = useState(defaultZoom);
+  const [mapZoom, setMapZoom] = useState<number>(defaultZoom);
 
   useEffect(() => {
-    if (selectedProject && selectedProject.latitude && selectedProject.longitude) {
+    if (selectedProject?.latitude && selectedProject?.longitude) {
       setMapCenter([selectedProject.latitude, selectedProject.longitude]);
       setMapZoom(13);
     }
@@ -118,21 +128,27 @@ const ProjectMap = ({
   };
 
   const getMarkerIcon = (status: string = 'en attente') => {
-    // Using the default icon for now - later could be customized by status
     return customIcon;
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Chargement de la carte...</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        Chargement de la carte...
+      </div>
+    );
   }
 
   return (
-    <div style={{ height, width }} className={`border rounded-md overflow-hidden ${className || ''}`}>
-      <MapContainer 
+    <div
+      style={{ height, width }}
+      className={`border rounded-md overflow-hidden ${className || ''}`}
+    >
+      <MapContainer
         style={{ height: '100%', width: '100%' }}
-        zoom={defaultZoom}
+        center={mapCenter}
+        zoom={mapZoom}
         whenCreated={(mapInstance) => {
-          mapInstance.setView(mapCenter, mapZoom);
           if (selectable) {
             mapInstance.on('click', handleMapClick as any);
           }
@@ -144,50 +160,60 @@ const ProjectMap = ({
           }
         }}
       >
+        <MapCenterUpdater center={mapCenter} zoom={mapZoom} />
+
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          {...{
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          }}
         />
 
-        {showAllProjects && projects && projects.map((project: any) => {
-          if (project.latitude && project.longitude) {
-            return (
-              <Marker
-                key={project.id}
-                position={[project.latitude, project.longitude]}
-                eventHandlers={{
-                  click: () => handleMarkerClick(project.id),
-                }}
-              >
-                <Popup>
-                  <div className="font-medium">{project.name}</div>
-                  <div className="text-sm text-gray-600">{project.location}</div>
-                  <Button 
-                    variant="link" 
-                    className="p-0 mt-1 h-auto" 
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                  >
-                    Voir le projet
-                  </Button>
-                </Popup>
-              </Marker>
-            );
-          }
-          return null;
-        })}
+        {showAllProjects &&
+          projects?.map((project: any) => {
+            if (project.latitude && project.longitude) {
+              return (
+                <Marker
+                  key={project.id}
+                  position={[project.latitude, project.longitude]}
+                  icon={getMarkerIcon(project.status)}
+                  eventHandlers={{
+                    click: () => handleMarkerClick(project.id),
+                  }}
+                >
+                  <Popup>
+                    <div className="font-medium">{project.name}</div>
+                    <div className="text-sm text-gray-600">
+                      {project.location}
+                    </div>
+                    <Button
+                      variant="link"
+                      className="p-0 mt-1 h-auto"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
+                      Voir le projet
+                    </Button>
+                  </Popup>
+                </Marker>
+              );
+            }
+            return null;
+          })}
 
-        {locations && locations.map((location) => (
-          <Marker 
+        {locations?.map((location) => (
+          <Marker
             key={location.id}
             position={[location.latitude, location.longitude]}
+            icon={getMarkerIcon(location.status)}
           >
             <Popup>
               <div className="font-medium">{location.name}</div>
               <div className="text-sm text-gray-600">{location.region || ''}</div>
               {location.type === 'project' && (
-                <Button 
-                  variant="link" 
-                  className="p-0 mt-1 h-auto" 
+                <Button
+                  variant="link"
+                  className="p-0 mt-1 h-auto"
                   onClick={() => navigate(`/projects/${location.id}`)}
                 >
                   Voir le projet
@@ -197,9 +223,10 @@ const ProjectMap = ({
           </Marker>
         ))}
 
-        {selectedProject && selectedProject.latitude && selectedProject.longitude && (
-          <Marker 
+        {selectedProject?.latitude && selectedProject?.longitude && (
+          <Marker
             position={[selectedProject.latitude, selectedProject.longitude]}
+            icon={getMarkerIcon(selectedProject.status)}
           >
             <Popup>
               <div className="font-medium">{selectedProject.name}</div>
