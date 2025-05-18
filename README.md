@@ -1,5 +1,5 @@
 # Welcome to your mauritanian management project for local material.
-est une solution de gestion de projet pour une entreprise utilise des materiaux locaux.
+ce projet est une solution de gestion de projet pour une entreprise utilise des materiaux.suivi de project de construction,
 base de données postgresql. géolocalisation des batiments et des projets et sources de matériaux .
 
 # 1.Purpose: 
