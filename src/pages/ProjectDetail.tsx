@@ -231,21 +231,36 @@ const ProjectDetail = () => {
       setIsDeleting(false);
     }
   };
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-grow pt-24 pb-16">
-          <div className="container mx-auto px-4">
-            <div className="h-screen flex items-center justify-center">
-              <div className="animate-pulse text-xl text-gray-500">Chargement du projet...</div>
+// In ProjectDetail.tsx, replace the loading state check with this:
+if (loading) {
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
+      <main className="flex-grow pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          {/* Keep the back button in layout to prevent shift */}
+          <div className="mb-6">
+            <Button variant="ghost" disabled>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour aux projets
+            </Button>
+          </div>
+          
+          {/* Simplified loading indicator that matches your design */}
+          <div className="bg-white rounded-xl shadow-elegant p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="flex flex-col items-center gap-3">
+                <div className="border-4 border-adrar-600/30 border-t-adrar-600 rounded-full w-12 h-12 animate-spin" />
+                <p className="text-gray-600">Chargement du projet...</p>
+              </div>
             </div>
           </div>
-        </main>
-      </div>
-    );
-  }
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
   
   if (!project) {
     return (
