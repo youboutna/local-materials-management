@@ -47,7 +47,7 @@ const Navbar = () => {
             Construction ERP
           </Link>
         </div>
-        <NavigationMenuItem>
+        <NavigationMenuItem      className="text-sm bg-terracotta-500 hover:bg-terracotta-600">
           <LanguageSwitcher />
        </NavigationMenuItem>
         <nav className="hidden md:flex items-center space-x-4">
