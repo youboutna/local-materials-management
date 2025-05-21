@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Check, Building, Shield, Users, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Hero from '@/components/Hero';
-import Navbar from '@/components/Navbar';
+import MainNavbar from '@/components/MainNavbar';
 import Footer from '@/components/Footer';
 import ProjectCard from '@/components/ProjectCard';
 import { useProjects } from '@/hooks/useProjects';
