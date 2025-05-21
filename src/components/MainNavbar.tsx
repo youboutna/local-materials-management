@@ -91,20 +91,7 @@ const MainNavbar = () => {
               </Button>
             </NavigationMenuItem>
             
-            {/* Database Settings */}
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/database-settings">
-                  <Database className="h-4 w-4 mr-2" />
-                  Base de données
-                </Link>
-              </Button>
-            </NavigationMenuItem>
+
           </NavigationMenuList>
         </NavigationMenu>
         
