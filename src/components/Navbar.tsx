@@ -43,7 +43,9 @@ const Navbar = () => {
             Construction ERP
           </Link>
         </div>
-        
+        <NavigationMenuItem>
+          <LanguageSwitcher />
+       </NavigationMenuItem>
         <nav className="hidden md:flex items-center space-x-4">
           <Link to="/projects" className="text-sm text-adrar-600 hover:text-terracotta-500">
             Projets
