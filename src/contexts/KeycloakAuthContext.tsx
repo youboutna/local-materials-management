@@ -81,8 +81,8 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
                   full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
                   phone: '',
                   national_id: keycloakId,
-                  // Map Keycloak admin role to patient for new users as default in our system
-                  role: userInfo.roles.includes('admin') ? 'patient' : 'patient',
+                  // Map Keycloak admin role to inspector for new users as default in our system
+                  role: userInfo.roles.includes('admin') ? 'director' : 'director',
                   avatar_url: null,
                 })
                 .select()
@@ -112,7 +112,7 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
                 .from('profiles')
                 .update({
                   full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                  // Keep the existing role or default to patient if needed
+                  // Keep the existing role or default to inspector if needed
                 })
                 .eq('national_id', keycloakId);
 
@@ -158,7 +158,7 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
         keycloakId: 'dev-keycloak-id',
         username: 'dev-user',
         email: 'dev@example.com',
-        roles: ['patient'],
+        roles: ['director'],
         firstName: 'Dev',
         lastName: 'User'
       });

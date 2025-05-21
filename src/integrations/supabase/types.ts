@@ -281,7 +281,7 @@ export type Database = {
           documents: Json | null
           id: string
           insurance_company_id: string | null
-          patient_id: string | null
+          inspector_id: string | null
           practitioner_id: string | null
           status: string
           updated_at: string | null
@@ -293,7 +293,7 @@ export type Database = {
           documents?: Json | null
           id?: string
           insurance_company_id?: string | null
-          patient_id?: string | null
+          inspector_id?: string | null
           practitioner_id?: string | null
           status?: string
           updated_at?: string | null
@@ -305,7 +305,7 @@ export type Database = {
           documents?: Json | null
           id?: string
           insurance_company_id?: string | null
-          patient_id?: string | null
+          inspector_id?: string | null
           practitioner_id?: string | null
           status?: string
           updated_at?: string | null
@@ -324,7 +324,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "insurance_company" | "practitioner" | "patient"
+      user_role: "manager" | "director" | "inspector" | "supplyer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -440,7 +440,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["insurance_company", "practitioner", "patient"],
+      user_role: ["manager", "director", "inspector"],
     },
   },
 } as const

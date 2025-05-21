@@ -16,17 +16,17 @@ export const DEV_USER = {
 
 // Development mode role configuration
 export interface DevRoleOptions {
-  role: "admin" | "user" | "patient" | "practitioner" | "insurance_company" | "material-manager" | "project_manager" | "director";
+  role: "admin" | "user" | "inspector" | "practitioner" | "insurance_company" | "material-manager" | "manager" | "director";
   description: string;
 }
 
 export const DEV_ROLES: DevRoleOptions[] = [
   { role: "admin", description: "Full system access" },
-  { role: "patient", description: "Patient access only" },
+  { role: "inspector", description: "inspector access only" },
   { role: "practitioner", description: "Medical practitioner" },
   { role: "insurance_company", description: "Insurance company representative" },
   { role: "material-manager", description: "Materials management" },
-  { role: "project_manager", description: "Project management" },
+  { role: "manager", description: "Project management" },
   { role: "director", description: "Director level access" },
   { role: "user", description: "Standard user" }
 ];

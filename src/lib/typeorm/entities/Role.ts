@@ -5,7 +5,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 export enum RoleType {
   ADMIN = 'admin',
   DEV = 'dev',
-  PROJECT_MANAGER = 'project_manager',
+  manager = 'manager',
   DIRECTOR = 'director'
 }
 
