@@ -11,12 +11,19 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user: supabaseUser, signOut } = useAuth();
   const { isAuthenticated, user, login, logout } = useKeycloakAuth();
+  
+  const handleLanguageChange = (newLanguage: Language) => {
+    if (setLanguage) {
+      setLanguage(newLanguage);
+    }
+  };
   
   useEffect(() => {
     setIsOpen(false); // Close mobile menu on route change
