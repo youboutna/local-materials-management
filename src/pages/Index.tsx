@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Check, Building, Shield, Users, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Hero from '@/components/Hero';
-import MainNavbar from '@/components/MainNavbar';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProjectCard from '@/components/ProjectCard';
 import { useProjects } from '@/hooks/useProjects';
@@ -75,7 +75,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <MainNavbar />
+      <Navbar />
       
       {/* Hero Section */}
       <Hero />
