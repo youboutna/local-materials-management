@@ -18,7 +18,7 @@ const Footer = () => {
               © {currentYear} - Tous droits réservés
             </p>
               <Link to="https://hadratech.com/" className="text-adrar-600 hover:text-adrar-900">
-                  by hadrtach
+                  by hadratech
                 </Link>
           </div>
           
