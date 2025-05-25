@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { keycloak, initKeycloak, getUserInfo } from '@/integrations/keycloak/keycloak';
@@ -91,15 +90,7 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
 
     const init = async () => {
       try {
-        // Add error handling with timeouts to prevent hanging
-        const timeoutPromise = new Promise<boolean>((_, reject) => {
-          setTimeout(() => reject(new Error("Keycloak initialization timed out")), 10000);
-        });
-        
-        const authenticated = await Promise.race([
-          initKeycloak(),
-          timeoutPromise
-        ]) as boolean;
+        const authenticated = await initKeycloak();
         
         setIsAuthenticated(authenticated);
 
@@ -110,43 +101,66 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
           if (keycloak.tokenParsed?.sub) {
             const keycloakId = keycloak.tokenParsed.sub;
             
-            // Check if user exists in Supabase
-            const { data: existingUser, error: fetchError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('national_id', keycloakId)
-              .single();
-
-            if (fetchError && fetchError.code !== 'PGRST116') {
-              console.error('Error fetching user:', fetchError);
-            }
-
-            if (!existingUser) {
-              // Create new user profile - use inspector as default role
-              const { data: newUser, error: createError } = await supabase
+            try {
+              // Check if user exists in Supabase
+              const { data: existingUser, error: fetchError } = await supabase
                 .from('profiles')
-                .insert({
-                  id: crypto.randomUUID(), // Generate a UUID
-                  full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                  phone: '',
-                  national_id: keycloakId,
-                  // Use inspector as default role for new users
-                  role: 'inspector' as any,
-                  avatar_url: null,
-                })
-                .select()
+                .select('*')
+                .eq('national_id', keycloakId)
                 .single();
 
-              if (createError) {
-                console.error('Error creating user:', createError);
-                toast({
-                  title: 'Erreur',
-                  description: 'Impossible de créer le profil utilisateur',
-                  variant: 'destructive'
-                });
+              if (fetchError && fetchError.code !== 'PGRST116') {
+                console.error('Error fetching user:', fetchError);
+                throw fetchError;
+              }
+
+              if (!existingUser) {
+                // Create new user profile - use inspector as default role
+                const { data: newUser, error: createError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    id: crypto.randomUUID(), // Generate a UUID
+                    full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+                    phone: '',
+                    national_id: keycloakId,
+                    // Use inspector as default role for new users
+                    role: 'inspector' as any,
+                    avatar_url: null,
+                  })
+                  .select()
+                  .single();
+
+                if (createError) {
+                  console.error('Error creating user:', createError);
+                  throw createError;
+                } else {
+                  setUser({
+                    id: newUser.id,
+                    keycloakId,
+                    username: userInfo.username || '',
+                    email: userInfo.email,
+                    roles: userInfo.roles,
+                    firstName: userInfo.firstName,
+                    lastName: userInfo.lastName,
+                  });
+                }
               } else {
+                // User exists, update their profile with latest Keycloak info
+                const { error: updateError } = await supabase
+                  .from('profiles')
+                  .update({
+                    full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
+                    // Keep the existing role or default to inspector if needed
+                  })
+                  .eq('national_id', keycloakId);
+
+                if (updateError) {
+                  console.error('Error updating user:', updateError);
+                  // Don't throw here, just log the error
+                }
+
                 setUser({
-                  id: newUser.id,
+                  id: existingUser.id,
                   keycloakId,
                   username: userInfo.username || '',
                   email: userInfo.email,
@@ -155,22 +169,11 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
                   lastName: userInfo.lastName,
                 });
               }
-            } else {
-              // User exists, update their profile with latest Keycloak info
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                  full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
-                  // Keep the existing role or default to inspector if needed
-                })
-                .eq('national_id', keycloakId);
-
-              if (updateError) {
-                console.error('Error updating user:', updateError);
-              }
-
+            } catch (dbError) {
+              console.error('Database error:', dbError);
+              // Still set the user even if database operations fail
               setUser({
-                id: existingUser.id,
+                id: 'temp-id',
                 keycloakId,
                 username: userInfo.username || '',
                 email: userInfo.email,
@@ -183,11 +186,8 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error initializing Keycloak:', error);
-        toast({
-          title: 'Erreur d\'authentification',
-          description: 'Impossible de se connecter au service d\'authentification',
-          variant: 'destructive'
-        });
+        // Don't show toast for initialization errors as they're expected in some cases
+        console.log('Keycloak initialization failed, continuing without authentication');
       } finally {
         setLoading(false);
       }

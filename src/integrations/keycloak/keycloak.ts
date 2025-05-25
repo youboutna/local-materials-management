@@ -7,15 +7,28 @@ const keycloakInstance = new Keycloak(keycloakConfig);
 
 export const initKeycloak = async () => {
   try {
-    const auth = await keycloakInstance.init({
+    // Reduce timeout and add better error handling
+    const timeoutPromise = new Promise<boolean>((_, reject) => {
+      setTimeout(() => reject(new Error("Keycloak initialization timed out")), 5000); // Reduced from 10s to 5s
+    });
+
+    const initPromise = keycloakInstance.init({
       onLoad: 'check-sso',
       silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+      checkLoginIframe: false, // Disable iframe check to prevent timeout issues
+      enableLogging: false, // Disable logging to reduce noise
     });
+    
+    const auth = await Promise.race([
+      initPromise,
+      timeoutPromise
+    ]) as boolean;
     
     console.log('Keycloak initialization', auth ? 'authenticated' : 'not authenticated');
     return auth;
   } catch (error) {
     console.error('Keycloak initialization error:', error);
+    // Return false instead of throwing to allow graceful fallback
     return false;
   }
 };
@@ -33,8 +46,24 @@ export const refreshToken = async () => {
   }
 };
 
-export const login = keycloakInstance.login;
-export const logout = keycloakInstance.logout;
+export const login = () => {
+  try {
+    return keycloakInstance.login();
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
+export const logout = () => {
+  try {
+    return keycloakInstance.logout();
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
+};
+
 export const isAuthenticated = () => !!keycloakInstance.token;
 export const getUsername = () => keycloakInstance.tokenParsed?.preferred_username;
 export const getRoles = () => {
