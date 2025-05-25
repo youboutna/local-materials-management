@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import {
   MapContainer,
@@ -154,12 +153,18 @@ const ProjectMap = ({
     );
   }
 
-  // Determine the center point for the map
-  const mapCenter: [number, number] = selectedProject?.latitude && selectedProject?.longitude 
-    ? [selectedProject.latitude, selectedProject.longitude]
-    : defaultCenter;
+  // Determine the center point for the map - prioritize selectedProject coordinates
+  let mapCenter: [number, number] = defaultCenter;
+  let mapZoom = defaultZoom;
 
-  const mapZoom = selectedProject?.latitude && selectedProject?.longitude ? 13 : defaultZoom;
+  if (selectedProject?.coordinates?.latitude && selectedProject?.coordinates?.longitude) {
+    mapCenter = [selectedProject.coordinates.latitude, selectedProject.coordinates.longitude];
+    mapZoom = 15; // Zoom closer for specific project
+  } else if (locations && locations.length > 0) {
+    // Use first location if no selectedProject
+    mapCenter = [locations[0].latitude, locations[0].longitude];
+    mapZoom = 13;
+  }
 
   return (
     <div
@@ -233,12 +238,12 @@ const ProjectMap = ({
           </Marker>
         ))}
 
-        {selectedProject?.latitude && selectedProject?.longitude && (
+        {selectedProject?.coordinates?.latitude && selectedProject?.coordinates?.longitude && (
           <Marker
-            position={[selectedProject.latitude, selectedProject.longitude]}
+            position={[selectedProject.coordinates.latitude, selectedProject.coordinates.longitude]}
           >
             <Popup>
-              <div className="font-medium">{selectedProject.name}</div>
+              <div className="font-medium">{selectedProject.title || selectedProject.name}</div>
               <div className="text-sm text-gray-600">{selectedProject.location}</div>
             </Popup>
           </Marker>

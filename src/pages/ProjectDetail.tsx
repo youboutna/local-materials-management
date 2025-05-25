@@ -244,17 +244,9 @@ const ProjectDetail = () => {
                         <CardContent>
                           <div className="h-[300px] rounded-md overflow-hidden">
                             <ProjectMap 
-                              locations={[{
-                                id: project.id,
-                                name: project.title,
-                                latitude: project.coordinates.latitude,
-                                longitude: project.coordinates.longitude,
-                                type: 'project',
-                                status: project.status,
-                                region: project.location,
-                                startDate: project.startDate
-                              }]} 
-                              interactive={true} 
+                              selectedProject={project}
+                              interactive={true}
+                              height="300px"
                             />
                           </div>
                           <div className="mt-2 text-sm text-gray-500">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,8 @@ import {
 import { format } from 'date-fns';
 import { ProjectWithPayments, InspectionStatus } from '@/types/project';
 import { InspectionDialog } from '@/components/project/InspectionDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface WorkflowInspectionProps {
   project: ProjectWithPayments;
@@ -27,11 +28,44 @@ interface WorkflowInspectionProps {
 
 export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInspectionProps) {
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
+  const { toast } = useToast();
   
   // Sort inspections by date
   const sortedInspections = project.inspections 
     ? [...project.inspections].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     : [];
+
+  const handleInspectionCreated = async () => {
+    try {
+      // Update project progress based on the latest inspection
+      if (sortedInspections.length > 0) {
+        const latestInspection = sortedInspections[0];
+        await supabase
+          .from('projects')
+          .update({ 
+            progress: latestInspection.progress_at_inspection,
+            status: latestInspection.status === 'approved' ? 'en cours' : 'en inspection'
+          })
+          .eq('id', project.id);
+
+        toast({
+          title: "Projet mis à jour",
+          description: "La progression du projet a été mise à jour selon l'inspection.",
+        });
+      }
+
+      if (onInspectionUpdate) {
+        onInspectionUpdate();
+      }
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la progression du projet.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusIcon = (status: InspectionStatus) => {
     switch (status) {
@@ -83,7 +117,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           </CardTitle>
           <InspectionDialog 
             project={project} 
-            onInspectionCreated={onInspectionUpdate}
+            onInspectionCreated={handleInspectionCreated}
           />
         </div>
         
@@ -112,7 +146,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             </p>
             <InspectionDialog 
               project={project} 
-              onInspectionCreated={onInspectionUpdate}
+              onInspectionCreated={handleInspectionCreated}
             />
           </div>
         ) : (
