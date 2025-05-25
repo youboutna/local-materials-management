@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardList, Plus, Calendar, User, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { sendTaskAssignmentNotifications } from '@/services/notificationService';
 
 interface TaskAssignment {
   id: string;
@@ -90,9 +90,31 @@ const TaskAssignments = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
-      toast({ title: "Succès", description: "Tâche créée avec succès." });
+      
+      // Send notifications
+      try {
+        await sendTaskAssignmentNotifications({
+          id: data.id,
+          title: data.title,
+          assigned_to: data.assigned_to,
+          assigned_by: data.assigned_by || '',
+          project_id: data.project_id
+        });
+        
+        toast({ 
+          title: "Succès", 
+          description: "Tâche créée avec succès et notifications envoyées." 
+        });
+      } catch (notificationError) {
+        console.error('Error sending notifications:', notificationError);
+        toast({ 
+          title: "Succès", 
+          description: "Tâche créée avec succès. Erreur lors de l'envoi des notifications." 
+        });
+      }
+      
       resetForm();
     },
     onError: (error) => {

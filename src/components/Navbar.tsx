@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, LogOut, FileText, Home, Briefcase, Package, Settings as SettingsIcon, Users as UsersIcon } from 'lucide-react';
+import { Menu, X, User, LogOut, FileText, Home, Briefcase, Package, Settings as SettingsIcon, Users as UsersIcon, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,6 +28,7 @@ const Navbar = () => {
     { name: 'Projets', href: '/projects', icon: Briefcase },
     { name: 'Matériaux', href: '/materials', icon: Package },
     { name: 'Documents', href: '/documents', icon: FileText },
+    { name: 'Tâches', href: '/tasks', icon: ClipboardList },
     { name: 'Utilisateurs', href: '/users', icon: UsersIcon },
   ];
 

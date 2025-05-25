@@ -14,6 +14,7 @@ import ProjectEdit from "./pages/ProjectEdit";
 import Materials from "./pages/Materials";
 import MaterialCreate from "./pages/MaterialCreate";
 import Documents from "./pages/Documents";
+import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/materials" element={<Materials />} />
               <Route path="/materials/create" element={<MaterialCreate />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/tasks" element={<Tasks />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/contact" element={<Contact />} />

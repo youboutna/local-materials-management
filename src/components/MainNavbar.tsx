@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
-import { Globe, Database, Cog } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -55,6 +55,33 @@ const MainNavbar = () => {
               >
                 <Link to="/materials">
                   {t('nav.materials') || 'Matériaux'}
+                </Link>
+              </Button>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/documents">
+                  Documents
+                </Link>
+              </Button>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-gray-200"
+                size="sm"
+                asChild
+              >
+                <Link to="/tasks">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Tâches
                 </Link>
               </Button>
             </NavigationMenuItem>
