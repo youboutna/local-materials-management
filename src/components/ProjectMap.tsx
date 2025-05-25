@@ -108,7 +108,10 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     }
   };
 
-  if (projectsWithCoordinates.length === 0 && locations.length === 0) {
+  // Show map even if no projects/locations when selectable is true
+  const shouldShowMap = selectable || projectsWithCoordinates.length > 0 || locations.length > 0;
+
+  if (!shouldShowMap) {
     return (
       <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`} style={{ height, width }}>
         <p className="text-gray-600">Aucun projet avec coordonnées géographiques à afficher</p>
