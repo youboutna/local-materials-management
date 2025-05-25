@@ -174,7 +174,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           <Marker
             key={project.id}
             position={[project.coordinates!.latitude, project.coordinates!.longitude] as LatLngExpression}
-            icon={createCustomIcon(project)}
             eventHandlers={{
               click: () => onProjectSelect?.(project),
             }}
@@ -205,7 +204,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           <Marker
             key={location.id}
             position={[location.latitude, location.longitude] as LatLngExpression}
-            icon={createLocationIcon(location)}
           >
             <Popup>
               <div className="p-2">
