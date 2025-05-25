@@ -165,14 +165,15 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer 
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
         
         {/* Render project markers */}
         {projectsWithCoordinates.map((project) => (
           <Marker
             key={project.id}
             position={[project.coordinates!.latitude, project.coordinates!.longitude] as LatLngExpression}
-            // @ts-ignore - react-leaflet types issue with custom icons
             icon={createCustomIcon(project)}
             eventHandlers={{
               click: () => onProjectSelect?.(project),
@@ -204,7 +205,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           <Marker
             key={location.id}
             position={[location.latitude, location.longitude] as LatLngExpression}
-            // @ts-ignore - react-leaflet types issue with custom icons
             icon={createLocationIcon(location)}
           >
             <Popup>
