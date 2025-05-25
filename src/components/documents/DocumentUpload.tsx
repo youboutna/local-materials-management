@@ -38,6 +38,12 @@ const DocumentUpload = () => {
 
   const uploadMutation = useMutation({
     mutationFn: async (uploadData: typeof formData & { file?: File }) => {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated to upload documents');
+      }
+
       let fileUrl: string | null = null;
       let uploadedFileName: string | null = null;
       let fileSize: number | null = null;
@@ -57,7 +63,7 @@ const DocumentUpload = () => {
         mimeType = uploadData.file.type;
       }
 
-      // Create document record
+      // Create document record with uploaded_by field
       const { data, error } = await supabase
         .from('documents')
         .insert({
@@ -69,7 +75,8 @@ const DocumentUpload = () => {
           file_url: fileUrl,
           file_name: uploadedFileName,
           file_size: fileSize,
-          mime_type: mimeType
+          mime_type: mimeType,
+          uploaded_by: user.id // Required for RLS policy compliance
         })
         .select()
         .single();
