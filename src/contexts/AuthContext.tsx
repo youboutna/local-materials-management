@@ -8,8 +8,10 @@ import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 const getSessionId = () => {
   let sessionId = sessionStorage.getItem('lovable-session-id');
   if (!sessionId) {
-    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    // Create a truly unique session ID with timestamp and random string
+    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-' + Math.random().toString(36).substr(2, 9);
     sessionStorage.setItem('lovable-session-id', sessionId);
+    console.log('🆔 Created new session ID:', sessionId);
   }
   return sessionId;
 };
@@ -19,18 +21,23 @@ const shouldBypassAuth = () => {
   const currentSessionId = getSessionId();
   const adminSessionId = localStorage.getItem('admin-session-id');
   
+  console.log('🔍 Session check - Current:', currentSessionId, 'Admin:', adminSessionId);
+  
   // If no admin session is set, set this as the admin session
   if (!adminSessionId) {
     localStorage.setItem('admin-session-id', currentSessionId);
+    console.log('👑 Set as admin session:', currentSessionId);
     return false; // This session is admin
   }
   
   // If this session is the admin session, don't bypass
   if (currentSessionId === adminSessionId) {
+    console.log('✅ Admin session detected');
     return false;
   }
   
   // All other sessions are anonymous
+  console.log('👻 Anonymous session detected');
   return true;
 };
 
@@ -91,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const mockSession = createDevSession();
       setSession(mockSession);
       setUser(mockSession.user);
+      setLoading(false);
       
       return;
     }
@@ -114,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [bypassAuth, activeDevRole]);
 
   const signIn = async (email: string, password: string) => {
     if (DEV_MODE && bypassAuth) {

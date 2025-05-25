@@ -4,13 +4,41 @@ import { keycloak, initKeycloak, getUserInfo } from '@/integrations/keycloak/key
 import { useToast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
 
+// Get a unique session identifier for this browser session
+const getSessionId = () => {
+  let sessionId = sessionStorage.getItem('lovable-session-id');
+  if (!sessionId) {
+    // Create a truly unique session ID with timestamp and random string
+    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-' + Math.random().toString(36).substr(2, 9);
+    sessionStorage.setItem('lovable-session-id', sessionId);
+    console.log('🆔 Keycloak: Created new session ID:', sessionId);
+  }
+  return sessionId;
+};
+
 // Check if this session should be bypassed (anonymous)
 const shouldBypassAuth = () => {
-  const currentSessionId = sessionStorage.getItem('lovable-session-id');
+  const currentSessionId = getSessionId();
   const adminSessionId = localStorage.getItem('admin-session-id');
   
-  // If this session is not the admin session, bypass auth
-  return currentSessionId && adminSessionId && currentSessionId !== adminSessionId;
+  console.log('🔍 Keycloak session check - Current:', currentSessionId, 'Admin:', adminSessionId);
+  
+  // If no admin session is set, set this as the admin session
+  if (!adminSessionId) {
+    localStorage.setItem('admin-session-id', currentSessionId);
+    console.log('👑 Keycloak: Set as admin session:', currentSessionId);
+    return false; // This session is admin
+  }
+  
+  // If this session is the admin session, don't bypass
+  if (currentSessionId === adminSessionId) {
+    console.log('✅ Keycloak: Admin session detected');
+    return false;
+  }
+  
+  // All other sessions are anonymous
+  console.log('👻 Keycloak: Anonymous session detected');
+  return true;
 };
 
 interface KeycloakUser {
