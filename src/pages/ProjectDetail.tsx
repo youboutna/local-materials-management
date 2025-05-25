@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -354,9 +353,11 @@ const ProjectDetail = () => {
                         <CardContent>
                           <div className="h-[300px] rounded-md overflow-hidden">
                             <ProjectMap 
+                              projects={[project]}
                               selectedProject={project}
                               interactive={true}
                               height="300px"
+                              width="100%"
                             />
                           </div>
                           <div className="mt-2 text-sm text-gray-500">

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -468,6 +469,8 @@ const ProjectCreate = () => {
                         selectable={true}
                         onLocationSelect={handleLocationSelect}
                         interactive={true}
+                        height="500px"
+                        width="100%"
                       />
                     </div>
                     

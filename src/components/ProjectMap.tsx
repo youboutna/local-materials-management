@@ -27,6 +27,8 @@ export interface MapLocation {
   endDate?: string;
 }
 
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
+
 export const statusColors = {
   'en cours': '#3b82f6',
   'terminé': '#10b981',
@@ -169,7 +171,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
-        {...(selectable && { onclick: handleMapClick })}
+        onClick={selectable ? handleMapClick : undefined}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
