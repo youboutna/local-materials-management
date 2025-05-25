@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
@@ -11,18 +12,21 @@ import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap from '@/components/ProjectMap';
 import { ProjectData } from '@/components/ProjectCard';
 import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
+import { InspectionsList } from '@/components/project/InspectionsList';
+import { supabase } from '@/integrations/supabase/client';
+import { ProjectWithPayments } from '@/types/project';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { getProject, deleteProject } = useProjects();
-  const [project, setProject] = useState<ProjectData | null>(null);
+  const { getProject, deleteProject, updateProject } = useProjects();
+  const [project, setProject] = useState<ProjectWithPayments | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   
   useEffect(() => {
-    const fetchProject = async () => {
+    const fetchProjectWithInspections = async () => {
       if (!id) {
         toast({
           title: "Erreur",
@@ -34,6 +38,7 @@ const ProjectDetail = () => {
       }
 
       try {
+        // Fetch project data
         const projectData = await getProject(id);
         
         if (!projectData) {
@@ -43,9 +48,40 @@ const ProjectDetail = () => {
             variant: "destructive",
           });
           setProject(null);
-        } else {
-          setProject(projectData);
+          setLoading(false);
+          return;
         }
+
+        // Fetch inspections for this project
+        const { data: inspections, error: inspectionsError } = await supabase
+          .from('inspections')
+          .select('*')
+          .eq('project_id', id)
+          .order('date', { ascending: false });
+
+        if (inspectionsError) {
+          console.error('Error fetching inspections:', inspectionsError);
+        }
+
+        // Fetch payments for this project
+        const { data: payments, error: paymentsError } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('project_id', id)
+          .order('payment_date', { ascending: false });
+
+        if (paymentsError) {
+          console.error('Error fetching payments:', paymentsError);
+        }
+
+        // Combine project data with inspections and payments
+        const projectWithInspections: ProjectWithPayments = {
+          ...projectData,
+          inspections: inspections || [],
+          payments: payments || []
+        };
+
+        setProject(projectWithInspections);
       } catch (error) {
         console.error("Error loading project data:", error);
         toast({
@@ -59,8 +95,52 @@ const ProjectDetail = () => {
       }
     };
     
-    fetchProject();
+    fetchProjectWithInspections();
   }, [id, getProject, toast]);
+
+  const handleInspectionUpdate = async () => {
+    if (!id || !project) return;
+    
+    try {
+      // Refresh project data including inspections
+      const { data: inspections } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', id)
+        .order('date', { ascending: false });
+
+      if (inspections && inspections.length > 0) {
+        const latestInspection = inspections[0];
+        
+        // Update project progress and status based on latest inspection
+        const updatedProjectData = await updateProject(id, {
+          progress: latestInspection.progress_at_inspection,
+          status: latestInspection.status === 'approved' ? 'en cours' : 'en inspection'
+        });
+
+        if (updatedProjectData) {
+          // Update local state with new data
+          setProject(prev => prev ? {
+            ...prev,
+            ...updatedProjectData,
+            inspections: inspections || [],
+          } : null);
+
+          toast({
+            title: "Projet mis à jour",
+            description: "La progression du projet a été mise à jour selon l'inspection.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating project:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la progression du projet.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const handleDelete = async () => {
     if (!project || !window.confirm("Êtes-vous sûr de vouloir supprimer ce projet?")) return;
@@ -181,9 +261,10 @@ const ProjectDetail = () => {
             </div>
             
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
                 <TabsTrigger value="workflow">Workflow</TabsTrigger>
+                <TabsTrigger value="inspections">Inspections</TabsTrigger>
                 <TabsTrigger value="details">Détails</TabsTrigger>
               </TabsList>
               
@@ -262,24 +343,14 @@ const ProjectDetail = () => {
               {/* Workflow Tab */}
               <TabsContent value="workflow" className="mt-6">
                 <WorkflowInspection 
-                  project={project as any} 
-                  onInspectionUpdate={() => {
-                    // Refresh project data when inspection is updated
-                    const fetchProject = async () => {
-                      if (id) {
-                        try {
-                          const projectData = await getProject(id);
-                          if (projectData) {
-                            setProject(projectData);
-                          }
-                        } catch (error) {
-                          console.error("Error refreshing project:", error);
-                        }
-                      }
-                    };
-                    fetchProject();
-                  }}
+                  project={project} 
+                  onInspectionUpdate={handleInspectionUpdate}
                 />
+              </TabsContent>
+              
+              {/* Inspections Tab */}
+              <TabsContent value="inspections" className="mt-6">
+                <InspectionsList projectId={project.id} />
               </TabsContent>
               
               {/* Details Tab */}
