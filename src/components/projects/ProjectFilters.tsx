@@ -188,16 +188,6 @@ const ProjectFilters = ({
             </SelectContent>
           </Select>
         </div>
-        
-        {/* New Project Button - use the same path as in ProjectsHeader */}
-        <div>
-          <Link to="/projects/create">
-            <Button className="bg-terracotta-500 hover:bg-terracotta-600 w-full md:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouveau projet
-            </Button>
-          </Link>
-        </div>
       </div>
     </motion.div>
   );
