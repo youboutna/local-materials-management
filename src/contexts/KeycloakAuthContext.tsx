@@ -1,9 +1,17 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { keycloak, initKeycloak, getUserInfo } from '@/integrations/keycloak/keycloak';
 import { useToast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
+
+// Check if this session should be bypassed (anonymous)
+const shouldBypassAuth = () => {
+  const currentSessionId = sessionStorage.getItem('lovable-session-id');
+  const adminSessionId = localStorage.getItem('admin-session-id');
+  
+  // If this session is not the admin session, bypass auth
+  return currentSessionId && adminSessionId && currentSessionId !== adminSessionId;
+};
 
 interface KeycloakUser {
   id?: string;
@@ -26,15 +34,25 @@ type KeycloakAuthContextType = {
 const KeycloakAuthContext = createContext<KeycloakAuthContextType | undefined>(undefined);
 
 export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
+  const bypassAuth = shouldBypassAuth();
+  
   const [user, setUser] = useState<KeycloakUser | null>(null);
-  const [loading, setLoading] = useState(!DEV_MODE); // Don't show loading in dev mode
-  const [isAuthenticated, setIsAuthenticated] = useState(DEV_MODE); // Auto-authenticated in dev mode
+  const [loading, setLoading] = useState(!(DEV_MODE || bypassAuth));
+  const [isAuthenticated, setIsAuthenticated] = useState(DEV_MODE && !bypassAuth);
   const { toast } = useToast();
 
   // Initialize Keycloak
   useEffect(() => {
-    // Skip Keycloak initialization in development mode
-    if (DEV_MODE) {
+    // Skip Keycloak initialization in development mode or for bypassed sessions
+    if (DEV_MODE && bypassAuth) {
+      console.log('🛠️ Development mode: Session bypassed - Keycloak authentication disabled');
+      setLoading(false);
+      setIsAuthenticated(false);
+      setUser(null);
+      return;
+    }
+
+    if (DEV_MODE && !bypassAuth) {
       console.log('🛠️ Development mode active: Keycloak authentication is bypassed');
       setLoading(false);
       return;
@@ -145,11 +163,20 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
     };
 
     init();
-  }, [toast]);
+  }, [toast, bypassAuth]);
 
   // Safe login function
   const login = () => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
+      console.log('🛠️ Session anonyme: Login action bloqué');
+      toast({
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
+      });
+      return;
+    }
+
+    if (DEV_MODE && !bypassAuth) {
       console.log('🛠️ Development mode: Login action simulated');
       // Directly set authenticated in dev mode
       setIsAuthenticated(true);
@@ -179,7 +206,16 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
 
   // Safe logout function
   const logout = () => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
+      console.log('🛠️ Session anonyme: Logout action bloqué');
+      toast({
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
+      });
+      return;
+    }
+
+    if (DEV_MODE && !bypassAuth) {
       console.log('🛠️ Development mode: Logout action simulated');
       setIsAuthenticated(false);
       setUser(null);

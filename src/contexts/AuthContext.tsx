@@ -4,6 +4,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
 
+// Get a unique session identifier for this browser session
+const getSessionId = () => {
+  let sessionId = sessionStorage.getItem('lovable-session-id');
+  if (!sessionId) {
+    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    sessionStorage.setItem('lovable-session-id', sessionId);
+  }
+  return sessionId;
+};
+
+// Check if this session should be bypassed (anonymous)
+const shouldBypassAuth = () => {
+  const currentSessionId = getSessionId();
+  const adminSessionId = localStorage.getItem('admin-session-id');
+  
+  // If no admin session is set, set this as the admin session
+  if (!adminSessionId) {
+    localStorage.setItem('admin-session-id', currentSessionId);
+    return false; // This session is admin
+  }
+  
+  // If this session is the admin session, don't bypass
+  if (currentSessionId === adminSessionId) {
+    return false;
+  }
+  
+  // All other sessions are anonymous
+  return true;
+};
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
@@ -22,6 +52,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const activeDevRole = getActiveDevRole();
+  const bypassAuth = shouldBypassAuth();
   
   // Create a mock session for dev mode
   const createDevSession = (): Session => ({
@@ -36,15 +67,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } as unknown as User
   });
 
-  const [user, setUser] = useState<User | null>(DEV_MODE ? 
+  const [user, setUser] = useState<User | null>((DEV_MODE && !bypassAuth) ? 
     {...DEV_USER, user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}} as unknown as User 
     : null);
-  const [session, setSession] = useState<Session | null>(DEV_MODE ? createDevSession() : null);
-  const [loading, setLoading] = useState(!DEV_MODE);
+  const [session, setSession] = useState<Session | null>((DEV_MODE && !bypassAuth) ? createDevSession() : null);
+  const [loading, setLoading] = useState(!(DEV_MODE || bypassAuth));
   const { toast } = useToast();
 
   useEffect(() => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
+      console.log('🛠️ Development mode: Session bypassed - showing anonymous view');
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      return;
+    }
+
+    if (DEV_MODE && !bypassAuth) {
       console.log('🛠️ Development mode active: Authentication is bypassed');
       console.log(`🛠️ Using role: ${activeDevRole.role}`);
       
@@ -78,6 +117,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (DEV_MODE && bypassAuth) {
+      toast({
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
+      });
+      return;
+    }
+
     if (DEV_MODE) {
       toast({
         title: "Mode développement",
@@ -112,6 +159,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string, nationalId: string) => {
+    if (DEV_MODE && bypassAuth) {
+      toast({
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
+      });
+      return;
+    }
+
     if (DEV_MODE) {
       toast({
         title: "Mode développement",
@@ -156,6 +211,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (DEV_MODE && bypassAuth) {
+      toast({
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
+      });
+      return;
+    }
+
     if (DEV_MODE) {
       toast({
         title: "Mode développement",
@@ -185,10 +248,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign in with Google
   const signInWithGoogle = async () => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
       toast({
-        title: "Mode développement",
-        description: "Connexion Google simulée en mode développement",
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
       });
       return;
     }
@@ -220,12 +283,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign in with phone number
   const signInWithPhone = async (phone: string): Promise<{ success: boolean; error?: string; }> => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
       toast({
-        title: "Mode développement",
-        description: "Connexion par téléphone simulée en mode développement",
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
       });
-      return { success: true };
+      return { success: false, error: "Session anonyme" };
     }
 
     try {
@@ -259,10 +322,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Verify phone OTP
   const verifyPhoneOTP = async (phone: string, token: string) => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
       toast({
-        title: "Mode développement",
-        description: "Vérification OTP simulée en mode développement",
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
       });
       return;
     }
@@ -298,10 +361,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign in with National ID (custom implementation)
   const signInWithNationalId = async (nationalId: string, password: string) => {
-    if (DEV_MODE) {
+    if (DEV_MODE && bypassAuth) {
       toast({
-        title: "Mode développement",
-        description: "Connexion par ID National simulée en mode développement",
+        title: "Session anonyme",
+        description: "Cette session est configurée en mode anonyme",
       });
       return;
     }
@@ -348,10 +411,146 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    signInWithGoogle,
-    signInWithPhone,
-    verifyPhoneOTP,
-    signInWithNationalId,
+    signInWithGoogle: async () => {
+      if (DEV_MODE && bypassAuth) {
+        toast({
+          title: "Session anonyme",
+          description: "Cette session est configurée en mode anonyme",
+        });
+        return;
+      }
+      try {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin + '/auth/callback'
+          }
+        });
+        
+        if (error) {
+          toast({
+            title: "Erreur de connexion Google",
+            description: error.message,
+            variant: "destructive"
+          });
+          throw error;
+        }
+      } catch (error) {
+        console.error('Google sign in error:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    signInWithPhone: async (phone: string) => {
+      if (DEV_MODE && bypassAuth) {
+        toast({
+          title: "Session anonyme",
+          description: "Cette session est configurée en mode anonyme",
+        });
+        return { success: false, error: "Session anonyme" };
+      }
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.auth.signInWithOtp({
+          phone,
+        });
+        
+        if (error) {
+          toast({
+            title: "Erreur de connexion",
+            description: error.message,
+            variant: "destructive"
+          });
+          return { success: false, error: error.message };
+        }
+        
+        toast({
+          title: "Code envoyé",
+          description: "Un code de vérification a été envoyé à votre numéro de téléphone.",
+        });
+        
+        return { success: true };
+      } catch (error: any) {
+        console.error('Phone sign in error:', error);
+        return { success: false, error: error.message };
+      } finally {
+        setLoading(false);
+      }
+    },
+    verifyPhoneOTP: async (phone: string, token: string) => {
+      if (DEV_MODE && bypassAuth) {
+        toast({
+          title: "Session anonyme",
+          description: "Cette session est configurée en mode anonyme",
+        });
+        return;
+      }
+      try {
+        setLoading(true);
+        const { error } = await supabase.auth.verifyOtp({
+          phone,
+          token,
+          type: 'sms',
+        });
+        
+        if (error) {
+          toast({
+            title: "Erreur de vérification",
+            description: error.message,
+            variant: "destructive"
+          });
+          throw error;
+        }
+        
+        toast({
+          title: "Vérification réussie",
+          description: "Vous êtes maintenant connecté.",
+        });
+      } catch (error) {
+        console.error('OTP verification error:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    signInWithNationalId: async (nationalId: string, password: string) => {
+      if (DEV_MODE && bypassAuth) {
+        toast({
+          title: "Session anonyme",
+          description: "Cette session est configurée en mode anonyme",
+        });
+        return;
+      }
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('national_id', nationalId)
+          .single();
+        
+        if (error || !data) {
+          toast({
+            title: "Erreur de connexion",
+            description: "ID National non trouvé ou invalide.",
+            variant: "destructive"
+          });
+          throw new Error("ID National non trouvé");
+        }
+        
+        toast({
+          title: "ID National vérifié",
+          description: "Veuillez vous connecter avec votre email et mot de passe.",
+        });
+      } catch (error) {
+        console.error('National ID sign in error:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
     isDevelopmentMode: DEV_MODE
   };
 
