@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,15 +17,15 @@ import { sendTaskAssignmentNotifications } from '@/services/notificationService'
 interface TaskAssignment {
   id: string;
   title: string;
-  description: string;
-  project_id: string;
-  assigned_to: string;
-  assigned_by: string;
-  due_date: string;
-  priority: string;
-  status: string;
-  completion_date: string;
-  notes: string;
+  description: string | null;
+  project_id: string | null;
+  assigned_to: string | null;
+  assigned_by: string | null;
+  due_date: string | null;
+  priority: string | null;
+  status: string | null;
+  completion_date: string | null;
+  notes: string | null;
   created_at: string;
 }
 
@@ -98,9 +99,9 @@ const TaskAssignments = () => {
         await sendTaskAssignmentNotifications({
           id: data.id,
           title: data.title,
-          assigned_to: data.assigned_to,
+          assigned_to: data.assigned_to || '',
           assigned_by: data.assigned_by || '',
-          project_id: data.project_id
+          project_id: data.project_id || undefined
         });
         
         toast({ 
@@ -177,7 +178,7 @@ const TaskAssignments = () => {
     createTaskMutation.mutate(formData);
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string | null) => {
     const colors = {
       low: 'bg-green-100 text-green-800',
       medium: 'bg-yellow-100 text-yellow-800',
@@ -187,7 +188,7 @@ const TaskAssignments = () => {
     return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
     const icons = {
       pending: Clock,
       in_progress: AlertTriangle,
@@ -197,7 +198,7 @@ const TaskAssignments = () => {
     return icons[status as keyof typeof icons] || Clock;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     const colors = {
       pending: 'bg-gray-100 text-gray-800',
       in_progress: 'bg-blue-100 text-blue-800',
@@ -362,11 +363,11 @@ const TaskAssignments = () => {
                   </div>
                   <div className="flex flex-col space-y-2">
                     <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
+                      {task.priority || 'medium'}
                     </Badge>
                     <Badge className={getStatusColor(task.status)}>
                       <StatusIcon className="h-3 w-3 mr-1" />
-                      {task.status.replace('_', ' ')}
+                      {task.status?.replace('_', ' ') || 'pending'}
                     </Badge>
                   </div>
                 </div>
@@ -387,14 +388,14 @@ const TaskAssignments = () => {
                   )}
                   <div className="flex items-center space-x-2 text-gray-600">
                     <User className="h-4 w-4" />
-                    <span>Assigné à: {task.assigned_to}</span>
+                    <span>Assigné à: {task.assigned_to || 'Non assigné'}</span>
                   </div>
                 </div>
 
                 {task.status !== 'completed' && task.status !== 'cancelled' && (
                   <div className="flex space-x-2 pt-2">
                     <Select
-                      value={task.status}
+                      value={task.status || 'pending'}
                       onValueChange={(value) => updateTaskStatusMutation.mutate({ id: task.id, status: value })}
                     >
                       <SelectTrigger className="flex-1">

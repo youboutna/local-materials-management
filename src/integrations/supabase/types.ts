@@ -142,6 +142,7 @@ export type Database = {
           position: string | null
           salary: number | null
           skills: string[] | null
+          superior_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -160,6 +161,7 @@ export type Database = {
           position?: string | null
           salary?: number | null
           skills?: string[] | null
+          superior_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -178,6 +180,7 @@ export type Database = {
           position?: string | null
           salary?: number | null
           skills?: string[] | null
+          superior_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -185,6 +188,13 @@ export type Database = {
           {
             foreignKeyName: "employees_manager_id_fkey"
             columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_superior_id_fkey"
+            columns: ["superior_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -402,6 +412,45 @@ export type Database = {
           default_price?: number | null
           label?: string
           type_label?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          read: boolean
+          recipient_id: string
+          related_id: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          read?: boolean
+          recipient_id: string
+          related_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read?: boolean
+          recipient_id?: string
+          related_id?: string | null
+          title?: string
+          type?: string
           updated_at?: string
         }
         Relationships: []
