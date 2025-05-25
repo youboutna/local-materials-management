@@ -14,18 +14,56 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Export types and constants that are used in other files
+export interface MapLocation {
+  id: string;
+  name: string;
+  type: 'project' | 'material';
+  latitude: number;
+  longitude: number;
+  status?: string;
+  region?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export const statusColors = {
+  'en cours': '#3b82f6',
+  'terminé': '#10b981',
+  'en attente': '#f59e0b',
+  'en inspection': '#eab308',
+  'suspendu': '#8b5cf6',
+  'annulé': '#ef4444'
+};
+
 interface ProjectMapProps {
-  projects: ProjectData[];
+  projects?: ProjectData[];
   selectedProject?: ProjectData | null;
   onProjectSelect?: (project: ProjectData) => void;
   className?: string;
+  locations?: MapLocation[];
+  defaultCenter?: number[];
+  defaultZoom?: number;
+  height?: string;
+  width?: string;
+  selectable?: boolean;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  interactive?: boolean;
 }
 
 const ProjectMap: React.FC<ProjectMapProps> = ({ 
-  projects, 
+  projects = [], 
   selectedProject, 
   onProjectSelect,
-  className = ""
+  className = "",
+  locations = [],
+  defaultCenter,
+  defaultZoom = 7,
+  height = "400px",
+  width = "100%",
+  selectable = false,
+  onLocationSelect,
+  interactive = true
 }) => {
   // Filter projects that have coordinates
   const projectsWithCoordinates = useMemo(() => {
@@ -36,8 +74,12 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     );
   }, [projects]);
 
-  // Calculate map center based on projects
+  // Calculate map center based on projects or use provided defaults
   const mapCenter: LatLngExpression = useMemo(() => {
+    if (defaultCenter && defaultCenter.length === 2) {
+      return [defaultCenter[0], defaultCenter[1]];
+    }
+    
     if (selectedProject?.coordinates) {
       return [selectedProject.coordinates.latitude, selectedProject.coordinates.longitude];
     }
@@ -50,18 +92,10 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     
     // Default to Nouakchott, Mauritania
     return [18.079052, -15.965634];
-  }, [projectsWithCoordinates, selectedProject]);
+  }, [projectsWithCoordinates, selectedProject, defaultCenter]);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'en cours': return '#3b82f6'; // blue
-      case 'terminé': return '#10b981'; // green
-      case 'en attente': return '#f59e0b'; // amber
-      case 'en inspection': return '#eab308'; // yellow
-      case 'suspendu': return '#8b5cf6'; // purple
-      case 'annulé': return '#ef4444'; // red
-      default: return '#6b7280'; // gray
-    }
+    return statusColors[status as keyof typeof statusColors] || '#6b7280';
   };
 
   const createCustomIcon = (project: ProjectData) => {
@@ -93,27 +127,56 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     });
   };
 
-  if (projectsWithCoordinates.length === 0) {
+  const createLocationIcon = (location: MapLocation) => {
+    const color = location.status ? getStatusColor(location.status) : '#6b7280';
+    
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          background-color: ${color};
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        "></div>
+      `,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+  };
+
+  // Handle map click for location selection
+  const handleMapClick = (e: any) => {
+    if (selectable && onLocationSelect) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    }
+  };
+
+  if (projectsWithCoordinates.length === 0 && locations.length === 0) {
     return (
-      <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`}>
+      <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`} style={{ height, width }}>
         <p className="text-gray-600">Aucun projet avec coordonnées géographiques à afficher</p>
       </div>
     );
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={{ height, width }}>
       <MapContainer
         center={mapCenter}
-        zoom={7}
-        style={{ height: '400px', width: '100%' }}
+        zoom={defaultZoom}
+        style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
+        {...(selectable && { onclick: handleMapClick })}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
+        {/* Render project markers */}
         {projectsWithCoordinates.map((project) => (
           <Marker
             key={project.id}
@@ -143,30 +206,56 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             </Popup>
           </Marker>
         ))}
+
+        {/* Render location markers */}
+        {locations.map((location) => (
+          <Marker
+            key={location.id}
+            position={[location.latitude, location.longitude]}
+            icon={createLocationIcon(location)}
+          >
+            <Popup>
+              <div className="p-2">
+                <h3 className="font-semibold text-sm">{location.name}</h3>
+                <p className="text-xs text-gray-600">{location.type}</p>
+                {location.status && (
+                  <span 
+                    className="px-2 py-1 rounded text-white text-xs"
+                    style={{ backgroundColor: getStatusColor(location.status) }}
+                  >
+                    {location.status}
+                  </span>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
       
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg">
-        <h4 className="text-xs font-semibold mb-2">Statuts des projets</h4>
-        <div className="space-y-1">
-          {[
-            { status: 'en cours', label: 'En cours' },
-            { status: 'terminé', label: 'Terminé' },
-            { status: 'en attente', label: 'En attente' },
-            { status: 'en inspection', label: 'En inspection' },
-            { status: 'suspendu', label: 'Suspendu' },
-            { status: 'annulé', label: 'Annulé' }
-          ].map(({ status, label }) => (
-            <div key={status} className="flex items-center gap-2 text-xs">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: getStatusColor(status) }}
-              />
-              <span>{label}</span>
-            </div>
-          ))}
+      {/* Legend - only show for projects */}
+      {projectsWithCoordinates.length > 0 && (
+        <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg">
+          <h4 className="text-xs font-semibold mb-2">Statuts des projets</h4>
+          <div className="space-y-1">
+            {[
+              { status: 'en cours', label: 'En cours' },
+              { status: 'terminé', label: 'Terminé' },
+              { status: 'en attente', label: 'En attente' },
+              { status: 'en inspection', label: 'En inspection' },
+              { status: 'suspendu', label: 'Suspendu' },
+              { status: 'annulé', label: 'Annulé' }
+            ].map(({ status, label }) => (
+              <div key={status} className="flex items-center gap-2 text-xs">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: getStatusColor(status) }}
+                />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
