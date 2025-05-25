@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -18,7 +17,7 @@ import { MapLocation } from '@/components/ProjectMap';
 import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments, Inspection } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProjectDetail = () => {
@@ -51,7 +50,7 @@ const ProjectDetail = () => {
       }
 
       // Fetch inspections
-      const { data: inspections, error: inspectionsError } = await supabase
+      const { data: inspectionsData, error: inspectionsError } = await supabase
         .from('inspections')
         .select('*')
         .eq('project_id', projectId)
@@ -61,11 +60,17 @@ const ProjectDetail = () => {
         console.error('Error fetching inspections:', inspectionsError);
       }
 
+      // Transform inspections data to match the Inspection interface
+      const inspections: Inspection[] = inspectionsData?.map(inspection => ({
+        ...inspection,
+        documents: inspection.documents ? (Array.isArray(inspection.documents) ? inspection.documents : []) : undefined
+      })) || [];
+
       // Combine data
       const projectWithDetails: ProjectWithPayments = {
         ...projectData,
         payments: payments || [],
-        inspections: inspections || []
+        inspections: inspections
       };
 
       console.log('Project with details loaded:', projectWithDetails);
