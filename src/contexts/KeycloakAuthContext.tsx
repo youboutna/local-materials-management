@@ -73,7 +73,7 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
             }
 
             if (!existingUser) {
-              // Create new user profile
+              // Create new user profile - use inspector as default role
               const { data: newUser, error: createError } = await supabase
                 .from('profiles')
                 .insert({
@@ -81,8 +81,8 @@ export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
                   full_name: `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim(),
                   phone: '',
                   national_id: keycloakId,
-                  // Map Keycloak admin role to inspector for new users as default in our system
-                  role: userInfo.roles.includes('admin') ? 'director' : 'director',
+                  // Use inspector as default role for new users
+                  role: 'inspector' as any,
                   avatar_url: null,
                 })
                 .select()

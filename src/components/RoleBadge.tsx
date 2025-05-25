@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 // Define the custom role type that matches what we're using in the Users component
 // and include database roles
-export type RoleType = 'admin' | 'developer' | 'manager' | 'director' | 'inspector' | 'supplyer'  | 'user';
+export type RoleType = 'admin' | 'developer' | 'manager' | 'director' | 'inspector' | 'supplier'  | 'user';
 
 interface RoleBadgeProps {
   role: RoleType;
@@ -27,7 +27,7 @@ const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {
         return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
       case 'inspector':
         return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
-      case 'supplayer':
+      case 'supplier':
         return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
       case 'user':
       default:

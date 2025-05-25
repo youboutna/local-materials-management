@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { useLanguage, Language } from '@/contexts/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -22,11 +24,10 @@ const Navbar = () => {
   const location = useLocation();
   const { user: supabaseUser, signOut } = useAuth();
   const { isAuthenticated, user, login, logout } = useKeycloakAuth();
+  const { language, setLanguage } = useLanguage();
   
   const handleLanguageChange = (newLanguage: Language) => {
-    if (setLanguage) {
-      setLanguage(newLanguage);
-    }
+    setLanguage(newLanguage);
   };
   
   useEffect(() => {
@@ -47,7 +48,7 @@ const Navbar = () => {
             Construction ERP
           </Link>
         </div>
-        <NavigationMenuItem      className="text-sm bg-terracotta-500 hover:bg-terracotta-600">
+        <NavigationMenuItem className="text-sm bg-terracotta-500 hover:bg-terracotta-600">
           <LanguageSwitcher />
        </NavigationMenuItem>
         <nav className="hidden md:flex items-center space-x-4">

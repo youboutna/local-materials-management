@@ -175,7 +175,6 @@ const ProjectMap = ({
                 <Marker
                   key={project.id}
                   position={[project.coordinates.latitude, project.coordinates.longitude]}
-                  icon={getMarkerIcon(project.status)}
                   eventHandlers={{
                     click: () => handleMarkerClick(project.id),
                   }}
@@ -203,7 +202,6 @@ const ProjectMap = ({
           <Marker
             key={location.id}
             position={[location.latitude, location.longitude]}
-            icon={getMarkerIcon(location.status)}
           >
             <Popup>
               <div className="font-medium">{location.name}</div>
@@ -224,7 +222,6 @@ const ProjectMap = ({
         {selectedProject?.latitude && selectedProject?.longitude && (
           <Marker
             position={[selectedProject.latitude, selectedProject.longitude]}
-            icon={getMarkerIcon(selectedProject.status)}
           >
             <Popup>
               <div className="font-medium">{selectedProject.name}</div>
