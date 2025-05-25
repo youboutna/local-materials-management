@@ -195,6 +195,8 @@ export type Database = {
         Row: {
           available_quantity: number
           category: string
+          coordinates_latitude: number | null
+          coordinates_longitude: number | null
           created_at: string
           description: string
           id: string
@@ -208,6 +210,8 @@ export type Database = {
         Insert: {
           available_quantity?: number
           category: string
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
           created_at?: string
           description: string
           id?: string
@@ -221,6 +225,8 @@ export type Database = {
         Update: {
           available_quantity?: number
           category?: string
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
           created_at?: string
           description?: string
           id?: string
