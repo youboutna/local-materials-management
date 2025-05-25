@@ -77,7 +77,7 @@ const Projects = () => {
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <ProjectsHeader title="Projets" />
+          <ProjectsHeader />
           
           {/* View Toggle Tabs */}
           <Tabs defaultValue="list" className="mt-6 mb-6">
