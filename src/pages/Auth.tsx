@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -34,6 +33,8 @@ import { DEV_MODE } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import OAuthErrorHandler from '@/components/auth/OAuthErrorHandler';
 import OAuthConfigGuide from '@/components/auth/OAuthConfigGuide';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Info } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email("Format d'email invalide"),
@@ -88,6 +89,7 @@ const Auth = () => {
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showOAuthConfig, setShowOAuthConfig] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -178,11 +180,67 @@ const Auth = () => {
     }
   }, [isDevelopmentMode, toast]);
   
+  const getAuthErrorMessage = (error: any) => {
+    if (error?.code) {
+      switch (error.code) {
+        case 'email_not_confirmed':
+          return {
+            title: "Email non confirmé",
+            description: "Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation avant de vous connecter.",
+            type: 'warning' as const
+          };
+        case 'invalid_credentials':
+          return {
+            title: "Identifiants incorrects",
+            description: "L'adresse email ou le mot de passe que vous avez saisi est incorrect. Veuillez vérifier et réessayer.",
+            type: 'error' as const
+          };
+        case 'too_many_requests':
+          return {
+            title: "Trop de tentatives",
+            description: "Trop de tentatives de connexion. Veuillez attendre quelques minutes avant de réessayer.",
+            type: 'error' as const
+          };
+        case 'user_not_found':
+          return {
+            title: "Utilisateur non trouvé",
+            description: "Aucun compte n'est associé à cette adresse email. Vérifiez l'adresse ou créez un nouveau compte.",
+            type: 'error' as const
+          };
+        case 'weak_password':
+          return {
+            title: "Mot de passe trop faible",
+            description: "Le mot de passe doit contenir au moins 8 caractères avec des lettres et des chiffres.",
+            type: 'error' as const
+          };
+        case 'signup_disabled':
+          return {
+            title: "Inscription désactivée",
+            description: "Les nouvelles inscriptions sont temporairement désactivées. Contactez l'administrateur.",
+            type: 'error' as const
+          };
+        default:
+          return {
+            title: "Erreur d'authentification",
+            description: error.message || "Une erreur inattendue s'est produite. Veuillez réessayer.",
+            type: 'error' as const
+          };
+      }
+    }
+    
+    return {
+      title: "Erreur d'authentification",
+      description: error?.message || "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      type: 'error' as const
+    };
+  };
+  
   const onLoginSubmit = async (values: LoginFormValues) => {
     setLoading(true);
+    setAuthError(null);
+    
     try {
       if (isDevelopmentMode) {
-        // Avoid navigate in dev mode, use direct location change
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 100);
@@ -191,8 +249,16 @@ const Auth = () => {
 
       await signIn(values.email, values.password);
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      const errorInfo = getAuthErrorMessage(error);
+      setAuthError(errorInfo.description);
+      
+      toast({
+        title: errorInfo.title,
+        description: errorInfo.description,
+        variant: errorInfo.type === 'error' ? 'destructive' : 'default'
+      });
     } finally {
       setLoading(false);
     }
@@ -200,6 +266,8 @@ const Auth = () => {
   
   const onRegisterSubmit = async (values: RegisterFormValues) => {
     setLoading(true);
+    setAuthError(null);
+    
     try {
       if (isDevelopmentMode) {
         toast({
@@ -217,9 +285,23 @@ const Auth = () => {
         values.phone, 
         values.nationalId
       );
+      
+      toast({
+        title: "Inscription réussie",
+        description: "Un email de confirmation a été envoyé à votre adresse. Vérifiez votre boîte mail avant de vous connecter.",
+      });
+      
       setMode('login');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      const errorInfo = getAuthErrorMessage(error);
+      setAuthError(errorInfo.description);
+      
+      toast({
+        title: errorInfo.title,
+        description: errorInfo.description,
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -356,8 +438,18 @@ const Auth = () => {
         <div className="w-full max-w-md z-10 space-y-6">
           <OAuthErrorHandler />
           
+          {authError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Card className="shadow-elegant border-none overflow-hidden">
-            <Tabs value={mode} onValueChange={setMode} className="w-full">
+            <Tabs value={mode} onValueChange={(newMode) => {
+              setMode(newMode);
+              setAuthError(null); // Clear error when switching tabs
+            }} className="w-full">
               <TabsList className="grid grid-cols-2 w-full rounded-none">
                 <TabsTrigger value="login" className="rounded-none data-[state=active]:bg-white">
                   Connexion
@@ -392,7 +484,11 @@ const Auth = () => {
                                   <Input 
                                     placeholder="votre@email.com" 
                                     className="pl-10" 
-                                    {...field} 
+                                    {...field}
+                                    onChange={(e) => {
+                                      field.onChange(e);
+                                      setAuthError(null); // Clear error on input change
+                                    }}
                                   />
                                 </FormControl>
                               </div>
@@ -420,6 +516,10 @@ const Auth = () => {
                                     placeholder="••••••••"
                                     className="pl-10"
                                     {...field}
+                                    onChange={(e) => {
+                                      field.onChange(e);
+                                      setAuthError(null); // Clear error on input change
+                                    }}
                                   />
                                 </FormControl>
                                 <button
