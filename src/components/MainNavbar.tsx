@@ -26,7 +26,7 @@ const MainNavbar = () => {
 
   return (
     <header className="bg-adrar-700 text-white py-4">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="container mx-auto flex justify-between items-center px-4">
         <Link to="/" className="text-xl font-bold">
           Construction ERP
         </Link>
@@ -73,11 +73,6 @@ const MainNavbar = () => {
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <LanguageSwitcher />
-            </NavigationMenuItem>
-            
-            {/* Settings */}
-            <NavigationMenuItem>
               <Button 
                 variant="ghost" 
                 className="text-white hover:text-gray-200"
@@ -90,21 +85,24 @@ const MainNavbar = () => {
                 </Link>
               </Button>
             </NavigationMenuItem>
-            
-
           </NavigationMenuList>
         </NavigationMenu>
         
-        {/* Account or Login Button */}
-        <Button 
-          variant="secondary"
-          size="sm"
-          asChild
-        >
-          <Link to="/auth">
-            {t('nav.login') || 'Se connecter'}
-          </Link>
-        </Button>
+        <div className="flex items-center gap-4">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+          
+          {/* Account or Login Button */}
+          <Button 
+            variant="secondary"
+            size="sm"
+            asChild
+          >
+            <Link to="/auth">
+              {t('nav.login') || 'Se connecter'}
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
   );
