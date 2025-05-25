@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -145,10 +144,14 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
           <img 
             src={document.file_url} 
             alt={document.title}
-            className="max-w-full max-h-96 object-contain rounded"
+            className="max-w-full max-h-96 object-contain rounded shadow-lg"
             onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const errorDiv = target.nextElementSibling as HTMLElement;
+              if (errorDiv) {
+                errorDiv.classList.remove('hidden');
+              }
             }}
           />
           <div className="hidden text-center text-gray-500">
@@ -161,11 +164,18 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
 
     if (isPDF(document.mime_type)) {
       return (
-        <div className="w-full h-96 bg-gray-50 rounded-lg">
+        <div className="w-full h-96 bg-gray-50 rounded-lg overflow-hidden">
           <iframe 
-            src={document.file_url}
-            className="w-full h-full rounded-lg"
+            src={`${document.file_url}#toolbar=1&navpanes=1&scrollbar=1`}
+            className="w-full h-full border-0"
             title={document.title}
+            onError={() => {
+              toast({
+                title: "Erreur de prévisualisation",
+                description: "Impossible de charger le PDF. Vous pouvez le télécharger pour le consulter.",
+                variant: "destructive"
+              });
+            }}
           />
         </div>
       );
@@ -177,6 +187,16 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
           <FileText className="h-12 w-12 mx-auto mb-2" />
           <p>Prévisualisation non disponible pour ce type de fichier</p>
           <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Télécharger pour consulter
+          </Button>
         </div>
       </div>
     );
@@ -192,6 +212,9 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
             <IconComponent className="h-6 w-6 text-terracotta-600" />
             {document.title}
           </DialogTitle>
+          <DialogDescription>
+            Détails et prévisualisation du document {document.file_name}
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
