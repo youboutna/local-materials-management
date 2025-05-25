@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -132,25 +133,37 @@ const Auth = () => {
   });
   
   useEffect(() => {
-    if (DEV_MODE) {
-      // Use history API directly to avoid security errors in dev mode
-      const newUrl = `/auth?mode=${mode}`;
-      if (window.location.pathname + window.location.search !== newUrl) {
-        window.history.replaceState(null, '', newUrl);
+    try {
+      if (DEV_MODE) {
+        // Use history API safely in dev mode
+        const newUrl = `/auth?mode=${mode}`;
+        if (window.location.pathname + window.location.search !== newUrl) {
+          window.history.replaceState(null, '', newUrl);
+        }
+      } else {
+        // Only use navigate in production mode
+        navigate(`/auth?mode=${mode}`, { replace: true });
       }
-    } else {
-      // Only use navigate in production mode
-      navigate(`/auth?mode=${mode}`, { replace: true });
+    } catch (error) {
+      console.error('Navigation error:', error);
     }
   }, [mode, navigate]);
 
   useEffect(() => {
     if (user) {
-      if (DEV_MODE) {
-        // Use direct window location change to avoid security errors
+      try {
+        if (DEV_MODE) {
+          // Use direct window location change to avoid security errors
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 100);
+        } else {
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Redirect error:', error);
+        // Fallback to direct navigation
         window.location.href = '/dashboard';
-      } else {
-        navigate('/dashboard');
       }
     }
   }, [user, navigate]);
@@ -170,7 +183,9 @@ const Auth = () => {
     try {
       if (isDevelopmentMode) {
         // Avoid navigate in dev mode, use direct location change
-        window.location.href = '/dashboard';
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 100);
         return;
       }
 
@@ -216,7 +231,9 @@ const Auth = () => {
         title: "Mode développement",
         description: "Connexion Google simulée en mode développement",
       });
-      window.location.href = '/dashboard';
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 100);
       return;
     }
 
