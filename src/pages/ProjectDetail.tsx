@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
@@ -14,7 +13,7 @@ import { ProjectData } from '@/components/ProjectCard';
 import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { InspectionsList } from '@/components/project/InspectionsList';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectWithPayments } from '@/types/project';
+import { ProjectWithPayments, Inspection } from '@/types/project';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -74,10 +73,21 @@ const ProjectDetail = () => {
           console.error('Error fetching payments:', paymentsError);
         }
 
+        // Transform inspections to match the Inspection type
+        const transformedInspections: Inspection[] = (inspections || []).map(inspection => ({
+          id: inspection.id,
+          date: inspection.date,
+          status: inspection.status,
+          inspector: inspection.inspector,
+          progress_at_inspection: inspection.progress_at_inspection,
+          comments: inspection.comments,
+          documents: inspection.documents ? (Array.isArray(inspection.documents) ? inspection.documents : []) : undefined
+        }));
+
         // Combine project data with inspections and payments
         const projectWithInspections: ProjectWithPayments = {
           ...projectData,
-          inspections: inspections || [],
+          inspections: transformedInspections,
           payments: payments || []
         };
 
@@ -119,11 +129,22 @@ const ProjectDetail = () => {
         });
 
         if (updatedProjectData) {
+          // Transform inspections to match the Inspection type
+          const transformedInspections: Inspection[] = inspections.map(inspection => ({
+            id: inspection.id,
+            date: inspection.date,
+            status: inspection.status,
+            inspector: inspection.inspector,
+            progress_at_inspection: inspection.progress_at_inspection,
+            comments: inspection.comments,
+            documents: inspection.documents ? (Array.isArray(inspection.documents) ? inspection.documents : []) : undefined
+          }));
+
           // Update local state with new data
           setProject(prev => prev ? {
             ...prev,
             ...updatedProjectData,
-            inspections: inspections || [],
+            inspections: transformedInspections,
           } : null);
 
           toast({
