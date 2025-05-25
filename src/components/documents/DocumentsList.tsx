@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 interface Document {
   id: string;
@@ -28,6 +29,7 @@ const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const { toast } = useToast();
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents', typeFilter, statusFilter],
@@ -81,6 +83,37 @@ const DocumentsList = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        throw new Error('Erreur lors du téléchargement');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Succès",
+        description: "Fichier téléchargé avec succès.",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le fichier.",
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredDocuments = documents?.filter(doc =>
@@ -196,7 +229,12 @@ const DocumentsList = () => {
 
                   <div className="flex items-center space-x-2">
                     {document.file_url && (
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleDownload(document.file_url, document.file_name)}
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Télécharger
                       </Button>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const DocumentUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -33,6 +34,86 @@ const DocumentUpload = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (uploadData: typeof formData & { file?: File }) => {
+      let fileUrl: string | null = null;
+      let uploadedFileName: string | null = null;
+      let fileSize: number | null = null;
+      let mimeType: string | null = null;
+
+      // Upload file if provided
+      if (uploadData.file) {
+        const fileExt = uploadData.file.name.split('.').pop();
+        const uniqueFileName = `${Date.now()}.${fileExt}`;
+        
+        const { data: uploadResult, error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(uniqueFileName, uploadData.file);
+
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(uniqueFileName);
+
+        fileUrl = urlData.publicUrl;
+        uploadedFileName = uploadData.file.name;
+        fileSize = uploadData.file.size;
+        mimeType = uploadData.file.type;
+      }
+
+      // Create document record
+      const { data, error } = await supabase
+        .from('documents')
+        .insert({
+          title: uploadData.title,
+          description: uploadData.description,
+          document_type: uploadData.document_type as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record',
+          project_id: uploadData.project_id || null,
+          status: uploadData.status as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived',
+          file_url: fileUrl,
+          file_name: uploadedFileName,
+          file_size: fileSize,
+          mime_type: mimeType
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      toast({
+        title: "Succès",
+        description: "Document créé avec succès.",
+      });
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        document_type: '',
+        project_id: '',
+        status: 'draft'
+      });
+      setFile(null);
+    },
+    onError: (error: Error) => {
+      console.error('Upload error:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue s'est produite.",
+        variant: "destructive"
+      });
+    }
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -59,89 +140,8 @@ const DocumentUpload = () => {
     }
 
     setUploading(true);
-
     try {
-      let fileUrl: string | null = null;
-      let uploadedFileName: string | null = null;
-      let fileSize: number | null = null;
-      let mimeType: string | null = null;
-
-      // Upload file if provided
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        const uniqueFileName = `${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(uniqueFileName, file);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          toast({
-            title: "Erreur de téléchargement",
-            description: "Impossible de télécharger le fichier.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(uniqueFileName);
-
-        fileUrl = urlData.publicUrl;
-        uploadedFileName = file.name;
-        fileSize = file.size;
-        mimeType = file.type;
-      }
-
-      // Create document record
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          document_type: formData.document_type as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record',
-          project_id: formData.project_id || null,
-          status: formData.status as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived',
-          file_url: fileUrl,
-          file_name: uploadedFileName,
-          file_size: fileSize,
-          mime_type: mimeType
-        });
-
-      if (error) {
-        console.error('Insert error:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de créer le document.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Succès",
-        description: "Document créé avec succès.",
-      });
-
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        document_type: '',
-        project_id: '',
-        status: 'draft'
-      });
-      setFile(null);
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite.",
-        variant: "destructive"
-      });
+      await uploadMutation.mutateAsync({ ...formData, file: file || undefined });
     } finally {
       setUploading(false);
     }
