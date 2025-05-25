@@ -29,9 +29,9 @@ const ProjectDistributionChart: React.FC<ProjectDistributionChartProps> = ({ dat
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis />
-        <Tooltip formatter={(value) => [`${value} ${t('projects.projects')}`, t('projects.count')]} />
+        <Tooltip formatter={(value) => [`${value} projets`, 'Nombre']} />
         <Legend />
-        <Bar dataKey="count" name={t('projects.projectCount')} fill="#8884d8" />
+        <Bar dataKey="count" name="Nombre de projets" fill="#8884d8" />
       </BarChart>
     </ResponsiveContainer>
   );

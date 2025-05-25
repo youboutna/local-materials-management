@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -11,11 +12,16 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LoadDataButton from '@/components/LoadDataButton';
 import { DEV_MODE } from '@/config/constants';
+import { useProjects } from '@/hooks/projects/useProjects';
+import ProjectProgressChart from '@/components/ProjectProgressChart';
+import ProjectDistributionChart from '@/components/ProjectDistributionChart';
+import ProjectMap from '@/components/ProjectMap';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isDevelopmentMode } = useAuth();
   const { toast } = useToast();
+  const { projects, loading } = useProjects();
 
   useEffect(() => {
     if (!user && !isDevelopmentMode) {
@@ -27,6 +33,82 @@ const Dashboard = () => {
       });
     }
   }, [user, navigate, toast, isDevelopmentMode]);
+
+  // Calculate statistics from projects data
+  const calculateStats = () => {
+    if (!projects || projects.length === 0) {
+      return {
+        activeProjects: 0,
+        totalBudget: 0,
+        teamMembers: 0,
+        materials: 0,
+        statusDistribution: [],
+        locationDistribution: []
+      };
+    }
+
+    const activeProjects = projects.filter(p => p.status === 'en cours').length;
+    const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+    const teamMembers = projects.reduce((sum, p) => sum + p.teamSize, 0);
+
+    // Status distribution for pie chart
+    const statusCounts = projects.reduce((acc, project) => {
+      acc[project.status] = (acc[project.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const statusColors = {
+      'en cours': '#3b82f6',
+      'terminé': '#10b981',
+      'en attente': '#f59e0b',
+      'en inspection': '#eab308',
+      'suspendu': '#8b5cf6',
+      'annulé': '#ef4444'
+    };
+
+    const statusDistribution = Object.entries(statusCounts).map(([status, count]) => ({
+      name: status,
+      value: count,
+      color: statusColors[status as keyof typeof statusColors] || '#6b7280'
+    }));
+
+    // Location distribution for bar chart
+    const locationCounts = projects.reduce((acc, project) => {
+      acc[project.location] = (acc[project.location] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const locationDistribution = Object.entries(locationCounts).map(([location, count]) => ({
+      name: location,
+      count
+    }));
+
+    return {
+      activeProjects,
+      totalBudget,
+      teamMembers,
+      materials: 12, // Static for now
+      statusDistribution,
+      locationDistribution
+    };
+  };
+
+  const stats = calculateStats();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-adrar-600">Chargement du tableau de bord...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -62,7 +144,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-adrar-800">4</span>
+                  <span className="text-3xl font-bold text-adrar-800">{stats.activeProjects}</span>
                   <span className="ml-2 text-sm text-gray-500">projets actifs</span>
                 </div>
               </CardContent>
@@ -75,7 +157,9 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-adrar-800">42.5M</span>
+                  <span className="text-3xl font-bold text-adrar-800">
+                    {(stats.totalBudget / 1000000).toFixed(1)}M
+                  </span>
                   <span className="ml-2 text-sm text-gray-500">MRU</span>
                 </div>
               </CardContent>
@@ -88,7 +172,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-adrar-800">27</span>
+                  <span className="text-3xl font-bold text-adrar-800">{stats.teamMembers}</span>
                   <span className="ml-2 text-sm text-gray-500">membres</span>
                 </div>
               </CardContent>
@@ -101,7 +185,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-adrar-800">12</span>
+                  <span className="text-3xl font-bold text-adrar-800">{stats.materials}</span>
                   <span className="ml-2 text-sm text-gray-500">types</span>
                 </div>
               </CardContent>
@@ -122,10 +206,13 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-80">
-                {/* Chart placeholder */}
-                <div className="h-full w-full bg-gradient-to-br from-terracotta-100 to-white flex items-center justify-center rounded-lg border border-dashed border-terracotta-300">
-                  <span className="text-terracotta-400 text-sm font-medium">Statistiques de progression</span>
-                </div>
+                {stats.statusDistribution.length > 0 ? (
+                  <ProjectProgressChart data={stats.statusDistribution} />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-terracotta-100 to-white flex items-center justify-center rounded-lg border border-dashed border-terracotta-300">
+                    <span className="text-terracotta-400 text-sm font-medium">Aucune donnée disponible</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
@@ -146,26 +233,27 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { name: "Rénovation École Primaire", location: "Atar", date: "Déc 2023" },
-                    { name: "Puits Communautaire", location: "Chinguetti", date: "Jan 2024" },
-                    { name: "Centre de Formation", location: "Nouakchott", date: "Fév 2024" }
-                  ].map((project, i) => (
-                    <div key={i} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  {projects && projects.slice(0, 3).map((project, i) => (
+                    <div key={project.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
                       <div className="bg-terracotta-100 p-2 rounded-md mr-3">
                         <CheckSquare className="h-5 w-5 text-terracotta-600" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-adrar-800">{project.name}</h4>
+                        <h4 className="font-medium text-adrar-800">{project.title}</h4>
                         <div className="flex items-center text-sm text-gray-500 mt-1">
                           <MapPin className="h-3 w-3 mr-1" />
                           <span className="mr-3">{project.location}</span>
                           <Calendar className="h-3 w-3 mr-1" />
-                          <span>{project.date}</span>
+                          <span>{new Date(project.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</span>
                         </div>
                       </div>
                     </div>
                   ))}
+                  {(!projects || projects.length === 0) && (
+                    <div className="text-center py-4 text-gray-500">
+                      Aucun projet disponible
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -181,31 +269,17 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl font-serif">
                   <Users className="h-5 w-5 mr-2 text-adrar-600" />
-                  Activité de l'équipe
+                  Distribution par région
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { name: "Ahmed Mahmoud", action: "a mis à jour le projet 'Centre de Formation'", time: "Il y a 2h" },
-                    { name: "Fatima Diallo", action: "a ajouté un nouveau matériau", time: "Il y a 5h" },
-                    { name: "Mohamed Ould", action: "a complété la phase 1 du projet 'Puits Communautaire'", time: "Hier" }
-                  ].map((activity, i) => (
-                    <div key={i} className="flex items-start pb-4 border-b border-gray-100 last:border-0">
-                      <div className="bg-adrar-100 h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium text-adrar-800 mr-3">
-                        {activity.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <p className="text-sm">
-                          <span className="font-medium text-adrar-800">{activity.name}</span>
-                          {' '}
-                          <span className="text-gray-600">{activity.action}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {stats.locationDistribution.length > 0 ? (
+                  <ProjectDistributionChart data={stats.locationDistribution} />
+                ) : (
+                  <div className="h-64 w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
+                    <span className="text-adrar-400 text-sm font-medium">Aucune donnée disponible</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
@@ -217,10 +291,19 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-80">
-                {/* Map placeholder */}
-                <div className="h-full w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
-                  <span className="text-adrar-400 text-sm font-medium">Carte de distribution des projets</span>
-                </div>
+                {projects && projects.length > 0 ? (
+                  <ProjectMap 
+                    projects={projects}
+                    defaultCenter={[20.5279, -10.0309]}
+                    defaultZoom={6}
+                    height="100%"
+                    className="h-full rounded-lg"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
+                    <span className="text-adrar-400 text-sm font-medium">Aucun projet géolocalisé disponible</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
