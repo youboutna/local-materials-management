@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 
 const DocumentUpload = () => {
   const [formData, setFormData] = useState({
@@ -20,9 +20,9 @@ const DocumentUpload = () => {
     status: 'draft'
   });
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { uploadFile, uploading } = useDocumentStorage();
 
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -43,26 +43,17 @@ const DocumentUpload = () => {
       let fileSize: number | null = null;
       let mimeType: string | null = null;
 
-      // Upload file if provided
+      // Upload file using storage abstraction
       if (uploadData.file) {
-        const fileExt = uploadData.file.name.split('.').pop();
-        const uniqueFileName = `${Date.now()}.${fileExt}`;
+        const uploadResult = await uploadFile(uploadData.file);
         
-        const { data: uploadResult, error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(uniqueFileName, uploadData.file);
-
-        if (uploadError) {
-          throw new Error(`Upload failed: ${uploadError.message}`);
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error || 'Upload failed');
         }
 
-        const { data: urlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(uniqueFileName);
-
-        fileUrl = urlData.publicUrl;
-        uploadedFileName = uploadData.file.name;
-        fileSize = uploadData.file.size;
+        fileUrl = uploadResult.url || null;
+        uploadedFileName = uploadResult.fileName || uploadData.file.name;
+        fileSize = uploadResult.size || uploadData.file.size;
         mimeType = uploadData.file.type;
       }
 
@@ -139,11 +130,10 @@ const DocumentUpload = () => {
       return;
     }
 
-    setUploading(true);
     try {
       await uploadMutation.mutateAsync({ ...formData, file: file || undefined });
-    } finally {
-      setUploading(false);
+    } catch (error) {
+      console.error('Submit error:', error);
     }
   };
 

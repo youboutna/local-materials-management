@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Key, Shield, Cog } from "lucide-react";
+import { Database, Key, Shield, Cog, Folder } from "lucide-react";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DatabaseSettings from '@/components/admin/DatabaseSettings';
 import KeycloakSettings from '@/components/admin/KeycloakSettings';
 import KeycloakConfigurationTab from '@/components/admin/KeycloakConfigurationTab';
+import StorageSettings from '@/components/admin/StorageSettings';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { DEV_ROLES, getActiveDevRole, setActiveDevRole } from '@/config/constants';
@@ -77,9 +78,12 @@ const Settings = () => {
           )}
           
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-8">
+            <TabsList className="grid grid-cols-5 mb-8">
               <TabsTrigger value="database" className="flex items-center">
                 <Database className="mr-2 h-4 w-4" /> Database
+              </TabsTrigger>
+              <TabsTrigger value="storage" className="flex items-center">
+                <Folder className="mr-2 h-4 w-4" /> Storage
               </TabsTrigger>
               <TabsTrigger value="keycloak" className="flex items-center">
                 <Key className="mr-2 h-4 w-4" /> Keycloak
@@ -94,6 +98,10 @@ const Settings = () => {
             
             <TabsContent value="database">
               <DatabaseSettings />
+            </TabsContent>
+            
+            <TabsContent value="storage">
+              <StorageSettings />
             </TabsContent>
             
             <TabsContent value="keycloak">

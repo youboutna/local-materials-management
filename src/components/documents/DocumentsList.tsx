@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 
 interface Document {
   id: string;
@@ -30,6 +30,7 @@ const DocumentsList = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
+  const { downloadFile, downloading } = useDocumentStorage();
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents', typeFilter, statusFilter],
@@ -87,25 +88,16 @@ const DocumentsList = () => {
 
   const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
-      const response = await fetch(fileUrl);
-      if (!response.ok) {
-        throw new Error('Erreur lors du téléchargement');
+      const result = await downloadFile(fileUrl, fileName);
+      
+      if (result.success) {
+        toast({
+          title: "Succès",
+          description: "Fichier téléchargé avec succès.",
+        });
+      } else {
+        throw new Error(result.error || 'Download failed');
       }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Succès",
-        description: "Fichier téléchargé avec succès.",
-      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -234,9 +226,10 @@ const DocumentsList = () => {
                         variant="outline" 
                         className="flex-1"
                         onClick={() => handleDownload(document.file_url, document.file_name)}
+                        disabled={downloading}
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        Télécharger
+                        {downloading ? 'Téléchargement...' : 'Télécharger'}
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" className="flex-1">
