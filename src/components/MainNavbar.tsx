@@ -25,7 +25,7 @@ const MainNavbar = () => {
   };
 
   return (
-    <header className="bg-adrar-700 text-white py-4">
+    <header className="bg-adrar-700 text-white py-4 fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link to="/" className="text-xl font-bold">
           Construction ERP
@@ -116,7 +116,7 @@ const MainNavbar = () => {
         </NavigationMenu>
         
         <div className="flex items-center gap-4">
-          {/* Language Switcher */}
+          {/* Language Switcher - Now prominently placed */}
           <LanguageSwitcher />
           
           {/* Account or Login Button */}

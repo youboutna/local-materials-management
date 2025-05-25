@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import Navbar from '@/components/Navbar';
+import MainNavbar from '@/components/MainNavbar';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
+import AboutEditor from '@/components/AboutEditor';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Briefcase, Package, FileText, Users, BarChart3 } from 'lucide-react';
@@ -51,7 +52,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
+        <MainNavbar />
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -65,11 +66,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+      <MainNavbar />
       
       <main className="flex-grow">
         {/* Hero Section */}
         <Hero />
+        
+        {/* About System Section - Editable for authenticated users */}
+        <AboutEditor />
         
         {/* Features Section */}
         <section className="py-20 bg-white">
