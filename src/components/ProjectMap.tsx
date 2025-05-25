@@ -171,7 +171,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
-        eventHandlers={selectable ? { click: handleMapClick } : {}}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
