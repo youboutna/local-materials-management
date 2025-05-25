@@ -171,7 +171,8 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         {projectsWithCoordinates.map((project) => (
           <Marker
             key={project.id}
-            position={[project.coordinates!.latitude, project.coordinates!.longitude]}
+            position={[project.coordinates!.latitude, project.coordinates!.longitude] as LatLngExpression}
+            // @ts-ignore - react-leaflet types issue with custom icons
             icon={createCustomIcon(project)}
             eventHandlers={{
               click: () => onProjectSelect?.(project),
@@ -202,7 +203,8 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         {locations.map((location) => (
           <Marker
             key={location.id}
-            position={[location.latitude, location.longitude]}
+            position={[location.latitude, location.longitude] as LatLngExpression}
+            // @ts-ignore - react-leaflet types issue with custom icons
             icon={createLocationIcon(location)}
           >
             <Popup>

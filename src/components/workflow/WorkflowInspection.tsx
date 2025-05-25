@@ -48,30 +48,52 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       if (latestInspections && latestInspections.length > 0) {
         const latestInspection = latestInspections[0];
         
-        // Update project progress based on inspection progression and status
+        console.log('Latest inspection:', latestInspection);
+        
+        // Get the highest approved inspection progress
+        const { data: allInspections } = await supabase
+          .from('inspections')
+          .select('*')
+          .eq('project_id', project.id)
+          .eq('status', 'approved')
+          .order('progress_at_inspection', { ascending: false });
+
+        console.log('All approved inspections:', allInspections);
+
+        // Determine new progress and status based on inspection logic
         let newProgress = project.progress; // Start with current progress
         let newStatus = project.status;
 
-        // Determine new status and progress based on inspection status
         if (latestInspection.status === 'approved') {
-          // For approved inspections, always use the inspection's progress
+          // For approved inspections, use the inspection's progress
           newProgress = latestInspection.progress_at_inspection;
-          newStatus = newProgress >= 100 ? 'terminé' : 'en cours';
+          
+          // If progress reaches 100%, mark project as completed
+          if (newProgress >= 100) {
+            newStatus = 'terminé';
+          } else {
+            newStatus = 'en cours';
+          }
         } else if (latestInspection.status === 'requires_changes') {
           // For inspections requiring changes, keep current progress but change status
-          newProgress = Math.max(project.progress, latestInspection.progress_at_inspection);
           newStatus = 'en inspection';
+          // Don't update progress for inspections requiring changes
         } else if (latestInspection.status === 'rejected') {
           // For rejected inspections, don't update progress, set status to suspended
-          newProgress = project.progress; // Keep current progress
           newStatus = 'suspendu';
-        } else {
-          // For pending inspections, update progress and set status to inspection
-          newProgress = Math.max(project.progress, latestInspection.progress_at_inspection);
+          // Don't update progress for rejected inspections
+        } else if (latestInspection.status === 'pending') {
+          // For pending inspections, set status to inspection but don't update progress yet
           newStatus = 'en inspection';
+          // Don't update progress for pending inspections
         }
 
-        console.log('Updating project with:', { newProgress, newStatus, inspectionStatus: latestInspection.status });
+        console.log('Updating project with:', { 
+          newProgress, 
+          newStatus, 
+          inspectionStatus: latestInspection.status,
+          inspectionProgress: latestInspection.progress_at_inspection
+        });
 
         // Update project with new progress and status
         const { error: updateError } = await supabase
@@ -86,9 +108,16 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           throw updateError;
         }
 
+        const statusMessages = {
+          'approved': 'approuvée',
+          'rejected': 'rejetée',
+          'requires_changes': 'nécessitant des modifications',
+          'pending': 'en attente'
+        };
+
         toast({
           title: "Projet mis à jour",
-          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${latestInspection.status === 'approved' ? 'approuvée' : latestInspection.status === 'rejected' ? 'rejetée' : 'en cours'}. Statut: ${newStatus}`,
+          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
         });
       }
 
@@ -140,7 +169,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
     }
   };
 
-  // Calculate workflow progress
+  // Calculate workflow progress based on approved inspections
   const approvedInspections = sortedInspections.filter(i => i.status === 'approved').length;
   const totalInspections = sortedInspections.length;
   const workflowProgress = totalInspections > 0 ? (approvedInspections / totalInspections) * 100 : 0;
