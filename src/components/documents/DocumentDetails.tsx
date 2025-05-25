@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -116,8 +115,11 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
   };
 
   const isImage = (mimeType?: string, fileName?: string) => {
+    console.log('🔍 Checking if image:', { mimeType, fileName });
+    
     // Check MIME type first
     if (mimeType?.startsWith('image/')) {
+      console.log('✅ Image detected by MIME type:', mimeType);
       return true;
     }
     
@@ -125,32 +127,56 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
     if (fileName) {
       const extension = fileName.toLowerCase().split('.').pop();
       const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-      return imageExtensions.includes(extension || '');
+      const isImageExtension = imageExtensions.includes(extension || '');
+      console.log('🔍 Checking file extension:', { extension, isImageExtension });
+      return isImageExtension;
     }
     
+    console.log('❌ Not an image');
     return false;
   };
 
   const isPDF = (mimeType?: string, fileName?: string) => {
+    console.log('🔍 Checking if PDF:', { mimeType, fileName });
+    
     // Check MIME type first
     if (mimeType === 'application/pdf') {
+      console.log('✅ PDF detected by MIME type');
       return true;
     }
     
     // Fallback to file extension
     if (fileName) {
       const extension = fileName.toLowerCase().split('.').pop();
-      return extension === 'pdf';
+      const isPdfExtension = extension === 'pdf';
+      console.log('🔍 Checking PDF extension:', { extension, isPdfExtension });
+      return isPdfExtension;
     }
     
+    console.log('❌ Not a PDF');
     return false;
   };
 
   const canPreview = () => {
-    return document.file_url && (
-      isImage(document.mime_type, document.file_name) || 
-      isPDF(document.mime_type, document.file_name)
-    );
+    const hasFileUrl = !!document.file_url;
+    const isImageFile = isImage(document.mime_type, document.file_name);
+    const isPDFFile = isPDF(document.mime_type, document.file_name);
+    
+    console.log('🔍 Can preview check:', {
+      hasFileUrl,
+      isImageFile,
+      isPDFFile,
+      documentData: {
+        file_url: document.file_url,
+        file_name: document.file_name,
+        mime_type: document.mime_type
+      }
+    });
+    
+    const canPreviewResult = hasFileUrl && (isImageFile || isPDFFile);
+    console.log('📋 Final preview result:', canPreviewResult);
+    
+    return canPreviewResult;
   };
 
   const renderDocumentPreview = () => {
