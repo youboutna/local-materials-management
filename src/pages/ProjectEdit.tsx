@@ -220,7 +220,6 @@ const ProjectEdit = () => {
                     <FormLabel>Statut</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
                       value={field.value}
                     >
                       <FormControl>
@@ -237,6 +236,9 @@ const ProjectEdit = () => {
                         <SelectItem value="annulé">Annulé</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      Modifier le statut du projet selon son état actuel
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
