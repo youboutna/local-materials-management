@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Edit, Trash2, CreditCard } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -260,6 +260,35 @@ const ProjectDetail = () => {
               <p className="text-gray-700 leading-relaxed">{project.description}</p>
             </div>
 
+            {/* Quick Action Panel */}
+            <Card className="border-l-4 border-l-terracotta-500">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5 text-terracotta-500" />
+                  Gestion des paiements
+                </CardTitle>
+                <CardDescription>
+                  Actions rapides pour effectuer un paiement
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Budget total: <span className="font-medium">{project.budget.toLocaleString('fr-FR')} MRU</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Progression: <span className="font-medium">{project.progress}%</span>
+                    </p>
+                  </div>
+                  <PaymentDialog 
+                    project={project} 
+                    onPaymentComplete={handleDataUpdate}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Project details grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Progress Card */}
@@ -312,24 +341,8 @@ const ProjectDetail = () => {
               onInspectionUpdate={handleDataUpdate}
             />
 
-            {/* Payment Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <PaymentHistory payments={project.payments} />
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Gestion des paiements</CardTitle>
-                  <CardDescription>
-                    Effectuer des paiements pour ce projet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <PaymentDialog 
-                    project={project} 
-                    onPaymentComplete={handleDataUpdate}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+            {/* Payment History */}
+            <PaymentHistory payments={project.payments} />
 
             {/* Map section */}
             {mapLocation && (
