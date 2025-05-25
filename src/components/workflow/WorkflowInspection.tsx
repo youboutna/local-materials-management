@@ -49,12 +49,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         const latestInspection = latestInspections[0];
         
         // Update project progress based on inspection progression and status
-        let newProgress = latestInspection.progress_at_inspection;
+        let newProgress = project.progress; // Start with current progress
         let newStatus = project.status;
 
         // Determine new status and progress based on inspection status
         if (latestInspection.status === 'approved') {
-          // For approved inspections, use the inspection's progress
+          // For approved inspections, always use the inspection's progress
           newProgress = latestInspection.progress_at_inspection;
           newStatus = newProgress >= 100 ? 'terminé' : 'en cours';
         } else if (latestInspection.status === 'requires_changes') {
@@ -66,10 +66,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           newProgress = project.progress; // Keep current progress
           newStatus = 'suspendu';
         } else {
-          // For pending inspections
+          // For pending inspections, update progress and set status to inspection
           newProgress = Math.max(project.progress, latestInspection.progress_at_inspection);
           newStatus = 'en inspection';
         }
+
+        console.log('Updating project with:', { newProgress, newStatus, inspectionStatus: latestInspection.status });
 
         // Update project with new progress and status
         const { error: updateError } = await supabase
