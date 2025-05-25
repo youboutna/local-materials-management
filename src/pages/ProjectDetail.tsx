@@ -32,12 +32,17 @@ const ProjectDetail = () => {
         return;
       }
 
+      console.log('Fetching project with ID:', id);
       setIsLoading(true);
+      
       try {
         const projectData = await getProject(id);
+        console.log('Project data received:', projectData);
+        
         if (projectData) {
           setProject(projectData);
         } else {
+          console.log('No project found for ID:', id);
           toast({
             title: "Projet non trouvé",
             description: "Le projet que vous recherchez n'existe pas ou a été supprimé.",
@@ -58,8 +63,11 @@ const ProjectDetail = () => {
       }
     };
 
-    fetchProject();
-  }, [id, getProject, navigate]);
+    // Only fetch if we have an ID and haven't loaded this project yet
+    if (id && (!project || project.id !== id)) {
+      fetchProject();
+    }
+  }, [id]); // Remove getProject and navigate from dependencies to prevent infinite loops
 
   const handleDelete = async () => {
     if (!project || !id) return;
