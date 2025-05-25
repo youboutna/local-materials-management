@@ -3,6 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { Globe, Database, Cog, ClipboardList } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
@@ -17,6 +19,11 @@ import {
 
 const MainNavbar = () => {
   const { language, setLanguage, t } = useLanguage();
+  const { user: authUser } = useAuth();
+  const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+
+  // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
+  const isUserAuthenticated = !!authUser || isAuthenticated;
 
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
@@ -31,104 +38,119 @@ const MainNavbar = () => {
           Construction ERP
         </Link>
         
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className="gap-2">
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/projects">
-                  {t('nav.projects') || 'Projets'}
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/materials">
-                  {t('nav.materials') || 'Matériaux'}
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/documents">
-                  Documents
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/tasks">
-                  <ClipboardList className="h-4 w-4 mr-2" />
-                  Tâches
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/dashboard">
-                  Dashboard
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-gray-200"
-                size="sm"
-                asChild
-              >
-                <Link to="/settings">
-                  <Cog className="h-4 w-4 mr-2" />
-                  Settings
-                </Link>
-              </Button>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        {/* Show full navigation only for authenticated users */}
+        {isUserAuthenticated && (
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList className="gap-2">
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/projects">
+                    {t('nav.projects') || 'Projets'}
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/materials">
+                    {t('nav.materials') || 'Matériaux'}
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/documents">
+                    Documents
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/tasks">
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Tâches
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/dashboard">
+                    Dashboard
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/settings">
+                    <Cog className="h-4 w-4 mr-2" />
+                    Settings
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        )}
         
         <div className="flex items-center gap-4">
-          {/* Language Switcher - Now prominently placed */}
+          {/* Language Switcher - Always visible */}
           <LanguageSwitcher />
           
-          {/* Account or Login Button */}
-          <Button 
-            variant="secondary"
-            size="sm"
-            asChild
-          >
-            <Link to="/auth">
-              {t('nav.login') || 'Se connecter'}
-            </Link>
-          </Button>
+          {/* Show different buttons based on authentication status */}
+          {isUserAuthenticated ? (
+            <Button 
+              variant="secondary"
+              size="sm"
+              asChild
+            >
+              <Link to="/dashboard">
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <Button 
+              variant="secondary"
+              size="sm"
+              asChild
+            >
+              <Link to="/auth">
+                {t('nav.login') || 'Se connecter'}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>
