@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import {
   MapContainer,
@@ -164,26 +165,23 @@ const ProjectMap = ({
 
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          {...{
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          }}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         {showAllProjects &&
           projects?.map((project: any) => {
-            if (project.latitude && project.longitude) {
+            if (project.coordinates?.latitude && project.coordinates?.longitude) {
               return (
                 <Marker
                   key={project.id}
-                  position={[project.latitude, project.longitude]}
+                  position={[project.coordinates.latitude, project.coordinates.longitude]}
                   icon={getMarkerIcon(project.status)}
                   eventHandlers={{
                     click: () => handleMarkerClick(project.id),
                   }}
                 >
                   <Popup>
-                    <div className="font-medium">{project.name}</div>
+                    <div className="font-medium">{project.title}</div>
                     <div className="text-sm text-gray-600">
                       {project.location}
                     </div>

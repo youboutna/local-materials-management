@@ -9,6 +9,108 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      claim_medical_acts: {
+        Row: {
+          claim_id: string
+          id: string
+          medical_act_code: string
+          price_charged: number
+          quantity: number | null
+          remarks: string | null
+        }
+        Insert: {
+          claim_id: string
+          id?: string
+          medical_act_code: string
+          price_charged: number
+          quantity?: number | null
+          remarks?: string | null
+        }
+        Update: {
+          claim_id?: string
+          id?: string
+          medical_act_code?: string
+          price_charged?: number
+          quantity?: number | null
+          remarks?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_medical_acts_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "health_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_medical_acts_medical_act_code_fkey"
+            columns: ["medical_act_code"]
+            isOneToOne: false
+            referencedRelation: "medical_acts"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      health_claims: {
+        Row: {
+          act_reimbursement_rates: Json | null
+          claim_date: string
+          created_at: string
+          id: string
+          insurance_company_id: string | null
+          invoice_number: string | null
+          patient_id: string
+          practitioner_name: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string
+          valid_for_reimbursement: boolean | null
+        }
+        Insert: {
+          act_reimbursement_rates?: Json | null
+          claim_date: string
+          created_at?: string
+          id?: string
+          insurance_company_id?: string | null
+          invoice_number?: string | null
+          patient_id: string
+          practitioner_name?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string
+          valid_for_reimbursement?: boolean | null
+        }
+        Update: {
+          act_reimbursement_rates?: Json | null
+          claim_date?: string
+          created_at?: string
+          id?: string
+          insurance_company_id?: string | null
+          invoice_number?: string | null
+          patient_id?: string
+          practitioner_name?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+          valid_for_reimbursement?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_claims_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_claims_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inspections: {
         Row: {
           comments: string | null
@@ -56,6 +158,39 @@ export type Database = {
           },
         ]
       }
+      insurance_companies: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       materials: {
         Row: {
           available_quantity: number
@@ -97,6 +232,80 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      medical_acts: {
+        Row: {
+          code: string
+          created_at: string
+          default_price: number | null
+          label: string
+          type_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_price?: number | null
+          label: string
+          type_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_price?: number | null
+          label?: string
+          type_label?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          allergies_notes: string | null
+          blood_type: string | null
+          created_at: string
+          date_of_birth: string | null
+          gender: string | null
+          id: string
+          insurance_number: string | null
+          medical_history_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          allergies_notes?: string | null
+          blood_type?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id: string
+          insurance_number?: string | null
+          medical_history_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          allergies_notes?: string | null
+          blood_type?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id?: string
+          insurance_number?: string | null
+          medical_history_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -274,44 +483,131 @@ export type Database = {
         }
         Relationships: []
       }
-      reimbursement_requests: {
+      prospect_subscription_requests: {
         Row: {
-          amount: number
-          created_at: string | null
-          documents: Json | null
+          address: string
+          bank_details_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string
           id: string
-          insurance_company_id: string | null
-          inspector_id: string | null
-          practitioner_id: string | null
+          id_card_url: string | null
+          phone: string
+          practitioner_specialty: string | null
+          prospect_type: string
+          selected_plan_price_text: string
+          selected_plan_title: string
+          social_security_card_url: string | null
           status: string
-          updated_at: string | null
-          user_id: string
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
-          amount: number
-          created_at?: string | null
-          documents?: Json | null
+          address: string
+          bank_details_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
           id?: string
-          insurance_company_id?: string | null
-          inspector_id?: string | null
-          practitioner_id?: string | null
+          id_card_url?: string | null
+          phone: string
+          practitioner_specialty?: string | null
+          prospect_type: string
+          selected_plan_price_text: string
+          selected_plan_title: string
+          social_security_card_url?: string | null
           status?: string
-          updated_at?: string | null
-          user_id: string
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          amount?: number
-          created_at?: string | null
-          documents?: Json | null
+          address?: string
+          bank_details_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
           id?: string
-          insurance_company_id?: string | null
-          inspector_id?: string | null
-          practitioner_id?: string | null
+          id_card_url?: string | null
+          phone?: string
+          practitioner_specialty?: string | null
+          prospect_type?: string
+          selected_plan_price_text?: string
+          selected_plan_title?: string
+          social_security_card_url?: string | null
           status?: string
-          updated_at?: string | null
-          user_id?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          act_codes: Json | null
+          active: boolean | null
+          category: string | null
+          coverage_details: Json | null
+          coverage_rate: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          insurance_company_id: string | null
+          name: string | null
+          patient_id: string
+          policy_number: string | null
+          price: number | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          act_codes?: Json | null
+          active?: boolean | null
+          category?: string | null
+          coverage_details?: Json | null
+          coverage_rate?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          name?: string | null
+          patient_id: string
+          policy_number?: string | null
+          price?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          act_codes?: Json | null
+          active?: boolean | null
+          category?: string | null
+          coverage_details?: Json | null
+          coverage_rate?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          name?: string | null
+          patient_id?: string
+          policy_number?: string | null
+          price?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -324,7 +620,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "manager" | "director" | "inspector" | "supplyer"
+      user_role: "insurance_company" | "practitioner" | "patient"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -440,7 +736,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["manager", "director", "inspector"],
+      user_role: ["insurance_company", "practitioner", "patient"],
     },
   },
 } as const
