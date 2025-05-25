@@ -75,7 +75,7 @@ const Navbar = () => {
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <span className="text-xl font-bold text-adrar-900 font-serif">
-              Adrar Construction
+              HadrConstruct
             </span>
           </Link>
 
