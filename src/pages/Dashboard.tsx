@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -41,22 +40,14 @@ const Dashboard = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-between items-center mb-6">
-            <motion.h1 
-              className="text-3xl font-bold text-adrar-900 font-serif"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              Tableau de bord
-            </motion.h1>
-            <div className="space-x-2">
-              <LoadDataButton 
-                variant="outline" 
-                className="border-terracotta-300 text-terracotta-600 hover:bg-terracotta-50"
-              />
-            </div>
-          </div>
+          <motion.h1 
+            className="text-3xl font-bold text-adrar-900 font-serif mb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Tableau de bord
+          </motion.h1>
           
           <motion.div 
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
