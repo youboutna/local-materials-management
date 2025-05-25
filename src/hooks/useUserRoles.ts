@@ -22,19 +22,31 @@ export interface Role {
 }
 
 export const useUserRoles = (userId?: string) => {
-  // Fetch user roles
+  // Fetch user roles using RPC functions to work around type issues
   const { data: userRoles, isLoading: rolesLoading } = useQuery({
     queryKey: ['userRoles', userId],
     queryFn: async () => {
       if (!userId) return [];
       
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId);
+      console.log('Fetching user roles for:', userId);
       
-      if (error) throw error;
-      return data as UserRole[];
+      // Use a raw query since the table isn't in the types yet
+      const { data, error } = await supabase
+        .rpc('get_user_roles', { target_user_id: userId });
+      
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        // Fallback to direct query with type assertion
+        const { data: fallbackData, error: fallbackError } = await (supabase as any)
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId);
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData as UserRole[] || [];
+      }
+      
+      return data || [];
     },
     enabled: !!userId
   });
@@ -43,13 +55,19 @@ export const useUserRoles = (userId?: string) => {
   const { data: availableRoles, isLoading: availableRolesLoading } = useQuery({
     queryKey: ['roles'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching available roles');
+      
+      // Use type assertion for the roles table
+      const { data, error } = await (supabase as any)
         .from('roles')
         .select('*')
         .order('name');
       
-      if (error) throw error;
-      return data as Role[];
+      if (error) {
+        console.error('Error fetching roles:', error);
+        throw error;
+      }
+      return data as Role[] || [];
     }
   });
 
@@ -76,13 +94,19 @@ export const useCurrentUserRoles = () => {
     queryFn: async () => {
       if (!currentUser?.id) return [];
       
-      const { data, error } = await supabase
+      console.log('Fetching current user roles for:', currentUser.id);
+      
+      // Use type assertion for the user_roles table
+      const { data, error } = await (supabase as any)
         .from('user_roles')
         .select('role_name')
         .eq('user_id', currentUser.id);
       
-      if (error) throw error;
-      return data.map(r => r.role_name);
+      if (error) {
+        console.error('Error fetching current user roles:', error);
+        throw error;
+      }
+      return data?.map((r: any) => r.role_name) || [];
     },
     enabled: !!currentUser?.id
   });
@@ -109,20 +133,28 @@ export const useRoleManagement = () => {
 
   const assignRole = useMutation({
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      const { error } = await supabase
+      console.log('Assigning role:', roleName, 'to user:', userId);
+      
+      // Use type assertion for the user_roles table
+      const { error } = await (supabase as any)
         .from('user_roles')
         .insert({ user_id: userId, role_name: roleName });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error assigning role:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userRoles'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUserRoles'] });
       toast({
         title: "Rôle assigné",
         description: "Le rôle a été assigné avec succès.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Role assignment error:', error);
       toast({
         title: "Erreur",
         description: "Impossible d'assigner le rôle.",
@@ -133,22 +165,30 @@ export const useRoleManagement = () => {
 
   const removeRole = useMutation({
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      const { error } = await supabase
+      console.log('Removing role:', roleName, 'from user:', userId);
+      
+      // Use type assertion for the user_roles table
+      const { error } = await (supabase as any)
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
         .eq('role_name', roleName);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing role:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userRoles'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUserRoles'] });
       toast({
         title: "Rôle retiré",
         description: "Le rôle a été retiré avec succès.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Role removal error:', error);
       toast({
         title: "Erreur",
         description: "Impossible de retirer le rôle.",
