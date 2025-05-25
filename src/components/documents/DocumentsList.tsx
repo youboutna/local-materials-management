@@ -10,6 +10,7 @@ import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Us
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import DocumentDetails from './DocumentDetails';
 
 interface Document {
   id: string;
@@ -29,6 +30,8 @@ const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const { toast } = useToast();
   const { downloadFile, downloading } = useDocumentStorage();
 
@@ -106,6 +109,11 @@ const DocumentsList = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleViewDetails = (document: Document) => {
+    setSelectedDocument(document);
+    setDetailsOpen(true);
   };
 
   const filteredDocuments = documents?.filter(doc =>
@@ -232,7 +240,12 @@ const DocumentsList = () => {
                         {downloading ? 'Téléchargement...' : 'Télécharger'}
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="flex-1"
+                      onClick={() => handleViewDetails(document)}
+                    >
                       Détails
                     </Button>
                   </div>
@@ -252,6 +265,13 @@ const DocumentsList = () => {
           </p>
         </div>
       )}
+
+      {/* Document Details Dialog */}
+      <DocumentDetails 
+        document={selectedDocument}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
     </div>
   );
 };
