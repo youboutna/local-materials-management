@@ -48,18 +48,26 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       if (latestInspections && latestInspections.length > 0) {
         const latestInspection = latestInspections[0];
         
-        // Update project progress based on inspection progression
+        // Update project progress based on inspection progression and status
         let newProgress = latestInspection.progress_at_inspection;
         let newStatus = project.status;
 
-        // Determine new status based on inspection status
+        // Determine new status and progress based on inspection status
         if (latestInspection.status === 'approved') {
+          // For approved inspections, use the inspection's progress
+          newProgress = latestInspection.progress_at_inspection;
           newStatus = newProgress >= 100 ? 'terminé' : 'en cours';
         } else if (latestInspection.status === 'requires_changes') {
+          // For inspections requiring changes, keep current progress but change status
+          newProgress = Math.max(project.progress, latestInspection.progress_at_inspection);
           newStatus = 'en inspection';
         } else if (latestInspection.status === 'rejected') {
+          // For rejected inspections, don't update progress, set status to suspended
+          newProgress = project.progress; // Keep current progress
           newStatus = 'suspendu';
         } else {
+          // For pending inspections
+          newProgress = Math.max(project.progress, latestInspection.progress_at_inspection);
           newStatus = 'en inspection';
         }
 
@@ -78,7 +86,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
 
         toast({
           title: "Projet mis à jour",
-          description: `Progression mise à jour à ${newProgress}% selon l'inspection. Statut: ${newStatus}`,
+          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${latestInspection.status === 'approved' ? 'approuvée' : latestInspection.status === 'rejected' ? 'rejetée' : 'en cours'}. Statut: ${newStatus}`,
         });
       }
 

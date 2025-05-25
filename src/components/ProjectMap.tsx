@@ -1,19 +1,12 @@
 
-import { useEffect, useState } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-} from 'react-leaflet';
+import React, { useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useProjects } from '@/hooks/useProjects';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { ProjectData } from './ProjectCard';
 
-// Fix leaflet icon issue
+// Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -21,234 +14,159 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom marker icon
-const customIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-// Define status colors
-export const statusColors = {
-  'en cours': 'blue',
-  'en attente': 'orange',
-  'terminé': 'green',
-  'suspendu': 'purple',
-  'annulé': 'red',
-  'en inspection': 'yellow',
-};
-
-export type ProjectStatus =
-  | 'en cours'
-  | 'en attente'
-  | 'terminé'
-  | 'suspendu'
-  | 'annulé'
-  | 'en inspection';
-
-export interface MapLocation {
-  id: string;
-  name: string;
-  type: 'project' | 'material' | 'supplier';
-  latitude: number;
-  longitude: number;
-  status?: ProjectStatus;
-  region?: string;
-  startDate?: string;
-  endDate?: string;
-}
-
 interface ProjectMapProps {
-  height?: string;
-  width?: string;
-  selectedProject?: any;
-  showAllProjects?: boolean;
-  onMarkerClick?: (projectId: string) => void;
-  locations?: MapLocation[];
-  selectable?: boolean;
-  onLocationSelect?: (latitude: number, longitude: number) => void;
-  interactive?: boolean;
-  defaultCenter?: [number, number];
-  defaultZoom?: number;
+  projects: ProjectData[];
+  selectedProject?: ProjectData | null;
+  onProjectSelect?: (project: ProjectData) => void;
   className?: string;
 }
 
-// Component to handle map initialization and event listeners
-function MapInitializer({ 
-  selectable, 
-  onLocationSelect, 
-  interactive 
-}: { 
-  selectable: boolean; 
-  onLocationSelect?: (latitude: number, longitude: number) => void; 
-  interactive: boolean;
-}) {
-  const map = useMap();
+const ProjectMap: React.FC<ProjectMapProps> = ({ 
+  projects, 
+  selectedProject, 
+  onProjectSelect,
+  className = ""
+}) => {
+  // Filter projects that have coordinates
+  const projectsWithCoordinates = useMemo(() => {
+    return projects.filter(project => 
+      project.coordinates && 
+      project.coordinates.latitude && 
+      project.coordinates.longitude
+    );
+  }, [projects]);
 
-  useEffect(() => {
-    const handleMapClick = (e: L.LeafletMouseEvent) => {
-      if (selectable && onLocationSelect) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng);
-      }
-    };
-
-    if (selectable) {
-      map.on('click', handleMapClick);
+  // Calculate map center based on projects
+  const mapCenter: LatLngExpression = useMemo(() => {
+    if (selectedProject?.coordinates) {
+      return [selectedProject.coordinates.latitude, selectedProject.coordinates.longitude];
     }
     
-    if (!interactive) {
-      map.dragging.disable();
-      map.touchZoom.disable();
-      map.doubleClickZoom.disable();
-      map.scrollWheelZoom.disable();
+    if (projectsWithCoordinates.length > 0) {
+      const avgLat = projectsWithCoordinates.reduce((sum, p) => sum + p.coordinates!.latitude, 0) / projectsWithCoordinates.length;
+      const avgLng = projectsWithCoordinates.reduce((sum, p) => sum + p.coordinates!.longitude, 0) / projectsWithCoordinates.length;
+      return [avgLat, avgLng];
     }
+    
+    // Default to Nouakchott, Mauritania
+    return [18.079052, -15.965634];
+  }, [projectsWithCoordinates, selectedProject]);
 
-    return () => {
-      if (selectable) {
-        map.off('click', handleMapClick);
-      }
-    };
-  }, [map, selectable, onLocationSelect, interactive]);
-
-  return null;
-}
-
-const ProjectMap = ({
-  height = '400px',
-  width = '100%',
-  selectedProject,
-  showAllProjects = false,
-  onMarkerClick,
-  locations,
-  selectable = false,
-  onLocationSelect,
-  interactive = false,
-  defaultCenter = [18.0735, -15.9582],
-  defaultZoom = 10,
-  className,
-}: ProjectMapProps) => {
-  const { projects, loading } = useProjects();
-  const navigate = useNavigate();
-
-  const handleMarkerClick = (projectId: string) => {
-    if (onMarkerClick) {
-      onMarkerClick(projectId);
-    } else {
-      navigate(`/projects/${projectId}`);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'en cours': return '#3b82f6'; // blue
+      case 'terminé': return '#10b981'; // green
+      case 'en attente': return '#f59e0b'; // amber
+      case 'en inspection': return '#eab308'; // yellow
+      case 'suspendu': return '#8b5cf6'; // purple
+      case 'annulé': return '#ef4444'; // red
+      default: return '#6b7280'; // gray
     }
   };
 
-  const getMarkerIcon = (status: string = 'en attente') => {
-    return customIcon;
+  const createCustomIcon = (project: ProjectData) => {
+    const color = getStatusColor(project.status);
+    const isSelected = selectedProject?.id === project.id;
+    
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          background-color: ${color};
+          width: ${isSelected ? '20px' : '16px'};
+          height: ${isSelected ? '20px' : '16px'};
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: ${isSelected ? '10px' : '8px'};
+          color: white;
+          font-weight: bold;
+        ">
+          ${project.progress}%
+        </div>
+      `,
+      iconSize: [isSelected ? 24 : 20, isSelected ? 24 : 20],
+      iconAnchor: [isSelected ? 12 : 10, isSelected ? 12 : 10],
+    });
   };
 
-  if (loading) {
+  if (projectsWithCoordinates.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        Chargement de la carte...
+      <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`}>
+        <p className="text-gray-600">Aucun projet avec coordonnées géographiques à afficher</p>
       </div>
     );
   }
 
-  // Determine the center point for the map - prioritize selectedProject coordinates
-  let mapCenter: [number, number] = defaultCenter;
-  let mapZoom = defaultZoom;
-
-  if (selectedProject?.coordinates?.latitude && selectedProject?.coordinates?.longitude) {
-    mapCenter = [selectedProject.coordinates.latitude, selectedProject.coordinates.longitude];
-    mapZoom = 15; // Zoom closer for specific project
-  } else if (locations && locations.length > 0) {
-    // Use first location if no selectedProject
-    mapCenter = [locations[0].latitude, locations[0].longitude];
-    mapZoom = 13;
-  }
-
   return (
-    <div
-      style={{ height, width }}
-      className={`border rounded-md overflow-hidden ${className || ''}`}
-    >
+    <div className={`relative ${className}`}>
       <MapContainer
         center={mapCenter}
-        zoom={mapZoom}
-        style={{ height: '100%', width: '100%' }}
+        zoom={7}
+        style={{ height: '400px', width: '100%' }}
+        className="rounded-lg"
       >
-        <MapInitializer 
-          selectable={selectable} 
-          onLocationSelect={onLocationSelect} 
-          interactive={interactive} 
-        />
-
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-
-        {showAllProjects &&
-          projects?.map((project: any) => {
-            if (project.coordinates?.latitude && project.coordinates?.longitude) {
-              return (
-                <Marker
-                  key={project.id}
-                  position={[project.coordinates.latitude, project.coordinates.longitude]}
-                  eventHandlers={{
-                    click: () => handleMarkerClick(project.id),
-                  }}
-                >
-                  <Popup>
-                    <div className="font-medium">{project.title}</div>
-                    <div className="text-sm text-gray-600">
-                      {project.location}
-                    </div>
-                    <Button
-                      variant="link"
-                      className="p-0 mt-1 h-auto"
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      Voir le projet
-                    </Button>
-                  </Popup>
-                </Marker>
-              );
-            }
-            return null;
-          })}
-
-        {locations?.map((location) => (
+        
+        {projectsWithCoordinates.map((project) => (
           <Marker
-            key={location.id}
-            position={[location.latitude, location.longitude]}
+            key={project.id}
+            position={[project.coordinates!.latitude, project.coordinates!.longitude]}
+            icon={createCustomIcon(project)}
+            eventHandlers={{
+              click: () => onProjectSelect?.(project),
+            }}
           >
             <Popup>
-              <div className="font-medium">{location.name}</div>
-              <div className="text-sm text-gray-600">{location.region || ''}</div>
-              {location.type === 'project' && (
-                <Button
-                  variant="link"
-                  className="p-0 mt-1 h-auto"
-                  onClick={() => navigate(`/projects/${location.id}`)}
-                >
-                  Voir le projet
-                </Button>
-              )}
+              <div className="p-2">
+                <h3 className="font-semibold text-sm">{project.title}</h3>
+                <p className="text-xs text-gray-600 mb-1">{project.location}</p>
+                <div className="flex items-center gap-2 text-xs">
+                  <span 
+                    className="px-2 py-1 rounded text-white"
+                    style={{ backgroundColor: getStatusColor(project.status) }}
+                  >
+                    {project.status}
+                  </span>
+                  <span className="text-gray-700">{project.progress}%</span>
+                </div>
+                <p className="text-xs text-gray-600 mt-1">
+                  Budget: {project.budget.toLocaleString()} MRU
+                </p>
+              </div>
             </Popup>
           </Marker>
         ))}
-
-        {selectedProject?.coordinates?.latitude && selectedProject?.coordinates?.longitude && (
-          <Marker
-            position={[selectedProject.coordinates.latitude, selectedProject.coordinates.longitude]}
-          >
-            <Popup>
-              <div className="font-medium">{selectedProject.title || selectedProject.name}</div>
-              <div className="text-sm text-gray-600">{selectedProject.location}</div>
-            </Popup>
-          </Marker>
-        )}
       </MapContainer>
+      
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg">
+        <h4 className="text-xs font-semibold mb-2">Statuts des projets</h4>
+        <div className="space-y-1">
+          {[
+            { status: 'en cours', label: 'En cours' },
+            { status: 'terminé', label: 'Terminé' },
+            { status: 'en attente', label: 'En attente' },
+            { status: 'en inspection', label: 'En inspection' },
+            { status: 'suspendu', label: 'Suspendu' },
+            { status: 'annulé', label: 'Annulé' }
+          ].map(({ status, label }) => (
+            <div key={status} className="flex items-center gap-2 text-xs">
+              <div 
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: getStatusColor(status) }}
+              />
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

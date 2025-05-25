@@ -33,14 +33,14 @@ export class PaymentValidator {
       };
     }
 
-    // Rule 4: Calculate allowed payment amount based on progress and inspections with 10% tolerance
+    // Rule 4: Calculate allowed payment amount based on current progress and inspections with 10% tolerance
     const allowedAmount = this.calculateAllowedAmount(project);
     const toleranceAmount = allowedAmount * 1.10; // 10% tolerance above allowed amount
     
     if (amount > toleranceAmount) {
       return {
         valid: false,
-        message: `Le montant demandé (${amount.toLocaleString()}) dépasse le paiement autorisé avec tolérance de 10% (${toleranceAmount.toLocaleString()}) basé sur le progrès (${project.progress}%) et les inspections du projet`
+        message: `Le montant demandé (${amount.toLocaleString()}) dépasse le paiement autorisé avec tolérance de 10% (${toleranceAmount.toLocaleString()}) basé sur le progrès actuel du projet (${project.progress}%) et les inspections`
       };
     }
     
@@ -57,7 +57,7 @@ export class PaymentValidator {
   }
 
   static calculateAllowedAmount(project: ProjectWithPayments): number {
-    // Base amount calculated from current project progress
+    // Base amount calculated from current project progress (updated based on inspections)
     const baseAmount = (project.budget * project.progress) / 100;
     
     // Apply inspection modifiers
@@ -79,7 +79,7 @@ export class PaymentValidator {
   }
 
   private static getInspectionModifier(project: ProjectWithPayments): number {
-    if (project.progress < 25) return 1.0; // No inspection needed
+    if (project.progress < 25) return 1.0; // No inspection needed for progress < 25%
     
     const latestInspection = project.inspections?.sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -88,10 +88,10 @@ export class PaymentValidator {
     if (!latestInspection) return 0; // Inspection required but missing
     
     switch (latestInspection.status as InspectionStatus) {
-      case 'approved': return 1.0;
-      case 'requires_changes': return 0.5;
-      case 'rejected': return 0;
-      default: return 0;
+      case 'approved': return 1.0; // Full payment allowed
+      case 'requires_changes': return 0.5; // 50% payment allowed
+      case 'rejected': return 0; // No payment allowed
+      default: return 0; // Pending inspection, no payment allowed
     }
   }
 }
