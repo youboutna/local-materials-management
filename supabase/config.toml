@@ -16,8 +16,8 @@ allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 allowed_headers = ["Authorization", "Content-Type"]
 exposed_headers = ["Content-Range", "X-Total-Count"]
 
-# Add dev environment variable
+# Update environment to use Lovable project domain
 [auth]
 enable_signup = true
-site_url = "http://localhost:8080"
-additional_redirect_urls = ["http://localhost:8080/auth/callback"]
+site_url = "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com"
+additional_redirect_urls = ["https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth/callback", "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth"]
