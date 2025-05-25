@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,8 +35,8 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
   const onSubmit = async (values: PasswordResetValues) => {
     setLoading(true);
     try {
-      // Use the current window location origin instead of localhost
-      const redirectTo = `${window.location.origin}/auth?mode=reset-password`;
+      // Use the Lovable project domain instead of localhost
+      const redirectTo = `https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth?mode=reset-password`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: redirectTo,
