@@ -50,11 +50,26 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         
         console.log('Latest inspection:', latestInspection);
         
-        // Always update progress to match the inspection's progress value
-        const newProgress = latestInspection.progress_at_inspection;
+        // Get the last inspection by date with status 'approved' or 'requires_changes' for progress reference
+        const { data: relevantInspections } = await supabase
+          .from('inspections')
+          .select('*')
+          .eq('project_id', project.id)
+          .in('status', ['approved', 'requires_changes'])
+          .order('date', { ascending: false })
+          .limit(1);
+
+        // Use progress from the most recent approved or requires_changes inspection
+        // If no such inspection exists, keep current project progress
+        const newProgress = relevantInspections && relevantInspections.length > 0 
+          ? relevantInspections[0].progress_at_inspection
+          : project.progress;
+        
         let newStatus = project.status;
 
-        // Determine new status based on inspection status
+        console.log('Using progress from last approved/requires_changes inspection:', relevantInspections?.[0]?.status, 'with progress:', newProgress);
+
+        // Determine new status based on latest inspection status
         if (latestInspection.status === 'approved') {
           // If progress reaches 100%, mark project as completed
           if (newProgress >= 100) {
@@ -77,8 +92,8 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           newProgress, 
           newStatus, 
           currentProgress: project.progress,
-          inspectionStatus: latestInspection.status,
-          inspectionProgress: latestInspection.progress_at_inspection
+          latestInspectionStatus: latestInspection.status,
+          relevantInspectionFound: relevantInspections?.length > 0
         });
 
         // Update project with new progress and status
@@ -101,9 +116,13 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           'pending': 'en attente'
         };
 
+        const progressSource = relevantInspections && relevantInspections.length > 0 
+          ? `basée sur la dernière inspection ${relevantInspections[0].status === 'approved' ? 'approuvée' : 'nécessitant des modifications'}`
+          : 'maintenue (aucune inspection approuvée/modifiée trouvée)';
+
         toast({
           title: "Projet mis à jour",
-          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
+          description: `Progression mise à jour à ${newProgress}% ${progressSource}. Statut: ${newStatus}`,
         });
       }
 
