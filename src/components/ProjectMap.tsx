@@ -100,6 +100,14 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     return statusColors[status as keyof typeof statusColors] || '#6b7280';
   };
 
+  // Handle map click for location selection
+  const handleMapClick = (e: any) => {
+    if (selectable && onLocationSelect) {
+      const { lat, lng } = e.latlng;
+      onLocationSelect(lat, lng);
+    }
+  };
+
   if (projectsWithCoordinates.length === 0 && locations.length === 0) {
     return (
       <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`} style={{ height, width }}>
@@ -115,6 +123,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
+        eventHandlers={selectable ? { click: handleMapClick } : {}}
       >
         <TileLayer 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

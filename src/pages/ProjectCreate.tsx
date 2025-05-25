@@ -38,6 +38,7 @@ import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap, { MapLocation, ProjectStatus } from '@/components/ProjectMap';
 import MaterialFormSection from '@/components/MaterialFormSection'; 
 import { supabase } from '@/integrations/supabase/client';
+import ProgressIndicator from '@/components/ProgressIndicator';
 
 // Interface for selected materials
 interface SelectedMaterial {
@@ -58,6 +59,9 @@ const formSchema = z.object({
   }),
   status: z.enum(["en cours", "terminé", "en attente", "suspendu", "annulé"], {
     required_error: "Veuillez sélectionner un statut.",
+  }),
+  progress: z.coerce.number().min(0).max(100, {
+    message: "Le progrès doit être entre 0 et 100%.",
   }),
   budget: z.coerce.number().min(1, {
     message: "Le budget doit être un nombre positif.",
@@ -89,6 +93,7 @@ const ProjectCreate = () => {
       description: "",
       location: "",
       status: "en attente",
+      progress: 0,
       budget: undefined,
       teamSize: undefined,
       startDate: new Date().toISOString().split('T')[0],
@@ -101,7 +106,6 @@ const ProjectCreate = () => {
 
   // Handle location selection from map
   const handleLocationSelect = (latitude: number, longitude: number) => {
-    // Make sure we're setting coordinates with non-optional values
     form.setValue("coordinates", { 
       latitude: latitude,
       longitude: longitude
@@ -117,6 +121,37 @@ const ProjectCreate = () => {
       region: form.getValues("location") || "",
       startDate: form.getValues("startDate") || new Date().toISOString().split('T')[0]
     });
+
+    toast({
+      title: "Position sélectionnée",
+      description: `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`,
+    });
+  };
+
+  // Get current location
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          handleLocationSelect(latitude, longitude);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Erreur de géolocalisation",
+            description: "Impossible d'obtenir votre position actuelle.",
+            variant: "destructive",
+          });
+        }
+      );
+    } else {
+      toast({
+        title: "Géolocalisation non supportée",
+        description: "Votre navigateur ne supporte pas la géolocalisation.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle materials selection change
@@ -130,10 +165,6 @@ const ProjectCreate = () => {
     setIsSubmitting(true);
     
     try {
-      // Calculate progress based on status
-      const progress = values.status === 'terminé' ? 100 : 
-                       values.status === 'en cours' ? 25 : 0;
-      
       // Prepare coordinates for the API
       const projectCoordinates = values.coordinates ? {
         latitude: values.coordinates.latitude as number,
@@ -146,7 +177,7 @@ const ProjectCreate = () => {
         description: values.description,
         location: values.location,
         status: values.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-        progress: progress,
+        progress: values.progress,
         budget: values.budget,
         startDate: values.startDate,
         thumbnail: '/img/project-placeholder.jpg',
@@ -305,6 +336,37 @@ const ProjectCreate = () => {
                         />
                       </div>
                       
+                      <FormField
+                        control={form.control}
+                        name="progress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Progression (%)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="0" 
+                                max="100" 
+                                placeholder="Ex: 25" 
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Pourcentage d'avancement du projet (0-100%)
+                            </FormDescription>
+                            {field.value && (
+                              <div className="mt-2">
+                                <ProgressIndicator value={Number(field.value)} />
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Progression actuelle: {field.value}%
+                                </p>
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
@@ -460,8 +522,19 @@ const ProjectCreate = () => {
                   <div className="mb-4">
                     <p className="text-adrar-600 mb-4">
                       Cliquez sur la carte pour sélectionner l'emplacement du projet.
-                      Utilisez le bouton <span className="inline-flex items-center mx-1"><Navigation className="h-3 w-3 mr-1" />Position</span> pour utiliser votre position actuelle.
                     </p>
+                    
+                    <div className="flex gap-2 mb-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleGetCurrentLocation}
+                        className="flex items-center gap-2"
+                      >
+                        <Navigation className="h-4 w-4" />
+                        Ma position
+                      </Button>
+                    </div>
                     
                     <div className="h-[500px] mb-4">
                       <ProjectMap 
@@ -471,6 +544,8 @@ const ProjectCreate = () => {
                         interactive={true}
                         height="500px"
                         width="100%"
+                        defaultCenter={[18.079052, -15.965634]}
+                        defaultZoom={6}
                       />
                     </div>
                     
