@@ -100,55 +100,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     return statusColors[status as keyof typeof statusColors] || '#6b7280';
   };
 
-  const createCustomIcon = (project: ProjectData) => {
-    const color = getStatusColor(project.status);
-    const isSelected = selectedProject?.id === project.id;
-    
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          background-color: ${color};
-          width: ${isSelected ? '20px' : '16px'};
-          height: ${isSelected ? '20px' : '16px'};
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: ${isSelected ? '10px' : '8px'};
-          color: white;
-          font-weight: bold;
-        ">
-          ${project.progress}%
-        </div>
-      `,
-      iconSize: [isSelected ? 24 : 20, isSelected ? 24 : 20],
-      iconAnchor: [isSelected ? 12 : 10, isSelected ? 12 : 10],
-    });
-  };
-
-  const createLocationIcon = (location: MapLocation) => {
-    const color = location.status ? getStatusColor(location.status) : '#6b7280';
-    
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          background-color: ${color};
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        "></div>
-      `,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
-    });
-  };
-
   if (projectsWithCoordinates.length === 0 && locations.length === 0) {
     return (
       <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`} style={{ height, width }}>
