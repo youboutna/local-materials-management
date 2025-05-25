@@ -81,9 +81,16 @@ const Auth = () => {
   const { signIn, signUp, user, signInWithGoogle, signInWithPhone, verifyPhoneOTP, signInWithNationalId, isDevelopmentMode } = useAuth();
   const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
-  const initialMode = queryParams.get('mode') === 'register' ? 'register' : 'login';
+  const urlMode = queryParams.get('mode');
   
-  const [mode, setMode] = useState(initialMode);
+  // Handle different modes including reset-password
+  const getInitialMode = () => {
+    if (urlMode === 'register') return 'register';
+    if (urlMode === 'reset-password') return 'reset-password';
+    return 'login';
+  };
+  
+  const [mode, setMode] = useState(getInitialMode());
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone' | 'nationalId'>('email');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -91,7 +98,7 @@ const Auth = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showOAuthConfig, setShowOAuthConfig] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(urlMode === 'reset-password');
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -136,6 +143,14 @@ const Auth = () => {
     },
   });
   
+  useEffect(() => {
+    // Check if we're in reset-password mode
+    if (urlMode === 'reset-password') {
+      setShowPasswordReset(true);
+      setMode('reset-password');
+    }
+  }, [urlMode]);
+
   useEffect(() => {
     try {
       if (DEV_MODE) {
@@ -447,8 +462,14 @@ const Auth = () => {
             </Alert>
           )}
           
-          {showPasswordReset ? (
-            <PasswordResetForm onBack={() => setShowPasswordReset(false)} />
+          {showPasswordReset || mode === 'reset-password' ? (
+            <PasswordResetForm onBack={() => {
+              setShowPasswordReset(false);
+              setMode('login');
+              // Update URL without the reset-password mode
+              const newUrl = '/auth?mode=login';
+              window.history.replaceState(null, '', newUrl);
+            }} />
           ) : (
             <Card className="shadow-elegant border-none overflow-hidden">
               <Tabs value={mode} onValueChange={(newMode) => {

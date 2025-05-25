@@ -36,16 +36,36 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
   const onSubmit = async (values: PasswordResetValues) => {
     setLoading(true);
     try {
+      // Use the current window location origin instead of localhost
+      const redirectTo = `${window.location.origin}/auth?mode=reset-password`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/auth?mode=reset-password`,
+        redirectTo: redirectTo,
       });
 
       if (error) {
-        toast({
-          title: "Erreur",
-          description: error.message,
-          variant: "destructive",
-        });
+        console.error('Password reset error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('User not found')) {
+          toast({
+            title: "Utilisateur non trouvé",
+            description: "Aucun compte n'est associé à cette adresse email.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('too_many_requests')) {
+          toast({
+            title: "Trop de tentatives",
+            description: "Veuillez attendre avant de demander un nouveau lien de réinitialisation.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: error.message || "Une erreur est survenue lors de l'envoi de l'email.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -55,9 +75,10 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
         description: "Un lien de réinitialisation a été envoyé à votre adresse email.",
       });
     } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
+        description: "Une erreur inattendue est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -79,11 +100,15 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
         <CardContent className="space-y-4">
           <p className="text-sm text-center text-gray-600">
             Si vous ne voyez pas l'email, vérifiez votre dossier spam ou tentez de renvoyer le lien.
+            Le lien de réinitialisation expire après 1 heure.
           </p>
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => setEmailSent(false)}
+              onClick={() => {
+                setEmailSent(false);
+                form.reset();
+              }}
               className="flex-1"
             >
               Renvoyer l'email
