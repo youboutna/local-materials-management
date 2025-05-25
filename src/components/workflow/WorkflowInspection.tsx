@@ -77,15 +77,15 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         } else if (latestInspection.status === 'requires_changes') {
           // For inspections requiring changes, keep current progress but change status
           newStatus = 'en inspection';
-          // Don't update progress for inspections requiring changes
+          // Keep the current progress, don't downgrade it
         } else if (latestInspection.status === 'rejected') {
           // For rejected inspections, don't update progress, set status to suspended
           newStatus = 'suspendu';
-          // Don't update progress for rejected inspections
+          // Keep the current progress
         } else if (latestInspection.status === 'pending') {
           // For pending inspections, set status to inspection but don't update progress yet
           newStatus = 'en inspection';
-          // Don't update progress for pending inspections
+          // Keep the current progress
         }
 
         console.log('Updating project with:', { 
@@ -117,7 +117,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
 
         toast({
           title: "Projet mis à jour",
-          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
+          description: `Progression maintenue à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
         });
       }
 
