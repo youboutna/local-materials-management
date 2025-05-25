@@ -50,22 +50,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         
         console.log('Latest inspection:', latestInspection);
         
-        // Get the highest approved inspection progress
-        const { data: allInspections } = await supabase
-          .from('inspections')
-          .select('*')
-          .eq('project_id', project.id)
-          .eq('status', 'approved')
-          .order('progress_at_inspection', { ascending: false });
-
-        console.log('All approved inspections:', allInspections);
-
         // Determine new progress and status based on inspection logic
         let newProgress = project.progress; // Start with current progress
         let newStatus = project.status;
 
         if (latestInspection.status === 'approved') {
-          // For approved inspections, use the inspection's progress
+          // For approved inspections, update progress to the inspection's progress value
           newProgress = latestInspection.progress_at_inspection;
           
           // If progress reaches 100%, mark project as completed
@@ -75,22 +65,23 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             newStatus = 'en cours';
           }
         } else if (latestInspection.status === 'requires_changes') {
-          // For inspections requiring changes, keep current progress but change status
+          // For inspections requiring changes, set status to inspection but keep current progress
           newStatus = 'en inspection';
-          // Keep the current progress, don't downgrade it
+          // Don't change the progress - keep the current value
         } else if (latestInspection.status === 'rejected') {
-          // For rejected inspections, don't update progress, set status to suspended
+          // For rejected inspections, set status to suspended but keep current progress
           newStatus = 'suspendu';
-          // Keep the current progress
+          // Don't change the progress - keep the current value
         } else if (latestInspection.status === 'pending') {
-          // For pending inspections, set status to inspection but don't update progress yet
+          // For pending inspections, set status to inspection but keep current progress
           newStatus = 'en inspection';
-          // Keep the current progress
+          // Don't change the progress - keep the current value
         }
 
         console.log('Updating project with:', { 
           newProgress, 
           newStatus, 
+          currentProgress: project.progress,
           inspectionStatus: latestInspection.status,
           inspectionProgress: latestInspection.progress_at_inspection
         });
@@ -115,9 +106,13 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           'pending': 'en attente'
         };
 
+        const progressMessage = latestInspection.status === 'approved' 
+          ? `Progression mise à jour à ${newProgress}%`
+          : `Progression maintenue à ${newProgress}%`;
+
         toast({
           title: "Projet mis à jour",
-          description: `Progression maintenue à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
+          description: `${progressMessage} selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
         });
       }
 
