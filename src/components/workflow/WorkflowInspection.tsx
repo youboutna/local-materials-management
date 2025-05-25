@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           newStatus, 
           currentProgress: project.progress,
           latestInspectionStatus: latestInspection.status,
-          relevantInspectionFound: relevantInspections?.length > 0
+          relevantInspectionFound: relevantInspections && relevantInspections.length > 0
         });
 
         // Update project with new progress and status
