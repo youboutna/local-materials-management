@@ -14,6 +14,7 @@ import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { InspectionsList } from '@/components/project/InspectionsList';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, Inspection } from '@/types/project';
+import { PaymentDialog } from '@/components/project/PaymentDialog';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -190,6 +191,11 @@ const ProjectDetail = () => {
     }
   };
 
+  // Check if there are approved inspections
+  const hasApprovedInspections = project?.inspections?.some(
+    inspection => inspection.status === 'approved'
+  ) || false;
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -282,10 +288,11 @@ const ProjectDetail = () => {
             </div>
             
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
                 <TabsTrigger value="workflow">Workflow</TabsTrigger>
                 <TabsTrigger value="inspections">Inspections</TabsTrigger>
+                <TabsTrigger value="payments">Paiements</TabsTrigger>
                 <TabsTrigger value="details">Détails</TabsTrigger>
               </TabsList>
               
@@ -372,6 +379,88 @@ const ProjectDetail = () => {
               {/* Inspections Tab */}
               <TabsContent value="inspections" className="mt-6">
                 <InspectionsList projectId={project.id} />
+              </TabsContent>
+              
+              {/* Payments Tab */}
+              <TabsContent value="payments" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Processus de paiement</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {hasApprovedInspections ? (
+                      <div className="space-y-6">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 text-green-800 mb-2">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-medium">Inspections approuvées</span>
+                          </div>
+                          <p className="text-green-700 text-sm">
+                            Le projet a des inspections approuvées. Vous pouvez procéder au transfert de paiement.
+                          </p>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Étapes de transfert</h3>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="bg-adrar-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">1</div>
+                              <div>
+                                <h4 className="font-medium">Vérification des inspections</h4>
+                                <p className="text-sm text-gray-600">Confirmation que les inspections sont approuvées et conformes aux standards.</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="bg-adrar-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">2</div>
+                              <div>
+                                <h4 className="font-medium">Calcul du montant</h4>
+                                <p className="text-sm text-gray-600">Détermination du montant basé sur la progression et les conditions du contrat.</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="bg-adrar-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">3</div>
+                              <div>
+                                <h4 className="font-medium">Autorisation de paiement</h4>
+                                <p className="text-sm text-gray-600">Validation finale et autorisation du transfert de fonds.</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="bg-adrar-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">4</div>
+                              <div>
+                                <h4 className="font-medium">Exécution du transfert</h4>
+                                <p className="text-sm text-gray-600">Traitement bancaire et confirmation de la transaction.</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t">
+                            <PaymentDialog 
+                              project={project} 
+                              onPaymentComplete={handleInspectionUpdate}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Inspections requises
+                        </h3>
+                        <p className="text-gray-500 mb-4">
+                          Des inspections approuvées sont nécessaires avant de pouvoir procéder au processus de paiement.
+                        </p>
+                        <Link to="#" onClick={() => setActiveTab("inspections")}>
+                          <Button variant="outline">Voir les inspections</Button>
+                        </Link>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
               
               {/* Details Tab */}
