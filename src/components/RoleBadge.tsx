@@ -3,9 +3,8 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Define the custom role type that matches what we're using in the Users component
-// and include database roles
-export type RoleType = 'admin' | 'developer' | 'manager' | 'director' | 'inspector' | 'supplier'  | 'user';
+// Update to match database roles
+export type RoleType = 'admin' | 'project_manager' | 'supervisor' | 'inspector' | 'supplier' | 'viewer';
 
 interface RoleBadgeProps {
   role: RoleType;
@@ -19,24 +18,30 @@ const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {
     switch (role) {
       case 'admin':
         return 'bg-red-100 text-red-800 hover:bg-red-200';
-      case 'developer':
+      case 'project_manager':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'manager':
+      case 'supervisor':
         return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'director':
-        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
       case 'inspector':
         return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
       case 'supplier':
         return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
-      case 'user':
+      case 'viewer':
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
   const getRoleLabel = (role: RoleType) => {
-    return t(`roles.${role}`);
+    const labels = {
+      admin: 'Administrateur',
+      project_manager: 'Chef de projet',
+      supervisor: 'Superviseur',
+      inspector: 'Inspecteur',
+      supplier: 'Fournisseur',
+      viewer: 'Lecteur'
+    };
+    return labels[role] || role;
   };
 
   return (

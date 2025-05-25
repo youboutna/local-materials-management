@@ -18,42 +18,46 @@ import {
 } from '@/components/ui/table';
 import { Database } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { UserPlus, Search, User, Edit, Trash2 } from 'lucide-react';
+import { UserPlus, Search, User, Edit } from 'lucide-react';
 import { DEV_MODE } from '@/config/constants';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
+import { useUserRoles, useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 // Define types for profile data
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-// Define user profile type that includes our custom role
-type UserProfile = Omit<Profile, 'role'> & { role: RoleType };
+// Define user profile type with roles array
+type UserProfile = Profile & { 
+  roles?: string[];
+  primaryRole?: RoleType;
+};
 
-// Mock profiles for development mode with roles that align with our custom type
+// Mock profiles for development mode
 const DEV_PROFILES: UserProfile[] = [
   {
     id: "dev-user-id",
     full_name: "Développeur Test",
-    role: "admin",
     phone: "123456789",
     national_id: "DEV12345",
     avatar_url: null,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    roles: ['admin'],
+    primaryRole: 'admin'
   },
   {
     id: "dev-user-id-2",
     full_name: "Marie Diallo",
-    role: "developer",
     phone: "987654321",
     national_id: "DEV54321",
     avatar_url: null,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    roles: ['project_manager'],
+    primaryRole: 'project_manager'
   }
 ];
 
@@ -61,6 +65,7 @@ const Users = () => {
   const { toast } = useToast();
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
+  const { hasRole } = useCurrentUserRoles();
   const [profiles, setProfiles] = useState<UserProfile[]>(
     isDevelopmentMode ? DEV_PROFILES : []
   );
@@ -81,33 +86,46 @@ const Users = () => {
     }
   }, [user, navigate, toast, isDevelopmentMode]);
 
-  // Fetch profiles
+  // Fetch profiles with roles
   useEffect(() => {
     if (isDevelopmentMode) {
       console.log('Using mock profiles in development mode');
       return;
     }
 
-    const fetchProfiles = async () => {
+    const fetchProfilesWithRoles = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // Fetch profiles
+        const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) {
-          throw error;
-        }
+        if (profilesError) throw profilesError;
 
-        if (data) {
-          // Map database profiles to our custom type with role casting
-          const mappedProfiles = data.map(profile => ({
-            ...profile,
-            // Cast database role to our RoleType, defaulting to 'admin' if null
-            role: (profile.role as unknown as RoleType) || 'admin'
-          }));
-          setProfiles(mappedProfiles);
+        if (profilesData) {
+          // Fetch roles for each user
+          const profilesWithRoles = await Promise.all(
+            profilesData.map(async (profile) => {
+              const { data: rolesData } = await supabase
+                .from('user_roles')
+                .select('role_name')
+                .eq('user_id', profile.id);
+
+              const roles = rolesData?.map(r => r.role_name) || [];
+              const primaryRole = roles[0] as RoleType || 'viewer';
+
+              return {
+                ...profile,
+                roles,
+                primaryRole
+              };
+            })
+          );
+
+          setProfiles(profilesWithRoles);
         }
       } catch (error: any) {
         toast({
@@ -121,7 +139,7 @@ const Users = () => {
     };
 
     if (user) {
-      fetchProfiles();
+      fetchProfilesWithRoles();
     }
   }, [user, toast, isDevelopmentMode]);
 
@@ -146,6 +164,9 @@ const Users = () => {
     return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
   };
 
+  // Check if current user can manage users
+  const canManageUsers = hasRole('admin') || hasRole('project_manager');
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -168,13 +189,15 @@ const Users = () => {
               Gestion des Utilisateurs
             </h1>
             
-            <Button
-              className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
-              onClick={() => navigate('/auth?mode=register')}
-            >
-              <UserPlus className="h-4 w-4" />
-              <span>Nouvel Utilisateur</span>
-            </Button>
+            {canManageUsers && (
+              <Button
+                className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
+                onClick={() => navigate('/auth?mode=register')}
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Nouvel Utilisateur</span>
+              </Button>
+            )}
           </div>
           
           {/* Search Bar */}
@@ -196,7 +219,7 @@ const Users = () => {
                   <TableHead>Utilisateur</TableHead>
                   <TableHead className="hidden md:table-cell">Téléphone</TableHead>
                   <TableHead className="hidden md:table-cell">ID National</TableHead>
-                  <TableHead className="hidden md:table-cell">Rôle</TableHead>
+                  <TableHead className="hidden md:table-cell">Rôle principal</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -235,7 +258,7 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">{profile.phone || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <RoleBadge role={profile.role} />
+                        {profile.primaryRole && <RoleBadge role={profile.primaryRole} />}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
@@ -282,22 +305,26 @@ const Users = () => {
                   )}
                 </Avatar>
                 <h3 className="text-xl font-medium">{selectedUser.full_name || 'Utilisateur sans nom'}</h3>
-                <RoleBadge role={selectedUser.role} />
+                <div className="flex flex-wrap gap-2">
+                  {selectedUser.roles?.map(role => (
+                    <RoleBadge key={role} role={role as RoleType} />
+                  ))}
+                </div>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground">Téléphone</Label>
+                  <label className="text-muted-foreground text-sm">Téléphone</label>
                   <p className="font-medium">{selectedUser.phone || '-'}</p>
                 </div>
                 
                 <div>
-                  <Label className="text-muted-foreground">ID National</Label>
+                  <label className="text-muted-foreground text-sm">ID National</label>
                   <p className="font-medium">{selectedUser.national_id || '-'}</p>
                 </div>
                 
                 <div>
-                  <Label className="text-muted-foreground">Date d'inscription</Label>
+                  <label className="text-muted-foreground text-sm">Date d'inscription</label>
                   <p className="font-medium">
                     {selectedUser.created_at 
                       ? new Date(selectedUser.created_at).toLocaleDateString('fr-FR', {
@@ -313,15 +340,17 @@ const Users = () => {
             </div>
           )}
           
-          <SheetFooter className="pt-4 flex gap-2 justify-center sm:justify-end">
-            <Button 
-              variant="outline"
-              className="border-terracotta-200 hover:border-terracotta-300 flex items-center gap-2"
-            >
-              <Edit className="h-4 w-4" />
-              <span>Modifier</span>
-            </Button>
-          </SheetFooter>
+          {canManageUsers && (
+            <SheetFooter className="pt-4 flex gap-2 justify-center sm:justify-end">
+              <Button 
+                variant="outline"
+                className="border-terracotta-200 hover:border-terracotta-300 flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Gérer les rôles</span>
+              </Button>
+            </SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
       
