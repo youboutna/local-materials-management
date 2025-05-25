@@ -297,15 +297,74 @@ const MaterialCreate = () => {
                   )}
                 />
 
+                {/* Latitude and Longitude fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="coordinates_latitude"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Latitude</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.000001"
+                            placeholder="Ex: 18.079052" 
+                            value={field.value?.toString() || ''}
+                            onChange={(e) => {
+                              const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="coordinates_longitude"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Longitude</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.000001"
+                            placeholder="Ex: -15.965634" 
+                            value={field.value?.toString() || ''}
+                            onChange={(e) => {
+                              const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {/* Map integration */}
                 <div className="mb-4">
                   <Label>{t('materials.selectLocation')}</Label>
-                  <ProjectMap
-                    height="300px"
-                    width="100%"
-                    selectable={true}
-                    onLocationSelect={handleSelectLocation}
-                  />
+                  <div className="mt-2">
+                    <ProjectMap
+                      height="300px"
+                      width="100%"
+                      selectable={true}
+                      onLocationSelect={handleSelectLocation}
+                      interactive={true}
+                      locations={selectedLocation ? [{
+                        id: "selected-location",
+                        name: form.getValues("name") || "Matériau sélectionné",
+                        type: "material" as const,
+                        latitude: selectedLocation.lat,
+                        longitude: selectedLocation.lng
+                      }] : []}
+                    />
+                  </div>
                   {selectedLocation && (
                     <div className="mt-2 text-sm text-gray-600">
                       {t('materials.selectedLocation')}: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
