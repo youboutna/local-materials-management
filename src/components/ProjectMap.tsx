@@ -77,17 +77,6 @@ interface ProjectMapProps {
   className?: string;
 }
 
-// Update center/zoom dynamically
-function MapCenterUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
-
-  return null;
-}
-
 // Component to handle map initialization and event listeners
 function MapInitializer({ 
   selectable, 
@@ -144,15 +133,6 @@ const ProjectMap = ({
 }: ProjectMapProps) => {
   const { projects, loading } = useProjects();
   const navigate = useNavigate();
-  const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
-  const [mapZoom, setMapZoom] = useState<number>(defaultZoom);
-
-  useEffect(() => {
-    if (selectedProject?.latitude && selectedProject?.longitude) {
-      setMapCenter([selectedProject.latitude, selectedProject.longitude]);
-      setMapZoom(13);
-    }
-  }, [selectedProject]);
 
   const handleMarkerClick = (projectId: string) => {
     if (onMarkerClick) {
@@ -174,6 +154,13 @@ const ProjectMap = ({
     );
   }
 
+  // Determine the center point for the map
+  const mapCenter: [number, number] = selectedProject?.latitude && selectedProject?.longitude 
+    ? [selectedProject.latitude, selectedProject.longitude]
+    : defaultCenter;
+
+  const mapZoom = selectedProject?.latitude && selectedProject?.longitude ? 13 : defaultZoom;
+
   return (
     <div
       style={{ height, width }}
@@ -183,8 +170,8 @@ const ProjectMap = ({
         style={{ height: '100%', width: '100%' }}
         center={mapCenter}
         zoom={mapZoom}
+        key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
       >
-        <MapCenterUpdater center={mapCenter} zoom={mapZoom} />
         <MapInitializer 
           selectable={selectable} 
           onLocationSelect={onLocationSelect} 
