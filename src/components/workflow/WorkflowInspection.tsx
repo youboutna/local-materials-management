@@ -50,14 +50,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         
         console.log('Latest inspection:', latestInspection);
         
-        // Determine new progress and status based on inspection logic
-        let newProgress = project.progress; // Start with current progress
+        // Always update progress to match the inspection's progress value
+        const newProgress = latestInspection.progress_at_inspection;
         let newStatus = project.status;
 
+        // Determine new status based on inspection status
         if (latestInspection.status === 'approved') {
-          // For approved inspections, update progress to the inspection's progress value
-          newProgress = latestInspection.progress_at_inspection;
-          
           // If progress reaches 100%, mark project as completed
           if (newProgress >= 100) {
             newStatus = 'terminé';
@@ -65,17 +63,14 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             newStatus = 'en cours';
           }
         } else if (latestInspection.status === 'requires_changes') {
-          // For inspections requiring changes, set status to inspection but keep current progress
+          // For inspections requiring changes, set status to inspection
           newStatus = 'en inspection';
-          // Don't change the progress - keep the current value
         } else if (latestInspection.status === 'rejected') {
-          // For rejected inspections, set status to suspended but keep current progress
+          // For rejected inspections, set status to suspended
           newStatus = 'suspendu';
-          // Don't change the progress - keep the current value
         } else if (latestInspection.status === 'pending') {
-          // For pending inspections, set status to inspection but keep current progress
+          // For pending inspections, set status to inspection
           newStatus = 'en inspection';
-          // Don't change the progress - keep the current value
         }
 
         console.log('Updating project with:', { 
@@ -106,13 +101,9 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           'pending': 'en attente'
         };
 
-        const progressMessage = latestInspection.status === 'approved' 
-          ? `Progression mise à jour à ${newProgress}%`
-          : `Progression maintenue à ${newProgress}%`;
-
         toast({
           title: "Projet mis à jour",
-          description: `${progressMessage} selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
+          description: `Progression mise à jour à ${newProgress}% selon l'inspection ${statusMessages[latestInspection.status as keyof typeof statusMessages]}. Statut: ${newStatus}`,
         });
       }
 
