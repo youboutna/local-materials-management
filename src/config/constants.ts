@@ -4,7 +4,7 @@ export const DEV_MODE = true;
 
 // Mock user for development mode
 export const DEV_USER = {
-  id: "dev-user-id",
+  id: "00000000-0000-0000-0000-000000000001", // Valid UUID format for dev
   email: "dev@example.com",
   user_metadata: {
     full_name: "Développeur Test",
