@@ -22,7 +22,7 @@ export interface Role {
 }
 
 export const useUserRoles = (userId?: string) => {
-  // Fetch user roles using RPC functions to work around type issues
+  // Fetch user roles using direct query with type assertion
   const { data: userRoles, isLoading: rolesLoading } = useQuery({
     queryKey: ['userRoles', userId],
     queryFn: async () => {
@@ -30,23 +30,17 @@ export const useUserRoles = (userId?: string) => {
       
       console.log('Fetching user roles for:', userId);
       
-      // Use a raw query since the table isn't in the types yet
-      const { data, error } = await supabase
-        .rpc('get_user_roles', { target_user_id: userId });
+      // Use type assertion for the user_roles table
+      const { data, error } = await (supabase as any)
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId);
       
       if (error) {
         console.error('Error fetching user roles:', error);
-        // Fallback to direct query with type assertion
-        const { data: fallbackData, error: fallbackError } = await (supabase as any)
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', userId);
-        
-        if (fallbackError) throw fallbackError;
-        return fallbackData as UserRole[] || [];
+        throw error;
       }
-      
-      return data || [];
+      return data as UserRole[] || [];
     },
     enabled: !!userId
   });

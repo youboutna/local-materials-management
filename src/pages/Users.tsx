@@ -16,7 +16,6 @@ import {
   TableRow,
   TableCell
 } from '@/components/ui/table';
-import { Database } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,13 +23,17 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/com
 import { UserPlus, Search, User, Edit } from 'lucide-react';
 import { DEV_MODE } from '@/config/constants';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
-import { useUserRoles, useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
-// Define types for profile data
-type Profile = Database['public']['Tables']['profiles']['Row'];
-
-// Define user profile type with roles array
-type UserProfile = Profile & { 
+// Define user profile type with roles array (without the old role property)
+type UserProfile = {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  national_id: string | null;
+  avatar_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
   roles?: string[];
   primaryRole?: RoleType;
 };
@@ -109,19 +112,19 @@ const Users = () => {
           // Fetch roles for each user
           const profilesWithRoles = await Promise.all(
             profilesData.map(async (profile) => {
-              const { data: rolesData } = await supabase
+              const { data: rolesData } = await (supabase as any)
                 .from('user_roles')
                 .select('role_name')
                 .eq('user_id', profile.id);
 
-              const roles = rolesData?.map(r => r.role_name) || [];
+              const roles = rolesData?.map((r: any) => r.role_name) || [];
               const primaryRole = roles[0] as RoleType || 'viewer';
 
               return {
                 ...profile,
                 roles,
                 primaryRole
-              };
+              } as UserProfile;
             })
           );
 
