@@ -15,19 +15,70 @@ import StatusBadge from '@/components/StatusBadge';
 import ProgressIndicator from '@/components/ProgressIndicator';
 import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/components/ProjectMap';
+import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
+import { PaymentHistory } from '@/components/project/PaymentHistory';
+import { PaymentDialog } from '@/components/project/PaymentDialog';
+import { ProjectWithPayments } from '@/types/project';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [project, setProject] = useState<ProjectData | null>(null);
+  const [project, setProject] = useState<ProjectWithPayments | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const { getProject, deleteProject } = useProjects();
 
+  const fetchProjectWithDetails = async (projectId: string) => {
+    try {
+      console.log('Fetching project with details for ID:', projectId);
+      
+      // Fetch project data
+      const projectData = await getProject(projectId);
+      if (!projectData) {
+        throw new Error('Project not found');
+      }
+
+      // Fetch payments
+      const { data: payments, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('payment_date', { ascending: false });
+
+      if (paymentsError) {
+        console.error('Error fetching payments:', paymentsError);
+      }
+
+      // Fetch inspections
+      const { data: inspections, error: inspectionsError } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('date', { ascending: false });
+
+      if (inspectionsError) {
+        console.error('Error fetching inspections:', inspectionsError);
+      }
+
+      // Combine data
+      const projectWithDetails: ProjectWithPayments = {
+        ...projectData,
+        payments: payments || [],
+        inspections: inspections || []
+      };
+
+      console.log('Project with details loaded:', projectWithDetails);
+      setProject(projectWithDetails);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchProject = async () => {
       if (!id || id === 'create') {
-        // Don't try to fetch if we're on the create route
         navigate('/projects/create');
         return;
       }
@@ -36,20 +87,7 @@ const ProjectDetail = () => {
       setIsLoading(true);
       
       try {
-        const projectData = await getProject(id);
-        console.log('Project data received:', projectData);
-        
-        if (projectData) {
-          setProject(projectData);
-        } else {
-          console.log('No project found for ID:', id);
-          toast({
-            title: "Projet non trouvé",
-            description: "Le projet que vous recherchez n'existe pas ou a été supprimé.",
-            variant: "destructive",
-          });
-          navigate('/projects');
-        }
+        await fetchProjectWithDetails(id);
       } catch (error) {
         console.error('Error fetching project:', error);
         toast({
@@ -63,11 +101,10 @@ const ProjectDetail = () => {
       }
     };
 
-    // Only fetch if we have an ID and haven't loaded this project yet
     if (id && (!project || project.id !== id)) {
       fetchProject();
     }
-  }, [id]); // Remove getProject and navigate from dependencies to prevent infinite loops
+  }, [id]);
 
   const handleDelete = async () => {
     if (!project || !id) return;
@@ -95,6 +132,12 @@ const ProjectDetail = () => {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleDataUpdate = async () => {
+    if (id) {
+      await fetchProjectWithDetails(id);
     }
   };
 
@@ -170,9 +213,10 @@ const ProjectDetail = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="space-y-8"
           >
             {/* Project header */}
-            <div className="bg-white rounded-xl shadow-elegant p-8 mb-8">
+            <div className="bg-white rounded-xl shadow-elegant p-8">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-serif text-adrar-800 mb-2">{project.title}</h1>
@@ -212,7 +256,7 @@ const ProjectDetail = () => {
             </div>
 
             {/* Project details grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Progress Card */}
               <Card>
                 <CardHeader>
@@ -257,9 +301,34 @@ const ProjectDetail = () => {
               </Card>
             </div>
 
+            {/* Inspection Workflow */}
+            <WorkflowInspection 
+              project={project} 
+              onInspectionUpdate={handleDataUpdate}
+            />
+
+            {/* Payment Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <PaymentHistory payments={project.payments} />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Gestion des paiements</CardTitle>
+                  <CardDescription>
+                    Effectuer des paiements pour ce projet
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PaymentDialog 
+                    project={project} 
+                    onPaymentComplete={handleDataUpdate}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Map section */}
             {mapLocation && (
-              <Card className="mb-8">
+              <Card>
                 <CardHeader>
                   <CardTitle>Localisation</CardTitle>
                   <CardDescription>Position géographique du projet</CardDescription>
