@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +21,7 @@ interface Document {
   created_at: string;
   uploaded_by: string;
   project_id: string;
+  mime_type?: string;
 }
 
 interface DocumentDetailsProps {
@@ -31,6 +33,7 @@ interface DocumentDetailsProps {
 const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps) => {
   const { downloadFile, downloading } = useDocumentStorage();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('details');
 
   if (!document) return null;
 
@@ -112,11 +115,78 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
     }
   };
 
+  const isImage = (mimeType?: string) => {
+    return mimeType?.startsWith('image/') || false;
+  };
+
+  const isPDF = (mimeType?: string) => {
+    return mimeType === 'application/pdf';
+  };
+
+  const canPreview = () => {
+    return document.file_url && (isImage(document.mime_type) || isPDF(document.mime_type));
+  };
+
+  const renderDocumentPreview = () => {
+    if (!document.file_url) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+          <div className="text-center text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-2" />
+            <p>Aucun fichier disponible pour la prévisualisation</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (isImage(document.mime_type)) {
+      return (
+        <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4">
+          <img 
+            src={document.file_url} 
+            alt={document.title}
+            className="max-w-full max-h-96 object-contain rounded"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+          <div className="hidden text-center text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-2" />
+            <p>Impossible de charger l'image</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (isPDF(document.mime_type)) {
+      return (
+        <div className="w-full h-96 bg-gray-50 rounded-lg">
+          <iframe 
+            src={document.file_url}
+            className="w-full h-full rounded-lg"
+            title={document.title}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+        <div className="text-center text-gray-500">
+          <FileText className="h-12 w-12 mx-auto mb-2" />
+          <p>Prévisualisation non disponible pour ce type de fichier</p>
+          <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
+        </div>
+      </div>
+    );
+  };
+
   const IconComponent = getDocumentIcon(document.document_type);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <IconComponent className="h-6 w-6 text-terracotta-600" />
@@ -124,97 +194,118 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Status and Type */}
-          <div className="flex items-center justify-between">
-            <Badge className={getStatusColor(document.status)}>
-              {getStatusLabel(document.status)}
-            </Badge>
-            <span className="text-sm text-gray-600">
-              {getDocumentTypeLabel(document.document_type)}
-            </span>
-          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Détails</TabsTrigger>
+            <TabsTrigger value="preview" disabled={!canPreview()}>
+              <Eye className="h-4 w-4 mr-2" />
+              Aperçu
+            </TabsTrigger>
+          </TabsList>
 
-          <Separator />
-
-          {/* Description */}
-          {document.description && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-              <p className="text-sm text-gray-600">{document.description}</p>
+          <TabsContent value="details" className="space-y-6 overflow-y-auto max-h-[60vh]">
+            {/* Status and Type */}
+            <div className="flex items-center justify-between">
+              <Badge className={getStatusColor(document.status)}>
+                {getStatusLabel(document.status)}
+              </Badge>
+              <span className="text-sm text-gray-600">
+                {getDocumentTypeLabel(document.document_type)}
+              </span>
             </div>
-          )}
 
-          {/* File Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Informations du fichier</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Nom:</span>
-                  <span className="font-medium">{document.file_name}</span>
-                </div>
-                {document.file_size && (
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Taille:</span>
-                    <span className="font-medium">{formatFileSize(document.file_size)}</span>
-                  </div>
-                )}
+            <Separator />
+
+            {/* Description */}
+            {document.description && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
+                <p className="text-sm text-gray-600">{document.description}</p>
               </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Métadonnées</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Créé le:</span>
-                  <span className="font-medium">
-                    {new Date(document.created_at).toLocaleDateString('fr-FR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Téléchargé par:</span>
-                  <span className="font-medium">{document.uploaded_by}</span>
-                </div>
-                {document.project_id && (
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Projet ID:</span>
-                    <span className="font-medium">{document.project_id}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fermer
-            </Button>
-            {document.file_url && (
-              <Button 
-                onClick={handleDownload}
-                disabled={downloading}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                {downloading ? 'Téléchargement...' : 'Télécharger'}
-              </Button>
             )}
-          </div>
+
+            {/* File Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Informations du fichier</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Nom:</span>
+                    <span className="font-medium">{document.file_name}</span>
+                  </div>
+                  {document.file_size && (
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Taille:</span>
+                      <span className="font-medium">{formatFileSize(document.file_size)}</span>
+                    </div>
+                  )}
+                  {document.mime_type && (
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-medium">{document.mime_type}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Métadonnées</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Créé le:</span>
+                    <span className="font-medium">
+                      {new Date(document.created_at).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Téléchargé par:</span>
+                    <span className="font-medium">{document.uploaded_by}</span>
+                  </div>
+                  {document.project_id && (
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-600">Projet ID:</span>
+                      <span className="font-medium">{document.project_id}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="preview" className="overflow-y-auto max-h-[60vh]">
+            {renderDocumentPreview()}
+          </TabsContent>
+        </Tabs>
+
+        <Separator />
+
+        {/* Actions */}
+        <div className="flex justify-end space-x-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+          {document.file_url && (
+            <Button 
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {downloading ? 'Téléchargement...' : 'Télécharger'}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
