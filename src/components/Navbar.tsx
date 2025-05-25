@@ -1,190 +1,218 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  Menu as MenuIcon,
-  X as CloseIcon,
-  User as UserIcon,
-  ChevronRight as ChevronRightIcon,
-  LogOut as LogOutIcon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { useLanguage, Language } from '@/contexts/LanguageContext';
-import LanguageSwitcher from './LanguageSwitcher';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-} from "@/components/ui/navigation-menu";
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, User, LogOut, FileText, Home, Briefcase, Package, Settings as SettingsIcon, Users as UsersIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
-  const { user: supabaseUser, signOut } = useAuth();
-  const { isAuthenticated, user, login, logout } = useKeycloakAuth();
-  const { language, setLanguage } = useLanguage();
-  
-  const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
-  };
-  
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { user, logout, isDevelopmentMode } = useAuth();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    setIsOpen(false); // Close mobile menu on route change
-  }, [location]);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { name: 'Accueil', href: '/', icon: Home },
+    { name: 'Tableau de bord', href: '/dashboard', icon: Home },
+    { name: 'Projets', href: '/projects', icon: Briefcase },
+    { name: 'Matériaux', href: '/materials', icon: Package },
+    { name: 'Documents', href: '/documents', icon: FileText },
+    { name: 'Utilisateurs', href: '/users', icon: UsersIcon },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="bg-adrar-50 text-adrar-700 text-sm py-1.5 hidden md:block">
-        <div className="container mx-auto text-center">
-          Livraison gratuite pour toute commande supérieure à 2000 MRU
-        </div>
-      </div>
-      
-      <div className="container mx-auto flex justify-between items-center py-3 px-4">
-        <div className="flex items-center">
-          <Link to="/" className="font-bold text-xl text-adrar-700">
-            Construction ERP
-          </Link>
-        </div>
-        <NavigationMenuItem className="text-sm bg-terracotta-500 hover:bg-terracotta-600">
-          <LanguageSwitcher />
-       </NavigationMenuItem>
-        <nav className="hidden md:flex items-center space-x-4">
-          <Link to="/projects" className="text-sm text-adrar-600 hover:text-terracotta-500">
-            Projets
-          </Link>
-          <Link to="/materials" className="text-sm text-adrar-600 hover:text-terracotta-500">
-            Matériaux
-          </Link>
-          <Link to="/dashboard" className="text-sm text-adrar-600 hover:text-terracotta-500">
-            Tableau de bord
-          </Link>
-          
-          {isAuthenticated && user ? (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/profile"
-                className="flex items-center gap-2 text-sm text-adrar-600 hover:text-terracotta-500"
-              >
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-terracotta-100 text-terracotta-700 text-xs">
-                    {user.firstName && user.lastName 
-                      ? `${user.firstName[0]}${user.lastName[0]}`
-                      : user.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span>Profil</span>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={logout}
-                className="text-sm"
-              >
-                Se déconnecter
-              </Button>
+    <motion.nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white'
+      }`}
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-adrar-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">A</span>
             </div>
-          ) : (
-            <Button
-              onClick={login}
-              size="sm"
-              variant="default"
-              className="text-sm bg-terracotta-500 hover:bg-terracotta-600"
-            >
-              <UserIcon className="h-4 w-4 mr-2" />
-              Se connecter
-            </Button>
-          )}
-        </nav>
-        
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-adrar-600 hover:text-adrar-800 focus:outline-none"
-          aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-        >
-          {isOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-        </button>
-      </div>
-      
-      {isOpen && (
-        <div className="md:hidden p-4 border-t border-gray-200">
-          <Link
-            to="/"
-            className="block py-2 text-base text-adrar-600 hover:text-terracotta-500"
-            onClick={() => setIsOpen(false)}
-          >
-            Accueil
+            <span className="text-xl font-bold text-adrar-900 font-serif">
+              Adrar Construction
+            </span>
           </Link>
-          <Link
-            to="/projects"
-            className="block py-2 text-base text-adrar-600 hover:text-terracotta-500"
-            onClick={() => setIsOpen(false)}
-          >
-            Projets
-          </Link>
-          <Link
-            to="/materials"
-            className="block py-2 text-base text-adrar-600 hover:text-terracotta-500"
-            onClick={() => setIsOpen(false)}
-          >
-            Matériaux
-          </Link>
-          <Link
-            to="/dashboard"
-            className="block py-2 text-base text-adrar-600 hover:text-terracotta-500"
-            onClick={() => setIsOpen(false)}
-          >
-            Tableau de bord
-          </Link>
-          
-          {isAuthenticated && user ? (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => (
               <Link
-                to="/profile"
-                className="flex items-center justify-between px-2 py-2 text-base text-adrar-600"
-                onClick={() => setIsOpen(false)}
+                key={item.name}
+                to={item.href}
+                className="text-gray-700 hover:text-terracotta-600 transition-colors duration-200 font-medium"
               >
-                <div className="flex items-center">
-                  <Avatar className="h-6 w-6 mr-2">
-                    <AvatarFallback className="bg-terracotta-100 text-terracotta-700 text-xs">
-                      {user.firstName && user.lastName 
-                        ? `${user.firstName[0]}${user.lastName[0]}`
-                        : user.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  Mon profil
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Right Side */}
+          <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar_url || ''} alt={user.full_name || 'User'} />
+                      <AvatarFallback className="bg-terracotta-100 text-terracotta-700">
+                        {getInitials(user.full_name || 'User')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex flex-col space-y-1 p-2">
+                    <p className="text-sm font-medium leading-none">{user.full_name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.phone}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="cursor-pointer">
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      <span>Paramètres</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Se déconnecter</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" asChild>
+                  <Link to="/auth?mode=login">Se connecter</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth?mode=register">S'inscrire</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              className="md:hidden"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+                {navItems.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-terracotta-600 hover:bg-gray-50 transition-colors duration-200"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+                
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center justify-between px-3">
+                    <LanguageSwitcher />
+                    
+                    {user ? (
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar_url || ''} alt={user.full_name || 'User'} />
+                            <AvatarFallback className="bg-terracotta-100 text-terracotta-700">
+                              {getInitials(user.full_name || 'User')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{user.full_name}</span>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={handleLogout}>
+                          <LogOut className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link to="/auth?mode=login" onClick={() => setIsOpen(false)}>
+                            Se connecter
+                          </Link>
+                        </Button>
+                        <Button size="sm" asChild>
+                          <Link to="/auth?mode=register" onClick={() => setIsOpen(false)}>
+                            S'inscrire
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <ChevronRightIcon className="h-4 w-4" />
-              </Link>
-              <Button
-                variant="outline"
-                className="w-full mt-2"
-                onClick={() => {
-                  setIsOpen(false);
-                  logout();
-                }}
-              >
-                <LogOutIcon className="h-4 w-4 mr-2" />
-                Se déconnecter
-              </Button>
-            </div>
-          ) : (
-            <Button
-              className="w-full mt-4 bg-terracotta-500 hover:bg-terracotta-600"
-              onClick={() => {
-                setIsOpen(false);
-                login();
-              }}
-            >
-              <UserIcon className="h-4 w-4 mr-2" />
-              Se connecter
-            </Button>
+              </div>
+            </motion.div>
           )}
-        </div>
-      )}
-    </header>
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   );
 };
 

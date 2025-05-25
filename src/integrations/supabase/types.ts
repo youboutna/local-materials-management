@@ -51,6 +51,146 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          inspection_id: string | null
+          metadata: Json | null
+          mime_type: string | null
+          project_id: string | null
+          status: Database["public"]["Enums"]["document_status"] | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          inspection_id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          inspection_id?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          certifications: Json | null
+          created_at: string | null
+          department: string | null
+          email: string | null
+          employee_id: string
+          full_name: string
+          hire_date: string | null
+          id: string
+          is_active: boolean | null
+          manager_id: string | null
+          phone: string | null
+          position: string | null
+          salary: number | null
+          skills: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          certifications?: Json | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id: string
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          certifications?: Json | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id?: string
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_claims: {
         Row: {
           act_reimbursement_rates: Json | null
@@ -615,6 +755,104 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          address: string | null
+          category: string | null
+          contact_person: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string | null
+          rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      task_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_to: string | null
+          completion_date: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          project_id: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completion_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -626,6 +864,20 @@ export type Database = {
       }
     }
     Enums: {
+      document_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "archived"
+      document_type:
+        | "inspection_report"
+        | "location_photo"
+        | "project_report"
+        | "contract"
+        | "supplier_info"
+        | "task_assignment"
+        | "employee_record"
       user_role: "insurance_company" | "practitioner" | "patient"
     }
     CompositeTypes: {
@@ -742,6 +994,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      document_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "archived",
+      ],
+      document_type: [
+        "inspection_report",
+        "location_photo",
+        "project_report",
+        "contract",
+        "supplier_info",
+        "task_assignment",
+        "employee_record",
+      ],
       user_role: ["insurance_company", "practitioner", "patient"],
     },
   },
