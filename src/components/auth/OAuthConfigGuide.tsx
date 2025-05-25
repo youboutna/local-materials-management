@@ -35,11 +35,11 @@ const OAuthConfigGuide = () => {
         <div className="space-y-2">
           <p className="text-sm font-medium">Étapes de configuration :</p>
           <ol className="list-decimal list-inside text-sm space-y-1 text-gray-600">
-            <li>Aller dans Google Cloud Console > APIs & Credentials</li>
+            <li>Aller dans Google Cloud Console {'->'} APIs & Credentials</li>
             <li>Sélectionner votre OAuth 2.0 Client ID</li>
             <li>Ajouter les URLs ci-dessus dans les champs appropriés</li>
             <li>Configurer l'écran de consentement avec votre domaine autorisé</li>
-            <li>Dans Supabase > Auth > URL Configuration, définir Site URL: {currentDomain}</li>
+            <li>Dans Supabase {'->'} Auth {'->'} URL Configuration, définir Site URL: {currentDomain}</li>
           </ol>
         </div>
 
