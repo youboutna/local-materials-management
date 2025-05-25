@@ -89,6 +89,46 @@ function MapCenterUpdater({ center, zoom }: { center: [number, number]; zoom: nu
   return null;
 }
 
+// Component to handle map initialization and event listeners
+function MapInitializer({ 
+  selectable, 
+  onLocationSelect, 
+  interactive 
+}: { 
+  selectable: boolean; 
+  onLocationSelect?: (latitude: number, longitude: number) => void; 
+  interactive: boolean;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      if (selectable && onLocationSelect) {
+        onLocationSelect(e.latlng.lat, e.latlng.lng);
+      }
+    };
+
+    if (selectable) {
+      map.on('click', handleMapClick);
+    }
+    
+    if (!interactive) {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+      map.scrollWheelZoom.disable();
+    }
+
+    return () => {
+      if (selectable) {
+        map.off('click', handleMapClick);
+      }
+    };
+  }, [map, selectable, onLocationSelect, interactive]);
+
+  return null;
+}
+
 const ProjectMap = ({
   height = '400px',
   width = '100%',
@@ -123,12 +163,6 @@ const ProjectMap = ({
     }
   };
 
-  const handleMapClick = (e: L.LeafletMouseEvent) => {
-    if (selectable && onLocationSelect) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    }
-  };
-
   const getMarkerIcon = (status: string = 'en attente') => {
     return customIcon;
   };
@@ -150,23 +184,16 @@ const ProjectMap = ({
         style={{ height: '100%', width: '100%' }}
         center={mapCenter}
         zoom={mapZoom}
-        whenReady={(mapInstance) => {
-          if (selectable) {
-            mapInstance.target.on('click', handleMapClick as any);
-          }
-          if (!interactive) {
-            mapInstance.target.dragging.disable();
-            mapInstance.target.touchZoom.disable();
-            mapInstance.target.doubleClickZoom.disable();
-            mapInstance.target.scrollWheelZoom.disable();
-          }
-        }}
       >
         <MapCenterUpdater center={mapCenter} zoom={mapZoom} />
+        <MapInitializer 
+          selectable={selectable} 
+          onLocationSelect={onLocationSelect} 
+          interactive={interactive} 
+        />
 
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
         {showAllProjects &&
