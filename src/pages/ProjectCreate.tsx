@@ -94,8 +94,8 @@ const ProjectCreate = () => {
       location: "",
       status: "en attente",
       progress: 0,
-      budget: undefined,
-      teamSize: undefined,
+      budget: 0,
+      teamSize: 1,
       startDate: new Date().toISOString().split('T')[0],
       coordinates: undefined,
     },
@@ -166,9 +166,11 @@ const ProjectCreate = () => {
     
     try {
       // Prepare coordinates for the API
-      const projectCoordinates = values.coordinates ? {
-        latitude: values.coordinates.latitude as number,
-        longitude: values.coordinates.longitude as number
+      const projectCoordinates = values.coordinates && 
+        values.coordinates.latitude !== undefined && 
+        values.coordinates.longitude !== undefined ? {
+        latitude: values.coordinates.latitude,
+        longitude: values.coordinates.longitude
       } : undefined;
       
       // Create the new project
@@ -221,7 +223,11 @@ const ProjectCreate = () => {
       navigate('/projects');
     } catch (error) {
       console.error('Error creating project:', error);
-      // Toast notification is already handled in the createProject function
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le projet. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
