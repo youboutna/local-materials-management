@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProjectMap from '@/components/ProjectMap';
+import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,6 +24,8 @@ interface Material {
   price_per_unit: number;
   available_quantity: number;
   origin_location: string | null;
+  coordinates_latitude: number | null;
+  coordinates_longitude: number | null;
   image: string | null;
   created_at: string;
   updated_at: string;
@@ -101,6 +102,20 @@ const Materials = () => {
           return a.name.localeCompare(b.name);
       }
     });
+
+  // Convert materials to map locations
+  const materialLocations: MapLocation[] = useMemo(() => {
+    return filteredMaterials
+      .filter(material => material.coordinates_latitude && material.coordinates_longitude)
+      .map(material => ({
+        id: material.id,
+        name: material.name,
+        type: 'material' as const,
+        latitude: material.coordinates_latitude!,
+        longitude: material.coordinates_longitude!,
+        region: material.origin_location || ''
+      }));
+  }, [filteredMaterials]);
 
   // Get unique categories
   const categories = [...new Set(materials.map(m => m.category))];
@@ -217,6 +232,7 @@ const Materials = () => {
             </TabsList>
             
             <TabsContent value="grid" className="mt-6">
+              {/* ... keep existing code (grid view implementation) */}
               {filteredMaterials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMaterials.map((material, index) => (
@@ -313,18 +329,26 @@ const Materials = () => {
             
             <TabsContent value="map" className="mt-6">
               <div className="h-[600px]">
-                <p className="text-center text-adrar-600 mb-4">
-                  Carte des matériaux (fonctionnalité à venir)
-                </p>
-                <div className="bg-white rounded-xl shadow-elegant p-8 text-center h-full flex items-center justify-center">
-                  <div>
-                    <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-adrar-800 mb-2">Carte des matériaux</h3>
-                    <p className="text-adrar-600">
-                      Cette fonctionnalité sera bientôt disponible pour visualiser la distribution géographique des matériaux.
-                    </p>
+                {materialLocations.length > 0 ? (
+                  <ProjectMap
+                    locations={materialLocations}
+                    defaultCenter={[18.079052, -15.965634]} // Nouakchott, Mauritania
+                    defaultZoom={6}
+                    height="600px"
+                    width="100%"
+                    className="rounded-lg shadow-sm"
+                  />
+                ) : (
+                  <div className="bg-white rounded-xl shadow-elegant p-8 text-center h-full flex items-center justify-center">
+                    <div>
+                      <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-adrar-800 mb-2">Aucun matériau géolocalisé</h3>
+                      <p className="text-adrar-600">
+                        Les matériaux avec des coordonnées géographiques s'afficheront ici.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
