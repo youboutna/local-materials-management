@@ -1,6 +1,5 @@
-
-// Set this to true to bypass authentication in development
-export const DEV_MODE = true;
+// Set this to false to enable proper authentication behavior
+export const DEV_MODE = false;
 
 // Mock user for development mode
 export const DEV_USER = {
