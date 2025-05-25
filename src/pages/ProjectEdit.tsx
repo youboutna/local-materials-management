@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -13,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { ArrowLeft, Save, MapPin } from 'lucide-react';
 import { ProjectStatus } from '@/types/project';
+import ProgressIndicator from '@/components/ProgressIndicator';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -20,12 +22,11 @@ const projectSchema = z.object({
   description: z.string().min(10, 'La description doit comporter au moins 10 caractères'),
   location: z.string().min(2, 'La localisation est requise'),
   status: z.enum(['en cours', 'terminé', 'en attente', 'en inspection', 'suspendu', 'annulé'] as const),
-  progress: z.number().min(0).max(100),
+  progress: z.number().min(0, 'La progression ne peut pas être négative').max(100, 'La progression ne peut pas dépasser 100%'),
   budget: z.number().positive('Le budget doit être positif'),
   startDate: z.string(),
   endDate: z.string().optional(),
   teamSize: z.number().int().positive('Le nombre de membres doit être positif'),
-  // Use a more flexible coordinates schema that allows null values
   coordinates: z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional()
@@ -58,6 +59,9 @@ const ProjectEdit = () => {
       coordinates: null
     }
   });
+
+  // Watch progress value for real-time updates
+  const progressValue = form.watch('progress');
 
   // Load project data
   useEffect(() => {
@@ -250,10 +254,26 @@ const ProjectEdit = () => {
                         type="number" 
                         min="0" 
                         max="100" 
+                        step="1"
+                        placeholder="0-100"
                         {...field}
-                        onChange={e => field.onChange(Number(e.target.value))}
+                        onChange={e => {
+                          const value = Math.min(100, Math.max(0, Number(e.target.value)));
+                          field.onChange(value);
+                        }}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Pourcentage d'avancement du projet (0-100%)
+                    </FormDescription>
+                    {progressValue !== undefined && (
+                      <div className="mt-2">
+                        <ProgressIndicator value={progressValue} />
+                        <p className="text-sm text-gray-600 mt-1">
+                          Progression actuelle: {progressValue}%
+                        </p>
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

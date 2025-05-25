@@ -116,15 +116,22 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     );
   }
 
+  // Prepare MapContainer props
+  const mapContainerProps: any = {
+    center: mapCenter,
+    zoom: defaultZoom,
+    style: { height: '100%', width: '100%' },
+    className: "rounded-lg"
+  };
+
+  // Add click handler only if selectable
+  if (selectable) {
+    mapContainerProps.eventHandlers = { click: handleMapClick };
+  }
+
   return (
     <div className={`relative ${className}`} style={{ height, width }}>
-      <MapContainer
-        center={mapCenter}
-        zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
-        className="rounded-lg"
-        {...(selectable && { eventHandlers: { click: handleMapClick } })}
-      >
+      <MapContainer {...mapContainerProps}>
         <TileLayer 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
