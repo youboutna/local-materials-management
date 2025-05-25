@@ -149,13 +149,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     });
   };
 
-  // Handle map click for location selection
-  const handleMapClick = (e: any) => {
-    if (selectable && onLocationSelect) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    }
-  };
-
   if (projectsWithCoordinates.length === 0 && locations.length === 0) {
     return (
       <div className={`bg-gray-100 rounded-lg p-8 text-center ${className}`} style={{ height, width }}>
@@ -172,10 +165,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         
         {/* Render project markers */}
         {projectsWithCoordinates.map((project) => (
