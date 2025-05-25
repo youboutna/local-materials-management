@@ -1,6 +1,8 @@
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import MainNavbar from '@/components/MainNavbar';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
@@ -10,11 +12,12 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Package, FileText, Users, BarChart3 } from 'lucide-react';
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user: authUser, loading } = useAuth();
+  const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
   const navigate = useNavigate();
 
-  // If user is authenticated, you could redirect to dashboard or keep them on home
-  // For now, we'll keep them on the home page but show authenticated content
+  // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
+  const isUserAuthenticated = !!authUser || isAuthenticated;
 
   const features = [
     {
@@ -72,7 +75,7 @@ const Index = () => {
         {/* Hero Section */}
         <Hero />
         
-        {/* About System Section - Editable for authenticated users */}
+        {/* About System Section - Read-only for anonymous users, editable for authenticated users */}
         <AboutEditor />
         
         {/* Features Section */}
@@ -104,11 +107,20 @@ const Index = () => {
                     <p className="text-adrar-600 mb-6 leading-relaxed">
                       {feature.description}
                     </p>
-                    <Button asChild className="w-full">
-                      <Link to={feature.link}>
-                        Découvrir
-                      </Link>
-                    </Button>
+                    {/* Only show action buttons for authenticated users */}
+                    {isUserAuthenticated ? (
+                      <Button asChild className="w-full">
+                        <Link to={feature.link}>
+                          Découvrir
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild className="w-full" variant="outline">
+                        <Link to="/auth">
+                          Se connecter pour accéder
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 );
               })}
@@ -123,13 +135,13 @@ const Index = () => {
               Prêt à commencer ?
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              {user 
+              {isUserAuthenticated 
                 ? "Accédez à votre tableau de bord pour gérer vos projets"
                 : "Rejoignez-nous et transformez votre gestion de construction"
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
+              {isUserAuthenticated ? (
                 <>
                   <Button size="lg" variant="secondary" asChild>
                     <Link to="/dashboard">

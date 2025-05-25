@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { Globe, Database, Cog, ClipboardList } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -19,8 +19,8 @@ import {
 
 const MainNavbar = () => {
   const { language, setLanguage, t } = useLanguage();
-  const { user: authUser } = useAuth();
-  const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+  const { user: authUser, signOut } = useAuth();
+  const { user: keycloakUser, isAuthenticated, logout } = useKeycloakAuth();
 
   // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
   const isUserAuthenticated = !!authUser || isAuthenticated;
@@ -28,6 +28,20 @@ const MainNavbar = () => {
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
       setLanguage(newLanguage);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      // Try both logout methods
+      if (authUser) {
+        await signOut();
+      }
+      if (keycloakUser || isAuthenticated) {
+        logout();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
@@ -131,15 +145,26 @@ const MainNavbar = () => {
           
           {/* Show different buttons based on authentication status */}
           {isUserAuthenticated ? (
-            <Button 
-              variant="secondary"
-              size="sm"
-              asChild
-            >
-              <Link to="/dashboard">
-                Dashboard
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="secondary"
+                size="sm"
+                asChild
+              >
+                <Link to="/dashboard">
+                  Dashboard
+                </Link>
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleDisconnect}
+                className="text-white border-white hover:bg-white hover:text-adrar-700"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
+              </Button>
+            </div>
           ) : (
             <Button 
               variant="secondary"
