@@ -176,7 +176,6 @@ const ProjectMap = ({
         center={mapCenter}
         zoom={mapZoom}
         style={{ height: '100%', width: '100%' }}
-        key={`${mapCenter[0]}-${mapCenter[1]}-${mapZoom}`}
       >
         <MapInitializer 
           selectable={selectable} 
