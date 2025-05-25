@@ -12,9 +12,10 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { ArrowLeft, Save, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, RefreshCw } from 'lucide-react';
 import { ProjectStatus } from '@/types/project';
 import ProgressIndicator from '@/components/ProgressIndicator';
+import { supabase } from '@/integrations/supabase/client';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -41,6 +42,7 @@ const ProjectEdit = () => {
   const { getProject, updateProject } = useProjects();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingInspection, setLoadingInspection] = useState(false);
   const navigate = useNavigate();
 
   // Set up form with validation
@@ -106,6 +108,50 @@ const ProjectEdit = () => {
     
     fetchProject();
   }, [id, getProject, navigate, form]);
+
+  // Function to sync progress with latest inspection
+  const syncProgressWithLatestInspection = async () => {
+    if (!id) return;
+    
+    setLoadingInspection(true);
+    try {
+      const { data: inspections, error } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', id)
+        .order('date', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        throw error;
+      }
+
+      if (inspections && inspections.length > 0) {
+        const latestInspection = inspections[0];
+        form.setValue('progress', latestInspection.progress_at_inspection);
+        
+        toast({
+          title: "Progression mise à jour",
+          description: `Progression définie à ${latestInspection.progress_at_inspection}% selon la dernière inspection`,
+        });
+      } else {
+        toast({
+          title: "Information",
+          description: "Aucune inspection trouvée pour ce projet",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching latest inspection:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer la dernière inspection",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingInspection(false);
+    }
+  };
 
   // Handle form submission
   const onSubmit = async (data: ProjectFormValues) => {
@@ -250,7 +296,24 @@ const ProjectEdit = () => {
                 name="progress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Progression (%)</FormLabel>
+                    <FormLabel className="flex items-center justify-between">
+                      <span>Progression (%)</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={syncProgressWithLatestInspection}
+                        disabled={loadingInspection}
+                        className="text-xs"
+                      >
+                        {loadingInspection ? (
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                        )}
+                        Sync avec inspection
+                      </Button>
+                    </FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -266,7 +329,7 @@ const ProjectEdit = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Pourcentage d'avancement du projet (0-100%)
+                      Pourcentage d'avancement du projet (0-100%). Utilisez le bouton "Sync avec inspection" pour récupérer la progression de la dernière inspection.
                     </FormDescription>
                     {progressValue !== undefined && (
                       <div className="mt-2">
