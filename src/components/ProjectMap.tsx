@@ -1,5 +1,4 @@
 
-
 import { useEffect, useState } from 'react';
 import {
   MapContainer,
@@ -263,4 +262,3 @@ const ProjectMap = ({
 };
 
 export default ProjectMap;
-
