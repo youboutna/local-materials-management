@@ -22,10 +22,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const activeDevRole = getActiveDevRole();
+  
+  // Create a mock session for dev mode
+  const createDevSession = (): Session => ({
+    access_token: 'dev-access-token',
+    refresh_token: 'dev-refresh-token',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
+    user: {
+      ...DEV_USER,
+      user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}
+    } as unknown as User
+  });
+
   const [user, setUser] = useState<User | null>(DEV_MODE ? 
     {...DEV_USER, user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}} as unknown as User 
     : null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(DEV_MODE ? createDevSession() : null);
   const [loading, setLoading] = useState(!DEV_MODE);
   const { toast } = useToast();
 
@@ -33,6 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (DEV_MODE) {
       console.log('🛠️ Development mode active: Authentication is bypassed');
       console.log(`🛠️ Using role: ${activeDevRole.role}`);
+      
+      // Set a mock session for Supabase operations
+      const mockSession = createDevSession();
+      setSession(mockSession);
+      setUser(mockSession.user);
+      
       return;
     }
 

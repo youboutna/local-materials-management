@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { DEV_MODE, DEV_USER } from '@/config/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DocumentUpload = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +26,7 @@ const DocumentUpload = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
+  const { user } = useAuth();
 
   const { data: projects } = useQuery({
     queryKey: ['projects'],
@@ -39,18 +42,9 @@ const DocumentUpload = () => {
 
   const uploadMutation = useMutation({
     mutationFn: async (uploadData: typeof formData & { file?: File }) => {
-      // Get current user - bypass in dev mode
-      let user;
-      if (DEV_MODE) {
-        user = DEV_USER;
-        // In dev mode, also set the auth context for storage operations
-        console.log('Dev mode: bypassing auth for document upload');
-      } else {
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-        if (userError || !authUser) {
-          throw new Error('User must be authenticated to upload documents');
-        }
-        user = authUser;
+      // Get current user - use auth context
+      if (!user) {
+        throw new Error('User must be authenticated to upload documents');
       }
 
       let fileUrl: string | null = null;
