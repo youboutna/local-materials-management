@@ -23,14 +23,6 @@ export default function ProjectsHeader({
         )}
       </div>
       
-      {addButton && (
-        <Link to="/projects/create">
-          <Button className="bg-terracotta-500 hover:bg-terracotta-600">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un projet
-          </Button>
-        </Link>
-      )}
     </div>
   );
 }
