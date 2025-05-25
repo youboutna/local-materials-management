@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, User, Lock, Mail, Phone, ArrowRight, Fingerprint } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+import MainNavbar from '@/components/MainNavbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -278,7 +279,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <MainNavbar />
       
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
