@@ -12,7 +12,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, logout, isDevelopmentMode } = useAuth();
+  const { user, signOut, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/');
   };
 
@@ -44,6 +44,18 @@ const Navbar = () => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Get user display name from user metadata or email
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
+  };
+
+  // Get user avatar URL from user metadata
+  const getUserAvatarUrl = () => {
+    return user?.user_metadata?.avatar_url || '';
   };
 
   return (
@@ -89,17 +101,17 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url || ''} alt={user.full_name || 'User'} />
+                      <AvatarImage src={getUserAvatarUrl()} alt={getUserDisplayName()} />
                       <AvatarFallback className="bg-terracotta-100 text-terracotta-700">
-                        {getInitials(user.full_name || 'User')}
+                        {getInitials(getUserDisplayName())}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex flex-col space-y-1 p-2">
-                    <p className="text-sm font-medium leading-none">{user.full_name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.phone}</p>
+                    <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -180,12 +192,12 @@ const Navbar = () => {
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-2">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar_url || ''} alt={user.full_name || 'User'} />
+                            <AvatarImage src={getUserAvatarUrl()} alt={getUserDisplayName()} />
                             <AvatarFallback className="bg-terracotta-100 text-terracotta-700">
-                              {getInitials(user.full_name || 'User')}
+                              {getInitials(getUserDisplayName())}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium">{user.full_name}</span>
+                          <span className="text-sm font-medium">{getUserDisplayName()}</span>
                         </div>
                         <Button size="sm" variant="outline" onClick={handleLogout}>
                           <LogOut className="h-4 w-4" />

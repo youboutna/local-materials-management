@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Camera, FileBarChart, FileContract, Building2, ClipboardList, Users } from 'lucide-react';
+import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users } from 'lucide-react';
 import DocumentsList from '@/components/documents/DocumentsList';
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import SuppliersManagement from '@/components/documents/SuppliersManagement';
@@ -19,7 +19,7 @@ const Documents = () => {
     { id: 'inspection_report', label: 'Rapports d\'inspection', icon: FileText, color: 'text-blue-600' },
     { id: 'location_photo', label: 'Photos de localisation', icon: Camera, color: 'text-green-600' },
     { id: 'project_report', label: 'Rapports de projet', icon: FileBarChart, color: 'text-purple-600' },
-    { id: 'contract', label: 'Contrats', icon: FileContract, color: 'text-red-600' },
+    { id: 'contract', label: 'Contrats', icon: FileCheck, color: 'text-red-600' },
     { id: 'supplier_info', label: 'Informations fournisseurs', icon: Building2, color: 'text-orange-600' },
     { id: 'task_assignment', label: 'Affectations de tâches', icon: ClipboardList, color: 'text-indigo-600' },
     { id: 'employee_record', label: 'Dossiers employés', icon: Users, color: 'text-teal-600' }

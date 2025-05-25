@@ -61,19 +61,19 @@ const DocumentUpload = () => {
     setUploading(true);
 
     try {
-      let fileUrl = null;
-      let fileName = null;
-      let fileSize = null;
-      let mimeType = null;
+      let fileUrl: string | null = null;
+      let uploadedFileName: string | null = null;
+      let fileSize: number | null = null;
+      let mimeType: string | null = null;
 
       // Upload file if provided
       if (file) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
+        const uniqueFileName = `${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('documents')
-          .upload(fileName, file);
+          .upload(uniqueFileName, file);
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
@@ -87,10 +87,10 @@ const DocumentUpload = () => {
 
         const { data: urlData } = supabase.storage
           .from('documents')
-          .getPublicUrl(fileName);
+          .getPublicUrl(uniqueFileName);
 
         fileUrl = urlData.publicUrl;
-        fileName = file.name;
+        uploadedFileName = file.name;
         fileSize = file.size;
         mimeType = file.type;
       }
@@ -101,11 +101,11 @@ const DocumentUpload = () => {
         .insert({
           title: formData.title,
           description: formData.description,
-          document_type: formData.document_type,
+          document_type: formData.document_type as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record',
           project_id: formData.project_id || null,
-          status: formData.status,
+          status: formData.status as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived',
           file_url: fileUrl,
-          file_name: fileName,
+          file_name: uploadedFileName,
           file_size: fileSize,
           mime_type: mimeType
         });

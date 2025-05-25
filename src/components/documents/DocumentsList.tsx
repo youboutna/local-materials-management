@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Camera, FileBarChart, FileContract, Building2, ClipboardList, Users, Download, Search, Filter } from 'lucide-react';
+import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Document {
@@ -38,11 +38,11 @@ const DocumentsList = () => {
         .order('created_at', { ascending: false });
 
       if (typeFilter !== 'all') {
-        query = query.eq('document_type', typeFilter);
+        query = query.eq('document_type', typeFilter as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record');
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.eq('status', statusFilter as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived');
       }
 
       const { data, error } = await query;
@@ -56,7 +56,7 @@ const DocumentsList = () => {
       inspection_report: FileText,
       location_photo: Camera,
       project_report: FileBarChart,
-      contract: FileContract,
+      contract: FileCheck,
       supplier_info: Building2,
       task_assignment: ClipboardList,
       employee_record: Users
