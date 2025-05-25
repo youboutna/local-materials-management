@@ -502,6 +502,7 @@ const ProjectCreate = () => {
                     <MaterialFormSection 
                       selectedMaterials={selectedMaterials}
                       onChange={handleMaterialsChange}
+                      projectBudget={form.getValues("budget")}
                     />
                     
                     <div className="flex justify-between mt-6">

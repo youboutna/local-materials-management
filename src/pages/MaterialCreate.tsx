@@ -7,7 +7,6 @@ import * as z from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -37,8 +36,8 @@ const formSchema = z.object({
   unit: z.string().min(1, {
     message: "Veuillez sélectionner une unité.",
   }),
-  price_per_unit: z.number().nonnegative().default(0),
-  available_quantity: z.number().nonnegative().default(0),
+  price_per_unit: z.coerce.number().nonnegative().default(0),
+  available_quantity: z.coerce.number().nonnegative().default(0),
   origin_location: z.string().optional(),
   coordinates_latitude: z.number().nullable().optional(),
   coordinates_longitude: z.number().nullable().optional(),
@@ -92,6 +91,7 @@ const MaterialCreate = () => {
       });
 
       if (error) {
+        console.error('Error creating material:', error);
         toast({
           title: "Erreur",
           description: "Erreur lors de la création du matériau.",
@@ -105,6 +105,7 @@ const MaterialCreate = () => {
         navigate('/materials');
       }
     } catch (error) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Erreur inattendue",
         description: "Une erreur inattendue s'est produite.",
@@ -156,7 +157,6 @@ const MaterialCreate = () => {
     return translations[key] || key;
   };
 
-  // Helper function to translate text (t)
   const t = (key: string) => translateLabel(key);
 
   return (
@@ -184,6 +184,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="description"
@@ -191,7 +192,7 @@ const MaterialCreate = () => {
                     <FormItem>
                       <FormLabel>{t('materials.description')}</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <Textarea 
                           placeholder={t('materials.descriptionPlaceholder')}
                           className="resize-none"
                           {...field}
@@ -201,6 +202,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="category"
@@ -224,6 +226,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="unit"
@@ -247,6 +250,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="price_per_unit"
@@ -256,6 +260,8 @@ const MaterialCreate = () => {
                       <FormControl>
                         <Input 
                           type="number" 
+                          step="0.01"
+                          min="0"
                           placeholder={t('materials.pricePerUnitPlaceholder')} 
                           {...field} 
                           onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} 
@@ -265,6 +271,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="available_quantity"
@@ -274,6 +281,8 @@ const MaterialCreate = () => {
                       <FormControl>
                         <Input 
                           type="number" 
+                          step="0.01"
+                          min="0"
                           placeholder={t('materials.availableQuantityPlaceholder')} 
                           {...field} 
                           onChange={e => field.onChange(e.target.value ? Number(e.target.value) : 0)} 
@@ -283,6 +292,7 @@ const MaterialCreate = () => {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="origin_location"
@@ -297,7 +307,6 @@ const MaterialCreate = () => {
                   )}
                 />
 
-                {/* Latitude and Longitude fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -346,9 +355,8 @@ const MaterialCreate = () => {
                   />
                 </div>
 
-                {/* Map integration */}
                 <div className="mb-4">
-                  <Label>{t('materials.selectLocation')}</Label>
+                  <FormLabel>{t('materials.selectLocation')}</FormLabel>
                   <div className="mt-2">
                     <ProjectMap
                       height="300px"
@@ -372,7 +380,7 @@ const MaterialCreate = () => {
                   )}
                 </div>
 
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting} className="w-full">
                   {isSubmitting ? t('common.submitting') : t('common.submit')}
                 </Button>
               </form>
