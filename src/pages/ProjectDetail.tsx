@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Calendar, MapPin, User, Percent, DollarSign } from 'lucide-react';
@@ -11,6 +10,7 @@ import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectMap from '@/components/ProjectMap';
 import { ProjectData } from '@/components/ProjectCard';
+import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -181,8 +181,9 @@ const ProjectDetail = () => {
             </div>
             
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
+                <TabsTrigger value="workflow">Workflow</TabsTrigger>
                 <TabsTrigger value="details">Détails</TabsTrigger>
               </TabsList>
               
@@ -264,6 +265,29 @@ const ProjectDetail = () => {
                     )}
                   </div>
                 </div>
+              </TabsContent>
+              
+              {/* Workflow Tab */}
+              <TabsContent value="workflow" className="mt-6">
+                <WorkflowInspection 
+                  project={project as any} 
+                  onInspectionUpdate={() => {
+                    // Refresh project data when inspection is updated
+                    const fetchProject = async () => {
+                      if (id) {
+                        try {
+                          const projectData = await getProject(id);
+                          if (projectData) {
+                            setProject(projectData);
+                          }
+                        } catch (error) {
+                          console.error("Error refreshing project:", error);
+                        }
+                      }
+                    };
+                    fetchProject();
+                  }}
+                />
               </TabsContent>
               
               {/* Details Tab */}
