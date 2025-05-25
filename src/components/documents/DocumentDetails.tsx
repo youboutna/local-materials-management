@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -114,16 +115,42 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
     }
   };
 
-  const isImage = (mimeType?: string) => {
-    return mimeType?.startsWith('image/') || false;
+  const isImage = (mimeType?: string, fileName?: string) => {
+    // Check MIME type first
+    if (mimeType?.startsWith('image/')) {
+      return true;
+    }
+    
+    // Fallback to file extension if MIME type is not available or reliable
+    if (fileName) {
+      const extension = fileName.toLowerCase().split('.').pop();
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+      return imageExtensions.includes(extension || '');
+    }
+    
+    return false;
   };
 
-  const isPDF = (mimeType?: string) => {
-    return mimeType === 'application/pdf';
+  const isPDF = (mimeType?: string, fileName?: string) => {
+    // Check MIME type first
+    if (mimeType === 'application/pdf') {
+      return true;
+    }
+    
+    // Fallback to file extension
+    if (fileName) {
+      const extension = fileName.toLowerCase().split('.').pop();
+      return extension === 'pdf';
+    }
+    
+    return false;
   };
 
   const canPreview = () => {
-    return document.file_url && (isImage(document.mime_type) || isPDF(document.mime_type));
+    return document.file_url && (
+      isImage(document.mime_type, document.file_name) || 
+      isPDF(document.mime_type, document.file_name)
+    );
   };
 
   const renderDocumentPreview = () => {
@@ -138,7 +165,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
       );
     }
 
-    if (isImage(document.mime_type)) {
+    if (isImage(document.mime_type, document.file_name)) {
       return (
         <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4">
           <img 
@@ -162,7 +189,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
       );
     }
 
-    if (isPDF(document.mime_type)) {
+    if (isPDF(document.mime_type, document.file_name)) {
       return (
         <div className="w-full h-96 bg-gray-50 rounded-lg overflow-hidden">
           <iframe 
