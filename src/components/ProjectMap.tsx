@@ -1,4 +1,5 @@
 
+
 import { useEffect, useState } from 'react';
 import {
   MapContainer,
@@ -149,15 +150,15 @@ const ProjectMap = ({
         style={{ height: '100%', width: '100%' }}
         center={mapCenter}
         zoom={mapZoom}
-        whenCreated={(mapInstance) => {
+        whenReady={(mapInstance) => {
           if (selectable) {
-            mapInstance.on('click', handleMapClick as any);
+            mapInstance.target.on('click', handleMapClick as any);
           }
           if (!interactive) {
-            mapInstance.dragging.disable();
-            mapInstance.touchZoom.disable();
-            mapInstance.doubleClickZoom.disable();
-            mapInstance.scrollWheelZoom.disable();
+            mapInstance.target.dragging.disable();
+            mapInstance.target.touchZoom.disable();
+            mapInstance.target.doubleClickZoom.disable();
+            mapInstance.target.scrollWheelZoom.disable();
           }
         }}
       >
@@ -235,3 +236,4 @@ const ProjectMap = ({
 };
 
 export default ProjectMap;
+
