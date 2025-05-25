@@ -37,20 +37,48 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
 
   const handleInspectionCreated = async () => {
     try {
-      // Update project progress based on the latest inspection
-      if (sortedInspections.length > 0) {
-        const latestInspection = sortedInspections[0];
-        await supabase
+      // Get the latest inspection after creation
+      const { data: latestInspections } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', project.id)
+        .order('date', { ascending: false })
+        .limit(1);
+
+      if (latestInspections && latestInspections.length > 0) {
+        const latestInspection = latestInspections[0];
+        
+        // Update project progress based on inspection progression
+        let newProgress = latestInspection.progress_at_inspection;
+        let newStatus = project.status;
+
+        // Determine new status based on inspection status
+        if (latestInspection.status === 'approved') {
+          newStatus = newProgress >= 100 ? 'terminé' : 'en cours';
+        } else if (latestInspection.status === 'requires_changes') {
+          newStatus = 'en inspection';
+        } else if (latestInspection.status === 'rejected') {
+          newStatus = 'suspendu';
+        } else {
+          newStatus = 'en inspection';
+        }
+
+        // Update project with new progress and status
+        const { error: updateError } = await supabase
           .from('projects')
           .update({ 
-            progress: latestInspection.progress_at_inspection,
-            status: latestInspection.status === 'approved' ? 'en cours' : 'en inspection'
+            progress: newProgress,
+            status: newStatus
           })
           .eq('id', project.id);
 
+        if (updateError) {
+          throw updateError;
+        }
+
         toast({
           title: "Projet mis à jour",
-          description: "La progression du projet a été mise à jour selon l'inspection.",
+          description: `Progression mise à jour à ${newProgress}% selon l'inspection. Statut: ${newStatus}`,
         });
       }
 

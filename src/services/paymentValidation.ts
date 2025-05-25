@@ -33,12 +33,14 @@ export class PaymentValidator {
       };
     }
 
-    // Rule 4: Calculate allowed payment amount based on progress and inspections
+    // Rule 4: Calculate allowed payment amount based on progress and inspections with 10% tolerance
     const allowedAmount = this.calculateAllowedAmount(project);
-    if (amount > allowedAmount) {
+    const toleranceAmount = allowedAmount * 1.10; // 10% tolerance above allowed amount
+    
+    if (amount > toleranceAmount) {
       return {
         valid: false,
-        message: `Le montant demandé (${amount.toLocaleString()}) dépasse le paiement autorisé (${allowedAmount.toLocaleString()}) basé sur le progrès et les inspections du projet`
+        message: `Le montant demandé (${amount.toLocaleString()}) dépasse le paiement autorisé avec tolérance de 10% (${toleranceAmount.toLocaleString()}) basé sur le progrès (${project.progress}%) et les inspections du projet`
       };
     }
     
@@ -55,6 +57,7 @@ export class PaymentValidator {
   }
 
   static calculateAllowedAmount(project: ProjectWithPayments): number {
+    // Base amount calculated from current project progress
     const baseAmount = (project.budget * project.progress) / 100;
     
     // Apply inspection modifiers
@@ -68,6 +71,11 @@ export class PaymentValidator {
     
     // Cannot be negative
     return Math.max(0, remainingModifiedBaseAmount);
+  }
+
+  static getMaxAllowedAmountWithTolerance(project: ProjectWithPayments): number {
+    const baseAllowed = this.calculateAllowedAmount(project);
+    return baseAllowed * 1.10; // 10% tolerance
   }
 
   private static getInspectionModifier(project: ProjectWithPayments): number {

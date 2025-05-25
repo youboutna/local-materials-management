@@ -44,6 +44,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   const [allowedPaymentAmount, setAllowedPaymentAmount] = useState<number>(
     PaymentValidator.calculateAllowedAmount(project)
   );
+  const [maxToleranceAmount, setMaxToleranceAmount] = useState<number>(
+    PaymentValidator.getMaxAllowedAmountWithTolerance(project)
+  );
   
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -70,6 +73,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   const totalPaid = project.payments ? 
     project.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
   const remainingBudget = project.budget - totalPaid;
+  
+  // Calculate progress-based payment info
+  const progressBasedAmount = (project.budget * project.progress) / 100;
+  const progressBasedRemaining = progressBasedAmount - totalPaid;
   
   // Determine payment status
   const paymentStatus = (() => {
@@ -105,16 +112,32 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             <div className="font-medium">{totalPaid.toLocaleString()} MRU</div>
           </div>
           <div className="flex justify-between items-center mt-2">
-            <div className="text-sm text-muted-foreground">Reste à payer</div>
-            <div className="font-bold text-lg">{remainingBudget.toLocaleString()} MRU</div>
+            <div className="text-sm text-muted-foreground">Progression actuelle</div>
+            <div className="font-medium">{project.progress}%</div>
+          </div>
+          <div className="flex justify-between items-center mt-2">
+            <div className="text-sm text-muted-foreground">Montant basé sur progression</div>
+            <div className="font-medium">{progressBasedAmount.toLocaleString()} MRU</div>
+          </div>
+          <div className="flex justify-between items-center mt-2">
+            <div className="text-sm text-muted-foreground">Reste à payer (progression)</div>
+            <div className="font-bold text-lg text-blue-600">{Math.max(0, progressBasedRemaining).toLocaleString()} MRU</div>
           </div>
           
           <div className="mt-3">
             <div className="flex justify-between text-sm">
-              <span>Progression du paiement</span>
+              <span>Progression du paiement vs budget</span>
               <span>{((totalPaid / project.budget) * 100).toFixed(1)}%</span>
             </div>
             <Progress value={(totalPaid / project.budget) * 100} className="h-2 mt-1" />
+          </div>
+          
+          <div className="mt-3">
+            <div className="flex justify-between text-sm">
+              <span>Progression vs paiement attendu</span>
+              <span>{progressBasedAmount > 0 ? ((totalPaid / progressBasedAmount) * 100).toFixed(1) : 0}%</span>
+            </div>
+            <Progress value={progressBasedAmount > 0 ? (totalPaid / progressBasedAmount) * 100 : 0} className="h-2 mt-1" />
           </div>
         </div>
         
@@ -136,6 +159,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             <AlertDescription className="text-amber-700">
               L'inspection a révélé des modifications nécessaires. Le paiement maximal autorisé 
               est de {allowedPaymentAmount.toLocaleString()} MRU (50% du montant basé sur la progression).
+              Avec tolérance de 10%: {maxToleranceAmount.toLocaleString()} MRU
             </AlertDescription>
           </Alert>
         )}
@@ -168,7 +192,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                 />
               </FormControl>
               <FormDescription>
-                Montant maximum autorisé: {allowedPaymentAmount.toLocaleString()} MRU
+                Montant basé sur progression ({project.progress}%): {allowedPaymentAmount.toLocaleString()} MRU
+                <br />
+                Montant maximum autorisé (avec tolérance 10%): {maxToleranceAmount.toLocaleString()} MRU
               </FormDescription>
               <FormMessage />
             </FormItem>
