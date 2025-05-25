@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -19,12 +18,19 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
 import { supabase } from '@/integrations/supabase/client';
 import ProjectMap from '@/components/ProjectMap';
 import { useAuth } from '@/contexts/AuthContext';
-import MainNavbar from '@/components/MainNavbar';
 import Footer from '@/components/Footer';
-import { MapPin } from 'lucide-react';
+import { MapPin, Home, FolderOpen, Package, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -166,7 +172,68 @@ const MaterialCreate = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <MainNavbar />
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4 py-2">
+          <Menubar>
+            <MenubarMenu>
+              <MenubarTrigger asChild>
+                <Link to="/" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Accueil
+                </Link>
+              </MenubarTrigger>
+            </MenubarMenu>
+            
+            <MenubarMenu>
+              <MenubarTrigger className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                Projets
+              </MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem asChild>
+                  <Link to="/projects">Voir tous les projets</Link>
+                </MenubarItem>
+                <MenubarItem asChild>
+                  <Link to="/projects/create">Créer un projet</Link>
+                </MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
+            
+            <MenubarMenu>
+              <MenubarTrigger className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Matériaux
+              </MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem asChild>
+                  <Link to="/materials">Voir tous les matériaux</Link>
+                </MenubarItem>
+                <MenubarItem asChild>
+                  <Link to="/materials/create">Créer un matériau</Link>
+                </MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
+            
+            <MenubarMenu>
+              <MenubarTrigger asChild>
+                <Link to="/dashboard" className="flex items-center gap-2">
+                  Dashboard
+                </Link>
+              </MenubarTrigger>
+            </MenubarMenu>
+            
+            <MenubarMenu>
+              <MenubarTrigger asChild>
+                <Link to="/settings" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Paramètres
+                </Link>
+              </MenubarTrigger>
+            </MenubarMenu>
+          </Menubar>
+        </div>
+      </header>
+
       <div className="container mx-auto py-12 flex-grow">
         <Card className="w-full max-w-4xl mx-auto">
           <CardHeader>
