@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { DEV_MODE, DEV_USER } from '@/config/constants';
 
 const DocumentUpload = () => {
   const [formData, setFormData] = useState({
@@ -38,10 +40,16 @@ const DocumentUpload = () => {
 
   const uploadMutation = useMutation({
     mutationFn: async (uploadData: typeof formData & { file?: File }) => {
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User must be authenticated to upload documents');
+      // Get current user - bypass in dev mode
+      let user;
+      if (DEV_MODE) {
+        user = DEV_USER;
+      } else {
+        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+        if (userError || !authUser) {
+          throw new Error('User must be authenticated to upload documents');
+        }
+        user = authUser;
       }
 
       let fileUrl: string | null = null;
