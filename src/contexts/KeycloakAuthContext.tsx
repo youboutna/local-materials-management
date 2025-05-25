@@ -1,10 +1,11 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { keycloak, initKeycloak, getUserInfo } from '@/integrations/keycloak/keycloak';
 import { useToast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
 
-// Get a unique session identifier for this browser session
+// Get a unique session identifier for this browser session - use same logic as AuthContext
 const getSessionId = () => {
   let sessionId = sessionStorage.getItem('lovable-session-id');
   if (!sessionId) {
@@ -16,7 +17,7 @@ const getSessionId = () => {
   return sessionId;
 };
 
-// Check if this session should be bypassed (anonymous)
+// Check if this session should be bypassed (anonymous) - use same logic as AuthContext
 const shouldBypassAuth = () => {
   const currentSessionId = getSessionId();
   const adminSessionId = localStorage.getItem('admin-session-id');
@@ -63,6 +64,8 @@ const KeycloakAuthContext = createContext<KeycloakAuthContextType | undefined>(u
 
 export function KeycloakAuthProvider({ children }: { children: ReactNode }) {
   const bypassAuth = shouldBypassAuth();
+  
+  console.log('🔧 KeycloakAuthProvider - DEV_MODE:', DEV_MODE, 'bypassAuth:', bypassAuth);
   
   const [user, setUser] = useState<KeycloakUser | null>(null);
   const [loading, setLoading] = useState(!(DEV_MODE || bypassAuth));

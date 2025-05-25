@@ -28,6 +28,8 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
   // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
   const isUserAuthenticated = !!authUser || isAuthenticated;
 
+  console.log('🔍 AboutEditor - authUser:', !!authUser, 'keycloakUser:', !!keycloakUser, 'isAuthenticated:', isAuthenticated, 'final:', isUserAuthenticated);
+
   useEffect(() => {
     // Load saved content from localStorage
     const savedContent = localStorage.getItem('aboutSystemContent');
@@ -66,6 +68,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
               <CardTitle className="text-3xl md:text-4xl font-bold text-adrar-900 flex-1">
                 À Propos du Système
               </CardTitle>
+              {/* Only show edit button for authenticated users */}
               {isUserAuthenticated && !isEditing && (
                 <Button 
                   onClick={handleEdit}
@@ -77,7 +80,8 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                   Modifier
                 </Button>
               )}
-              {isEditing && (
+              {/* Only show save/cancel buttons for authenticated users when editing */}
+              {isUserAuthenticated && isEditing && (
                 <div className="flex gap-2">
                   <Button 
                     onClick={handleSave}
@@ -101,7 +105,8 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
             </div>
           </CardHeader>
           <CardContent>
-            {isEditing ? (
+            {/* Only allow editing for authenticated users */}
+            {isUserAuthenticated && isEditing ? (
               <div className="space-y-4">
                 <Textarea
                   value={editedContent}

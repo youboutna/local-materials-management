@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,6 +61,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const activeDevRole = getActiveDevRole();
   const bypassAuth = shouldBypassAuth();
+  
+  console.log('🔧 AuthProvider - DEV_MODE:', DEV_MODE, 'bypassAuth:', bypassAuth);
   
   // Create a mock session for dev mode
   const createDevSession = (): Session => ({
