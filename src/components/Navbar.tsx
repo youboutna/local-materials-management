@@ -140,6 +140,16 @@ const Navbar = () => {
           </Link>
           
           {isAuthenticated && user ? (
+
+            <Link
+            to="/settings"
+            className="block py-2 text-base text-adrar-600 hover:text-terracotta-500"
+            onClick={() => setIsOpen(false)}
+          >
+            Tableau de bord
+          </Link>
+
+          
             <div className="mt-4 pt-4 border-t border-gray-200">
               <Link
                 to="/profile"
