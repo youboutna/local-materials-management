@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Trash, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from '@/components/ui/progress';
 import type { Database } from '@/integrations/supabase/types';
 
-// Use Supabase types directly
 type Material = Database['public']['Tables']['materials']['Row'];
 
 interface SelectedMaterial {
@@ -40,7 +40,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
       try {
         const { data, error } = await supabase
           .from('materials')
-          .select('id, name, unit, available_quantity, price_per_unit, category')
+          .select('*')
           .order('name');
         
         if (error) throw error;
