@@ -44,7 +44,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           .order('name');
         
         if (error) throw error;
-        setMaterials((data as Material[]) || []);
+        setMaterials((data as unknown as Material[]) || []);
       } catch (error) {
         console.error('Error fetching materials:', error);
         toast({

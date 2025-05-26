@@ -1,5 +1,3 @@
-
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +39,7 @@ const DocumentUpload = () => {
         .select('id, title')
         .order('title');
       if (error) throw error;
-      return (data as Project[]) || [];
+      return (data as unknown as Project[]) || [];
     },
   });
 
@@ -91,7 +89,7 @@ const DocumentUpload = () => {
       }
 
       // Create document record with uploaded_by field
-      const documentInsert: DocumentInsert = {
+      const documentInsert = {
         title: uploadData.title,
         description: uploadData.description,
         document_type: uploadData.document_type as Database['public']['Enums']['document_type'],
@@ -106,7 +104,7 @@ const DocumentUpload = () => {
 
       const { data, error } = await supabase
         .from('documents')
-        .insert(documentInsert)
+        .insert(documentInsert as any)
         .select()
         .single();
 
