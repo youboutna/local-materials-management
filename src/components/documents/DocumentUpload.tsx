@@ -1,4 +1,5 @@
 
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,7 +41,7 @@ const DocumentUpload = () => {
         .select('id, title')
         .order('title');
       if (error) throw error;
-      return data || [];
+      return (data as Project[]) || [];
     },
   });
 

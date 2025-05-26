@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus, Trash, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           .order('name');
         
         if (error) throw error;
-        setMaterials(data || []);
+        setMaterials((data as Material[]) || []);
       } catch (error) {
         console.error('Error fetching materials:', error);
         toast({
