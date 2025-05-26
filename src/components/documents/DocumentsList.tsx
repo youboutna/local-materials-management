@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,20 +12,9 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import DocumentDetails from './DocumentDetails';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Document {
-  id: string;
-  title: string;
-  description: string;
-  document_type: string;
-  status: string;
-  file_url: string;
-  file_name: string;
-  file_size: number;
-  created_at: string;
-  uploaded_by: string;
-  project_id: string;
-}
+type Document = Database['public']['Tables']['documents']['Row'];
 
 const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,16 +34,16 @@ const DocumentsList = () => {
         .order('created_at', { ascending: false });
 
       if (typeFilter !== 'all') {
-        query = query.eq('document_type', typeFilter as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record');
+        query = query.eq('document_type', typeFilter);
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived');
+        query = query.eq('status', statusFilter);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Document[];
+      return data;
     },
   });
 
@@ -81,15 +71,24 @@ const DocumentsList = () => {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleDownload = async (fileUrl: string, fileName: string) => {
+  const handleDownload = async (fileUrl: string | null, fileName: string | null) => {
+    if (!fileUrl || !fileName) {
+      toast({
+        title: "Erreur",
+        description: "Fichier non disponible pour le téléchargement.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const result = await downloadFile(fileUrl, fileName);
       
@@ -204,12 +203,12 @@ const DocumentsList = () => {
                           {document.title}
                         </CardTitle>
                         <p className="text-xs text-gray-500 mt-1">
-                          {new Date(document.created_at).toLocaleDateString('fr-FR')}
+                          {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : ''}
                         </p>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(document.status)}>
-                      {document.status.replace('_', ' ')}
+                    <Badge className={getStatusColor(document.status || 'draft')}>
+                      {document.status?.replace('_', ' ')}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -221,7 +220,7 @@ const DocumentsList = () => {
                   )}
                   
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{document.file_name}</span>
+                    <span>{document.file_name || 'Pas de fichier'}</span>
                     {document.file_size && (
                       <span>{formatFileSize(document.file_size)}</span>
                     )}

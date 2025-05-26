@@ -14,22 +14,9 @@ import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Material {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  origin_location: string | null;
-  coordinates_latitude: number | null;
-  coordinates_longitude: number | null;
-  image: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type Material = Database['public']['Tables']['materials']['Row'];
 
 const Materials = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,7 +34,7 @@ const Materials = () => {
         .order('name');
       
       if (error) throw error;
-      return data as Material[];
+      return data;
     }
   });
 
@@ -94,9 +81,9 @@ const Materials = () => {
     .sort((a, b) => {
       switch (sortOption) {
         case 'price':
-          return a.price_per_unit - b.price_per_unit;
+          return Number(a.price_per_unit) - Number(b.price_per_unit);
         case 'quantity':
-          return b.available_quantity - a.available_quantity;
+          return Number(b.available_quantity) - Number(a.available_quantity);
         case 'name':
         default:
           return a.name.localeCompare(b.name);
@@ -111,8 +98,8 @@ const Materials = () => {
         id: material.id,
         name: material.name,
         type: 'material' as const,
-        latitude: material.coordinates_latitude!,
-        longitude: material.coordinates_longitude!,
+        latitude: Number(material.coordinates_latitude!),
+        longitude: Number(material.coordinates_longitude!),
         region: material.origin_location || ''
       }));
   }, [filteredMaterials]);
@@ -270,14 +257,14 @@ const Materials = () => {
                             <div className="flex justify-between">
                               <span>Prix unitaire:</span>
                               <span className="font-medium">
-                                {material.price_per_unit.toLocaleString()} MRU/{material.unit}
+                                {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
                               </span>
                             </div>
                             
                             <div className="flex justify-between">
                               <span>Disponible:</span>
                               <span className="font-medium">
-                                {material.available_quantity} {material.unit}
+                                {Number(material.available_quantity)} {material.unit}
                               </span>
                             </div>
                             

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Trash, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,16 +13,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from '@/components/ui/progress';
+import type { Database } from '@/integrations/supabase/types';
 
-// Define types for our component
-interface Material {
-  id: string;
-  name: string;
-  unit: string;
-  available_quantity: number;
-  price_per_unit: number;
-  category: string;
-}
+// Use Supabase types directly
+type Material = Database['public']['Tables']['materials']['Row'];
 
 interface SelectedMaterial {
   materialId: string;
@@ -73,7 +66,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     selectedMaterials.forEach(selected => {
       const material = materials.find(m => m.id === selected.materialId);
       if (material) {
-        cost += material.price_per_unit * selected.quantity;
+        cost += Number(material.price_per_unit) * selected.quantity;
       }
     });
     setTotalCost(cost);
@@ -151,7 +144,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
         <div className="space-y-3">
           {selectedMaterials.map((selected, index) => {
             const material = getMaterialDetails(selected.materialId);
-            const itemCost = material ? material.price_per_unit * selected.quantity : 0;
+            const itemCost = material ? Number(material.price_per_unit) * selected.quantity : 0;
             
             return (
               <div key={index} className="p-3 border rounded-md bg-gray-50">
@@ -217,10 +210,10 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                       {material.category}
                     </Badge>
                     <Badge variant="outline" className="bg-amber-50">
-                      Prix: {material.price_per_unit.toLocaleString()} MRU/{material.unit}
+                      Prix: {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
                     </Badge>
                     <Badge variant="outline" className="bg-green-50">
-                      Stock: {material.available_quantity} {material.unit}
+                      Stock: {Number(material.available_quantity)} {material.unit}
                     </Badge>
                     <Badge className="ml-auto bg-terracotta-100 text-terracotta-700 hover:bg-terracotta-200">
                       Total: {itemCost.toLocaleString()} MRU

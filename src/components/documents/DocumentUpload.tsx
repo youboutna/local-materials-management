@@ -13,6 +13,10 @@ import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { DEV_MODE, DEV_USER } from '@/config/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
+
+type DocumentInsert = Database['public']['Tables']['documents']['Insert'];
+type Project = Database['public']['Tables']['projects']['Row'];
 
 const DocumentUpload = () => {
   const [formData, setFormData] = useState({
@@ -20,7 +24,7 @@ const DocumentUpload = () => {
     description: '',
     document_type: '',
     project_id: '',
-    status: 'draft'
+    status: 'draft' as const
   });
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -36,7 +40,7 @@ const DocumentUpload = () => {
         .select('id, title')
         .order('title');
       if (error) throw error;
-      return data;
+      return data as Project[];
     },
   });
 
@@ -86,20 +90,22 @@ const DocumentUpload = () => {
       }
 
       // Create document record with uploaded_by field
+      const documentInsert: DocumentInsert = {
+        title: uploadData.title,
+        description: uploadData.description,
+        document_type: uploadData.document_type as Database['public']['Enums']['document_type'],
+        project_id: uploadData.project_id || null,
+        status: uploadData.status as Database['public']['Enums']['document_status'],
+        file_url: fileUrl,
+        file_name: uploadedFileName,
+        file_size: fileSize,
+        mime_type: mimeType,
+        uploaded_by: user.id // Required for RLS policy compliance
+      };
+
       const { data, error } = await supabase
         .from('documents')
-        .insert({
-          title: uploadData.title,
-          description: uploadData.description,
-          document_type: uploadData.document_type as 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record',
-          project_id: uploadData.project_id || null,
-          status: uploadData.status as 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived',
-          file_url: fileUrl,
-          file_name: uploadedFileName,
-          file_size: fileSize,
-          mime_type: mimeType,
-          uploaded_by: user.id // Required for RLS policy compliance
-        })
+        .insert(documentInsert)
         .select()
         .single();
 
