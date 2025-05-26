@@ -345,13 +345,9 @@ const Auth = () => {
       
       console.log('Calling signInWithGoogle...');
       
-      const result = await signInWithGoogle();
+      await signInWithGoogle();
       
-      console.log('Google sign-in result:', result);
-      
-      if (result?.error) {
-        throw new Error(result.error.message || 'Erreur de connexion Google');
-      }
+      console.log('Google sign-in completed successfully');
       
       // Success case - redirect will happen automatically via auth state change
       toast({
