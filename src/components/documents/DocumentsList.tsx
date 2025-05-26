@@ -27,23 +27,23 @@ const DocumentsList = () => {
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['documents', typeFilter, statusFilter],
-    queryFn: async () => {
+    queryFn: async (): Promise<Document[]> => {
       let query = supabase
         .from('documents')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (typeFilter !== 'all') {
-        query = query.eq('document_type', typeFilter);
+        query = query.eq('document_type', typeFilter as Database['public']['Enums']['document_type']);
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.eq('status', statusFilter as Database['public']['Enums']['document_status']);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -116,7 +116,7 @@ const DocumentsList = () => {
   };
 
   const filteredDocuments = documents?.filter(doc =>
-    doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doc.description?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Trash, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';

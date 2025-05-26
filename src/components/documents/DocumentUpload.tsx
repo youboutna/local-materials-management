@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type DocumentInsert = Database['public']['Tables']['documents']['Insert'];
-type Project = Database['public']['Tables']['projects']['Row'];
+type Project = { id: string; title: string };
 
 const DocumentUpload = () => {
   const [formData, setFormData] = useState({
@@ -33,13 +34,13 @@ const DocumentUpload = () => {
 
   const { data: projects } = useQuery({
     queryKey: ['projects'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Project[]> => {
       const { data, error } = await supabase
         .from('projects')
         .select('id, title')
         .order('title');
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
