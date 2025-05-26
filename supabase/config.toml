@@ -16,8 +16,19 @@ allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 allowed_headers = ["Authorization", "Content-Type"]
 exposed_headers = ["Content-Range", "X-Total-Count"]
 
-# Update environment to use Lovable project domain
+# Update environment to use Lovable project domain with Google OAuth support
 [auth]
 enable_signup = true
 site_url = "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com"
-additional_redirect_urls = ["https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth/callback", "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth"]
+additional_redirect_urls = [
+  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth/callback", 
+  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth",
+  "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/"
+]
+
+# Google OAuth configuration
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+redirect_uri = "https://huttgbybeuzeikaqfvam.supabase.co/auth/v1/callback"

@@ -93,6 +93,7 @@ const Auth = () => {
   const [mode, setMode] = useState(getInitialMode());
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone' | 'nationalId'>('email');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -325,6 +326,8 @@ const Auth = () => {
   };
 
   const onGoogleSignIn = async () => {
+    console.log('Google sign-in attempt started');
+    
     if (isDevelopmentMode) {
       toast({
         title: "Mode développement",
@@ -337,29 +340,51 @@ const Auth = () => {
     }
 
     try {
-      setLoading(true);
-      await signInWithGoogle();
-      // Redirect happens automatically on success
+      setGoogleLoading(true);
+      setAuthError(null);
+      
+      console.log('Calling signInWithGoogle...');
+      
+      const result = await signInWithGoogle();
+      
+      console.log('Google sign-in result:', result);
+      
+      if (result?.error) {
+        throw new Error(result.error.message || 'Erreur de connexion Google');
+      }
+      
+      // Success case - redirect will happen automatically via auth state change
+      toast({
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté avec Google.",
+      });
+      
     } catch (error: any) {
       console.error("Google sign in error:", error);
       
-      // Show OAuth configuration guide for common errors
-      if (error.message?.includes('403') || error.message?.includes('unauthorized') || error.message?.includes('access_denied')) {
+      let errorMessage = "Impossible de se connecter avec Google.";
+      
+      // Handle specific error cases
+      if (error.message?.includes('popup_closed')) {
+        errorMessage = "La fenêtre de connexion Google a été fermée.";
+      } else if (error.message?.includes('access_denied')) {
+        errorMessage = "Accès refusé. Vous avez annulé la connexion Google.";
+      } else if (error.message?.includes('unauthorized')) {
+        errorMessage = "Configuration Google OAuth incorrecte.";
         setShowOAuthConfig(true);
-        toast({
-          title: "Erreur de configuration OAuth",
-          description: "Veuillez configurer correctement Google OAuth. Voir les instructions ci-dessous.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erreur de connexion Google",
-          description: "Impossible de se connecter avec Google. Vérifiez votre configuration.",
-          variant: "destructive",
-        });
+      } else if (error.message?.includes('network')) {
+        errorMessage = "Erreur de réseau. Vérifiez votre connexion internet.";
       }
+      
+      setAuthError(errorMessage);
+      
+      toast({
+        title: "Erreur de connexion Google",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -622,9 +647,9 @@ const Auth = () => {
                             onClick={onGoogleSignIn}
                             variant="outline"
                             className="w-full"
-                            disabled={loading}
+                            disabled={googleLoading || loading}
                           >
-                            {loading ? (
+                            {googleLoading ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
                             ) : (
                               <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
@@ -646,7 +671,7 @@ const Auth = () => {
                                 />
                               </svg>
                             )}
-                            {loading ? 'Connexion...' : 'Continuer avec Google'}
+                            {googleLoading ? 'Connexion en cours...' : 'Continuer avec Google'}
                           </Button>
                         </CardContent>
                         <CardFooter className="flex flex-col">
@@ -1038,9 +1063,9 @@ const Auth = () => {
                           onClick={onGoogleSignIn}
                           variant="outline"
                           className="w-full"
-                          disabled={loading}
+                          disabled={googleLoading || loading}
                         >
-                          {loading ? (
+                          {googleLoading ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
                           ) : (
                             <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
@@ -1062,7 +1087,7 @@ const Auth = () => {
                               />
                             </svg>
                           )}
-                          {loading ? 'Connexion...' : 'Continuer avec Google'}
+                          {googleLoading ? 'Connexion en cours...' : 'Continuer avec Google'}
                         </Button>
                       </CardContent>
                       <CardFooter className="flex flex-col">
