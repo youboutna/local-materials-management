@@ -16,7 +16,7 @@ allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 allowed_headers = ["Authorization", "Content-Type"]
 exposed_headers = ["Content-Range", "X-Total-Count"]
 
-# Update environment to use Lovable project domain with Google OAuth support
+# Update environment to use correct Lovable project domain with Google OAuth support
 [auth]
 enable_signup = true
 site_url = "https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com"
