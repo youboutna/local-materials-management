@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,18 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardList, Plus, Calendar, User, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { sendTaskAssignmentNotifications } from '@/services/notificationService';
+import { ClipboardList, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type TaskAssignment = Database['public']['Tables']['task_assignments']['Row'];
+type Project = { id: string; title: string };
+type Employee = { id: string; full_name: string; position: string };
 
 const TaskAssignments = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -25,15 +27,15 @@ const TaskAssignments = () => {
     assigned_to: '',
     due_date: '',
     priority: 'medium',
-    status: 'pending'
+    status: 'pending',
+    notes: ''
   });
-
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ['task-assignments'],
-    queryFn: async () => {
+    queryKey: ['task_assignments'],
+    queryFn: async (): Promise<TaskAssignment[]> => {
       const { data, error } = await supabase
         .from('task_assignments')
         .select('*')
@@ -44,96 +46,138 @@ const TaskAssignments = () => {
   });
 
   const { data: projects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
+    queryKey: ['projects_for_tasks'],
+    queryFn: async (): Promise<Project[]> => {
       const { data, error } = await supabase
         .from('projects')
         .select('id, title')
         .order('title');
       if (error) throw error;
-      return data;
+      return (data as unknown as Project[]) || [];
     },
   });
 
   const { data: employees } = useQuery({
-    queryKey: ['employees'],
-    queryFn: async () => {
+    queryKey: ['employees_for_tasks'],
+    queryFn: async (): Promise<Employee[]> => {
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
-        .eq('is_active', true as any)
+        .eq('is_active', true)
         .order('full_name');
       if (error) throw error;
-      return data;
+      return (data as unknown as Employee[]) || [];
     },
   });
 
-  const createTaskMutation = useMutation({
-    mutationFn: async (newTask: typeof formData) => {
+  // Sample data creation mutation
+  const createSampleData = useMutation({
+    mutationFn: async () => {
+      const sampleTasks = [
+        {
+          title: 'Installation électrique',
+          description: 'Installation du système électrique principal',
+          project_id: 'sample-project-1',
+          assigned_to: 'sample-employee-1',
+          due_date: '2024-02-15',
+          priority: 'high',
+          status: 'pending'
+        },
+        {
+          title: 'Inspection finale',
+          description: 'Inspection finale du projet avant livraison',
+          project_id: 'sample-project-2',
+          assigned_to: 'sample-employee-2',
+          due_date: '2024-02-20',
+          priority: 'medium',
+          status: 'in_progress'
+        }
+      ];
+
       const { data, error } = await supabase
         .from('task_assignments')
-        .insert([newTask as any])
-        .select()
-        .single();
+        .insert(sampleTasks as any)
+        .select();
       if (error) throw error;
       return data;
     },
-    onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
-      
-      // Send notifications
-      try {
-        await sendTaskAssignmentNotifications({
-          id: (data as TaskAssignment).id,
-          title: (data as TaskAssignment).title,
-          assigned_to: (data as TaskAssignment).assigned_to || '',
-          assigned_by: (data as TaskAssignment).assigned_by || '',
-          project_id: (data as TaskAssignment).project_id || undefined
-        });
-        
-        toast({ 
-          title: "Succès", 
-          description: "Tâche créée avec succès et notifications envoyées." 
-        });
-      } catch (notificationError) {
-        console.error('Error sending notifications:', notificationError);
-        toast({ 
-          title: "Succès", 
-          description: "Tâche créée avec succès. Erreur lors de l'envoi des notifications." 
-        });
-      }
-      
-      resetForm();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+      toast({ title: "Succès", description: "Données d'exemple créées avec succès." });
     },
-    onError: (error) => {
-      console.error('Error creating task:', error);
-      toast({ title: "Erreur", description: "Impossible de créer la tâche.", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
-  const updateTaskStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const updates: any = { status };
-      if (status === 'completed') {
-        updates.completion_date = new Date().toISOString();
-      }
-      
+  const createMutation = useMutation({
+    mutationFn: async (taskData: typeof formData) => {
       const { data, error } = await supabase
         .from('task_assignments')
-        .update(updates)
-        .eq('id', id as any)
+        .insert(taskData as any)
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
-      toast({ title: "Succès", description: "Statut de la tâche mis à jour." });
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+      toast({ title: "Succès", description: "Tâche créée avec succès." });
+      resetForm();
     },
-    onError: (error) => {
-      console.error('Error updating task status:', error);
-      toast({ title: "Erreur", description: "Impossible de mettre à jour le statut.", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
+      const { error } = await supabase
+        .from('task_assignments')
+        .update(data as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+      toast({ title: "Succès", description: "Tâche mise à jour avec succès." });
+      resetForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('task_assignments')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+      toast({ title: "Succès", description: "Tâche supprimée avec succès." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -145,61 +189,72 @@ const TaskAssignments = () => {
       assigned_to: '',
       due_date: '',
       priority: 'medium',
-      status: 'pending'
+      status: 'pending',
+      notes: ''
     });
-    setIsDialogOpen(false);
+    setIsCreating(false);
+    setEditingId(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.title || !formData.assigned_to) {
-      toast({
-        title: "Erreur",
-        description: "Le titre et l'assignation sont obligatoires.",
-        variant: "destructive"
-      });
-      return;
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: formData });
+    } else {
+      createMutation.mutate(formData);
     }
-
-    createTaskMutation.mutate(formData);
   };
 
-  const getPriorityColor = (priority: string | null) => {
-    const colors = {
-      low: 'bg-green-100 text-green-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800'
-    };
-    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const handleEdit = (task: TaskAssignment) => {
+    setFormData({
+      title: task.title || '',
+      description: task.description || '',
+      project_id: task.project_id || '',
+      assigned_to: task.assigned_to || '',
+      due_date: task.due_date || '',
+      priority: task.priority || 'medium',
+      status: task.status || 'pending',
+      notes: task.notes || ''
+    });
+    setEditingId(task.id);
+    setIsCreating(true);
   };
 
-  const getStatusIcon = (status: string | null) => {
-    const icons = {
-      pending: Clock,
-      in_progress: AlertTriangle,
-      completed: CheckCircle,
-      cancelled: XCircle
-    };
-    return icons[status as keyof typeof icons] || Clock;
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const getStatusColor = (status: string | null) => {
-    const colors = {
-      pending: 'bg-gray-100 text-gray-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'in_progress': return 'bg-orange-100 text-orange-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getProjectTitle = (projectId: string | null) => {
+    if (!projectId) return 'N/A';
+    const project = projects?.find(p => p.id === projectId);
+    return project?.title || projectId;
+  };
+
+  const getEmployeeName = (employeeId: string | null) => {
+    if (!employeeId) return 'Non assigné';
+    const employee = employees?.find(e => e.id === employeeId);
+    return employee ? `${employee.full_name} (${employee.position})` : employeeId;
   };
 
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-adrar-600">Chargement des tâches...</p>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -207,47 +262,45 @@ const TaskAssignments = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-adrar-900">Affectations de Tâches</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Créer une Tâche
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Créer une Nouvelle Tâche</DialogTitle>
-            </DialogHeader>
+        <h2 className="text-2xl font-bold">Affectations de Tâches</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => createSampleData.mutate()}>
+            Créer des données d'exemple
+          </Button>
+          <Button onClick={() => setIsCreating(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Tâche
+          </Button>
+        </div>
+      </div>
+
+      {isCreating && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {editingId ? 'Modifier la Tâche' : 'Nouvelle Tâche'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titre *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Titre de la tâche"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Description détaillée de la tâche"
-                  rows={3}
-                />
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="project_id">Projet</Label>
-                  <Select value={formData.project_id} onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}>
+                <div>
+                  <Label htmlFor="title">Titre *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="project">Projet</Label>
+                  <Select
+                    value={formData.project_id}
+                    onValueChange={(value) => setFormData({ ...formData, project_id: value })}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un projet" />
+                      <SelectValue placeholder="Sélectionner un projet" />
                     </SelectTrigger>
                     <SelectContent>
                       {projects?.map((project) => (
@@ -258,12 +311,14 @@ const TaskAssignments = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="assigned_to">Assigné à *</Label>
-                  <Select value={formData.assigned_to} onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}>
+                <div>
+                  <Label htmlFor="assigned_to">Assigné à</Label>
+                  <Select
+                    value={formData.assigned_to}
+                    onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un employé" />
+                      <SelectValue placeholder="Sélectionner un employé" />
                     </SelectTrigger>
                     <SelectContent>
                       {employees?.map((employee) => (
@@ -274,22 +329,21 @@ const TaskAssignments = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="due_date">Date d'échéance</Label>
                   <Input
                     id="due_date"
                     type="date"
                     value={formData.due_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   />
                 </div>
-
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="priority">Priorité</Label>
-                  <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -297,14 +351,15 @@ const TaskAssignments = () => {
                       <SelectItem value="low">Faible</SelectItem>
                       <SelectItem value="medium">Moyenne</SelectItem>
                       <SelectItem value="high">Élevée</SelectItem>
-                      <SelectItem value="urgent">Urgente</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -312,105 +367,131 @@ const TaskAssignments = () => {
                       <SelectItem value="pending">En attente</SelectItem>
                       <SelectItem value="in_progress">En cours</SelectItem>
                       <SelectItem value="completed">Terminé</SelectItem>
+                      <SelectItem value="cancelled">Annulé</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+              
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex space-x-2">
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {editingId ? 'Mettre à jour' : 'Créer'}
+                </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Annuler
                 </Button>
-                <Button type="submit">
-                  Créer la Tâche
-                </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+          </CardContent>
+        </Card>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tasks?.map((task) => {
-          const StatusIcon = getStatusIcon(task.status);
-          return (
-            <Card key={task.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <ClipboardList className="h-6 w-6 text-terracotta-600" />
-                    <div>
-                      <CardTitle className="text-lg font-semibold text-adrar-800 line-clamp-1">
-                        {task.title}
-                      </CardTitle>
-                      <p className="text-sm text-gray-600">
-                        {new Date(task.created_at).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col space-y-2">
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority || 'medium'}
-                    </Badge>
-                    <Badge className={getStatusColor(task.status)}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {task.status?.replace('_', ' ') || 'pending'}
-                    </Badge>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {tasks?.map((task) => (
+          <Card key={task.id}>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5 text-blue-500" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{task.title}</h3>
+                    <p className="text-sm text-gray-500 truncate">
+                      {getProjectTitle(task.project_id)}
+                    </p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {task.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {task.description}
-                  </p>
-                )}
-
-                <div className="space-y-2 text-sm">
-                  {task.due_date && (
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <User className="h-4 w-4" />
-                    <span>Assigné à: {task.assigned_to || 'Non assigné'}</span>
-                  </div>
+                <div className="flex flex-col space-y-1">
+                  <Badge className={getPriorityColor(task.priority || 'medium')}>
+                    {task.priority === 'high' ? 'Élevée' : task.priority === 'medium' ? 'Moyenne' : 'Faible'}
+                  </Badge>
+                  <Badge className={getStatusColor(task.status || 'pending')}>
+                    {task.status === 'pending' ? 'En attente' : 
+                     task.status === 'in_progress' ? 'En cours' :
+                     task.status === 'completed' ? 'Terminé' : 'Annulé'}
+                  </Badge>
                 </div>
-
-                {task.status !== 'completed' && task.status !== 'cancelled' && (
-                  <div className="flex space-x-2 pt-2">
-                    <Select
-                      value={task.status || 'pending'}
-                      onValueChange={(value) => updateTaskStatusMutation.mutate({ id: task.id, status: value })}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="completed">Terminé</SelectItem>
-                        <SelectItem value="cancelled">Annulé</SelectItem>
-                      </SelectContent>
-                    </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {task.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {task.description}
+                </p>
+              )}
+              
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <User className="h-4 w-4" />
+                  <span>{getEmployeeName(task.assigned_to)}</span>
+                </div>
+                {task.due_date && (
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                <div className="text-xs text-gray-500">
+                  Créé: {new Date(task.created_at || '').toLocaleDateString('fr-FR')}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEdit(task)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700"
+                  onClick={() => deleteMutation.mutate(task.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {tasks?.length === 0 && (
-        <div className="text-center py-12">
-          <ClipboardList className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune tâche</h3>
-          <p className="text-gray-500 mb-4">
-            Commencez par créer votre première tâche.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="text-center py-8">
+            <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucune tâche trouvée</p>
+            <Button
+              className="mt-4"
+              onClick={() => createSampleData.mutate()}
+              disabled={createSampleData.isPending}
+            >
+              Créer des données d'exemple
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

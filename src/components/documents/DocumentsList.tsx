@@ -34,11 +34,11 @@ const DocumentsList = () => {
       }
 
       if (filterType !== 'all') {
-        query = query.eq('document_type', filterType);
+        query = query.eq('document_type', filterType as DocumentType);
       }
 
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus);
+        query = query.eq('status', filterStatus as DocumentStatus);
       }
 
       const { data, error } = await query;
