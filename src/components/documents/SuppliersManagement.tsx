@@ -5,30 +5,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Edit2, Star, Phone, Mail, MapPin } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Search, Star } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Supplier {
-  id: string;
-  name: string;
-  contact_person: string;
-  email: string;
-  phone: string;
-  address: string;
-  category: string;
-  rating: number;
-  is_active: boolean;
-  created_at: string;
-}
+type Supplier = Database['public']['Tables']['suppliers']['Row'];
 
 const SuppliersManagement = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -36,29 +28,49 @@ const SuppliersManagement = () => {
     phone: '',
     address: '',
     category: '',
-    rating: 5
+    rating: 5,
+    is_active: true
   });
 
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers'],
+    queryKey: ['suppliers', searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('suppliers')
         .select('*')
         .order('name');
+
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data as Supplier[];
+      return (data as unknown as Supplier[]) || [];
     },
   });
 
-  const createSupplierMutation = useMutation({
-    mutationFn: async (newSupplier: typeof formData) => {
+  const seedSuppliers = async () => {
+    const sampleSuppliers = [
+      { name: 'Matériaux Sahel', contact_person: 'Ahmed Ould Mohamed', email: 'contact@materiaux-sahel.mr', phone: '+222 45 67 89 01', address: 'Nouakchott, Mauritanie', category: 'Construction', rating: 4 },
+      { name: 'Électronique Moderne', contact_person: 'Fatima Mint Ali', email: 'info@electronique-moderne.mr', phone: '+222 45 67 89 02', address: 'Nouakchott, Mauritanie', category: 'Électronique', rating: 5 },
+      { name: 'Fournitures Générales', contact_person: 'Mohamed Ould Brahim', email: 'contact@fournitures-gen.mr', phone: '+222 45 67 89 03', address: 'Nouakchott, Mauritanie', category: 'Fournitures', rating: 3 }
+    ];
+
+    const { data, error } = await supabase
+      .from('suppliers')
+      .insert(sampleSuppliers as any)
+      .select();
+
+    if (error) throw error;
+    return data;
+  };
+
+  const createMutation = useMutation({
+    mutationFn: async (supplierData: typeof formData) => {
       const { data, error } = await supabase
         .from('suppliers')
-        .insert([newSupplier])
+        .insert(supplierData as any)
         .select()
         .single();
       if (error) throw error;
@@ -66,34 +78,52 @@ const SuppliersManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur créé avec succès." });
+      toast({ title: "Fournisseur créé avec succès" });
+      setShowCreateDialog(false);
       resetForm();
     },
     onError: (error) => {
-      console.error('Error creating supplier:', error);
-      toast({ title: "Erreur", description: "Impossible de créer le fournisseur.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     }
   });
 
-  const updateSupplierMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: typeof formData }) => {
-      const { data, error } = await supabase
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
         .from('suppliers')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+        .delete()
+        .eq('id', id);
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur mis à jour avec succès." });
-      resetForm();
+      toast({ title: "Fournisseur supprimé avec succès" });
     },
     onError: (error) => {
-      console.error('Error updating supplier:', error);
-      toast({ title: "Erreur", description: "Impossible de mettre à jour le fournisseur.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const seedMutation = useMutation({
+    mutationFn: seedSuppliers,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast({ title: "Données d'exemple ajoutées avec succès" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erreur",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -105,13 +135,19 @@ const SuppliersManagement = () => {
       phone: '',
       address: '',
       category: '',
-      rating: 5
+      rating: 5,
+      is_active: true
     });
     setEditingSupplier(null);
-    setIsDialogOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
   };
 
   const handleEdit = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
     setFormData({
       name: supplier.name,
       contact_person: supplier.contact_person || '',
@@ -119,29 +155,10 @@ const SuppliersManagement = () => {
       phone: supplier.phone || '',
       address: supplier.address || '',
       category: supplier.category || '',
-      rating: supplier.rating || 5
+      rating: supplier.rating || 5,
+      is_active: supplier.is_active || true
     });
-    setEditingSupplier(supplier);
-    setIsDialogOpen(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name) {
-      toast({
-        title: "Erreur",
-        description: "Le nom du fournisseur est obligatoire.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (editingSupplier) {
-      updateSupplierMutation.mutate({ id: editingSupplier.id, updates: formData });
-    } else {
-      createSupplierMutation.mutate(formData);
-    }
+    setShowCreateDialog(true);
   };
 
   const renderStars = (rating: number) => {
@@ -154,205 +171,198 @@ const SuppliersManagement = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-adrar-600">Chargement des fournisseurs...</p>
-      </div>
-    );
+    return <div className="flex justify-center py-4">Chargement...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-adrar-900">Gestion des Fournisseurs</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un Fournisseur
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingSupplier ? 'Modifier le Fournisseur' : 'Ajouter un Fournisseur'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nom *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Nom du fournisseur"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact_person">Personne de contact</Label>
-                  <Input
-                    id="contact_person"
-                    value={formData.contact_person}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contact_person: e.target.value }))}
-                    placeholder="Nom du contact"
-                  />
-                </div>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Building2 className="h-5 w-5 mr-2" />
+              Gestion des Fournisseurs
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => seedMutation.mutate()}
+                disabled={seedMutation.isPending}
+              >
+                Ajouter des exemples
+              </Button>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetForm}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouveau Fournisseur
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingSupplier ? 'Modifier le fournisseur' : 'Nouveau fournisseur'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nom *</Label>
+                        <Input
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Personne de contact</Label>
+                        <Input
+                          value={formData.contact_person}
+                          onChange={(e) => setFormData(prev => ({...prev, contact_person: e.target.value}))}
+                        />
+                      </div>
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="email@exemple.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+222 XX XX XX XX"
-                  />
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Téléphone</Label>
+                        <Input
+                          value={formData.phone}
+                          onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                        />
+                      </div>
+                    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">Adresse</Label>
-                <Textarea
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Adresse complète"
-                  rows={2}
-                />
-              </div>
+                    <div className="space-y-2">
+                      <Label>Adresse</Label>
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
+                      />
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Catégorie</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="materiaux">Matériaux</SelectItem>
-                      <SelectItem value="equipement">Équipement</SelectItem>
-                      <SelectItem value="transport">Transport</SelectItem>
-                      <SelectItem value="services">Services</SelectItem>
-                      <SelectItem value="consultation">Consultation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rating">Notation (1-5)</Label>
-                  <Select value={formData.rating.toString()} onValueChange={(value) => setFormData(prev => ({ ...prev, rating: parseInt(value) }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 étoile</SelectItem>
-                      <SelectItem value="2">2 étoiles</SelectItem>
-                      <SelectItem value="3">3 étoiles</SelectItem>
-                      <SelectItem value="4">4 étoiles</SelectItem>
-                      <SelectItem value="5">5 étoiles</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Catégorie</Label>
+                        <Input
+                          value={formData.category}
+                          onChange={(e) => setFormData(prev => ({...prev, category: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Note (1-5)</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={formData.rating}
+                          onChange={(e) => setFormData(prev => ({...prev, rating: Number(e.target.value)}))}
+                        />
+                      </div>
+                    </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  {editingSupplier ? 'Mettre à jour' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                        Annuler
+                      </Button>
+                      <Button type="submit">
+                        {editingSupplier ? 'Modifier' : 'Créer'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Rechercher un fournisseur..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {suppliers?.map((supplier) => (
-          <Card key={supplier.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <Building2 className="h-6 w-6 text-terracotta-600" />
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-adrar-800">
-                      {supplier.name}
-                    </CardTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {suppliers?.map((supplier) => (
+              <Card key={supplier.id} className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h3 className="font-medium">{supplier.name}</h3>
+                      <Badge variant={supplier.is_active ? "default" : "secondary"}>
+                        {supplier.is_active ? "Actif" : "Inactif"}
+                      </Badge>
+                    </div>
+                    
                     {supplier.contact_person && (
-                      <p className="text-sm text-gray-600">{supplier.contact_person}</p>
+                      <p className="text-sm text-gray-600 mb-1">Contact: {supplier.contact_person}</p>
+                    )}
+                    
+                    {supplier.email && (
+                      <p className="text-sm text-gray-600 mb-1">Email: {supplier.email}</p>
+                    )}
+                    
+                    {supplier.phone && (
+                      <p className="text-sm text-gray-600 mb-1">Tel: {supplier.phone}</p>
+                    )}
+                    
+                    {supplier.category && (
+                      <Badge variant="outline" className="mb-2">
+                        {supplier.category}
+                      </Badge>
+                    )}
+                    
+                    {supplier.rating && (
+                      <div className="flex items-center space-x-1">
+                        {renderStars(supplier.rating)}
+                        <span className="text-sm text-gray-500">({supplier.rating}/5)</span>
+                      </div>
                     )}
                   </div>
-                </div>
-                <div className="flex flex-col items-end space-y-2">
-                  <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                    {supplier.is_active ? 'Actif' : 'Inactif'}
-                  </Badge>
-                  <div className="flex items-center space-x-1">
-                    {renderStars(supplier.rating)}
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(supplier)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => deleteMutation.mutate(supplier.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {supplier.category && (
-                <Badge variant="outline">{supplier.category}</Badge>
-              )}
-              
-              <div className="space-y-2 text-sm">
-                {supplier.email && (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Mail className="h-4 w-4" />
-                    <span>{supplier.email}</span>
-                  </div>
-                )}
-                {supplier.phone && (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    <span>{supplier.phone}</span>
-                  </div>
-                )}
-                {supplier.address && (
-                  <div className="flex items-start space-x-2 text-gray-600">
-                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span className="line-clamp-2">{supplier.address}</span>
-                  </div>
-                )}
-              </div>
+              </Card>
+            ))}
+          </div>
 
-              <div className="flex justify-end pt-2">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(supplier)}>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {suppliers?.length === 0 && (
-        <div className="text-center py-12">
-          <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fournisseur</h3>
-          <p className="text-gray-500 mb-4">
-            Commencez par ajouter votre premier fournisseur.
-          </p>
-        </div>
-      )}
+          {suppliers?.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Aucun fournisseur trouvé
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

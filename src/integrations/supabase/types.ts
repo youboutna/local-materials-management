@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      catch_records: {
+        Row: {
+          actual_sale_value: number | null
+          catch_date: string
+          created_at: string | null
+          estimated_value: number | null
+          fish_species: string
+          fishing_zone: string | null
+          id: string
+          mission_id: string | null
+          recorded_by: string | null
+          weight_kg: number
+        }
+        Insert: {
+          actual_sale_value?: number | null
+          catch_date: string
+          created_at?: string | null
+          estimated_value?: number | null
+          fish_species: string
+          fishing_zone?: string | null
+          id?: string
+          mission_id?: string | null
+          recorded_by?: string | null
+          weight_kg: number
+        }
+        Update: {
+          actual_sale_value?: number | null
+          catch_date?: string
+          created_at?: string | null
+          estimated_value?: number | null
+          fish_species?: string
+          fishing_zone?: string | null
+          id?: string
+          mission_id?: string | null
+          recorded_by?: string | null
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catch_records_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catch_records_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claim_medical_acts: {
         Row: {
           claim_id: string
@@ -48,6 +102,64 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "medical_acts"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      consumables_usage: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          id: string
+          item_name: string
+          mission_id: string | null
+          quantity_used: number
+          reason: string | null
+          recorded_by: string | null
+          usage_date: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_name: string
+          mission_id?: string | null
+          quantity_used: number
+          reason?: string | null
+          recorded_by?: string | null
+          usage_date: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_name?: string
+          mission_id?: string | null
+          quantity_used?: number
+          reason?: string | null
+          recorded_by?: string | null
+          usage_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumables_usage_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "supply_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumables_usage_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumables_usage_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -197,6 +309,141 @@ export type Database = {
             columns: ["superior_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fishing_licenses: {
+        Row: {
+          authorized_zones: string[] | null
+          cost_per_mission: number | null
+          created_at: string | null
+          id: string
+          license_number: string
+          owner_id: string | null
+          quota_limit: number | null
+          updated_at: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          authorized_zones?: string[] | null
+          cost_per_mission?: number | null
+          created_at?: string | null
+          id?: string
+          license_number: string
+          owner_id?: string | null
+          quota_limit?: number | null
+          updated_at?: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          authorized_zones?: string[] | null
+          cost_per_mission?: number | null
+          created_at?: string | null
+          id?: string
+          license_number?: string
+          owner_id?: string | null
+          quota_limit?: number | null
+          updated_at?: string | null
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fishing_licenses_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fishing_missions: {
+        Row: {
+          budget: number
+          captain_id: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          fishing_zone: string
+          fuel_consumed: number | null
+          id: string
+          license_id: string
+          planned_duration: number | null
+          progress: number | null
+          start_date: string
+          status: Database["public"]["Enums"]["mission_status"] | null
+          title: string
+          total_catch_value: number | null
+          total_catch_weight: number | null
+          total_expenses: number | null
+          updated_at: string | null
+          vessel_id: string
+        }
+        Insert: {
+          budget: number
+          captain_id: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          fishing_zone: string
+          fuel_consumed?: number | null
+          id?: string
+          license_id: string
+          planned_duration?: number | null
+          progress?: number | null
+          start_date: string
+          status?: Database["public"]["Enums"]["mission_status"] | null
+          title: string
+          total_catch_value?: number | null
+          total_catch_weight?: number | null
+          total_expenses?: number | null
+          updated_at?: string | null
+          vessel_id: string
+        }
+        Update: {
+          budget?: number
+          captain_id?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          fishing_zone?: string
+          fuel_consumed?: number | null
+          id?: string
+          license_id?: string
+          planned_duration?: number | null
+          progress?: number | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["mission_status"] | null
+          title?: string
+          total_catch_value?: number | null
+          total_catch_weight?: number | null
+          total_expenses?: number | null
+          updated_at?: string | null
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fishing_missions_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fishing_missions_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fishing_missions_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
             referencedColumns: ["id"]
           },
         ]
@@ -416,6 +663,147 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_crew: {
+        Row: {
+          created_at: string | null
+          crew_member_id: string | null
+          daily_rate: number | null
+          days_worked: number | null
+          id: string
+          mission_id: string | null
+          profit_share_percentage: number | null
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          crew_member_id?: string | null
+          daily_rate?: number | null
+          days_worked?: number | null
+          id?: string
+          mission_id?: string | null
+          profit_share_percentage?: number | null
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          crew_member_id?: string | null
+          daily_rate?: number | null
+          days_worked?: number | null
+          id?: string
+          mission_id?: string | null
+          profit_share_percentage?: number | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_crew_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_crew_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string
+          expense_date: string
+          id: string
+          mission_id: string | null
+          receipt_url: string | null
+          recorded_by: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description: string
+          expense_date: string
+          id?: string
+          mission_id?: string | null
+          receipt_url?: string | null
+          recorded_by?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          mission_id?: string | null
+          receipt_url?: string | null
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_expenses_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_expenses_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_investments: {
+        Row: {
+          created_at: string | null
+          id: string
+          investment_amount: number
+          investor_id: string | null
+          mission_id: string | null
+          profit_share_percentage: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          investment_amount: number
+          investor_id?: string | null
+          mission_id?: string | null
+          profit_share_percentage: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          investment_amount?: number
+          investor_id?: string | null
+          mission_id?: string | null
+          profit_share_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_investments_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_investments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -582,6 +970,57 @@ export type Database = {
         }
         Relationships: []
       }
+      profit_distributions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          mission_id: string | null
+          paid_at: string | null
+          payment_status: string | null
+          percentage: number | null
+          recipient_id: string | null
+          recipient_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          mission_id?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          percentage?: number | null
+          recipient_id?: string | null
+          recipient_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          mission_id?: string | null
+          paid_at?: string | null
+          payment_status?: string | null
+          percentage?: number | null
+          recipient_id?: string | null
+          recipient_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profit_distributions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profit_distributions_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_materials: {
         Row: {
           created_at: string
@@ -626,15 +1065,22 @@ export type Database = {
       }
       projects: {
         Row: {
+          attribution_date: string | null
           budget: number
+          completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
           created_at: string
           description: string
           end_date: string | null
+          financing_source: string | null
           id: string
+          launch_date: string | null
           location: string
+          market_type: string | null
           progress: number
+          project_order: number | null
+          selection_mode: string | null
           start_date: string
           status: string
           team_size: number
@@ -643,15 +1089,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attribution_date?: string | null
           budget: number
+          completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description: string
           end_date?: string | null
+          financing_source?: string | null
           id?: string
+          launch_date?: string | null
           location: string
+          market_type?: string | null
           progress?: number
+          project_order?: number | null
+          selection_mode?: string | null
           start_date: string
           status: string
           team_size: number
@@ -660,15 +1113,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attribution_date?: string | null
           budget?: number
+          completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description?: string
           end_date?: string | null
+          financing_source?: string | null
           id?: string
+          launch_date?: string | null
           location?: string
+          market_type?: string | null
           progress?: number
+          project_order?: number | null
+          selection_mode?: string | null
           start_date?: string
           status?: string
           team_size?: number
@@ -846,6 +1306,116 @@ export type Database = {
         }
         Relationships: []
       }
+      supply_categories: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+          unit: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+          unit: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+          unit?: string
+        }
+        Relationships: []
+      }
+      supply_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          category_id: string | null
+          completed_at: string | null
+          id: string
+          item_name: string
+          mission_id: string | null
+          notes: string | null
+          quantity_approved: number | null
+          quantity_requested: number
+          receipt_url: string | null
+          requested_at: string | null
+          requested_by: string | null
+          status: Database["public"]["Enums"]["supply_request_status"] | null
+          supplier_name: string | null
+          total_cost: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          completed_at?: string | null
+          id?: string
+          item_name: string
+          mission_id?: string | null
+          notes?: string | null
+          quantity_approved?: number | null
+          quantity_requested: number
+          receipt_url?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["supply_request_status"] | null
+          supplier_name?: string | null
+          total_cost?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category_id?: string | null
+          completed_at?: string | null
+          id?: string
+          item_name?: string
+          mission_id?: string | null
+          notes?: string | null
+          quantity_approved?: number | null
+          quantity_requested?: number
+          receipt_url?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["supply_request_status"] | null
+          supplier_name?: string | null
+          total_cost?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supply_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "supply_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_requests_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supply_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_assignments: {
         Row: {
           assigned_by: string | null
@@ -916,6 +1486,54 @@ export type Database = {
           },
         ]
       }
+      vessels: {
+        Row: {
+          capacity: number
+          coordinates_latitude: number | null
+          coordinates_longitude: number | null
+          created_at: string | null
+          daily_cost: number
+          equipment: Json | null
+          fuel_capacity: number | null
+          id: string
+          insurance_expires_at: string | null
+          name: string
+          registration_number: string
+          status: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          capacity: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string | null
+          daily_cost: number
+          equipment?: Json | null
+          fuel_capacity?: number | null
+          id?: string
+          insurance_expires_at?: string | null
+          name: string
+          registration_number: string
+          status?: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string | null
+          daily_cost?: number
+          equipment?: Json | null
+          fuel_capacity?: number | null
+          id?: string
+          insurance_expires_at?: string | null
+          name?: string
+          registration_number?: string
+          status?: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -941,7 +1559,10 @@ export type Database = {
         | "supplier_info"
         | "task_assignment"
         | "employee_record"
+      mission_status: "planned" | "in_progress" | "completed" | "cancelled"
+      supply_request_status: "pending" | "approved" | "rejected" | "completed"
       user_role: "insurance_company" | "practitioner" | "patient"
+      vessel_status: "active" | "maintenance" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1073,7 +1694,10 @@ export const Constants = {
         "task_assignment",
         "employee_record",
       ],
+      mission_status: ["planned", "in_progress", "completed", "cancelled"],
+      supply_request_status: ["pending", "approved", "rejected", "completed"],
       user_role: ["insurance_company", "practitioner", "patient"],
+      vessel_status: ["active", "maintenance", "inactive"],
     },
   },
 } as const

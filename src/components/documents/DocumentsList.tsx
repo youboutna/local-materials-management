@@ -2,42 +2,42 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Search, Filter } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { FileText, Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import DocumentDetails from './DocumentDetails';
 import type { Database } from '@/integrations/supabase/types';
 
 type Document = Database['public']['Tables']['documents']['Row'];
+type DocumentType = Database['public']['Enums']['document_type'];
+type DocumentStatus = Database['public']['Enums']['document_status'];
 
 const DocumentsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
-  const { downloadFile, downloading } = useDocumentStorage();
 
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['documents', typeFilter, statusFilter],
+  const { data: documents, isLoading, error } = useQuery({
+    queryKey: ['documents', searchTerm, filterType, filterStatus],
     queryFn: async (): Promise<Document[]> => {
       let query = supabase
         .from('documents')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (typeFilter !== 'all') {
-        query = query.eq('document_type', typeFilter as Database['public']['Enums']['document_type']);
+      if (searchTerm) {
+        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
 
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter as Database['public']['Enums']['document_status']);
+      if (filterType !== 'all') {
+        query = query.eq('document_type', filterType as DocumentType);
+      }
+
+      if (filterStatus !== 'all') {
+        query = query.eq('status', filterStatus as DocumentStatus);
       }
 
       const { data, error } = await query;
@@ -46,61 +46,66 @@ const DocumentsList = () => {
     },
   });
 
-  const getDocumentIcon = (type: string) => {
-    const icons = {
-      inspection_report: FileText,
-      location_photo: Camera,
-      project_report: FileBarChart,
-      contract: FileCheck,
-      supplier_info: Building2,
-      task_assignment: ClipboardList,
-      employee_record: Users
+  const getDocumentTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      'inspection_report': 'Rapport d\'inspection',
+      'location_photo': 'Photo de localisation',
+      'project_report': 'Rapport de projet',
+      'contract': 'Contrat',
+      'supplier_info': 'Information fournisseur',
+      'task_assignment': 'Affectation de tâche',
+      'employee_record': 'Dossier employé'
     };
-    return icons[type as keyof typeof icons] || FileText;
+    return types[type] || type;
   };
 
   const getStatusColor = (status: string) => {
-    const colors = {
-      draft: 'bg-gray-100 text-gray-800',
-      pending_review: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-      archived: 'bg-blue-100 text-blue-800'
+    switch (status) {
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'pending_review': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statuses: Record<string, string> = {
+      'draft': 'Brouillon',
+      'pending_review': 'En attente de révision',
+      'approved': 'Approuvé'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return statuses[status] || status;
   };
 
   const formatFileSize = (bytes: number | null) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024;
+    if (!bytes) return 'N/A';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleDownload = async (fileUrl: string | null, fileName: string | null) => {
-    if (!fileUrl || !fileName) {
+  const handleDownload = async (document: Document) => {
+    if (!document.file_url) {
       toast({
         title: "Erreur",
-        description: "Fichier non disponible pour le téléchargement.",
+        description: "Aucun fichier disponible pour ce document.",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      const result = await downloadFile(fileUrl, fileName);
-      
-      if (result.success) {
-        toast({
-          title: "Succès",
-          description: "Fichier téléchargé avec succès.",
-        });
-      } else {
-        throw new Error(result.error || 'Download failed');
-      }
+      const response = await fetch(document.file_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = document.file_name || 'document';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Download error:', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le fichier.",
@@ -109,167 +114,152 @@ const DocumentsList = () => {
     }
   };
 
-  const handleViewDetails = (document: Document) => {
-    setSelectedDocument(document);
-    setDetailsOpen(true);
-  };
-
-  const filteredDocuments = documents?.filter(doc =>
-    doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-adrar-600">Chargement des documents...</p>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-600">
+        Erreur lors du chargement des documents: {(error as Error).message}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
+      {/* Search and Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Filter className="h-5 w-5 mr-2" />
-            Filtres et Recherche
+            <Search className="h-5 w-5 mr-2" />
+            Recherche et Filtres
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Recherche</label>
               <Input
-                placeholder="Rechercher des documents..."
+                placeholder="Rechercher par titre ou description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
               />
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Type de document" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="inspection_report">Rapports d'inspection</SelectItem>
-                <SelectItem value="location_photo">Photos de localisation</SelectItem>
-                <SelectItem value="project_report">Rapports de projet</SelectItem>
-                <SelectItem value="contract">Contrats</SelectItem>
-                <SelectItem value="supplier_info">Informations fournisseurs</SelectItem>
-                <SelectItem value="task_assignment">Affectations de tâches</SelectItem>
-                <SelectItem value="employee_record">Dossiers employés</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="draft">Brouillon</SelectItem>
-                <SelectItem value="pending_review">En attente de révision</SelectItem>
-                <SelectItem value="approved">Approuvé</SelectItem>
-                <SelectItem value="rejected">Rejeté</SelectItem>
-                <SelectItem value="archived">Archivé</SelectItem>
-              </SelectContent>
-            </Select>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type de document</label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les types</SelectItem>
+                  <SelectItem value="inspection_report">Rapport d'inspection</SelectItem>
+                  <SelectItem value="location_photo">Photo de localisation</SelectItem>
+                  <SelectItem value="project_report">Rapport de projet</SelectItem>
+                  <SelectItem value="contract">Contrat</SelectItem>
+                  <SelectItem value="supplier_info">Information fournisseur</SelectItem>
+                  <SelectItem value="task_assignment">Affectation de tâche</SelectItem>
+                  <SelectItem value="employee_record">Dossier employé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Statut</label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="pending_review">En attente de révision</SelectItem>
+                  <SelectItem value="approved">Approuvé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDocuments.map((document, index) => {
-          const IconComponent = getDocumentIcon(document.document_type);
-          return (
-            <motion.div
-              key={document.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <IconComponent className="h-6 w-6 text-terracotta-600" />
-                      <div>
-                        <CardTitle className="text-sm font-semibold text-adrar-800 line-clamp-1">
-                          {document.title}
-                        </CardTitle>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(document.status || 'draft')}>
-                      {document.status?.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {document.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {document.description}
+      {/* Documents List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {documents?.map((document) => (
+          <Card key={document.id} className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-blue-500" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{document.title}</h3>
+                    <p className="text-sm text-gray-500">
+                      {getDocumentTypeLabel(document.document_type)}
                     </p>
-                  )}
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{document.file_name || 'Pas de fichier'}</span>
-                    {document.file_size && (
-                      <span>{formatFileSize(document.file_size)}</span>
-                    )}
                   </div>
+                </div>
+                <Badge className={getStatusColor(document.status || 'draft')}>
+                  {getStatusLabel(document.status || 'draft')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {document.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {document.description}
+                </p>
+              )}
+              
+              <div className="space-y-2 text-xs text-gray-500">
+                {document.file_name && (
+                  <div>Fichier: {document.file_name}</div>
+                )}
+                {document.file_size && (
+                  <div>Taille: {formatFileSize(document.file_size)}</div>
+                )}
+                <div>
+                  Créé: {new Date(document.created_at || '').toLocaleDateString('fr-FR')}
+                </div>
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    {document.file_url && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => handleDownload(document.file_url, document.file_name)}
-                        disabled={downloading}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        {downloading ? 'Téléchargement...' : 'Télécharger'}
-                      </Button>
-                    )}
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="flex-1"
-                      onClick={() => handleViewDetails(document)}
-                    >
-                      Détails
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+              <div className="flex justify-end space-x-2 mt-4">
+                {document.file_url && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownload(document)}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button size="sm" variant="outline">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {filteredDocuments.length === 0 && (
-        <div className="text-center py-12">
-          <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun document trouvé</h3>
-          <p className="text-gray-500">
-            Aucun document ne correspond à vos critères de recherche.
-          </p>
-        </div>
+      {documents?.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Aucun document trouvé</p>
+          </CardContent>
+        </Card>
       )}
-
-      {/* Document Details Dialog */}
-      <DocumentDetails 
-        document={selectedDocument}
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-      />
     </div>
   );
 };

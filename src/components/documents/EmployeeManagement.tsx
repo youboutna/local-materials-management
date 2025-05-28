@@ -1,35 +1,28 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, Edit2, Phone, Mail, Calendar, Building } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Search } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Employee {
-  id: string;
-  employee_id: string;
-  full_name: string;
-  position: string;
-  department: string;
-  phone: string;
-  email: string;
-  hire_date: string;
-  salary: number;
-  is_active: boolean;
-  skills: string[];
-  created_at: string;
-}
+type Employee = Database['public']['Tables']['employees']['Row'];
 
 const EmployeeManagement = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     employee_id: '',
     full_name: '',
@@ -39,30 +32,33 @@ const EmployeeManagement = () => {
     email: '',
     hire_date: '',
     salary: 0,
-    skills: ''
+    skills: [] as string[],
+    is_active: true
   });
 
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   const { data: employees, isLoading } = useQuery({
-    queryKey: ['employees'],
+    queryKey: ['employees', searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('employees')
         .select('*')
         .order('full_name');
+
+      if (searchTerm) {
+        query = query.or(`full_name.ilike.%${searchTerm}%,employee_id.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data as Employee[];
+      return (data as unknown as Employee[]) || [];
     },
   });
 
-  const createEmployeeMutation = useMutation({
-    mutationFn: async (newEmployee: any) => {
-      const skillsArray = newEmployee.skills ? newEmployee.skills.split(',').map((s: string) => s.trim()) : [];
+  const createMutation = useMutation({
+    mutationFn: async (employeeData: typeof formData) => {
       const { data, error } = await supabase
         .from('employees')
-        .insert([{ ...newEmployee, skills: skillsArray }])
+        .insert(employeeData as any)
         .select()
         .single();
       if (error) throw error;
@@ -70,35 +66,37 @@ const EmployeeManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: "Succès", description: "Employé créé avec succès." });
+      toast({ title: "Employé créé avec succès" });
+      setShowCreateDialog(false);
       resetForm();
     },
     onError: (error) => {
-      console.error('Error creating employee:', error);
-      toast({ title: "Erreur", description: "Impossible de créer l'employé.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     }
   });
 
-  const updateEmployeeMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
-      const skillsArray = updates.skills ? updates.skills.split(',').map((s: string) => s.trim()) : [];
-      const { data, error } = await supabase
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
         .from('employees')
-        .update({ ...updates, skills: skillsArray })
-        .eq('id', id)
-        .select()
-        .single();
+        .delete()
+        .eq('id', id as any);
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: "Succès", description: "Employé mis à jour avec succès." });
-      resetForm();
+      toast({ title: "Employé supprimé avec succès" });
     },
     onError: (error) => {
-      console.error('Error updating employee:', error);
-      toast({ title: "Erreur", description: "Impossible de mettre à jour l'employé.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -112,13 +110,19 @@ const EmployeeManagement = () => {
       email: '',
       hire_date: '',
       salary: 0,
-      skills: ''
+      skills: [],
+      is_active: true
     });
     setEditingEmployee(null);
-    setIsDialogOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(formData);
   };
 
   const handleEdit = (employee: Employee) => {
+    setEditingEmployee(employee);
     setFormData({
       employee_id: employee.employee_id,
       full_name: employee.full_name,
@@ -128,275 +132,186 @@ const EmployeeManagement = () => {
       email: employee.email || '',
       hire_date: employee.hire_date || '',
       salary: employee.salary || 0,
-      skills: employee.skills ? employee.skills.join(', ') : ''
+      skills: employee.skills || [],
+      is_active: employee.is_active || true
     });
-    setEditingEmployee(employee);
-    setIsDialogOpen(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.employee_id || !formData.full_name) {
-      toast({
-        title: "Erreur",
-        description: "L'ID employé et le nom complet sont obligatoires.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (editingEmployee) {
-      updateEmployeeMutation.mutate({ id: editingEmployee.id, updates: formData });
-    } else {
-      createEmployeeMutation.mutate(formData);
-    }
+    setShowCreateDialog(true);
   };
 
   if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-adrar-600">Chargement des employés...</p>
-      </div>
-    );
+    return <div className="flex justify-center py-4">Chargement...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-adrar-900">Gestion des Employés</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un Employé
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingEmployee ? 'Modifier l\'Employé' : 'Ajouter un Employé'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employee_id">ID Employé *</Label>
-                  <Input
-                    id="employee_id"
-                    value={formData.employee_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, employee_id: e.target.value }))}
-                    placeholder="EMP001"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Nom Complet *</Label>
-                  <Input
-                    id="full_name"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                    placeholder="Nom complet"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="position">Poste</Label>
-                  <Select value={formData.position} onValueChange={(value) => setFormData(prev => ({ ...prev, position: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un poste" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="director">Directeur</SelectItem>
-                      <SelectItem value="project_manager">Chef de Projet</SelectItem>
-                      <SelectItem value="inspector">Inspecteur</SelectItem>
-                      <SelectItem value="engineer">Ingénieur</SelectItem>
-                      <SelectItem value="supervisor">Superviseur</SelectItem>
-                      <SelectItem value="technician">Technicien</SelectItem>
-                      <SelectItem value="administrator">Administrateur</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Département</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un département" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="management">Direction</SelectItem>
-                      <SelectItem value="projects">Projets</SelectItem>
-                      <SelectItem value="inspection">Inspection</SelectItem>
-                      <SelectItem value="engineering">Ingénierie</SelectItem>
-                      <SelectItem value="administration">Administration</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="email@exemple.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+222 XX XX XX XX"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="hire_date">Date d'embauche</Label>
-                  <Input
-                    id="hire_date"
-                    type="date"
-                    value={formData.hire_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, hire_date: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Salaire (MRU)</Label>
-                  <Input
-                    id="salary"
-                    type="number"
-                    value={formData.salary}
-                    onChange={(e) => setFormData(prev => ({ ...prev, salary: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="skills">Compétences</Label>
-                <Input
-                  id="skills"
-                  value={formData.skills}
-                  onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value }))}
-                  placeholder="Séparées par des virgules: Construction, Supervision, AutoCAD"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Gestion des Employés
+            </div>
+            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvel Employé
                 </Button>
-                <Button type="submit">
-                  {editingEmployee ? 'Mettre à jour' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingEmployee ? 'Modifier l\'employé' : 'Nouvel employé'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>ID Employé *</Label>
+                      <Input
+                        value={formData.employee_id}
+                        onChange={(e) => setFormData(prev => ({...prev, employee_id: e.target.value}))}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Nom complet *</Label>
+                      <Input
+                        value={formData.full_name}
+                        onChange={(e) => setFormData(prev => ({...prev, full_name: e.target.value}))}
+                        required
+                      />
+                    </div>
+                  </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {employees?.map((employee) => (
-          <Card key={employee.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <Users className="h-6 w-6 text-terracotta-600" />
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-adrar-800">
-                      {employee.full_name}
-                    </CardTitle>
-                    <p className="text-sm text-gray-600">{employee.employee_id}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Poste</Label>
+                      <Input
+                        value={formData.position}
+                        onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Département</Label>
+                      <Input
+                        value={formData.department}
+                        onChange={(e) => setFormData(prev => ({...prev, department: e.target.value}))}
+                      />
+                    </div>
                   </div>
-                </div>
-                <Badge variant={employee.is_active ? "default" : "secondary"}>
-                  {employee.is_active ? 'Actif' : 'Inactif'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                {employee.position && (
-                  <Badge variant="outline">{employee.position}</Badge>
-                )}
-                {employee.department && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Building className="h-4 w-4" />
-                    <span>{employee.department}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                {employee.email && (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Mail className="h-4 w-4" />
-                    <span>{employee.email}</span>
-                  </div>
-                )}
-                {employee.phone && (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    <span>{employee.phone}</span>
-                  </div>
-                )}
-                {employee.hire_date && (
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    <span>Embauché le {new Date(employee.hire_date).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                )}
-              </div>
 
-              {employee.skills && employee.skills.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-700">Compétences:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {employee.skills.slice(0, 3).map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {skill}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Téléphone</Label>
+                      <Input
+                        value={formData.phone}
+                        onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date d'embauche</Label>
+                      <Input
+                        type="date"
+                        value={formData.hire_date}
+                        onChange={(e) => setFormData(prev => ({...prev, hire_date: e.target.value}))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Salaire</Label>
+                      <Input
+                        type="number"
+                        value={formData.salary}
+                        onChange={(e) => setFormData(prev => ({...prev, salary: Number(e.target.value)}))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">
+                      {editingEmployee ? 'Modifier' : 'Créer'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Rechercher un employé..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {employees?.map((employee) => (
+              <Card key={employee.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <h3 className="font-medium">{employee.full_name}</h3>
+                        <p className="text-sm text-gray-500">ID: {employee.employee_id}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm">{employee.position}</p>
+                        <p className="text-sm text-gray-500">{employee.department}</p>
+                      </div>
+                      <Badge variant={employee.is_active ? "default" : "secondary"}>
+                        {employee.is_active ? "Actif" : "Inactif"}
                       </Badge>
-                    ))}
-                    {employee.skills.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{employee.skills.length - 3}
-                      </Badge>
-                    )}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => deleteMutation.mutate(employee.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              )}
+              </Card>
+            ))}
+          </div>
 
-              <div className="flex justify-end pt-2">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(employee)}>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {employees?.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun employé</h3>
-          <p className="text-gray-500 mb-4">
-            Commencez par ajouter votre premier employé.
-          </p>
-        </div>
-      )}
+          {employees?.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Aucun employé trouvé
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
