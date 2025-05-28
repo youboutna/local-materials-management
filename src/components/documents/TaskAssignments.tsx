@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,21 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardList, Plus, Calendar, User, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { sendTaskAssignmentNotifications } from '@/services/notificationService';
+import type { Database } from '@/integrations/supabase/types';
 
-interface TaskAssignment {
-  id: string;
-  title: string;
-  description: string | null;
-  project_id: string | null;
-  assigned_to: string | null;
-  assigned_by: string | null;
-  due_date: string | null;
-  priority: string | null;
-  status: string | null;
-  completion_date: string | null;
-  notes: string | null;
-  created_at: string;
-}
+type TaskAssignment = Database['public']['Tables']['task_assignments']['Row'];
 
 const TaskAssignments = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,7 +39,7 @@ const TaskAssignments = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as TaskAssignment[];
+      return (data as unknown as TaskAssignment[]) || [];
     },
   });
 
@@ -74,7 +61,7 @@ const TaskAssignments = () => {
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
-        .eq('is_active', true)
+        .eq('is_active', true as any)
         .order('full_name');
       if (error) throw error;
       return data;
@@ -85,7 +72,7 @@ const TaskAssignments = () => {
     mutationFn: async (newTask: typeof formData) => {
       const { data, error } = await supabase
         .from('task_assignments')
-        .insert([newTask])
+        .insert([newTask as any])
         .select()
         .single();
       if (error) throw error;
@@ -97,11 +84,11 @@ const TaskAssignments = () => {
       // Send notifications
       try {
         await sendTaskAssignmentNotifications({
-          id: data.id,
-          title: data.title,
-          assigned_to: data.assigned_to || '',
-          assigned_by: data.assigned_by || '',
-          project_id: data.project_id || undefined
+          id: (data as TaskAssignment).id,
+          title: (data as TaskAssignment).title,
+          assigned_to: (data as TaskAssignment).assigned_to || '',
+          assigned_by: (data as TaskAssignment).assigned_by || '',
+          project_id: (data as TaskAssignment).project_id || undefined
         });
         
         toast({ 
@@ -134,7 +121,7 @@ const TaskAssignments = () => {
       const { data, error } = await supabase
         .from('task_assignments')
         .update(updates)
-        .eq('id', id)
+        .eq('id', id as any)
         .select()
         .single();
       if (error) throw error;

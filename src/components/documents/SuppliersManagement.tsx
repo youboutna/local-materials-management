@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,7 +45,7 @@ const SuppliersManagement = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as unknown as Supplier[]) || [];
+      return (data as Supplier[]) || [];
     },
   });
 
@@ -96,7 +95,7 @@ const SuppliersManagement = () => {
       const { error } = await supabase
         .from('suppliers')
         .delete()
-        .eq('id', id);
+        .eq('id', id as any);
       if (error) throw error;
     },
     onSuccess: () => {

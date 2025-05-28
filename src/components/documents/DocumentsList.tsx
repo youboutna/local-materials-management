@@ -42,7 +42,7 @@ const DocumentsList = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as unknown as Document[]) || [];
+      return (data as Document[]) || [];
     },
   });
 
@@ -84,8 +84,8 @@ const DocumentsList = () => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleDownload = async (document: Document) => {
-    if (!document.file_url) {
+  const handleDownload = async (doc: Document) => {
+    if (!doc.file_url) {
       toast({
         title: "Erreur",
         description: "Aucun fichier disponible pour ce document.",
@@ -95,16 +95,17 @@ const DocumentsList = () => {
     }
 
     try {
-      const response = await fetch(document.file_url);
+      const response = await fetch(doc.file_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = document.file_name || 'document';
-      document.body.appendChild(a);
+      a.download = doc.file_name || 'document';
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
+      window.document.body.removeChild(a);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -190,49 +191,49 @@ const DocumentsList = () => {
 
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {documents?.map((document) => (
-          <Card key={document.id} className="hover:shadow-md transition-shadow">
+        {documents?.map((doc) => (
+          <Card key={doc.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-blue-500" />
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-medium truncate">{document.title}</h3>
+                    <h3 className="font-medium truncate">{doc.title}</h3>
                     <p className="text-sm text-gray-500">
-                      {getDocumentTypeLabel(document.document_type)}
+                      {getDocumentTypeLabel(doc.document_type)}
                     </p>
                   </div>
                 </div>
-                <Badge className={getStatusColor(document.status || 'draft')}>
-                  {getStatusLabel(document.status || 'draft')}
+                <Badge className={getStatusColor(doc.status || 'draft')}>
+                  {getStatusLabel(doc.status || 'draft')}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
-              {document.description && (
+              {doc.description && (
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {document.description}
+                  {doc.description}
                 </p>
               )}
               
               <div className="space-y-2 text-xs text-gray-500">
-                {document.file_name && (
-                  <div>Fichier: {document.file_name}</div>
+                {doc.file_name && (
+                  <div>Fichier: {doc.file_name}</div>
                 )}
-                {document.file_size && (
-                  <div>Taille: {formatFileSize(document.file_size)}</div>
+                {doc.file_size && (
+                  <div>Taille: {formatFileSize(doc.file_size)}</div>
                 )}
                 <div>
-                  Créé: {new Date(document.created_at || '').toLocaleDateString('fr-FR')}
+                  Créé: {new Date(doc.created_at || '').toLocaleDateString('fr-FR')}
                 </div>
               </div>
 
               <div className="flex justify-end space-x-2 mt-4">
-                {document.file_url && (
+                {doc.file_url && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDownload(document)}
+                    onClick={() => handleDownload(doc)}
                   >
                     <Download className="h-4 w-4" />
                   </Button>
