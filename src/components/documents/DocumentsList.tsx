@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -33,16 +34,16 @@ const DocumentsList = () => {
       }
 
       if (filterType !== 'all') {
-        query = query.eq('document_type', filterType as DocumentType);
+        query = query.eq('document_type', filterType);
       }
 
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus as DocumentStatus);
+        query = query.eq('status', filterStatus);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as Document[]) || [];
+      return (data as unknown as Document[]) || [];
     },
   });
 
@@ -98,14 +99,14 @@ const DocumentsList = () => {
       const response = await fetch(doc.file_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
+      const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
       a.download = doc.file_name || 'document';
-      window.document.body.appendChild(a);
+      document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(a);
+      document.body.removeChild(a);
     } catch (error) {
       toast({
         title: "Erreur",

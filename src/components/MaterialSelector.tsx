@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash, FileText } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,9 +11,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
-import { Progress } from '@/components/ui/progress';
 import type { Database } from '@/integrations/supabase/types';
 
 type Material = Database['public']['Tables']['materials']['Row'];
@@ -33,6 +32,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCost, setTotalCost] = useState(0);
+  const { toast } = useToast();
 
   // Fetch materials from Supabase
   useEffect(() => {
@@ -58,7 +58,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     };
 
     fetchMaterials();
-  }, []);
+  }, [toast]);
 
   // Calculate total cost whenever selected materials change
   useEffect(() => {

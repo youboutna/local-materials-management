@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,11 +11,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { DEV_MODE, DEV_USER } from '@/config/constants';
+import { DEV_MODE } from '@/config/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
-type DocumentInsert = Database['public']['Tables']['documents']['Insert'];
 type Project = { id: string; title: string };
 
 const DocumentUpload = () => {
@@ -92,14 +92,14 @@ const DocumentUpload = () => {
       const documentInsert = {
         title: uploadData.title,
         description: uploadData.description,
-        document_type: uploadData.document_type as Database['public']['Enums']['document_type'],
+        document_type: uploadData.document_type,
         project_id: uploadData.project_id || null,
-        status: uploadData.status as Database['public']['Enums']['document_status'],
+        status: uploadData.status,
         file_url: fileUrl,
         file_name: uploadedFileName,
         file_size: fileSize,
         mime_type: mimeType,
-        uploaded_by: user.id // Required for RLS policy compliance
+        uploaded_by: user.id
       };
 
       const { data, error } = await supabase

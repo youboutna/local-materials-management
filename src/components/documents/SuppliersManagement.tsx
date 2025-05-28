@@ -45,7 +45,7 @@ const SuppliersManagement = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data as Supplier[]) || [];
+      return (data as unknown as Supplier[]) || [];
     },
   });
 
@@ -95,7 +95,7 @@ const SuppliersManagement = () => {
       const { error } = await supabase
         .from('suppliers')
         .delete()
-        .eq('id', id as any);
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
