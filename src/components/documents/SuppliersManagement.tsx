@@ -70,7 +70,7 @@ const SuppliersManagement = () => {
       const { error } = await supabase
         .from('suppliers')
         .update(data as any)
-        .eq('id', id);
+        .eq('id', id as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -347,6 +347,52 @@ const SuppliersManagement = () => {
       )}
     </div>
   );
+
+  function resetForm() {
+    setFormData({
+      name: '',
+      contact_person: '',
+      email: '',
+      phone: '',
+      address: '',
+      category: '',
+      rating: 0
+    });
+    setIsCreating(false);
+    setEditingId(null);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  }
+
+  function handleEdit(supplier: Supplier) {
+    setFormData({
+      name: supplier.name || '',
+      contact_person: supplier.contact_person || '',
+      email: supplier.email || '',
+      phone: supplier.phone || '',
+      address: supplier.address || '',
+      category: supplier.category || '',
+      rating: supplier.rating || 0
+    });
+    setEditingId(supplier.id);
+    setIsCreating(true);
+  }
+
+  function renderStars(rating: number) {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+      />
+    ));
+  }
 };
 
 export default SuppliersManagement;

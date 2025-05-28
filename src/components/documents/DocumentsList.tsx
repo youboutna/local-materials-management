@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,11 +33,11 @@ const DocumentsList = () => {
       }
 
       if (filterType !== 'all') {
-        query = query.eq('document_type', filterType as DocumentType);
+        query = query.eq('document_type', filterType as any);
       }
 
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus as DocumentStatus);
+        query = query.eq('status', filterStatus as any);
       }
 
       const { data, error } = await query;
@@ -99,14 +98,14 @@ const DocumentsList = () => {
       const response = await fetch(doc.file_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
       a.download = doc.file_name || 'document';
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (error) {
       toast({
         title: "Erreur",
