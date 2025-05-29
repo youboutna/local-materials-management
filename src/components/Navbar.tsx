@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -97,6 +98,8 @@ const Navbar = () => {
           {/* Right Side */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSwitcher />
+            
+            {user && <NotificationDropdown />}
             
             {user ? (
               <DropdownMenu>
@@ -189,6 +192,8 @@ const Navbar = () => {
                 <div className="pt-4 pb-2">
                   <div className="flex items-center justify-between px-3">
                     <LanguageSwitcher />
+                    
+                    {user && <NotificationDropdown />}
                     
                     {user ? (
                       <div className="flex items-center space-x-3">

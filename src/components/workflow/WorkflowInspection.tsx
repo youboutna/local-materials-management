@@ -42,7 +42,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       const { data: latestInspections } = await supabase
         .from('inspections')
         .select('*')
-        .eq('project_id', project.id)
+        .eq('project_id' as any, project.id)
         .order('date', { ascending: false })
         .limit(1);
 
@@ -55,15 +55,15 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         const { data: relevantInspections } = await supabase
           .from('inspections')
           .select('*')
-          .eq('project_id', project.id)
-          .in('status', ['approved', 'requires_changes'])
+          .eq('project_id' as any, project.id)
+          .in('status' as any, ['approved', 'requires_changes'])
           .order('date', { ascending: false })
           .limit(1);
 
         // Use progress from the most recent approved or requires_changes inspection
         // If no such inspection exists, keep current project progress
         const newProgress = relevantInspections && relevantInspections.length > 0 
-          ? relevantInspections[0].progress_at_inspection
+          ? (relevantInspections[0] as any).progress_at_inspection
           : project.progress;
         
         let newStatus = project.status;
@@ -71,20 +71,20 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         console.log('Using progress from last approved/requires_changes inspection:', relevantInspections?.[0]?.status, 'with progress:', newProgress);
 
         // Determine new status based on latest inspection status
-        if (latestInspection.status === 'approved') {
+        if ((latestInspection as any).status === 'approved') {
           // If progress reaches 100%, mark project as completed
           if (newProgress >= 100) {
             newStatus = 'terminé';
           } else {
             newStatus = 'en cours';
           }
-        } else if (latestInspection.status === 'requires_changes') {
+        } else if ((latestInspection as any).status === 'requires_changes') {
           // For inspections requiring changes, set status to inspection
           newStatus = 'en inspection';
-        } else if (latestInspection.status === 'rejected') {
+        } else if ((latestInspection as any).status === 'rejected') {
           // For rejected inspections, set status to suspended
           newStatus = 'suspendu';
-        } else if (latestInspection.status === 'pending') {
+        } else if ((latestInspection as any).status === 'pending') {
           // For pending inspections, set status to inspection
           newStatus = 'en inspection';
         }
@@ -93,7 +93,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           newProgress, 
           newStatus, 
           currentProgress: project.progress,
-          latestInspectionStatus: latestInspection.status,
+          latestInspectionStatus: (latestInspection as any).status,
           relevantInspectionFound: relevantInspections && relevantInspections.length > 0
         });
 
@@ -103,8 +103,8 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           .update({ 
             progress: newProgress,
             status: newStatus
-          })
-          .eq('id', project.id);
+          } as any)
+          .eq('id' as any, project.id);
 
         if (updateError) {
           throw updateError;
