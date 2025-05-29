@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,12 +38,14 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
   const handleInspectionCreated = async () => {
     try {
       // Get the latest inspection after creation
-      const { data: latestInspections } = await supabase
+      const { data: latestInspections, error: latestError } = await supabase
         .from('inspections')
         .select('*')
         .eq('project_id' as any, project.id as any)
         .order('date', { ascending: false })
         .limit(1);
+
+      if (latestError) throw latestError;
 
       if (latestInspections && latestInspections.length > 0) {
         const latestInspection = latestInspections[0];
@@ -52,7 +53,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         console.log('Latest inspection:', latestInspection);
         
         // Get the last inspection by date with status 'approved' or 'requires_changes' for progress reference
-        const { data: relevantInspections } = await supabase
+        const { data: relevantInspections, error: relevantError } = await supabase
           .from('inspections')
           .select('*')
           .eq('project_id' as any, project.id as any)
@@ -60,10 +61,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           .order('date', { ascending: false })
           .limit(1);
 
+        if (relevantError) throw relevantError;
+
         // Use progress from the most recent approved or requires_changes inspection
         // If no such inspection exists, keep current project progress
         const newProgress = relevantInspections && relevantInspections.length > 0 
-          ? (relevantInspections[0] as any).progress_at_inspection
+          ? relevantInspections[0].progress_at_inspection
           : project.progress;
         
         let newStatus = project.status;
@@ -71,20 +74,20 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         console.log('Using progress from last approved/requires_changes inspection:', relevantInspections?.[0]?.status, 'with progress:', newProgress);
 
         // Determine new status based on latest inspection status
-        if ((latestInspection as any).status === 'approved') {
+        if (latestInspection.status === 'approved') {
           // If progress reaches 100%, mark project as completed
           if (newProgress >= 100) {
             newStatus = 'terminé';
           } else {
             newStatus = 'en cours';
           }
-        } else if ((latestInspection as any).status === 'requires_changes') {
+        } else if (latestInspection.status === 'requires_changes') {
           // For inspections requiring changes, set status to inspection
           newStatus = 'en inspection';
-        } else if ((latestInspection as any).status === 'rejected') {
+        } else if (latestInspection.status === 'rejected') {
           // For rejected inspections, set status to suspended
           newStatus = 'suspendu';
-        } else if ((latestInspection as any).status === 'pending') {
+        } else if (latestInspection.status === 'pending') {
           // For pending inspections, set status to inspection
           newStatus = 'en inspection';
         }
@@ -93,7 +96,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
           newProgress, 
           newStatus, 
           currentProgress: project.progress,
-          latestInspectionStatus: (latestInspection as any).status,
+          latestInspectionStatus: latestInspection.status,
           relevantInspectionFound: relevantInspections && relevantInspections.length > 0
         });
 
