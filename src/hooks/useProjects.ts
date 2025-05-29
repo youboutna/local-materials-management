@@ -22,7 +22,7 @@ export const useProjects = () => {
       }
 
       // Transform database data to match ProjectData interface
-      const transformedData = (data || []).map(project => ({
+      const transformedData = (data || []).map((project: any) => ({
         id: project.id,
         title: project.title,
         description: project.description,
@@ -83,20 +83,20 @@ export const useProjects = () => {
 
       // Transform the returned data to match ProjectData interface
       const newProject: ProjectData = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        status: data.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-        progress: data.progress,
-        budget: data.budget,
-        startDate: data.start_date,
-        endDate: data.end_date || undefined,
-        thumbnail: data.thumbnail,
-        teamSize: data.team_size,
-        coordinates: data.coordinates_latitude && data.coordinates_longitude ? {
-          latitude: data.coordinates_latitude,
-          longitude: data.coordinates_longitude
+        id: (data as any).id,
+        title: (data as any).title,
+        description: (data as any).description,
+        location: (data as any).location,
+        status: (data as any).status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+        progress: (data as any).progress,
+        budget: (data as any).budget,
+        startDate: (data as any).start_date,
+        endDate: (data as any).end_date || undefined,
+        thumbnail: (data as any).thumbnail,
+        teamSize: (data as any).team_size,
+        coordinates: (data as any).coordinates_latitude && (data as any).coordinates_longitude ? {
+          latitude: (data as any).coordinates_latitude,
+          longitude: (data as any).coordinates_longitude
         } : undefined
       };
 
@@ -105,7 +105,7 @@ export const useProjects = () => {
 
       toast({
         title: "Projet créé",
-        description: `Le projet "${data.title}" a été créé avec succès.`,
+        description: `Le projet "${(data as any).title}" a été créé avec succès.`,
       });
 
       return newProject;
@@ -134,20 +134,20 @@ export const useProjects = () => {
 
       // Transform the database data to match ProjectData interface
       return {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        status: data.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-        progress: data.progress,
-        budget: data.budget,
-        startDate: data.start_date,
-        endDate: data.end_date || undefined,
-        thumbnail: data.thumbnail,
-        teamSize: data.team_size,
-        coordinates: data.coordinates_latitude && data.coordinates_longitude ? {
-          latitude: data.coordinates_latitude,
-          longitude: data.coordinates_longitude
+        id: (data as any).id,
+        title: (data as any).title,
+        description: (data as any).description,
+        location: (data as any).location,
+        status: (data as any).status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+        progress: (data as any).progress,
+        budget: (data as any).budget,
+        startDate: (data as any).start_date,
+        endDate: (data as any).end_date || undefined,
+        thumbnail: (data as any).thumbnail,
+        teamSize: (data as any).team_size,
+        coordinates: (data as any).coordinates_latitude && (data as any).coordinates_longitude ? {
+          latitude: (data as any).coordinates_latitude,
+          longitude: (data as any).coordinates_longitude
         } : undefined
       };
     } catch (err) {

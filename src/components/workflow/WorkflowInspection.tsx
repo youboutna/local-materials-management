@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       if (latestError) throw latestError;
 
       if (latestInspections && latestInspections.length > 0) {
-        const latestInspection = latestInspections[0];
+        const latestInspection = latestInspections[0] as any;
         
         console.log('Latest inspection:', latestInspection);
         
@@ -66,12 +67,12 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         // Use progress from the most recent approved or requires_changes inspection
         // If no such inspection exists, keep current project progress
         const newProgress = relevantInspections && relevantInspections.length > 0 
-          ? relevantInspections[0].progress_at_inspection
+          ? (relevantInspections[0] as any).progress_at_inspection
           : project.progress;
         
         let newStatus = project.status;
 
-        console.log('Using progress from last approved/requires_changes inspection:', relevantInspections?.[0]?.status, 'with progress:', newProgress);
+        console.log('Using progress from last approved/requires_changes inspection:', (relevantInspections as any)?.[0]?.status, 'with progress:', newProgress);
 
         // Determine new status based on latest inspection status
         if (latestInspection.status === 'approved') {
@@ -121,7 +122,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         };
 
         const progressSource = relevantInspections && relevantInspections.length > 0 
-          ? `basée sur la dernière inspection ${relevantInspections[0].status === 'approved' ? 'approuvée' : 'nécessitant des modifications'}`
+          ? `basée sur la dernière inspection ${(relevantInspections[0] as any).status === 'approved' ? 'approuvée' : 'nécessitant des modifications'}`
           : 'maintenue (aucune inspection approuvée/modifiée trouvée)';
 
         toast({
