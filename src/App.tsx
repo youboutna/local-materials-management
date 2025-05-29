@@ -12,6 +12,7 @@ import Projects from "./pages/Projects";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectEdit from "./pages/ProjectEdit";
+import ProjectImport from "./pages/ProjectImport";
 import Materials from "./pages/Materials";
 import MaterialCreate from "./pages/MaterialCreate";
 import Documents from "./pages/Documents";
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/projects/create" element={<ProjectCreate />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+                <Route path="/projects/import" element={<ProjectImport />} />
                 <Route path="/materials" element={<Materials />} />
                 <Route path="/materials/create" element={<MaterialCreate />} />
                 <Route path="/documents" element={<Documents />} />

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { Globe, Database, Cog, ClipboardList, LogOut } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -57,16 +57,49 @@ const MainNavbar = () => {
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/projects">
-                    {t('nav.projects') || 'Projets'}
-                  </Link>
-                </Button>
+                <NavigationMenuTrigger className="text-white hover:text-gray-200">
+                  {t('nav.projects') || 'Projets'}
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid gap-3 p-6 w-[400px]">
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/projects"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">Tous les projets</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Gérer et visualiser tous les projets
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/projects/create"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">Nouveau projet</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Créer un nouveau projet
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/projects/import"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none flex items-center">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import projets
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Importer les projets 2025
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                  </div>
+                </NavigationMenuContent>
               </NavigationMenuItem>
               
               <NavigationMenuItem>

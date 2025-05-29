@@ -163,7 +163,7 @@ const ProjectImporter2025 = () => {
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      const results = [];
+      const results: any[] = [];
       
       for (let i = 0; i < projects2025.length; i++) {
         const project = projects2025[i];
@@ -173,7 +173,7 @@ const ProjectImporter2025 = () => {
           .from('projects')
           .select('id')
           .eq('title', project.title as any)
-          .single();
+          .maybeSingle();
 
         if (!existing) {
           const { data, error } = await supabase
@@ -187,7 +187,9 @@ const ProjectImporter2025 = () => {
             throw error;
           }
           
-          results.push(data as any);
+          if (data) {
+            results.push(data);
+          }
         }
         
         // Update progress
