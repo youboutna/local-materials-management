@@ -1,180 +1,187 @@
--- Enable uuid extension if not already enabled
+
+-- Extensions recommandées pour Supabase
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- =========================================
--- USERS & ROLES STRUCTURE (Outside Supabase)
--- =========================================
+-- ============================
+-- ENUM TYPES
+-- ============================
 
--- Roles Table
-CREATE TABLE IF NOT EXISTS public.roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR NOT NULL UNIQUE
+CREATE TYPE project_status AS ENUM (
+  'en cours', 'terminé', 'en attente', 'en inspection', 'suspendu', 'annulé'
 );
 
--- Users Table
-CREATE TABLE IF NOT EXISTS public.users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email VARCHAR UNIQUE NOT NULL,
-  full_name VARCHAR,
-  phone VARCHAR,
-  national_id VARCHAR UNIQUE,
-  password_hash TEXT,
-  role_id UUID REFERENCES public.roles(id) ON DELETE SET NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+CREATE TYPE inspection_status AS ENUM (
+  'approved', 'requires_changes', 'rejected', 'pending'
 );
 
--- Profiles Table (extended user data)
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
-  avatar_url VARCHAR,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+CREATE TYPE task_status AS ENUM (
+  'pending', 'in_progress', 'completed', 'cancelled'
 );
 
--- =========================================
--- PROJECTS & MATERIALS & RELATIONS
--- =========================================
+CREATE TYPE task_priority AS ENUM (
+  'low', 'medium', 'high', 'urgent'
+);
 
-CREATE TABLE IF NOT EXISTS public.projects (
+CREATE TYPE notification_type AS ENUM (
+  'task_assignment', 'project_update', 'inspection_required',
+  'payment_due', 'document_review', 'system'
+);
+
+CREATE TYPE task_type AS ENUM (
+  'project', 'inspection', 'document', 'payment', 'material', 'general'
+);
+
+-- ============================
+-- TABLES
+-- ============================
+
+-- Table: projects
+CREATE TABLE projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title VARCHAR NOT NULL,
-  description TEXT NOT NULL,
-  location VARCHAR NOT NULL,
-  status VARCHAR NOT NULL,
-  progress INT NOT NULL,
-  budget DECIMAL NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  location TEXT,
+  status project_status NOT NULL,
+  progress INTEGER CHECK (progress >= 0 AND progress <= 100),
+  budget NUMERIC(12, 2),
   start_date DATE NOT NULL,
   end_date DATE,
-  thumbnail VARCHAR,
-  team_size INT NOT NULL,
-  coordinates_latitude FLOAT,
-  coordinates_longitude FLOAT,
-  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  thumbnail TEXT,
+  team_size INTEGER,
+  coordinates_latitude DOUBLE PRECISION,
+  coordinates_longitude DOUBLE PRECISION,
+  created_by TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS public.materials (
+-- Table: payments
+CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR NOT NULL,
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  amount NUMERIC(12, 2) NOT NULL,
+  payment_date DATE NOT NULL,
+  payment_method TEXT,
+  progress_at_payment INTEGER CHECK (progress_at_payment >= 0 AND progress_at_payment <= 100),
+  transaction_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: inspections
+CREATE TABLE inspections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  status inspection_status NOT NULL,
+  inspector TEXT NOT NULL,
+  progress_at_inspection INTEGER CHECK (progress_at_inspection >= 0 AND progress_at_inspection <= 100),
+  comments TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: project_materials
+CREATE TABLE project_materials (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  material_id UUID NOT NULL,
+  quantity NUMERIC(10, 2),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Table: task_assignments
+CREATE TABLE task_assignments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
   description TEXT,
-  type VARCHAR NOT NULL,
-  unit VARCHAR NOT NULL,
-  price_per_unit DECIMAL NOT NULL,
-  inventory_count INT NOT NULL,
-  source_location VARCHAR,
-  coordinates_latitude FLOAT,
-  coordinates_longitude FLOAT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  assigned_to TEXT NOT NULL,
+  assigned_by TEXT NOT NULL,
+  status task_status NOT NULL,
+  priority task_priority NOT NULL,
+  due_date DATE,
+  completion_date DATE,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS public.project_materials (
+-- Table: notifications
+CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
-  material_id UUID REFERENCES public.materials(id) ON DELETE CASCADE,
-  quantity INT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  UNIQUE (project_id, material_id)
+  recipient_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type notification_type NOT NULL,
+  related_id UUID,
+  metadata JSONB,
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =========================================
--- ROW LEVEL SECURITY CONFIGURATION
--- =========================================
+-- ============================
+-- INDEXES
+-- ============================
 
--- Enable RLS
-ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.project_materials ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE INDEX idx_projects_created_by ON projects(created_by);
+CREATE INDEX idx_payments_project_id ON payments(project_id);
+CREATE INDEX idx_inspections_project_id ON inspections(project_id);
+CREATE INDEX idx_project_materials_project_id ON project_materials(project_id);
+CREATE INDEX idx_task_assignments_project_id ON task_assignments(project_id);
 
--- -----------------------------------------
--- POLICIES using JWT claims (via pgjwt / Keycloak headers)
--- -----------------------------------------
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_task_assignments_status ON task_assignments(status);
+CREATE INDEX idx_notifications_recipient_id ON notifications(recipient_id);
+CREATE INDEX idx_notifications_type ON notifications(type);
 
--- Grant SELECT on own profile
-CREATE POLICY select_own_profile ON public.profiles
+-- ============================
+-- RLS POLICIES
+-- ============================
+
+-- RLS for projects
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY select_own_projects ON projects
 FOR SELECT TO public
 USING (
-  id::text = current_setting('request.jwt.claims', true)::json ->> 'sub'
+  created_by = current_setting('request.jwt.claims', true)::json ->> 'sub'
 );
 
--- Grant UPDATE on own profile
-CREATE POLICY update_own_profile ON public.profiles
-FOR UPDATE TO public
-USING (
-  id::text = current_setting('request.jwt.claims', true)::json ->> 'sub'
-)
-WITH CHECK (
-  id::text = current_setting('request.jwt.claims', true)::json ->> 'sub'
-);
+-- RLS for task_assignments
+ALTER TABLE task_assignments ENABLE ROW LEVEL SECURITY;
 
--- Grant SELECT on projects to everyone authenticated
-CREATE POLICY select_all_projects ON public.projects
+CREATE POLICY select_own_tasks ON task_assignments
 FOR SELECT TO public
-USING (true);
+USING (
+  assigned_to = current_setting('request.jwt.claims', true)::json ->> 'sub'
+);
 
--- Allow INSERT if role is project_manager or admin
-CREATE POLICY insert_project_policy ON public.projects
+CREATE POLICY insert_task_policy ON task_assignments
 FOR INSERT TO public
 WITH CHECK (
   (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('project_manager', 'admin')
 );
 
--- Allow UPDATE on own projects
-CREATE POLICY update_own_project_policy ON public.projects
-FOR UPDATE TO public
+-- RLS for notifications
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY select_own_notifications ON notifications
+FOR SELECT TO public
 USING (
-  created_by::text = current_setting('request.jwt.claims', true)::json ->> 'sub'
+  recipient_id = current_setting('request.jwt.claims', true)::json ->> 'sub'
 );
 
--- Allow DELETE on own projects
-CREATE POLICY delete_own_project_policy ON public.projects
-FOR DELETE TO public
-USING (
-  created_by::text = current_setting('request.jwt.claims', true)::json ->> 'sub'
-);
+-- RLS for inspections
+ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
 
--- Read-only access to materials and project_materials
-CREATE POLICY select_materials_policy ON public.materials
+CREATE POLICY select_all_inspections ON inspections
 FOR SELECT TO public
 USING (true);
 
-CREATE POLICY select_project_materials_policy ON public.project_materials
+-- RLS for payments
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY select_all_payments ON payments
 FOR SELECT TO public
 USING (true);
-
--- =========================================
--- DEFAULT ROLE SEEDING (Optional)
--- =========================================
-
-INSERT INTO public.roles (id, name) VALUES
-  (uuid_generate_v4(), 'admin'),
-  (uuid_generate_v4(), 'project_manager'),
-  (uuid_generate_v4(), 'supervisor'),
-  (uuid_generate_v4(), 'viewer')
-ON CONFLICT DO NOTHING;
-
--- =========================================
--- Optional Trigger: auto-create profile on insert (non-Supabase)
--- =========================================
-
-CREATE OR REPLACE FUNCTION public.create_profile_after_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id)
-  VALUES (NEW.id);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trigger_create_profile ON public.users;
-
-CREATE TRIGGER trigger_create_profile
-AFTER INSERT ON public.users
-FOR EACH ROW
-EXECUTE FUNCTION public.create_profile_after_user();
-
