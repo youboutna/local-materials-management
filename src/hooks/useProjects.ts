@@ -22,7 +22,7 @@ export const useProjects = () => {
       }
 
       // Transform database data to match ProjectData interface
-      const transformedData = data.map(project => ({
+      const transformedData = (data || []).map(project => ({
         id: project.id,
         title: project.title,
         description: project.description,
@@ -75,7 +75,7 @@ export const useProjects = () => {
 
       const { data, error } = await supabase
         .from('projects')
-        .insert(dbData)
+        .insert(dbData as any)
         .select()
         .single();
 
@@ -125,10 +125,12 @@ export const useProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('id', id)
+        .eq('id' as any, id as any)
         .single();
 
       if (error) throw error;
+
+      if (!data) return null;
 
       // Transform the database data to match ProjectData interface
       return {

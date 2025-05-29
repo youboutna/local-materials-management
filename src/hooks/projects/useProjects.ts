@@ -1,3 +1,4 @@
+
 import { useProjects as useSupabaseProjects } from '@/hooks/useProjects';
 import { useTypeOrmProjectOperations } from './useTypeOrmProjectOperations';
 import { USE_TYPEORM } from './constants';
@@ -52,11 +53,13 @@ export const useProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .update(dbData)
-        .eq('id', id)
+        .eq('id' as any, id as any)
         .select()
         .single();
 
       if (error) throw error;
+
+      if (!data) return null;
 
       // Transform the returned data to match ProjectData interface
       const updatedProject: ProjectData = {
@@ -104,7 +107,7 @@ export const useProjects = () => {
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', id);
+        .eq('id' as any, id as any);
 
       if (error) throw error;
       

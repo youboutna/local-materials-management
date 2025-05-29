@@ -42,7 +42,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
       const { data: latestInspections } = await supabase
         .from('inspections')
         .select('*')
-        .eq('project_id' as any, project.id)
+        .eq('project_id' as any, project.id as any)
         .order('date', { ascending: false })
         .limit(1);
 
@@ -55,8 +55,8 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
         const { data: relevantInspections } = await supabase
           .from('inspections')
           .select('*')
-          .eq('project_id' as any, project.id)
-          .in('status' as any, ['approved', 'requires_changes'])
+          .eq('project_id' as any, project.id as any)
+          .in('status' as any, ['approved', 'requires_changes'] as any)
           .order('date', { ascending: false })
           .limit(1);
 
@@ -104,7 +104,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             progress: newProgress,
             status: newStatus
           } as any)
-          .eq('id' as any, project.id);
+          .eq('id' as any, project.id as any);
 
         if (updateError) {
           throw updateError;
