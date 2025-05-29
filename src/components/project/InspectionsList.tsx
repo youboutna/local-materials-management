@@ -36,7 +36,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
         const { data, error } = await supabase
           .from('inspections')
           .select('*')
-          .eq('project_id', projectId)
+          .eq('project_id', projectId as any)
           .order('date', { ascending: false });
 
         if (error) {
@@ -44,7 +44,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
         }
 
         // Transform data to match InspectionData type
-        const formattedData: InspectionData[] = (data || []).map(item => ({
+        const formattedData: InspectionData[] = (data || []).map((item: any) => ({
           id: item.id,
           date: item.date,
           status: item.status as StatusType,

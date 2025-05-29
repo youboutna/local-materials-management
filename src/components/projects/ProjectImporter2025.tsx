@@ -172,13 +172,13 @@ const ProjectImporter2025 = () => {
         const { data: existing } = await supabase
           .from('projects')
           .select('id')
-          .eq('title', project.title)
+          .eq('title', project.title as any)
           .single();
 
         if (!existing) {
           const { data, error } = await supabase
             .from('projects')
-            .insert(project)
+            .insert(project as any)
             .select()
             .single();
 
@@ -187,7 +187,7 @@ const ProjectImporter2025 = () => {
             throw error;
           }
           
-          results.push(data);
+          results.push(data as any);
         }
         
         // Update progress

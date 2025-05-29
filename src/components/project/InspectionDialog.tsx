@@ -54,7 +54,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
           inspector,
           progress_at_inspection: progress,
           comments: comments || null,
-        })
+        } as any)
         .select();
 
       if (error) throw error;
@@ -63,8 +63,8 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
       if (status === 'approved' && project.status !== 'terminé') {
         await supabase
           .from('projects')
-          .update({ status: 'en inspection' })
-          .eq('id', project.id);
+          .update({ status: 'en inspection' } as any)
+          .eq('id', project.id as any);
       }
 
       toast({

@@ -63,7 +63,7 @@ const TaskAssignments = () => {
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
-        .eq('is_active', true)
+        .eq('is_active', true as any)
         .order('full_name');
       if (error) throw error;
       return (data as unknown as Employee[]) || [];
@@ -143,7 +143,7 @@ const TaskAssignments = () => {
       const { error } = await supabase
         .from('task_assignments')
         .update(data as any)
-        .eq('id', id);
+        .eq('id', id as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -165,7 +165,7 @@ const TaskAssignments = () => {
       const { error } = await supabase
         .from('task_assignments')
         .delete()
-        .eq('id', id);
+        .eq('id', id as any);
       if (error) throw error;
     },
     onSuccess: () => {
