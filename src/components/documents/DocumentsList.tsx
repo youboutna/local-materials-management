@@ -15,7 +15,11 @@ type Document = Database['public']['Tables']['documents']['Row'];
 type DocumentType = Database['public']['Enums']['document_type'];
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
-const DocumentsList = () => {
+interface DocumentsListProps {
+  onDocumentSelect?: (document: Document) => void;
+}
+
+const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -124,6 +128,12 @@ const DocumentsList = () => {
         description: "Impossible de télécharger le fichier.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    if (onDocumentSelect) {
+      onDocumentSelect(doc);
     }
   };
 
@@ -265,7 +275,11 @@ const DocumentsList = () => {
                     <Download className="h-4 w-4" />
                   </Button>
                 )}
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleViewDocument(doc)}
+                >
                   <Eye className="h-4 w-4" />
                 </Button>
                 <Button size="sm" variant="outline">
