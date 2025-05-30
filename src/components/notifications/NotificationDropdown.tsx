@@ -17,9 +17,11 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { getTaskLink, getPriorityColor } from '@/utils/notificationUtils';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function NotificationDropdown() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { user } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user?.id);
 
   const recentNotifications = notifications.slice(0, 10);
 

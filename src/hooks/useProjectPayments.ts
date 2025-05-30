@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWithPayments, Payment } from '@/types/project';
@@ -22,7 +23,7 @@ export const useCreateProjectPayment = () => {
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id', projectId)
+        .eq('id' as any, projectId as any)
         .single();
       
       if (projectError) throw new Error(projectError.message);
@@ -31,7 +32,7 @@ export const useCreateProjectPayment = () => {
       const { data: inspections } = await supabase
         .from('inspections')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id' as any, projectId as any)
         .order('date', { ascending: false })
         .limit(1);
       
@@ -45,21 +46,21 @@ export const useCreateProjectPayment = () => {
           amount: payment.amount,
           payment_date: payment.paymentDate,
           payment_method: payment.paymentMethod,
-          progress_at_payment: project.progress,
+          progress_at_payment: (project as any).progress,
           inspection_id: latestInspection?.id,
           transaction_id: `TX-${Date.now()}`,
-        })
+        } as any)
         .select()
         .single();
       
       if (error) throw new Error(error.message);
 
       // Update project status to 'payé' if full amount
-      if (payment.amount >= project.budget) {
+      if (payment.amount >= (project as any).budget) {
         await supabase
           .from('projects')
-          .update({ status: 'payé' })
-          .eq('id', projectId);
+          .update({ status: 'payé' } as any)
+          .eq('id' as any, projectId as any);
       }
       
       return data;
@@ -70,7 +71,7 @@ export const useCreateProjectPayment = () => {
       
       toast({
         title: 'Paiement réussi',
-        description: `Transfert de ${data.amount.toLocaleString()} MRU complété`,
+        description: `Transfert de ${(data as any).amount.toLocaleString()} MRU complété`,
       });
     },
     onError: (error: Error) => {
@@ -84,8 +85,6 @@ export const useCreateProjectPayment = () => {
 };
 
 export const useProjectPayments = (projectId: string) => {
-  const { toast } = useToast();
-
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project-with-payments', projectId],
     queryFn: async (): Promise<ProjectWithPayments | null> => {

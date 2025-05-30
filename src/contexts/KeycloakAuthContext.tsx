@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +17,9 @@ interface KeycloakAuthContextProps {
   profile: Profile | null;
   loading: boolean;
   error: string | null;
+  user: any;
+  isAuthenticated: boolean;
+  logout: () => void;
   fetchProfile: () => Promise<void>;
   updateProfile: (fullName: string) => Promise<void>;
   createProfile: (fullName: string, phoneNumber: string, nationalId: string) => Promise<void>;
@@ -24,7 +28,7 @@ interface KeycloakAuthContextProps {
 const KeycloakAuthContext = createContext<KeycloakAuthContextProps | undefined>(undefined);
 
 export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     setError(null);
 
-    if (!user?.sub) {
+    if (!user?.id) {
       console.warn('User ID is missing.');
       setLoading(false);
       return;
@@ -43,7 +47,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.sub)
+        .eq('id' as any, user.id as any)
         .single();
 
       if (profileError) {
@@ -51,7 +55,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       if (profileData) {
-        setProfile(profileData);
+        setProfile(profileData as any);
       } else {
         console.log('No profile found, attempting to create...');
         setProfile(null);
@@ -68,7 +72,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     setError(null);
 
-    if (!user?.sub) {
+    if (!user?.id) {
       console.warn('User ID is missing.');
       setLoading(false);
       return;
@@ -96,7 +100,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
         .insert({
-          id: user.sub,
+          id: user.id,
           full_name: fullName,
           phone: phoneNumber,
           national_id: nationalId,
@@ -134,7 +138,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     setError(null);
 
-    if (!user?.sub) {
+    if (!user?.id) {
       console.warn('User ID is missing.');
       setLoading(false);
       return;
@@ -146,7 +150,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .update({
           full_name: fullName,
         } as any)
-        .eq('national_id' as any, user.sub as any)
+        .eq('id' as any, user.id as any)
         .select()
         .single();
 
@@ -186,6 +190,9 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     profile,
     loading,
     error,
+    user,
+    isAuthenticated,
+    logout: signOut,
     fetchProfile,
     updateProfile,
     createProfile,

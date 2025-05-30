@@ -4,13 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { TaskType, NotificationMetadata } from '@/types/notification';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 export const useTaskAssignment = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { createNotification } = useNotifications();
-  const { toast } = useToast();
 
   const createTaskAssignment = async (
     title: string,
@@ -48,10 +47,10 @@ export const useTaskAssignment = () => {
       const { data: assigneeProfile } = await supabase
         .from('profiles')
         .select('full_name')
-        .eq('id' as any, assignedTo)
+        .eq('id' as any, assignedTo as any)
         .single();
 
-      const assigneeName = assigneeProfile?.full_name || 'Utilisateur';
+      const assigneeName = (assigneeProfile as any)?.full_name || 'Utilisateur';
 
       // Create notification metadata
       const metadata: NotificationMetadata = {
@@ -87,7 +86,7 @@ export const useTaskAssignment = () => {
         `Nouvelle tâche assignée: ${title}`,
         `Vous avez été assigné(e) à une nouvelle tâche${priority === 'urgent' ? ' URGENTE' : priority === 'high' ? ' prioritaire' : ''}. ${description ? description.substring(0, 100) + '...' : ''}`,
         'task_assignment',
-        taskData?.id,
+        (taskData as any)?.id,
         metadata
       );
 
