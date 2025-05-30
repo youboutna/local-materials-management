@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -16,6 +15,7 @@ import { ArrowLeft, Save, MapPin, RefreshCw } from 'lucide-react';
 import { ProjectStatus } from '@/types/project';
 import ProgressIndicator from '@/components/ProgressIndicator';
 import { supabase } from '@/integrations/supabase/client';
+import LocationSelector from '@/components/location/LocationSelector';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -438,84 +438,27 @@ const ProjectEdit = () => {
               )}
             />
             
-            {/* Coordinates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="coordinates.latitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Latitude (optionnelle)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.000001"
-                        placeholder="Ex: 18.079052" 
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
-                          field.onChange(value);
-                          
-                          // Update the form's coordinates object
-                          const currentCoords = form.getValues().coordinates;
-                          if (!value && (!currentCoords || !currentCoords.longitude)) {
-                            form.setValue('coordinates', null);
-                          } else {
-                            form.setValue('coordinates', {
-                              latitude: value,
-                              longitude: currentCoords?.longitude
-                            });
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Coordonnée géographique pour la carte
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="coordinates.longitude"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Longitude (optionnelle)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.000001"
-                        placeholder="Ex: -15.965634" 
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={e => {
-                          const value = e.target.value ? Number(e.target.value) : undefined;
-                          field.onChange(value);
-                          
-                          // Update the form's coordinates object
-                          const currentCoords = form.getValues().coordinates;
-                          if (!value && (!currentCoords || !currentCoords.latitude)) {
-                            form.setValue('coordinates', null);
-                          } else {
-                            form.setValue('coordinates', {
-                              latitude: currentCoords?.latitude,
-                              longitude: value
-                            });
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Coordonnée géographique pour la carte
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Location Selector - New enhanced section */}
+            <LocationSelector
+              value={{
+                latitude: form.watch('coordinates.latitude'),
+                longitude: form.watch('coordinates.longitude'),
+                address: form.watch('location')
+              }}
+              onChange={(location) => {
+                if (location.address) {
+                  form.setValue('location', location.address);
+                }
+                if (location.latitude !== undefined && location.longitude !== undefined) {
+                  form.setValue('coordinates', {
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                  });
+                } else if (location.latitude === undefined && location.longitude === undefined) {
+                  form.setValue('coordinates', null);
+                }
+              }}
+            />
             
             {/* Submit button */}
             <div className="flex justify-end pt-4">

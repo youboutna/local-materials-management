@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -12,9 +11,11 @@ import DocumentUpload from '@/components/documents/DocumentUpload';
 import SuppliersManagement from '@/components/documents/SuppliersManagement';
 import TaskAssignments from '@/components/documents/TaskAssignments';
 import EmployeeManagement from '@/components/documents/EmployeeManagement';
+import DocumentViewer from '@/components/documents/DocumentViewer';
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const navigate = useNavigate();
 
   const documentTypes = [
@@ -34,6 +35,11 @@ const Documents = () => {
     const searchParams = new URLSearchParams();
     searchParams.set('type', documentType);
     navigate(`/documents?${searchParams.toString()}`, { replace: true });
+  };
+
+  const handleDocumentSelect = (document: any) => {
+    setSelectedDocument(document);
+    setActiveTab('viewer');
   };
 
   return (
@@ -62,13 +68,14 @@ const Documents = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
                 <TabsTrigger value="tasks">Tâches</TabsTrigger>
                 <TabsTrigger value="employees">Employés</TabsTrigger>
                 <TabsTrigger value="upload">Télécharger</TabsTrigger>
+                {selectedDocument && <TabsTrigger value="viewer">Visionneuse</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="all" className="space-y-6">
@@ -99,7 +106,7 @@ const Documents = () => {
               </TabsContent>
 
               <TabsContent value="documents">
-                <DocumentsList />
+                <DocumentsList onDocumentSelect={handleDocumentSelect} />
               </TabsContent>
 
               <TabsContent value="suppliers">
@@ -117,6 +124,12 @@ const Documents = () => {
               <TabsContent value="upload">
                 <DocumentUpload />
               </TabsContent>
+
+              {selectedDocument && (
+                <TabsContent value="viewer">
+                  <DocumentViewer document={selectedDocument} />
+                </TabsContent>
+              )}
             </Tabs>
           </motion.div>
         </div>
