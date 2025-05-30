@@ -17,7 +17,7 @@ import { MapLocation } from '@/components/ProjectMap';
 import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
-import { ProjectWithPayments, Inspection } from '@/types/project';
+import { ProjectWithPayments, Inspection, InspectionStatus } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProjectDetail = () => {
@@ -60,9 +60,14 @@ const ProjectDetail = () => {
         console.error('Error fetching inspections:', inspectionsError);
       }
 
-      // Transform inspections data to match the Inspection interface
+      // Transform inspections data to match the Inspection interface with proper type casting
       const inspections: Inspection[] = inspectionsData?.map(inspection => ({
-        ...inspection,
+        id: inspection.id,
+        date: inspection.date,
+        status: inspection.status as InspectionStatus,
+        inspector: inspection.inspector,
+        progress_at_inspection: inspection.progress_at_inspection,
+        comments: inspection.comments,
         documents: inspection.documents ? (Array.isArray(inspection.documents) ? inspection.documents : []) : undefined
       })) || [];
 
