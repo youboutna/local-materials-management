@@ -23,6 +23,12 @@ export interface ProjectData {
     latitude: number;
     longitude: number;
   };
+  // New optional fields
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: string;
+  attributionDate?: string;
 }
 
 interface ProjectCardProps {
