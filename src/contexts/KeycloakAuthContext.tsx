@@ -28,10 +28,12 @@ interface KeycloakAuthContextProps {
 const KeycloakAuthContext = createContext<KeycloakAuthContextProps | undefined>(undefined);
 
 export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const isAuthenticated = !!user;
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -47,7 +49,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id' as any, user.id as any)
+        .eq('id', user.id)
         .single();
 
       if (profileError) {
@@ -83,7 +85,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('national_id' as any, nationalId as any)
+        .eq('national_id', nationalId)
         .maybeSingle();
 
       if (existingProfile) {
@@ -104,7 +106,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           full_name: fullName,
           phone: phoneNumber,
           national_id: nationalId,
-          role: 'user' as any,
+          role: 'user',
           avatar_url: null,
         } as any)
         .select()
@@ -150,7 +152,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .update({
           full_name: fullName,
         } as any)
-        .eq('id' as any, user.id as any)
+        .eq('id', user.id)
         .select()
         .single();
 

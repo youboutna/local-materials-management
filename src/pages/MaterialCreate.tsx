@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -89,7 +88,7 @@ const MaterialCreate = () => {
         origin_location: materialData.origin_location || null,
         coordinates_latitude: materialData.coordinates_latitude || null,
         coordinates_longitude: materialData.coordinates_longitude || null
-      });
+      } as any);
 
       if (error) {
         console.error('Error creating material:', error);

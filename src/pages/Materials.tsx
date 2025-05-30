@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -73,39 +74,39 @@ const Materials = () => {
   // Filter and sort materials
   const filteredMaterials = materials
     .filter(material => {
-      const matchesSearch = material.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           material.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = categoryFilter === 'all' || material.category === categoryFilter;
+      const matchesSearch = (material as any).name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           (material as any).description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === 'all' || (material as any).category === categoryFilter;
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
       switch (sortOption) {
         case 'price':
-          return Number(a.price_per_unit) - Number(b.price_per_unit);
+          return Number((a as any).price_per_unit) - Number((b as any).price_per_unit);
         case 'quantity':
-          return Number(b.available_quantity) - Number(a.available_quantity);
+          return Number((b as any).available_quantity) - Number((a as any).available_quantity);
         case 'name':
         default:
-          return a.name.localeCompare(b.name);
+          return (a as any).name?.localeCompare((b as any).name) || 0;
       }
     });
 
   // Convert materials to map locations
   const materialLocations: MapLocation[] = useMemo(() => {
     return filteredMaterials
-      .filter(material => material.coordinates_latitude && material.coordinates_longitude)
+      .filter(material => (material as any).coordinates_latitude && (material as any).coordinates_longitude)
       .map(material => ({
-        id: material.id,
-        name: material.name,
+        id: (material as any).id,
+        name: (material as any).name,
         type: 'material' as const,
-        latitude: Number(material.coordinates_latitude!),
-        longitude: Number(material.coordinates_longitude!),
-        region: material.origin_location || ''
+        latitude: Number((material as any).coordinates_latitude!),
+        longitude: Number((material as any).coordinates_longitude!),
+        region: (material as any).origin_location || ''
       }));
   }, [filteredMaterials]);
 
   // Get unique categories
-  const categories = [...new Set(materials.map(m => m.category))];
+  const categories = [...new Set(materials.map(m => (m as any).category))];
 
   if (isLoading) {
     return (
@@ -219,12 +220,11 @@ const Materials = () => {
             </TabsList>
             
             <TabsContent value="grid" className="mt-6">
-              {/* ... keep existing code (grid view implementation) */}
               {filteredMaterials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMaterials.map((material, index) => (
                     <motion.div
-                      key={material.id}
+                      key={(material as any).id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -232,8 +232,8 @@ const Materials = () => {
                       <Card className="h-full hover:shadow-lg transition-shadow">
                         <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
                           <img 
-                            src={material.image || '/img/material-placeholder.jpg'}
-                            alt={material.name}
+                            src={(material as any).image || '/img/material-placeholder.jpg'}
+                            alt={(material as any).name}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -241,14 +241,14 @@ const Materials = () => {
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <CardTitle className="text-lg text-adrar-800 line-clamp-1">
-                              {material.name}
+                              {(material as any).name}
                             </CardTitle>
                             <Badge variant="secondary" className="text-xs">
-                              {material.category}
+                              {(material as any).category}
                             </Badge>
                           </div>
                           <CardDescription className="line-clamp-2">
-                            {material.description}
+                            {(material as any).description}
                           </CardDescription>
                         </CardHeader>
                         
@@ -257,21 +257,21 @@ const Materials = () => {
                             <div className="flex justify-between">
                               <span>Prix unitaire:</span>
                               <span className="font-medium">
-                                {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
+                                {Number((material as any).price_per_unit).toLocaleString()} MRU/{(material as any).unit}
                               </span>
                             </div>
                             
                             <div className="flex justify-between">
                               <span>Disponible:</span>
                               <span className="font-medium">
-                                {Number(material.available_quantity)} {material.unit}
+                                {Number((material as any).available_quantity)} {(material as any).unit}
                               </span>
                             </div>
                             
-                            {material.origin_location && (
+                            {(material as any).origin_location && (
                               <div className="flex items-center">
                                 <MapPin className="h-3 w-3 mr-1 text-terracotta-500" />
-                                <span className="text-xs">{material.origin_location}</span>
+                                <span className="text-xs">{(material as any).origin_location}</span>
                               </div>
                             )}
                           </div>
@@ -283,7 +283,7 @@ const Materials = () => {
                             <Button 
                               variant="destructive" 
                               size="sm"
-                              onClick={() => handleDeleteMaterial(material.id)}
+                              onClick={() => handleDeleteMaterial((material as any).id)}
                               disabled={deleteMaterial.isPending}
                             >
                               {deleteMaterial.isPending ? 'Suppression...' : 'Supprimer'}

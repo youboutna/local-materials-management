@@ -23,7 +23,7 @@ export const useCreateProjectPayment = () => {
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id' as any, projectId as any)
+        .eq('id', projectId)
         .single();
       
       if (projectError) throw new Error(projectError.message);
@@ -32,7 +32,7 @@ export const useCreateProjectPayment = () => {
       const { data: inspections } = await supabase
         .from('inspections')
         .select('*')
-        .eq('project_id' as any, projectId as any)
+        .eq('project_id', projectId)
         .order('date', { ascending: false })
         .limit(1);
       
@@ -60,7 +60,7 @@ export const useCreateProjectPayment = () => {
         await supabase
           .from('projects')
           .update({ status: 'payé' } as any)
-          .eq('id' as any, projectId as any);
+          .eq('id', projectId);
       }
       
       return data;
@@ -91,7 +91,7 @@ export const useProjectPayments = (projectId: string) => {
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id' as any, projectId as any)
+        .eq('id', projectId)
         .single();
 
       if (projectError) throw projectError;
@@ -99,13 +99,13 @@ export const useProjectPayments = (projectId: string) => {
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
-        .eq('project_id' as any, projectId as any)
+        .eq('project_id', projectId)
         .order('payment_date', { ascending: false });
 
       const { data: inspectionsData, error: inspectionsError } = await supabase
         .from('inspections')
         .select('*')
-        .eq('project_id' as any, projectId as any)
+        .eq('project_id', projectId)
         .order('date', { ascending: false });
 
       if (paymentsError) throw paymentsError;
@@ -143,7 +143,7 @@ export const useProjectPayments = (projectId: string) => {
         await supabase
           .from('projects')
           .update({ progress: (data as any).progress_at_payment } as any)
-          .eq('id' as any, projectId as any);
+          .eq('id', projectId);
       }
 
       toast({
