@@ -17,6 +17,12 @@ export interface ProjectData {
     latitude: number;
     longitude: number;
   };
+  // New optional fields
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: string;
+  attributionDate?: string;
 }
 
 export interface ProjectWithPayments extends ProjectData {
@@ -81,6 +87,12 @@ export interface ProjectEntity {
   teamSize: number;
   coordinatesLatitude?: number;
   coordinatesLongitude?: number;
+  // New optional fields
+  financingSource?: string;
+  marketType?: string;
+  selectionMode?: string;
+  launchDate?: Date;
+  attributionDate?: Date;
   createdAt: Date;
   updatedAt: Date;
   // Relations

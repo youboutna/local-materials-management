@@ -48,6 +48,13 @@ export const useProjects = () => {
         dbData.coordinates_latitude = null;
         dbData.coordinates_longitude = null;
       }
+      
+      // Handle new optional fields
+      if (projectData.financingSource !== undefined) dbData.financing_source = projectData.financingSource;
+      if (projectData.marketType !== undefined) dbData.market_type = projectData.marketType;
+      if (projectData.selectionMode !== undefined) dbData.selection_mode = projectData.selectionMode;
+      if (projectData.launchDate !== undefined) dbData.launch_date = projectData.launchDate;
+      if (projectData.attributionDate !== undefined) dbData.attribution_date = projectData.attributionDate;
       // If projectData.coordinates is undefined, we don't update the coordinates
 
       const { data, error } = await supabase
@@ -77,7 +84,12 @@ export const useProjects = () => {
         coordinates: (data as any).coordinates_latitude && (data as any).coordinates_longitude ? {
           latitude: (data as any).coordinates_latitude,
           longitude: (data as any).coordinates_longitude
-        } : undefined
+        } : undefined,
+        financingSource: (data as any).financing_source || undefined,
+        marketType: (data as any).market_type || undefined,
+        selectionMode: (data as any).selection_mode || undefined,
+        launchDate: (data as any).launch_date || undefined,
+        attributionDate: (data as any).attribution_date || undefined
       };
 
       toast({

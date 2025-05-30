@@ -1,3 +1,4 @@
+
 import { Repository } from "typeorm";
 import { Project } from "../entities/Project";
 import { AppDataSource, initializeDataSource } from "../data-source";
@@ -61,6 +62,13 @@ export class ProjectRepository {
       project.teamSize = projectData.teamSize;
       project.coordinatesLatitude = projectData.coordinates?.latitude || null;
       project.coordinatesLongitude = projectData.coordinates?.longitude || null;
+      
+      // Set new optional fields
+      project.financingSource = projectData.financingSource || null;
+      project.marketType = projectData.marketType || null;
+      project.selectionMode = projectData.selectionMode || null;
+      project.launchDate = projectData.launchDate ? new Date(projectData.launchDate) : null;
+      project.attributionDate = projectData.attributionDate ? new Date(projectData.attributionDate) : null;
 
       // Save the project
       const savedProject = await this.repository.save(project);
@@ -97,6 +105,13 @@ export class ProjectRepository {
         project.coordinatesLatitude = projectData.coordinates.latitude;
         project.coordinatesLongitude = projectData.coordinates.longitude;
       }
+      
+      // Update new optional fields
+      if (projectData.financingSource !== undefined) project.financingSource = projectData.financingSource || null;
+      if (projectData.marketType !== undefined) project.marketType = projectData.marketType || null;
+      if (projectData.selectionMode !== undefined) project.selectionMode = projectData.selectionMode || null;
+      if (projectData.launchDate !== undefined) project.launchDate = projectData.launchDate ? new Date(projectData.launchDate) : null;
+      if (projectData.attributionDate !== undefined) project.attributionDate = projectData.attributionDate ? new Date(projectData.attributionDate) : null;
 
       // Save the updated project
       const updatedProject = await this.repository.save(project);

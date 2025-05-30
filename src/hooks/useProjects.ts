@@ -37,7 +37,12 @@ export const useProjects = () => {
         coordinates: project.coordinates_latitude && project.coordinates_longitude ? {
           latitude: project.coordinates_latitude,
           longitude: project.coordinates_longitude
-        } : undefined
+        } : undefined,
+        financingSource: project.financing_source || undefined,
+        marketType: project.market_type || undefined,
+        selectionMode: project.selection_mode || undefined,
+        launchDate: project.launch_date || undefined,
+        attributionDate: project.attribution_date || undefined
       }));
 
       setProjects(transformedData);
@@ -70,7 +75,12 @@ export const useProjects = () => {
         thumbnail: projectData.thumbnail || '/img/project-placeholder.jpg',
         team_size: projectData.teamSize,
         coordinates_latitude: projectData.coordinates?.latitude,
-        coordinates_longitude: projectData.coordinates?.longitude
+        coordinates_longitude: projectData.coordinates?.longitude,
+        financing_source: projectData.financingSource,
+        market_type: projectData.marketType,
+        selection_mode: projectData.selectionMode,
+        launch_date: projectData.launchDate,
+        attribution_date: projectData.attributionDate
       };
 
       const { data, error } = await supabase
@@ -97,7 +107,12 @@ export const useProjects = () => {
         coordinates: (data as any).coordinates_latitude && (data as any).coordinates_longitude ? {
           latitude: (data as any).coordinates_latitude,
           longitude: (data as any).coordinates_longitude
-        } : undefined
+        } : undefined,
+        financingSource: (data as any).financing_source || undefined,
+        marketType: (data as any).market_type || undefined,
+        selectionMode: (data as any).selection_mode || undefined,
+        launchDate: (data as any).launch_date || undefined,
+        attributionDate: (data as any).attribution_date || undefined
       };
 
       // Update the local state
@@ -148,7 +163,12 @@ export const useProjects = () => {
         coordinates: (data as any).coordinates_latitude && (data as any).coordinates_longitude ? {
           latitude: (data as any).coordinates_latitude,
           longitude: (data as any).coordinates_longitude
-        } : undefined
+        } : undefined,
+        financingSource: (data as any).financing_source || undefined,
+        marketType: (data as any).market_type || undefined,
+        selectionMode: (data as any).selection_mode || undefined,
+        launchDate: (data as any).launch_date || undefined,
+        attributionDate: (data as any).attribution_date || undefined
       };
     } catch (err) {
       console.error(`Error fetching project with id ${id}:`, err);

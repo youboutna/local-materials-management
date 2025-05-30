@@ -46,6 +46,22 @@ export class Project {
   @Column({ name: "coordinates_longitude", type: "float", nullable: true })
   coordinatesLongitude!: number | null;
 
+  // New optional fields
+  @Column({ name: "financing_source", type: "varchar", nullable: true })
+  financingSource!: string | null;
+
+  @Column({ name: "market_type", type: "varchar", nullable: true })
+  marketType!: string | null;
+
+  @Column({ name: "selection_mode", type: "varchar", nullable: true })
+  selectionMode!: string | null;
+
+  @Column({ name: "launch_date", type: "date", nullable: true })
+  launchDate!: Date | null;
+
+  @Column({ name: "attribution_date", type: "date", nullable: true })
+  attributionDate!: Date | null;
+
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project, { cascade: true })
   projectMaterials!: ProjectMaterial[];
 
@@ -72,7 +88,12 @@ export class Project {
       coordinates: this.coordinatesLatitude && this.coordinatesLongitude ? {
         latitude: this.coordinatesLatitude,
         longitude: this.coordinatesLongitude
-      } : undefined
+      } : undefined,
+      financingSource: this.financingSource || undefined,
+      marketType: this.marketType || undefined,
+      selectionMode: this.selectionMode || undefined,
+      launchDate: this.launchDate ? this.launchDate.toISOString().split('T')[0] : undefined,
+      attributionDate: this.attributionDate ? this.attributionDate.toISOString().split('T')[0] : undefined
     };
   }
 }
