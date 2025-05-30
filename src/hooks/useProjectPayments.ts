@@ -1,8 +1,8 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { ProjectWithPayments, Payment } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface CreatePaymentPayload {
   projectId: string;
@@ -84,16 +84,85 @@ export const useCreateProjectPayment = () => {
 };
 
 export const useProjectPayments = (projectId: string) => {
-  const fetchPayments = async () => {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('payment_date', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+  const { toast } = useToast();
+
+  const { data: project, isLoading: projectLoading } = useQuery({
+    queryKey: ['project-with-payments', projectId],
+    queryFn: async (): Promise<ProjectWithPayments | null> => {
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id' as any, projectId as any)
+        .single();
+
+      if (projectError) throw projectError;
+
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('project_id' as any, projectId as any)
+        .order('payment_date', { ascending: false });
+
+      const { data: inspectionsData, error: inspectionsError } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id' as any, projectId as any)
+        .order('date', { ascending: false });
+
+      if (paymentsError) throw paymentsError;
+      if (inspectionsError) throw inspectionsError;
+
+      return {
+        ...(projectData as any),
+        payments: paymentsData || [],
+        inspections: inspectionsData || [],
+      };
+    },
+    enabled: !!projectId,
+  });
+
+  const createPayment = async (paymentData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .insert({
+          project_id: projectId,
+          amount: paymentData.amount,
+          payment_date: paymentData.payment_date,
+          payment_method: paymentData.payment_method,
+          progress_at_payment: paymentData.progress_at_payment,
+          inspection_id: paymentData.inspection_id,
+          transaction_id: paymentData.transaction_id,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update project progress if needed
+      if (data && (data as any).progress_at_payment !== undefined) {
+        await supabase
+          .from('projects')
+          .update({ progress: (data as any).progress_at_payment } as any)
+          .eq('id' as any, projectId as any);
+      }
+
+      toast({
+        title: "Paiement ajouté",
+        description: "Le paiement a été enregistré avec succès.",
+      });
+
+      return data;
+    } catch (err) {
+      console.error('Error creating payment:', err);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer le paiement.",
+        variant: "destructive",
+      });
+      throw err;
+    }
   };
 
-  return { fetchPayments };
+  return { project, isLoading: projectLoading, createPayment };
 };

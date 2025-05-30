@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,10 +16,21 @@ type DocumentType = Database['public']['Enums']['document_type'];
 type DocumentStatus = Database['public']['Enums']['document_status'];
 
 const DocumentsList = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
+
+  // Read URL search parameters and set initial filter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const typeParam = searchParams.get('type');
+    if (typeParam) {
+      setFilterType(typeParam);
+    }
+  }, [location.search]);
 
   const { data: documents, isLoading, error } = useQuery({
     queryKey: ['documents', searchTerm, filterType, filterStatus],
@@ -33,11 +45,11 @@ const DocumentsList = () => {
       }
 
       if (filterType !== 'all') {
-        query = query.eq('document_type', filterType as any);
+        query = query.eq('document_type' as any, filterType as any);
       }
 
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus as any);
+        query = query.eq('status' as any, filterStatus as any);
       }
 
       const { data, error } = await query;
@@ -115,6 +127,14 @@ const DocumentsList = () => {
     }
   };
 
+  // Clear filter and return to all documents
+  const clearFilters = () => {
+    setFilterType('all');
+    setFilterStatus('all');
+    setSearchTerm('');
+    navigate('/documents', { replace: true });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -136,9 +156,16 @@ const DocumentsList = () => {
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Search className="h-5 w-5 mr-2" />
-            Recherche et Filtres
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Search className="h-5 w-5 mr-2" />
+              Recherche et Filtres
+            </div>
+            {filterType !== 'all' && (
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Effacer les filtres
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -257,7 +284,12 @@ const DocumentsList = () => {
         <Card>
           <CardContent className="text-center py-8">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Aucun document trouvé</p>
+            <p className="text-gray-500">
+              {filterType !== 'all' ? 
+                `Aucun document de type "${getDocumentTypeLabel(filterType)}" trouvé` : 
+                'Aucun document trouvé'
+              }
+            </p>
           </CardContent>
         </Card>
       )}

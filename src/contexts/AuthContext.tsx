@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -384,19 +383,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       
       // First, find the user with this national ID using a Supabase function or query
-      const { data, error } = await supabase
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('national_id', nationalId)
+        .select('*')
+        .eq('national_id' as any, nationalId as any)
         .single();
       
-      if (error || !data) {
+      if (existingProfile) {
         toast({
-          title: "Erreur de connexion",
-          description: "ID National non trouvé ou invalide.",
-          variant: "destructive"
+          title: "ID National vérifié",
+          description: "Veuillez vous connecter avec votre email et mot de passe.",
         });
-        throw new Error("ID National non trouvé");
+        return;
       }
       
       // Then, get the user's email from auth.users table (this would require a secure server function)
@@ -536,19 +534,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('national_id', nationalId)
+          .select('*')
+          .eq('national_id' as any, nationalId as any)
           .single();
         
-        if (error || !data) {
+        if (profileData) {
           toast({
-            title: "Erreur de connexion",
-            description: "ID National non trouvé ou invalide.",
-            variant: "destructive"
+            title: "ID National vérifié",
+            description: "Veuillez vous connecter avec votre email et mot de passe.",
           });
-          throw new Error("ID National non trouvé");
+          return;
         }
         
         toast({

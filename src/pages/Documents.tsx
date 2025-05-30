@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import EmployeeManagement from '@/components/documents/EmployeeManagement';
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const navigate = useNavigate();
 
   const documentTypes = [
     { id: 'inspection_report', label: 'Rapports d\'inspection', icon: FileText, color: 'text-blue-600' },
@@ -24,6 +26,15 @@ const Documents = () => {
     { id: 'task_assignment', label: 'Affectations de tâches', icon: ClipboardList, color: 'text-indigo-600' },
     { id: 'employee_record', label: 'Dossiers employés', icon: Users, color: 'text-teal-600' }
   ];
+
+  const handleDocumentTypeClick = (documentType: string) => {
+    // Navigate to documents tab with the specific type filter
+    setActiveTab('documents');
+    // Use URL search params to pass the filter
+    const searchParams = new URLSearchParams();
+    searchParams.set('type', documentType);
+    navigate(`/documents?${searchParams.toString()}`, { replace: true });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -65,7 +76,11 @@ const Documents = () => {
                   {documentTypes.map((type) => {
                     const IconComponent = type.icon;
                     return (
-                      <Card key={type.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <Card 
+                        key={type.id} 
+                        className="hover:shadow-md transition-shadow cursor-pointer hover:scale-105 transform transition-transform"
+                        onClick={() => handleDocumentTypeClick(type.id)}
+                      >
                         <CardHeader className="pb-3">
                           <div className="flex items-center space-x-3">
                             <IconComponent className={`h-6 w-6 ${type.color}`} />
