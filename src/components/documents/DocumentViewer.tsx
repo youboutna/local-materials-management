@@ -1,10 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen, ExternalLink, ZoomIn, RotateCw } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +30,8 @@ interface DocumentViewerProps {
 const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const { downloadFile, downloading } = useDocumentStorage();
   const { toast } = useToast();
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [imageRotation, setImageRotation] = useState(0);
 
   const getDocumentIcon = (type: string) => {
     const icons = {
@@ -134,6 +136,25 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
     return false;
   };
 
+  const isVideo = (mimeType?: string, fileName?: string) => {
+    if (mimeType?.startsWith('video/')) return true;
+    if (fileName) {
+      const extension = fileName.toLowerCase().split('.').pop();
+      const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
+      return videoExtensions.includes(extension || '');
+    }
+    return false;
+  };
+
+  const openImageFullscreen = (imageUrl: string) => {
+    setFullscreenImage(imageUrl);
+    setImageRotation(0);
+  };
+
+  const rotateImage = () => {
+    setImageRotation(prev => (prev + 90) % 360);
+  };
+
   const renderDocumentContent = () => {
     if (!document.file_url) {
       return (
@@ -148,11 +169,12 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
 
     if (isImage(document.mime_type, document.file_name)) {
       return (
-        <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-center bg-gray-50 rounded-lg p-4 relative group">
           <img 
             src={document.file_url} 
             alt={document.title}
-            className="max-w-full max-h-96 object-contain rounded shadow-lg"
+            className="max-w-full max-h-96 object-contain rounded shadow-lg cursor-pointer"
+            onClick={() => openImageFullscreen(document.file_url)}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';
@@ -162,6 +184,14 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
               }
             }}
           />
+          <Button
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            size="sm"
+            variant="secondary"
+            onClick={() => openImageFullscreen(document.file_url)}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
           <div className="hidden text-center text-gray-500">
             <FileText className="h-12 w-12 mx-auto mb-2" />
             <p>Impossible de charger l'image</p>
@@ -189,12 +219,41 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
       );
     }
 
+    if (isVideo(document.mime_type, document.file_name)) {
+      return (
+        <div className="w-full bg-gray-50 rounded-lg overflow-hidden">
+          <video 
+            src={document.file_url}
+            controls
+            className="w-full max-h-96"
+            onError={() => {
+              toast({
+                title: "Erreur de prévisualisation",
+                description: "Impossible de charger la vidéo. Vous pouvez la télécharger pour la consulter.",
+                variant: "destructive"
+              });
+            }}
+          >
+            Votre navigateur ne supporte pas la lecture vidéo.
+          </video>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
         <div className="text-center text-gray-500">
           <FileText className="h-12 w-12 mx-auto mb-2" />
           <p>Prévisualisation non disponible pour ce type de fichier</p>
           <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
+          <Button
+            variant="outline"
+            className="mt-3"
+            onClick={handleViewInNewTab}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Ouvrir dans un nouvel onglet
+          </Button>
         </div>
       </div>
     );
@@ -203,118 +262,147 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const IconComponent = getDocumentIcon(document.document_type);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <IconComponent className="h-6 w-6 text-terracotta-600" />
-            <div>
-              <CardTitle className="text-lg">{document.title}</CardTitle>
-              <p className="text-sm text-gray-600">{document.file_name}</p>
-            </div>
-          </div>
-          <Badge className={getStatusColor(document.status)}>
-            {getStatusLabel(document.status)}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Document Content */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Contenu du document</h3>
-          {renderDocumentContent()}
-        </div>
-
-        <Separator />
-
-        {/* Document Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Informations</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Type:</span>
-                <span className="font-medium">{getDocumentTypeLabel(document.document_type)}</span>
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <IconComponent className="h-6 w-6 text-terracotta-600" />
+              <div>
+                <CardTitle className="text-lg">{document.title}</CardTitle>
+                <p className="text-sm text-gray-600">{document.file_name}</p>
               </div>
-              {document.file_size && (
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Taille:</span>
-                  <span className="font-medium">{formatFileSize(document.file_size)}</span>
-                </div>
-              )}
-              {document.mime_type && (
+            </div>
+            <Badge className={getStatusColor(document.status)}>
+              {getStatusLabel(document.status)}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Document Content */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Contenu du document</h3>
+            {renderDocumentContent()}
+          </div>
+
+          <Separator />
+
+          {/* Document Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Informations</h3>
+              <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">Format:</span>
-                  <span className="font-medium">{document.mime_type}</span>
+                  <span className="text-gray-600">Type:</span>
+                  <span className="font-medium">{getDocumentTypeLabel(document.document_type)}</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Métadonnées</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Créé le:</span>
-                <span className="font-medium">
-                  {new Date(document.created_at).toLocaleDateString('fr-FR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">Par:</span>
-                <span className="font-medium">{document.uploaded_by}</span>
+                {document.file_size && (
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Taille:</span>
+                    <span className="font-medium">{formatFileSize(document.file_size)}</span>
+                  </div>
+                )}
+                {document.mime_type && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">Format:</span>
+                    <span className="font-medium">{document.mime_type}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Description */}
-        {document.description && (
-          <>
-            <Separator />
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-              <p className="text-sm text-gray-600">{document.description}</p>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Métadonnées</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-600">Créé le:</span>
+                  <span className="font-medium">
+                    {new Date(document.created_at).toLocaleDateString('fr-FR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-600">Par:</span>
+                  <span className="font-medium">{document.uploaded_by}</span>
+                </div>
+              </div>
             </div>
-          </>
-        )}
+          </div>
 
-        {/* Actions */}
-        <Separator />
-        <div className="flex gap-3">
-          {document.file_url && (
+          {/* Description */}
+          {document.description && (
             <>
-              <Button 
-                onClick={handleDownload}
-                disabled={downloading}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                {downloading ? 'Téléchargement...' : 'Télécharger'}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleViewInNewTab}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Ouvrir dans un nouvel onglet
-              </Button>
+              <Separator />
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
+                <p className="text-sm text-gray-600">{document.description}</p>
+              </div>
             </>
           )}
-        </div>
-      </CardContent>
-    </Card>
+
+          {/* Actions */}
+          <Separator />
+          <div className="flex gap-3">
+            {document.file_url && (
+              <>
+                <Button 
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  {downloading ? 'Téléchargement...' : 'Télécharger'}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleViewInNewTab}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Ouvrir dans un nouvel onglet
+                </Button>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Fullscreen Image Dialog */}
+      <Dialog open={!!fullscreenImage} onOpenChange={() => setFullscreenImage(null)}>
+        <DialogContent className="max-w-screen-lg max-h-screen p-0 bg-black/90">
+          <DialogHeader className="absolute top-4 left-4 z-10">
+            <DialogTitle className="text-white">{document.title}</DialogTitle>
+          </DialogHeader>
+          {fullscreenImage && (
+            <div className="relative w-full h-full flex items-center justify-center p-4">
+              <img 
+                src={fullscreenImage} 
+                alt={document.title}
+                className="max-w-full max-h-full object-contain"
+                style={{ transform: `rotate(${imageRotation}deg)` }}
+              />
+              <Button
+                className="absolute top-4 right-16 z-10"
+                size="sm"
+                variant="secondary"
+                onClick={rotateImage}
+              >
+                <RotateCw className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

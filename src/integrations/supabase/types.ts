@@ -1486,6 +1486,66 @@ export type Database = {
           },
         ]
       }
+      tender_documents: {
+        Row: {
+          category: Database["public"]["Enums"]["tender_document_category"]
+          created_at: string
+          document_id: string
+          id: string
+          is_required: boolean | null
+          is_submitted: boolean | null
+          project_id: string
+          reviewer_notes: string | null
+          status: string | null
+          subcategory: Database["public"]["Enums"]["tender_document_subcategory"]
+          submission_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["tender_document_category"]
+          created_at?: string
+          document_id: string
+          id?: string
+          is_required?: boolean | null
+          is_submitted?: boolean | null
+          project_id: string
+          reviewer_notes?: string | null
+          status?: string | null
+          subcategory: Database["public"]["Enums"]["tender_document_subcategory"]
+          submission_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["tender_document_category"]
+          created_at?: string
+          document_id?: string
+          id?: string
+          is_required?: boolean | null
+          is_submitted?: boolean | null
+          project_id?: string
+          reviewer_notes?: string | null
+          status?: string | null
+          subcategory?: Database["public"]["Enums"]["tender_document_subcategory"]
+          submission_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vessels: {
         Row: {
           capacity: number
@@ -1561,6 +1621,27 @@ export type Database = {
         | "employee_record"
       mission_status: "planned" | "in_progress" | "completed" | "cancelled"
       supply_request_status: "pending" | "approved" | "rejected" | "completed"
+      tender_document_category: "administrative" | "technical" | "financial"
+      tender_document_subcategory:
+        | "lettre_soumission"
+        | "pouvoir_signature"
+        | "acte_groupement"
+        | "attestation_impot"
+        | "attestation_cnss"
+        | "attestation_non_faillite"
+        | "renseignement_soumissionnaire"
+        | "preuves_capacites_techniques"
+        | "experience_generale_marche"
+        | "methodologie"
+        | "personnel_cle"
+        | "planning_travaux"
+        | "calendrier_livraison"
+        | "conformite_techniques"
+        | "preuves_capacites_financieres"
+        | "chiffre_affaires_annuel"
+        | "devis_quantitatif_estimatif"
+        | "garantie_bancaire"
+        | "garantie_soumission"
       user_role: "insurance_company" | "practitioner" | "patient"
       vessel_status: "active" | "maintenance" | "inactive"
     }
@@ -1696,6 +1777,28 @@ export const Constants = {
       ],
       mission_status: ["planned", "in_progress", "completed", "cancelled"],
       supply_request_status: ["pending", "approved", "rejected", "completed"],
+      tender_document_category: ["administrative", "technical", "financial"],
+      tender_document_subcategory: [
+        "lettre_soumission",
+        "pouvoir_signature",
+        "acte_groupement",
+        "attestation_impot",
+        "attestation_cnss",
+        "attestation_non_faillite",
+        "renseignement_soumissionnaire",
+        "preuves_capacites_techniques",
+        "experience_generale_marche",
+        "methodologie",
+        "personnel_cle",
+        "planning_travaux",
+        "calendrier_livraison",
+        "conformite_techniques",
+        "preuves_capacites_financieres",
+        "chiffre_affaires_annuel",
+        "devis_quantitatif_estimatif",
+        "garantie_bancaire",
+        "garantie_soumission",
+      ],
       user_role: ["insurance_company", "practitioner", "patient"],
       vessel_status: ["active", "maintenance", "inactive"],
     },

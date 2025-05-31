@@ -1,22 +1,43 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Gavel } from 'lucide-react';
 import DocumentsList from '@/components/documents/DocumentsList';
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import SuppliersManagement from '@/components/documents/SuppliersManagement';
 import TaskAssignments from '@/components/documents/TaskAssignments';
 import EmployeeManagement from '@/components/documents/EmployeeManagement';
 import DocumentViewer from '@/components/documents/DocumentViewer';
+import TenderDocuments from '@/components/documents/TenderDocuments';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const Documents = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Get projects for tender documents
+  const { data: projects } = useQuery({
+    queryKey: ['projects-for-tender'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title')
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const documentTypes = [
     { id: 'inspection_report', label: 'Rapports d\'inspection', icon: FileText, color: 'text-blue-600' },
@@ -25,10 +46,16 @@ const Documents = () => {
     { id: 'contract', label: 'Contrats', icon: FileCheck, color: 'text-red-600' },
     { id: 'supplier_info', label: 'Informations fournisseurs', icon: Building2, color: 'text-orange-600' },
     { id: 'task_assignment', label: 'Affectations de tâches', icon: ClipboardList, color: 'text-indigo-600' },
-    { id: 'employee_record', label: 'Dossiers employés', icon: Users, color: 'text-teal-600' }
+    { id: 'employee_record', label: 'Dossiers employés', icon: Users, color: 'text-teal-600' },
+    { id: 'tender_documents', label: 'Documents d\'appel d\'offres', icon: Gavel, color: 'text-amber-600' }
   ];
 
   const handleDocumentTypeClick = (documentType: string) => {
+    if (documentType === 'tender_documents') {
+      setActiveTab('tender');
+      return;
+    }
+    
     // Navigate to documents tab with the specific type filter
     setActiveTab('documents');
     // Use URL search params to pass the filter
@@ -68,9 +95,10 @@ const Documents = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-10">
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="tender">Appels d'offres</TabsTrigger>
                 <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
                 <TabsTrigger value="tasks">Tâches</TabsTrigger>
                 <TabsTrigger value="employees">Employés</TabsTrigger>
@@ -107,6 +135,38 @@ const Documents = () => {
 
               <TabsContent value="documents">
                 <DocumentsList onDocumentSelect={handleDocumentSelect} />
+              </TabsContent>
+
+              <TabsContent value="tender" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Documents d'Appel d'Offres</CardTitle>
+                    <CardDescription>
+                      Sélectionnez un projet pour voir ses documents d'appel d'offres
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sélectionner un projet..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </CardContent>
+                </Card>
+
+                {selectedProjectId && (
+                  <TenderDocuments 
+                    projectId={selectedProjectId} 
+                    onDocumentSelect={handleDocumentSelect}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="suppliers">
