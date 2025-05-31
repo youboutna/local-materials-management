@@ -19,6 +19,7 @@ import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
 import { ProjectWithPayments, Inspection, InspectionStatus } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
+import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,7 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<ProjectWithPayments | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   const { getProject, deleteProject } = useProjects();
 
   const fetchProjectWithDetails = async (projectId: string) => {
@@ -419,6 +421,58 @@ const ProjectDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-7">
+                <TabsTrigger value="overview">Aperçu</TabsTrigger>
+                <TabsTrigger value="materials">Matériaux</TabsTrigger>
+                <TabsTrigger value="payments">Paiements</TabsTrigger>
+                <TabsTrigger value="inspections">Inspections</TabsTrigger>
+                <TabsTrigger value="workflow">Workflow</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="takeoffs">Métrés</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">{project.description}</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="materials">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">Matériaux du projet</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="payments">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">Historique des paiements</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="inspections">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">Historique des inspections</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="workflow">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">Workflow du projet</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="documents">
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">Documents du projet</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="takeoffs">
+                <QuantityTakeoffs projectId={id!} />
+              </TabsContent>
+            </Tabs>
           </motion.div>
         </div>
       </main>

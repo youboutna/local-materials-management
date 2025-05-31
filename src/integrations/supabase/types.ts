@@ -1195,6 +1195,66 @@ export type Database = {
         }
         Relationships: []
       }
+      quantity_takeoffs: {
+        Row: {
+          created_at: string
+          element_type: string
+          height: number | null
+          id: string
+          length: number
+          material_id: string
+          note: string | null
+          project_id: string
+          quantity: number
+          unit: string
+          updated_at: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          element_type: string
+          height?: number | null
+          id?: string
+          length?: number
+          material_id: string
+          note?: string | null
+          project_id: string
+          quantity?: number
+          unit: string
+          updated_at?: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          element_type?: string
+          height?: number | null
+          id?: string
+          length?: number
+          material_id?: string
+          note?: string | null
+          project_id?: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quantity_takeoffs_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quantity_takeoffs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           act_codes: Json | null
