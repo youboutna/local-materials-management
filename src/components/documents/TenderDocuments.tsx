@@ -20,7 +20,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
 
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', projectId],
-    queryFn: async (): Promise<TenderDocumentWithDetails[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('tender_documents')
         .select(`
@@ -39,7 +39,7 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as TenderDocumentWithDetails[];
     },
   });
 

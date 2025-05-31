@@ -1,4 +1,3 @@
-
 export type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 
 export type TenderDocumentSubcategory = 
@@ -46,12 +45,12 @@ export interface TenderDocumentWithDetails extends TenderDocument {
   document?: {
     id: string;
     title: string;
-    description?: string;
-    file_url?: string;
-    file_name?: string;
-    mime_type?: string;
-    file_size?: number;
-  };
+    description?: string | null;
+    file_url?: string | null;
+    file_name?: string | null;
+    mime_type?: string | null;
+    file_size?: number | null;
+  } | null;
 }
 
 export const TENDER_DOCUMENT_LABELS = {
