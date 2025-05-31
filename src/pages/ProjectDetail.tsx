@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -19,6 +18,7 @@ import { MapLocation } from '@/components/ProjectMap';
 import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
+import { InspectionReportCard } from '@/components/project/InspectionReportCard';
 import { ProjectWithPayments, Inspection, InspectionStatus } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
@@ -344,86 +344,7 @@ const ProjectDetail = () => {
               </Card>
             </div>
 
-            {/* Inspection Workflow */}
-            <WorkflowInspection 
-              project={project} 
-              onInspectionUpdate={handleDataUpdate}
-            />
-
-            {/* Payment History */}
-            <PaymentHistory payments={project.payments} />
-
-            {/* Map section */}
-            {mapLocation && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Localisation</CardTitle>
-                  <CardDescription>Position géographique du projet</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-96 rounded-lg overflow-hidden">
-                    <ProjectMap 
-                      locations={[mapLocation]}
-                      height="100%"
-                      width="100%"
-                      interactive={true}
-                      defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
-                      defaultZoom={12}
-                    />
-                  </div>
-                  <div className="mt-4 text-sm text-gray-600">
-                    <p>
-                      Coordonnées: {mapLocation.latitude.toFixed(6)}, {mapLocation.longitude.toFixed(6)}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Timeline */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Calendrier du projet</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Date de début</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(project.startDate).toLocaleDateString('fr-FR', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <Badge variant="outline">Commencé</Badge>
-                  </div>
-                  
-                  {project.endDate && (
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">Date de fin prévue</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(project.endDate).toLocaleDateString('fr-FR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                      <Badge variant={project.status === 'terminé' ? 'default' : 'secondary'}>
-                        {project.status === 'terminé' ? 'Terminé' : 'Prévu'}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Main Tabs Section - Moved here after project summary */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="overview">Aperçu</TabsTrigger>
@@ -436,39 +357,119 @@ const ProjectDetail = () => {
               </TabsList>
 
               <TabsContent value="overview">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">{project.description}</p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Description du projet</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <p className="text-gray-700 leading-relaxed">{project.description}</p>
+                      
+                      {/* Timeline */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Calendrier du projet</h3>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                              <p className="font-medium">Date de début</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(project.startDate).toLocaleDateString('fr-FR', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                            <Badge variant="outline">Commencé</Badge>
+                          </div>
+                          
+                          {project.endDate && (
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                              <div>
+                                <p className="font-medium">Date de fin prévue</p>
+                                <p className="text-sm text-gray-600">
+                                  {new Date(project.endDate).toLocaleDateString('fr-FR', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                              <Badge variant={project.status === 'terminé' ? 'default' : 'secondary'}>
+                                {project.status === 'terminé' ? 'Terminé' : 'Prévu'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Map section */}
+                      {mapLocation && (
+                        <div>
+                          <h3 className="text-lg font-medium mb-4">Localisation</h3>
+                          <div className="h-96 rounded-lg overflow-hidden">
+                            <ProjectMap 
+                              locations={[mapLocation]}
+                              height="100%"
+                              width="100%"
+                              interactive={true}
+                              defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
+                              defaultZoom={12}
+                            />
+                          </div>
+                          <div className="mt-4 text-sm text-gray-600">
+                            <p>
+                              Coordonnées: {mapLocation.latitude.toFixed(6)}, {mapLocation.longitude.toFixed(6)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="materials">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">Matériaux du projet</p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Matériaux du projet</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-500 text-center py-8">
+                      Fonctionnalité de gestion des matériaux en cours de développement.
+                    </p>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="payments">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">Historique des paiements</p>
-                </div>
+                <PaymentHistory payments={project.payments} />
               </TabsContent>
 
               <TabsContent value="inspections">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">Historique des inspections</p>
-                </div>
+                <InspectionReportCard project={project} />
               </TabsContent>
 
               <TabsContent value="workflow">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">Workflow du projet</p>
-                </div>
+                <WorkflowInspection 
+                  project={project} 
+                  onInspectionUpdate={handleDataUpdate}
+                />
               </TabsContent>
 
               <TabsContent value="documents">
-                <div className="space-y-4">
-                  <p className="text-gray-700 leading-relaxed">Documents du projet</p>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Documents du projet</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-500 text-center py-8">
+                      Fonctionnalité de gestion des documents en cours de développement.
+                    </p>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="takeoffs">
