@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,23 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDocuments(data || []);
+      
+      // Transform the data to match our interface, handling null values properly
+      const transformedDocuments: ProjectDocument[] = (data || []).map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        description: doc.description || undefined,
+        file_name: doc.file_name || undefined,
+        file_url: doc.file_url || undefined,
+        mime_type: doc.mime_type || undefined,
+        file_size: doc.file_size || undefined,
+        document_type: doc.document_type,
+        status: doc.status,
+        created_at: doc.created_at,
+        tags: doc.tags || undefined
+      }));
+      
+      setDocuments(transformedDocuments);
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast({
@@ -112,7 +127,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
           mime_type: uploadData.file.type,
           file_size: uploadData.file.size,
           project_id: projectId,
-          status: 'active'
+          status: 'draft'
         });
 
       if (error) throw error;

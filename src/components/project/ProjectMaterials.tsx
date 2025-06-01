@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, MapPin, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Package, MapPin, Edit2, Trash2, Calculator } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -61,7 +61,24 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
         .eq('project_id', projectId);
 
       if (error) throw error;
-      setMaterials(data || []);
+      
+      // Transform the data to match our interface, handling null values properly
+      const transformedMaterials: ProjectMaterial[] = (data || []).map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        material: {
+          id: item.material.id,
+          name: item.material.name,
+          description: item.material.description,
+          category: item.material.category,
+          unit: item.material.unit,
+          price_per_unit: item.material.price_per_unit,
+          origin_location: item.material.origin_location || undefined,
+          image: item.material.image || undefined
+        }
+      }));
+      
+      setMaterials(transformedMaterials);
     } catch (error) {
       console.error('Error fetching project materials:', error);
       toast({
@@ -77,6 +94,43 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
   useEffect(() => {
     fetchProjectMaterials();
   }, [projectId]);
+
+  const createQuantityTakeoffs = async (materials: SelectedMaterial[]) => {
+    try {
+      console.log('Creating quantity takeoffs for materials:', materials);
+      
+      const takeoffsToCreate = materials.map(material => ({
+        project_id: projectId,
+        material_id: material.materialId,
+        element_type: 'Standard Element',
+        unit: 'unité', // Default unit, will be updated based on material
+        length: material.quantity,
+        width: null,
+        height: null,
+        note: 'Auto-généré lors de l\'ajout du matériau'
+      }));
+
+      const { error } = await supabase
+        .from('quantity_takeoffs')
+        .insert(takeoffsToCreate);
+
+      if (error) throw error;
+      
+      console.log('Quantity takeoffs created successfully');
+      
+      toast({
+        title: "Métrés créés",
+        description: `${materials.length} métré(s) automatiquement créé(s).`,
+      });
+    } catch (error) {
+      console.error('Error creating quantity takeoffs:', error);
+      toast({
+        title: "Avertissement",
+        description: "Matériaux ajoutés mais métrés non créés automatiquement.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAddMaterials = async () => {
     if (selectedMaterials.length === 0) return;
@@ -94,9 +148,12 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
       if (error) throw error;
 
+      // Automatically create quantity takeoffs for the new materials
+      await createQuantityTakeoffs(selectedMaterials);
+
       toast({
         title: "Matériaux ajoutés",
-        description: `${selectedMaterials.length} matériau(x) ajouté(s) au projet.`,
+        description: `${selectedMaterials.length} matériau(x) ajouté(s) au projet avec métrés automatiques.`,
       });
 
       setIsAddDialogOpen(false);
@@ -166,6 +223,10 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
               Matériaux du projet
+              <Badge variant="outline" className="ml-2">
+                <Calculator className="h-3 w-3 mr-1" />
+                Métrés auto
+              </Badge>
             </CardTitle>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
@@ -177,6 +238,9 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Ajouter des matériaux au projet</DialogTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Les métrés seront automatiquement calculés pour chaque matériau ajouté.
+                  </p>
                 </DialogHeader>
                 <div className="space-y-4">
                   <MaterialSelector
@@ -225,7 +289,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun matériau assigné</h3>
             <p className="text-gray-600 mb-4">
-              Commencez par ajouter des matériaux à ce projet.
+              Commencez par ajouter des matériaux à ce projet. Les métrés seront calculés automatiquement.
             </p>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
