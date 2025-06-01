@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -488,70 +489,70 @@ const ProjectEdit = () => {
                   </FormItem>
                 )}
               />
-            </div>
-            
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Description détaillée du projet" 
-                      className="min-h-32" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Location Selector - New enhanced section */}
-            <LocationSelector
-              value={{
-                latitude: form.watch('coordinates.latitude'),
-                longitude: form.watch('coordinates.longitude'),
-                address: form.watch('location')
-              }}
-              onChange={(location) => {
-                if (location.address) {
-                  form.setValue('location', location.address);
-                }
-                if (location.latitude !== undefined && location.longitude !== undefined) {
-                  form.setValue('coordinates', {
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                  });
-                } else if (location.latitude === undefined && location.longitude === undefined) {
-                  form.setValue('coordinates', null);
-                }
-              }}
-            />
-            
-            {/* Submit button */}
-            <div className="flex justify-end pt-4">
-              <Button 
-                type="submit" 
-                className="bg-terracotta-500 hover:bg-terracotta-600"
-                disabled={submitting}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {submitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
+              
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Description détaillée du projet" 
+                        className="min-h-32" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Location Selector - New enhanced section */}
+              <LocationSelector
+                value={{
+                  latitude: form.watch('coordinates.latitude'),
+                  longitude: form.watch('coordinates.longitude'),
+                  address: form.watch('location')
+                }}
+                onChange={(location) => {
+                  if (location.address) {
+                    form.setValue('location', location.address);
+                  }
+                  if (location.latitude !== undefined && location.longitude !== undefined) {
+                    form.setValue('coordinates', {
+                      latitude: location.latitude,
+                      longitude: location.longitude
+                    });
+                  } else if (location.latitude === undefined && location.longitude === undefined) {
+                    form.setValue('coordinates', null);
+                  }
+                }}
+              />
+              
+              {/* Submit button */}
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  className="bg-terracotta-500 hover:bg-terracotta-600"
+                  disabled={submitting}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {submitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
 
-      {/* Materials Section */}
-      <MaterialFormSection 
-        selectedMaterials={selectedMaterials}
-        onChange={handleMaterialsChange}
-        projectBudget={form.watch('budget')}
-      />
+        {/* Materials Section */}
+        <MaterialFormSection 
+          selectedMaterials={selectedMaterials}
+          onChange={handleMaterialsChange}
+          projectBudget={form.watch('budget')}
+        />
+      </div>
     </div>
   );
 };
