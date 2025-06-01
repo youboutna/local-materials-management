@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface ProjectDocument {
   id: string;
-  title: string;
   description?: string;
   file_name?: string;
   file_url?: string;
@@ -46,7 +46,6 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   const [filterType, setFilterType] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadData, setUploadData] = useState({
-    title: '',
     description: '',
     document_type: 'project_report',
     file: null as File | null
@@ -57,7 +56,9 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     { value: 'contract', label: 'Contrat', icon: FileText },
     { value: 'inspection_report', label: 'Rapport d\'inspection', icon: FileText },
     { value: 'location_photo', label: 'Photo de localisation', icon: Image },
-    { value: 'other', label: 'Autre', icon: File }
+    { value: 'supplier_info', label: 'Info fournisseur', icon: FileText },
+    { value: 'task_assignment', label: 'Assignation de tâche', icon: FileText },
+    { value: 'employee_record', label: 'Dossier employé', icon: File }
   ];
 
   const fetchDocuments = async () => {
@@ -73,14 +74,13 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
       // Transform the data to match our interface, handling null values properly
       const transformedDocuments: ProjectDocument[] = (data || []).map(doc => ({
         id: doc.id,
-        title: doc.title,
         description: doc.description || undefined,
         file_name: doc.file_name || undefined,
         file_url: doc.file_url || undefined,
         mime_type: doc.mime_type || undefined,
         file_size: doc.file_size || undefined,
         document_type: doc.document_type,
-        status: doc.status,
+        status: doc.status || 'draft', // Handle null status by defaulting to 'draft'
         created_at: doc.created_at,
         tags: doc.tags || undefined
       }));
@@ -120,9 +120,8 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
       const { error } = await supabase
         .from('documents')
         .insert({
-          title: uploadData.title,
           description: uploadData.description,
-          document_type: uploadData.document_type,
+          document_type: uploadData.document_type as any, // Cast to match database enum
           file_name: uploadData.file.name,
           mime_type: uploadData.file.type,
           file_size: uploadData.file.size,
@@ -139,7 +138,6 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
 
       setIsUploadDialogOpen(false);
       setUploadData({
-        title: '',
         description: '',
         document_type: 'project_report',
         file: null
@@ -200,8 +198,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   };
 
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesFilter = filterType === 'all' || doc.document_type === filterType;
     return matchesSearch && matchesFilter;
   });
@@ -240,15 +237,6 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                   <DialogTitle>Ajouter un nouveau document</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleFileUpload} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Titre</label>
-                    <Input
-                      value={uploadData.title}
-                      onChange={(e) => setUploadData({...uploadData, title: e.target.value})}
-                      placeholder="Titre du document"
-                      required
-                    />
-                  </div>
                   <div>
                     <label className="text-sm font-medium">Description</label>
                     <Textarea
@@ -364,7 +352,9 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                       <div className="flex items-start gap-3 flex-1">
                         <IconComponent className="h-6 w-6 text-adrar-600 mt-1" />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 truncate">{doc.title}</h3>
+                          <h3 className="font-medium text-gray-900 truncate">
+                            {doc.file_name || 'Document sans nom'}
+                          </h3>
                           {doc.description && (
                             <p className="text-sm text-gray-600 mt-1 line-clamp-2">{doc.description}</p>
                           )}
