@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,7 +80,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
         file_size: doc.file_size || undefined,
         document_type: doc.document_type,
         status: doc.status || 'draft', // Handle null status by defaulting to 'draft'
-        created_at: doc.created_at,
+        created_at: doc.created_at || new Date().toISOString(), // Handle null created_at
         tags: doc.tags || undefined
       }));
       
@@ -120,6 +119,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
       const { error } = await supabase
         .from('documents')
         .insert({
+          title: uploadData.file.name, // Use filename as title
           description: uploadData.description,
           document_type: uploadData.document_type as any, // Cast to match database enum
           file_name: uploadData.file.name,
