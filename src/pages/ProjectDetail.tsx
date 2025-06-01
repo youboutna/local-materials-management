@@ -22,6 +22,8 @@ import { InspectionReportCard } from '@/components/project/InspectionReportCard'
 import { ProjectWithPayments, Inspection, InspectionStatus } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
+import ProjectMaterials from '@/components/project/ProjectMaterials';
+import ProjectDocuments from '@/components/project/ProjectDocuments';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -432,16 +434,7 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="materials">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Matériaux du projet</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500 text-center py-8">
-                      Fonctionnalité de gestion des matériaux en cours de développement.
-                    </p>
-                  </CardContent>
-                </Card>
+                <ProjectMaterials projectId={id!} onUpdate={handleDataUpdate} />
               </TabsContent>
 
               <TabsContent value="payments">
@@ -460,16 +453,7 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="documents">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Documents du projet</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500 text-center py-8">
-                      Fonctionnalité de gestion des documents en cours de développement.
-                    </p>
-                  </CardContent>
-                </Card>
+                <ProjectDocuments projectId={id!} />
               </TabsContent>
 
               <TabsContent value="takeoffs">

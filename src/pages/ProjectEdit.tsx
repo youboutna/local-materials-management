@@ -16,6 +16,7 @@ import { ProjectStatus } from '@/types/project';
 import ProgressIndicator from '@/components/ProgressIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import LocationSelector from '@/components/location/LocationSelector';
+import MaterialFormSection from '@/components/MaterialFormSection';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -37,12 +38,19 @@ const projectSchema = z.object({
 // Define the type for our form values
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
+// Add interface for selected materials
+interface SelectedMaterial {
+  materialId: string;
+  quantity: number;
+}
+
 const ProjectEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { getProject, updateProject } = useProjects();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [loadingInspection, setLoadingInspection] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
   const navigate = useNavigate();
 
   // Set up form with validation
@@ -86,6 +94,9 @@ const ProjectEdit = () => {
             teamSize: projectData.teamSize,
             coordinates: projectData.coordinates || null
           });
+
+          // Load project materials
+          await loadProjectMaterials(id);
         } else {
           toast({
             title: "Erreur",
@@ -108,6 +119,29 @@ const ProjectEdit = () => {
     
     fetchProject();
   }, [id, getProject, navigate, form]);
+
+  // Load existing materials when project loads
+  const loadProjectMaterials = async (projectId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('project_materials')
+        .select('material_id, quantity')
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      const materials: SelectedMaterial[] = data?.map(item => ({
+        materialId: item.material_id,
+        quantity: item.quantity
+      })) || [];
+
+      setSelectedMaterials(materials);
+    } catch (error) {
+      console.error('Error loading project materials:', error);
+    }
+  };
+
+  // Update the existing useEffect to also load materials
 
   // Function to sync progress with latest inspection
   const syncProgressWithLatestInspection = async () => {
@@ -171,6 +205,9 @@ const ProjectEdit = () => {
 
       const updatedProject = await updateProject(id, projectDataToUpdate);
       if (updatedProject) {
+        // Update materials
+        await updateProjectMaterials(id, selectedMaterials);
+
         toast({
           title: "Modifications enregistrées",
           description: "Le projet a été mis à jour avec succès",
@@ -188,6 +225,40 @@ const ProjectEdit = () => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Update materials when they change
+  const handleMaterialsChange = (materials: SelectedMaterial[]) => {
+    setSelectedMaterials(materials);
+  };
+
+  // Update materials in database
+  const updateProjectMaterials = async (projectId: string, materials: SelectedMaterial[]) => {
+    try {
+      // Delete existing materials
+      await supabase
+        .from('project_materials')
+        .delete()
+        .eq('project_id', projectId);
+
+      // Insert new materials
+      if (materials.length > 0) {
+        const materialsToInsert = materials.map(material => ({
+          project_id: projectId,
+          material_id: material.materialId,
+          quantity: material.quantity
+        }));
+
+        const { error } = await supabase
+          .from('project_materials')
+          .insert(materialsToInsert);
+
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Error updating project materials:', error);
+      throw error;
     }
   };
 
@@ -220,10 +291,10 @@ const ProjectEdit = () => {
       </div>
       
       {/* Edit form */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Title */}
               <FormField
                 control={form.control}
@@ -474,6 +545,13 @@ const ProjectEdit = () => {
           </form>
         </Form>
       </div>
+
+      {/* Materials Section */}
+      <MaterialFormSection 
+        selectedMaterials={selectedMaterials}
+        onChange={handleMaterialsChange}
+        projectBudget={form.watch('budget')}
+      />
     </div>
   );
 };
