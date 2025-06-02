@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,6 +19,7 @@ import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import Documents from './pages/Documents';
 import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
 import PasswordResetHandler from './components/auth/PasswordResetHandler';
@@ -53,6 +53,7 @@ function App() {
                     <Route path="/materials/:id" element={<MaterialDetail />} />
                     <Route path="/materials/create" element={<MaterialCreate />} />
                     <Route path="/materials/:id/edit" element={<MaterialEdit />} />
+                    <Route path="/documents" element={<Documents />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />

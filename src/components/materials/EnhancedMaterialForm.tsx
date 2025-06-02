@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Location, OperationalStatus, TimeLine, EnhancedMaterial } from '@/types/mauritania';
+import InteractiveMap from '@/components/map/InteractiveMap';
+import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
 interface EnhancedMaterialFormProps {
   onSubmit: (material: Partial<EnhancedMaterial>) => void;
@@ -43,6 +45,12 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     ...initialData
   });
 
+  const [warehouseMapData, setWarehouseMapData] = useState({
+    center: undefined,
+    polygon: [],
+    address: ''
+  });
+
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -60,19 +68,23 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     }));
   };
 
-  const handleSupplierChange = (field: string, value: any) => {
+  const handleSupplierChange = (supplier: any) => {
     setFormData(prev => ({
       ...prev,
-      supplier: {
-        ...prev.supplier!,
-        [field]: value
-      }
+      supplier
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Include warehouse location data
+    const submissionData = {
+      ...formData,
+      warehouseLocation: warehouseMapData
+    };
+    
+    onSubmit(submissionData);
   };
 
   return (
@@ -126,10 +138,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       {/* Workspace and Location */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Espace de travail et localisation
-          </CardTitle>
+          <CardTitle>Espace de travail et localisation</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -167,6 +176,15 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Warehouse Location Map */}
+      <InteractiveMap
+        title="Localisation de l'entrepôt"
+        description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
+        value={warehouseMapData}
+        onChange={setWarehouseMapData}
+        allowPolygon={true}
+      />
 
       {/* Quantities and Pricing */}
       <Card>
@@ -275,38 +293,12 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         <CardHeader>
           <CardTitle>Informations fournisseur</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="supplierName">Nom du fournisseur</Label>
-              <Input
-                id="supplierName"
-                value={formData.supplier?.name || ''}
-                onChange={(e) => handleSupplierChange('name', e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="supplierContact">Contact</Label>
-              <Input
-                id="supplierContact"
-                value={formData.supplier?.contact || ''}
-                onChange={(e) => handleSupplierChange('contact', e.target.value)}
-                placeholder="Téléphone ou email"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
-              <Input
-                id="leadTime"
-                type="number"
-                min="1"
-                value={formData.supplier?.leadTime || 0}
-                onChange={(e) => handleSupplierChange('leadTime', parseInt(e.target.value) || 0)}
-              />
-            </div>
-          </div>
+        <CardContent>
+          <SupplierSelector
+            value={formData.supplier}
+            onChange={handleSupplierChange}
+            allowCustom={true}
+          />
         </CardContent>
       </Card>
 

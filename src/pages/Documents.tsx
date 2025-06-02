@@ -95,7 +95,7 @@ const Documents = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-10">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
                 <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="tender">Appels d'offres</TabsTrigger>
@@ -113,7 +113,7 @@ const Documents = () => {
                     return (
                       <Card 
                         key={type.id} 
-                        className="hover:shadow-md transition-shadow cursor-pointer hover:scale-105 transform transition-transform"
+                        className="hover:shadow-md transition-all cursor-pointer hover:scale-105 transform transition-transform duration-200"
                         onClick={() => handleDocumentTypeClick(type.id)}
                       >
                         <CardHeader className="pb-3">
