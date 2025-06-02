@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Square, Navigation, Trash2 } from 'lucide-react';
+import { MapPin, Square, Navigation, Trash2, Target } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Coordinate {
@@ -24,6 +24,7 @@ interface InteractiveMapProps {
   title?: string;
   description?: string;
   allowPolygon?: boolean;
+  allowCoordinateSelection?: boolean;
   className?: string;
 }
 
@@ -33,10 +34,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   title = "Localisation et zone",
   description = "Définissez la position GPS et tracez la zone si nécessaire",
   allowPolygon = true,
+  allowCoordinateSelection = true,
   className
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSelectingCoordinate, setIsSelectingCoordinate] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<Coordinate[]>(value?.polygon || []);
   const [centerPoint, setCenterPoint] = useState<Coordinate | undefined>(value?.center);
   const [address, setAddress] = useState(value?.address || '');
@@ -162,13 +165,21 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const newPolygon = [...currentPolygon, { lat, lng }];
       setCurrentPolygon(newPolygon);
       updateMapData({ polygon: newPolygon });
-    } else {
+    } else if (isSelectingCoordinate || !isDrawing) {
       // Set center point
       const newCenter = { lat, lng };
       setCenterPoint(newCenter);
       setManualLat(lat.toFixed(6));
       setManualLng(lng.toFixed(6));
       updateMapData({ center: newCenter });
+      
+      if (isSelectingCoordinate) {
+        setIsSelectingCoordinate(false);
+        toast({
+          title: "Coordonnées sélectionnées",
+          description: `Position: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+        });
+      }
     }
   };
 
@@ -235,8 +246,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     updateMapData({ center: newCenter });
   };
 
+  const startCoordinateSelection = () => {
+    setIsSelectingCoordinate(true);
+    setIsDrawing(false);
+    toast({
+      title: "Sélection de coordonnées",
+      description: "Cliquez sur la carte pour sélectionner une position"
+    });
+  };
+
   const startDrawing = () => {
     setIsDrawing(true);
+    setIsSelectingCoordinate(false);
     setCurrentPolygon([]);
     updateMapData({ polygon: [] });
     toast({
@@ -337,48 +358,65 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             ref={canvasRef}
             width={600}
             height={400}
-            className="w-full h-64 cursor-crosshair"
+            className={`w-full h-64 ${
+              isSelectingCoordinate ? 'cursor-crosshair' : 
+              isDrawing ? 'cursor-copy' : 'cursor-pointer'
+            }`}
             onClick={handleCanvasClick}
           />
         </div>
 
         {/* Map controls */}
-        {allowPolygon && (
-          <div className="flex flex-wrap gap-2">
-            {!isDrawing ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={startDrawing}
-                className="flex items-center gap-2"
-              >
-                <Square className="h-4 w-4" />
-                Tracer zone
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={finishDrawing}
-                className="flex items-center gap-2"
-              >
-                <Square className="h-4 w-4" />
-                Terminer
-              </Button>
-            )}
-            {currentPolygon.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={clearPolygon}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Effacer zone
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {allowCoordinateSelection && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={startCoordinateSelection}
+              className={`flex items-center gap-2 ${isSelectingCoordinate ? 'bg-blue-100' : ''}`}
+            >
+              <Target className="h-4 w-4" />
+              Sélectionner coordonnées
+            </Button>
+          )}
+          
+          {allowPolygon && (
+            <>
+              {!isDrawing ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={startDrawing}
+                  className="flex items-center gap-2"
+                >
+                  <Square className="h-4 w-4" />
+                  Tracer zone
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={finishDrawing}
+                  className="flex items-center gap-2"
+                >
+                  <Square className="h-4 w-4" />
+                  Terminer
+                </Button>
+              )}
+              {currentPolygon.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={clearPolygon}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Effacer zone
+                </Button>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Summary */}
         {(centerPoint || currentPolygon.length > 0) && (

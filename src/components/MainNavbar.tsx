@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload } from 'lucide-react';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -21,9 +22,13 @@ const MainNavbar = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user: authUser, signOut } = useAuth();
   const { user: keycloakUser, isAuthenticated, logout } = useKeycloakAuth();
+  const { hasRole, hasAnyRole } = useCurrentUserRoles();
 
   // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
   const isUserAuthenticated = !!authUser || isAuthenticated;
+
+  // Check if user can manage users (admin or director)
+  const canManageUsers = hasAnyRole(['admin', 'director']);
 
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
@@ -141,6 +146,23 @@ const MainNavbar = () => {
                   </Link>
                 </Button>
               </NavigationMenuItem>
+
+              {/* Users link - only for admin and director */}
+              {canManageUsers && (
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/users">
+                      <Users className="h-4 w-4 mr-2" />
+                      Utilisateurs
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+              )}
               
               <NavigationMenuItem>
                 <Button 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -20,10 +19,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { UserPlus, Search, User, Edit } from 'lucide-react';
+import { UserPlus, Search, User, Edit, Ban, CheckCircle } from 'lucide-react';
 import { DEV_MODE } from '@/config/constants';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import UserManagementDialog from '@/components/users/UserManagementDialog';
 
 // Define user profile type with roles array (without the old role property)
 type UserProfile = {
@@ -36,6 +36,7 @@ type UserProfile = {
   updated_at: string | null;
   roles?: string[];
   primaryRole?: RoleType;
+  is_active?: boolean;
 };
 
 // Mock profiles for development mode
@@ -49,7 +50,8 @@ const DEV_PROFILES: UserProfile[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     roles: ['admin'],
-    primaryRole: 'admin'
+    primaryRole: 'admin',
+    is_active: true
   },
   {
     id: "dev-user-id-2",
@@ -60,7 +62,8 @@ const DEV_PROFILES: UserProfile[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     roles: ['project_manager'],
-    primaryRole: 'project_manager'
+    primaryRole: 'project_manager',
+    is_active: true
   }
 ];
 
@@ -68,7 +71,7 @@ const Users = () => {
   const { toast } = useToast();
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
-  const { hasRole } = useCurrentUserRoles();
+  const { hasAnyRole } = useCurrentUserRoles();
   const [profiles, setProfiles] = useState<UserProfile[]>(
     isDevelopmentMode ? DEV_PROFILES : []
   );
@@ -76,6 +79,11 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [isManagementDialogOpen, setIsManagementDialogOpen] = useState<boolean>(false);
+  const [managementMode, setManagementMode] = useState<'create' | 'edit'>('create');
+
+  // Check if user can manage users (admin or director)
+  const canManageUsers = hasAnyRole(['admin', 'director']);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -151,6 +159,54 @@ const Users = () => {
     setIsDetailOpen(true);
   };
 
+  const handleCreateUser = () => {
+    setSelectedUser(null);
+    setManagementMode('create');
+    setIsManagementDialogOpen(true);
+  };
+
+  const handleEditUser = (profile: UserProfile) => {
+    setSelectedUser(profile);
+    setManagementMode('edit');
+    setIsManagementDialogOpen(true);
+  };
+
+  const handleToggleUserStatus = async (profile: UserProfile) => {
+    try {
+      const newStatus = !profile.is_active;
+      
+      // Update user status in auth.users table
+      const { error } = await supabase.auth.admin.updateUserById(
+        profile.id,
+        { ban_duration: newStatus ? 'none' : '24h' }
+      );
+
+      if (error) throw error;
+
+      // Update local state
+      setProfiles(prev => prev.map(p => 
+        p.id === profile.id ? { ...p, is_active: newStatus } : p
+      ));
+
+      toast({
+        title: newStatus ? "Utilisateur activé" : "Utilisateur désactivé",
+        description: `Le compte de ${profile.full_name} a été ${newStatus ? 'activé' : 'désactivé'}.`
+      });
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le statut de l'utilisateur",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const refreshUserList = () => {
+    // Refetch profiles logic here
+    // ... existing fetchProfilesWithRoles logic
+  };
+
   // Filter profiles based on search query
   const filteredProfiles = profiles.filter(profile => 
     profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -166,9 +222,6 @@ const Users = () => {
     if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
     return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
   };
-
-  // Check if current user can manage users
-  const canManageUsers = hasRole('admin') || hasRole('project_manager');
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -195,7 +248,7 @@ const Users = () => {
             {canManageUsers && (
               <Button
                 className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
-                onClick={() => navigate('/auth?mode=register')}
+                onClick={handleCreateUser}
               >
                 <UserPlus className="h-4 w-4" />
                 <span>Nouvel Utilisateur</span>
@@ -223,6 +276,7 @@ const Users = () => {
                   <TableHead className="hidden md:table-cell">Téléphone</TableHead>
                   <TableHead className="hidden md:table-cell">ID National</TableHead>
                   <TableHead className="hidden md:table-cell">Rôle principal</TableHead>
+                  <TableHead className="hidden md:table-cell">Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -263,16 +317,56 @@ const Users = () => {
                       <TableCell className="hidden md:table-cell">
                         {profile.primaryRole && <RoleBadge role={profile.primaryRole} />}
                       </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          profile.is_active !== false 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {profile.is_active !== false ? 'Actif' : 'Désactivé'}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 border-terracotta-200 hover:border-terracotta-300"
-                          onClick={() => handleViewDetails(profile)}
-                        >
-                          <span className="sr-only">Voir détails</span>
-                          <User className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1 justify-end">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 border-terracotta-200 hover:border-terracotta-300"
+                            onClick={() => handleViewDetails(profile)}
+                          >
+                            <User className="h-4 w-4" />
+                          </Button>
+                          
+                          {canManageUsers && (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 border-blue-200 hover:border-blue-300"
+                                onClick={() => handleEditUser(profile)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className={`h-8 ${
+                                  profile.is_active !== false 
+                                    ? 'border-red-200 hover:border-red-300 text-red-600' 
+                                    : 'border-green-200 hover:border-green-300 text-green-600'
+                                }`}
+                                onClick={() => handleToggleUserStatus(profile)}
+                              >
+                                {profile.is_active !== false ? (
+                                  <Ban className="h-4 w-4" />
+                                ) : (
+                                  <CheckCircle className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -356,6 +450,15 @@ const Users = () => {
           )}
         </SheetContent>
       </Sheet>
+      
+      {/* User Management Dialog */}
+      <UserManagementDialog
+        user={selectedUser}
+        isOpen={isManagementDialogOpen}
+        onClose={() => setIsManagementDialogOpen(false)}
+        onUpdate={refreshUserList}
+        mode={managementMode}
+      />
       
       <Footer />
     </div>
