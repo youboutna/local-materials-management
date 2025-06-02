@@ -6,7 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { KeycloakAuthProvider } from './contexts/KeycloakAuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { ErrorFallback } from './components/ErrorFallback';
+import ErrorFallback from './components/ErrorFallback';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';

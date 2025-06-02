@@ -39,6 +39,11 @@ const MaterialCreate = () => {
     setLoading(true);
     
     try {
+      // Validate required fields
+      if (!materialData.name) {
+        throw new Error('Le nom du matériau est requis');
+      }
+
       // Transform enhanced material data to match current database schema
       const dbData = {
         name: materialData.name,
@@ -69,7 +74,7 @@ const MaterialCreate = () => {
       console.error('Error creating material:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer le matériau. Veuillez réessayer plus tard.",
+        description: error instanceof Error ? error.message : "Impossible de créer le matériau. Veuillez réessayer plus tard.",
         variant: "destructive",
       });
     } finally {
