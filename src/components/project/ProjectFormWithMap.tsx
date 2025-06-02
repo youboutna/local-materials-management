@@ -23,8 +23,14 @@ interface ProjectFormData {
   selection_mode?: string;
 }
 
+interface MapData {
+  center?: { lat: number; lng: number };
+  polygon?: { lat: number; lng: number }[];
+  address?: string;
+}
+
 interface ProjectFormWithMapProps {
-  onSubmit: (data: ProjectFormData & { facilitiesLocation?: any }) => void;
+  onSubmit: (data: ProjectFormData & { facilitiesLocation?: MapData }) => void;
   initialData?: Partial<ProjectFormData>;
 }
 
@@ -47,7 +53,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     ...initialData
   });
 
-  const [facilitiesMapData, setFacilitiesMapData] = useState({
+  const [facilitiesMapData, setFacilitiesMapData] = useState<MapData>({
     center: undefined,
     polygon: [],
     address: ''
@@ -58,6 +64,10 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleMapDataChange = (data: MapData) => {
+    setFacilitiesMapData(data);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -244,7 +254,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         title="Localisation des installations du projet"
         description="Définissez la position GPS du projet et tracez la zone des installations"
         value={facilitiesMapData}
-        onChange={setFacilitiesMapData}
+        onChange={handleMapDataChange}
         allowPolygon={true}
       />
 

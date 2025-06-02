@@ -11,12 +11,12 @@ import { Badge } from '@/components/ui/badge';
 interface Supplier {
   id: string;
   name: string;
-  contact_person?: string;
-  phone?: string;
-  email?: string;
-  category?: string;
-  rating?: number;
-  is_active: boolean;
+  contact_person?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  is_active: boolean | null;
 }
 
 interface SupplierSelectorProps {

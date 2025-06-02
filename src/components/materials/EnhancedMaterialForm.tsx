@@ -11,6 +11,12 @@ import { Location, OperationalStatus, TimeLine, EnhancedMaterial } from '@/types
 import InteractiveMap from '@/components/map/InteractiveMap';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
+interface MapData {
+  center?: { lat: number; lng: number };
+  polygon?: { lat: number; lng: number }[];
+  address?: string;
+}
+
 interface EnhancedMaterialFormProps {
   onSubmit: (material: Partial<EnhancedMaterial>) => void;
   initialData?: Partial<EnhancedMaterial>;
@@ -45,7 +51,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     ...initialData
   });
 
-  const [warehouseMapData, setWarehouseMapData] = useState({
+  const [warehouseMapData, setWarehouseMapData] = useState<MapData>({
     center: undefined,
     polygon: [],
     address: ''
@@ -73,6 +79,10 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       ...prev,
       supplier
     }));
+  };
+
+  const handleMapDataChange = (data: MapData) => {
+    setWarehouseMapData(data);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -182,7 +192,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         title="Localisation de l'entrepôt"
         description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
         value={warehouseMapData}
-        onChange={setWarehouseMapData}
+        onChange={handleMapDataChange}
         allowPolygon={true}
       />
 
