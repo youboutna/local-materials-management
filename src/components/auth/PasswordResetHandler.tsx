@@ -19,20 +19,44 @@ const PasswordResetHandler = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isValidLink, setIsValidLink] = useState(false);
 
-  // Check if we have the required tokens
+  // Check if we have the required tokens or if user is authenticated
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
 
   useEffect(() => {
-    // If this is a password recovery link, set the session
-    if (accessToken && refreshToken && type === 'recovery') {
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    }
+    const checkAuthState = async () => {
+      // If this is a password recovery link, set the session
+      if (accessToken && refreshToken && type === 'recovery') {
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (!error) {
+            setIsValidLink(true);
+            return;
+          }
+        } catch (err) {
+          console.error('Error setting session:', err);
+        }
+      }
+
+      // Check if user is already authenticated (might have clicked link while logged in)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsValidLink(true);
+        return;
+      }
+
+      // If no valid session and no valid tokens, link is invalid
+      setIsValidLink(false);
+    };
+
+    checkAuthState();
   }, [accessToken, refreshToken, type]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -63,7 +87,8 @@ const PasswordResetHandler = () => {
         description: "Votre mot de passe a été mis à jour avec succès.",
       });
 
-      // Redirect to login page
+      // Sign out and redirect to login page
+      await supabase.auth.signOut();
       navigate('/auth');
     } catch (error: any) {
       console.error('Error updating password:', error);
@@ -73,7 +98,7 @@ const PasswordResetHandler = () => {
     }
   };
 
-  if (!accessToken || !refreshToken || type !== 'recovery') {
+  if (!isValidLink) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
@@ -89,9 +114,9 @@ const PasswordResetHandler = () => {
             </Alert>
             <Button 
               className="w-full mt-4" 
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/auth?mode=reset-password')}
             >
-              Retour à la connexion
+              Demander un nouveau lien
             </Button>
           </CardContent>
         </Card>
