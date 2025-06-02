@@ -94,8 +94,72 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
     }
   };
 
+  // Fetch project materials and automatically generate takeoffs
+  const fetchProjectMaterials = async () => {
+    try {
+      const { data: projectMaterials, error } = await supabase
+        .from('project_materials')
+        .select(`
+          quantity,
+          material:materials(
+            id,
+            name,
+            unit,
+            price_per_unit,
+            category
+          )
+        `)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      // Auto-generate takeoffs for project materials
+      if (projectMaterials && projectMaterials.length > 0) {
+        const autoTakeoffs = projectMaterials.map(pm => ({
+          project_id: projectId,
+          material_id: pm.material.id,
+          element_type: pm.material.category || 'Material',
+          unit: pm.material.unit,
+          length: 1,
+          width: pm.material.unit === 'm²' || pm.material.unit === 'm³' ? 1 : undefined,
+          height: pm.material.unit === 'm³' ? 1 : undefined,
+          quantity: pm.quantity,
+          note: `Auto-généré depuis les matériaux du projet`
+        }));
+
+        // Check if auto-takeoffs already exist to avoid duplicates
+        const { data: existingTakeoffs } = await supabase
+          .from('quantity_takeoffs')
+          .select('material_id')
+          .eq('project_id', projectId);
+
+        const existingMaterialIds = existingTakeoffs?.map(t => t.material_id) || [];
+        const newTakeoffs = autoTakeoffs.filter(t => !existingMaterialIds.includes(t.material_id));
+
+        if (newTakeoffs.length > 0) {
+          const { error: insertError } = await supabase
+            .from('quantity_takeoffs')
+            .insert(newTakeoffs);
+
+          if (!insertError) {
+            toast({
+              title: "Métrés générés",
+              description: `${newTakeoffs.length} métrés automatiques créés depuis les matériaux du projet.`,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error generating automatic takeoffs:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchQuantityTakeoffs();
+    const loadData = async () => {
+      await fetchProjectMaterials();
+      await fetchQuantityTakeoffs();
+    };
+    loadData();
   }, [projectId]);
 
   const handleTakeoffAdded = () => {
@@ -155,15 +219,13 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                   <TabsContent value="manual" className="space-y-4">
                     <QuantityTakeoffForm
                       projectId={projectId}
-                      onSuccess={handleTakeoffAdded}
-                      onCancel={() => setIsFormDialogOpen(false)}
+                      onSubmitSuccess={handleTakeoffAdded}
                     />
                   </TabsContent>
                   
                   <TabsContent value="advanced" className="space-y-4">
                     <AdvancedQuantityCalculator
                       onResultsChange={(results) => {
-                        // Ici vous pouvez traiter les résultats du calculateur avancé
                         console.log('Résultats du calculateur:', results);
                       }}
                     />
@@ -202,8 +264,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
 
       {/* Takeoffs List */}
       <QuantityTakeoffsList
-        takeoffs={takeoffs}
-        onTakeoffDeleted={handleTakeoffDeleted}
+        projectId={projectId}
       />
     </div>
   );

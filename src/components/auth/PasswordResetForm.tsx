@@ -1,72 +1,37 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Mail, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-const passwordResetSchema = z.object({
-  email: z.string().email("Format d'email invalide"),
-});
-
-type PasswordResetValues = z.infer<typeof passwordResetSchema>;
+import { Mail, ArrowLeft } from 'lucide-react';
 
 interface PasswordResetFormProps {
   onBack: () => void;
 }
 
 const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState('');
 
-  const form = useForm<PasswordResetValues>({
-    resolver: zodResolver(passwordResetSchema),
-    defaultValues: {
-      email: '',
-    },
-  });
-
-  const onSubmit = async (values: PasswordResetValues) => {
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
     setLoading(true);
+
     try {
-      // Use the Lovable project domain instead of localhost
-      const redirectTo = `https://539e8f41-564f-4a0a-bf12-5745f07e400b.lovableproject.com/auth?mode=reset-password`;
+      const redirectUrl = `${window.location.origin}/reset-password`;
       
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: redirectTo,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
       });
 
-      if (error) {
-        console.error('Password reset error:', error);
-        
-        // Handle specific error cases
-        if (error.message.includes('User not found')) {
-          toast({
-            title: "Utilisateur non trouvé",
-            description: "Aucun compte n'est associé à cette adresse email.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('too_many_requests')) {
-          toast({
-            title: "Trop de tentatives",
-            description: "Veuillez attendre avant de demander un nouveau lien de réinitialisation.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Erreur",
-            description: error.message || "Une erreur est survenue lors de l'envoi de l'email.",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
+      if (error) throw error;
 
       setEmailSent(true);
       toast({
@@ -74,12 +39,8 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
         description: "Un lien de réinitialisation a été envoyé à votre adresse email.",
       });
     } catch (error: any) {
-      console.error('Unexpected error:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur inattendue est survenue. Veuillez réessayer.",
-        variant: "destructive",
-      });
+      console.error('Error sending password reset email:', error);
+      setError(error.message || 'Une erreur est survenue lors de l\'envoi de l\'email.');
     } finally {
       setLoading(false);
     }
@@ -87,102 +48,81 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
 
   if (emailSent) {
     return (
-      <Card>
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif text-center text-adrar-800">
+          <CardTitle className="text-center flex items-center justify-center gap-2">
+            <Mail className="h-5 w-5" />
             Email envoyé
           </CardTitle>
-          <CardDescription className="text-center">
-            Vérifiez votre boîte mail pour le lien de réinitialisation
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-center text-gray-600">
-            Si vous ne voyez pas l'email, vérifiez votre dossier spam ou tentez de renvoyer le lien.
-            Le lien de réinitialisation expire après 1 heure.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEmailSent(false);
-                form.reset();
-              }}
-              className="flex-1"
-            >
-              Renvoyer l'email
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onBack}
-              className="flex-1"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
-            </Button>
-          </div>
+          <Alert>
+            <AlertDescription>
+              Un lien de réinitialisation de mot de passe a été envoyé à <strong>{email}</strong>.
+              Vérifiez votre boîte de réception et suivez les instructions dans l'email.
+            </AlertDescription>
+          </Alert>
+          
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={onBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour à la connexion
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-serif text-center text-adrar-800">
-              Mot de passe oublié
-            </CardTitle>
-            <CardDescription className="text-center">
-              Entrez votre email pour recevoir un lien de réinitialisation
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adresse email</FormLabel>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                    <FormControl>
-                      <Input 
-                        placeholder="votre@email.com" 
-                        className="pl-10" 
-                        {...field} 
-                      />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-center">Mot de passe oublié</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handlePasswordReset} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div>
+            <Label htmlFor="email">Adresse email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Entrez votre adresse email"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+            </Button>
             
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onBack}
-                className="flex-1"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Retour
-              </Button>
-              <Button 
-                type="submit"
-                className="flex-1 bg-terracotta-500 hover:bg-terracotta-600 text-white"
-                disabled={loading}
-              >
-                {loading ? 'Envoi...' : 'Envoyer le lien'}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
-    </Form>
+            <Button 
+              type="button"
+              variant="outline" 
+              className="w-full" 
+              onClick={onBack}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Retour à la connexion
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
