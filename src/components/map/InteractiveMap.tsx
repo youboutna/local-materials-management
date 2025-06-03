@@ -145,7 +145,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       
       // Add label
       ctx.fillStyle = '#000';
-      ctx.font = ${12 / zoom}px sans-serif;
+      ctx.font = `${12 / zoom}px sans-serif`;
       ctx.fillText('GPS', x + 12 / zoom, y - 10 / zoom);
     }
 
@@ -188,7 +188,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = ${10 / zoom}px sans-serif;
+        ctx.font = `${10 / zoom}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText((index + 1).toString(), x, y + 3 / zoom);
       });
@@ -219,9 +219,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         const midY = (y1 + y2) / 2;
         
         ctx.fillStyle = '#f59e0b';
-        ctx.font = ${10 / zoom}px sans-serif;
+        ctx.font = `${10 / zoom}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(${distance.toFixed(2)} km, midX, midY);
+        ctx.fillText(`${distance.toFixed(2)} km`, midX, midY);
       }
       
       // Draw measurement points
@@ -279,7 +279,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         setIsSelectingCoordinate(false);
         toast({
           title: "Coordonnées sélectionnées",
-          description: Position: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+          description: `Position: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
         });
       }
     }
@@ -322,7 +322,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         
         toast({
           title: "Position obtenue",
-          description: Coordonnées: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
+          description:  `Coordonnées: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} `
         });
       },
       (error) => {
@@ -467,12 +467,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             ref={canvasRef}
             width={600}
             height={400}
-            className={w-full h-64 ${
+            className={ `w-full h-64 ${
               isSelectingCoordinate ? 'cursor-crosshair' : 
               isDrawing ? 'cursor-copy' : 
               isMeasuring ? 'cursor-cell' :
               isPanning ? 'cursor-move' : 'cursor-pointer'
-            }}
+            } `}
             onClick={handleCanvasClick}
             onWheel={handleCanvasWheel}
           />
@@ -510,7 +510,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 setIsDrawing(false);
                 setIsMeasuring(false);
               }}
-              className={flex items-center gap-2 text-xs ${isSelectingCoordinate ? 'bg-blue-100' : ''}}
+              className={ `flex items-center gap-2 text-xs ${isSelectingCoordinate ? 'bg-blue-100' : ''} `}
             >
               <Target className="h-4 w-4" />
               Sélectionner GPS
@@ -584,7 +584,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 setMeasurementPoints([]);
               }
             }}
-            className={flex items-center gap-2 text-xs ${isMeasuring ? 'bg-amber-100' : ''}}
+            className={ `flex items-center gap-2 text-xs ${isMeasuring ? 'bg-amber-100' : ''} `}
           >
             <Ruler className="h-4 w-4" />
             Mesurer distance
