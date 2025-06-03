@@ -269,7 +269,6 @@ const handleRegionChange = (regionCode: string) => {
     setManualLng(region.lng.toFixed(6));
     updateMapData({ center: newCenter });
     setZoom(8);
-    
     toast({
       title: `Région sélectionnée: ${region.name}`,
       description: `Centré sur ${region.name} (${region.lat.toFixed(6)}, ${region.lng.toFixed(6)})`

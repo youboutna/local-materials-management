@@ -177,9 +177,9 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(Location).map(location => (
-                    <SelectItem key={location} value={location}>
-                      {location}
+                  {MAURITANIA_REGIONS.map(region => (
+                    <SelectItem key={region.code} value={region.code}> {/* or region.name */}
+                      {region.name} ({region.nameAr})
                     </SelectItem>
                   ))}
                 </SelectContent>
