@@ -34,7 +34,6 @@ interface ProjectMapProps {
   defaultCenter?: [number, number];
   defaultZoom?: number;
   height?: string;
-  width?: string;
   className?: string;
   focusRegion?: string;
   selectable?: boolean;
@@ -102,7 +101,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   defaultCenter = [20.5279, -10.0309],
   defaultZoom = 6,
   height = "400px",
-  width,
   className = "",
   focusRegion,
   selectable = false,
@@ -137,14 +135,13 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
   const mapStyle = {
     height: '100%',
-    width: '100%',
-    ...(width && { width })
+    width: '100%'
   };
 
   return (
-    <div className={`relative ${className}`} style={{ height, ...(width && { width }) }}>
+    <div className={`relative ${className}`} style={{ height }}>
       <MapContainer
-        center={defaultCenter as L.LatLngExpression}
+        center={defaultCenter}
         zoom={defaultZoom}
         style={mapStyle}
         className="rounded-lg"
@@ -153,8 +150,8 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         zoomControl={interactive}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         {/* Focus controller for region selection */}
@@ -163,7 +160,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         {mapLocations.map((location) => (
           <Marker
             key={location.id}
-            position={[location.latitude, location.longitude] as L.LatLngExpression}
+            position={[location.latitude, location.longitude]}
             icon={createCustomIcon(location.status)}
           >
             <Popup>

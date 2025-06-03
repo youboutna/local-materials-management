@@ -7,23 +7,20 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
-import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
 import InteractiveMap from '@/components/map/InteractiveMap';
 import { EnhancedMaterial, Location, OperationalStatus } from '@/types/mauritania';
 
 const MaterialCreate = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
-  const [mapFocusRegion, setMapFocusRegion] = useState<string>('');
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
     address?: string;
   }>({});
 
-  // Mock workspaces data - in real app, this would come from your API
-  const mockWorkspaces = [
+  // Unique workspaces data - removed duplicates
+  const uniqueWorkspaces = [
     {
       id: '1',
       name: 'Entrepôt Principal Nouakchott',
@@ -109,19 +106,10 @@ const MaterialCreate = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Workspace Selection */}
-                <WorkspaceSelector
-                  workspaces={mockWorkspaces}
-                  selectedWorkspaceId={selectedWorkspaceId}
-                  onWorkspaceChange={setSelectedWorkspaceId}
-                  onLocationChange={setMapFocusRegion}
-                  showDetails={false}
-                />
-
                 {/* Enhanced Material Form */}
                 <EnhancedMaterialForm
                   onSubmit={handleSubmit}
-                  workspaces={mockWorkspaces}
+                  workspaces={uniqueWorkspaces}
                 />
               </CardContent>
             </Card>
