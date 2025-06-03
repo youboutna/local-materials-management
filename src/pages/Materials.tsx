@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -322,7 +321,6 @@ const Materials = () => {
                     defaultCenter={[18.079052, -15.965634]} // Nouakchott, Mauritania
                     defaultZoom={6}
                     height="600px"
-                    width="100%"
                     className="rounded-lg shadow-sm"
                   />
                 ) : (

@@ -26,12 +26,15 @@ export interface MapLocation {
   endDate?: string;
 }
 
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
+
 interface ProjectMapProps {
   projects?: ProjectData[];
   locations?: MapLocation[];
   defaultCenter?: [number, number];
   defaultZoom?: number;
   height?: string;
+  width?: string;
   className?: string;
   focusRegion?: string;
   selectable?: boolean;
@@ -99,6 +102,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   defaultCenter = [20.5279, -10.0309],
   defaultZoom = 6,
   height = "400px",
+  width,
   className = "",
   focusRegion,
   selectable = false,
@@ -131,12 +135,18 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   // Get unique statuses for legend
   const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
 
+  const mapStyle = {
+    height: '100%',
+    width: '100%',
+    ...(width && { width })
+  };
+
   return (
-    <div className={`relative ${className}`} style={{ height }}>
+    <div className={`relative ${className}`} style={{ height, ...(width && { width }) }}>
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
+        style={mapStyle}
         className="rounded-lg"
         scrollWheelZoom={interactive}
         dragging={interactive}
@@ -153,7 +163,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         {mapLocations.map((location) => (
           <Marker
             key={location.id}
-            position={[location.latitude, location.longitude]}
+            position={[location.latitude, location.longitude] as L.LatLngExpression}
             icon={createCustomIcon(location.status)}
           >
             <Popup>

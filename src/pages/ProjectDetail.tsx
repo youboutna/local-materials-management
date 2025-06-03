@@ -415,7 +415,6 @@ const ProjectDetail = () => {
                             <ProjectMap 
                               locations={[mapLocation]}
                               height="100%"
-                              width="100%"
                               interactive={true}
                               defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
                               defaultZoom={12}
