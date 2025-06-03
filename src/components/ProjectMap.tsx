@@ -34,6 +34,9 @@ interface ProjectMapProps {
   height?: string;
   className?: string;
   focusRegion?: string;
+  selectable?: boolean;
+  onLocationSelect?: (latitude: number, longitude: number) => void;
+  interactive?: boolean;
 }
 
 // Regional coordinates for Mauritania wilayas
@@ -97,7 +100,10 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   defaultZoom = 6,
   height = "400px",
   className = "",
-  focusRegion
+  focusRegion,
+  selectable = false,
+  onLocationSelect,
+  interactive = true
 }) => {
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
 
@@ -132,6 +138,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
+        scrollWheelZoom={interactive}
+        dragging={interactive}
+        zoomControl={interactive}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -177,9 +186,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       
       {/* Enhanced Legend - positioned to avoid overlap */}
       {uniqueStatuses.length > 0 && (
-        <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
+        <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
           <h4 className="font-semibold text-sm mb-2">Statuts des projets</h4>
-          <div className="grid grid-cols-2 gap-1 text-xs">
+          <div className="grid grid-cols-1 gap-1 text-xs">
             {uniqueStatuses.map((status) => (
               <div key={status} className="flex items-center gap-2">
                 <div 
