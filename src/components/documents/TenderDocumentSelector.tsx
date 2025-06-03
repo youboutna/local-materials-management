@@ -54,7 +54,15 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      return (data || []).map(doc => ({
+        id: doc.id,
+        title: doc.title || '',
+        file_name: doc.file_name,
+        file_url: doc.file_url,
+        document_type: doc.document_type,
+        created_at: doc.created_at || new Date().toISOString(),
+        uploaded_by: doc.uploaded_by
+      }));
     },
   });
 
@@ -98,7 +106,17 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
       });
 
       // Select the newly uploaded document
-      onDocumentSelect(newDocument, uploadFile);
+      const mappedDocument: Document = {
+        id: newDocument.id,
+        title: newDocument.title || '',
+        file_name: newDocument.file_name,
+        file_url: newDocument.file_url,
+        document_type: newDocument.document_type,
+        created_at: newDocument.created_at || new Date().toISOString(),
+        uploaded_by: newDocument.uploaded_by
+      };
+      
+      onDocumentSelect(mappedDocument, uploadFile);
       setIsUploadDialogOpen(false);
       setUploadFile(null);
       setUploadTitle('');

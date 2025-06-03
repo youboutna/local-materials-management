@@ -22,7 +22,7 @@ interface UserProfile {
 }
 
 interface UserManagementDialogProps {
-  user?: UserProfile;
+  user?: UserProfile | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
@@ -82,6 +82,10 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         });
       } else {
         // Update existing user profile
+        if (!user?.id) {
+          throw new Error('User ID is required for update');
+        }
+
         const { error } = await supabase
           .from('profiles')
           .update({
@@ -89,7 +93,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             phone: formData.phone,
             national_id: formData.national_id
           })
-          .eq('id', user?.id);
+          .eq('id', user.id);
 
         if (error) throw error;
 

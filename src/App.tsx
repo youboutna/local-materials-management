@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,6 +21,9 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Documents from './pages/Documents';
+import Dashboard from './pages/Dashboard';
+import Tasks from './pages/Tasks';
+import Users from './pages/Users';
 import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
 import PasswordResetHandler from './components/auth/PasswordResetHandler';
@@ -54,6 +58,9 @@ function App() {
                     <Route path="/materials/create" element={<MaterialCreate />} />
                     <Route path="/materials/:id/edit" element={<MaterialEdit />} />
                     <Route path="/documents" element={<Documents />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/tasks" element={<Tasks />} />
+                    <Route path="/users" element={<Users />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />

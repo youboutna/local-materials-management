@@ -1679,6 +1679,7 @@ export type Database = {
         | "supplier_info"
         | "task_assignment"
         | "employee_record"
+        | "tender"
       mission_status: "planned" | "in_progress" | "completed" | "cancelled"
       supply_request_status: "pending" | "approved" | "rejected" | "completed"
       tender_document_category: "administrative" | "technical" | "financial"
@@ -1834,6 +1835,7 @@ export const Constants = {
         "supplier_info",
         "task_assignment",
         "employee_record",
+        "tender",
       ],
       mission_status: ["planned", "in_progress", "completed", "cancelled"],
       supply_request_status: ["pending", "approved", "rejected", "completed"],
