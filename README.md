@@ -113,8 +113,4 @@ B. Node.js Server
 
 
 
-Simply open [Lovable](https://lovable.dev/projects/539e8f41-564f-4a0a-bf12-5745f07e400b) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+539e8f41-564f-4a0a-bf12-5745f07e400b) and click on Share -> Publish.
