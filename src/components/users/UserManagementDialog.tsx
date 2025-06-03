@@ -55,6 +55,17 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     setLoading(true);
     try {
       if (mode === 'create') {
+        // Validate required fields for creation
+        if (!formData.email || !formData.password || !formData.full_name) {
+          toast({
+            title: "Erreur",
+            description: "Email, mot de passe et nom complet sont requis",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
         // Create new user
         const { data, error } = await supabase.auth.admin.createUser({
           email: formData.email,
@@ -69,11 +80,29 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         if (error) throw error;
 
         if (data.user) {
+          // Update profile with additional data
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              full_name: formData.full_name,
+              phone: formData.phone,
+              national_id: formData.national_id
+            });
+
+          if (profileError) {
+            console.warn('Profile update warning:', profileError);
+          }
+
           // Assign role to new user
-          await assignRole.mutateAsync({
-            userId: data.user.id,
-            roleName: selectedRole
-          });
+          try {
+            await assignRole.mutateAsync({
+              userId: data.user.id,
+              roleName: selectedRole
+            });
+          } catch (roleError) {
+            console.warn('Role assignment warning:', roleError);
+          }
         }
 
         toast({
@@ -83,10 +112,11 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
       } else {
         // Update existing user profile
         if (!user?.id) {
-          throw new Error('User ID is required for update');
+          throw new Error('ID utilisateur requis pour la mise à jour');
         }
 
-        const { error } = await supabase
+        // Update profile data
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             full_name: formData.full_name,
@@ -95,7 +125,30 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           })
           .eq('id', user.id);
 
-        if (error) throw error;
+        if (profileError) throw profileError;
+
+        // Update user status if changed
+        if (formData.is_active !== user.is_active) {
+          try {
+            if (formData.is_active) {
+              // Activate user
+              const { error: authError } = await supabase.auth.admin.updateUserById(
+                user.id,
+                { ban_duration: 'none' }
+              );
+              if (authError) console.warn('Auth activation warning:', authError);
+            } else {
+              // Deactivate user (ban indefinitely)
+              const { error: authError } = await supabase.auth.admin.updateUserById(
+                user.id,
+                { ban_duration: '876000h' } // Very long ban duration
+              );
+              if (authError) console.warn('Auth deactivation warning:', authError);
+            }
+          } catch (authError) {
+            console.warn('User status update warning:', authError);
+          }
+        }
 
         toast({
           title: "Utilisateur mis à jour",
@@ -125,8 +178,18 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         userId: user.id,
         roleName: role
       });
+      toast({
+        title: "Rôle assigné",
+        description: `Rôle ${role} assigné avec succès`
+      });
+      onUpdate();
     } catch (error) {
       console.error('Error assigning role:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'assigner le rôle",
+        variant: "destructive"
+      });
     }
   };
 
@@ -138,14 +201,24 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         userId: user.id,
         roleName: role
       });
+      toast({
+        title: "Rôle retiré",
+        description: `Rôle ${role} retiré avec succès`
+      });
+      onUpdate();
     } catch (error) {
       console.error('Error removing role:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de retirer le rôle",
+        variant: "destructive"
+      });
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Créer un utilisateur' : 'Modifier l\'utilisateur'}
@@ -154,11 +227,12 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="full_name">Nom complet</Label>
+            <Label htmlFor="full_name">Nom complet *</Label>
             <Input
               id="full_name"
               value={formData.full_name}
               onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+              required
             />
           </div>
           
@@ -168,6 +242,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               id="phone"
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="+222 XX XX XX XX"
             />
           </div>
           
@@ -177,30 +252,34 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               id="national_id"
               value={formData.national_id}
               onChange={(e) => setFormData(prev => ({ ...prev, national_id: e.target.value }))}
+              placeholder="Numéro d'identité nationale"
             />
           </div>
 
           {mode === 'create' && (
             <>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   required
+                  placeholder="utilisateur@example.com"
                 />
               </div>
               
               <div>
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">Mot de passe *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
+                  placeholder="Minimum 6 caractères"
+                  minLength={6}
                 />
               </div>
 
@@ -213,7 +292,10 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                   <SelectContent>
                     {availableRoles.map(role => (
                       <SelectItem key={role} value={role}>
-                        <RoleBadge role={role} />
+                        <div className="flex items-center gap-2">
+                          <RoleBadge role={role} />
+                          <span className="text-xs capitalize">{role.replace('_', ' ')}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -223,60 +305,84 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           )}
 
           {mode === 'edit' && user && (
-            <div>
-              <Label>Rôles actuels</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {user.roles?.map(role => (
-                  <div key={role} className="flex items-center gap-2">
-                    <RoleBadge role={role as RoleType} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRoleRemove(role)}
-                      className="h-6 w-6 p-0"
-                    >
-                      ×
-                    </Button>
-                  </div>
-                ))}
+            <div className="space-y-4">
+              <div>
+                <Label>Rôles actuels</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {user.roles && user.roles.length > 0 ? (
+                    user.roles.map(role => (
+                      <div key={role} className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                        <RoleBadge role={role as RoleType} />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRoleRemove(role)}
+                          className="h-6 w-6 p-0 hover:bg-red-100"
+                          title="Retirer ce rôle"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-500">Aucun rôle assigné</span>
+                  )}
+                </div>
               </div>
               
-              <div className="mt-4">
+              <div>
                 <Label>Ajouter un rôle</Label>
                 <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un rôle" />
+                    <SelectValue placeholder="Sélectionner un rôle à ajouter" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoles
                       .filter(role => !user.roles?.includes(role))
                       .map(role => (
                         <SelectItem key={role} value={role}>
-                          <RoleBadge role={role} />
+                          <div className="flex items-center gap-2">
+                            <RoleBadge role={role} />
+                            <span className="text-xs capitalize">{role.replace('_', ' ')}</span>
+                          </div>
                         </SelectItem>
                       ))}
+                    {availableRoles.filter(role => !user.roles?.includes(role)).length === 0 && (
+                      <SelectItem value="no-roles" disabled>
+                        Tous les rôles sont déjà assignés
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 p-3 border rounded-lg">
             <Switch
               id="is_active"
               checked={formData.is_active}
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
             />
-            <Label htmlFor="is_active">Compte actif</Label>
+            <Label htmlFor="is_active" className="font-medium">
+              Compte actif
+            </Label>
+            <span className="text-sm text-gray-500 ml-2">
+              {formData.is_active ? 'L\'utilisateur peut se connecter' : 'L\'utilisateur est bloqué'}
+            </span>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'En cours...' : mode === 'create' ? 'Créer' : 'Mettre à jour'}
+          <Button 
+            onClick={handleSubmit} 
+            disabled={loading || (mode === 'create' && (!formData.email || !formData.password || !formData.full_name))}
+            className="min-w-[120px]"
+          >
+            {loading ? 'En cours...' : mode === 'create' ? 'Créer utilisateur' : 'Sauvegarder'}
           </Button>
         </DialogFooter>
       </DialogContent>

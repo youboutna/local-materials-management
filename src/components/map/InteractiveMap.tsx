@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Square, Navigation, Trash2, Target } from 'lucide-react';
+import { MapPin, Square, Navigation, Trash2, Target, Ruler, Move, RotateCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Coordinate {
@@ -40,11 +40,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isSelectingCoordinate, setIsSelectingCoordinate] = useState(false);
+  const [isMeasuring, setIsMeasuring] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<Coordinate[]>(value?.polygon || []);
   const [centerPoint, setCenterPoint] = useState<Coordinate | undefined>(value?.center);
   const [address, setAddress] = useState(value?.address || '');
   const [manualLat, setManualLat] = useState(value?.center?.lat?.toString() || '');
   const [manualLng, setManualLng] = useState(value?.center?.lng?.toString() || '');
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [measurementPoints, setMeasurementPoints] = useState<Coordinate[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,61 +61,105 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Apply zoom and pan transformations
+    ctx.save();
+    ctx.translate(offset.x, offset.y);
+    ctx.scale(zoom, zoom);
+
     // Draw background (light blue for water, light green for land)
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height / zoom);
     gradient.addColorStop(0, '#e0f2fe');
     gradient.addColorStop(1, '#f0fdf4');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(-offset.x / zoom, -offset.y / zoom, canvas.width / zoom, canvas.height / zoom);
 
-    // Draw grid
+    // Draw enhanced grid
     ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < canvas.width; i += 40) {
+    ctx.lineWidth = 1 / zoom;
+    const gridSize = 40;
+    const startX = Math.floor((-offset.x / zoom) / gridSize) * gridSize;
+    const startY = Math.floor((-offset.y / zoom) / gridSize) * gridSize;
+    const endX = startX + (canvas.width / zoom) + gridSize;
+    const endY = startY + (canvas.height / zoom) + gridSize;
+
+    for (let i = startX; i < endX; i += gridSize) {
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, canvas.height);
+      ctx.moveTo(i, startY);
+      ctx.lineTo(i, endY);
       ctx.stroke();
     }
-    for (let i = 0; i < canvas.height; i += 40) {
+    for (let i = startY; i < endY; i += gridSize) {
       ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(canvas.width, i);
+      ctx.moveTo(startX, i);
+      ctx.lineTo(endX, i);
       ctx.stroke();
     }
+
+    // Draw coordinate system
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = 2 / zoom;
+    ctx.setLineDash([5 / zoom, 5 / zoom]);
+    
+    // Draw latitude lines
+    for (let lat = -90; lat <= 90; lat += 30) {
+      const y = ((90 - lat) / 180) * (canvas.height / zoom);
+      ctx.beginPath();
+      ctx.moveTo(-offset.x / zoom, y);
+      ctx.lineTo((-offset.x + canvas.width) / zoom, y);
+      ctx.stroke();
+    }
+    
+    // Draw longitude lines
+    for (let lng = -180; lng <= 180; lng += 30) {
+      const x = ((lng + 180) / 360) * (canvas.width / zoom);
+      ctx.beginPath();
+      ctx.moveTo(x, -offset.y / zoom);
+      ctx.lineTo(x, (-offset.y + canvas.height) / zoom);
+      ctx.stroke();
+    }
+    
+    ctx.setLineDash([]);
 
     // Draw center point
     if (centerPoint) {
-      // Normalize coordinates to canvas
-      const x = ((centerPoint.lng + 180) / 360) * canvas.width;
-      const y = ((90 - centerPoint.lat) / 180) * canvas.height;
+      const x = ((centerPoint.lng + 180) / 360) * (canvas.width / zoom);
+      const y = ((90 - centerPoint.lat) / 180) * (canvas.height / zoom);
       
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
-      ctx.arc(x, y, 8, 0, 2 * Math.PI);
+      ctx.arc(x, y, 8 / zoom, 0, 2 * Math.PI);
       ctx.fill();
       
-      // Add white border
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / zoom;
       ctx.stroke();
       
-      // Add center point label
+      // Add GPS icon effect
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1 / zoom;
+      ctx.beginPath();
+      ctx.arc(x, y, 15 / zoom, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 25 / zoom, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Add label
       ctx.fillStyle = '#000';
-      ctx.font = '12px sans-serif';
-      ctx.fillText('Centre', x + 12, y - 10);
+      ctx.font = `${12 / zoom}px sans-serif`;
+      ctx.fillText('GPS', x + 12 / zoom, y - 10 / zoom);
     }
 
     // Draw polygon
     if (currentPolygon.length > 0) {
       ctx.strokeStyle = '#3b82f6';
       ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3 / zoom;
 
       ctx.beginPath();
       currentPolygon.forEach((point, index) => {
-        const x = ((point.lng + 180) / 360) * canvas.width;
-        const y = ((90 - point.lat) / 180) * canvas.height;
+        const x = ((point.lng + 180) / 360) * (canvas.width / zoom);
+        const y = ((90 - point.lat) / 180) * (canvas.height / zoom);
         
         if (index === 0) {
           ctx.moveTo(x, y);
@@ -127,46 +176,100 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       // Draw polygon points
       currentPolygon.forEach((point, index) => {
-        const x = ((point.lng + 180) / 360) * canvas.width;
-        const y = ((90 - point.lat) / 180) * canvas.height;
+        const x = ((point.lng + 180) / 360) * (canvas.width / zoom);
+        const y = ((90 - point.lat) / 180) * (canvas.height / zoom);
         
         ctx.fillStyle = '#3b82f6';
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.arc(x, y, 5 / zoom, 0, 2 * Math.PI);
         ctx.fill();
         
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 / zoom;
         ctx.stroke();
 
-        // Number the points
         ctx.fillStyle = '#fff';
-        ctx.font = '10px sans-serif';
+        ctx.font = `${10 / zoom}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText((index + 1).toString(), x, y + 3);
+        ctx.fillText((index + 1).toString(), x, y + 3 / zoom);
       });
     }
-  }, [centerPoint, currentPolygon]);
+
+    // Draw measurement points and lines
+    if (measurementPoints.length > 0) {
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2 / zoom;
+      
+      for (let i = 0; i < measurementPoints.length - 1; i++) {
+        const p1 = measurementPoints[i];
+        const p2 = measurementPoints[i + 1];
+        
+        const x1 = ((p1.lng + 180) / 360) * (canvas.width / zoom);
+        const y1 = ((90 - p1.lat) / 180) * (canvas.height / zoom);
+        const x2 = ((p2.lng + 180) / 360) * (canvas.width / zoom);
+        const y2 = ((90 - p2.lat) / 180) * (canvas.height / zoom);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        
+        // Calculate and display distance
+        const distance = calculateDistance(p1, p2);
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = `${10 / zoom}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${distance.toFixed(2)} km`, midX, midY);
+      }
+      
+      // Draw measurement points
+      measurementPoints.forEach((point, index) => {
+        const x = ((point.lng + 180) / 360) * (canvas.width / zoom);
+        const y = ((90 - point.lat) / 180) * (canvas.height / zoom);
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(x, y, 4 / zoom, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    ctx.restore();
+  }, [centerPoint, currentPolygon, zoom, offset, measurementPoints]);
+
+  const calculateDistance = (p1: Coordinate, p2: Coordinate): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+    const dLng = (p2.lng - p1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = (event.clientX - rect.left - offset.x) / zoom;
+    const y = (event.clientY - rect.top - offset.y) / zoom;
 
     // Convert canvas coordinates to lat/lng
     const lng = (x / canvas.width) * 360 - 180;
     const lat = 90 - (y / canvas.height) * 180;
 
-    if (isDrawing && allowPolygon) {
-      // Add point to polygon
+    if (isMeasuring) {
+      setMeasurementPoints(prev => [...prev, { lat, lng }]);
+    } else if (isDrawing && allowPolygon) {
       const newPolygon = [...currentPolygon, { lat, lng }];
       setCurrentPolygon(newPolygon);
       updateMapData({ polygon: newPolygon });
     } else if (isSelectingCoordinate || !isDrawing) {
-      // Set center point
       const newCenter = { lat, lng };
       setCenterPoint(newCenter);
       setManualLat(lat.toFixed(6));
@@ -181,6 +284,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         });
       }
     }
+  };
+
+  const handleCanvasWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.1, Math.min(5, prev * zoomFactor)));
   };
 
   const updateMapData = (updates: Partial<MapData>) => {
@@ -246,46 +355,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     updateMapData({ center: newCenter });
   };
 
-  const startCoordinateSelection = () => {
-    setIsSelectingCoordinate(true);
-    setIsDrawing(false);
-    toast({
-      title: "Sélection de coordonnées",
-      description: "Cliquez sur la carte pour sélectionner une position"
-    });
+  const resetView = () => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
   };
 
-  const startDrawing = () => {
-    setIsDrawing(true);
-    setIsSelectingCoordinate(false);
-    setCurrentPolygon([]);
-    updateMapData({ polygon: [] });
-    toast({
-      title: "Mode dessin activé",
-      description: "Cliquez sur la carte pour tracer le polygone"
-    });
-  };
-
-  const finishDrawing = () => {
-    setIsDrawing(false);
-    if (currentPolygon.length < 3) {
-      toast({
-        title: "Polygone incomplet",
-        description: "Au moins 3 points sont nécessaires pour un polygone",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Polygone terminé",
-        description: `Polygone créé avec ${currentPolygon.length} points`
-      });
-    }
-  };
-
-  const clearPolygon = () => {
-    setCurrentPolygon([]);
-    setIsDrawing(false);
-    updateMapData({ polygon: [] });
+  const clearMeasurements = () => {
+    setMeasurementPoints([]);
+    setIsMeasuring(false);
   };
 
   return (
@@ -298,15 +375,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <p className="text-sm text-gray-600">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Manual coordinates input */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Enhanced coordinate inputs */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <Label htmlFor="latitude">Latitude</Label>
             <Input
               id="latitude"
               value={manualLat}
               onChange={(e) => setManualLat(e.target.value)}
-              placeholder="-90 à 90"
+              placeholder="-90.000000 à 90.000000"
+              className="text-sm"
             />
           </div>
           <div>
@@ -315,7 +393,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               id="longitude"
               value={manualLng}
               onChange={(e) => setManualLng(e.target.value)}
-              placeholder="-180 à 180"
+              placeholder="-180.000000 à 180.000000"
+              className="text-sm"
             />
           </div>
           <div className="flex gap-2 items-end">
@@ -323,7 +402,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               type="button" 
               variant="outline" 
               onClick={handleManualCoordinates}
-              className="flex-1"
+              className="flex-1 text-xs"
             >
               Appliquer
             </Button>
@@ -332,9 +411,40 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               variant="outline" 
               onClick={getCurrentLocation}
               size="icon"
+              title="Ma position"
             >
               <Navigation className="h-4 w-4" />
             </Button>
+          </div>
+          <div>
+            <Label>Zoom: {zoom.toFixed(1)}x</Label>
+            <div className="flex gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setZoom(prev => Math.min(5, prev * 1.2))}
+              >
+                +
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setZoom(prev => Math.max(0.1, prev / 1.2))}
+              >
+                -
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={resetView}
+                title="Reset vue"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -348,35 +458,63 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               setAddress(e.target.value);
               updateMapData({ address: e.target.value });
             }}
-            placeholder="Adresse complète"
+            placeholder="Adresse complète de l'entrepôt"
           />
         </div>
 
-        {/* Map canvas */}
-        <div className="border rounded-lg overflow-hidden">
+        {/* Enhanced map canvas */}
+        <div className="relative border rounded-lg overflow-hidden bg-gray-100">
           <canvas
             ref={canvasRef}
             width={600}
             height={400}
             className={`w-full h-64 ${
               isSelectingCoordinate ? 'cursor-crosshair' : 
-              isDrawing ? 'cursor-copy' : 'cursor-pointer'
+              isDrawing ? 'cursor-copy' : 
+              isMeasuring ? 'cursor-cell' :
+              isPanning ? 'cursor-move' : 'cursor-pointer'
             }`}
             onClick={handleCanvasClick}
+            onWheel={handleCanvasWheel}
           />
+          
+          {/* Legend positioned to avoid overlap */}
+          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg text-xs max-w-48">
+            <h4 className="font-semibold mb-2">Légende</h4>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span>Position GPS</span>
+              </div>
+              {allowPolygon && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500/30 border border-blue-500"></div>
+                  <span>Zone tracée</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-1 bg-amber-500"></div>
+                <span>Mesures</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Map controls */}
+        {/* Enhanced map controls */}
         <div className="flex flex-wrap gap-2">
           {allowCoordinateSelection && (
             <Button
               type="button"
               variant="outline"
-              onClick={startCoordinateSelection}
-              className={`flex items-center gap-2 ${isSelectingCoordinate ? 'bg-blue-100' : ''}`}
+              onClick={() => {
+                setIsSelectingCoordinate(!isSelectingCoordinate);
+                setIsDrawing(false);
+                setIsMeasuring(false);
+              }}
+              className={`flex items-center gap-2 text-xs ${isSelectingCoordinate ? 'bg-blue-100' : ''}`}
             >
               <Target className="h-4 w-4" />
-              Sélectionner coordonnées
+              Sélectionner GPS
             </Button>
           )}
           
@@ -386,8 +524,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={startDrawing}
-                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setIsDrawing(true);
+                    setIsSelectingCoordinate(false);
+                    setIsMeasuring(false);
+                    setCurrentPolygon([]);
+                    updateMapData({ polygon: [] });
+                  }}
+                  className="flex items-center gap-2 text-xs"
                 >
                   <Square className="h-4 w-4" />
                   Tracer zone
@@ -396,19 +540,32 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={finishDrawing}
-                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setIsDrawing(false);
+                    if (currentPolygon.length < 3) {
+                      toast({
+                        title: "Zone incomplète",
+                        description: "Au moins 3 points sont nécessaires",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-2 text-xs bg-green-100"
                 >
                   <Square className="h-4 w-4" />
-                  Terminer
+                  Terminer zone
                 </Button>
               )}
               {currentPolygon.length > 0 && (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={clearPolygon}
-                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setCurrentPolygon([]);
+                    setIsDrawing(false);
+                    updateMapData({ polygon: [] });
+                  }}
+                  className="flex items-center gap-2 text-xs"
                 >
                   <Trash2 className="h-4 w-4" />
                   Effacer zone
@@ -416,16 +573,62 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               )}
             </>
           )}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsMeasuring(!isMeasuring);
+              setIsDrawing(false);
+              setIsSelectingCoordinate(false);
+              if (!isMeasuring) {
+                setMeasurementPoints([]);
+              }
+            }}
+            className={`flex items-center gap-2 text-xs ${isMeasuring ? 'bg-amber-100' : ''}`}
+          >
+            <Ruler className="h-4 w-4" />
+            Mesurer distance
+          </Button>
+
+          {measurementPoints.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={clearMeasurements}
+              className="flex items-center gap-2 text-xs"
+            >
+              <Trash2 className="h-4 w-4" />
+              Effacer mesures
+            </Button>
+          )}
         </div>
 
-        {/* Summary */}
-        {(centerPoint || currentPolygon.length > 0) && (
-          <div className="text-sm text-gray-600 space-y-1">
+        {/* Enhanced summary */}
+        {(centerPoint || currentPolygon.length > 0 || measurementPoints.length > 0) && (
+          <div className="text-sm text-gray-600 space-y-1 bg-gray-50 p-3 rounded-lg">
             {centerPoint && (
-              <div>Centre: {centerPoint.lat.toFixed(6)}, {centerPoint.lng.toFixed(6)}</div>
+              <div className="flex justify-between">
+                <span>Centre GPS:</span>
+                <span className="font-mono">{centerPoint.lat.toFixed(6)}, {centerPoint.lng.toFixed(6)}</span>
+              </div>
             )}
             {currentPolygon.length > 0 && (
-              <div>Zone: {currentPolygon.length} points définis</div>
+              <div className="flex justify-between">
+                <span>Zone tracée:</span>
+                <span>{currentPolygon.length} points définis</span>
+              </div>
+            )}
+            {measurementPoints.length > 1 && (
+              <div className="flex justify-between">
+                <span>Distance totale:</span>
+                <span>
+                  {measurementPoints.reduce((total, point, index) => {
+                    if (index === 0) return 0;
+                    return total + calculateDistance(measurementPoints[index - 1], point);
+                  }, 0).toFixed(2)} km
+                </span>
+              </div>
             )}
           </div>
         )}
