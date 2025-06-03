@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ interface MapData {
   center?: { lat: number; lng: number };
   polygon?: { lat: number; lng: number }[];
   address?: string;
+  shapeType?: "polygon" | "rectangle" | "circle";
 }
 
 interface EnhancedMaterialFormProps {
@@ -39,7 +39,6 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     pricePerUnit: 0,
     availableQuantity: 0,
     workspaceId: '',
-    location: Location.Nouakchott,
     timeline: {
       start: new Date(),
       end: new Date(),
@@ -50,6 +49,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       contact: '',
       leadTime: 7
     },
+    regions: initialData?.regions || [],
     ...initialData
   });
 
@@ -58,6 +58,29 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     polygon: [],
     address: ''
   });
+
+  // When region(s) selected in the map or select:
+  const handleMapDataChange = (data: MapData) => {
+    setWarehouseMapData(data);
+
+    // Find region(s) for localisation
+    let selectedRegions: Region[] = [];
+    if (data.center) {
+      const region = MAURITANIA_REGIONS.find(
+        r =>
+          Math.abs(r.lat - data.center!.lat) < 0.2 &&
+          Math.abs(r.lng - data.center!.lng) < 0.2
+      );
+      if (region) selectedRegions = [region];
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      localisation: selectedRegions, // store in localisation
+      forme: data.shapeType,         // e.g. "polygon", "rectangle", "circle"
+      adresse: data.center           // { lat, lng }
+    }));
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -83,19 +106,12 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     }));
   };
 
-  const handleMapDataChange = (data: MapData) => {
-    setWarehouseMapData(data);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Include warehouse location data
     const submissionData = {
       ...formData,
       warehouseLocation: warehouseMapData
     };
-    
     onSubmit(submissionData);
   };
 
@@ -154,9 +170,13 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Espace de travail: select from DB or add new */}
             <div>
               <Label htmlFor="workspaceId">Espace de travail</Label>
-              <Select value={formData.workspaceId} onValueChange={(value) => handleChange('workspaceId', value)}>
+              <Select
+                value={formData.workspaceId}
+                onValueChange={value => handleChange('workspaceId', value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un espace de travail" />
                 </SelectTrigger>
@@ -166,30 +186,26 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
                       {workspace.name} - {workspace.location}
                     </SelectItem>
                   ))}
+                  <SelectItem value="add-new">+ Ajouter un nouvel espace</SelectItem>
                 </SelectContent>
               </Select>
+              {formData.workspaceId === 'add-new' && (
+                <div className="mt-2">
+                  <Label>Nom du nouvel espace</Label>
+                  <Input
+                    value={formData.newWorkspaceName || ''}
+                    onChange={e => handleChange('newWorkspaceName', e.target.value)}
+                    placeholder="Nom de l'espace"
+                  />
+                </div>
+              )}
             </div>
-            
+            {/* Localisation: only InteractiveMap */}
             <div>
-              <Label htmlFor="location">Localisation</Label>
-              <Select value={formData.location} onValueChange={(value) => handleChange('location', value as Location)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MAURITANIA_REGIONS.map(region => (
-                    <SelectItem key={region.code} value={region.code}> {/* or region.name */}
-                      {region.name} ({region.nameAr})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </CardContent>
       </Card>
-
-   
 
       {/* Quantities and Pricing */}
       <Card>

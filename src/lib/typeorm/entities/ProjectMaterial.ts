@@ -1,4 +1,3 @@
-
 import "reflect-metadata";
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Project } from "./Project";
@@ -27,29 +26,39 @@ export class ProjectMaterial {
   material!: Material;
 
   // Helper method to transform ProjectMaterial to MapLocation
-  toMapLocation(materialName: string, originLocation?: string) {
-    // Extract coordinates from the origin location string (if available)
-    // Format expected: "Location Name, Lat: 20.5169, Long: -13.0499"
+  toMapLocation() {
+    // Prefer structured fields from the related material
     let latitude = 0;
     let longitude = 0;
-    
-    if (originLocation) {
-      const latMatch = originLocation.match(/Lat:\s*(-?\d+(\.\d+)?)/i);
-      const longMatch = originLocation.match(/Long:\s*(-?\d+(\.\d+)?)/i);
-      
+    let region = '';
+
+    if (this.material?.adresse) {
+      latitude = this.material.adresse.lat;
+      longitude = this.material.adresse.lng;
+    }
+
+    if (this.material?.localisation && this.material.localisation.length > 0) {
+      region = this.material.localisation[0]; // Or join(', ') for multiple regions
+    }
+
+    // Fallback: try to parse from originLocation string if still missing
+    if ((!latitude || !longitude) && this.material?.originLocation) {
+      const latMatch = this.material.originLocation.match(/Lat:\s*(-?\d+(\.\d+)?)/i);
+      const longMatch = this.material.originLocation.match(/Long:\s*(-?\d+(\.\d+)?)/i);
       if (latMatch && longMatch) {
         latitude = parseFloat(latMatch[1]);
         longitude = parseFloat(longMatch[1]);
       }
+      region = this.material.originLocation.split(',')[0] || region;
     }
-    
+
     return {
       id: this.id,
-      name: materialName,
+      name: this.material?.name || '',
       type: 'material' as const,
-      latitude: latitude,
-      longitude: longitude,
-      region: originLocation?.split(',')[0] || ''
+      latitude,
+      longitude,
+      region
     };
   }
 

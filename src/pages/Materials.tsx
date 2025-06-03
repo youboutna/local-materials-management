@@ -38,6 +38,18 @@ const Materials = () => {
     }
   });
 
+  // Fetch workspaces from Supabase
+  const { data: workspaces = [] } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workspaces')
+        .select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+
   // Delete material mutation
   const deleteMaterial = useMutation({
     mutationFn: async (materialId: string) => {
@@ -259,22 +271,50 @@ const Materials = () => {
                                 {Number((material as any).price_per_unit).toLocaleString()} MRU/{(material as any).unit}
                               </span>
                             </div>
-                            
                             <div className="flex justify-between">
                               <span>Disponible:</span>
                               <span className="font-medium">
                                 {Number((material as any).available_quantity)} {(material as any).unit}
                               </span>
                             </div>
-                            
-                            {(material as any).origin_location && (
-                              <div className="flex items-center">
-                                <MapPin className="h-3 w-3 mr-1 text-terracotta-500" />
-                                <span className="text-xs">{(material as any).origin_location}</span>
+
+                            {/* --- Espace de travail et localisation --- */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <MapPin className="h-4 w-4 text-terracotta-500" />
+                              <span className="font-semibold">Espace de travail:</span>
+                              <span>
+                                {(material as any).workspace?.name // If joined workspace object exists
+                                  || workspaces.find(w => w.id === (material as any).workspace_id)?.name // If found in fetched workspaces
+                                  || (material as any).workspace_id // Show the ID if nothing else
+                                  || <span className="italic text-gray-400">Non défini</span>}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Localisation de l'entrepôt:</span>
+                              <span>
+                                {Array.isArray((material as any).localisation)
+                                  ? (material as any).localisation.map((r: any) => r.name).join(', ')
+                                  : (material as any).origin_location || 'Non défini'}
+                              </span>
+                            </div>
+                            {(material as any).adresse && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">Adresse (Lat/Lng):</span>
+                                <span>
+                                  {((material as any).adresse.lat).toFixed(5)}, {((material as any).adresse.lng).toFixed(5)}
+                                </span>
                               </div>
                             )}
+                            {(material as any).forme && (
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">Forme:</span>
+                                <span>{(material as any).forme}</span>
+                              </div>
+                            )}
+                            {/* --- End Espace de travail et localisation --- */}
+
+
                           </div>
-                          
                           <div className="flex justify-between mt-4">
                             <Button variant="outline" size="sm">
                               Modifier

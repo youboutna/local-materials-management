@@ -1,0 +1,57 @@
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  cursor: inherit !important;
+}
+
+.leaflet-control-container {
+  position: absolute;
+  z-index: 2;
+}
+
+/* Ensure legend stays on top */
+.legend-overlay {
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.legend-overlay * {
+  pointer-events: auto;
+}
+
+.coords-tooltip {
+  transition: all 0.1s ease;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+/* Add these styles for better cursor control */
+.leaflet-container.selecting-gps {
+  cursor: pointer !important;
+}
+
+.leaflet-container.selecting-gps .leaflet-interactive {
+  cursor: pointer !important;
+}
+
+/* Prevent resize handles from appearing */
+.leaflet-container * {
+  user-select: none;
+}
+
+.leaflet-marker-icon.preview {
+  transition: transform 0.1s ease-out;
+  pointer-events: none;
+}
+
+/* Add highlighting for active coordinate inputs */
+.input-active {
+  @apply bg-blue-50 border-blue-300;
+  transition: all 0.2s ease;
+}
+
+/* Add visual feedback for coordinate selection mode */
+.leaflet-container.coordinate-selection-active {
+  @apply ring-2 ring-blue-200;
+}
