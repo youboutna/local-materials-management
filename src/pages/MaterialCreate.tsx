@@ -7,11 +7,20 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
+import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
+import InteractiveMap from '@/components/map/InteractiveMap';
 import { EnhancedMaterial, Location, OperationalStatus } from '@/types/mauritania';
 
 const MaterialCreate = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
+  const [mapFocusRegion, setMapFocusRegion] = useState<string>('');
+  const [mapData, setMapData] = useState<{
+    center?: { lat: number; lng: number };
+    polygon?: { lat: number; lng: number }[];
+    address?: string;
+  }>({});
 
   // Mock workspaces data - in real app, this would come from your API
   const mockWorkspaces = [
@@ -53,7 +62,10 @@ const MaterialCreate = () => {
         price_per_unit: materialData.pricePerUnit || 0,
         available_quantity: materialData.availableQuantity || 0,
         origin_location: materialData.location || Location.Nouakchott,
-        image: '/img/material-placeholder.jpg'
+        image: '/img/material-placeholder.jpg',
+        // Add coordinates if available
+        coordinates_latitude: mapData.center?.lat || null,
+        coordinates_longitude: mapData.center?.lng || null
       };
 
       const { data, error } = await supabase
@@ -87,20 +99,46 @@ const MaterialCreate = () => {
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-adrar-900">
-                Créer un nouveau matériau
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EnhancedMaterialForm
-                onSubmit={handleSubmit}
-                workspaces={mockWorkspaces}
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-adrar-900">
+                  Créer un nouveau matériau
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Workspace Selection */}
+                <WorkspaceSelector
+                  workspaces={mockWorkspaces}
+                  selectedWorkspaceId={selectedWorkspaceId}
+                  onWorkspaceChange={setSelectedWorkspaceId}
+                  onLocationChange={setMapFocusRegion}
+                  showDetails={false}
+                />
+
+                {/* Enhanced Material Form */}
+                <EnhancedMaterialForm
+                  onSubmit={handleSubmit}
+                  workspaces={mockWorkspaces}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Right Column - Map */}
+            <div className="space-y-4">
+              <InteractiveMap
+                value={mapData}
+                onChange={setMapData}
+                title="Localisation de l'entrepôt"
+                description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
+                allowPolygon={true}
+                allowCoordinateSelection={true}
+                className="h-full"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </main>
       

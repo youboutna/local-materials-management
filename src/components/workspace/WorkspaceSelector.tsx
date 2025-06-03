@@ -21,6 +21,7 @@ interface WorkspaceSelectorProps {
   workspaces: Workspace[];
   selectedWorkspaceId?: string;
   onWorkspaceChange: (workspaceId: string) => void;
+  onLocationChange?: (location: string) => void;
   showDetails?: boolean;
 }
 
@@ -28,9 +29,20 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   workspaces,
   selectedWorkspaceId,
   onWorkspaceChange,
+  onLocationChange,
   showDetails = false
 }) => {
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
+
+  const handleWorkspaceChange = (workspaceId: string) => {
+    const workspace = workspaces.find(w => w.id === workspaceId);
+    onWorkspaceChange(workspaceId);
+    
+    // Notify parent about location change for map focusing
+    if (workspace && onLocationChange) {
+      onLocationChange(workspace.location);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -38,7 +50,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         <label className="text-sm font-medium text-gray-700 mb-2 block">
           Espace de travail
         </label>
-        <Select value={selectedWorkspaceId} onValueChange={onWorkspaceChange}>
+        <Select value={selectedWorkspaceId} onValueChange={handleWorkspaceChange}>
           <SelectTrigger>
             <SelectValue placeholder="Sélectionner un espace de travail" />
           </SelectTrigger>
