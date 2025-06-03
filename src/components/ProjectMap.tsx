@@ -1,6 +1,5 @@
-
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ProjectData } from '@/types/project';
@@ -73,6 +72,19 @@ const MapFocusController: React.FC<{ focusRegion?: string }> = ({ focusRegion })
   return null;
 };
 
+// Click handler component
+const MapClickHandler: React.FC<{
+  selectable: boolean;
+  onLocationSelect?: (lat: number, lng: number) => void;
+}> = ({ selectable, onLocationSelect }) => {
+  useMapEvent('click', (e) => {
+    if (selectable && onLocationSelect) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    }
+  });
+  return null;
+};
+
 const getStatusColor = (status?: string) => {
   switch (status) {
     case 'en cours': return '#3b82f6';
@@ -130,13 +142,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     }
   }, [projects, locations]);
 
-  // Get unique statuses for legend
   const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
 
-  const mapStyle = {
-    height: '100%',
-    width: '100%'
-  };
+  const mapStyle = { height: '100%', width: '100%' };
 
   return (
     <div className={`relative ${className}`} style={{ height }}>
@@ -153,10 +161,9 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        
-        {/* Focus controller for region selection */}
         <MapFocusController focusRegion={focusRegion} />
-        
+        <MapClickHandler selectable={selectable} onLocationSelect={onLocationSelect} />
+
         {mapLocations.map((location) => (
           <Marker
             key={location.id}
@@ -190,8 +197,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           </Marker>
         ))}
       </MapContainer>
-      
-      {/* Enhanced Legend - positioned to avoid overlap */}
+
       {uniqueStatuses.length > 0 && (
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
           <h4 className="font-semibold text-sm mb-2">Statuts des projets</h4>
