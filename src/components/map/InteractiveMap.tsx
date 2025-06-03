@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Square, Navigation, Trash2, Target, Ruler, Move, RotateCcw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { MAURITANIA_REGIONS, Region } from '@/types/mauritania';
 
 interface Coordinate {
   lat: number;
@@ -25,6 +26,9 @@ interface InteractiveMapProps {
   allowPolygon?: boolean;
   allowCoordinateSelection?: boolean;
   className?: string;
+  //regions
+  regions?: Region[];
+ onRegionSelect?: (region: Region | null) => void;
 }
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -34,6 +38,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   description = "Définissez la position GPS et tracez la zone si nécessaire",
   allowPolygon = true,
   allowCoordinateSelection = true,
+  regions = MAURITANIA_REGIONS,
   className
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -49,6 +54,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [measurementPoints, setMeasurementPoints] = useState<Coordinate[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -250,6 +256,38 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return R * c;
   };
 
+
+    //Add state for the selected region
+const handleRegionChange = (regionCode: string) => {
+  const region = regions.find(r => r.code === regionCode) || null;
+  setSelectedRegion(region);
+  
+  if (region) {
+    const newCenter = { lat: region.lat, lng: region.lng };
+    setCenterPoint(newCenter);
+    setManualLat(region.lat.toFixed(6));
+    setManualLng(region.lng.toFixed(6));
+    updateMapData({ center: newCenter });
+    setZoom(8);
+    
+    toast({
+      title: `Région sélectionnée: ${region.name}`,
+      description: `Centré sur ${region.name} (${region.lat.toFixed(6)}, ${region.lng.toFixed(6)})`
+    });
+  }
+
+  if (onRegionSelect) {
+    onRegionSelect(region); // Pass the full region object or null
+  }
+};
+
+const handleClearRegion = () => {
+  setSelectedRegion(null);
+  if (onRegionSelect) {
+    onRegionSelect(null); // Notify parent that region was cleared
+  }
+};
+  
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -374,6 +412,28 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <p className="text-sm text-gray-600">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
+
+        {/* Enhanced regions  select */}
+              {/* Region selector */}
+        {regions && regions.length > 0 && (
+          <div>
+            <Label htmlFor="region-select">Sélectionner une région</Label>
+            <select
+              id="region-select"
+              value={selectedRegion?.code || ""}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">-- Choisir une région --</option>
+              {regions.map((region) => (
+                <option key={region.code} value={region.code}>
+                  {region.name} ({region.nameAr})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}  
+
         {/* Enhanced coordinate inputs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>

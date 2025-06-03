@@ -7,9 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
-import { Location, OperationalStatus, TimeLine, EnhancedMaterial } from '@/types/mauritania';
+import { Location, Region, OperationalStatus, TimeLine, EnhancedMaterial, MAURITANIA_REGIONS } from '@/types/mauritania';
+
 import InteractiveMap from '@/components/map/InteractiveMap';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import { toast } from '@/hooks/use-toast';
 
 interface MapData {
   center?: { lat: number; lng: number };
@@ -187,14 +189,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Warehouse Location Map */}
-      <InteractiveMap
-        title="Localisation de l'entrepôt"
-        description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
-        value={warehouseMapData}
-        onChange={handleMapDataChange}
-        allowPolygon={true}
-      />
+   
 
       {/* Quantities and Pricing */}
       <Card>
