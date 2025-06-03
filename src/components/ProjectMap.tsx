@@ -144,7 +144,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   return (
     <div className={`relative ${className}`} style={{ height, ...(width && { width }) }}>
       <MapContainer
-        center={defaultCenter}
+        center={defaultCenter as L.LatLngExpression}
         zoom={defaultZoom}
         style={mapStyle}
         className="rounded-lg"
