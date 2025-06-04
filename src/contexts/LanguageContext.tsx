@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'fr' | 'ar' | 'en';
@@ -13,6 +12,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations = {
   fr: {
+    // UI Labels
     'app.name': 'Gestion de Projets',
     'app.description': 'Système de gestion des projets et matériaux',
     'nav.home': 'Accueil',
@@ -27,20 +27,29 @@ const translations = {
     'auth.password': 'Mot de passe',
     'auth.name': 'Nom complet',
     'auth.submit': 'Soumettre',
+    // Roles
     'roles.admin': 'Administrateur',
-    'roles.developer': 'Développeur',
     'roles.manager': 'Chef de Projet',
     'roles.director': 'Directeur',
+    'roles.agent': 'Agent',
+    'roles.supplier': 'Fournisseur',
+    'roles.user': 'Utilisateur',
+    // Project Status ENUM
+    'project_status.in_progress': 'En cours',
+    'project_status.completed': 'Terminé',
+    'project_status.pending': 'En attente',
+    'project_status.cancelled': 'Annulé',
+    // Document Status ENUM
+    'document_status.draft': 'Brouillon',
+    'document_status.pending_review': 'En attente de révision',
+    'document_status.approved': 'Approuvé',
+    'document_status.rejected': 'Rejeté',
+    'document_status.archived': 'Archivé',
+    // Inputs & Descriptions
     'projects.title': 'Projets',
     'projects.new': 'Nouveau Projet',
     'projects.search': 'Rechercher un projet...',
     'projects.status.all': 'Tous',
-    'projects.status.active': 'En cours',
-    'projects.status.completed': 'Terminé',
-    'projects.status.pending': 'En attente',
-    'projects.sort.newest': 'Plus récent',
-    'projects.sort.oldest': 'Plus ancien',
-    'projects.sort.name': 'Nom',
     'projects.empty': 'Aucun projet trouvé',
     'materials.title': 'Matériaux',
     'materials.new': 'Nouveau Matériau',
@@ -50,6 +59,24 @@ const translations = {
     'materials.quantity': 'Quantité',
     'materials.unit': 'Unité',
     'materials.description': 'Description',
+    // Tender Inputs & Alerts
+    'tender.input.title': 'Titre du document',
+    'tender.input.description': 'Description',
+    'tender.input.category': 'Catégorie',
+    'tender.input.subcategory': 'Sous-catégorie',
+    'tender.button.add': 'Ajouter',
+    'tender.button.loading': 'Ajout en cours...',
+    'tender.alert.upload_error': "Erreur lors de l'upload du fichier",
+    'tender.alert.document_error': "Erreur lors de l'ajout du document",
+    'tender.alert.tenderdoc_error': "Erreur lors de la création du TenderDocument",
+    'tender.alert.success': "Document ajouté !",
+    'tender_category.administrative': 'Administratif',
+    'tender_category.technical': 'Technique',
+    'tender_category.financial': 'Financier',
+    'tender_subcategory.lettre_soumission': 'Lettre de soumission',
+    'tender_subcategory.pouvoir_signature': 'Pouvoir de signature',
+    'ts.empty': 'Aucune donnée à afficher',
+    // ...add more as needed
   },
   ar: {
     'app.name': 'إدارة المشاريع',
@@ -67,19 +94,24 @@ const translations = {
     'auth.name': 'الاسم الكامل',
     'auth.submit': 'إرسال',
     'roles.admin': 'مسؤول',
-    'roles.developer': 'مطور',
     'roles.manager': 'مدير مشروع',
     'roles.director': 'مدير',
+    'roles.agent': 'وكيل',
+    'roles.supplier': 'مورد',
+    'roles.user': 'مستخدم',
+    'project_status.in_progress': 'قيد التنفيذ',
+    'project_status.completed': 'مكتمل',
+    'project_status.pending': 'قيد الانتظار',
+    'project_status.cancelled': 'ملغى',
+    'document_status.draft': 'مسودة',
+    'document_status.pending_review': 'قيد المراجعة',
+    'document_status.approved': 'موافق عليه',
+    'document_status.rejected': 'مرفوض',
+    'document_status.archived': 'مؤرشف',
     'projects.title': 'المشاريع',
     'projects.new': 'مشروع جديد',
     'projects.search': 'البحث عن مشروع...',
     'projects.status.all': 'الكل',
-    'projects.status.active': 'قيد التنفيذ',
-    'projects.status.completed': 'مكتمل',
-    'projects.status.pending': 'قيد الانتظار',
-    'projects.sort.newest': 'الأحدث',
-    'projects.sort.oldest': 'الأقدم',
-    'projects.sort.name': 'الاسم',
     'projects.empty': 'لم يتم العثور على مشاريع',
     'materials.title': 'المواد',
     'materials.new': 'مادة جديدة',
@@ -89,6 +121,24 @@ const translations = {
     'materials.quantity': 'الكمية',
     'materials.unit': 'الوحدة',
     'materials.description': 'الوصف',
+    // Tender Inputs & Alerts
+    'tender.input.title': 'عنوان المستند',
+    'tender.input.description': 'الوصف',
+    'tender.input.category': 'الفئة',
+    'tender.input.subcategory': 'الفئة الفرعية',
+    'tender.button.add': 'إضافة',
+    'tender.button.loading': 'جاري الإضافة...',
+    'tender.alert.upload_error': 'خطأ أثناء رفع الملف',
+    'tender.alert.document_error': 'خطأ أثناء إضافة المستند',
+    'tender.alert.tenderdoc_error': 'خطأ أثناء إنشاء مستند المناقصة',
+    'tender.alert.success': 'تمت إضافة المستند!',
+    'tender_category.administrative': 'إداري',
+    'tender_category.technical': 'تقني',
+    'tender_category.financial': 'مالي',
+    'tender_subcategory.lettre_soumission': 'خطاب التقديم',
+    'tender_subcategory.pouvoir_signature': 'تفويض التوقيع',
+    'ts.empty': 'لا توجد بيانات للعرض',
+    // ...add more as needed
   },
   en: {
     'app.name': 'Project Management',
@@ -106,19 +156,24 @@ const translations = {
     'auth.name': 'Full Name',
     'auth.submit': 'Submit',
     'roles.admin': 'Administrator',
-    'roles.developer': 'Developer',
-    'roles.manager': 'Project Manager',
+    'roles.manager': 'Manager',
     'roles.director': 'Director',
+    'roles.agent': 'Agent',
+    'roles.supplier': 'Supplier',
+    'roles.user': 'User',
+    'project_status.in_progress': 'In Progress',
+    'project_status.completed': 'Completed',
+    'project_status.pending': 'Pending',
+    'project_status.cancelled': 'Cancelled',
+    'document_status.draft': 'Draft',
+    'document_status.pending_review': 'Pending Review',
+    'document_status.approved': 'Approved',
+    'document_status.rejected': 'Rejected',
+    'document_status.archived': 'Archived',
     'projects.title': 'Projects',
     'projects.new': 'New Project',
     'projects.search': 'Search for a project...',
     'projects.status.all': 'All',
-    'projects.status.active': 'In Progress',
-    'projects.status.completed': 'Completed',
-    'projects.status.pending': 'Pending',
-    'projects.sort.newest': 'Newest',
-    'projects.sort.oldest': 'Oldest',
-    'projects.sort.name': 'Name',
     'projects.empty': 'No projects found',
     'materials.title': 'Materials',
     'materials.new': 'New Material',
@@ -128,38 +183,45 @@ const translations = {
     'materials.quantity': 'Quantity',
     'materials.unit': 'Unit',
     'materials.description': 'Description',
+    // Tender Inputs & Alerts
+    'tender.input.title': 'Document Title',
+    'tender.input.description': 'Description',
+    'tender.input.category': 'Category',
+    'tender.input.subcategory': 'Subcategory',
+    'tender.button.add': 'Add',
+    'tender.button.loading': 'Adding...',
+    'tender.alert.upload_error': 'Error uploading file',
+    'tender.alert.document_error': 'Error adding document',
+    'tender.alert.tenderdoc_error': 'Error creating TenderDocument',
+    'tender.alert.success': 'Document added!',
+    'tender_category.administrative': 'Administrative',
+    'tender_category.technical': 'Technical',
+    'tender_category.financial': 'Financial',
+    'tender_subcategory.lettre_soumission': 'Submission Letter',
+    'tender_subcategory.pouvoir_signature': 'Signature Authority',
+    'ts.empty': 'No data to display',
+    // ...add more as needed
   }
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fr');
 
-  // Load saved language from localStorage on component mount
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language') as Language;
     if (savedLanguage && ['fr', 'ar', 'en'].includes(savedLanguage)) {
       setLanguage(savedLanguage);
-      
-      // Set text direction based on language
       document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
-      
-      // Add language class to body for additional styling if needed
       document.body.className = `lang-${savedLanguage}`;
     }
   }, []);
 
-  // Save language to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('language', language);
-    
-    // Set text direction based on language
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    
-    // Update language class on body
     document.body.className = `lang-${language}`;
   }, [language]);
 
-  // Translation function
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations[typeof language]] || key;
   };

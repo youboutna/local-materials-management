@@ -1,29 +1,75 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const TENDER_CATEGORIES = [
-  { value: "administrative", label: "Administratif" },
-  { value: "technical", label: "Technique" },
-  { value: "financial", label: "Financier" }
+export type TenderCategory = "administrative" | "technical" | "financial";
+export type TenderSubcategory =
+  | "lettre_soumission"
+  | "pouvoir_signature"
+  | "acte_groupement"
+  | "attestation_impot"
+  | "attestation_cnss"
+  | "attestation_non_faillite"
+  | "renseignement_soumissionnaire"
+  | "garantie_soumission";
+
+export type DocumentType =
+  | "inspection_report"
+  | "location_photo"
+  | "project_report"
+  | "contract"
+  | "supplier_info"
+  | "task_assignment"
+  | "employee_record"
+  | "tender_documents";
+
+export type DocumentStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "archived";
+
+export interface Document {
+  id: string;
+  title: string;
+  description: string;
+  document_type: DocumentType;
+  status: DocumentStatus;
+  file_url: string;
+  file_name: string;
+  file_size: number;
+  created_at: string;
+  uploaded_by: string;
+  project_id: string;
+  mime_type?: string;
+}
+
+const TENDER_CATEGORIES: { value: TenderCategory; labelKey: string }[] = [
+  { value: "administrative", labelKey: "tender_category.administrative" },
+  { value: "technical", labelKey: "tender_category.technical" },
+  { value: "financial", labelKey: "tender_category.financial" }
 ];
 
-const TENDER_SUBCATEGORIES = [
-  { value: "lettre_soumission", label: "Lettre de soumission" },
-  { value: "pouvoir_signature", label: "Pouvoir de signature" },
-  // ...add all subcategories you need
+const TENDER_SUBCATEGORIES: { value: TenderSubcategory; labelKey: string }[] = [
+  { value: "lettre_soumission", labelKey: "tender_subcategory.lettre_soumission" },
+  { value: "pouvoir_signature", labelKey: "tender_subcategory.pouvoir_signature" }
 ];
 
 export default function TenderDocumentUploadForm({ projectId }: { projectId: string }) {
-  const [subcategory, setSubcategory] = useState("");
-  const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState<TenderSubcategory | "">("");
+  const [category, setCategory] = useState<TenderCategory | "">("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,65 +77,61 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
 
     setLoading(true);
 
-    // 1. Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("documents")
       .upload(`tender/${projectId}/${file.name}`, file);
 
     if (uploadError || !uploadData?.path) {
-      alert("Erreur lors de l'upload du fichier");
+      toast({ title: t("tender.alert.upload_error"), variant: "destructive" });
       setLoading(false);
       return;
     }
 
-    // 1. Insert into documents table
+    const documentInsertObj = {
+      project_id: projectId,
+      title,
+      description,
+      file_url: uploadData.path,
+      document_type: "tender_documents" as DocumentType,
+      category,
+      subcategory,
+    };
+
     const { data: docData, error: docError } = await supabase
       .from("documents")
-      .insert([
-        {
-          project_id: projectId,
-          title,
-          description,
-          file_url: uploadData.path,
-          document_type: "tender_documents",
-          category,
-          subcategory,
-        }
-      ])
+      .insert([documentInsertObj])
       .select()
       .single();
 
     if (docError || !docData) {
-      alert("Erreur lors de l'ajout du document");
+      toast({ title: t("tender.alert.document_error"), variant: "destructive" });
       setLoading(false);
       return;
     }
 
-    // 2. Insert into tender_documents table, linking to the document
+    const tenderDocumentInsertObj = {
+      project_id: projectId,
+      category,
+      subcategory: subcategory as TenderSubcategory,
+      is_required: true,
+      is_submitted: true,
+      status: "draft" as DocumentStatus,
+      document_id: docData.id,
+    };
+
     const { error: tenderDocError } = await supabase
       .from("tender_documents")
-      .insert([
-        {
-          project_id: projectId,
-          category,
-          subcategory,
-          is_required: true,
-          is_submitted: true,
-          status: "draft",
-          document_id: docData.id, // <-- use the document's id here!
-        }
-      ]);
+      .insert([tenderDocumentInsertObj]);
 
     if (tenderDocError) {
-      alert("Erreur lors de la création du TenderDocument");
+      toast({ title: t("tender.alert.tenderdoc_error"), variant: "destructive" });
     } else {
-      alert("Document ajouté !");
+      toast({ title: t("tender.alert.success"), variant: "success" });
       setTitle("");
       setDescription("");
       setFile(null);
       setCategory("");
       setSubcategory("");
-      // Optionally reset file input value here if needed
     }
     setLoading(false);
   };
@@ -97,33 +139,33 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <Input
-        placeholder="Titre du document"
+        placeholder={t("tender.input.title")}
         value={title}
         onChange={e => setTitle(e.target.value)}
         required
       />
       <Textarea
-        placeholder="Description"
+        placeholder={t("tender.input.description")}
         value={description}
         onChange={e => setDescription(e.target.value)}
       />
-      <Select value={category} onValueChange={setCategory} required>
+      <Select value={category} onValueChange={v => setCategory(v as TenderCategory)} required>
         <SelectTrigger>
-          <SelectValue placeholder="Catégorie" />
+          <SelectValue placeholder={t("tender.input.category")} />
         </SelectTrigger>
         <SelectContent>
           {TENDER_CATEGORIES.map(cat => (
-            <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+            <SelectItem key={cat.value} value={cat.value}>{t(cat.labelKey)}</SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={subcategory} onValueChange={setSubcategory} required>
+      <Select value={subcategory} onValueChange={v => setSubcategory(v as TenderSubcategory)} required>
         <SelectTrigger>
-          <SelectValue placeholder="Sous-catégorie" />
+          <SelectValue placeholder={t("tender.input.subcategory")} />
         </SelectTrigger>
         <SelectContent>
           {TENDER_SUBCATEGORIES.map(sub => (
-            <SelectItem key={sub.value} value={sub.value}>{sub.label}</SelectItem>
+            <SelectItem key={sub.value} value={sub.value}>{t(sub.labelKey)}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -134,7 +176,7 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
         required
       />
       <Button type="submit" disabled={loading}>
-        {loading ? "Ajout en cours..." : "Ajouter"}
+        {loading ? t("tender.button.loading") : t("tender.button.add")}
       </Button>
     </form>
   );
