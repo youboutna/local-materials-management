@@ -1,5 +1,5 @@
 // Set this to false to enable proper authentication behavior
-export const DEV_MODE = false;
+export const DEV_MODE = true;
 
 // Mock user for development mode
 export const DEV_USER = {
@@ -15,7 +15,7 @@ export const DEV_USER = {
 
 // Development mode role configuration
 export interface DevRoleOptions {
-  role: "admin" | "user" | "inspector" | "practitioner" | "insurance_company" | "material-manager" | "manager" | "director";
+  role: "admin" | "user" | "inspector" | "practitioner" | "insurance_company" | "material-manager" | "manager" | "director"| "agent"|"supplier";
   description: string;
 }
 
@@ -27,6 +27,8 @@ export const DEV_ROLES: DevRoleOptions[] = [
   { role: "material-manager", description: "Materials management" },
   { role: "manager", description: "Project management" },
   { role: "director", description: "Director level access" },
+  { role: "agent", description: "Director level access" },
+  { role: "supplier", description: "Director level access" },
   { role: "user", description: "Standard user" }
 ];
 
