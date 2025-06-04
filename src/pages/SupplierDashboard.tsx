@@ -44,14 +44,14 @@ const SupplierDashboard = () => {
     }
   });
 
-  // Fetch documents
+  // Fetch documents - using 'contract' type instead of 'supplier'
   const { data: documents = [] } = useQuery({
     queryKey: ['supplier-documents'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('document_type', 'supplier')
+        .eq('document_type', 'contract')
         .order('created_at', { ascending: false })
         .limit(15);
       
@@ -164,7 +164,7 @@ const SupplierDashboard = () => {
                               <h3 className="font-medium text-gray-900">{notification.title}</h3>
                               <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                               <p className="text-xs text-gray-500 mt-2">
-                                {new Date(notification.created_at).toLocaleDateString('fr-FR')}
+                                {notification.created_at ? new Date(notification.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                               </p>
                             </div>
                             {!notification.read && (
@@ -205,7 +205,7 @@ const SupplierDashboard = () => {
                                 Montant: {payment.amount?.toLocaleString()} MRO
                               </p>
                               <p className="text-xs text-gray-500">
-                                {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
+                                {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : 'Date inconnue'}
                               </p>
                             </div>
                             <Badge 
@@ -249,7 +249,7 @@ const SupplierDashboard = () => {
                                 <h3 className="font-medium text-gray-900">{document.title}</h3>
                                 <p className="text-sm text-gray-600">{document.description}</p>
                                 <p className="text-xs text-gray-500">
-                                  {new Date(document.created_at).toLocaleDateString('fr-FR')}
+                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                                 </p>
                               </div>
                             </div>

@@ -104,9 +104,10 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
 
   const handleWarehouseShapeChange = (points: Point[]) => {
     setWarehouseShape(points);
+    // Store as JSON string instead of setting forme directly
     setFormData(prev => ({
       ...prev,
-      forme: points.length > 0 ? JSON.stringify(points) : null
+      warehouseShape: points
     }));
   };
 
