@@ -1,3 +1,4 @@
+
 /**
  * Core Entities for Mauritania-specific project management:
  * Workspaces: Physical/virtual locations
@@ -33,30 +34,31 @@ export enum Location {
   // Special cases
   Other = "Other", // For undefined locations
 }
+
 export interface Region {
   code: string;
   name: string;
   nameAr: string;
   lat: number;
   lng: number;
-  geometry: Feature<Polygon>;
+  geometry?: Feature<Polygon>;
 }
 
 export const MAURITANIA_REGIONS: Region[] = [
-  { code: "NKC", name: "Nouakchott", nameAr: "نواكشوط", lat: 18.0858, lng: -15.9785, geometry: null },
-  { code: "NDB", name: "Nouadhibou", nameAr: "نواذيبو", lat: 20.9425, lng: -17.0383, geometry: null },
-  { code: "ADR", name: "Adrar", nameAr: "آدرار", lat: 20.5091, lng: -12.8343, geometry: null },
-  { code: "ASA", name: "Assaba", nameAr: "العصابة", lat: 16.8296, lng: -11.3557, geometry: null },
-  { code: "BRK", name: "Brakna", nameAr: "براكنة", lat: 17.2318, lng: -13.1740, geometry: null },
-  { code: "DKN", name: "Dakhlet Nouadhibou", nameAr: "داخلة نواذيبو", lat: 20.5986, lng: -16.2522, geometry: null },
-  { code: "GOG", name: "Gorgol", nameAr: "كوركول", lat: 15.9717, lng: -13.1740, geometry: null },
-  { code: "GDM", name: "Guidimaka", nameAr: "غيديماغا", lat: 15.3833, lng: -12.1333, geometry: null },
-  { code: "HEC", name: "Hodh Ech Chargui", nameAr: "الحوض الشرقي", lat: 18.6737, lng: -7.0929, geometry: null },
-  { code: "HEG", name: "Hodh El Gharbi", nameAr: "الحوض الغربي", lat: 16.6916, lng: -9.5457, geometry: null },
-  { code: "INC", name: "Inchiri", nameAr: "إينشيري", lat: 20.0281, lng: -15.4065, geometry: null },
-  { code: "TGT", name: "Tagant", nameAr: "تكانت", lat: 18.7128, lng: -10.9408, geometry: null },
-  { code: "TRZ", name: "Tiris Zemmour", nameAr: "تيرس زمور", lat: 24.5774, lng: -9.9018, geometry: null },
-  { code: "TRR", name: "Trarza", nameAr: "ترارزة", lat: 17.8667, lng: -14.6667, geometry: null }
+  { code: "NKC", name: "Nouakchott", nameAr: "نواكشوط", lat: 18.0858, lng: -15.9785 },
+  { code: "NDB", name: "Nouadhibou", nameAr: "نواذيبو", lat: 20.9425, lng: -17.0383 },
+  { code: "ADR", name: "Adrar", nameAr: "آدرار", lat: 20.5091, lng: -12.8343 },
+  { code: "ASA", name: "Assaba", nameAr: "العصابة", lat: 16.8296, lng: -11.3557 },
+  { code: "BRK", name: "Brakna", nameAr: "براكنة", lat: 17.2318, lng: -13.1740 },
+  { code: "DKN", name: "Dakhlet Nouadhibou", nameAr: "داخلة نواذيبو", lat: 20.5986, lng: -16.2522 },
+  { code: "GOG", name: "Gorgol", nameAr: "كوركول", lat: 15.9717, lng: -13.1740 },
+  { code: "GDM", name: "Guidimaka", nameAr: "غيديماغا", lat: 15.3833, lng: -12.1333 },
+  { code: "HEC", name: "Hodh Ech Chargui", nameAr: "الحوض الشرقي", lat: 18.6737, lng: -7.0929 },
+  { code: "HEG", name: "Hodh El Gharbi", nameAr: "الحوض الغربي", lat: 16.6916, lng: -9.5457 },
+  { code: "INC", name: "Inchiri", nameAr: "إينشيري", lat: 20.0281, lng: -15.4065 },
+  { code: "TGT", name: "Tagant", nameAr: "تكانت", lat: 18.7128, lng: -10.9408 },
+  { code: "TRZ", name: "Tiris Zemmour", nameAr: "تيرس زمور", lat: 24.5774, lng: -9.9018 },
+  { code: "TRR", name: "Trarza", nameAr: "ترارزة", lat: 17.8667, lng: -14.6667 }
 ];
 
 

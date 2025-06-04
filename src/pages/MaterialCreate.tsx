@@ -57,8 +57,8 @@ const MaterialCreate = () => {
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
-        localisation: materialData.localisation || [],
-        adresse: materialData.adresse || null,
+        localisation: JSON.stringify(materialData.localisation || []), // Convert to JSON string
+        adresse: materialData.adresse ? JSON.stringify(materialData.adresse) : null, // Convert to JSON string
         forme: materialData.forme || null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,

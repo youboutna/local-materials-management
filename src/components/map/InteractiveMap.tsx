@@ -92,6 +92,14 @@ const calculateBounds = (points: Coordinate[]): L.LatLngBounds => {
   ]);
 };
 
+// Add the missing isWithinMauritania function
+const isWithinMauritania = (lat: number, lng: number) => {
+  return lat >= MAURITANIA_BOUNDS[0][0] && 
+         lat <= MAURITANIA_BOUNDS[1][0] && 
+         lng >= MAURITANIA_BOUNDS[0][1] && 
+         lng <= MAURITANIA_BOUNDS[1][1];
+};
+
 // Update the MapController component to handle zoom better
 const MapController = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
@@ -152,13 +160,6 @@ const MapClickHandler = ({
   const [mouseCoords, setMouseCoords] = useState<{ lat: number; lng: number } | null>(null);
   const coordsTooltipRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
-  const isWithinMauritania = (lat: number, lng: number) => {
-    return lat >= MAURITANIA_BOUNDS[0][0] && 
-           lat <= MAURITANIA_BOUNDS[1][0] && 
-           lng >= MAURITANIA_BOUNDS[0][1] && 
-           lng <= MAURITANIA_BOUNDS[1][1];
-  };
 
   useEffect(() => {
     // Create tooltip element
@@ -616,7 +617,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               boundsOptions={{ padding: [50, 50] }}
               doubleClickZoom={false}
               keyboard={false}
-              whenCreated={(map) => {
+              whenReady={(map) => {
                 map.on('zoomend', () => {
                   setZoom(map.getZoom());
                 });
