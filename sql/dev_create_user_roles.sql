@@ -23,11 +23,29 @@ CREATE POLICY "Users can view their own roles" ON public.user_roles
 CREATE POLICY "Admins can manage all roles" ON public.user_roles
   FOR ALL USING (
     EXISTS (
-      SELECT 1 FROM public.user_roles 
-      WHERE user_id = auth.uid() AND role_name = 'admin'
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() AND is_admin = true
     )
   );
 
+-- Create user_role ENUM type
+CREATE TYPE user_role AS ENUM (
+  'admin',
+  'manager',
+  'director',
+  'agent',
+  'supplier',
+  'user'
+);
+
+-- Create document_status ENUM type
+CREATE TYPE document_status AS ENUM (
+  'draft',
+  'pending_review',
+  'approved',
+  'rejected',
+  'archived'
+);
 
 -- Create some sample users with roles
 -- Note: In a real scenario, users would sign up through the auth system
@@ -46,6 +64,12 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE public.profiles
   ADD CONSTRAINT fk_profiles_user
   FOREIGN KEY (id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+-- Add a boolean is_admin column to profiles (or users)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean DEFAULT false;
+
+-- Update is_admin for your admin users
+UPDATE public.profiles SET is_admin = true WHERE id IN (SELECT user_id FROM public.user_roles WHERE role_name = 'admin');
 
 -- Assign roles to users
 INSERT INTO public.user_roles (user_id, role_name) VALUES

@@ -42,8 +42,31 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
       return;
     }
 
-    // 2. Insert into tender_documents table first
-    const { data: tenderDocData, error: tenderDocError } = await supabase
+    // 1. Insert into documents table
+    const { data: docData, error: docError } = await supabase
+      .from("documents")
+      .insert([
+        {
+          project_id: projectId,
+          title,
+          description,
+          file_url: uploadData.path,
+          document_type: "tender_documents",
+          category,
+          subcategory,
+        }
+      ])
+      .select()
+      .single();
+
+    if (docError || !docData) {
+      alert("Erreur lors de l'ajout du document");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Insert into tender_documents table, linking to the document
+    const { error: tenderDocError } = await supabase
       .from("tender_documents")
       .insert([
         {
@@ -53,33 +76,12 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
           is_required: true,
           is_submitted: true,
           status: "draft",
+          document_id: docData.id, // <-- use the document's id here!
         }
-      ])
-      .select()
-      .single();
+      ]);
 
-    if (tenderDocError || !tenderDocData) {
+    if (tenderDocError) {
       alert("Erreur lors de la création du TenderDocument");
-      setLoading(false);
-      return;
-    }
-
-    // 3. Insert into documents table, linking to the tender_document
-    const { error } = await supabase.from("documents").insert([
-      {
-        project_id: projectId,
-        title,
-        description,
-        file_url: uploadData.path,
-        document_type: "tender_documents",
-        tender_document_id: tenderDocData.id,
-        category,
-        subcategory,
-      }
-    ]);
-
-    if (error) {
-      alert("Erreur lors de l'ajout du document");
     } else {
       alert("Document ajouté !");
       setTitle("");
