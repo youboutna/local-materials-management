@@ -1,13 +1,17 @@
+
 import "reflect-metadata";
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { ProjectMaterial } from "./ProjectMaterial";
+import { Workspace } from "./Workspace";
 
 @Entity({ name: "materials" })
 export class Material {
@@ -46,6 +50,22 @@ export class Material {
 
   @Column({ name: "local_type", type: "varchar", nullable: true })
   localType?: string;
+
+  @Column({ name: "workspace_id", type: "uuid", nullable: true })
+  workspaceId?: string;
+
+  @Column({ type: "jsonb", nullable: true })
+  localisation?: any[];
+
+  @Column({ type: "jsonb", nullable: true })
+  adresse?: { lat: number; lng: number };
+
+  @Column({ type: "varchar", nullable: true })
+  forme?: string;
+
+  @ManyToOne(() => Workspace, (workspace) => workspace.materials, { nullable: true })
+  @JoinColumn({ name: "workspace_id" })
+  workspace?: Workspace;
 
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.material)
   projectMaterials!: ProjectMaterial[];

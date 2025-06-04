@@ -590,51 +590,71 @@ export type Database = {
       }
       materials: {
         Row: {
+          adresse: Json | null
           available_quantity: number
           category: string
           coordinates_latitude: number | null
           coordinates_longitude: number | null
           created_at: string
           description: string
+          forme: string | null
           id: string
           image: string | null
+          localisation: Json | null
           name: string
           origin_location: string | null
           price_per_unit: number
           unit: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
+          adresse?: Json | null
           available_quantity?: number
           category: string
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description: string
+          forme?: string | null
           id?: string
           image?: string | null
+          localisation?: Json | null
           name: string
           origin_location?: string | null
           price_per_unit: number
           unit: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
+          adresse?: Json | null
           available_quantity?: number
           category?: string
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description?: string
+          forme?: string | null
           id?: string
           image?: string | null
+          localisation?: Json | null
           name?: string
           origin_location?: string | null
           price_per_unit?: number
           unit?: string
           updated_at?: string
+          workspace_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "materials_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medical_acts: {
         Row: {
@@ -1651,6 +1671,42 @@ export type Database = {
           registration_number?: string
           status?: Database["public"]["Enums"]["vessel_status"] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      workspaces: {
+        Row: {
+          contact_manager: string | null
+          contact_phone: string | null
+          created_at: string
+          facilities: Json | null
+          id: string
+          location: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact_manager?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          facilities?: Json | null
+          id?: string
+          location: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_manager?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          facilities?: Json | null
+          id?: string
+          location?: string
+          name?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

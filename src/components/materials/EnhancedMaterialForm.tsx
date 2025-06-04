@@ -49,7 +49,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       contact: '',
       leadTime: 7
     },
-    regions: initialData?.regions || [],
+    localisation: initialData?.localisation || [],
     ...initialData
   });
 
@@ -170,7 +170,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Espace de travail: select from DB or add new */}
+            {/* Espace de travail: select from DB */}
             <div>
               <Label htmlFor="workspaceId">Espace de travail</Label>
               <Select
@@ -186,22 +186,8 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
                       {workspace.name} - {workspace.location}
                     </SelectItem>
                   ))}
-                  <SelectItem value="add-new">+ Ajouter un nouvel espace</SelectItem>
                 </SelectContent>
               </Select>
-              {formData.workspaceId === 'add-new' && (
-                <div className="mt-2">
-                  <Label>Nom du nouvel espace</Label>
-                  <Input
-                    value={formData.newWorkspaceName || ''}
-                    onChange={e => handleChange('newWorkspaceName', e.target.value)}
-                    placeholder="Nom de l'espace"
-                  />
-                </div>
-              )}
-            </div>
-            {/* Localisation: only InteractiveMap */}
-            <div>
             </div>
           </div>
         </CardContent>

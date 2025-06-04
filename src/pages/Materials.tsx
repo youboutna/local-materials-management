@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -17,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/integrations/supabase/types';
 
 type Material = Database['public']['Tables']['materials']['Row'];
+type Workspace = Database['public']['Tables']['workspaces']['Row'];
 
 const Materials = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,13 +26,23 @@ const Materials = () => {
   const [sortOption, setSortOption] = useState('name');
   const queryClient = useQueryClient();
 
-  // Fetch materials from Supabase
+  // Fetch materials with workspaces from Supabase
   const { data: materials = [], isLoading, error } = useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('materials')
-        .select('*')
+        .select(`
+          *,
+          workspace:workspaces(
+            id,
+            name,
+            location,
+            status,
+            contact_manager,
+            contact_phone
+          )
+        `)
         .order('name');
       
       if (error) throw error;
@@ -283,16 +295,15 @@ const Materials = () => {
                               <MapPin className="h-4 w-4 text-terracotta-500" />
                               <span className="font-semibold">Espace de travail:</span>
                               <span>
-                                {(material as any).workspace?.name // If joined workspace object exists
-                                  || workspaces.find(w => w.id === (material as any).workspace_id)?.name // If found in fetched workspaces
-                                  || (material as any).workspace_id // Show the ID if nothing else
-                                  || <span className="italic text-gray-400">Non défini</span>}
+                                {(material as any).workspace?.name || (
+                                  <span className="italic text-gray-400">Non défini</span>
+                                )}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">Localisation de l'entrepôt:</span>
                               <span>
-                                {Array.isArray((material as any).localisation)
+                                {Array.isArray((material as any).localisation) && (material as any).localisation.length > 0
                                   ? (material as any).localisation.map((r: any) => r.name).join(', ')
                                   : (material as any).origin_location || 'Non défini'}
                               </span>
@@ -312,8 +323,6 @@ const Materials = () => {
                               </div>
                             )}
                             {/* --- End Espace de travail et localisation --- */}
-
-
                           </div>
                           <div className="flex justify-between mt-4">
                             <Button variant="outline" size="sm">

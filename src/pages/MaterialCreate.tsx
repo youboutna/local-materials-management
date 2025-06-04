@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
 import InteractiveMap from '@/components/map/InteractiveMap';
 import { EnhancedMaterial, Location, OperationalStatus } from '@/types/mauritania';
+import { useQuery } from '@tanstack/react-query';
 
 const MaterialCreate = () => {
   const navigate = useNavigate();
@@ -19,27 +20,22 @@ const MaterialCreate = () => {
     address?: string;
   }>({});
 
-  // Unique workspaces data - removed duplicates
-  const uniqueWorkspaces = [
-    {
-      id: '1',
-      name: 'Entrepôt Principal Nouakchott',
-      location: Location.Nouakchott,
-      status: OperationalStatus.active
-    },
-    {
-      id: '2',
-      name: 'Site Nouadhibou',
-      location: Location.Nouadhibou,
-      status: OperationalStatus.active
-    },
-    {
-      id: '3',
-      name: 'Dépôt Adrar',
-      location: Location.Adrar,
-      status: OperationalStatus.inactive
+  // Fetch workspaces from Supabase
+  const { data: workspaces = [] } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workspaces')
+        .select('*');
+      if (error) throw error;
+      return data.map(workspace => ({
+        id: workspace.id,
+        name: workspace.name,
+        location: workspace.location as Location,
+        status: workspace.status as OperationalStatus
+      }));
     }
-  ];
+  });
 
   const handleSubmit = async (materialData: Partial<EnhancedMaterial>) => {
     setLoading(true);
@@ -60,6 +56,10 @@ const MaterialCreate = () => {
         available_quantity: materialData.availableQuantity || 0,
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
+        workspace_id: materialData.workspaceId || null,
+        localisation: materialData.localisation || [],
+        adresse: materialData.adresse || null,
+        forme: materialData.forme || null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
@@ -109,7 +109,7 @@ const MaterialCreate = () => {
                 {/* Enhanced Material Form */}
                 <EnhancedMaterialForm
                   onSubmit={handleSubmit}
-                  workspaces={uniqueWorkspaces}
+                  workspaces={workspaces}
                 />
               </CardContent>
             </Card>
