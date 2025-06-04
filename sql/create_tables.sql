@@ -82,6 +82,15 @@ CREATE TABLE users (
   is_anonymous BOOLEAN
 );
 
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_own_user ON users;
+CREATE POLICY select_own_user ON users
+  FOR SELECT TO public
+  USING (
+    id = current_setting('request.jwt.claims', true)::json ->> 'sub'
+    OR (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+
 -- PROFILES
 CREATE TABLE profiles (
   id UUID PRIMARY KEY,
@@ -96,6 +105,24 @@ CREATE TABLE profiles (
   FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_own_profile ON profiles;
+CREATE POLICY select_own_profile ON profiles
+  FOR SELECT TO public
+  USING (
+    id = current_setting('request.jwt.claims', true)::json ->> 'sub'
+    OR (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+DROP POLICY IF EXISTS manage_profiles_admin_director ON profiles;
+CREATE POLICY manage_profiles_admin_director ON profiles
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+
 -- USER ROLES
 CREATE TABLE user_roles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -105,6 +132,26 @@ CREATE TABLE user_roles (
   assigned_by UUID REFERENCES users(id),
   UNIQUE(user_id, role_name)
 );
+
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_own_user_roles ON user_roles;
+CREATE POLICY select_own_user_roles ON user_roles
+  FOR SELECT TO public
+  USING (
+    user_id = current_setting('request.jwt.claims', true)::json ->> 'sub'
+    OR (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+DROP POLICY IF EXISTS manage_roles_admin_director ON user_roles;
+CREATE POLICY manage_roles_admin_director ON user_roles
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+
+UPDATE user_roles SET role_name = 'manager' WHERE role_name = 'project_manager';
 
 -- PROJECTS
 CREATE TABLE projects (
@@ -126,6 +173,24 @@ CREATE TABLE projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_projects_by_role ON projects;
+CREATE POLICY select_projects_by_role ON projects
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent')
+    OR created_by = current_setting('request.jwt.claims', true)::json ->> 'sub'
+  );
+DROP POLICY IF EXISTS manage_projects_admin_director_manager ON projects;
+CREATE POLICY manage_projects_admin_director_manager ON projects
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- PAYMENTS
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -137,6 +202,23 @@ CREATE TABLE payments (
   transaction_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_payments_by_role ON payments;
+CREATE POLICY select_payments_by_role ON payments
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent', 'supplier')
+  );
+DROP POLICY IF EXISTS manage_payments_admin_director_manager ON payments;
+CREATE POLICY manage_payments_admin_director_manager ON payments
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
 
 -- INSPECTIONS
 CREATE TABLE inspections (
@@ -150,6 +232,23 @@ CREATE TABLE inspections (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_inspections_by_role ON inspections;
+CREATE POLICY select_inspections_by_role ON inspections
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent')
+  );
+DROP POLICY IF EXISTS manage_inspections_admin_director_manager ON inspections;
+CREATE POLICY manage_inspections_admin_director_manager ON inspections
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- PROJECT MATERIALS
 CREATE TABLE project_materials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -159,6 +258,23 @@ CREATE TABLE project_materials (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE project_materials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_project_materials_by_role ON project_materials;
+CREATE POLICY select_project_materials_by_role ON project_materials
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent')
+  );
+DROP POLICY IF EXISTS manage_project_materials_admin_director_manager ON project_materials;
+CREATE POLICY manage_project_materials_admin_director_manager ON project_materials
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
 
 -- TASK ASSIGNMENTS
 CREATE TABLE task_assignments (
@@ -177,6 +293,24 @@ CREATE TABLE task_assignments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE task_assignments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_tasks_by_role ON task_assignments;
+CREATE POLICY select_tasks_by_role ON task_assignments
+  FOR SELECT TO public
+  USING (
+    assigned_to = current_setting('request.jwt.claims', true)::json ->> 'sub'
+    OR (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+DROP POLICY IF EXISTS manage_tasks_admin_director_manager ON task_assignments;
+CREATE POLICY manage_tasks_admin_director_manager ON task_assignments
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- NOTIFICATIONS
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -190,6 +324,24 @@ CREATE TABLE notifications (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_own_notifications ON notifications;
+CREATE POLICY select_own_notifications ON notifications
+  FOR SELECT TO public
+  USING (
+    recipient_id = current_setting('request.jwt.claims', true)::json ->> 'sub'
+    OR (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+DROP POLICY IF EXISTS manage_notifications_admin_director ON notifications;
+CREATE POLICY manage_notifications_admin_director ON notifications
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
 
 -- MATERIALS
 CREATE TABLE materials (
@@ -212,6 +364,23 @@ CREATE TABLE materials (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE materials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_materials_by_role ON materials;
+CREATE POLICY select_materials_by_role ON materials
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent', 'supplier')
+  );
+DROP POLICY IF EXISTS manage_materials_admin_director_manager ON materials;
+CREATE POLICY manage_materials_admin_director_manager ON materials
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- SUPPLIERS
 CREATE TABLE suppliers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -227,6 +396,23 @@ CREATE TABLE suppliers (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_suppliers_by_role ON suppliers;
+CREATE POLICY select_suppliers_by_role ON suppliers
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent', 'supplier')
+  );
+DROP POLICY IF EXISTS manage_suppliers_admin_director ON suppliers;
+CREATE POLICY manage_suppliers_admin_director ON suppliers
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director')
+  );
+
 -- WORKSPACES
 CREATE TABLE workspaces (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -239,6 +425,23 @@ CREATE TABLE workspaces (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_workspaces_by_role ON workspaces;
+CREATE POLICY select_workspaces_by_role ON workspaces
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent', 'supplier')
+  );
+DROP POLICY IF EXISTS manage_workspaces_admin_director_manager ON workspaces;
+CREATE POLICY manage_workspaces_admin_director_manager ON workspaces
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
 
 -- DOCUMENTS
 CREATE TABLE documents (
@@ -264,6 +467,24 @@ CREATE TABLE documents (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_documents_by_role ON documents;
+CREATE POLICY select_documents_by_role ON documents
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent', 'supplier')
+    OR project_id IS NULL
+  );
+DROP POLICY IF EXISTS manage_documents_admin_director_manager ON documents;
+CREATE POLICY manage_documents_admin_director_manager ON documents
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- TENDER DOCUMENTS
 CREATE TABLE tender_documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -280,56 +501,32 @@ CREATE TABLE tender_documents (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE tender_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS select_tender_documents_by_role ON tender_documents;
+CREATE POLICY select_tender_documents_by_role ON tender_documents
+  FOR SELECT TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager', 'agent')
+  );
+DROP POLICY IF EXISTS manage_tender_documents_admin_director_manager ON tender_documents;
+CREATE POLICY manage_tender_documents_admin_director_manager ON tender_documents
+  FOR ALL TO public
+  USING (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  )
+  WITH CHECK (
+    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('admin', 'director', 'manager')
+  );
+
 -- ============================
 -- INDEXES
 -- ============================
-CREATE INDEX idx_projects_created_by ON projects(created_by);
-CREATE INDEX idx_payments_project_id ON payments(project_id);
-CREATE INDEX idx_inspections_project_id ON inspections(project_id);
-CREATE INDEX idx_project_materials_project_id ON project_materials(project_id);
-CREATE INDEX idx_task_assignments_project_id ON task_assignments(project_id);
-CREATE INDEX idx_projects_status ON projects(status);
-CREATE INDEX idx_task_assignments_status ON task_assignments(status);
-CREATE INDEX idx_notifications_recipient_id ON notifications(recipient_id);
-CREATE INDEX idx_notifications_type ON notifications(type);
-
--- ============================
--- RLS POLICIES (EXAMPLES)
--- ============================
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-CREATE POLICY select_own_projects ON projects
-  FOR SELECT TO public
-  USING (
-    created_by = current_setting('request.jwt.claims', true)::json ->> 'sub'
-  );
-
-ALTER TABLE task_assignments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY select_own_tasks ON task_assignments
-  FOR SELECT TO public
-  USING (
-    assigned_to = current_setting('request.jwt.claims', true)::json ->> 'sub'
-  );
-CREATE POLICY insert_task_policy ON task_assignments
-  FOR INSERT TO public
-  WITH CHECK (
-    (current_setting('request.jwt.claims', true)::json ->> 'role') IN ('project_manager', 'admin')
-  );
-
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY select_own_notifications ON notifications
-  FOR SELECT TO public
-  USING (
-    recipient_id = current_setting('request.jwt.claims', true)::json ->> 'sub'
-  );
-
-ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
-CREATE POLICY select_all_inspections ON inspections
-  FOR SELECT TO public
-  USING (true);
-
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY select_all_payments ON payments
-  FOR SELECT TO public
-  USING (true);
-
--- Add similar RLS for other tables as needed.
+CREATE INDEX IF NOT EXISTS idx_projects_created_by ON projects(created_by);
+CREATE INDEX IF NOT EXISTS idx_payments_project_id ON payments(project_id);
+CREATE INDEX IF NOT EXISTS idx_inspections_project_id ON inspections(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_materials_project_id ON project_materials(project_id);
+CREATE INDEX IF NOT EXISTS idx_task_assignments_project_id ON task_assignments(project_id);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_task_assignments_status ON task_assignments(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_id ON notifications(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
