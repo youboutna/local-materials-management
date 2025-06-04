@@ -4,9 +4,10 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 
 export enum RoleType {
   ADMIN = 'admin',
-  DEV = 'dev',
-  manager = 'manager',
-  DIRECTOR = 'director'
+  DIRECTOR = 'director',
+  MANAGER = 'manager',
+  AGENT = 'agent',
+  SUPPLIER = 'supplier'
 }
 
 @Entity({ name: "roles" })
@@ -17,7 +18,7 @@ export class Role {
   @Column({
     type: "enum",
     enum: RoleType,
-    default: RoleType.DEV
+    default: RoleType.AGENT
   })
   type!: RoleType;
 
