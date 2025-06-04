@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -15,6 +14,7 @@ import TaskAssignments from '@/components/documents/TaskAssignments';
 import EmployeeManagement from '@/components/documents/EmployeeManagement';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import TenderDocuments from '@/components/documents/TenderDocuments';
+import TenderDocumentUploadForm from '@/components/documents/TenderDocumentUploadForm';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -167,6 +167,18 @@ const Documents = () => {
                     onDocumentSelect={handleDocumentSelect}
                   />
                 )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Ajouter un document d'appel d'offres</CardTitle>
+                    <CardDescription>
+                      Remplissez le formulaire pour ajouter un document lié à ce projet.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <TenderDocumentUploadForm projectId={selectedProjectId} />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="suppliers">
