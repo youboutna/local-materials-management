@@ -617,17 +617,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               boundsOptions={{ padding: [50, 50] }}
               doubleClickZoom={false}
               keyboard={false}
-              whenReady={(map) => {
-                map.on('zoomend', () => {
-                  setZoom(map.getZoom());
-                });
-                // Add this to prevent map panning outside Mauritania
-                map.on('moveend', () => {
-                  const center = map.getCenter();
-                  if (!isWithinMauritania(center.lat, center.lng)) {
-                    map.panTo([18.0735, -15.9582]); // Default to Nouakchott
-                  }
-                });
+              whenReady={() => {
+                if (mapRef.current) {
+                  const map = mapRef.current;
+                  map.on('zoomend', () => {
+                    setZoom(map.getZoom());
+                  });
+                  map.on('moveend', () => {
+                    const center = map.getCenter();
+                    if (!isWithinMauritania(center.lat, center.lng)) {
+                      map.panTo([18.0735, -15.9582]);
+                    }
+                  });
+                }
               }}
             >
               <TileLayer

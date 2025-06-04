@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -550,7 +549,6 @@ const ProjectCreate = () => {
                         onLocationSelect={handleLocationSelect}
                         interactive={true}
                         height="500px"
-                        width="100%"
                         defaultCenter={[18.079052, -15.965634]}
                         defaultZoom={6}
                       />
