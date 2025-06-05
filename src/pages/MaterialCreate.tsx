@@ -17,6 +17,7 @@ const MaterialCreate = () => {
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
+    warehouseShape?: { lat: number; lng: number }[];
     address?: string;
   }>({});
 
@@ -50,16 +51,17 @@ const MaterialCreate = () => {
       const dbData = {
         name: materialData.name,
         description: materialData.description || '',
-        category: 'Construction', // Default category
+        category: materialData.category || 'Construction',
         unit: materialData.unit || 'kg',
         price_per_unit: materialData.pricePerUnit || 0,
         available_quantity: materialData.availableQuantity || 0,
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
-        localisation: JSON.stringify(materialData.localisation || []), // Convert to JSON string
-        adresse: materialData.adresse ? JSON.stringify(materialData.adresse) : null, // Convert to JSON string
+        localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
+        adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         forme: materialData.forme || null,
+        warehouse_shape: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
@@ -120,9 +122,10 @@ const MaterialCreate = () => {
                 value={mapData}
                 onChange={setMapData}
                 title="Localisation de l'entrepôt"
-                description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
+                description="Définissez la position GPS de l'entrepôt et tracez sa forme et zone de stockage"
                 allowPolygon={true}
                 allowCoordinateSelection={true}
+                allowWarehouseTracing={true}
                 className="h-full"
               />
             </div>

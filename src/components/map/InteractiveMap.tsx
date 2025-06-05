@@ -18,10 +18,12 @@ import {
   Move,
   RotateCcw,
   ClipboardCopy,
+  Circle,
+  Pentagon,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { MAURITANIA_REGIONS, Region } from '@/types/mauritania';
-import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Polygon, Polyline, Popup, Rectangle, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Polygon, Polyline, Popup, Rectangle, Circle as LeafletCircle } from 'react-leaflet';
 import { FeatureCollection } from 'geojson';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -40,6 +42,7 @@ interface MapData {
   center?: Coordinate;
   polygon?: Coordinate[];
   address?: string;
+  warehouseShape?: Coordinate[]; // Add warehouse shape
 }
 
 interface InteractiveMapProps {
@@ -49,6 +52,7 @@ interface InteractiveMapProps {
   description?: string;
   allowPolygon?: boolean;
   allowCoordinateSelection?: boolean;
+  allowWarehouseTracing?: boolean; // New prop for warehouse tracing
   className?: string;
   regions?: Region[];
 }
@@ -127,8 +131,11 @@ const MapClickHandler = ({
   isSelectingCoordinate,
   isDrawing,
   isMeasuring,
+  isTracingWarehouse,
   currentPolygon,
+  warehouseShape,
   onPolygonUpdate,
+  onWarehouseShapeUpdate,
   onMeasurementUpdate,
   zoneShape,
   setRectangleBounds,
@@ -136,15 +143,18 @@ const MapClickHandler = ({
   setCircleRadius,
   drawingStep,
   setDrawingStep,
-  rectangleBounds, // <-- add this
-  circleCenter,    // <-- add this if needed
+  rectangleBounds,
+  circleCenter,
 }: { 
   onMapClick: (lat: number, lng: number) => void;
   isSelectingCoordinate: boolean;
   isDrawing: boolean;
   isMeasuring: boolean;
+  isTracingWarehouse: boolean;
   currentPolygon: Coordinate[];
+  warehouseShape: Coordinate[];
   onPolygonUpdate: (points: Coordinate[]) => void;
+  onWarehouseShapeUpdate: (points: Coordinate[]) => void;
   onMeasurementUpdate: (points: Coordinate[]) => void;
   zoneShape: 'polygon' | 'rectangle' | 'circle';
   setRectangleBounds: (bounds: [Coordinate, Coordinate] | null) => void;
@@ -152,8 +162,8 @@ const MapClickHandler = ({
   setCircleRadius: (radius: number) => void;
   drawingStep: number;
   setDrawingStep: (step: number) => void;
-  rectangleBounds: [Coordinate, Coordinate] | null; // <-- add this
-  circleCenter: Coordinate | null; // <-- add this if needed
+  rectangleBounds: [Coordinate, Coordinate] | null;
+  circleCenter: Coordinate | null;
 }) => {
   const map = useMap();
   const currentZoomRef = useRef(map.getZoom());
@@ -205,7 +215,10 @@ const MapClickHandler = ({
         return;
       }
 
-      if (isDrawing) {
+      if (isTracingWarehouse) {
+        const newShape = [...warehouseShape, { lat, lng }];
+        onWarehouseShapeUpdate(newShape);
+      } else if (isDrawing) {
         if (zoneShape === 'polygon') {
           const newPolygon = [...currentPolygon, { lat, lng }];
           onPolygonUpdate(newPolygon);
@@ -216,7 +229,6 @@ const MapClickHandler = ({
           } else if (drawingStep === 1 && rectangleBounds) {
             setRectangleBounds([rectangleBounds[0], { lat, lng }]);
             setDrawingStep(2);
-            // Optionally, finish drawing here
           }
         } else if (zoneShape === 'circle') {
           if (drawingStep === 0) {
@@ -226,18 +238,16 @@ const MapClickHandler = ({
             const radius = map.distance([circleCenter.lat, circleCenter.lng], [lat, lng]);
             setCircleRadius(radius);
             setDrawingStep(2);
-            // Optionally, finish drawing here
           }
         }
       }
 
-      // ADD THIS LINE to always notify parent of click
       onMapClick(lat, lng);
     };
 
     // Update cursor styles based on mode
     const container = map.getContainer();
-    if (isSelectingCoordinate) {
+    if (isSelectingCoordinate || isTracingWarehouse) {
       container.style.cursor = 'pointer';
       map.dragging.disable();
       map.scrollWheelZoom.disable();
@@ -258,13 +268,14 @@ const MapClickHandler = ({
     map.on('dragend', () => setTimeout(() => setIsDragging(false), 50));
 
     // Lock the map view when in drawing/measuring mode
-    if (isDrawing || isMeasuring) {
+    if (isDrawing || isMeasuring || isTracingWarehouse) {
       map.dragging.disable();
       map.doubleClickZoom.disable();
       
       // Fit bounds to current points if they exist
-      if (currentPolygon.length > 0) {
-        const bounds = calculateBounds(currentPolygon);
+      const activePoints = isTracingWarehouse ? warehouseShape : currentPolygon;
+      if (activePoints.length > 0) {
+        const bounds = calculateBounds(activePoints);
         const padding: L.PointTuple = [50, 50];
         map.fitBounds(bounds, { padding });
       }
@@ -286,7 +297,7 @@ const MapClickHandler = ({
         document.body.removeChild(coordsTooltipRef.current);
       }
     };
-  }, [map, onMapClick, isSelectingCoordinate, isDrawing, isMeasuring, currentPolygon, zoneShape, drawingStep, rectangleBounds, circleCenter]);
+  }, [map, onMapClick, isSelectingCoordinate, isDrawing, isMeasuring, isTracingWarehouse, currentPolygon, warehouseShape, zoneShape, drawingStep, rectangleBounds, circleCenter]);
 
   return null;
 };
@@ -308,6 +319,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   description = "Définissez la position GPS et tracez la zone si nécessaire",
   allowPolygon = true,
   allowCoordinateSelection = true,
+  allowWarehouseTracing = false,
   regions = MAURITANIA_REGIONS,
   className
 }) => {
@@ -315,7 +327,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [isSelectingCoordinate, setIsSelectingCoordinate] = useState(false);
   const [isMeasuring, setIsMeasuring] = useState(false);
+  const [isTracingWarehouse, setIsTracingWarehouse] = useState(false);
   const [currentPolygon, setCurrentPolygon] = useState<Coordinate[]>(value?.polygon || []);
+  const [warehouseShape, setWarehouseShape] = useState<Coordinate[]>(value?.warehouseShape || []);
   const [centerPoint, setCenterPoint] = useState<Coordinate | undefined>(value?.center);
   const [address, setAddress] = useState(value?.address || '');
   const [manualLat, setManualLat] = useState(value?.center?.lat?.toString() || '');
@@ -328,13 +342,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [rectangleBounds, setRectangleBounds] = useState<[Coordinate, Coordinate] | null>(null);
   const [circleCenter, setCircleCenter] = useState<Coordinate | null>(null);
   const [circleRadius, setCircleRadius] = useState<number>(0);
-  const [drawingStep, setDrawingStep] = useState<number>(0); // for rectangle/circle steps
+  const [drawingStep, setDrawingStep] = useState<number>(0);
 
   const updateMapData = (updates: Partial<MapData>) => {
     const newData = {
       center: centerPoint,
       polygon: currentPolygon,
       address,
+      warehouseShape,
       ...updates
     };
     onChange(newData);
@@ -457,6 +472,58 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isDrawing, isMeasuring, currentPolygon, measurementPoints]);
+
+  const createWarehouseShapes = () => {
+    // Rectangle warehouse
+    const createRectangleWarehouse = () => {
+      if (!centerPoint) {
+        toast({
+          title: "Position requise",
+          description: "Veuillez d'abord définir une position GPS",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const offset = 0.0005; // Small offset for warehouse shape
+      const points = [
+        { lat: centerPoint.lat - offset, lng: centerPoint.lng - offset },
+        { lat: centerPoint.lat - offset, lng: centerPoint.lng + offset },
+        { lat: centerPoint.lat + offset, lng: centerPoint.lng + offset },
+        { lat: centerPoint.lat + offset, lng: centerPoint.lng - offset }
+      ];
+      setWarehouseShape(points);
+      updateMapData({ warehouseShape: points });
+    };
+
+    // Circle warehouse
+    const createCircleWarehouse = () => {
+      if (!centerPoint) {
+        toast({
+          title: "Position requise",
+          description: "Veuillez d'abord définir une position GPS",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const radius = 0.0003;
+      const points: Coordinate[] = [];
+      for (let i = 0; i < 16; i++) {
+        const angle = (i * 2 * Math.PI) / 16;
+        points.push({
+          lat: centerPoint.lat + radius * Math.cos(angle),
+          lng: centerPoint.lng + radius * Math.sin(angle)
+        });
+      }
+      setWarehouseShape(points);
+      updateMapData({ warehouseShape: points });
+    };
+
+    return { createRectangleWarehouse, createCircleWarehouse };
+  };
+
+  const { createRectangleWarehouse, createCircleWarehouse } = createWarehouseShapes();
 
   return (
     <div className={className}>
@@ -660,10 +727,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 isSelectingCoordinate={isSelectingCoordinate}
                 isDrawing={isDrawing}
                 isMeasuring={isMeasuring}
+                isTracingWarehouse={isTracingWarehouse}
                 currentPolygon={currentPolygon}
+                warehouseShape={warehouseShape}
                 onPolygonUpdate={(points) => {
                   setCurrentPolygon(points);
                   updateMapData({ polygon: points });
+                }}
+                onWarehouseShapeUpdate={(points) => {
+                  setWarehouseShape(points);
+                  updateMapData({ warehouseShape: points });
                 }}
                 onMeasurementUpdate={(points) => {
                   setMeasurementPoints(points);
@@ -683,13 +756,27 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <Polygon 
                   positions={currentPolygon.map(p => [p.lat, p.lng])}
                   pathOptions={{
-                    color: '#2563eb', // blue-600
+                    color: '#2563eb',
                     weight: 2,
-                    fillColor: '#3b82f6', // blue-500
+                    fillColor: '#3b82f6',
                     fillOpacity: 0.2
                   }}
                 />
               )}
+
+              {/* Warehouse Shape */}
+              {warehouseShape.length > 0 && (
+                <Polygon 
+                  positions={warehouseShape.map(p => [p.lat, p.lng])}
+                  pathOptions={{
+                    color: '#f59e0b',
+                    weight: 2,
+                    fillColor: '#fbbf24',
+                    fillOpacity: 0.3
+                  }}
+                />
+              )}
+
               {/* Rectangle */}
               {zoneShape === 'rectangle' && rectangleBounds && (
                 <Rectangle
@@ -763,6 +850,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   <div className="flex items-center gap-1.5">
                     <div className="w-3 h-3 bg-blue-500/30 border border-blue-500"></div>
                     <span>Zone tracée</span>
+                  </div>
+                )}
+                {allowWarehouseTracing && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 bg-amber-500/30 border border-amber-500"></div>
+                    <span>Entrepôt</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -856,6 +949,82 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   >
                     <Trash2 className="h-4 w-4" />
                     Effacer zone
+                  </Button>
+                )}
+              </>
+            )}
+            {allowWarehouseTracing && (
+              <>
+                {!isTracingWarehouse ? (
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsTracingWarehouse(true);
+                        setIsDrawing(false);
+                        setIsSelectingCoordinate(false);
+                        setIsMeasuring(false);
+                        setWarehouseShape([]);
+                        updateMapData({ warehouseShape: [] });
+                      }}
+                      className="flex items-center gap-2 text-xs"
+                    >
+                      <Pentagon className="h-4 w-4" />
+                      Tracer entrepôt
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={createRectangleWarehouse}
+                      className="flex items-center gap-2 text-xs"
+                      title="Entrepôt rectangulaire"
+                    >
+                      <Square className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={createCircleWarehouse}
+                      className="flex items-center gap-2 text-xs"
+                      title="Entrepôt circulaire"
+                    >
+                      <Circle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsTracingWarehouse(false);
+                      if (warehouseShape.length < 3) {
+                        toast({
+                          title: "Forme incomplète",
+                          description: "Au moins 3 points sont nécessaires",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                    className="flex items-center gap-2 text-xs bg-green-100"
+                  >
+                    <Pentagon className="h-4 w-4" />
+                    Terminer entrepôt
+                  </Button>
+                )}
+                {warehouseShape.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setWarehouseShape([]);
+                      setIsTracingWarehouse(false);
+                      updateMapData({ warehouseShape: [] });
+                    }}
+                    className="flex items-center gap-2 text-xs"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Effacer entrepôt
                   </Button>
                 )}
               </>
@@ -958,6 +1127,31 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 </div>
                 <div className="text-xs grid grid-cols-2 gap-1">
                   {currentPolygon.map((point, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-1 rounded">
+                      <span>Point {index + 1}:</span>
+                      <span className="font-mono">{point.lat.toFixed(4)}, {point.lng.toFixed(4)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {warehouseShape.length > 0 && (
+              <div className="space-y-2 border-b pb-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Entrepôt tracé:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-amber-50 px-2 py-0.5 rounded-full text-amber-700">
+                      {warehouseShape.length} points
+                    </span>
+                    {warehouseShape.length >= 3 && (
+                      <span className="bg-orange-50 px-2 py-0.5 rounded-full text-orange-700">
+                        {calculatePolygonArea(warehouseShape).toFixed(2)} km²
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-xs grid grid-cols-2 gap-1">
+                  {warehouseShape.map((point, index) => (
                     <div key={index} className="flex items-center justify-between bg-white p-1 rounded">
                       <span>Point {index + 1}:</span>
                       <span className="font-mono">{point.lat.toFixed(4)}, {point.lng.toFixed(4)}</span>

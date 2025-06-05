@@ -9,6 +9,160 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      catch_records: {
+        Row: {
+          actual_sale_value: number | null
+          catch_date: string
+          created_at: string | null
+          estimated_value: number | null
+          fish_species: string
+          fishing_zone: string | null
+          id: string
+          mission_id: string | null
+          recorded_by: string | null
+          weight_kg: number
+        }
+        Insert: {
+          actual_sale_value?: number | null
+          catch_date: string
+          created_at?: string | null
+          estimated_value?: number | null
+          fish_species: string
+          fishing_zone?: string | null
+          id?: string
+          mission_id?: string | null
+          recorded_by?: string | null
+          weight_kg: number
+        }
+        Update: {
+          actual_sale_value?: number | null
+          catch_date?: string
+          created_at?: string | null
+          estimated_value?: number | null
+          fish_species?: string
+          fishing_zone?: string | null
+          id?: string
+          mission_id?: string | null
+          recorded_by?: string | null
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catch_records_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catch_records_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_medical_acts: {
+        Row: {
+          claim_id: string
+          id: string
+          medical_act_code: string
+          price_charged: number
+          quantity: number | null
+          remarks: string | null
+        }
+        Insert: {
+          claim_id: string
+          id?: string
+          medical_act_code: string
+          price_charged: number
+          quantity?: number | null
+          remarks?: string | null
+        }
+        Update: {
+          claim_id?: string
+          id?: string
+          medical_act_code?: string
+          price_charged?: number
+          quantity?: number | null
+          remarks?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_medical_acts_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "health_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_medical_acts_medical_act_code_fkey"
+            columns: ["medical_act_code"]
+            isOneToOne: false
+            referencedRelation: "medical_acts"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      consumables_usage: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          id: string
+          item_name: string
+          mission_id: string | null
+          quantity_used: number
+          reason: string | null
+          recorded_by: string | null
+          usage_date: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_name: string
+          mission_id?: string | null
+          quantity_used: number
+          reason?: string | null
+          recorded_by?: string | null
+          usage_date: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_name?: string
+          mission_id?: string | null
+          quantity_used?: number
+          reason?: string | null
+          recorded_by?: string | null
+          usage_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumables_usage_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "supply_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumables_usage_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumables_usage_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           assigned_to: string | null
@@ -68,6 +222,13 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
           {
             foreignKeyName: "documents_inspection_id_fkey"
             columns: ["inspection_id"]
@@ -155,6 +316,208 @@ export type Database = {
             columns: ["superior_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
+      fishing_licenses: {
+        Row: {
+          authorized_zones: string[] | null
+          cost_per_mission: number | null
+          created_at: string | null
+          id: string
+          license_number: string
+          owner_id: string | null
+          quota_limit: number | null
+          updated_at: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          authorized_zones?: string[] | null
+          cost_per_mission?: number | null
+          created_at?: string | null
+          id?: string
+          license_number: string
+          owner_id?: string | null
+          quota_limit?: number | null
+          updated_at?: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          authorized_zones?: string[] | null
+          cost_per_mission?: number | null
+          created_at?: string | null
+          id?: string
+          license_number?: string
+          owner_id?: string | null
+          quota_limit?: number | null
+          updated_at?: string | null
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fishing_licenses_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fishing_missions: {
+        Row: {
+          budget: number
+          captain_id: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          fishing_zone: string
+          fuel_consumed: number | null
+          id: string
+          license_id: string
+          planned_duration: number | null
+          progress: number | null
+          start_date: string
+          status: Database["public"]["Enums"]["mission_status"] | null
+          title: string
+          total_catch_value: number | null
+          total_catch_weight: number | null
+          total_expenses: number | null
+          updated_at: string | null
+          vessel_id: string
+        }
+        Insert: {
+          budget: number
+          captain_id: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          fishing_zone: string
+          fuel_consumed?: number | null
+          id?: string
+          license_id: string
+          planned_duration?: number | null
+          progress?: number | null
+          start_date: string
+          status?: Database["public"]["Enums"]["mission_status"] | null
+          title: string
+          total_catch_value?: number | null
+          total_catch_weight?: number | null
+          total_expenses?: number | null
+          updated_at?: string | null
+          vessel_id: string
+        }
+        Update: {
+          budget?: number
+          captain_id?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          fishing_zone?: string
+          fuel_consumed?: number | null
+          id?: string
+          license_id?: string
+          planned_duration?: number | null
+          progress?: number | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["mission_status"] | null
+          title?: string
+          total_catch_value?: number | null
+          total_catch_weight?: number | null
+          total_expenses?: number | null
+          updated_at?: string | null
+          vessel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fishing_missions_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fishing_missions_license_id_fkey"
+            columns: ["license_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_licenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fishing_missions_vessel_id_fkey"
+            columns: ["vessel_id"]
+            isOneToOne: false
+            referencedRelation: "vessels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_claims: {
+        Row: {
+          act_reimbursement_rates: Json | null
+          claim_date: string
+          created_at: string
+          id: string
+          insurance_company_id: string | null
+          invoice_number: string | null
+          patient_id: string
+          practitioner_name: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string
+          valid_for_reimbursement: boolean | null
+        }
+        Insert: {
+          act_reimbursement_rates?: Json | null
+          claim_date: string
+          created_at?: string
+          id?: string
+          insurance_company_id?: string | null
+          invoice_number?: string | null
+          patient_id: string
+          practitioner_name?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string
+          valid_for_reimbursement?: boolean | null
+        }
+        Update: {
+          act_reimbursement_rates?: Json | null
+          claim_date?: string
+          created_at?: string
+          id?: string
+          insurance_company_id?: string | null
+          invoice_number?: string | null
+          patient_id?: string
+          practitioner_name?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+          valid_for_reimbursement?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_claims_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_claims_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +670,174 @@ export type Database = {
           },
         ]
       }
+      medical_acts: {
+        Row: {
+          code: string
+          created_at: string
+          default_price: number | null
+          label: string
+          type_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          default_price?: number | null
+          label: string
+          type_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          default_price?: number | null
+          label?: string
+          type_label?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mission_crew: {
+        Row: {
+          created_at: string | null
+          crew_member_id: string | null
+          daily_rate: number | null
+          days_worked: number | null
+          id: string
+          mission_id: string | null
+          profit_share_percentage: number | null
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          crew_member_id?: string | null
+          daily_rate?: number | null
+          days_worked?: number | null
+          id?: string
+          mission_id?: string | null
+          profit_share_percentage?: number | null
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          crew_member_id?: string | null
+          daily_rate?: number | null
+          days_worked?: number | null
+          id?: string
+          mission_id?: string | null
+          profit_share_percentage?: number | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_crew_crew_member_id_fkey"
+            columns: ["crew_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_crew_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string
+          expense_date: string
+          id: string
+          mission_id: string | null
+          receipt_url: string | null
+          recorded_by: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description: string
+          expense_date: string
+          id?: string
+          mission_id?: string | null
+          receipt_url?: string | null
+          recorded_by?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          mission_id?: string | null
+          receipt_url?: string | null
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_expenses_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_expenses_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mission_investments: {
+        Row: {
+          created_at: string | null
+          id: string
+          investment_amount: number
+          investor_id: string | null
+          mission_id: string | null
+          profit_share_percentage: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          investment_amount: number
+          investor_id?: string | null
+          mission_id?: string | null
+          profit_share_percentage: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          investment_amount?: number
+          investor_id?: string | null
+          mission_id?: string | null
+          profit_share_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_investments_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_investments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "fishing_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -345,6 +876,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          allergies_notes: string | null
+          blood_type: string | null
+          created_at: string
+          date_of_birth: string | null
+          gender: string | null
+          id: string
+          insurance_number: string | null
+          medical_history_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          allergies_notes?: string | null
+          blood_type?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id: string
+          insurance_number?: string | null
+          medical_history_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          allergies_notes?: string | null
+          blood_type?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id?: string
+          insurance_number?: string | null
+          medical_history_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -424,7 +1002,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
       }
       profit_distributions: {
         Row: {
@@ -594,6 +1180,71 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_subscription_requests: {
+        Row: {
+          address: string
+          bank_details_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          id_card_url: string | null
+          phone: string
+          practitioner_specialty: string | null
+          prospect_type: string
+          selected_plan_price_text: string
+          selected_plan_title: string
+          social_security_card_url: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address: string
+          bank_details_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          id_card_url?: string | null
+          phone: string
+          practitioner_specialty?: string | null
+          prospect_type: string
+          selected_plan_price_text: string
+          selected_plan_title: string
+          social_security_card_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address?: string
+          bank_details_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          id_card_url?: string | null
+          phone?: string
+          practitioner_specialty?: string | null
+          prospect_type?: string
+          selected_plan_price_text?: string
+          selected_plan_title?: string
+          social_security_card_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_subscription_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       quantity_takeoffs: {
         Row: {
           created_at: string
@@ -650,6 +1301,75 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          act_codes: Json | null
+          active: boolean | null
+          category: string | null
+          coverage_details: Json | null
+          coverage_rate: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          insurance_company_id: string | null
+          name: string | null
+          patient_id: string
+          policy_number: string | null
+          price: number | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          act_codes?: Json | null
+          active?: boolean | null
+          category?: string | null
+          coverage_details?: Json | null
+          coverage_rate?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          name?: string | null
+          patient_id: string
+          policy_number?: string | null
+          price?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          act_codes?: Json | null
+          active?: boolean | null
+          category?: string | null
+          coverage_details?: Json | null
+          coverage_rate?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          name?: string | null
+          patient_id?: string
+          policy_number?: string | null
+          price?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
@@ -936,6 +1656,207 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role_name: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role_name: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          aud: string | null
+          banned_until: string | null
+          confirmation_sent_at: string | null
+          confirmation_token: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          email_change: string | null
+          email_change_confirm_status: number | null
+          email_change_sent_at: string | null
+          email_change_token_current: string | null
+          email_change_token_new: string | null
+          email_confirmed_at: string | null
+          encrypted_password: string | null
+          id: string
+          instance_id: string | null
+          invited_at: string | null
+          is_anonymous: boolean | null
+          is_sso_user: boolean | null
+          is_super_admin: boolean | null
+          last_sign_in_at: string | null
+          phone: string | null
+          phone_change: string | null
+          phone_change_sent_at: string | null
+          phone_change_token: string | null
+          phone_confirmed_at: string | null
+          raw_app_meta_data: Json | null
+          raw_user_meta_data: Json | null
+          reauthentication_sent_at: string | null
+          reauthentication_token: string | null
+          recovery_sent_at: string | null
+          recovery_token: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id: string
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean | null
+          is_sso_user?: boolean | null
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id?: string
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean | null
+          is_sso_user?: boolean | null
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      vessels: {
+        Row: {
+          capacity: number
+          coordinates_latitude: number | null
+          coordinates_longitude: number | null
+          created_at: string | null
+          daily_cost: number
+          equipment: Json | null
+          fuel_capacity: number | null
+          id: string
+          insurance_expires_at: string | null
+          name: string
+          registration_number: string
+          status: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          capacity: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string | null
+          daily_cost: number
+          equipment?: Json | null
+          fuel_capacity?: number | null
+          id?: string
+          insurance_expires_at?: string | null
+          name: string
+          registration_number: string
+          status?: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number
+          coordinates_latitude?: number | null
+          coordinates_longitude?: number | null
+          created_at?: string | null
+          daily_cost?: number
+          equipment?: Json | null
+          fuel_capacity?: number | null
+          id?: string
+          insurance_expires_at?: string | null
+          name?: string
+          registration_number?: string
+          status?: Database["public"]["Enums"]["vessel_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           contact_manager: string | null
@@ -974,12 +1895,67 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_full: {
+        Row: {
+          aud: string | null
+          auth_email: string | null
+          auth_id: string | null
+          banned_until: string | null
+          confirmation_sent_at: string | null
+          confirmation_token: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          email_change: string | null
+          email_change_confirm_status: number | null
+          email_change_sent_at: string | null
+          email_change_token_current: string | null
+          email_change_token_new: string | null
+          email_confirmed_at: string | null
+          encrypted_password: string | null
+          id: string | null
+          instance_id: string | null
+          invited_at: string | null
+          is_anonymous: boolean | null
+          is_sso_user: boolean | null
+          is_super_admin: boolean | null
+          last_sign_in_at: string | null
+          phone: string | null
+          phone_change: string | null
+          phone_change_sent_at: string | null
+          phone_change_token: string | null
+          phone_confirmed_at: string | null
+          raw_app_meta_data: Json | null
+          raw_user_meta_data: Json | null
+          reauthentication_sent_at: string | null
+          reauthentication_token: string | null
+          recovery_sent_at: string | null
+          recovery_token: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      assign_user_role: {
+        Args: { target_user_id: string; role_name: string }
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_user_roles: {
+        Args: { target_user_id: string }
+        Returns: {
+          role_name: string
+        }[]
+      }
+      has_role: {
+        Args: { user_id: string; role_name: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -1021,7 +1997,15 @@ export type Database = {
         | "devis_quantitatif_estimatif"
         | "garantie_bancaire"
         | "garantie_soumission"
-      user_role: "insurance_company" | "practitioner" | "patient"
+      user_role:
+        | "insurance_company"
+        | "practitioner"
+        | "patient"
+        | "admin"
+        | "manager"
+        | "director"
+        | "agent"
+        | "supplier"
       vessel_status: "active" | "maintenance" | "inactive"
     }
     CompositeTypes: {
@@ -1179,7 +2163,17 @@ export const Constants = {
         "garantie_bancaire",
         "garantie_soumission",
       ],
-      user_role: ["admin", "manager", "director","agent","supplier","contractor","subcontractor"],
+      user_role: [
+        "insurance_company",
+        "practitioner",
+        "patient",
+        "admin",
+        "manager",
+        "director",
+        "agent",
+        "supplier",
+      ],
+      vessel_status: ["active", "maintenance", "inactive"],
     },
   },
 } as const
