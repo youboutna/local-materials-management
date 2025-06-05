@@ -206,12 +206,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Warehouse Shape Tracer */}
-      <WarehouseShapeTracer
-        value={warehouseShape}
-        onChange={handleWarehouseShapeChange}
-        title="Délimitation de l'entrepôt"
-      />
+ 
 
       {/* Quantities and Pricing */}
       <Card className="border-l-4 border-l-green-500">
