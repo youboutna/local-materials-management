@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,19 +88,18 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
       return;
     }
 
+    // Fix: Remove category and subcategory from document insert, use correct document_type
     const documentInsertObj = {
       project_id: projectId,
       title,
       description,
       file_url: uploadData.path,
-      document_type: "tender_documents" as DocumentType,
-      category,
-      subcategory,
+      document_type: "tender_documents" as const,
     };
 
     const { data: docData, error: docError } = await supabase
       .from("documents")
-      .insert([documentInsertObj])
+      .insert(documentInsertObj)
       .select()
       .single();
 
@@ -126,7 +126,8 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
     if (tenderDocError) {
       toast({ title: t("tender.alert.tenderdoc_error"), variant: "destructive" });
     } else {
-      toast({ title: t("tender.alert.success"), variant: "success" });
+      // Fix: Remove "success" variant, use default
+      toast({ title: t("tender.alert.success") });
       setTitle("");
       setDescription("");
       setFile(null);

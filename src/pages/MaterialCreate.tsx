@@ -51,7 +51,8 @@ const MaterialCreate = () => {
       const dbData = {
         name: materialData.name,
         description: materialData.description || '',
-        category: materialData.category || 'Construction',
+        // Fix: Use materialData.category instead of materialData.category
+        category: materialData.materialCategory || 'Construction',
         unit: materialData.unit || 'kg',
         price_per_unit: materialData.pricePerUnit || 0,
         available_quantity: materialData.availableQuantity || 0,
