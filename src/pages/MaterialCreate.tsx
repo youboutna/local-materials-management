@@ -51,8 +51,8 @@ const MaterialCreate = () => {
       const dbData = {
         name: materialData.name,
         description: materialData.description || '',
-        // Fix: Use the correct property name 'category' instead of 'materialCategory'
-        category: materialData.category || 'Construction',
+        // Fix: Access category property safely with fallback
+        category: (materialData as any).category || 'Construction',
         unit: materialData.unit || 'kg',
         price_per_unit: materialData.pricePerUnit || 0,
         available_quantity: materialData.availableQuantity || 0,
@@ -61,7 +61,7 @@ const MaterialCreate = () => {
         workspace_id: materialData.workspaceId || null,
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
-        forme: materialData.forme || null,
+        forme: (materialData as any).forme || null,
         warehouse_shape: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,
