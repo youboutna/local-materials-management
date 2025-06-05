@@ -99,36 +99,40 @@ const MaterialCreate = () => {
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Left Column - Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-adrar-900">
-                  Créer un nouveau matériau
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Enhanced Material Form */}
-                <EnhancedMaterialForm
-                  onSubmit={handleSubmit}
-                  workspaces={workspaces}
-                />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-adrar-900">
+                    Créer un nouveau matériau
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Enhanced Material Form */}
+                  <EnhancedMaterialForm
+                    onSubmit={handleSubmit}
+                    workspaces={workspaces}
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Right Column - Map */}
-            <div className="space-y-4">
-              <InteractiveMap
-                value={mapData}
-                onChange={setMapData}
-                title="Localisation de l'entrepôt"
-                description="Définissez la position GPS de l'entrepôt et tracez sa forme et zone de stockage"
-                allowPolygon={true}
-                allowCoordinateSelection={true}
-                allowWarehouseTracing={true}
-                className="h-full min-h-[600px]"
-              />
+            <div className="space-y-6">
+              <div className="sticky top-24">
+                <InteractiveMap
+                  value={mapData}
+                  onChange={setMapData}
+                  title="Localisation de l'entrepôt"
+                  description="Définissez la position GPS de l'entrepôt et tracez sa forme et zone de stockage"
+                  allowPolygon={true}
+                  allowCoordinateSelection={true}
+                  allowWarehouseTracing={true}
+                  className="h-[700px]"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -213,7 +213,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
           {title}
           <div className="flex items-center gap-2">
@@ -248,10 +248,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         </CardTitle>
         <p className="text-sm text-gray-600">{description}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Coordinate inputs */}
         {allowCoordinateSelection && mode === 'center' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             <div>
               <Label htmlFor="latitude">Latitude</Label>
               <Input
@@ -285,7 +285,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         {/* Polygon controls */}
         {allowPolygon && mode === 'polygon' && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 p-4 bg-blue-50 rounded-lg">
             <Button 
               onClick={startDrawing}
               disabled={isDrawing}
@@ -311,13 +311,16 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         {/* Warehouse controls */}
         {allowWarehouseTracing && mode === 'warehouse' && (
-          <div className="space-y-2">
-            <div className="flex gap-2 items-center">
+          <div className="space-y-4 p-4 bg-red-50 rounded-lg">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex-shrink-0">
+                <Label className="text-sm font-medium">Type de forme:</Label>
+              </div>
               <Select value={warehouseShapeType} onValueChange={(value: ShapeType) => setWarehouseShapeType(value)}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-48 bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border shadow-lg z-50">
                   <SelectItem value="polygon">
                     <div className="flex items-center gap-2">
                       <Pencil className="w-4 h-4" />
@@ -338,7 +341,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   </SelectItem>
                 </SelectContent>
               </Select>
-              
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
               <Button 
                 onClick={startDrawing}
                 disabled={isDrawing}
@@ -444,7 +449,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         </div>
 
         {/* Status information */}
-        <div className="text-sm text-gray-600 space-y-1">
+        <div className="text-sm text-gray-600 space-y-1 p-3 bg-gray-50 rounded-lg">
           {value.center && (
             <div>Centre: {value.center.lat.toFixed(4)}, {value.center.lng.toFixed(4)}</div>
           )}
