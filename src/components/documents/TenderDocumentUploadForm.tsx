@@ -27,7 +27,7 @@ export type DocumentType =
   | "supplier_info"
   | "task_assignment"
   | "employee_record"
-  | "tender_documents";
+  | "tender";
 
 export type DocumentStatus =
   | "draft"
@@ -88,13 +88,13 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
       return;
     }
 
-    // Fix: Remove category and subcategory from document insert, use correct document_type
+    // Fix: Use correct document_type that exists in the database schema
     const documentInsertObj = {
       project_id: projectId,
       title,
       description,
       file_url: uploadData.path,
-      document_type: "tender_documents" as const,
+      document_type: "contract" as const, // Using "contract" as it's a valid type for tender documents
     };
 
     const { data: docData, error: docError } = await supabase
@@ -126,7 +126,6 @@ export default function TenderDocumentUploadForm({ projectId }: { projectId: str
     if (tenderDocError) {
       toast({ title: t("tender.alert.tenderdoc_error"), variant: "destructive" });
     } else {
-      // Fix: Remove "success" variant, use default
       toast({ title: t("tender.alert.success") });
       setTitle("");
       setDescription("");
