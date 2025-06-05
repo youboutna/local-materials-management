@@ -17,7 +17,6 @@ const MaterialCreate = () => {
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
-    warehouseShape?: { lat: number; lng: number }[];
     address?: string;
   }>({});
 
@@ -62,7 +61,7 @@ const MaterialCreate = () => {
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         forme: (materialData as any).forme || null,
-        warehouse_shape: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
+        warehouse_shape: (materialData as any).warehouseShape ? JSON.stringify((materialData as any).warehouseShape) : null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
@@ -123,10 +122,10 @@ const MaterialCreate = () => {
                 value={mapData}
                 onChange={setMapData}
                 title="Localisation de l'entrepôt"
-                description="Définissez la position GPS de l'entrepôt et tracez sa forme et zone de stockage"
+                description="Définissez la position GPS de l'entrepôt et tracez sa zone de stockage"
                 allowPolygon={true}
                 allowCoordinateSelection={true}
-                allowWarehouseTracing={true}
+                allowWarehouseTracing={false}
                 className="h-full"
               />
             </div>
