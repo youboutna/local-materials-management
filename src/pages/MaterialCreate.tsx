@@ -127,7 +127,7 @@ const MaterialCreate = () => {
                 allowPolygon={true}
                 allowCoordinateSelection={true}
                 allowWarehouseTracing={true}
-                className="h-full"
+                className="h-full min-h-[600px]"
               />
             </div>
           </div>

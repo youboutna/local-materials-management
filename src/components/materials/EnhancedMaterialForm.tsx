@@ -10,7 +10,6 @@ import { Clock, MapPin, Package, User } from 'lucide-react';
 import { Location, Region, OperationalStatus, TimeLine, EnhancedMaterial, MAURITANIA_REGIONS } from '@/types/mauritania';
 
 import MaterialCategorySelector from './MaterialCategorySelector';
-import WarehouseShapeTracer from './WarehouseShapeTracer';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,11 +18,6 @@ interface MapData {
   polygon?: { lat: number; lng: number }[];
   address?: string;
   shapeType?: "polygon" | "rectangle" | "circle";
-}
-
-interface Point {
-  x: number;
-  y: number;
 }
 
 interface EnhancedMaterialFormProps {
@@ -62,7 +56,6 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
-  const [warehouseShape, setWarehouseShape] = useState<Point[]>([]);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -102,22 +95,9 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
     }));
   };
 
-  const handleWarehouseShapeChange = (points: Point[]) => {
-    setWarehouseShape(points);
-    // Store as JSON string instead of setting forme directly
-    setFormData(prev => ({
-      ...prev,
-      warehouseShape: points
-    }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const submissionData = {
-      ...formData,
-      warehouseShape
-    };
-    onSubmit(submissionData);
+    onSubmit(formData);
   };
 
   return (
@@ -205,13 +185,6 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Warehouse Shape Tracer */}
-      <WarehouseShapeTracer
-        value={warehouseShape}
-        onChange={handleWarehouseShapeChange}
-        title="Délimitation de l'entrepôt"
-      />
 
       {/* Quantities and Pricing */}
       <Card className="border-l-4 border-l-green-500">
