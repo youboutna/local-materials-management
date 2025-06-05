@@ -61,7 +61,7 @@ const RoleBasedRoute = ({
               Vous n'avez pas les autorisations nécessaires pour accéder à cette page.
             </p>
             <p className="text-sm text-gray-500 mb-4">
-              Rôles requis: {allowedRoles.join(', ')}
+              Rôles requis: allowedRoles
             </p>
             <button 
               onClick={() => window.history.back()}
