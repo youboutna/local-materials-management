@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polygon, Rectangle, Circle } from 'react-leaflet';
 import L from 'leaflet';
@@ -24,6 +23,7 @@ export interface InteractiveMapValue {
   polygon?: { lat: number; lng: number }[];
   warehouseShape?: { lat: number; lng: number }[];
   address?: string;
+  warehouseShapeType?: ShapeType;
 }
 
 interface InteractiveMapProps {
@@ -44,12 +44,16 @@ const MapEventHandler: React.FC<{
   onMapClick: (latlng: L.LatLng) => void;
   onPolygonClick?: (latlng: L.LatLng) => void;
   mode: 'center' | 'polygon' | 'warehouse';
-}> = ({ onMapClick, onPolygonClick, mode }) => {
+  isDrawing: boolean;
+  warehouseShapeType: ShapeType;
+}> = ({ onMapClick, onPolygonClick, mode, isDrawing, warehouseShapeType }) => {
   useMapEvents({
     click: (e) => {
-      if (mode === 'polygon' && onPolygonClick) {
+      if (mode === 'polygon' && onPolygonClick && isDrawing) {
         onPolygonClick(e.latlng);
-      } else {
+      } else if (mode === 'warehouse' && onPolygonClick && isDrawing) {
+        onPolygonClick(e.latlng);
+      } else if (mode === 'center') {
         onMapClick(e.latlng);
       }
     },
@@ -84,13 +88,26 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [tempPolygon, setTempPolygon] = useState<{ lat: number; lng: number }[]>([]);
   const [tempWarehouseShape, setTempWarehouseShape] = useState<{ lat: number; lng: number }[]>([]);
-  const [warehouseShapeType, setWarehouseShapeType] = useState<ShapeType>('polygon');
+  const [warehouseShapeType, setWarehouseShapeType] = useState<ShapeType>(value.warehouseShapeType || 'polygon');
   const [coordinates, setCoordinates] = useState({
     latitude: value.center?.lat?.toString() || '',
     longitude: value.center?.lng?.toString() || ''
   });
 
   const mapRef = useRef<L.Map | null>(null);
+
+  // Update warehouse shape type when changed
+  const handleShapeTypeChange = (newShapeType: ShapeType) => {
+    setWarehouseShapeType(newShapeType);
+    // Clear current warehouse shape when changing type
+    setTempWarehouseShape([]);
+    setIsDrawing(false);
+    onChange({ 
+      ...value, 
+      warehouseShape: undefined,
+      warehouseShapeType: newShapeType 
+    });
+  };
 
   const handleMapClick = useCallback((latlng: L.LatLng) => {
     if (mode === 'center' && allowCoordinateSelection) {
@@ -109,9 +126,31 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       setTempPolygon(prev => [...prev, newPoint]);
     } else if (mode === 'warehouse' && allowWarehouseTracing && isDrawing) {
       const newPoint = { lat: latlng.lat, lng: latlng.lng };
-      setTempWarehouseShape(prev => [...prev, newPoint]);
+      
+      if (warehouseShapeType === 'rectangle') {
+        // For rectangle, we need only 2 points (diagonal corners)
+        if (tempWarehouseShape.length === 0) {
+          setTempWarehouseShape([newPoint]);
+        } else if (tempWarehouseShape.length === 1) {
+          setTempWarehouseShape([tempWarehouseShape[0], newPoint]);
+          // Auto-finish for rectangle after 2 points
+          setTimeout(() => finishDrawing(), 100);
+        }
+      } else if (warehouseShapeType === 'circle') {
+        // For circle, we need 2 points (center and radius point)
+        if (tempWarehouseShape.length === 0) {
+          setTempWarehouseShape([newPoint]);
+        } else if (tempWarehouseShape.length === 1) {
+          setTempWarehouseShape([tempWarehouseShape[0], newPoint]);
+          // Auto-finish for circle after 2 points
+          setTimeout(() => finishDrawing(), 100);
+        }
+      } else {
+        // For polygon, allow multiple points
+        setTempWarehouseShape(prev => [...prev, newPoint]);
+      }
     }
-  }, [mode, allowPolygon, allowWarehouseTracing, isDrawing]);
+  }, [mode, allowPolygon, allowWarehouseTracing, isDrawing, warehouseShapeType, tempWarehouseShape]);
 
   const startDrawing = () => {
     setIsDrawing(true);
@@ -127,9 +166,23 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (mode === 'polygon' && tempPolygon.length >= 3) {
       onChange({ ...value, polygon: tempPolygon });
       setTempPolygon([]);
-    } else if (mode === 'warehouse' && tempWarehouseShape.length >= 3) {
-      onChange({ ...value, warehouseShape: tempWarehouseShape });
-      setTempWarehouseShape([]);
+    } else if (mode === 'warehouse') {
+      let isValidShape = false;
+      
+      if (warehouseShapeType === 'polygon' && tempWarehouseShape.length >= 3) {
+        isValidShape = true;
+      } else if ((warehouseShapeType === 'rectangle' || warehouseShapeType === 'circle') && tempWarehouseShape.length >= 2) {
+        isValidShape = true;
+      }
+      
+      if (isValidShape) {
+        onChange({ 
+          ...value, 
+          warehouseShape: tempWarehouseShape,
+          warehouseShapeType: warehouseShapeType
+        });
+        setTempWarehouseShape([]);
+      }
     }
   };
 
@@ -139,7 +192,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   const clearWarehouseShape = () => {
-    onChange({ ...value, warehouseShape: undefined });
+    onChange({ 
+      ...value, 
+      warehouseShape: undefined,
+      warehouseShapeType: undefined
+    });
     setTempWarehouseShape([]);
   };
 
@@ -161,16 +218,21 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (!value.warehouseShape || value.warehouseShape.length === 0) return null;
 
     const positions = value.warehouseShape.map(point => [point.lat, point.lng] as [number, number]);
+    const currentShapeType = value.warehouseShapeType || warehouseShapeType;
     
-    if (warehouseShapeType === 'circle' && positions.length >= 1) {
+    if (currentShapeType === 'circle' && positions.length >= 2) {
       const center = positions[0];
-      const radius = positions.length > 1 ? 
-        Math.sqrt(Math.pow(positions[1][0] - center[0], 2) + Math.pow(positions[1][1] - center[1], 2)) * 111000 : 100;
+      const radiusPoint = positions[1];
+      // Calculate radius in meters
+      const radius = Math.sqrt(
+        Math.pow((radiusPoint[0] - center[0]) * 111000, 2) + 
+        Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
+      );
       
       return (
         <Circle
           center={center}
-          radius={radius}
+          radius={Math.max(radius, 50)} // Minimum 50m radius
           pathOptions={{
             color: '#e74c3c',
             weight: 3,
@@ -179,7 +241,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           }}
         />
       );
-    } else if (warehouseShapeType === 'rectangle' && positions.length >= 2) {
+    } else if (currentShapeType === 'rectangle' && positions.length >= 2) {
       const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
       return (
         <Rectangle
@@ -209,7 +271,104 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return null;
   };
 
+  // Render temporary warehouse shape
+  const renderTempWarehouseShape = () => {
+    if (tempWarehouseShape.length === 0) return null;
+
+    const positions = tempWarehouseShape.map(p => [p.lat, p.lng] as [number, number]);
+    
+    if (warehouseShapeType === 'circle' && positions.length >= 2) {
+      const center = positions[0];
+      const radiusPoint = positions[1];
+      const radius = Math.sqrt(
+        Math.pow((radiusPoint[0] - center[0]) * 111000, 2) + 
+        Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
+      );
+      
+      return (
+        <Circle
+          center={center}
+          radius={Math.max(radius, 50)}
+          pathOptions={{
+            color: '#ef4444',
+            weight: 2,
+            fillColor: '#ef4444',
+            fillOpacity: 0.1,
+            dashArray: '5, 5'
+          }}
+        />
+      );
+    } else if (warehouseShapeType === 'rectangle' && positions.length >= 2) {
+      const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
+      return (
+        <Rectangle
+          bounds={bounds}
+          pathOptions={{
+            color: '#ef4444',
+            weight: 2,
+            fillColor: '#ef4444',
+            fillOpacity: 0.1,
+            dashArray: '5, 5'
+          }}
+        />
+      );
+    } else if (positions.length >= 1) {
+      // For polygon, show points and lines
+      if (positions.length >= 3) {
+        return (
+          <Polygon
+            positions={positions}
+            pathOptions={{
+              color: '#ef4444',
+              weight: 2,
+              fillColor: '#ef4444',
+              fillOpacity: 0.1,
+              dashArray: '5, 5'
+            }}
+          />
+        );
+      } else {
+        // Show markers for individual points
+        return (
+          <>
+            {tempWarehouseShape.map((point, index) => (
+              <Marker key={index} position={[point.lat, point.lng]}>
+                <Popup>Point {index + 1}</Popup>
+              </Marker>
+            ))}
+          </>
+        );
+      }
+    }
+    
+    return null;
+  };
+
   const defaultCenter: [number, number] = [20.5279, -10.0309]; // Mauritania center
+
+  // Get instruction text based on shape type and drawing state
+  const getInstructionText = () => {
+    if (!isDrawing) return '';
+    
+    if (mode === 'polygon') {
+      return 'Cliquez pour ajouter des points à la zone. Cliquez sur "Terminer" quand vous avez fini.';
+    } else if (mode === 'warehouse') {
+      switch (warehouseShapeType) {
+        case 'rectangle':
+          return tempWarehouseShape.length === 0 
+            ? 'Cliquez pour définir le premier coin du rectangle'
+            : 'Cliquez pour définir le coin opposé du rectangle';
+        case 'circle':
+          return tempWarehouseShape.length === 0 
+            ? 'Cliquez pour définir le centre du cercle'
+            : 'Cliquez pour définir le rayon du cercle';
+        case 'polygon':
+        default:
+          return 'Cliquez pour ajouter des points au polygone. Cliquez sur "Terminer" quand vous avez fini.';
+      }
+    }
+    return '';
+  };
 
   return (
     <Card className={className}>
@@ -316,7 +475,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               <div className="flex-shrink-0">
                 <Label className="text-sm font-medium">Type de forme:</Label>
               </div>
-              <Select value={warehouseShapeType} onValueChange={(value: ShapeType) => setWarehouseShapeType(value)}>
+              <Select value={warehouseShapeType} onValueChange={handleShapeTypeChange}>
                 <SelectTrigger className="w-48 bg-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -353,7 +512,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 {isDrawing ? 'Tracé en cours...' : 'Tracer Entrepôt'}
               </Button>
               
-              {isDrawing && (
+              {isDrawing && warehouseShapeType === 'polygon' && tempWarehouseShape.length >= 3 && (
                 <Button onClick={finishDrawing}>
                   <Save className="w-4 h-4 mr-2" />
                   Terminer
@@ -389,6 +548,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               onMapClick={handleMapClick}
               onPolygonClick={handlePolygonClick}
               mode={mode}
+              isDrawing={isDrawing}
+              warehouseShapeType={warehouseShapeType}
             />
 
             {/* Center marker */}
@@ -433,18 +594,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             {renderWarehouseShape()}
 
             {/* Temporary warehouse shape */}
-            {tempWarehouseShape.length > 0 && (
-              <Polygon
-                positions={tempWarehouseShape.map(p => [p.lat, p.lng])}
-                pathOptions={{
-                  color: '#ef4444',
-                  weight: 2,
-                  fillColor: '#ef4444',
-                  fillOpacity: 0.1,
-                  dashArray: '5, 5'
-                }}
-              />
-            )}
+            {renderTempWarehouseShape()}
           </MapContainer>
         </div>
 
@@ -457,13 +607,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div>Zone tracée: {value.polygon.length} points</div>
           )}
           {value.warehouseShape && (
-            <div>Entrepôt tracé: {value.warehouseShape.length} points</div>
+            <div>Entrepôt tracé ({value.warehouseShapeType || warehouseShapeType}): {value.warehouseShape.length} points</div>
           )}
-          {isDrawing && mode === 'polygon' && (
-            <div className="text-blue-600">Cliquez pour ajouter des points à la zone. Cliquez sur "Terminer" quand vous avez fini.</div>
-          )}
-          {isDrawing && mode === 'warehouse' && (
-            <div className="text-red-600">Cliquez pour tracer la forme de l'entrepôt. Cliquez sur "Terminer" quand vous avez fini.</div>
+          {getInstructionText() && (
+            <div className="text-blue-600 font-medium">{getInstructionText()}</div>
           )}
         </div>
       </CardContent>
