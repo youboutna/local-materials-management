@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -51,7 +52,6 @@ const MaterialCreate = () => {
       const dbData = {
         name: materialData.name,
         description: materialData.description || '',
-        // Fix: Access category property safely with fallback
         category: (materialData as any).category || 'Construction',
         unit: materialData.unit || 'kg',
         price_per_unit: materialData.pricePerUnit || 0,
@@ -59,14 +59,20 @@ const MaterialCreate = () => {
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
+        // Store all location data properly
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
-        forme: (materialData as any).forme || null,
-        warehouse_shape: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
+        forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
         // Add coordinates if available
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
       };
+
+      console.log('Saving material with location data:', {
+        center: mapData.center,
+        polygon: mapData.polygon,
+        warehouseShape: mapData.warehouseShape
+      });
 
       const { data, error } = await supabase
         .from('materials')
@@ -78,7 +84,7 @@ const MaterialCreate = () => {
 
       toast({
         title: "Matériau créé",
-        description: `Le matériau "${materialData.name}" a été créé avec succès.`,
+        description: `Le matériau "${materialData.name}" a été créé avec succès avec sa localisation.`,
       });
 
       navigate('/materials');
@@ -110,10 +116,11 @@ const MaterialCreate = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Enhanced Material Form */}
+                  {/* Enhanced Material Form without submit button */}
                   <EnhancedMaterialForm
                     onSubmit={handleSubmit}
                     workspaces={workspaces}
+                    showSubmitButton={false}
                   />
                 </CardContent>
               </Card>
@@ -134,6 +141,24 @@ const MaterialCreate = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Submit Button at Bottom */}
+          <div className="mt-8 flex justify-center">
+            <Button 
+              onClick={() => {
+                // Trigger form submission with current map data
+                const formElement = document.querySelector('form');
+                if (formElement) {
+                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  formElement.dispatchEvent(submitEvent);
+                }
+              }}
+              disabled={loading}
+              className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-12 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-semibold"
+            >
+              {loading ? 'Enregistrement...' : 'Enregistrer le matériau'}
+            </Button>
           </div>
         </div>
       </main>

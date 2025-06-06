@@ -24,12 +24,14 @@ interface EnhancedMaterialFormProps {
   onSubmit: (material: Partial<EnhancedMaterial>) => void;
   initialData?: Partial<EnhancedMaterial>;
   workspaces?: Array<{ id: string; name: string; location: Location; status: OperationalStatus }>;
+  showSubmitButton?: boolean;
 }
 
 const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
   onSubmit,
   initialData,
-  workspaces = []
+  workspaces = [],
+  showSubmitButton = true
 }) => {
   const [formData, setFormData] = useState<Partial<EnhancedMaterial>>({
     name: '',
@@ -326,14 +328,17 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-4 pt-6">
-        <Button 
-          type="submit" 
-          className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          Enregistrer le matériau
-        </Button>
-      </div>
+      {/* Conditional Submit Button */}
+      {showSubmitButton && (
+        <div className="flex justify-end gap-4 pt-6">
+          <Button 
+            type="submit" 
+            className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Enregistrer le matériau
+          </Button>
+        </div>
+      )}
     </form>
   );
 };
