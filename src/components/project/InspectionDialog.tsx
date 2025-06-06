@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, InspectionStatus } from '@/types/project';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectionDialogProps {
   project: ProjectWithPayments;
@@ -29,14 +29,15 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(project.progress);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!inspector) {
       toast({
-        title: "Erreur de validation",
-        description: "Veuillez saisir le nom de l'inspecteur.",
+        title: t("inspection.dialog.validation_error"),
+        description: t("inspection.dialog.validation_inspector"),
         variant: "destructive",
       });
       return;
@@ -68,8 +69,8 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
       }
 
       toast({
-        title: "Inspection créée",
-        description: `L'inspection a été enregistrée avec succès.`,
+        title: t("inspection.dialog.created"),
+        description: t("inspection.dialog.created_description"),
       });
 
       setIsOpen(false);
@@ -87,8 +88,8 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
     } catch (error: any) {
       console.error('Error creating inspection:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'inspection.",
+        title: t("inspection.dialog.error"),
+        description: t("inspection.dialog.error_description"),
         variant: "destructive",
       });
     } finally {
@@ -101,21 +102,21 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <Clipboard className="h-4 w-4" />
-          Nouvelle Inspection
+          {t("inspection.dialog.new_inspection")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Créer une nouvelle inspection</DialogTitle>
+          <DialogTitle>{t("inspection.dialog.title")}</DialogTitle>
           <DialogDescription>
-            Enregistrez les détails de l'inspection pour le projet "{project.title}".
+            {t("inspection.dialog.description", { project: project.title })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="date" className="col-span-4 mb-1">
-                Date d'inspection
+                {t("inspection.dialog.date")}
               </Label>
               <div className="col-span-4">
                 <Popover>
@@ -128,7 +129,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "dd/MM/yyyy") : "Sélectionner une date"}
+                      {date ? format(date, "dd/MM/yyyy") : t("inspection.dialog.select_date")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -145,40 +146,40 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
             
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="inspector" className="col-span-4 mb-1">
-                Inspecteur
+                {t("inspection.dialog.inspector")}
               </Label>
               <Input
                 id="inspector"
                 value={inspector}
                 onChange={(e) => setInspector(e.target.value)}
                 className="col-span-4"
-                placeholder="Nom de l'inspecteur"
+                placeholder={t("inspection.dialog.inspector_placeholder")}
               />
             </div>
             
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="status" className="col-span-4 mb-1">
-                Statut
+                {t("inspection.dialog.status")}
               </Label>
               <Select
                 value={status}
                 onValueChange={(value: InspectionStatus) => setStatus(value)}
               >
                 <SelectTrigger className="col-span-4">
-                  <SelectValue placeholder="Sélectionner un statut" />
+                  <SelectValue placeholder={t("inspection.dialog.select_status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
-                  <SelectItem value="requires_changes">Modifications requises</SelectItem>
-                  <SelectItem value="rejected">Rejeté</SelectItem>
+                  <SelectItem value="pending">{t("inspection.dialog.status_pending")}</SelectItem>
+                  <SelectItem value="approved">{t("inspection.dialog.status_approved")}</SelectItem>
+                  <SelectItem value="requires_changes">{t("inspection.dialog.status_requires_changes")}</SelectItem>
+                  <SelectItem value="rejected">{t("inspection.dialog.status_rejected")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="progress" className="col-span-4 mb-1">
-                Progression du projet (%)
+                {t("inspection.dialog.progress")}
               </Label>
               <div className="col-span-4 flex items-center gap-2">
                 <Input
@@ -196,24 +197,24 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
             
             <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="comments" className="col-span-4 mb-1">
-                Commentaires
+                {t("inspection.dialog.comments")}
               </Label>
               <Textarea
                 id="comments"
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 className="col-span-4"
-                placeholder="Ajoutez des commentaires sur l'inspection..."
+                placeholder={t("inspection.dialog.comments_placeholder")}
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Annuler
+              {t("inspection.dialog.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Création..." : "Créer l'inspection"}
+              {isSubmitting ? t("inspection.dialog.creating") : t("inspection.dialog.create")}
             </Button>
           </DialogFooter>
         </form>

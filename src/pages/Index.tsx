@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,10 +9,12 @@ import AboutEditor from '@/components/AboutEditor';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Briefcase, Package, FileText, Users, BarChart3 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Index = () => {
   const { user: authUser, loading } = useAuth();
   const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
@@ -22,32 +23,32 @@ const Index = () => {
   const features = [
     {
       icon: Briefcase,
-      title: "Gestion de Projets",
-      description: "Suivez et gérez tous vos projets de construction en temps réel",
+      title: t("index.feature.projects.title"),
+      description: t("index.feature.projects.description"),
       link: "/projects"
     },
     {
       icon: Package,
-      title: "Gestion de Matériaux",
-      description: "Inventaire et suivi des matériaux de construction",
+      title: t("index.feature.materials.title"),
+      description: t("index.feature.materials.description"),
       link: "/materials"
     },
     {
       icon: FileText,
-      title: "Documentation",
-      description: "Centralisez tous vos documents et rapports",
+      title: t("index.feature.documents.title"),
+      description: t("index.feature.documents.description"),
       link: "/documents"
     },
     {
       icon: Users,
-      title: "Équipes",
-      description: "Gérez vos équipes et assignez les tâches",
+      title: t("index.feature.teams.title"),
+      description: t("index.feature.teams.description"),
       link: "/users"
     },
     {
       icon: BarChart3,
-      title: "Tableau de Bord",
-      description: "Visualisez les performances et statistiques",
+      title: t("index.feature.dashboard.title"),
+      description: t("index.feature.dashboard.description"),
       link: "/dashboard"
     }
   ];
@@ -59,7 +60,7 @@ const Index = () => {
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">Chargement...</p>
+            <p className="text-adrar-600">{t("index.loading")}</p>
           </div>
         </main>
         <Footer />
@@ -75,7 +76,7 @@ const Index = () => {
         {/* Hero Section */}
         <Hero />
         
-        {/* About System Section - Read-only for anonymous users, editable for authenticated users */}
+        {/* About System Section */}
         <AboutEditor />
         
         {/* Features Section */}
@@ -83,10 +84,10 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-adrar-900 mb-4">
-                Fonctionnalités Principales
+                {t("index.features.title")}
               </h2>
               <p className="text-lg text-adrar-600 max-w-2xl mx-auto">
-                Découvrez toutes les fonctionnalités de notre plateforme de gestion de construction
+                {t("index.features.description")}
               </p>
             </div>
             
@@ -111,13 +112,13 @@ const Index = () => {
                     {isUserAuthenticated ? (
                       <Button asChild className="w-full">
                         <Link to={feature.link}>
-                          Découvrir
+                          {t("index.features.discover")}
                         </Link>
                       </Button>
                     ) : (
                       <Button asChild className="w-full" variant="outline">
                         <Link to="/auth">
-                          Se connecter pour accéder
+                          {t("index.features.login_to_access")}
                         </Link>
                       </Button>
                     )}
@@ -132,12 +133,12 @@ const Index = () => {
         <section className="py-20 bg-gradient-to-r from-terracotta-500 to-adrar-600">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Prêt à commencer ?
+              {t("index.cta.title")}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               {isUserAuthenticated 
-                ? "Accédez à votre tableau de bord pour gérer vos projets"
-                : "Rejoignez-nous et transformez votre gestion de construction"
+                ? t("index.cta.authenticated")
+                : t("index.cta.unauthenticated")
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -145,12 +146,12 @@ const Index = () => {
                 <>
                   <Button size="lg" variant="secondary" asChild>
                     <Link to="/dashboard">
-                      Tableau de Bord
+                      {t("index.cta.dashboard")}
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-terracotta-600" asChild>
                     <Link to="/projects">
-                      Mes Projets
+                      {t("index.cta.my_projects")}
                     </Link>
                   </Button>
                 </>
@@ -158,12 +159,12 @@ const Index = () => {
                 <>
                   <Button size="lg" variant="secondary" asChild>
                     <Link to="/auth?mode=register">
-                      Commencer Gratuitement
+                      {t("index.cta.start_free")}
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-terracotta-600" asChild>
                     <Link to="/auth?mode=login">
-                      Se Connecter
+                      {t("index.cta.login")}
                     </Link>
                   </Button>
                 </>

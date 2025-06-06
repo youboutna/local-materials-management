@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Save, Square, Circle as CircleIcon, Pencil } from 'lucide-react';
-
+import { useLanguage } from "@/contexts/LanguageContext";
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -77,13 +77,14 @@ const MapCenterController: React.FC<{ center?: { lat: number; lng: number } }> =
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
   value,
   onChange,
-  title = "Carte Interactive",
-  description = "Cliquez sur la carte pour définir les coordonnées",
+  title,
+  description,
   allowPolygon = false,
   allowCoordinateSelection = true,
   allowWarehouseTracing = false,
   className = ""
 }) => {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<'center' | 'polygon' | 'warehouse'>('center');
   const [isDrawing, setIsDrawing] = useState(false);
   const [tempPolygon, setTempPolygon] = useState<{ lat: number; lng: number }[]>([]);
@@ -349,22 +350,21 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Get instruction text based on shape type and drawing state
   const getInstructionText = () => {
     if (!isDrawing) return '';
-    
     if (mode === 'polygon') {
-      return 'Cliquez pour ajouter des points à la zone. Cliquez sur "Terminer" quand vous avez fini.';
+      return t('map.instructions.polygon');
     } else if (mode === 'warehouse') {
       switch (warehouseShapeType) {
         case 'rectangle':
           return tempWarehouseShape.length === 0 
-            ? 'Cliquez pour définir le premier coin du rectangle'
-            : 'Cliquez pour définir le coin opposé du rectangle';
+            ? t('map.instructions.rectangle.start')
+            : t('map.instructions.rectangle.end');
         case 'circle':
           return tempWarehouseShape.length === 0 
-            ? 'Cliquez pour définir le centre du cercle'
-            : 'Cliquez pour définir le rayon du cercle';
+            ? t('map.instructions.circle.start')
+            : t('map.instructions.circle.end');
         case 'polygon':
         default:
-          return 'Cliquez pour ajouter des points au polygone. Cliquez sur "Terminer" quand vous avez fini.';
+          return t('map.instructions.warehouse.polygon');
       }
     }
     return '';
@@ -374,7 +374,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     <Card className={className}>
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between">
-          {title}
+          {title || t('materials.map.title')}
           <div className="flex items-center gap-2">
             {allowCoordinateSelection && (
               <Badge 
@@ -382,7 +382,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 className="cursor-pointer"
                 onClick={() => setMode('center')}
               >
-                Centre
+                {t('map.mode.center')}
               </Badge>
             )}
             {allowPolygon && (
@@ -391,7 +391,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 className="cursor-pointer"
                 onClick={() => setMode('polygon')}
               >
-                Zone
+                {t('map.mode.zone')}
               </Badge>
             )}
             {allowWarehouseTracing && (
@@ -400,19 +400,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 className="cursor-pointer"
                 onClick={() => setMode('warehouse')}
               >
-                Entrepôt
+                {t('map.mode.warehouse')}
               </Badge>
             )}
           </div>
         </CardTitle>
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className="text-sm text-gray-600">{description || t('materials.map.description')}</p>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Coordinate inputs */}
         {allowCoordinateSelection && mode === 'center' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             <div>
-              <Label htmlFor="latitude">Latitude</Label>
+              <Label htmlFor="latitude">{t('map.latitude')}</Label>
               <Input
                 id="latitude"
                 type="number"
@@ -423,7 +423,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="longitude">Longitude</Label>
+              <Label htmlFor="longitude">{t('map.longitude')}</Label>
               <Input
                 id="longitude"
                 type="number"
@@ -436,7 +436,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="flex items-end">
               <Button onClick={applyCoordinates} className="w-full">
                 <Save className="w-4 h-4 mr-2" />
-                Appliquer
+                {t('map.apply')}
               </Button>
             </div>
           </div>
@@ -451,18 +451,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               variant={isDrawing ? "secondary" : "default"}
             >
               <Pencil className="w-4 h-4 mr-2" />
-              {isDrawing ? 'Tracé en cours...' : 'Tracer Zone'}
+              {isDrawing ? t('map.drawing') : t('map.draw.zone')}
             </Button>
             {isDrawing && (
               <Button onClick={finishDrawing}>
                 <Save className="w-4 h-4 mr-2" />
-                Terminer
+                {t('map.finish')}
               </Button>
             )}
             {value.polygon && (
               <Button onClick={clearPolygon} variant="destructive">
                 <Trash2 className="w-4 h-4 mr-2" />
-                Effacer
+                {t('map.clear')}
               </Button>
             )}
           </div>
@@ -473,7 +473,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div className="space-y-4 p-4 bg-red-50 rounded-lg">
             <div className="flex flex-wrap gap-3 items-center">
               <div className="flex-shrink-0">
-                <Label className="text-sm font-medium">Type de forme:</Label>
+                <Label className="text-sm font-medium">{t('map.shape.type')}</Label>
               </div>
               <Select value={warehouseShapeType} onValueChange={handleShapeTypeChange}>
                 <SelectTrigger className="w-48 bg-white">
@@ -483,19 +483,19 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   <SelectItem value="polygon">
                     <div className="flex items-center gap-2">
                       <Pencil className="w-4 h-4" />
-                      Polygone
+                      {t('map.shape.polygon')}
                     </div>
                   </SelectItem>
                   <SelectItem value="rectangle">
                     <div className="flex items-center gap-2">
                       <Square className="w-4 h-4" />
-                      Rectangle
+                      {t('map.shape.rectangle')}
                     </div>
                   </SelectItem>
                   <SelectItem value="circle">
                     <div className="flex items-center gap-2">
                       <CircleIcon className="w-4 h-4" />
-                      Cercle
+                      {t('map.shape.circle')}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -509,20 +509,20 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 variant={isDrawing ? "secondary" : "default"}
               >
                 <Pencil className="w-4 h-4 mr-2" />
-                {isDrawing ? 'Tracé en cours...' : 'Tracer Entrepôt'}
+                {isDrawing ? t('map.drawing') : t('map.draw.warehouse')}
               </Button>
               
               {isDrawing && warehouseShapeType === 'polygon' && tempWarehouseShape.length >= 3 && (
                 <Button onClick={finishDrawing}>
                   <Save className="w-4 h-4 mr-2" />
-                  Terminer
+                  {t('map.finish')}
                 </Button>
               )}
               
               {value.warehouseShape && (
                 <Button onClick={clearWarehouseShape} variant="destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Effacer
+                  {t('map.clear')}
                 </Button>
               )}
             </div>
@@ -556,7 +556,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             {value.center && (
               <Marker position={[value.center.lat, value.center.lng]}>
                 <Popup>
-                  Centre sélectionné<br />
+                  {t('map.status.center')}<br />
                   Lat: {value.center.lat.toFixed(4)}<br />
                   Lng: {value.center.lng.toFixed(4)}
                 </Popup>
@@ -601,13 +601,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         {/* Status information */}
         <div className="text-sm text-gray-600 space-y-1 p-3 bg-gray-50 rounded-lg">
           {value.center && (
-            <div>Centre: {value.center.lat.toFixed(4)}, {value.center.lng.toFixed(4)}</div>
+            <div>{t('map.status.center')}: {value.center.lat.toFixed(4)}, {value.center.lng.toFixed(4)}</div>
           )}
           {value.polygon && (
-            <div>Zone tracée: {value.polygon.length} points</div>
+            <div>{t('map.status.zone')}: {value.polygon.length} {t('map.status.points')}</div>
           )}
           {value.warehouseShape && (
-            <div>Entrepôt tracé ({value.warehouseShapeType || warehouseShapeType}): {value.warehouseShape.length} points</div>
+            <div>
+              {t('map.status.warehouse')} ({t(`map.shape.${value.warehouseShapeType || warehouseShapeType}`)}): {value.warehouseShape.length} {t('map.status.points')}
+            </div>
           )}
           {getInstructionText() && (
             <div className="text-blue-600 font-medium">{getInstructionText()}</div>

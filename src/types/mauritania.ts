@@ -1,4 +1,3 @@
-
 /**
  * Core Entities for Mauritania-specific project management:
  * Workspaces: Physical/virtual locations
@@ -204,7 +203,7 @@ export interface EnhancedMaterial {
 
   localisation: Region[]; // Selected regions
   forme?: "polygon" | "rectangle" | "circle"; // Shape type
-  adresse?: { lat: number; lng: number }; // Address (lat/lng)
+  adresse?: string; // Full address
 }
 
 export enum PaymentMethod {

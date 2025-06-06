@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const MaterialCreate = () => {
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [mapData, setMapData] = useState<{
@@ -21,8 +22,6 @@ const MaterialCreate = () => {
     warehouseShape?: { lat: number; lng: number }[];
     address?: string;
   }>({});
-  const { t, language } = useLanguage();
-
   // Fetch workspaces from Supabase
   const { data: workspaces = [] } = useQuery({
     queryKey: ['workspaces'],
@@ -46,7 +45,7 @@ const MaterialCreate = () => {
     try {
       // Validate required fields
       if (!materialData.name) {
-        throw new Error('Le nom du matériau est requis');
+        throw new Error(t('materials.error.name_required'));
       }
 
       // Transform enhanced material data to match current database schema
@@ -61,11 +60,8 @@ const MaterialCreate = () => {
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
         adresse: materialData.adresse || '',
-        // Store location data properly - ensure we stringify objects correctly
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
-        //adresse_gps: mapData.center ? JSON.stringify(mapData.center) : null,
         forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
-        // Add coordinates as separate fields for easier querying
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
       };
@@ -90,16 +86,16 @@ const MaterialCreate = () => {
       if (error) throw error;
 
       toast({
-        title: "Matériau créé",
-        description: `Le matériau "${materialData.name}" a été créé avec succès avec sa localisation.`,
+        title: t('materials.toast.created'),
+        description: t('materials.toast.created_description') +{ name: materialData.name },
       });
 
       navigate('/materials');
     } catch (error) {
       console.error('Error creating material:', error);
       toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible de créer le matériau. Veuillez réessayer plus tard.",
+        title: t('materials.toast.error'),
+        description: error instanceof Error ? error.message : t('materials.toast.error_description'),
         variant: "destructive",
       });
     } finally {
@@ -140,8 +136,8 @@ const MaterialCreate = () => {
                 <InteractiveMap
                   value={mapData}
                   onChange={setMapData}
-                  title="Localisation de l'entrepôt"
-                  description="Définissez la position GPS de l'entrepôt et tracez sa forme et zone de stockage"
+                  title={t('materials.map.title')}
+                  description={t('materials.map.description')}
                   allowPolygon={true}
                   allowCoordinateSelection={true}
                   allowWarehouseTracing={true}
@@ -165,7 +161,7 @@ const MaterialCreate = () => {
               disabled={loading}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-12 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-semibold"
             >
-              {loading ? 'Enregistrement...' : 'Enregistrer le matériau'}
+              {loading ? t('materials.button.loading') : t('materials.button.save')}
             </Button>
           </div>
         </div>

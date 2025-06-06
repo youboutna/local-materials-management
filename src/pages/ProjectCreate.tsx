@@ -38,6 +38,7 @@ import ProjectMap, { MapLocation, ProjectStatus } from '@/components/ProjectMap'
 import MaterialFormSection from '@/components/MaterialFormSection'; 
 import { supabase } from '@/integrations/supabase/client';
 import ProgressIndicator from '@/components/ProgressIndicator';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Interface for selected materials
 interface SelectedMaterial {
@@ -45,45 +46,46 @@ interface SelectedMaterial {
   quantity: number;
 }
 
-// Form schema using Zod
-const formSchema = z.object({
-  title: z.string().min(3, {
-    message: "Le titre doit contenir au moins 3 caractères.",
-  }),
-  description: z.string().min(10, {
-    message: "La description doit contenir au moins 10 caractères.",
-  }),
-  location: z.string().min(2, {
-    message: "Veuillez indiquer un lieu valide.",
-  }),
-  status: z.enum(["en cours", "terminé", "en attente", "suspendu", "annulé"], {
-    required_error: "Veuillez sélectionner un statut.",
-  }),
-  progress: z.coerce.number().min(0).max(100, {
-    message: "Le progrès doit être entre 0 et 100%.",
-  }),
-  budget: z.coerce.number().min(1, {
-    message: "Le budget doit être un nombre positif.",
-  }),
-  teamSize: z.coerce.number().min(1, {
-    message: "L'équipe doit comporter au moins une personne.",
-  }),
-  startDate: z.string().min(1, {
-    message: "Veuillez sélectionner une date de début.",
-  }),
-  coordinates: z.object({
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-  }).optional(),
-});
-
 const ProjectCreate = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("form");
   const { createProject } = useProjects();
   const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
   
+  // Form schema using Zod
+  const formSchema = z.object({
+    title: z.string().min(3, {
+      message: t("project_create.validation.title"),
+    }),
+    description: z.string().min(10, {
+      message: t("project_create.validation.description"),
+    }),
+    location: z.string().min(2, {
+      message: t("project_create.validation.location"),
+    }),
+    status: z.enum(["en cours", "terminé", "en attente", "suspendu", "annulé"], {
+      required_error: t("project_create.validation.status"),
+    }),
+    progress: z.coerce.number().min(0).max(100, {
+      message: t("project_create.validation.progress"),
+    }),
+    budget: z.coerce.number().min(1, {
+      message: t("project_create.validation.budget"),
+    }),
+    teamSize: z.coerce.number().min(1, {
+      message: t("project_create.validation.team_size"),
+    }),
+    startDate: z.string().min(1, {
+      message: t("project_create.validation.start_date"),
+    }),
+    coordinates: z.object({
+      latitude: z.number().optional(),
+      longitude: z.number().optional(),
+    }).optional(),
+  });
+
   // Form definition using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,7 +114,7 @@ const ProjectCreate = () => {
     
     setMapLocation({
       id: "new-project",
-      name: form.getValues("title") || "Nouveau projet",
+      name: form.getValues("title") || t("project_create.default_project_name"),
       type: "project",
       latitude: latitude,
       longitude: longitude,
@@ -122,7 +124,7 @@ const ProjectCreate = () => {
     });
 
     toast({
-      title: "Position sélectionnée",
+      title: t("project_create.toast.position_selected"),
       description: `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`,
     });
   };
@@ -138,16 +140,16 @@ const ProjectCreate = () => {
         (error) => {
           console.error('Error getting location:', error);
           toast({
-            title: "Erreur de géolocalisation",
-            description: "Impossible d'obtenir votre position actuelle.",
+            title: t("project_create.toast.geolocation_error"),
+            description: t("project_create.toast.geolocation_unavailable"),
             variant: "destructive",
           });
         }
       );
     } else {
       toast({
-        title: "Géolocalisation non supportée",
-        description: "Votre navigateur ne supporte pas la géolocalisation.",
+        title: t("project_create.toast.geolocation_not_supported"),
+        description: t("project_create.toast.geolocation_not_supported_desc"),
         variant: "destructive",
       });
     }
@@ -205,8 +207,8 @@ const ProjectCreate = () => {
         if (materialsError) {
           console.error('Error adding materials to project:', materialsError);
           toast({
-            title: "Attention",
-            description: "Le projet a été créé mais certains matériaux n'ont pas pu être associés.",
+            title: t("project_create.toast.materials_error"),
+            description: t("project_create.toast.materials_error_desc"),
             variant: "destructive",
           });
         } else {
@@ -215,16 +217,16 @@ const ProjectCreate = () => {
       }
       
       toast({
-        title: "Projet créé",
-        description: `Le projet "${values.title}" a été créé avec succès.`,
+        title: t("project_create.toast.created"),
+        description: t("project_create.toast.created_desc", { title: values.title }),
       });
       
       navigate('/projects');
     } catch (error) {
       console.error('Error creating project:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de créer le projet. Veuillez réessayer.",
+        title: t("project_create.toast.error"),
+        description: t("project_create.toast.error_desc"),
         variant: "destructive",
       });
     } finally {
@@ -242,7 +244,7 @@ const ProjectCreate = () => {
           <Link to="/projects">
             <Button variant="ghost" className="mb-6">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux projets
+              {t("project_create.back_to_projects")}
             </Button>
           </Link>
           
@@ -253,13 +255,13 @@ const ProjectCreate = () => {
             className="max-w-2xl mx-auto"
           >
             <div className="bg-white rounded-xl shadow-elegant p-6 mb-8">
-              <h1 className="text-2xl font-serif text-adrar-800 mb-6">Créer un nouveau projet</h1>
+              <h1 className="text-2xl font-serif text-adrar-800 mb-6">{t("project_create.title")}</h1>
               
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="form">Formulaire</TabsTrigger>
-                  <TabsTrigger value="materials">Matériaux</TabsTrigger>
-                  <TabsTrigger value="map">Carte</TabsTrigger>
+                  <TabsTrigger value="form">{t("project_create.tabs.form")}</TabsTrigger>
+                  <TabsTrigger value="materials">{t("project_create.tabs.materials")}</TabsTrigger>
+                  <TabsTrigger value="map">{t("project_create.tabs.map")}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="form">
@@ -270,9 +272,9 @@ const ProjectCreate = () => {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Titre du projet</FormLabel>
+                            <FormLabel>{t("project_create.form.title")}</FormLabel>
                             <FormControl>
-                              <Input placeholder="Ex: Restauration du Fort d'Atar" {...field} />
+                              <Input placeholder={t("project_create.form.title_placeholder")} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -284,10 +286,10 @@ const ProjectCreate = () => {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t("project_create.form.description")}</FormLabel>
                             <FormControl>
                               <Textarea 
-                                placeholder="Décrivez le projet et ses objectifs..." 
+                                placeholder={t("project_create.form.description_placeholder")} 
                                 className="min-h-[100px]" 
                                 {...field} 
                               />
@@ -303,10 +305,10 @@ const ProjectCreate = () => {
                           name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Lieu</FormLabel>
+                              <FormLabel>{t("project_create.form.location")}</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <Input placeholder="Ex: Nouakchott" {...field} />
+                                  <Input placeholder={t("project_create.form.location_placeholder")} {...field} />
                                   <MapPin className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
                                 </div>
                               </FormControl>
@@ -320,19 +322,19 @@ const ProjectCreate = () => {
                           name="status"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Statut</FormLabel>
+                              <FormLabel>{t("project_create.form.status")}</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionnez un statut" />
+                                    <SelectValue placeholder={t("project_create.form.status_placeholder")} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="en attente">En attente</SelectItem>
-                                  <SelectItem value="en cours">En cours</SelectItem>
-                                  <SelectItem value="terminé">Terminé</SelectItem>
-                                  <SelectItem value="suspendu">Suspendu</SelectItem>
-                                  <SelectItem value="annulé">Annulé</SelectItem>
+                                  <SelectItem value="en attente">{t("project_create.status.pending")}</SelectItem>
+                                  <SelectItem value="en cours">{t("project_create.status.ongoing")}</SelectItem>
+                                  <SelectItem value="terminé">{t("project_create.status.completed")}</SelectItem>
+                                  <SelectItem value="suspendu">{t("project_create.status.suspended")}</SelectItem>
+                                  <SelectItem value="annulé">{t("project_create.status.cancelled")}</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -346,24 +348,24 @@ const ProjectCreate = () => {
                         name="progress"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Progression (%)</FormLabel>
+                            <FormLabel>{t("project_create.form.progress")}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 min="0" 
                                 max="100" 
-                                placeholder="Ex: 25" 
+                                placeholder={t("project_create.form.progress_placeholder")} 
                                 {...field}
                               />
                             </FormControl>
                             <FormDescription>
-                              Pourcentage d'avancement du projet (0-100%)
+                              {t("project_create.form.progress_desc")}
                             </FormDescription>
                             {field.value && (
                               <div className="mt-2">
                                 <ProgressIndicator value={Number(field.value)} />
                                 <p className="text-sm text-gray-600 mt-1">
-                                  Progression actuelle: {field.value}%
+                                  {t("project_create.form.progress_current", { value: field.value })}
                                 </p>
                               </div>
                             )}
@@ -378,11 +380,11 @@ const ProjectCreate = () => {
                           name="budget"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Budget (MRU)</FormLabel>
+                              <FormLabel>{t("project_create.form.budget")}</FormLabel>
                               <FormControl>
-                                <Input type="number" min="0" step="1000" placeholder="Ex: 5000000" {...field} />
+                                <Input type="number" min="0" step="1000" placeholder={t("project_create.form.budget_placeholder")} {...field} />
                               </FormControl>
-                              <FormDescription>Montant en Ouguiya mauritanien</FormDescription>
+                              <FormDescription>{t("project_create.form.budget_desc")}</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -393,9 +395,9 @@ const ProjectCreate = () => {
                           name="teamSize"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Taille de l'équipe</FormLabel>
+                              <FormLabel>{t("project_create.form.team_size")}</FormLabel>
                               <FormControl>
-                                <Input type="number" min="1" placeholder="Ex: 12" {...field} />
+                                <Input type="number" min="1" placeholder={t("project_create.form.team_size_placeholder")} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -408,7 +410,7 @@ const ProjectCreate = () => {
                         name="startDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Date de début</FormLabel>
+                            <FormLabel>{t("project_create.form.start_date")}</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
@@ -423,12 +425,12 @@ const ProjectCreate = () => {
                           name="coordinates.latitude"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Latitude (optionnelle)</FormLabel>
+                              <FormLabel>{t("project_create.form.latitude")}</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="number" 
                                   step="0.000001"
-                                  placeholder="Ex: 18.079052" 
+                                  placeholder={t("project_create.form.latitude_placeholder")} 
                                   value={field.value?.toString() || ''}
                                   onChange={(e) => {
                                     const value = e.target.value ? parseFloat(e.target.value) : undefined;
@@ -443,7 +445,7 @@ const ProjectCreate = () => {
                                   className="h-auto p-0 text-xs"
                                   onClick={() => setActiveTab("map")}
                                 >
-                                  Sélectionner sur la carte
+                                  {t("project_create.form.select_on_map")}
                                 </Button>
                               </FormDescription>
                               <FormMessage />
@@ -456,12 +458,12 @@ const ProjectCreate = () => {
                           name="coordinates.longitude"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Longitude (optionnelle)</FormLabel>
+                              <FormLabel>{t("project_create.form.longitude")}</FormLabel>
                               <FormControl>
                                 <Input 
                                   type="number" 
                                   step="0.000001"
-                                  placeholder="Ex: -15.965634" 
+                                  placeholder={t("project_create.form.longitude_placeholder")} 
                                   value={field.value?.toString() || ''}
                                   onChange={(e) => {
                                     const value = e.target.value ? parseFloat(e.target.value) : undefined;
@@ -481,7 +483,7 @@ const ProjectCreate = () => {
                           variant="outline"
                           onClick={() => setActiveTab("materials")}
                         >
-                          Ajouter des matériaux
+                          {t("project_create.form.add_materials")}
                         </Button>
                         
                         <Button 
@@ -489,7 +491,7 @@ const ProjectCreate = () => {
                           className="bg-terracotta-500 hover:bg-terracotta-600"
                           disabled={isSubmitting}
                         >
-                          {isSubmitting ? 'Création en cours...' : 'Créer le projet'}
+                          {isSubmitting ? t("project_create.form.creating") : t("project_create.form.create")}
                         </Button>
                       </div>
                     </form>
@@ -509,7 +511,7 @@ const ProjectCreate = () => {
                         variant="outline" 
                         onClick={() => setActiveTab("form")}
                       >
-                        Retour au formulaire
+                        {t("project_create.materials.back_to_form")}
                       </Button>
                       
                       <Button 
@@ -518,7 +520,7 @@ const ProjectCreate = () => {
                         onClick={form.handleSubmit(onSubmit)}
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Création en cours...' : 'Créer le projet'}
+                        {isSubmitting ? t("project_create.form.creating") : t("project_create.form.create")}
                       </Button>
                     </div>
                   </div>
@@ -527,7 +529,7 @@ const ProjectCreate = () => {
                 <TabsContent value="map">
                   <div className="mb-4">
                     <p className="text-adrar-600 mb-4">
-                      Cliquez sur la carte pour sélectionner l'emplacement du projet.
+                      {t("project_create.map.click_hint")}
                     </p>
                     
                     <div className="flex gap-2 mb-4">
@@ -538,7 +540,7 @@ const ProjectCreate = () => {
                         className="flex items-center gap-2"
                       >
                         <Navigation className="h-4 w-4" />
-                        Ma position
+                        {t("project_create.map.my_position")}
                       </Button>
                     </div>
                     
@@ -556,10 +558,10 @@ const ProjectCreate = () => {
                     
                     {form.getValues("coordinates")?.latitude && form.getValues("coordinates")?.longitude && (
                       <div className="bg-gray-100 p-3 rounded-lg mb-4">
-                        <p className="text-sm font-medium">Position sélectionnée:</p>
+                        <p className="text-sm font-medium">{t("project_create.map.selected_position")}</p>
                         <p className="text-sm">
-                          Latitude: {form.getValues("coordinates")?.latitude?.toFixed(6)}, 
-                          Longitude: {form.getValues("coordinates")?.longitude?.toFixed(6)}
+                          {t("project_create.map.latitude")}: {form.getValues("coordinates")?.latitude?.toFixed(6)}, 
+                          {t("project_create.map.longitude")}: {form.getValues("coordinates")?.longitude?.toFixed(6)}
                         </p>
                       </div>
                     )}
@@ -569,7 +571,7 @@ const ProjectCreate = () => {
                         variant="outline" 
                         onClick={() => setActiveTab("form")}
                       >
-                        Retour au formulaire
+                        {t("project_create.map.back_to_form")}
                       </Button>
                       
                       <Button 
@@ -578,7 +580,7 @@ const ProjectCreate = () => {
                         onClick={form.handleSubmit(onSubmit)}
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Création en cours...' : 'Créer le projet'}
+                        {isSubmitting ? t("project_create.form.creating") : t("project_create.form.create")}
                       </Button>
                     </div>
                   </div>

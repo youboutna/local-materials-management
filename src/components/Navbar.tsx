@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, User, LogOut, FileText, Home, Briefcase, Package, Settings as SettingsIcon, Users as UsersIcon, ClipboardList, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut, isDevelopmentMode } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,14 +26,14 @@ const Navbar = () => {
   }, []);
 
   const navItems = [
-    { name: 'Accueil', href: '/', icon: Home },
-    { name: 'Tableau de bord', href: '/dashboard', icon: Home },
-    { name: 'Projets', href: '/projects', icon: Briefcase },
-    { name: 'Import projets', href: '/projects/import', icon: Upload },
-    { name: 'Matériaux', href: '/materials', icon: Package },
-    { name: 'Documents', href: '/documents', icon: FileText },
-    { name: 'Tâches', href: '/tasks', icon: ClipboardList },
-    { name: 'Utilisateurs', href: '/users', icon: UsersIcon },
+    { name: t('nav.home'), href: '/', icon: Home },
+    { name: t('dashboard.title'), href: '/dashboard', icon: Home },
+    { name: t('nav.projects'), href: '/projects', icon: Briefcase },
+    { name: t('project_import.title'), href: '/projects/import', icon: Upload },
+    { name: t('nav.materials'), href: '/materials', icon: Package },
+    { name: t('documents.title'), href: '/documents', icon: FileText },
+    { name: t('task.title') || 'Tâches', href: '/tasks', icon: ClipboardList },
+    { name: t('nav.users'), href: '/users', icon: UsersIcon },
   ];
 
   const handleLogout = () => {
@@ -49,14 +50,12 @@ const Navbar = () => {
       .slice(0, 2);
   };
 
-  // Get user display name from user metadata or email
   const getUserDisplayName = () => {
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
     if (user?.email) return user.email.split('@')[0];
     return 'User';
   };
 
-  // Get user avatar URL from user metadata
   const getUserAvatarUrl = () => {
     return user?.user_metadata?.avatar_url || '';
   };
@@ -72,17 +71,15 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-adrar-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <span className="text-xl font-bold text-adrar-900 font-serif">
-              HadrConstruct
+              Construct
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
@@ -95,7 +92,6 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Side */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSwitcher />
             
@@ -122,35 +118,34 @@ const Navbar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Profil</span>
+                      <span>{t('nav.profile')}</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings" className="cursor-pointer">
                       <SettingsIcon className="mr-2 h-4 w-4" />
-                      <span>Paramètres</span>
+                      <span>{t('settings.title')}</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Se déconnecter</span>
+                    <span>{t('auth.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" asChild>
-                  <Link to="/auth?mode=login">Se connecter</Link>
+                  <Link to="/auth?mode=login">{t('auth.login')}</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/auth?mode=register">S'inscrire</Link>
+                  <Link to="/auth?mode=register">{t('auth.register')}</Link>
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <Button
               variant="ghost"
@@ -163,7 +158,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -214,12 +208,12 @@ const Navbar = () => {
                       <div className="flex space-x-2">
                         <Button size="sm" variant="ghost" asChild>
                           <Link to="/auth?mode=login" onClick={() => setIsOpen(false)}>
-                            Se connecter
+                            {t('auth.login')}
                           </Link>
                         </Button>
                         <Button size="sm" asChild>
                           <Link to="/auth?mode=register" onClick={() => setIsOpen(false)}>
-                            S'inscrire
+                            {t('auth.register')}
                           </Link>
                         </Button>
                       </div>

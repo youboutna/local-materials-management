@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +7,11 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const SupplierDashboard = () => {
+  const { t } = useLanguage();
+
   // Fetch notifications for supplier
   const { data: notifications = [] } = useQuery({
     queryKey: ['supplier-notifications'],
@@ -72,15 +74,15 @@ const SupplierDashboard = () => {
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-adrar-800 mb-2">Tableau de bord fournisseur</h1>
-            <p className="text-gray-600">Suivez vos commandes, paiements et notifications</p>
+            <h1 className="text-3xl font-bold text-adrar-800 mb-2">{t("supplier_dashboard.title")}</h1>
+            <p className="text-gray-600">{t("supplier_dashboard.subtitle")}</p>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-l-4 border-l-green-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total paiements</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("supplier_dashboard.stats.total_payments")}</CardTitle>
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -88,46 +90,46 @@ const SupplierDashboard = () => {
                   {totalPayments.toLocaleString()} MRO
                 </div>
                 <p className="text-xs text-gray-600">
-                  {payments.length} transactions
+                  {payments.length} {t("supplier_dashboard.stats.transactions")}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-orange-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Paiements en attente</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("supplier_dashboard.stats.pending_payments")}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600">{pendingPayments}</div>
                 <p className="text-xs text-gray-600">
-                  En cours de traitement
+                  {t("supplier_dashboard.stats.processing")}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("supplier_dashboard.stats.notifications")}</CardTitle>
                 <Bell className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{unreadNotifications}</div>
                 <p className="text-xs text-gray-600">
-                  Non lues
+                  {t("supplier_dashboard.stats.unread")}
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-purple-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("supplier_dashboard.stats.documents")}</CardTitle>
                 <FileText className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">{documents.length}</div>
                 <p className="text-xs text-gray-600">
-                  Disponibles
+                  {t("supplier_dashboard.stats.available")}
                 </p>
               </CardContent>
             </Card>
@@ -136,9 +138,9 @@ const SupplierDashboard = () => {
           {/* Main Content */}
           <Tabs defaultValue="notifications" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="payments">Paiements</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="notifications">{t("supplier_dashboard.tabs.notifications")}</TabsTrigger>
+              <TabsTrigger value="payments">{t("supplier_dashboard.tabs.payments")}</TabsTrigger>
+              <TabsTrigger value="documents">{t("supplier_dashboard.tabs.documents")}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="notifications">
@@ -146,7 +148,7 @@ const SupplierDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5" />
-                    Notifications récentes
+                    {t("supplier_dashboard.notifications.title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -164,19 +166,19 @@ const SupplierDashboard = () => {
                               <h3 className="font-medium text-gray-900">{notification.title}</h3>
                               <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                               <p className="text-xs text-gray-500 mt-2">
-                                {notification.created_at ? new Date(notification.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                {notification.created_at ? new Date(notification.created_at).toLocaleDateString('fr-FR') : t("supplier_dashboard.notifications.unknown_date")}
                               </p>
                             </div>
                             {!notification.read && (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                Nouveau
+                                {t("supplier_dashboard.notifications.new")}
                               </Badge>
                             )}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 text-center py-8">Aucune notification</p>
+                      <p className="text-gray-500 text-center py-8">{t("supplier_dashboard.notifications.empty")}</p>
                     )}
                   </div>
                 </CardContent>
@@ -188,7 +190,7 @@ const SupplierDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
-                    Historique des paiements
+                    {t("supplier_dashboard.payments.title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -199,13 +201,13 @@ const SupplierDashboard = () => {
                           <div className="flex items-center justify-between">
                             <div>
                               <h3 className="font-medium text-gray-900">
-                                Paiement #{payment.transaction_id}
+                                {t("supplier_dashboard.payments.payment")} #{payment.transaction_id}
                               </h3>
                               <p className="text-sm text-gray-600">
-                                Montant: {payment.amount?.toLocaleString()} MRO
+                                {t("supplier_dashboard.payments.amount")}: {payment.amount?.toLocaleString()} MRO
                               </p>
                               <p className="text-xs text-gray-500">
-                                {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : t("supplier_dashboard.payments.unknown_date")}
                               </p>
                             </div>
                             <Badge 
@@ -216,13 +218,13 @@ const SupplierDashboard = () => {
                                   : 'bg-orange-100 text-orange-800'
                               }
                             >
-                              {payment.payment_method === 'completed' ? 'Payé' : 'En attente'}
+                              {payment.payment_method === 'completed' ? t("supplier_dashboard.payments.paid") : t("supplier_dashboard.payments.pending")}
                             </Badge>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 text-center py-8">Aucun paiement trouvé</p>
+                      <p className="text-gray-500 text-center py-8">{t("supplier_dashboard.payments.empty")}</p>
                     )}
                   </div>
                 </CardContent>
@@ -234,7 +236,7 @@ const SupplierDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Documents partagés
+                    {t("supplier_dashboard.documents.title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -249,7 +251,7 @@ const SupplierDashboard = () => {
                                 <h3 className="font-medium text-gray-900">{document.title}</h3>
                                 <p className="text-sm text-gray-600">{document.description}</p>
                                 <p className="text-xs text-gray-500">
-                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : t("supplier_dashboard.documents.unknown_date")}
                                 </p>
                               </div>
                             </div>
@@ -260,7 +262,7 @@ const SupplierDashboard = () => {
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 text-center py-8">Aucun document disponible</p>
+                      <p className="text-gray-500 text-center py-8">{t("supplier_dashboard.documents.empty")}</p>
                     )}
                   </div>
                 </CardContent>

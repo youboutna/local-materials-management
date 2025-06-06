@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -18,6 +17,7 @@ import ProgressIndicator from '@/components/ProgressIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import LocationSelector from '@/components/location/LocationSelector';
 import MaterialFormSection from '@/components/MaterialFormSection';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -53,6 +53,7 @@ const ProjectEdit = () => {
   const [loadingInspection, setLoadingInspection] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Set up form with validation
   const form = useForm<ProjectFormValues>({
@@ -100,8 +101,8 @@ const ProjectEdit = () => {
           await loadProjectMaterials(id);
         } else {
           toast({
-            title: "Erreur",
-            description: "Projet non trouvé",
+            title: t("projects.edit.error"),
+            description: t("projects.edit.not_found"),
             variant: "destructive",
           });
           navigate('/projects');
@@ -109,8 +110,8 @@ const ProjectEdit = () => {
       } catch (error) {
         console.error("Error fetching project:", error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les détails du projet",
+          title: t("projects.edit.error"),
+          description: t("projects.edit.load_error"),
           variant: "destructive",
         });
       } finally {
@@ -119,7 +120,7 @@ const ProjectEdit = () => {
     };
     
     fetchProject();
-  }, [id, getProject, navigate, form]);
+  }, [id, getProject, navigate, form, t]);
 
   // Load existing materials when project loads
   const loadProjectMaterials = async (projectId: string) => {
@@ -166,21 +167,21 @@ const ProjectEdit = () => {
         form.setValue('progress', latestInspection.progress_at_inspection);
         
         toast({
-          title: "Progression mise à jour",
-          description: `Progression définie à ${latestInspection.progress_at_inspection}% selon la dernière inspection`,
+          title: t("projects.edit.progress_synced"),
+          description: t("projects.edit.progress_synced_desc", { value: latestInspection.progress_at_inspection }),
         });
       } else {
         toast({
-          title: "Information",
-          description: "Aucune inspection trouvée pour ce projet",
+          title: t("projects.edit.info"),
+          description: t("projects.edit.no_inspection"),
           variant: "default",
         });
       }
     } catch (error) {
       console.error("Error fetching latest inspection:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de récupérer la dernière inspection",
+        title: t("projects.edit.error"),
+        description: t("projects.edit.inspection_error"),
         variant: "destructive",
       });
     } finally {
@@ -210,8 +211,8 @@ const ProjectEdit = () => {
         await updateProjectMaterials(id, selectedMaterials);
 
         toast({
-          title: "Modifications enregistrées",
-          description: "Le projet a été mis à jour avec succès",
+          title: t("projects.edit.saved"),
+          description: t("projects.edit.saved_desc"),
         });
         navigate(`/projects/${id}`);
       } else {
@@ -220,8 +221,8 @@ const ProjectEdit = () => {
     } catch (error) {
       console.error("Error updating project:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le projet",
+        title: t("projects.edit.error"),
+        description: t("projects.edit.save_error"),
         variant: "destructive",
       });
     } finally {
@@ -280,15 +281,15 @@ const ProjectEdit = () => {
         <Button variant="ghost" asChild>
           <Link to={`/projects/${id}`} className="flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux détails du projet
+            {t("projects.edit.back_to_detail")}
           </Link>
         </Button>
       </div>
       
       {/* Form header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h1 className="text-2xl font-bold text-adrar-800 mb-2">Modifier le projet</h1>
-        <p className="text-adrar-600">Modifiez les détails du projet et enregistrez les changements</p>
+        <h1 className="text-2xl font-bold text-adrar-800 mb-2">{t("projects.edit.title")}</h1>
+        <p className="text-adrar-600">{t("projects.edit.subtitle")}</p>
       </div>
       
       {/* Edit form */}
@@ -302,9 +303,9 @@ const ProjectEdit = () => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Titre du projet</FormLabel>
+                    <FormLabel>{t("project_create.form.title")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Titre du projet" {...field} />
+                      <Input placeholder={t("project_create.form.title_placeholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -317,10 +318,10 @@ const ProjectEdit = () => {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Localisation</FormLabel>
+                    <FormLabel>{t("project_create.form.location")}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input placeholder="Localisation" {...field} />
+                        <Input placeholder={t("project_create.form.location_placeholder")} {...field} />
                         <MapPin className="absolute right-3 top-2.5 h-4 w-4 text-adrar-400" />
                       </div>
                     </FormControl>
@@ -335,27 +336,27 @@ const ProjectEdit = () => {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Statut</FormLabel>
+                    <FormLabel>{t("project_create.form.status")}</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un statut" />
+                          <SelectValue placeholder={t("project_create.form.status_placeholder")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="en cours">En cours</SelectItem>
-                        <SelectItem value="terminé">Terminé</SelectItem>
-                        <SelectItem value="en attente">En attente</SelectItem>
-                        <SelectItem value="en inspection">En inspection</SelectItem>
-                        <SelectItem value="suspendu">Suspendu</SelectItem>
-                        <SelectItem value="annulé">Annulé</SelectItem>
+                        <SelectItem value="en cours">{t("project_create.status.ongoing")}</SelectItem>
+                        <SelectItem value="terminé">{t("project_create.status.completed")}</SelectItem>
+                        <SelectItem value="en attente">{t("project_create.status.pending")}</SelectItem>
+                        <SelectItem value="en inspection">{t("project_create.status.inspection")}</SelectItem>
+                        <SelectItem value="suspendu">{t("project_create.status.suspended")}</SelectItem>
+                        <SelectItem value="annulé">{t("project_create.status.cancelled")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Modifier le statut du projet selon son état actuel
+                      {t("projects.edit.status_desc")}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -369,7 +370,7 @@ const ProjectEdit = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center justify-between">
-                      <span>Progression (%)</span>
+                      <span>{t("project_create.form.progress")}</span>
                       <Button
                         type="button"
                         variant="outline"
@@ -383,7 +384,7 @@ const ProjectEdit = () => {
                         ) : (
                           <RefreshCw className="h-3 w-3 mr-1" />
                         )}
-                        Sync avec inspection
+                        {t("projects.edit.sync_with_inspection")}
                       </Button>
                     </FormLabel>
                     <FormControl>
@@ -401,13 +402,13 @@ const ProjectEdit = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Pourcentage d'avancement du projet (0-100%). Utilisez le bouton "Sync avec inspection" pour récupérer la progression de la dernière inspection.
+                      {t("project_create.form.progress_desc")}
                     </FormDescription>
                     {progressValue !== undefined && (
                       <div className="mt-2">
                         <ProgressIndicator value={progressValue} />
                         <p className="text-sm text-gray-600 mt-1">
-                          Progression actuelle: {progressValue}%
+                          {t("project_create.form.progress_current", { value: progressValue })}
                         </p>
                       </div>
                     )}
@@ -422,7 +423,7 @@ const ProjectEdit = () => {
                 name="budget"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Budget (MRU)</FormLabel>
+                    <FormLabel>{t("project_create.form.budget")}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -442,7 +443,7 @@ const ProjectEdit = () => {
                 name="teamSize"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Taille de l'équipe</FormLabel>
+                    <FormLabel>{t("project_create.form.team_size")}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -462,7 +463,7 @@ const ProjectEdit = () => {
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date de début</FormLabel>
+                    <FormLabel>{t("project_create.form.start_date")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -477,7 +478,7 @@ const ProjectEdit = () => {
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date de fin (optionnelle)</FormLabel>
+                    <FormLabel>{t("projects.edit.end_date")}</FormLabel>
                     <FormControl>
                       <Input 
                         type="date" 
@@ -496,10 +497,10 @@ const ProjectEdit = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t("project_create.form.description")}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Description détaillée du projet" 
+                        placeholder={t("project_create.form.description_placeholder")} 
                         className="min-h-32" 
                         {...field} 
                       />
@@ -539,7 +540,7 @@ const ProjectEdit = () => {
                   disabled={submitting}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {submitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                  {submitting ? t("projects.edit.saving") : t("projects.edit.save")}
                 </Button>
               </div>
             </form>

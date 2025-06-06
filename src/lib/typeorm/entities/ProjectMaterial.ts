@@ -32,9 +32,9 @@ export class ProjectMaterial {
     let region = '';
 
     // If you have separate latitude/longitude fields, use them:
-    if (this.material?.latitude && this.material?.longitude) {
-      latitude = this.material.latitude;
-      longitude = this.material.longitude;
+    if (this.material?.getCoordinates() && this.material?.getCoordinates()) {
+      latitude = this.material.getCoordinates()?.lat ?? 0;
+      longitude = this.material.getCoordinates()?.lng ?? 0;
     }
 
     if (this.material?.localisation && this.material.localisation.length > 0) {

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { DEV_ROLES, getActiveDevRole, setActiveDevRole } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Settings = () => {
+  const { t } = useLanguage();
   const { isDevelopmentMode } = useAuth();
   const [activeTab, setActiveTab] = useState("database");
   const [activeDevRole, setDevRole] = useState(getActiveDevRole());
@@ -25,8 +26,8 @@ const Settings = () => {
     setDevRole(DEV_ROLES.find(r => r.role === role) || DEV_ROLES[0]);
     
     toast({
-      title: "Dev mode role updated",
-      description: `Role changed to: ${role}`,
+      title: t("settings.dev_role_updated"),
+      description: t("settings.dev_role_changed", { role }),
     });
 
     // Force reload to apply role changes
@@ -39,22 +40,24 @@ const Settings = () => {
       
       <main className="flex-grow container mx-auto px-4 py-16">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Settings</h1>
+          <h1 className="text-3xl font-bold mb-6">{t("settings.title")}</h1>
           
           {isDevelopmentMode && (
             <Card className="mb-8 border-amber-300 bg-amber-50">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Shield className="mr-2 h-5 w-5" />
-                  Development Mode Active
+                  {t("settings.dev_mode_active")}
                 </CardTitle>
                 <CardDescription>
-                  Authentication is bypassed. You can switch between different roles to test your application.
+                  {t("settings.dev_mode_desc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col space-y-4">
-                  <p className="font-medium">Current Role: <span className="text-amber-700">{activeDevRole.role}</span></p>
+                  <p className="font-medium">
+                    {t("settings.current_role")}: <span className="text-amber-700">{activeDevRole.role}</span>
+                  </p>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {DEV_ROLES.map((roleOption) => (
@@ -80,19 +83,19 @@ const Settings = () => {
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-5 mb-8">
               <TabsTrigger value="database" className="flex items-center">
-                <Database className="mr-2 h-4 w-4" /> Database
+                <Database className="mr-2 h-4 w-4" /> {t("settings.tabs.database")}
               </TabsTrigger>
               <TabsTrigger value="storage" className="flex items-center">
-                <Folder className="mr-2 h-4 w-4" /> Storage
+                <Folder className="mr-2 h-4 w-4" /> {t("settings.tabs.storage")}
               </TabsTrigger>
               <TabsTrigger value="keycloak" className="flex items-center">
-                <Key className="mr-2 h-4 w-4" /> Keycloak
+                <Key className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak")}
               </TabsTrigger>
               <TabsTrigger value="keycloak-config" className="flex items-center">
-                <Cog className="mr-2 h-4 w-4" /> Keycloak Config
+                <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.keycloak_config")}
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center">
-                <Cog className="mr-2 h-4 w-4" /> System
+                <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
               </TabsTrigger>
             </TabsList>
             
@@ -115,13 +118,13 @@ const Settings = () => {
             <TabsContent value="system">
               <Card>
                 <CardHeader>
-                  <CardTitle>System Settings</CardTitle>
+                  <CardTitle>{t("settings.system.title")}</CardTitle>
                   <CardDescription>
-                    Configure global system settings and parameters.
+                    {t("settings.system.desc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>System settings configuration coming soon.</p>
+                  <p>{t("settings.system.coming_soon")}</p>
                 </CardContent>
               </Card>
             </TabsContent>

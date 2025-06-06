@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
@@ -11,12 +10,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const LanguageSwitcher: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const languages: { code: Language; name: string; flag: string }[] = [
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'العربية', flag: '🇲🇷' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'fr', name: t('language.french') || 'Français', flag: '🇫🇷' },
+    { code: 'ar', name: t('language.arabic') || 'العربية', flag: '🇲🇷' },
+    { code: 'en', name: t('language.english') || 'English', flag: '🇬🇧' },
   ];
 
   return (
@@ -24,7 +23,13 @@ const LanguageSwitcher: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="text-white hover:text-gray-200">
           <Globe className="h-4 w-4 mr-2" />
-          {language === 'fr' ? 'Français' : language === 'en' ? 'English' : 'العربية'}
+          {
+            language === 'fr'
+              ? t('language.french') || 'Français'
+              : language === 'en'
+              ? t('language.english') || 'English'
+              : t('language.arabic') || 'العربية'
+          }
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-white">

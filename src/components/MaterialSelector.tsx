@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
 import type { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Material = Database['public']['Tables']['materials']['Row'];
 
@@ -33,6 +33,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const [loading, setLoading] = useState(true);
   const [totalCost, setTotalCost] = useState(0);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Fetch materials from Supabase
   useEffect(() => {
@@ -48,8 +49,8 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
       } catch (error) {
         console.error('Error fetching materials:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les matériaux. Veuillez réessayer plus tard.",
+          title: t('materials.error_loading') || "Erreur",
+          description: t('materials.retry') || "Impossible de récupérer les matériaux. Veuillez réessayer plus tard.",
           variant: "destructive",
         });
       } finally {
@@ -58,7 +59,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
     };
 
     fetchMaterials();
-  }, [toast]);
+  }, [toast, t]);
 
   // Calculate total cost whenever selected materials change
   useEffect(() => {
@@ -117,13 +118,13 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   };
 
   if (loading) {
-    return <div className="text-center py-4">Chargement des matériaux...</div>;
+    return <div className="text-center py-4">{t('materials.loading') || "Chargement des matériaux..."}</div>;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Matériaux requis</h3>
+        <h3 className="text-lg font-medium">{t('materials.required') || "Matériaux requis"}</h3>
         <Button 
           type="button" 
           variant="outline" 
@@ -132,13 +133,13 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           disabled={materials.length === 0 || selectedMaterials.length >= materials.length}
         >
           <Plus className="h-4 w-4 mr-1" />
-          Ajouter un matériau
+          {t('materials.add') || "Ajouter un matériau"}
         </Button>
       </div>
 
       {selectedMaterials.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-md p-4 text-center text-gray-500">
-          Aucun matériau sélectionné
+          {t('materials.none_found') || "Aucun matériau sélectionné"}
         </div>
       ) : (
         <div className="space-y-3">
@@ -150,13 +151,13 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
               <div key={index} className="p-3 border rounded-md bg-gray-50">
                 <div className="flex gap-2 items-end">
                   <div className="flex-grow">
-                    <label className="text-sm font-medium mb-1 block">Matériau</label>
+                    <label className="text-sm font-medium mb-1 block">{t('materials.name') || "Matériau"}</label>
                     <Select
                       value={selected.materialId}
                       onValueChange={(value) => updateMaterialId(index, value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un matériau" />
+                        <SelectValue placeholder={t('materials.search_placeholder') || "Sélectionner un matériau"} />
                       </SelectTrigger>
                       <SelectContent>
                         {materials.map(material => (
@@ -175,7 +176,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                   </div>
 
                   <div className="w-32">
-                    <label className="text-sm font-medium mb-1 block">Quantité</label>
+                    <label className="text-sm font-medium mb-1 block">{t('materials.quantity') || "Quantité"}</label>
                     <Input
                       type="number"
                       min="0.1"
@@ -210,13 +211,13 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                       {material.category}
                     </Badge>
                     <Badge variant="outline" className="bg-amber-50">
-                      Prix: {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
+                      {t('materials.price') || "Prix"}: {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
                     </Badge>
                     <Badge variant="outline" className="bg-green-50">
-                      Stock: {Number(material.available_quantity)} {material.unit}
+                      {t('materials.available_quantity') || "Stock"}: {Number(material.available_quantity)} {material.unit}
                     </Badge>
                     <Badge className="ml-auto bg-terracotta-100 text-terracotta-700 hover:bg-terracotta-200">
-                      Total: {itemCost.toLocaleString()} MRU
+                      {t('materials.total') || "Total"}: {itemCost.toLocaleString()} MRU
                     </Badge>
                   </div>
                 )}
@@ -226,14 +227,14 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           
           <div className="border-t pt-3 mt-4">
             <div className="flex justify-between items-center">
-              <span className="font-medium">Coût total des matériaux:</span>
+              <span className="font-medium">{t('materials.total_cost') || "Coût total des matériaux:"}</span>
               <span className="font-bold text-lg">{totalCost.toLocaleString()} MRU</span>
             </div>
             
             {projectBudget && (
               <div className="mt-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span>Pourcentage du budget:</span>
+                  <span>{t('materials.budget_percentage') || "Pourcentage du budget:"}</span>
                   <span className={totalCost > projectBudget ? "text-red-500" : "text-green-600"}>
                     {((totalCost / projectBudget) * 100).toFixed(1)}%
                   </span>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PasswordResetHandler = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -64,12 +65,12 @@ const PasswordResetHandler = () => {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(t('auth.passwords_do_not_match') || 'Les mots de passe ne correspondent pas.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.');
+      setError(t('auth.password_too_short') || 'Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
 
@@ -83,8 +84,8 @@ const PasswordResetHandler = () => {
       if (error) throw error;
 
       toast({
-        title: "Mot de passe mis à jour",
-        description: "Votre mot de passe a été mis à jour avec succès.",
+        title: t('auth.password_updated') || "Mot de passe mis à jour",
+        description: t('auth.password_updated_desc') || "Votre mot de passe a été mis à jour avec succès.",
       });
 
       // Sign out and redirect to login page
@@ -92,7 +93,7 @@ const PasswordResetHandler = () => {
       navigate('/auth');
     } catch (error: any) {
       console.error('Error updating password:', error);
-      setError(error.message || 'Une erreur est survenue lors de la mise à jour du mot de passe.');
+      setError(error.message || t('auth.password_update_error') || 'Une erreur est survenue lors de la mise à jour du mot de passe.');
     } finally {
       setLoading(false);
     }
@@ -103,20 +104,19 @@ const PasswordResetHandler = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Lien invalide</CardTitle>
+            <CardTitle className="text-center">{t('auth.invalid_link') || 'Lien invalide'}</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
               <AlertDescription>
-                Ce lien de réinitialisation de mot de passe est invalide ou a expiré.
-                Veuillez demander un nouveau lien de réinitialisation.
+                {t('auth.invalid_link_desc') || 'Ce lien de réinitialisation de mot de passe est invalide ou a expiré. Veuillez demander un nouveau lien de réinitialisation.'}
               </AlertDescription>
             </Alert>
             <Button 
               className="w-full mt-4" 
               onClick={() => navigate('/auth?mode=reset-password')}
             >
-              Demander un nouveau lien
+              {t('auth.request_new_link') || 'Demander un nouveau lien'}
             </Button>
           </CardContent>
         </Card>
@@ -130,7 +130,7 @@ const PasswordResetHandler = () => {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="h-5 w-5" />
-            Nouveau mot de passe
+            {t('auth.new_password') || 'Nouveau mot de passe'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -142,7 +142,7 @@ const PasswordResetHandler = () => {
             )}
 
             <div>
-              <Label htmlFor="password">Nouveau mot de passe</Label>
+              <Label htmlFor="password">{t('auth.new_password') || 'Nouveau mot de passe'}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -151,7 +151,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Entrez votre nouveau mot de passe"
+                  placeholder={t('auth.enter_new_password') || 'Entrez votre nouveau mot de passe'}
                 />
                 <Button
                   type="button"
@@ -170,7 +170,7 @@ const PasswordResetHandler = () => {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirmPassword">{t('auth.confirm_password') || 'Confirmer le mot de passe'}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -179,7 +179,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Confirmez votre nouveau mot de passe"
+                  placeholder={t('auth.confirm_new_password') || 'Confirmez votre nouveau mot de passe'}
                 />
                 <Button
                   type="button"
@@ -202,7 +202,7 @@ const PasswordResetHandler = () => {
               className="w-full" 
               disabled={loading}
             >
-              {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+              {loading ? t('auth.updating') || 'Mise à jour...' : t('auth.update_password') || 'Mettre à jour le mot de passe'}
             </Button>
           </form>
         </CardContent>

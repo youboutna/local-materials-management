@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +16,10 @@ import { Loader2, Database, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DatabaseConfig, DatabaseProvider, setDatabaseConfig, getDatabaseConfig } from '@/config/database';
 import { dbManager } from '@/lib/database/DatabaseFactory';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DatabaseSettings = () => {
+  const { t } = useLanguage();
   const [provider, setProvider] = useState<DatabaseProvider>('supabase');
   const [host, setHost] = useState<string>('');
   const [port, setPort] = useState<number>(5432);
@@ -52,7 +53,7 @@ const DatabaseSettings = () => {
     setIsLoading(true);
     
     try {
-      let configToTest: DatabaseConfig = {
+      const configToTest: DatabaseConfig = {
         provider,
       };
       
@@ -74,21 +75,21 @@ const DatabaseSettings = () => {
       if (connected) {
         setIsConnected(true);
         toast({
-          title: "Connexion réussie",
-          description: `Connecté avec succès à la base de données ${provider}.`,
+          title: t("database_settings.success_title"),
+          description: t("database_settings.success_desc")+':' +{ provider },
         });
       } else {
         toast({
-          title: "Échec de la connexion",
-          description: "Impossible de se connecter à la base de données. Vérifiez vos paramètres.",
+          title: t("database_settings.failure_title"),
+          description: t("database_settings.failure_desc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Error connecting to database:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la tentative de connexion.",
+        title: t("database_settings.error_title"),
+        description: t("database_settings.error_desc"),
         variant: "destructive",
       });
     } finally {
@@ -100,7 +101,7 @@ const DatabaseSettings = () => {
     setIsLoading(true);
     
     try {
-      let newConfig: DatabaseConfig = {
+      const newConfig: DatabaseConfig = {
         provider,
       };
       
@@ -120,14 +121,14 @@ const DatabaseSettings = () => {
       setDatabaseConfig(newConfig);
       
       toast({
-        title: "Paramètres enregistrés",
-        description: "Les paramètres de connexion à la base de données ont été enregistrés.",
+        title: t("database_settings.save_success_title"),
+        description: t("database_settings.save_success_desc"),
       });
     } catch (error) {
       console.error('Error saving database settings:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement des paramètres.",
+        title: t("database_settings.save_error_title"),
+        description: t("database_settings.save_error_desc"),
         variant: "destructive",
       });
     } finally {
@@ -140,17 +141,17 @@ const DatabaseSettings = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Database className="mr-2 h-5 w-5" />
-          Paramètres de la base de données
+          {t("database_settings.title")}
         </CardTitle>
         <CardDescription>
-          Configurez la connexion à votre base de données pour l'application.
+          {t("database_settings.desc")}
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div>
-            <Label htmlFor="database-provider">Fournisseur de base de données</Label>
+            <Label htmlFor="database-provider">{t("database_settings.provider")}</Label>
             <RadioGroup
               id="database-provider"
               value={provider}
@@ -180,12 +181,12 @@ const DatabaseSettings = () => {
                   checked={useConnectionString}
                   onCheckedChange={setUseConnectionString}
                 />
-                <Label htmlFor="use-connection-string">Utiliser une chaîne de connexion</Label>
+                <Label htmlFor="use-connection-string">{t("database_settings.use_connection_string")}</Label>
               </div>
               
               {useConnectionString ? (
                 <div className="space-y-2">
-                  <Label htmlFor="connection-string">Chaîne de connexion</Label>
+                  <Label htmlFor="connection-string">{t("database_settings.connection_string")}</Label>
                   <Input
                     id="connection-string"
                     value={connectionString}
@@ -198,7 +199,7 @@ const DatabaseSettings = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="host">Hôte</Label>
+                      <Label htmlFor="host">{t("database_settings.host")}</Label>
                       <Input
                         id="host"
                         value={host}
@@ -207,7 +208,7 @@ const DatabaseSettings = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="port">Port</Label>
+                      <Label htmlFor="port">{t("database_settings.port")}</Label>
                       <Input
                         id="port"
                         type="number"
@@ -220,7 +221,7 @@ const DatabaseSettings = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Nom d'utilisateur</Label>
+                      <Label htmlFor="username">{t("database_settings.username")}</Label>
                       <Input
                         id="username"
                         value={username}
@@ -229,7 +230,7 @@ const DatabaseSettings = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Mot de passe</Label>
+                      <Label htmlFor="password">{t("database_settings.password")}</Label>
                       <Input
                         id="password"
                         type="password"
@@ -241,7 +242,7 @@ const DatabaseSettings = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="database">Nom de la base de données</Label>
+                    <Label htmlFor="database">{t("database_settings.database")}</Label>
                     <Input
                       id="database"
                       value={database}
@@ -256,7 +257,7 @@ const DatabaseSettings = () => {
                       checked={ssl}
                       onCheckedChange={setSSL}
                     />
-                    <Label htmlFor="ssl">Activer SSL</Label>
+                    <Label htmlFor="ssl">{t("database_settings.ssl")}</Label>
                   </div>
                 </div>
               )}
@@ -274,15 +275,15 @@ const DatabaseSettings = () => {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Test en cours...
+              {t("database_settings.testing")}
             </>
           ) : isConnected ? (
             <>
               <Check className="mr-2 h-4 w-4 text-green-500" />
-              Connecté
+              {t("database_settings.connected")}
             </>
           ) : (
-            "Tester la connexion"
+            t("database_settings.test")
           )}
         </Button>
         
@@ -290,7 +291,7 @@ const DatabaseSettings = () => {
           onClick={handleSaveSettings}
           disabled={isLoading}
         >
-          Enregistrer les paramètres
+          {t("database_settings.save")}
         </Button>
       </CardFooter>
     </Card>

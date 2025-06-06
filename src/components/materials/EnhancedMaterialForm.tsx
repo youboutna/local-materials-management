@@ -113,20 +113,20 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         <CardHeader className="bg-gradient-to-r from-terracotta-50 to-adrar-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <Package className="h-5 w-5" />
-            Informations de base
+            {t('materials.form.basic_info')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Nom du matériau
+                {t('materials.name')}
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="Ex: Ciment Portland"
+                placeholder={t('materials.name_placeholder')}
                 className="border-gray-300 focus:border-terracotta-500"
                 required
               />
@@ -143,13 +143,13 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-              Description
+              {t('materials.description')}
             </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Décrivez les caractéristiques du matériau..."
+              placeholder={t('materials.description_placeholder')}
               rows={3}
               className="border-gray-300 focus:border-terracotta-500"
             />
@@ -162,20 +162,20 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         <CardHeader className="bg-gradient-to-r from-adrar-50 to-terracotta-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <MapPin className="h-5 w-5" />
-            Espace de travail et localisation
+            {t('materials.form.workspace_location')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-2">
             <Label htmlFor="workspaceId" className="text-sm font-medium text-gray-700">
-              Espace de travail
+              {t('materials.workspace')}
             </Label>
             <Select
               value={formData.workspaceId}
               onValueChange={value => handleChange('workspaceId', value)}
             >
               <SelectTrigger className="border-gray-300 focus:border-adrar-500">
-                <SelectValue placeholder="Sélectionner un espace de travail" />
+                <SelectValue placeholder={t('materials.workspace_placeholder')} />
               </SelectTrigger>
               <SelectContent>
                 {workspaces.map(workspace => (
@@ -196,12 +196,12 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             <Input
               id="adresse"
               type="text"
-              value={formData.localisation?.[0]?.address || ''}
-              onChange={(e) => handleChange('localisation', [{ address: e.target.value }])}
+              value={formData.adresse || ''}
+              onChange={(e) => handleChange('adresse', e.target.value)}
               placeholder={
                 language === 'ar'
                   ? 'رقم، اسم الشارع، الرمز البريدي، المدينة، البلد'
-                  : 'Numéro, nom rue, code postal, ville, pays'
+                  : t('materials.address_placeholder')
               }
               className="border-gray-300 focus:border-adrar-500"
               autoComplete="street-address"
@@ -213,13 +213,13 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       {/* Quantities and Pricing */}
       <Card className="border-l-4 border-l-green-500">
         <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardTitle className="text-adrar-800">Quantités et prix</CardTitle>
+          <CardTitle className="text-adrar-800">{t('materials.form.quantities_pricing')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                Quantité
+                {t('materials.quantity')}
               </Label>
               <Input
                 id="quantity"
@@ -234,7 +234,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="availableQuantity" className="text-sm font-medium text-gray-700">
-                Quantité disponible
+                {t('materials.available_quantity')}
               </Label>
               <Input
                 id="availableQuantity"
@@ -249,7 +249,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="minQuantity" className="text-sm font-medium text-gray-700">
-                Quantité minimale
+                {t('materials.min_quantity')}
               </Label>
               <Input
                 id="minQuantity"
@@ -264,7 +264,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="pricePerUnit" className="text-sm font-medium text-gray-700">
-                Prix unitaire (MRO)
+                {t('materials.price')}
               </Label>
               <Input
                 id="pricePerUnit"
@@ -285,14 +285,14 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <Clock className="h-5 w-5" />
-            Chronologie
+            {t('materials.form.timeline')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                Date de début
+                {t('materials.timeline.start')}
               </Label>
               <Input
                 id="startDate"
@@ -305,7 +305,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                Date de fin
+                {t('materials.timeline.end')}
               </Label>
               <Input
                 id="endDate"
@@ -318,7 +318,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="estimatedDuration" className="text-sm font-medium text-gray-700">
-                Durée estimée (jours)
+                {t('materials.timeline.estimated_duration')}
               </Label>
               <Input
                 id="estimatedDuration"
@@ -338,7 +338,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
         <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <User className="h-5 w-5" />
-            Informations fournisseur
+            {t('materials.form.supplier_info')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">

@@ -38,6 +38,64 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Info } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 
+type LoginFormValues = {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+};
+
+type RegisterFormValues = {
+  fullName: string;
+  email: string;
+  phone: string;
+  nationalId: string;
+  password: string;
+  acceptTerms: boolean;
+};
+
+type PhoneLoginValues = {
+  phone: string;
+};
+
+type PhoneVerifyValues = {
+  token: string;
+};
+
+type NationalIdValues = {
+  nationalId: string;
+  password: string;
+};
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  rememberMe: z.boolean().optional(),
+});
+
+const registerSchema = z.object({
+  fullName: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(8),
+  nationalId: z.string().min(4),
+  password: z.string().min(6),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "You must accept the terms",
+  }),
+});
+
+const phoneLoginSchema = z.object({
+  phone: z.string().min(8),
+});
+
+const phoneVerifySchema = z.object({
+  token: z.string().min(4),
+});
+
+const nationalIdSchema = z.object({
+  nationalId: z.string().min(4),
+  password: z.string().min(6),
+});
+
 const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -199,6 +257,16 @@ const Auth = () => {
           return {
             title: t("auth.signup_disabled"),
             description: t("auth.signup_disabled_description"),
+            type: 'error' as const
+          };
+        case 'account_locked':
+          toast({
+            title: t("auth.account_locked"),
+            description: t("auth.account_locked_description"),
+          });
+          return {
+            title: t("auth.account_locked"),
+            description: t("auth.account_locked_description"),
             type: 'error' as const
           };
         default:

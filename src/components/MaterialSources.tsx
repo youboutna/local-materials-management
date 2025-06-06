@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, MapPin } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MaterialSource {
   id: string;
@@ -19,12 +19,14 @@ const MaterialSources = ({
   sources?: MaterialSource[];
   className?: string;
 }) => {
+  const { t } = useLanguage();
+
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center text-adrar-800 font-serif">
           <Building className="mr-2 h-5 w-5 text-terracotta-500" />
-          Sources de matériaux
+          {t('materials.sources_title') || 'Sources de matériaux'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -38,7 +40,7 @@ const MaterialSources = ({
                     <p className="text-sm text-adrar-600">{source.type}</p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {source.availability}% disponible
+                    {source.availability}% {t('materials.available') || 'disponible'}
                   </span>
                 </div>
                 <div className="mt-2">
@@ -46,7 +48,7 @@ const MaterialSources = ({
                     <MapPin className="mr-1 h-3 w-3" /> {source.location}
                   </p>
                   <p className="text-xs text-adrar-400 mt-1">
-                    Dernière mise à jour: {new Date(source.lastUpdated).toLocaleDateString('fr-FR')}
+                    {t('materials.last_updated') || 'Dernière mise à jour'}: {new Date(source.lastUpdated).toLocaleDateString(t('locale') || 'fr-FR')}
                   </p>
                 </div>
               </div>
@@ -54,8 +56,8 @@ const MaterialSources = ({
           </div>
         ) : (
           <div className="text-center py-6">
-            <p className="text-adrar-600">Aucune source de matériaux disponible</p>
-            <p className="text-sm text-adrar-500 mt-1">Ajoutez des sources de matériaux pour les voir ici</p>
+            <p className="text-adrar-600">{t('materials.no_sources') || 'Aucune source de matériaux disponible'}</p>
+            <p className="text-sm text-adrar-500 mt-1">{t('materials.add_sources_hint') || 'Ajoutez des sources de matériaux pour les voir ici'}</p>
           </div>
         )}
       </CardContent>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardList, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type TaskAssignment = Database['public']['Tables']['task_assignments']['Row'];
 type Project = { id: string; title: string };
@@ -32,6 +32,7 @@ const TaskAssignments = () => {
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['task_assignments'],
@@ -246,7 +247,7 @@ const TaskAssignments = () => {
   };
 
   const getEmployeeName = (employeeId: string | null) => {
-    if (!employeeId) return 'Non assigné';
+    if (!employeeId) return t('task.unassigned') || 'Non assigné';
     const employee = employees?.find(e => e.id === employeeId);
     return employee ? `${employee.full_name} (${employee.position})` : employeeId;
   };
@@ -262,14 +263,14 @@ const TaskAssignments = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Affectations de Tâches</h2>
+        <h2 className="text-2xl font-bold">{t('task.assignments_title') || t('documents.type.task_assignment') || 'Affectations de Tâches'}</h2>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={() => createSampleData.mutate()}>
-            Créer des données d'exemple
+            {t('task.create_sample_data') || "Créer des données d'exemple"}
           </Button>
           <Button onClick={() => setIsCreating(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Tâche
+            {t('task.new') || 'Nouvelle Tâche'}
           </Button>
         </div>
       </div>
@@ -278,14 +279,14 @@ const TaskAssignments = () => {
         <Card>
           <CardHeader>
             <CardTitle>
-              {editingId ? 'Modifier la Tâche' : 'Nouvelle Tâche'}
+              {editingId ? t('task.edit') || 'Modifier la Tâche' : t('task.new') || 'Nouvelle Tâche'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Titre *</Label>
+                  <Label htmlFor="title">{t('task.title')} *</Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -294,13 +295,13 @@ const TaskAssignments = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="project">Projet</Label>
+                  <Label htmlFor="project">{t('projects.title')}</Label>
                   <Select
                     value={formData.project_id}
                     onValueChange={(value) => setFormData({ ...formData, project_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un projet" />
+                      <SelectValue placeholder={t('task.select_project') || "Sélectionner un projet"} />
                     </SelectTrigger>
                     <SelectContent>
                       {projects?.map((project) => (
@@ -312,13 +313,13 @@ const TaskAssignments = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="assigned_to">Assigné à</Label>
+                  <Label htmlFor="assigned_to">{t('task.assigned_to') || 'Assigné à'}</Label>
                   <Select
                     value={formData.assigned_to}
                     onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un employé" />
+                      <SelectValue placeholder={t('task.select_employee') || "Sélectionner un employé"} />
                     </SelectTrigger>
                     <SelectContent>
                       {employees?.map((employee) => (
@@ -330,7 +331,7 @@ const TaskAssignments = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="due_date">Date d'échéance</Label>
+                  <Label htmlFor="due_date">{t('task.due_date') || "Date d'échéance"}</Label>
                   <Input
                     id="due_date"
                     type="date"
@@ -339,7 +340,7 @@ const TaskAssignments = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="priority">Priorité</Label>
+                  <Label htmlFor="priority">{t('task.priority') || 'Priorité'}</Label>
                   <Select
                     value={formData.priority}
                     onValueChange={(value) => setFormData({ ...formData, priority: value })}
@@ -348,14 +349,14 @@ const TaskAssignments = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Faible</SelectItem>
-                      <SelectItem value="medium">Moyenne</SelectItem>
-                      <SelectItem value="high">Élevée</SelectItem>
+                      <SelectItem value="low">{t('task.priority_low') || 'Faible'}</SelectItem>
+                      <SelectItem value="medium">{t('task.priority_medium') || 'Moyenne'}</SelectItem>
+                      <SelectItem value="high">{t('task.priority_high') || 'Élevée'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status">{t('task.status') || 'Statut'}</Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -364,17 +365,17 @@ const TaskAssignments = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">En attente</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminé</SelectItem>
-                      <SelectItem value="cancelled">Annulé</SelectItem>
+                      <SelectItem value="pending">{t('task.status_pending') || 'En attente'}</SelectItem>
+                      <SelectItem value="in_progress">{t('task.status_in_progress') || 'En cours'}</SelectItem>
+                      <SelectItem value="completed">{t('task.status_completed') || 'Terminé'}</SelectItem>
+                      <SelectItem value="cancelled">{t('task.status_cancelled') || 'Annulé'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('task.description') || 'Description'}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -384,7 +385,7 @@ const TaskAssignments = () => {
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('task.notes') || 'Notes'}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -395,10 +396,10 @@ const TaskAssignments = () => {
 
               <div className="flex space-x-2">
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'Mettre à jour' : 'Créer'}
+                  {editingId ? t('task.update') || 'Mettre à jour' : t('task.create') || 'Créer'}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
+                  {t('task.cancel') || 'Annuler'}
                 </Button>
               </div>
             </form>
@@ -422,12 +423,20 @@ const TaskAssignments = () => {
                 </div>
                 <div className="flex flex-col space-y-1">
                   <Badge className={getPriorityColor(task.priority || 'medium')}>
-                    {task.priority === 'high' ? 'Élevée' : task.priority === 'medium' ? 'Moyenne' : 'Faible'}
+                    {task.priority === 'high'
+                      ? t('task.priority_high') || 'Élevée'
+                      : task.priority === 'medium'
+                      ? t('task.priority_medium') || 'Moyenne'
+                      : t('task.priority_low') || 'Faible'}
                   </Badge>
                   <Badge className={getStatusColor(task.status || 'pending')}>
-                    {task.status === 'pending' ? 'En attente' : 
-                     task.status === 'in_progress' ? 'En cours' :
-                     task.status === 'completed' ? 'Terminé' : 'Annulé'}
+                    {task.status === 'pending'
+                      ? t('task.status_pending') || 'En attente'
+                      : task.status === 'in_progress'
+                      ? t('task.status_in_progress') || 'En cours'
+                      : task.status === 'completed'
+                      ? t('task.status_completed') || 'Terminé'
+                      : t('task.status_cancelled') || 'Annulé'}
                   </Badge>
                 </div>
               </div>
@@ -447,11 +456,13 @@ const TaskAssignments = () => {
                 {task.due_date && (
                   <div className="flex items-center space-x-1">
                     <Calendar className="h-4 w-4" />
-                    <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
+                    <span>
+                      {t('task.due') || 'Échéance'}: {new Date(task.due_date).toLocaleDateString(t('locale') || 'fr-FR')}
+                    </span>
                   </div>
                 )}
                 <div className="text-xs text-gray-500">
-                  Créé: {new Date(task.created_at || '').toLocaleDateString('fr-FR')}
+                  {t('task.created') || 'Créé'}: {new Date(task.created_at || '').toLocaleDateString(t('locale') || 'fr-FR')}
                 </div>
               </div>
 
@@ -482,13 +493,13 @@ const TaskAssignments = () => {
         <Card>
           <CardContent className="text-center py-8">
             <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Aucune tâche trouvée</p>
+            <p className="text-gray-500">{t('task.none_found') || 'Aucune tâche trouvée'}</p>
             <Button
               className="mt-4"
               onClick={() => createSampleData.mutate()}
               disabled={createSampleData.isPending}
             >
-              Créer des données d'exemple
+              {t('task.create_sample_data') || "Créer des données d'exemple"}
             </Button>
           </CardContent>
         </Card>

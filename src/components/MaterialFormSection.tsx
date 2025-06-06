@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -8,6 +7,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import MaterialSelector from './MaterialSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SelectedMaterial {
   materialId: string;
@@ -25,14 +25,16 @@ const MaterialFormSection: React.FC<MaterialFormSectionProps> = ({
   onChange,
   projectBudget
 }) => {
+  const { t } = useLanguage();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          Matériaux nécessaires
+          {t('materials.title')}
         </CardTitle>
         <CardDescription>
-          Sélectionnez les matériaux requis pour ce projet
+          {t('project_create.form.add_materials')}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -15,11 +15,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Material = Database['public']['Tables']['materials']['Row'];
 type Workspace = Database['public']['Tables']['workspaces']['Row'];
 
 const Materials = () => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOption, setSortOption] = useState('name');
@@ -74,21 +76,21 @@ const Materials = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       toast({
-        title: "Matériau supprimé",
-        description: "Le matériau a été supprimé avec succès.",
+        title: t("materials.deleted"),
+        description: t("materials.deleted_success"),
       });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le matériau.",
+        title: t("materials.error"),
+        description: t("materials.delete_error"),
         variant: "destructive",
       });
     }
   });
 
   const handleDeleteMaterial = (materialId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce matériau ?')) {
+    if (window.confirm(t("materials.confirm_delete"))) {
       deleteMaterial.mutate(materialId);
     }
   };
@@ -137,7 +139,7 @@ const Materials = () => {
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">Chargement des matériaux...</p>
+            <p className="text-adrar-600">{t("materials.loading")}</p>
           </div>
         </main>
         <Footer />
@@ -151,9 +153,9 @@ const Materials = () => {
         <Navbar />
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 mb-4">Erreur lors du chargement des matériaux</p>
+            <p className="text-red-600 mb-4">{t("materials.error_loading")}</p>
             <Button onClick={() => window.location.reload()}>
-              Réessayer
+              {t("materials.retry")}
             </Button>
           </div>
         </main>
@@ -176,13 +178,13 @@ const Materials = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Matériaux de construction
+              {t("materials.title")}
             </motion.h1>
             
             <Link to="/materials/create">
               <Button className="bg-terracotta-500 hover:bg-terracotta-600">
                 <Plus className="h-4 w-4 mr-2" />
-                Nouveau matériau
+                {t("materials.add")}
               </Button>
             </Link>
           </div>
@@ -193,7 +195,7 @@ const Materials = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Rechercher un matériau..."
+                  placeholder={t("materials.search_placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -203,10 +205,10 @@ const Materials = () => {
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
                   <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Catégorie" />
+                  <SelectValue placeholder={t("materials.category")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les catégories</SelectItem>
+                  <SelectItem value="all">{t("materials.all_categories")}</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -217,12 +219,12 @@ const Materials = () => {
               
               <Select value={sortOption} onValueChange={setSortOption}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={t("materials.sort_by")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name">Nom</SelectItem>
-                  <SelectItem value="price">Prix</SelectItem>
-                  <SelectItem value="quantity">Quantité</SelectItem>
+                  <SelectItem value="name">{t("materials.sort.name")}</SelectItem>
+                  <SelectItem value="price">{t("materials.sort.price")}</SelectItem>
+                  <SelectItem value="quantity">{t("materials.sort.quantity")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -233,11 +235,11 @@ const Materials = () => {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
               <TabsTrigger value="grid" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                Grille
+                {t("materials.grid")}
               </TabsTrigger>
               <TabsTrigger value="map" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Carte
+                {t("materials.map")}
               </TabsTrigger>
             </TabsList>
             
@@ -277,13 +279,13 @@ const Materials = () => {
                         <CardContent className="pt-0">
                           <div className="space-y-2 text-sm text-adrar-600">
                             <div className="flex justify-between">
-                              <span>Prix unitaire:</span>
+                              <span>{t("materials.unit_price")}:</span>
                               <span className="font-medium">
                                 {Number((material as any).price_per_unit).toLocaleString()} MRU/{(material as any).unit}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Disponible:</span>
+                              <span>{t("materials.available")}:</span>
                               <span className="font-medium">
                                 {Number((material as any).available_quantity)} {(material as any).unit}
                               </span>
@@ -292,30 +294,30 @@ const Materials = () => {
                             {/* --- Espace de travail et localisation --- */}
                             <div className="flex items-center gap-2 mt-2">
                               <MapPin className="h-4 w-4 text-terracotta-500" />
-                              <span className="font-semibold">Espace de travail:</span>
+                              <span className="font-semibold">{t("materials.workspace")}:</span>
                               <span>
                                 {(material as any).workspace?.name || (
-                                  <span className="italic text-gray-400">Non défini</span>
+                                  <span className="italic text-gray-400">{t("materials.not_defined")}</span>
                                 )}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold">Localisation de l'entrepôt:</span>
+                              <span className="font-semibold">{t("materials.warehouse_location")}:</span>
                               <span>
                                 {Array.isArray((material as any).localisation) && (material as any).localisation.length > 0
                                   ? (material as any).localisation.map((r: any) => r.name).join(', ')
-                                  : (material as any).origin_location || 'Non défini'}
+                                  : (material as any).origin_location || t("materials.not_defined")}
                               </span>
                             </div>
                             {(material as any).adresse && (
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">Adresse:</span>
+                                <span className="font-semibold">{t("materials.address")}:</span>
                                 <span>{(material as any).adresse}</span>
                               </div>
                             )}
                             {(material as any).forme && (
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">Forme:</span>
+                                <span className="font-semibold">{t("materials.shape")}:</span>
                                 <span>{(material as any).forme}</span>
                               </div>
                             )}
@@ -323,7 +325,7 @@ const Materials = () => {
                           </div>
                           <div className="flex justify-between mt-4">
                             <Button variant="outline" size="sm">
-                              Modifier
+                              {t("materials.edit")}
                             </Button>
                             <Button 
                               variant="destructive" 
@@ -331,7 +333,7 @@ const Materials = () => {
                               onClick={() => handleDeleteMaterial((material as any).id)}
                               disabled={deleteMaterial.isPending}
                             >
-                              {deleteMaterial.isPending ? 'Suppression...' : 'Supprimer'}
+                              {deleteMaterial.isPending ? t("materials.deleting") : t("materials.delete")}
                             </Button>
                           </div>
                         </CardContent>
@@ -342,17 +344,17 @@ const Materials = () => {
               ) : (
                 <div className="text-center py-12">
                   <Package className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-adrar-800 mb-2">Aucun matériau trouvé</h3>
+                  <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("materials.none_found")}</h3>
                   <p className="text-adrar-600 mb-4">
                     {searchQuery || categoryFilter !== 'all' 
-                      ? 'Aucun matériau ne correspond à vos critères de recherche.'
-                      : 'Commencez par ajouter votre premier matériau.'
+                      ? t("materials.no_match")
+                      : t("materials.add_first")
                     }
                   </p>
                   <Link to="/materials/create">
                     <Button className="bg-terracotta-500 hover:bg-terracotta-600">
                       <Plus className="h-4 w-4 mr-2" />
-                      Ajouter un matériau
+                      {t("materials.add")}
                     </Button>
                   </Link>
                 </div>
@@ -373,9 +375,9 @@ const Materials = () => {
                   <div className="bg-white rounded-xl shadow-elegant p-8 text-center h-full flex items-center justify-center">
                     <div>
                       <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-adrar-800 mb-2">Aucun matériau géolocalisé</h3>
+                      <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("materials.no_geolocated")}</h3>
                       <p className="text-adrar-600">
-                        Les matériaux avec des coordonnées géographiques s'afficheront ici.
+                        {t("materials.geolocated_hint")}
                       </p>
                     </div>
                   </div>

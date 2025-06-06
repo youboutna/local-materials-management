@@ -15,8 +15,11 @@ import { useProjects } from '@/hooks/projects/useProjects';
 import ProjectProgressChart from '@/components/ProjectProgressChart';
 import ProjectDistributionChart from '@/components/ProjectDistributionChart';
 import ProjectMap from '@/components/ProjectMap';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Dashboard = () => {
+  const { t } = useLanguage();
+
   const navigate = useNavigate();
   const { user, isDevelopmentMode } = useAuth();
   const { toast } = useToast();
@@ -101,7 +104,7 @@ const Dashboard = () => {
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">Chargement du tableau de bord...</p>
+            <p className="text-adrar-600">{t('dashboard.loading')}</p>
           </div>
         </main>
         <Footer />
@@ -115,7 +118,7 @@ const Dashboard = () => {
       
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ Mode développement actif
+          🛠️ {t('dashboard.dev_mode')}
         </div>
       )}
       
@@ -127,7 +130,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Tableau de bord
+            {t('dashboard.title')}
           </motion.h1>
           
           <motion.div 
@@ -138,21 +141,21 @@ const Dashboard = () => {
           >
             <Card className="border-l-4 border-l-terracotta-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Projets en cours</CardTitle>
-                <CardDescription>Statut général</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.active_projects')}</CardTitle>
+                <CardDescription>{t('dashboard.status_overview')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-adrar-800">{stats.activeProjects}</span>
-                  <span className="ml-2 text-sm text-gray-500">projets actifs</span>
+                  <span className="ml-2 text-sm text-gray-500">{t('dashboard.active_projects_label')}</span>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="border-l-4 border-l-adrar-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Budget total</CardTitle>
-                <CardDescription>Ressources financières</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.total_budget')}</CardTitle>
+                <CardDescription>{t('dashboard.financial_resources')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
@@ -166,26 +169,26 @@ const Dashboard = () => {
             
             <Card className="border-l-4 border-l-sandstone-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Équipe</CardTitle>
-                <CardDescription>Personnel de projet</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.team')}</CardTitle>
+                <CardDescription>{t('dashboard.project_staff')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-adrar-800">{stats.teamMembers}</span>
-                  <span className="ml-2 text-sm text-gray-500">membres</span>
+                  <span className="ml-2 text-sm text-gray-500">{t('dashboard.members')}</span>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="border-l-4 border-l-green-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Matériaux</CardTitle>
-                <CardDescription>Ressources disponibles</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.materials')}</CardTitle>
+                <CardDescription>{t('dashboard.available_resources')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-adrar-800">{stats.materials}</span>
-                  <span className="ml-2 text-sm text-gray-500">types</span>
+                  <span className="ml-2 text-sm text-gray-500">{t('dashboard.types')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -201,7 +204,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl font-serif">
                   <BarChart3 className="h-5 w-5 mr-2 text-terracotta-600" />
-                  Progression des projets
+                  {t('dashboard.project_progress')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-80">
@@ -209,7 +212,7 @@ const Dashboard = () => {
                   <ProjectProgressChart data={stats.statusDistribution} />
                 ) : (
                   <div className="h-full w-full bg-gradient-to-br from-terracotta-100 to-white flex items-center justify-center rounded-lg border border-dashed border-terracotta-300">
-                    <span className="text-terracotta-400 text-sm font-medium">Aucune donnée disponible</span>
+                    <span className="text-terracotta-400 text-sm font-medium">{t('dashboard.no_data')}</span>
                   </div>
                 )}
               </CardContent>
@@ -220,11 +223,11 @@ const Dashboard = () => {
                 <CardTitle className="flex items-center justify-between text-xl font-serif">
                   <div className="flex items-center">
                     <CheckSquare className="h-5 w-5 mr-2 text-terracotta-600" />
-                    Projets récents
+                    {t('dashboard.recent_projects')}
                   </div>
                   <Link to="/projects">
                     <Button variant="ghost" size="sm" className="text-terracotta-600 hover:text-terracotta-700 -mr-2">
-                      <span className="text-xs mr-1">Voir tout</span>
+                      <span className="text-xs mr-1">{t('dashboard.view_all')}</span>
                       <ArrowRight className="h-3 w-3" />
                     </Button>
                   </Link>
@@ -250,7 +253,7 @@ const Dashboard = () => {
                   ))}
                   {(!projects || projects.length === 0) && (
                     <div className="text-center py-4 text-gray-500">
-                      Aucun projet disponible
+                      {t('dashboard.no_projects')}
                     </div>
                   )}
                 </div>
@@ -268,7 +271,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl font-serif">
                   <Users className="h-5 w-5 mr-2 text-adrar-600" />
-                  Distribution par région
+                  {t('dashboard.distribution_by_region')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -276,7 +279,7 @@ const Dashboard = () => {
                   <ProjectDistributionChart data={stats.locationDistribution} />
                 ) : (
                   <div className="h-64 w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
-                    <span className="text-adrar-400 text-sm font-medium">Aucune donnée disponible</span>
+                    <span className="text-adrar-400 text-sm font-medium">{t('dashboard.no_data')}</span>
                   </div>
                 )}
               </CardContent>
@@ -286,7 +289,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl font-serif">
                   <MapPin className="h-5 w-5 mr-2 text-adrar-600" />
-                  Distribution des projets
+                  {t('dashboard.project_distribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-80">
@@ -300,7 +303,7 @@ const Dashboard = () => {
                   />
                 ) : (
                   <div className="h-full w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
-                    <span className="text-adrar-400 text-sm font-medium">Aucun projet géolocalisé disponible</span>
+                    <span className="text-adrar-400 text-sm font-medium">{t('dashboard.no_geolocated_projects')}</span>
                   </div>
                 )}
               </CardContent>

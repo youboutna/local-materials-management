@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -72,9 +71,9 @@ const MainNavbar = () => {
                         to="/projects"
                         className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                       >
-                        <div className="text-sm font-medium leading-none">Tous les projets</div>
+                        <div className="text-sm font-medium leading-none">{t('projects.all') || 'Tous les projets'}</div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Gérer et visualiser tous les projets
+                          {t('projects.all_desc') || 'Gérer et visualiser tous les projets'}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -83,9 +82,9 @@ const MainNavbar = () => {
                         to="/projects/create"
                         className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                       >
-                        <div className="text-sm font-medium leading-none">Nouveau projet</div>
+                        <div className="text-sm font-medium leading-none">{t('projects.new') || 'Nouveau projet'}</div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Créer un nouveau projet
+                          {t('projects.new_desc') || 'Créer un nouveau projet'}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -96,10 +95,10 @@ const MainNavbar = () => {
                       >
                         <div className="text-sm font-medium leading-none flex items-center">
                           <Upload className="h-4 w-4 mr-2" />
-                          Import projets
+                          {t('project_import.title') || 'Import projets'}
                         </div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Importer les projets 2025
+                          {t('project_import.desc') || 'Importer les projets 2025'}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -128,7 +127,7 @@ const MainNavbar = () => {
                   asChild
                 >
                   <Link to="/documents">
-                    Documents
+                    {t('documents.title') || 'Documents'}
                   </Link>
                 </Button>
               </NavigationMenuItem>
@@ -142,7 +141,7 @@ const MainNavbar = () => {
                 >
                   <Link to="/tasks">
                     <ClipboardList className="h-4 w-4 mr-2" />
-                    Tâches
+                    {t('task.title') || 'Tâches'}
                   </Link>
                 </Button>
               </NavigationMenuItem>
@@ -158,7 +157,7 @@ const MainNavbar = () => {
                   >
                     <Link to="/users">
                       <Users className="h-4 w-4 mr-2" />
-                      Utilisateurs
+                      {t('nav.users') || 'Utilisateurs'}
                     </Link>
                   </Button>
                 </NavigationMenuItem>
@@ -172,7 +171,7 @@ const MainNavbar = () => {
                   asChild
                 >
                   <Link to="/dashboard">
-                    Dashboard
+                    {t('dashboard.title') || 'Dashboard'}
                   </Link>
                 </Button>
               </NavigationMenuItem>
@@ -186,7 +185,7 @@ const MainNavbar = () => {
                 >
                   <Link to="/settings">
                     <Cog className="h-4 w-4 mr-2" />
-                    Settings
+                    {t('settings.title') || 'Settings'}
                   </Link>
                 </Button>
               </NavigationMenuItem>
@@ -207,7 +206,7 @@ const MainNavbar = () => {
                 asChild
               >
                 <Link to="/dashboard">
-                  Dashboard
+                  {t('dashboard.title') || 'Dashboard'}
                 </Link>
               </Button>
               <Button 
@@ -217,7 +216,7 @@ const MainNavbar = () => {
                 className="text-white border-white hover:bg-white hover:text-adrar-700"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Déconnexion
+                {t('auth.logout') || 'Déconnexion'}
               </Button>
             </div>
           ) : (

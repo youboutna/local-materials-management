@@ -24,6 +24,7 @@ import { DEV_MODE } from '@/config/constants';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import UserManagementDialog from '@/components/users/UserManagementDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Define user profile type with roles array (without the old role property)
 type UserProfile = {
@@ -72,6 +73,7 @@ const Users = () => {
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
   const { hasAnyRole } = useCurrentUserRoles();
+  const { t } = useLanguage();
   const [profiles, setProfiles] = useState<UserProfile[]>(
     isDevelopmentMode ? DEV_PROFILES : []
   );
@@ -229,7 +231,7 @@ const Users = () => {
       
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ Mode développement actif
+          🛠️ {t('dev_mode.active') || "Mode développement actif"}
         </div>
       )}
       
@@ -242,7 +244,7 @@ const Users = () => {
         >
           <div className="flex justify-between items-center">
             <h1 className="text-2xl md:text-3xl font-serif text-adrar-800">
-              Gestion des Utilisateurs
+              {t('users.title') || "Gestion des Utilisateurs"}
             </h1>
             
             {canManageUsers && (
@@ -251,7 +253,7 @@ const Users = () => {
                 onClick={handleCreateUser}
               >
                 <UserPlus className="h-4 w-4" />
-                <span>Nouvel Utilisateur</span>
+                <span>{t('users.new') || "Nouvel Utilisateur"}</span>
               </Button>
             )}
           </div>
@@ -260,7 +262,7 @@ const Users = () => {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
             <Input
-              placeholder="Rechercher un utilisateur..."
+              placeholder={t('users.search_placeholder') || "Rechercher un utilisateur..."}
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -272,12 +274,12 @@ const Users = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead className="hidden md:table-cell">Téléphone</TableHead>
-                  <TableHead className="hidden md:table-cell">ID National</TableHead>
-                  <TableHead className="hidden md:table-cell">Rôle principal</TableHead>
-                  <TableHead className="hidden md:table-cell">Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('users.table.name') || "Utilisateur"}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('users.table.phone') || "Téléphone"}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('users.table.national_id') || "ID National"}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('users.table.role') || "Rôle principal"}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('users.table.status') || "Statut"}</TableHead>
+                  <TableHead className="text-right">{t('users.table.actions') || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -292,7 +294,9 @@ const Users = () => {
                 ) : filteredProfiles.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-10 text-adrar-600">
-                      {searchQuery ? "Aucun utilisateur ne correspond à la recherche" : "Aucun utilisateur trouvé"}
+                      {searchQuery
+                        ? t('users.no_results') || "Aucun utilisateur ne correspond à la recherche"
+                        : t('users.none_found') || "Aucun utilisateur trouvé"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -302,13 +306,13 @@ const Users = () => {
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8 bg-terracotta-100 text-terracotta-700">
                             {profile.avatar_url ? (
-                              <AvatarImage src={profile.avatar_url} alt={profile.full_name || 'Utilisateur'} />
+                              <AvatarImage src={profile.avatar_url} alt={profile.full_name || t('users.no_name') || 'Utilisateur'} />
                             ) : (
                               <AvatarFallback>{getUserInitials(profile.full_name)}</AvatarFallback>
                             )}
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm">{profile.full_name || 'Utilisateur sans nom'}</p>
+                            <p className="font-medium text-sm">{profile.full_name || t('users.no_name') || 'Utilisateur sans nom'}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -323,7 +327,9 @@ const Users = () => {
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {profile.is_active !== false ? 'Actif' : 'Désactivé'}
+                          {profile.is_active !== false
+                            ? t('users.active') || 'Actif'
+                            : t('users.inactive') || 'Désactivé'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -375,7 +381,7 @@ const Users = () => {
               <TableFooter>
                 <TableRow>
                   <TableCell colSpan={5} className="text-muted-foreground text-xs text-right">
-                    Total: {filteredProfiles.length} utilisateur(s)
+                    {t('users.total', { count: filteredProfiles.length }) || `Total: ${filteredProfiles.length} utilisateur(s)`}
                   </TableCell>
                 </TableRow>
               </TableFooter>
@@ -388,7 +394,7 @@ const Users = () => {
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <SheetContent className="w-[90%] sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle className="text-lg font-serif">Détails de l'utilisateur</SheetTitle>
+            <SheetTitle className="text-lg font-serif">{t('users.details_title') || "Détails de l'utilisateur"}</SheetTitle>
           </SheetHeader>
           
           {selectedUser && (
@@ -396,12 +402,12 @@ const Users = () => {
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-20 w-20 bg-terracotta-100 text-terracotta-700 text-2xl">
                   {selectedUser.avatar_url ? (
-                    <AvatarImage src={selectedUser.avatar_url} alt={selectedUser.full_name || 'Utilisateur'} />
+                    <AvatarImage src={selectedUser.avatar_url} alt={selectedUser.full_name || t('users.no_name') || 'Utilisateur'} />
                   ) : (
                     <AvatarFallback>{getUserInitials(selectedUser.full_name)}</AvatarFallback>
                   )}
                 </Avatar>
-                <h3 className="text-xl font-medium">{selectedUser.full_name || 'Utilisateur sans nom'}</h3>
+                <h3 className="text-xl font-medium">{selectedUser.full_name || t('users.no_name') || 'Utilisateur sans nom'}</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedUser.roles?.map(role => (
                     <RoleBadge key={role} role={role as RoleType} />
@@ -411,20 +417,20 @@ const Users = () => {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-muted-foreground text-sm">Téléphone</label>
+                  <label className="text-muted-foreground text-sm">{t('users.phone') || "Téléphone"}</label>
                   <p className="font-medium">{selectedUser.phone || '-'}</p>
                 </div>
                 
                 <div>
-                  <label className="text-muted-foreground text-sm">ID National</label>
+                  <label className="text-muted-foreground text-sm">{t('users.national_id') || "ID National"}</label>
                   <p className="font-medium">{selectedUser.national_id || '-'}</p>
                 </div>
                 
                 <div>
-                  <label className="text-muted-foreground text-sm">Date d'inscription</label>
+                  <label className="text-muted-foreground text-sm">{t('users.created_at') || "Date d'inscription"}</label>
                   <p className="font-medium">
                     {selectedUser.created_at 
-                      ? new Date(selectedUser.created_at).toLocaleDateString('fr-FR', {
+                      ? new Date(selectedUser.created_at).toLocaleDateString(t('locale') || 'fr-FR', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
@@ -444,7 +450,7 @@ const Users = () => {
                 className="border-terracotta-200 hover:border-terracotta-300 flex items-center gap-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Gérer les rôles</span>
+                <span>{t('users.manage_roles') || "Gérer les rôles"}</span>
               </Button>
             </SheetFooter>
           )}

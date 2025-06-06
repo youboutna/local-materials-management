@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,8 +11,10 @@ import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 import MapFilters from '@/components/projects/MapFilters';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, List } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Projects = () => {
+  const { t } = useLanguage();
   const { projects, loading } = useProjects();
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
@@ -62,7 +63,7 @@ const Projects = () => {
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">Chargement des projets...</p>
+            <p className="text-adrar-600">{t("projects.loading")}</p>
           </div>
         </main>
         <Footer />
@@ -84,11 +85,11 @@ const Projects = () => {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
               <TabsTrigger value="list" className="flex items-center gap-2">
                 <List className="h-4 w-4" />
-                Liste
+                {t("projects.tabs.list")}
               </TabsTrigger>
               <TabsTrigger value="map" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Carte
+                {t("projects.tabs.map")}
               </TabsTrigger>
             </TabsList>
             
@@ -96,7 +97,7 @@ const Projects = () => {
               {/* Filters and Actions */}
               <ProjectFilters 
                 searchQuery={searchQuery}
-                setSearchQuery={performSearch} // Use the enhanced search function
+                setSearchQuery={performSearch}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
                 sortOption={sortOption}
@@ -135,9 +136,9 @@ const Projects = () => {
               ) : (
                 <div className="bg-white rounded-xl shadow-elegant p-8 text-center">
                   <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-adrar-800 mb-2">Aucun projet géolocalisé</h3>
+                  <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("projects.map.empty_title")}</h3>
                   <p className="text-adrar-600">
-                    Aucun projet avec des coordonnées géographiques n'a été trouvé.
+                    {t("projects.map.empty_desc")}
                   </p>
                 </div>
               )}

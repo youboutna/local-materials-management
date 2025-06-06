@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { Calendar, MapPin, Users, ArrowUpRight } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import ProgressIndicator from './ProgressIndicator';
 import { ProjectStatus } from '@/types/project';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface ProjectData {
   id: string;
@@ -38,9 +38,10 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project, index }: ProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+  const { t } = useLanguage();
+
   // Format budget to locale string
-  const formattedBudget = new Intl.NumberFormat('fr-MR', {
+  const formattedBudget = new Intl.NumberFormat(t('locale') || 'fr-MR', {
     style: 'currency',
     currency: 'MRU',
     maximumFractionDigits: 0,
@@ -96,22 +97,26 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
               
               <div className="flex items-center text-sm text-adrar-600">
                 <Calendar className="h-4 w-4 mr-2 text-terracotta-500" />
-                <span>{new Date(project.startDate).toLocaleDateString('fr-FR')}</span>
+                <span>
+                  {t('projects.start_date') || 'Début'}: {new Date(project.startDate).toLocaleDateString(t('locale') || 'fr-FR')}
+                </span>
               </div>
               
               <div className="flex items-center text-sm text-adrar-600">
                 <Users className="h-4 w-4 mr-2 text-terracotta-500" />
-                <span>{project.teamSize} personnes</span>
+                <span>
+                  {project.teamSize} {t('projects.team_members') || 'personnes'}
+                </span>
               </div>
             </div>
             
             <div className="flex justify-between items-center mb-4">
               <div>
-                <span className="text-xs text-adrar-500">Budget</span>
+                <span className="text-xs text-adrar-500">{t('projects.budget') || 'Budget'}</span>
                 <p className="text-lg font-semibold text-adrar-800">{formattedBudget}</p>
               </div>
               <div className="inline-flex items-center text-terracotta-500 font-medium text-sm">
-                Voir détails
+                {t('projects.see_details') || 'Voir détails'}
                 <ArrowUpRight className="ml-1 h-4 w-4" />
               </div>
             </div>

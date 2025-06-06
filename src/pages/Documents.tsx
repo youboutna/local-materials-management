@@ -17,8 +17,10 @@ import TenderDocuments from '@/components/documents/TenderDocuments';
 import TenderDocumentUploadForm from '@/components/documents/TenderDocumentUploadForm';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Documents = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
@@ -40,14 +42,14 @@ const Documents = () => {
   });
 
   const documentTypes = [
-    { id: 'inspection_report', label: 'Rapports d\'inspection', icon: FileText, color: 'text-blue-600' },
-    { id: 'location_photo', label: 'Photos de localisation', icon: Camera, color: 'text-green-600' },
-    { id: 'project_report', label: 'Rapports de projet', icon: FileBarChart, color: 'text-purple-600' },
-    { id: 'contract', label: 'Contrats', icon: FileCheck, color: 'text-red-600' },
-    { id: 'supplier_info', label: 'Informations fournisseurs', icon: Building2, color: 'text-orange-600' },
-    { id: 'task_assignment', label: 'Affectations de tâches', icon: ClipboardList, color: 'text-indigo-600' },
-    { id: 'employee_record', label: 'Dossiers employés', icon: Users, color: 'text-teal-600' },
-    { id: 'tender_documents', label: 'Documents d\'appel d\'offres', icon: Gavel, color: 'text-amber-600' }
+    { id: 'inspection_report', label: t('documents.type.inspection_report'), icon: FileText, color: 'text-blue-600' },
+    { id: 'location_photo', label: t('documents.type.location_photo'), icon: Camera, color: 'text-green-600' },
+    { id: 'project_report', label: t('documents.type.project_report'), icon: FileBarChart, color: 'text-purple-600' },
+    { id: 'contract', label: t('documents.type.contract'), icon: FileCheck, color: 'text-red-600' },
+    { id: 'supplier_info', label: t('documents.type.supplier_info'), icon: Building2, color: 'text-orange-600' },
+    { id: 'task_assignment', label: t('documents.type.task_assignment'), icon: ClipboardList, color: 'text-indigo-600' },
+    { id: 'employee_record', label: t('documents.type.employee_record'), icon: Users, color: 'text-teal-600' },
+    { id: 'tender_documents', label: t('documents.type.tender_documents'), icon: Gavel, color: 'text-amber-600' }
   ];
 
   const handleDocumentTypeClick = (documentType: string) => {
@@ -82,10 +84,10 @@ const Documents = () => {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-adrar-900 font-serif mb-2">
-              Gestion des Documents
+              {t('documents.title')}
             </h1>
             <p className="text-gray-600">
-              Gérez tous vos documents de projet, contrats, rapports et informations
+              {t('documents.subtitle')}
             </p>
           </motion.div>
 
@@ -96,14 +98,14 @@ const Documents = () => {
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-                <TabsTrigger value="all">Tous</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="tender">Appels d'offres</TabsTrigger>
-                <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
-                <TabsTrigger value="tasks">Tâches</TabsTrigger>
-                <TabsTrigger value="employees">Employés</TabsTrigger>
-                <TabsTrigger value="upload">Télécharger</TabsTrigger>
-                {selectedDocument && <TabsTrigger value="viewer">Visionneuse</TabsTrigger>}
+                <TabsTrigger value="all">{t('documents.tabs.all')}</TabsTrigger>
+                <TabsTrigger value="documents">{t('documents.tabs.documents')}</TabsTrigger>
+                <TabsTrigger value="tender">{t('documents.tabs.tender')}</TabsTrigger>
+                <TabsTrigger value="suppliers">{t('documents.tabs.suppliers')}</TabsTrigger>
+                <TabsTrigger value="tasks">{t('documents.tabs.tasks')}</TabsTrigger>
+                <TabsTrigger value="employees">{t('documents.tabs.employees')}</TabsTrigger>
+                <TabsTrigger value="upload">{t('documents.tabs.upload')}</TabsTrigger>
+                {selectedDocument && <TabsTrigger value="viewer">{t('documents.tabs.viewer')}</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="all" className="space-y-6">
@@ -124,7 +126,7 @@ const Documents = () => {
                         </CardHeader>
                         <CardContent>
                           <CardDescription className="text-xs">
-                            Cliquez pour voir les documents de ce type
+                            {t('documents.card.click_to_view')}
                           </CardDescription>
                         </CardContent>
                       </Card>
@@ -140,15 +142,15 @@ const Documents = () => {
               <TabsContent value="tender" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Documents d'Appel d'Offres</CardTitle>
+                    <CardTitle>{t('documents.tender.title')}</CardTitle>
                     <CardDescription>
-                      Sélectionnez un projet pour voir ses documents d'appel d'offres
+                      {t('documents.tender.select_project')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Sélectionner un projet..." />
+                        <SelectValue placeholder={t('documents.tender.select_project_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {projects?.map((project) => (
@@ -172,7 +174,7 @@ const Documents = () => {
                   <CardHeader>
                     <CardTitle>Ajouter un document d'appel d'offres</CardTitle>
                     <CardDescription>
-                      Remplissez le formulaire pour ajouter un document lié à ce projet.
+                      {t('documents.tender.add_description')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
