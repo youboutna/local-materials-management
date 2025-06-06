@@ -27,18 +27,18 @@ export class ProjectMaterial {
 
   // Helper method to transform ProjectMaterial to MapLocation
   toMapLocation() {
-    // Prefer structured fields from the related material
     let latitude = 0;
     let longitude = 0;
     let region = '';
 
-    if (this.material?.adresse) {
-      latitude = this.material.adresse.lat;
-      longitude = this.material.adresse.lng;
+    // If you have separate latitude/longitude fields, use them:
+    if (this.material?.latitude && this.material?.longitude) {
+      latitude = this.material.latitude;
+      longitude = this.material.longitude;
     }
 
     if (this.material?.localisation && this.material.localisation.length > 0) {
-      region = this.material.localisation[0]; // Or join(', ') for multiple regions
+      region = this.material.localisation[0];
     }
 
     // Fallback: try to parse from originLocation string if still missing
@@ -58,7 +58,8 @@ export class ProjectMaterial {
       type: 'material' as const,
       latitude,
       longitude,
-      region
+      region,
+      adresse: this.material?.adresse || '', // Now a full address string
     };
   }
 

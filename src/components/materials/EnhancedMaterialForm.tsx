@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Package, User } from 'lucide-react';
 import { Location, Region, OperationalStatus, TimeLine, EnhancedMaterial, MAURITANIA_REGIONS } from '@/types/mauritania';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -25,14 +25,18 @@ interface EnhancedMaterialFormProps {
   initialData?: Partial<EnhancedMaterial>;
   workspaces?: Array<{ id: string; name: string; location: Location; status: OperationalStatus }>;
   showSubmitButton?: boolean;
+  language?: string;
 }
 
 const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
   onSubmit,
   initialData,
   workspaces = [],
-  showSubmitButton = true
+  showSubmitButton = true,
+  language
 }) => {
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState<Partial<EnhancedMaterial>>({
     name: '',
     description: '',
@@ -185,6 +189,24 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="adresse" className="text-sm font-medium text-gray-700">
+              {t('materials.address')}
+            </Label>
+            <Input
+              id="adresse"
+              type="text"
+              value={formData.localisation?.[0]?.address || ''}
+              onChange={(e) => handleChange('localisation', [{ address: e.target.value }])}
+              placeholder={
+                language === 'ar'
+                  ? 'رقم، اسم الشارع، الرمز البريدي، المدينة، البلد'
+                  : 'Numéro, nom rue, code postal, ville, pays'
+              }
+              className="border-gray-300 focus:border-adrar-500"
+              autoComplete="street-address"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -335,7 +357,7 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
             type="submit" 
             className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            Enregistrer le matériau
+            {t('materials.new')}
           </Button>
         </div>
       )}

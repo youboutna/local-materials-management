@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
 import InteractiveMap from '@/components/map/InteractiveMap';
 import { EnhancedMaterial, Location, OperationalStatus } from '@/types/mauritania';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MaterialCreate = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ const MaterialCreate = () => {
     warehouseShape?: { lat: number; lng: number }[];
     address?: string;
   }>({});
+  const { t, language } = useLanguage();
 
   // Fetch workspaces from Supabase
   const { data: workspaces = [] } = useQuery({
@@ -59,9 +60,10 @@ const MaterialCreate = () => {
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
+        adresse: materialData.adresse || '',
         // Store location data properly - ensure we stringify objects correctly
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
-        adresse: mapData.center ? JSON.stringify(mapData.center) : null,
+        //adresse_gps: mapData.center ? JSON.stringify(mapData.center) : null,
         forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
         // Add coordinates as separate fields for easier querying
         coordinates_latitude: mapData.center?.lat || null,
@@ -117,7 +119,7 @@ const MaterialCreate = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-adrar-900">
-                    Créer un nouveau matériau
+                    {t('materials.new')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -126,6 +128,7 @@ const MaterialCreate = () => {
                     onSubmit={handleSubmit}
                     workspaces={workspaces}
                     showSubmitButton={false}
+                    language={language}
                   />
                 </CardContent>
               </Card>

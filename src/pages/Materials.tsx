@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -310,10 +309,8 @@ const Materials = () => {
                             </div>
                             {(material as any).adresse && (
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">Adresse (Lat/Lng):</span>
-                                <span>
-                                  {((material as any).adresse.lat).toFixed(5)}, {((material as any).adresse.lng).toFixed(5)}
-                                </span>
+                                <span className="font-semibold">Adresse:</span>
+                                <span>{(material as any).adresse}</span>
                               </div>
                             )}
                             {(material as any).forme && (
