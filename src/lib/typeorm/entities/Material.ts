@@ -57,11 +57,19 @@ export class Material {
   @Column({ type: "jsonb", nullable: true })
   localisation?: any[];
 
+  // Change this to handle both string and object formats
   @Column({ type: "jsonb", nullable: true })
-  adresse?: { lat: number; lng: number };
+  adresse?: string | { lat: number; lng: number };
 
   @Column({ type: "varchar", nullable: true })
   forme?: string;
+
+  // Add separate coordinate columns for easier access
+  @Column({ name: "coordinates_latitude", type: "decimal", precision: 10, scale: 6, nullable: true })
+  coordinatesLatitude?: number;
+
+  @Column({ name: "coordinates_longitude", type: "decimal", precision: 10, scale: 6, nullable: true })
+  coordinatesLongitude?: number;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.materials, { nullable: true })
   @JoinColumn({ name: "workspace_id" })
@@ -75,4 +83,33 @@ export class Material {
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt!: Date;
+
+  // Helper method to get coordinates safely
+  getCoordinates(): { lat: number; lng: number } | null {
+    // First try the separate coordinate columns
+    if (this.coordinatesLatitude && this.coordinatesLongitude) {
+      return {
+        lat: this.coordinatesLatitude,
+        lng: this.coordinatesLongitude
+      };
+    }
+
+    // Then try parsing the adresse field
+    if (this.adresse) {
+      try {
+        if (typeof this.adresse === 'string') {
+          const parsed = JSON.parse(this.adresse);
+          if (parsed.lat && parsed.lng) {
+            return { lat: parsed.lat, lng: parsed.lng };
+          }
+        } else if (typeof this.adresse === 'object' && this.adresse.lat && this.adresse.lng) {
+          return { lat: this.adresse.lat, lng: this.adresse.lng };
+        }
+      } catch (error) {
+        console.error('Error parsing adresse coordinates:', error);
+      }
+    }
+
+    return null;
+  }
 }

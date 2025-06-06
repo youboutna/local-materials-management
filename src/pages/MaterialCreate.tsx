@@ -59,11 +59,11 @@ const MaterialCreate = () => {
         origin_location: materialData.location || Location.Nouakchott,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
-        // Store all location data properly
+        // Store location data properly - ensure we stringify objects correctly
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
-        // Add coordinates if available
+        // Add coordinates as separate fields for easier querying
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
       };
@@ -71,7 +71,12 @@ const MaterialCreate = () => {
       console.log('Saving material with location data:', {
         center: mapData.center,
         polygon: mapData.polygon,
-        warehouseShape: mapData.warehouseShape
+        warehouseShape: mapData.warehouseShape,
+        dbData: {
+          adresse: dbData.adresse,
+          coordinates_latitude: dbData.coordinates_latitude,
+          coordinates_longitude: dbData.coordinates_longitude
+        }
       });
 
       const { data, error } = await supabase
