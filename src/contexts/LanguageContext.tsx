@@ -617,6 +617,10 @@ const translations: Record<Language, Record<string, string>> = {
     'total.quantity': 'Quantité totale'
   },
   ar: {
+    'projects.title': ' مشاريع',
+    'projects.header.title':' مشاريع',
+    'projects.header.add':' مشاريع add',
+    'projects.header.subtitle':'مشاريع',
     'projects.tab.map': ' خرائط',
     'projects.tab.list': ' مشاريع',
     'language.french': "فرنسية",
