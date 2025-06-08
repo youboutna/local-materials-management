@@ -172,7 +172,7 @@ const Documents = () => {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Ajouter un document d'appel d'offres</CardTitle>
+                    <CardTitle>{t('documents.tender.add_title')}</CardTitle>
                     <CardDescription>
                       {t('documents.tender.add_description')}
                     </CardDescription>

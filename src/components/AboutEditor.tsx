@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 const AboutEditor = () => {
   const { user: authUser } = useAuth();
   const { user: keycloakUser, isAuthenticated } = useKeycloakAuth();
+  const { t } = useLanguage(); // Add translation hook
   const [isEditing, setIsEditing] = useState(false);
   const [aboutContent, setAboutContent] = useState(`
 Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction. 
@@ -49,8 +50,8 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
     localStorage.setItem('aboutSystemContent', editedContent);
     setIsEditing(false);
     toast({
-      title: "Contenu sauvegardé",
-      description: "Les informations sur le système ont été mises à jour avec succès.",
+      title: t('toast.saved_title'),
+      description: t('toast.saved_description'),
     });
   };
 
@@ -66,7 +67,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
           <CardHeader className="text-center">
             <div className="flex justify-between items-center">
               <CardTitle className="text-3xl md:text-4xl font-bold text-adrar-900 flex-1">
-                À Propos du Système
+                {t('footer.about')}
               </CardTitle>
               {/* Only show edit button for authenticated users */}
               {isUserAuthenticated && !isEditing && (
@@ -77,7 +78,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                   className="flex items-center gap-2"
                 >
                   <Edit3 className="h-4 w-4" />
-                  Modifier
+                  {t('project.edit')}
                 </Button>
               )}
               {/* Only show save/cancel buttons for authenticated users when editing */}
@@ -89,7 +90,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                     className="flex items-center gap-2"
                   >
                     <Save className="h-4 w-4" />
-                    Sauvegarder
+                    {t('project.save')}
                   </Button>
                   <Button 
                     onClick={handleCancel}
@@ -98,7 +99,7 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                     className="flex items-center gap-2"
                   >
                     <X className="h-4 w-4" />
-                    Annuler
+                    {t('project.cancel')}
                   </Button>
                 </div>
               )}
@@ -112,10 +113,10 @@ Notre plateforme s'adapte à tous types de projets de construction, des petites 
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
                   className="min-h-[300px] text-base leading-relaxed"
-                  placeholder="Décrivez votre système de gestion de construction..."
+                  placeholder={t('footer.about_desc')}
                 />
                 <p className="text-sm text-gray-500">
-                  Utilisez ce champ pour décrire les avantages et fonctionnalités de votre système.
+                  {t('footer.about_desc')}
                 </p>
               </div>
             ) : (

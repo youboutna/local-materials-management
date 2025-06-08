@@ -85,11 +85,11 @@ const Projects = () => {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
               <TabsTrigger value="list" className="flex items-center gap-2">
                 <List className="h-4 w-4" />
-                {t("projects.tabs.list")}
+                {t("projects.tab.list")}
               </TabsTrigger>
               <TabsTrigger value="map" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                {t("projects.tabs.map")}
+                {t("projects.tab.mao")}
               </TabsTrigger>
             </TabsList>
             

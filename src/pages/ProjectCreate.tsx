@@ -218,7 +218,7 @@ const ProjectCreate = () => {
       
       toast({
         title: t("project_create.toast.created"),
-        description: t("project_create.toast.created_desc", { title: values.title }),
+        description: t("project_create.toast.created_desc")+{ title: values.title },
       });
       
       navigate('/projects');
@@ -272,9 +272,9 @@ const ProjectCreate = () => {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("project_create.form.title")}</FormLabel>
+                            <FormLabel>{t("project_create.name_label")}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t("project_create.form.title_placeholder")} {...field} />
+                              <Input placeholder={t("project_create.name_placeholder")} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -365,7 +365,7 @@ const ProjectCreate = () => {
                               <div className="mt-2">
                                 <ProgressIndicator value={Number(field.value)} />
                                 <p className="text-sm text-gray-600 mt-1">
-                                  {t("project_create.form.progress_current", { value: field.value })}
+                                  {t("project_create.form.progress_current")}: {field.value}
                                 </p>
                               </div>
                             )}

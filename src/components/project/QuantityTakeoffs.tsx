@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QuantityTakeoffForm from './QuantityTakeoffForm';
 import QuantityTakeoffsList from './QuantityTakeoffsList';
 import AdvancedQuantityCalculator from './AdvancedQuantityCalculator';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuantityTakeoff {
   id: string;
@@ -37,6 +37,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
   const [takeoffs, setTakeoffs] = useState<QuantityTakeoff[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   const fetchQuantityTakeoffs = async () => {
     try {
@@ -197,23 +198,23 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              Métrés du projet
+              {t('documents.tabs.takeoffs')}
             </CardTitle>
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Ajouter un métré
+                  {t('documents.tabs.takeoffs') + ' ' + t('project.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Ajouter des métrés</DialogTitle>
+                  <DialogTitle>{t('documents.tabs.takeoffs') + ' ' + t('project.add')}</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="manual" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="manual">Saisie manuelle</TabsTrigger>
-                    <TabsTrigger value="advanced">Calcul automatique</TabsTrigger>
+                    <TabsTrigger value="manual">{t('materials.form.basic_info')}</TabsTrigger>
+                    <TabsTrigger value="advanced">{t('map.draw.zone')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="manual" className="space-y-4">
@@ -231,7 +232,7 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
                     />
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsFormDialogOpen(false)}>
-                        Fermer
+                        {t('project.cancel')}
                       </Button>
                     </div>
                   </TabsContent>
@@ -244,19 +245,19 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-adrar-600">{takeoffs.length}</p>
-              <p className="text-sm text-gray-600">Éléments mesurés</p>
+              <p className="text-sm text-gray-600">{t('elements.measured')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-terracotta-600">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
-              <p className="text-sm text-gray-600">Valeur totale</p>
+              <p className="text-sm text-gray-600">{t('total.value')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600">
                 {takeoffs.reduce((total, takeoff) => total + takeoff.quantity, 0).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-600">Quantité totale</p>
+              <p className="text-sm text-gray-600">{t('total.quantity')}</p>
             </div>
           </div>
         </CardContent>

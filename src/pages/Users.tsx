@@ -352,6 +352,7 @@ const Users = () => {
                                 onClick={() => handleEditUser(profile)}
                               >
                                 <Edit className="h-4 w-4" />
+                                {t('project.edit')}
                               </Button>
                               
                               <Button 

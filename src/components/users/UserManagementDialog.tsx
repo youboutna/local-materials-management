@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UserProfile {
   id: string;
@@ -38,6 +38,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { assignRole, removeRole } = useRoleManagement();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -55,18 +56,16 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     setLoading(true);
     try {
       if (mode === 'create') {
-        // Validate required fields for creation
         if (!formData.email || !formData.password || !formData.full_name) {
           toast({
-            title: "Erreur",
-            description: "Email, mot de passe et nom complet sont requis",
+            title: t('error.title'),
+            description: t('error.missing_fields'),
             variant: "destructive"
           });
           setLoading(false);
           return;
         }
 
-        // Create new user
         const { data, error } = await supabase.auth.admin.createUser({
           email: formData.email,
           password: formData.password,
@@ -80,7 +79,6 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         if (error) throw error;
 
         if (data.user) {
-          // Update profile with additional data
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -94,7 +92,6 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             console.warn('Profile update warning:', profileError);
           }
 
-          // Assign role to new user
           try {
             await assignRole.mutateAsync({
               userId: data.user.id,
@@ -106,16 +103,14 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         }
 
         toast({
-          title: "Utilisateur créé",
-          description: "L'utilisateur a été créé avec succès."
+          title: t('users.created'),
+          description: t('users.created_success')
         });
       } else {
-        // Update existing user profile
         if (!user?.id) {
-          throw new Error('ID utilisateur requis pour la mise à jour');
+          throw new Error(t('error.user_id_required'));
         }
 
-        // Update profile data
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -127,21 +122,18 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
         if (profileError) throw profileError;
 
-        // Update user status if changed
         if (formData.is_active !== user.is_active) {
           try {
             if (formData.is_active) {
-              // Activate user
               const { error: authError } = await supabase.auth.admin.updateUserById(
                 user.id,
                 { ban_duration: 'none' }
               );
               if (authError) console.warn('Auth activation warning:', authError);
             } else {
-              // Deactivate user (ban indefinitely)
               const { error: authError } = await supabase.auth.admin.updateUserById(
                 user.id,
-                { ban_duration: '876000h' } // Very long ban duration
+                { ban_duration: '876000h' }
               );
               if (authError) console.warn('Auth deactivation warning:', authError);
             }
@@ -151,8 +143,8 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         }
 
         toast({
-          title: "Utilisateur mis à jour",
-          description: "Les informations ont été mises à jour avec succès."
+          title: t('users.updated'),
+          description: t('users.updated_success')
         });
       }
 
@@ -161,8 +153,8 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     } catch (error) {
       console.error('Error managing user:', error);
       toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        title: t('error.title'),
+        description: error instanceof Error ? error.message : t('error.generic'),
         variant: "destructive"
       });
     } finally {
@@ -179,15 +171,15 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         roleName: role
       });
       toast({
-        title: "Rôle assigné",
-        description: `Rôle ${role} assigné avec succès`
+        title: t('roles.assigned'),
+        description: t('roles.assigned_success', { role })
       });
       onUpdate();
     } catch (error) {
       console.error('Error assigning role:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible d'assigner le rôle",
+        title: t('error.title'),
+        description: t('roles.assign_error'),
         variant: "destructive"
       });
     }
@@ -202,15 +194,15 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         roleName: role
       });
       toast({
-        title: "Rôle retiré",
-        description: `Rôle ${role} retiré avec succès`
+        title: t('roles.removed'),
+        description: t('roles.removed_success', { role })
       });
       onUpdate();
     } catch (error) {
       console.error('Error removing role:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de retirer le rôle",
+        title: t('error.title'),
+        description: t('roles.remove_error'),
         variant: "destructive"
       });
     }
@@ -221,13 +213,13 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Créer un utilisateur' : 'Modifier l\'utilisateur'}
+            {mode === 'create' ? t('users.new') : t('users.details_title')}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="full_name">Nom complet *</Label>
+            <Label htmlFor="full_name">{t('auth.full_name')} *</Label>
             <Input
               id="full_name"
               value={formData.full_name}
@@ -237,7 +229,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="phone">Téléphone</Label>
+            <Label htmlFor="phone">{t('auth.phone')}</Label>
             <Input
               id="phone"
               value={formData.phone}
@@ -247,19 +239,19 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="national_id">ID National</Label>
+            <Label htmlFor="national_id">{t('auth.national_id')}</Label>
             <Input
               id="national_id"
               value={formData.national_id}
               onChange={(e) => setFormData(prev => ({ ...prev, national_id: e.target.value }))}
-              placeholder="Numéro d'identité nationale"
+              placeholder={t('users.table.national_id')}
             />
           </div>
 
           {mode === 'create' && (
             <>
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t('auth.email')} *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -271,20 +263,20 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               </div>
               
               <div>
-                <Label htmlFor="password">Mot de passe *</Label>
+                <Label htmlFor="password">{t('auth.password')} *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
-                  placeholder="Minimum 6 caractères"
+                  placeholder={t('auth.password_requirements')}
                   minLength={6}
                 />
               </div>
 
               <div>
-                <Label htmlFor="role">Rôle initial</Label>
+                <Label htmlFor="role">{t('users.table.role')}</Label>
                 <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as RoleType)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -294,7 +286,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                       <SelectItem key={role} value={role}>
                         <div className="flex items-center gap-2">
                           <RoleBadge role={role} />
-                          <span className="text-xs capitalize">{role.replace('_', ' ')}</span>
+                          <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -307,7 +299,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           {mode === 'edit' && user && (
             <div className="space-y-4">
               <div>
-                <Label>Rôles actuels</Label>
+                <Label>{t('users.manage_roles')}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {user.roles && user.roles.length > 0 ? (
                     user.roles.map(role => (
@@ -318,23 +310,23 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                           size="sm"
                           onClick={() => handleRoleRemove(role)}
                           className="h-6 w-6 p-0 hover:bg-red-100"
-                          title="Retirer ce rôle"
+                          title={t('project.delete')}
                         >
                           ×
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <span className="text-sm text-gray-500">Aucun rôle assigné</span>
+                    <span className="text-sm text-gray-500">{t('users.none_found')}</span>
                   )}
                 </div>
               </div>
               
               <div>
-                <Label>Ajouter un rôle</Label>
+                <Label>{t('users.table.role')}</Label>
                 <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un rôle à ajouter" />
+                    <SelectValue placeholder={t('users.table.role')} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoles
@@ -343,13 +335,13 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                         <SelectItem key={role} value={role}>
                           <div className="flex items-center gap-2">
                             <RoleBadge role={role} />
-                            <span className="text-xs capitalize">{role.replace('_', ' ')}</span>
+                            <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
                           </div>
                         </SelectItem>
                       ))}
                     {availableRoles.filter(role => !user.roles?.includes(role)).length === 0 && (
                       <SelectItem value="no-roles" disabled>
-                        Tous les rôles sont déjà assignés
+                        {t('users.no_results')}
                       </SelectItem>
                     )}
                   </SelectContent>
@@ -365,24 +357,24 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
             />
             <Label htmlFor="is_active" className="font-medium">
-              Compte actif
+              {t('users.active')}
             </Label>
             <span className="text-sm text-gray-500 ml-2">
-              {formData.is_active ? 'L\'utilisateur peut se connecter' : 'L\'utilisateur est bloqué'}
+              {formData.is_active ? t('users.active') : t('users.inactive')}
             </span>
           </div>
         </div>
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
-            Annuler
+            {t('project.cancel')}
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={loading || (mode === 'create' && (!formData.email || !formData.password || !formData.full_name))}
             className="min-w-[120px]"
           >
-            {loading ? 'En cours...' : mode === 'create' ? 'Créer utilisateur' : 'Sauvegarder'}
+            {loading ? t('auth.button.loading') : mode === 'create' ? t('users.new') : t('project.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

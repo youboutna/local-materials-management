@@ -473,6 +473,7 @@ const TaskAssignments = () => {
                   onClick={() => handleEdit(task)}
                 >
                   <Edit className="h-4 w-4" />
+                  {t('task.edit')}
                 </Button>
                 <Button
                   size="sm"

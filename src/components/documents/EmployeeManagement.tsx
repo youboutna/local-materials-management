@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Plus, Edit, Trash2, Search } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Employee = Database['public']['Tables']['employees']['Row'];
 
@@ -22,6 +22,7 @@ const EmployeeManagement = () => {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage(); // Add translation hook
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -66,13 +67,13 @@ const EmployeeManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: "Employé créé avec succès" });
+      toast({ title: t('users.created_successfully') });
       setShowCreateDialog(false);
       resetForm();
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
+        title: t('error.title'),
         description: (error as Error).message,
         variant: "destructive"
       });
@@ -89,11 +90,11 @@ const EmployeeManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: "Employé supprimé avec succès" });
+      toast({ title: t('users.deleted_successfully') });
     },
     onError: (error) => {
       toast({
-        title: "Erreur",
+        title: t('error.title'),
         description: (error as Error).message,
         variant: "destructive"
       });
@@ -139,7 +140,7 @@ const EmployeeManagement = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-4">Chargement...</div>;
+    return <div className="flex justify-center py-4">{t('loading')}</div>;
   }
 
   return (
@@ -149,25 +150,25 @@ const EmployeeManagement = () => {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
               <Users className="h-5 w-5 mr-2" />
-              Gestion des Employés
+              {t('documents.tabs.employees')}
             </div>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nouvel Employé
+                  {t('users.new')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingEmployee ? 'Modifier l\'employé' : 'Nouvel employé'}
+                    {editingEmployee ? t('project.edit') + ' ' + t('documents.tabs.employees') : t('users.new')}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>ID Employé *</Label>
+                      <Label>{t('users.table.national_id')} *</Label>
                       <Input
                         value={formData.employee_id}
                         onChange={(e) => setFormData(prev => ({...prev, employee_id: e.target.value}))}
@@ -175,7 +176,7 @@ const EmployeeManagement = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Nom complet *</Label>
+                      <Label>{t('auth.full_name')} *</Label>
                       <Input
                         value={formData.full_name}
                         onChange={(e) => setFormData(prev => ({...prev, full_name: e.target.value}))}
@@ -186,14 +187,14 @@ const EmployeeManagement = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Poste</Label>
+                      <Label>{t('users.table.role')}</Label>
                       <Input
                         value={formData.position}
                         onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Département</Label>
+                      <Label>{t('users.table.status')}</Label>
                       <Input
                         value={formData.department}
                         onChange={(e) => setFormData(prev => ({...prev, department: e.target.value}))}
@@ -203,14 +204,14 @@ const EmployeeManagement = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Téléphone</Label>
+                      <Label>{t('auth.phone')}</Label>
                       <Input
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Email</Label>
+                      <Label>{t('auth.email')}</Label>
                       <Input
                         type="email"
                         value={formData.email}
@@ -221,7 +222,7 @@ const EmployeeManagement = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Date d'embauche</Label>
+                      <Label>{t('project_create.start_date')}</Label>
                       <Input
                         type="date"
                         value={formData.hire_date}
@@ -229,7 +230,7 @@ const EmployeeManagement = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Salaire</Label>
+                      <Label>{t('materials.price')}</Label>
                       <Input
                         type="number"
                         value={formData.salary}
@@ -240,10 +241,10 @@ const EmployeeManagement = () => {
 
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                      Annuler
+                      {t('project.cancel')}
                     </Button>
                     <Button type="submit">
-                      {editingEmployee ? 'Modifier' : 'Créer'}
+                      {editingEmployee ? t('project.edit') : t('project.add')}
                     </Button>
                   </div>
                 </form>
@@ -256,7 +257,7 @@ const EmployeeManagement = () => {
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Rechercher un employé..."
+                placeholder={t('users.search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -279,7 +280,7 @@ const EmployeeManagement = () => {
                         <p className="text-sm text-gray-500">{employee.department}</p>
                       </div>
                       <Badge variant={employee.is_active ? "default" : "secondary"}>
-                        {employee.is_active ? "Actif" : "Inactif"}
+                        {employee.is_active ? t('users.active') : t('users.inactive')}
                       </Badge>
                     </div>
                   </div>
@@ -290,6 +291,7 @@ const EmployeeManagement = () => {
                       onClick={() => handleEdit(employee)}
                     >
                       <Edit className="h-4 w-4" />
+                      {t('project.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -298,6 +300,7 @@ const EmployeeManagement = () => {
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
+                      {t('project.delete')}
                     </Button>
                   </div>
                 </div>
@@ -307,7 +310,7 @@ const EmployeeManagement = () => {
 
           {employees?.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              Aucun employé trouvé
+              {t('users.none_found')}
             </div>
           )}
         </CardContent>
