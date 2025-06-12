@@ -109,7 +109,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
         <DialogHeader>
           <DialogTitle>{t("inspection.dialog.title")}</DialogTitle>
           <DialogDescription>
-            {t("inspection.dialog.description", { project: project.title })}
+            {t("inspection.dialog.description").replace('{project}', project.title)}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

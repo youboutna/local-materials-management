@@ -382,7 +382,7 @@ const Users = () => {
               <TableFooter>
                 <TableRow>
                   <TableCell colSpan={5} className="text-muted-foreground text-xs text-right">
-                    {t('users.total', { count: filteredProfiles.length }) || `Total: ${filteredProfiles.length} utilisateur(s)`}
+                    {t('users.total') ? t('users.total').replace('{count}', filteredProfiles.length.toString()) : `Total: ${filteredProfiles.length} utilisateur(s)`}
                   </TableCell>
                 </TableRow>
               </TableFooter>

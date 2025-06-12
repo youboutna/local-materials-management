@@ -172,7 +172,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
       });
       toast({
         title: t('roles.assigned'),
-        description: t('roles.assigned_success', { role })
+        description: t('roles.assigned_success').replace('{role}', role)
       });
       onUpdate();
     } catch (error) {
@@ -195,7 +195,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
       });
       toast({
         title: t('roles.removed'),
-        description: t('roles.removed_success', { role })
+        description: t('roles.removed_success').replace('{role}', role)
       });
       onUpdate();
     } catch (error) {

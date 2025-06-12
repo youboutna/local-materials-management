@@ -140,7 +140,7 @@ const MaterialCreate = () => {
                       className="w-full px-3 py-2 border border-sandstone-200 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta-500"
                     >
                       <option value="">Sélectionner une région</option>
-                      {MAURIT_ANIA_REGIONS.map(region => (
+                      {MAURITANIA_REGIONS.map(region => (
                         <option key={region.code} value={region.code}>
                           {region.name} ({region.nameAr})
                         </option>

@@ -27,7 +27,7 @@ const Settings = () => {
     
     toast({
       title: t("settings.dev_role_updated"),
-      description: t("settings.dev_role_changed", { role }),
+      description: t("settings.dev_role_changed").replace('{role}', role),
     });
 
     // Force reload to apply role changes

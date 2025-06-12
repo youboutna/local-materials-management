@@ -220,7 +220,7 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
               {t('inspection.dialog.new_inspection')}
             </h3>
             <p className="text-gray-500 mb-4">
-              {t('inspection.dialog.description', { project: project.title })}
+              {t('inspection.dialog.description').replace('{project}', project.title)}
             </p>
             <InspectionDialog 
               project={project} 

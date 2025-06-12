@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -18,7 +19,7 @@ const ProgressIndicator = ({ value }: ProgressIndicatorProps) => {
         ></div>
       </div>
       <div className="text-xs text-right mt-1 text-gray-600">
-        {t('progress.percentage', { value: percentage }) || `${percentage}%`}
+        {t('progress.percentage') ? t('progress.percentage').replace('{value}', percentage.toString()) : `${percentage}%`}
       </div>
     </div>
   );
