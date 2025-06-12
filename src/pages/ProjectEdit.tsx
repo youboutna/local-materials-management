@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -19,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import LocationSelector from '@/components/location/LocationSelector';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MAURITANIA_REGIONS } from '@/data/mauritania';
+import { MAURITANIA_REGIONS } from '@/types/mauritania';
 
 // Form validation schema
 const projectSchema = z.object({
