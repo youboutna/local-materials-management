@@ -16,7 +16,8 @@ import {
   ArrowDownWideNarrow, 
   ArrowUpWideNarrow, 
   X,
-  ArrowRight
+  ArrowRight,
+  MapPin
 } from 'lucide-react';
 import { ProjectData } from '@/components/ProjectCard';
 import { useEffect, useRef, useState } from 'react';
@@ -28,12 +29,15 @@ interface ProjectFiltersProps {
   setSearchQuery: (query: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
+  regionFilter?: string;
+  setRegionFilter?: (region: string) => void;
   sortOption: SortOption;
   setSortOption: (option: SortOption) => void;
   searchResults?: ProjectData[];
   showSearchResults?: boolean;
   handleSelectSearchResult?: (projectId: string) => void;
   clearSearch?: () => void;
+  availableRegions?: Array<{code: string; name: string; nameAr: string}>;
 }
 
 const ProjectFilters = ({
@@ -41,12 +45,15 @@ const ProjectFilters = ({
   setSearchQuery,
   statusFilter,
   setStatusFilter,
+  regionFilter = 'all',
+  setRegionFilter = () => {},
   sortOption,
   setSortOption,
   searchResults = [],
   showSearchResults = false,
   handleSelectSearchResult = () => {},
-  clearSearch = () => {}
+  clearSearch = () => {},
+  availableRegions = []
 }: ProjectFiltersProps) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +95,7 @@ const ProjectFilters = ({
       transition={{ duration: 0.5, delay: 0.2 }}
       className="bg-white rounded-xl shadow-elegant p-4 mb-8"
     >
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-grow" ref={inputRef}>
           <div className="relative">
@@ -139,6 +146,29 @@ const ProjectFilters = ({
             </div>
           )}
         </div>
+        
+        {/* Region Filter */}
+        {availableRegions.length > 0 && (
+          <div className="w-full md:w-48">
+            <Select
+              value={regionFilter}
+              onValueChange={setRegionFilter}
+            >
+              <SelectTrigger className="border-sandstone-200 focus:ring-terracotta-500">
+                <MapPin className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Région" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les régions</SelectItem>
+                {availableRegions.map((region) => (
+                  <SelectItem key={region.code} value={region.code}>
+                    {region.name} ({region.nameAr})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         {/* Status Filter */}
         <div className="w-full md:w-48">

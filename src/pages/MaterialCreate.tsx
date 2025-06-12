@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
 import InteractiveMap from '@/components/map/InteractiveMap';
-import { EnhancedMaterial, Location, OperationalStatus } from '@/types/mauritania';
+import { EnhancedMaterial, Location, OperationalStatus, MAURITANIA_REGIONS } from '@/types/mauritania';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -16,12 +17,14 @@ const MaterialCreate = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
     warehouseShape?: { lat: number; lng: number }[];
     address?: string;
   }>({});
+
   // Fetch workspaces from Supabase
   const { data: workspaces = [] } = useQuery({
     queryKey: ['workspaces'],
@@ -48,6 +51,10 @@ const MaterialCreate = () => {
         throw new Error(t('materials.error.name_required'));
       }
 
+      // Get region name for location
+      const region = MAURITANIA_REGIONS.find(r => r.code === selectedRegion);
+      const locationName = region ? region.name : (materialData.location || Location.Nouakchott);
+
       // Transform enhanced material data to match current database schema
       const dbData = {
         name: materialData.name,
@@ -56,10 +63,10 @@ const MaterialCreate = () => {
         unit: materialData.unit || 'kg',
         price_per_unit: materialData.pricePerUnit || 0,
         available_quantity: materialData.availableQuantity || 0,
-        origin_location: materialData.location || Location.Nouakchott,
+        origin_location: locationName,
         image: '/img/material-placeholder.jpg',
         workspace_id: materialData.workspaceId || null,
-        adresse: materialData.adresse || '',
+        adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
         coordinates_latitude: mapData.center?.lat || null,
@@ -67,10 +74,13 @@ const MaterialCreate = () => {
       };
 
       console.log('Saving material with location data:', {
+        selectedRegion,
+        locationName,
         center: mapData.center,
         polygon: mapData.polygon,
         warehouseShape: mapData.warehouseShape,
         dbData: {
+          origin_location: dbData.origin_location,
           adresse: dbData.adresse,
           coordinates_latitude: dbData.coordinates_latitude,
           coordinates_longitude: dbData.coordinates_longitude
@@ -87,7 +97,7 @@ const MaterialCreate = () => {
 
       toast({
         title: t('materials.toast.created'),
-        description: t('materials.toast.created_description') +{ name: materialData.name },
+        description: `${t('materials.toast.created_description')} ${materialData.name}`,
       });
 
       navigate('/materials');
@@ -119,6 +129,25 @@ const MaterialCreate = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Region Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-adrar-700">
+                      Région/Wilaya
+                    </label>
+                    <select
+                      value={selectedRegion}
+                      onChange={(e) => setSelectedRegion(e.target.value)}
+                      className="w-full px-3 py-2 border border-sandstone-200 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta-500"
+                    >
+                      <option value="">Sélectionner une région</option>
+                      {MAURIT_ANIA_REGIONS.map(region => (
+                        <option key={region.code} value={region.code}>
+                          {region.name} ({region.nameAr})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Enhanced Material Form without submit button */}
                   <EnhancedMaterialForm
                     onSubmit={handleSubmit}

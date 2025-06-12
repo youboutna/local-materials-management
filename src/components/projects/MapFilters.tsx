@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/select';
 import { MapLocation } from '@/components/ProjectMap';
 import { ProjectStatus } from '@/types/project';
+import { MAURITANIA_REGIONS } from '@/types/mauritania';
+import { MapPin } from 'lucide-react';
 
 interface MapFiltersProps {
   locations: MapLocation[];
@@ -20,19 +22,6 @@ interface MapFiltersProps {
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
-  const [regions, setRegions] = useState<string[]>([]);
-
-  // Extract all unique regions
-  useEffect(() => {
-    const uniqueRegions = Array.from(
-      new Set(
-        locations
-          .map(location => location.region)
-          .filter(Boolean) as string[]
-      )
-    );
-    setRegions(uniqueRegions);
-  }, [locations]);
 
   // Apply filters
   useEffect(() => {
@@ -43,7 +32,13 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     }
     
     if (regionFilter !== 'all') {
-      filtered = filtered.filter(item => item.region === regionFilter);
+      const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
+      if (selectedRegion) {
+        filtered = filtered.filter(item => 
+          item.region?.toLowerCase().includes(selectedRegion.name.toLowerCase()) ||
+          item.region?.toLowerCase().includes(selectedRegion.nameAr.toLowerCase())
+        );
+      }
     }
     
     onFilterChange(filtered);
@@ -75,7 +70,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           </div>
           
           <div>
-            <Label htmlFor="region-filter" className="mb-2 block">Région</Label>
+            <Label htmlFor="region-filter" className="mb-2 block flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Région/Wilaya
+            </Label>
             <Select 
               value={regionFilter} 
               onValueChange={setRegionFilter}
@@ -85,8 +83,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les régions</SelectItem>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                {MAURITANIA_REGIONS.map(region => (
+                  <SelectItem key={region.code} value={region.code}>
+                    {region.name} ({region.nameAr})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -24,6 +25,8 @@ const Projects = () => {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    regionFilter,
+    setRegionFilter,
     sortOption,
     setSortOption,
     filteredProjects,
@@ -31,6 +34,7 @@ const Projects = () => {
     showSearchResults,
     handleSelectSearchResult,
     clearSearch,
+    availableRegions,
     performSearch
   } = useProjectsFilter(projects);
 
@@ -100,12 +104,15 @@ const Projects = () => {
                 setSearchQuery={performSearch}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
+                regionFilter={regionFilter}
+                setRegionFilter={setRegionFilter}
                 sortOption={sortOption}
                 setSortOption={setSortOption}
                 searchResults={searchResults}
                 showSearchResults={showSearchResults}
                 handleSelectSearchResult={handleSelectSearchResult}
                 clearSearch={clearSearch}
+                availableRegions={availableRegions}
               />
               
               {/* Projects Grid or Empty State */}
