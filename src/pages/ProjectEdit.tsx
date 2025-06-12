@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import LocationSelector from '@/components/location/LocationSelector';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { MAURITANIA_REGIONS } from '@/data/mauritania';
 
 // Form validation schema
 const projectSchema = z.object({
@@ -34,7 +35,10 @@ const projectSchema = z.object({
   coordinates: z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional()
-  }).optional().nullable()
+  }).optional().nullable(),
+  financingSource: z.string().optional(),
+  marketType: z.string().optional(),
+  selectionMode: z.string().optional()
 });
 
 // Define the type for our form values
@@ -69,7 +73,10 @@ const ProjectEdit = () => {
       startDate: '',
       endDate: undefined,
       teamSize: 1,
-      coordinates: null
+      coordinates: null,
+      financingSource: '',
+      marketType: '',
+      selectionMode: ''
     }
   });
 
@@ -95,7 +102,10 @@ const ProjectEdit = () => {
             startDate: projectData.startDate,
             endDate: projectData.endDate,
             teamSize: projectData.teamSize,
-            coordinates: projectData.coordinates || null
+            coordinates: projectData.coordinates || null,
+            financingSource: projectData.financingSource || '',
+            marketType: projectData.marketType || '',
+            selectionMode: projectData.selectionMode || ''
           });
 
           // Load project materials
@@ -311,19 +321,30 @@ const ProjectEdit = () => {
                 )}
               />
               
-              {/* Location */}
+              {/* Location with Mauritania regions */}
               <FormField
                 control={form.control}
                 name="location"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("project_create.form.location")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input placeholder={t("project_create.form.location_placeholder")} {...field} />
-                        <MapPin className="absolute right-3 top-2.5 h-4 w-4 text-adrar-400" />
-                      </div>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("project_create.form.location_placeholder")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {MAURITANIA_REGIONS.map((region) => (
+                          <SelectItem key={region.code} value={region.name}>
+                            {region.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {t("projects.edit.location_desc")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -489,6 +510,63 @@ const ProjectEdit = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Financing Source */}
+              <FormField
+                control={form.control}
+                name="financingSource"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("projects.edit.financing_source")}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={t("projects.edit.financing_source_placeholder")}
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Market Type */}
+              <FormField
+                control={form.control}
+                name="marketType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("projects.edit.market_type")}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={t("projects.edit.market_type_placeholder")}
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Selection Mode */}
+              <FormField
+                control={form.control}
+                name="selectionMode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("projects.edit.selection_mode")}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={t("projects.edit.selection_mode_placeholder")}
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               {/* Description */}
               <FormField
@@ -509,7 +587,7 @@ const ProjectEdit = () => {
                 )}
               />
               
-              {/* Location Selector - New enhanced section */}
+              {/* Location Selector - Enhanced section */}
               <LocationSelector
                 value={{
                   latitude: form.watch('coordinates.latitude'),
