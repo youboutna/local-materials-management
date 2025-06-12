@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -143,8 +144,6 @@ const ProjectEdit = () => {
     }
   };
 
-  // Update the existing useEffect to also load materials
-
   // Function to sync progress with latest inspection
   const syncProgressWithLatestInspection = async () => {
     if (!id) return;
@@ -168,7 +167,7 @@ const ProjectEdit = () => {
         
         toast({
           title: t("projects.edit.progress_synced"),
-          description: t("projects.edit.progress_synced_desc", { value: latestInspection.progress_at_inspection }),
+          description: t("projects.edit.progress_synced_desc").replace('{value}', latestInspection.progress_at_inspection.toString()),
         });
       } else {
         toast({
@@ -408,7 +407,7 @@ const ProjectEdit = () => {
                       <div className="mt-2">
                         <ProgressIndicator value={progressValue} />
                         <p className="text-sm text-gray-600 mt-1">
-                          {t("project_create.form.progress_current", { value: progressValue })}
+                          {t("project_create.form.progress_current").replace('{value}', progressValue.toString())}
                         </p>
                       </div>
                     )}

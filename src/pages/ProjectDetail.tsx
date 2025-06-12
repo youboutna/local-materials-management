@@ -127,7 +127,7 @@ const ProjectDetail = () => {
   const handleDelete = async () => {
     if (!project || !id) return;
     
-    if (!confirm(t('projects.delete_confirm', { title: project.title }))) {
+    if (!confirm(t('projects.delete_confirm').replace('{title}', project.title))) {
       return;
     }
 
@@ -137,7 +137,7 @@ const ProjectDetail = () => {
       if (success) {
         toast({
           title: t("projects.deleted"),
-          description: t("projects.deleted_desc", { title: project.title }),
+          description: t("projects.deleted_desc").replace('{title}', project.title),
         });
         navigate('/projects');
       }
