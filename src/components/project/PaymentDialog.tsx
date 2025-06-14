@@ -66,14 +66,14 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
       <DialogTrigger asChild>
         <Button>Effectuer un paiement</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Paiement du projet</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[95vw] max-w-[75vw] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b bg-white sticky top-0 z-10">
+          <DialogTitle className="text-xl">Paiement du projet</DialogTitle>
+          <DialogDescription className="text-base">
             {project.title}
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           <PaymentTransferForm 
             project={project} 
             onSubmit={handleSubmit} 
