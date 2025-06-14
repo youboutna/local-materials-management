@@ -1,5 +1,6 @@
+
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent, Polygon, Rectangle, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ProjectData } from '@/types/project';
@@ -23,6 +24,9 @@ export interface MapLocation {
   region?: string;
   startDate?: string;
   endDate?: string;
+  warehouseShape?: { lat: number; lng: number }[];
+  warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
+  adresse?: string;
 }
 
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
@@ -97,14 +101,65 @@ const getStatusColor = (status?: string) => {
   }
 };
 
-const createCustomIcon = (status?: string) => {
-  const color = getStatusColor(status);
+const createCustomIcon = (status?: string, type?: string) => {
+  const color = type === 'material' ? '#e67e22' : getStatusColor(status); // Orange for materials
   return L.divIcon({
     html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
     className: 'custom-marker',
     iconSize: [20, 20],
     iconAnchor: [10, 10]
   });
+};
+
+// Component to render warehouse shapes
+const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location }) => {
+  if (!location.warehouseShape || location.warehouseShape.length === 0) return null;
+
+  const positions = location.warehouseShape.map(point => [point.lat, point.lng] as [number, number]);
+  const shapeType = location.warehouseShapeType || 'polygon';
+  
+  const shapeStyle = {
+    color: '#e67e22',
+    weight: 2,
+    fillColor: '#e67e22',
+    fillOpacity: 0.2,
+    dashArray: '5, 5'
+  };
+
+  if (shapeType === 'circle' && positions.length >= 2) {
+    const center = positions[0];
+    const radiusPoint = positions[1];
+    // Calculate radius in meters
+    const radius = Math.sqrt(
+      Math.pow((radiusPoint[0] - center[0]) * 111000, 2) + 
+      Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
+    );
+    
+    return (
+      <Circle
+        center={center}
+        radius={Math.max(radius, 50)} // Minimum 50m radius
+        pathOptions={shapeStyle}
+      />
+    );
+  } else if (shapeType === 'rectangle' && positions.length >= 2) {
+    const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
+    return (
+      <Rectangle
+        bounds={bounds}
+        pathOptions={shapeStyle}
+      />
+    );
+  } else if (positions.length >= 3) {
+    return (
+      <Polygon
+        positions={positions}
+        pathOptions={shapeStyle}
+      />
+    );
+  }
+  
+  return null;
 };
 
 const ProjectMap: React.FC<ProjectMapProps> = ({
@@ -164,16 +219,25 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         <MapFocusController focusRegion={focusRegion} />
         <MapClickHandler selectable={selectable} onLocationSelect={onLocationSelect} />
 
+        {/* Render warehouse shapes first (so they appear behind markers) */}
+        {mapLocations.map((location) => (
+          <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />
+        ))}
+
+        {/* Render markers */}
         {mapLocations.map((location) => (
           <Marker
             key={location.id}
             position={[location.latitude, location.longitude]}
-            icon={createCustomIcon(location.status)}
+            icon={createCustomIcon(location.status, location.type)}
           >
             <Popup>
               <div className="p-2">
                 <h3 className="font-semibold text-sm">{location.name}</h3>
                 <p className="text-xs text-gray-600 mb-2">{location.region}</p>
+                {location.adresse && (
+                  <p className="text-xs text-gray-600 mb-2">📍 {location.adresse}</p>
+                )}
                 {location.status && (
                   <Badge 
                     style={{ backgroundColor: getStatusColor(location.status) }}
@@ -181,6 +245,16 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                   >
                     {location.status.toUpperCase()}
                   </Badge>
+                )}
+                {location.type === 'material' && (
+                  <Badge className="bg-orange-500 text-white text-xs mb-1">
+                    MATÉRIAU
+                  </Badge>
+                )}
+                {location.warehouseShape && location.warehouseShape.length > 0 && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    🏪 Zone tracée ({location.warehouseShapeType || 'polygon'})
+                  </p>
                 )}
                 {location.startDate && (
                   <p className="text-xs">
@@ -200,8 +274,17 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
       {uniqueStatuses.length > 0 && (
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
-          <h4 className="font-semibold text-sm mb-2">Statuts des projets</h4>
+          <h4 className="font-semibold text-sm mb-2">Légende</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
+            {/* Material legend */}
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
+                style={{ backgroundColor: '#e67e22' }}
+              />
+              <span className="truncate">Matériaux</span>
+            </div>
+            {/* Status legends */}
             {uniqueStatuses.map((status) => (
               <div key={status} className="flex items-center gap-2">
                 <div 
@@ -211,6 +294,11 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <span className="truncate">{status}</span>
               </div>
             ))}
+            {/* Warehouse shape legend */}
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+              <div className="w-3 h-3 border border-orange-500 bg-orange-200 flex-shrink-0"></div>
+              <span className="truncate">Zone d'entrepôt tracée</span>
+            </div>
           </div>
         </div>
       )}

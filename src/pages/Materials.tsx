@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -19,6 +20,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 type Material = Database['public']['Tables']['materials']['Row'];
 type Workspace = Database['public']['Tables']['workspaces']['Row'];
+
+// Enhanced MapLocation interface to include warehouse shape data
+interface EnhancedMapLocation extends MapLocation {
+  warehouseShape?: { lat: number; lng: number }[];
+  warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
+  adresse?: string;
+}
 
 const Materials = () => {
   const { t } = useLanguage();
@@ -115,18 +123,34 @@ const Materials = () => {
       }
     });
 
-  // Convert materials to map locations
-  const materialLocations: MapLocation[] = useMemo(() => {
+  // Convert materials to enhanced map locations with warehouse shapes
+  const materialLocations: EnhancedMapLocation[] = useMemo(() => {
     return filteredMaterials
       .filter(material => (material as any).coordinates_latitude && (material as any).coordinates_longitude)
-      .map(material => ({
-        id: (material as any).id,
-        name: (material as any).name,
-        type: 'material' as const,
-        latitude: Number((material as any).coordinates_latitude!),
-        longitude: Number((material as any).coordinates_longitude!),
-        region: (material as any).origin_location || ''
-      }));
+      .map(material => {
+        const baseLocation: EnhancedMapLocation = {
+          id: (material as any).id,
+          name: (material as any).name,
+          type: 'material' as const,
+          latitude: Number((material as any).coordinates_latitude!),
+          longitude: Number((material as any).coordinates_longitude!),
+          region: (material as any).origin_location || '',
+          adresse: (material as any).adresse || ''
+        };
+
+        // Add warehouse shape data if available
+        if ((material as any).localisation && Array.isArray((material as any).localisation)) {
+          const localisation = (material as any).localisation;
+          
+          // Check if localisation contains warehouse shape data
+          if (localisation.length > 0 && localisation[0].warehouseShape) {
+            baseLocation.warehouseShape = localisation[0].warehouseShape;
+            baseLocation.warehouseShapeType = localisation[0].warehouseShapeType || 'polygon';
+          }
+        }
+
+        return baseLocation;
+      });
   }, [filteredMaterials]);
 
   // Get unique categories
