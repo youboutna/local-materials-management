@@ -39,43 +39,51 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   useEffect(() => {
     let filtered = [...locations];
     
-    console.log('Filtering locations:', {
-      totalLocations: locations.length,
-      statusFilter,
-      regionFilter
-    });
+    console.log('MapFilters - Original locations:', locations.length);
+    console.log('MapFilters - Filter settings:', { statusFilter, regionFilter });
     
     if (statusFilter !== 'all') {
       filtered = filtered.filter(item => item.status === statusFilter);
-      console.log('After status filter:', filtered.length);
+      console.log('MapFilters - After status filter:', filtered.length);
     }
     
     if (regionFilter !== 'all') {
       const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
       if (selectedRegion) {
-        console.log('Selected region:', selectedRegion);
+        console.log('MapFilters - Selected region:', selectedRegion);
         
+        const beforeRegionFilter = filtered.length;
         filtered = filtered.filter(item => {
-          if (!item.region) return false;
+          if (!item.region) {
+            console.log('MapFilters - Item has no region:', item);
+            return false;
+          }
           
           const itemRegion = item.region.toLowerCase().trim();
           const regionName = selectedRegion.name.toLowerCase().trim();
           const regionNameAr = selectedRegion.nameAr.toLowerCase().trim();
           
-          // Multiple matching strategies for better coverage
+          // Enhanced matching strategies
           const matches = 
+            // Exact matches
+            itemRegion === regionName ||
+            itemRegion === regionNameAr ||
+            // Contains matches (both directions)
             itemRegion.includes(regionName) ||
             itemRegion.includes(regionNameAr) ||
             regionName.includes(itemRegion) ||
             regionNameAr.includes(itemRegion) ||
-            // Exact match
-            itemRegion === regionName ||
-            itemRegion === regionNameAr ||
-            // Remove common prefixes/suffixes
-            itemRegion.replace(/wilaya|région|province/gi, '').trim() === regionName ||
-            regionName.replace(/wilaya|région|province/gi, '').trim() === itemRegion;
+            // Clean matches (remove common words)
+            itemRegion.replace(/wilaya|région|province|governorate/gi, '').trim() === regionName ||
+            regionName.replace(/wilaya|région|province|governorate/gi, '').trim() === itemRegion ||
+            // Partial word matches
+            regionName.split(' ').some(word => itemRegion.includes(word)) ||
+            regionNameAr.split(' ').some(word => itemRegion.includes(word)) ||
+            itemRegion.split(' ').some(word => regionName.includes(word));
             
-          console.log('Region matching:', {
+          console.log('MapFilters - Region matching for item:', {
+            itemId: item.id,
+            itemName: item.name,
             itemRegion,
             regionName,
             regionNameAr,
@@ -85,10 +93,20 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           return matches;
         });
         
-        console.log('After region filter:', filtered.length, 'locations');
+        console.log(`MapFilters - Region filter: ${beforeRegionFilter} → ${filtered.length} locations`);
+        
+        // Show which items were filtered out for debugging
+        if (filtered.length < beforeRegionFilter) {
+          const filteredOut = locations.filter(loc => !filtered.find(f => f.id === loc.id));
+          console.log('MapFilters - Filtered out items:', filteredOut.map(item => ({
+            name: item.name,
+            region: item.region
+          })));
+        }
       }
     }
     
+    console.log('MapFilters - Final filtered locations:', filtered.length);
     onFilterChange(filtered);
   }, [statusFilter, regionFilter, locations, onFilterChange]);
 
@@ -154,7 +172,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
             </Label>
             <Select 
               value={regionFilter} 
-              onValueChange={setRegionFilter}
+              onValueChange={(value) => {
+                console.log('MapFilters - Region filter changed to:', value);
+                setRegionFilter(value);
+              }}
             >
               <SelectTrigger id="region-filter" className="w-full">
                 <SelectValue placeholder="Filtrer par région" />
@@ -201,6 +222,19 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
               <div className="text-xs text-muted-foreground">
                 projet{locations.length > 1 ? 's' : ''} affiché{locations.length > 1 ? 's' : ''}
               </div>
+              
+              {/* Debug info */}
+              <div className="mt-2 text-xs text-gray-500 border-t pt-2">
+                <div>Total disponible: {locations.length}</div>
+                {regionFilter !== 'all' && (
+                  <div>
+                    Région: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
+                  </div>
+                )}
+                {statusFilter !== 'all' && (
+                  <div>Statut: {statusFilter}</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -234,6 +268,22 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                   </button>
                 </Badge>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Debug Panel - only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info</h4>
+            <div className="text-xs text-yellow-700 space-y-1">
+              <div>Available locations with regions:</div>
+              {locations.slice(0, 5).map(loc => (
+                <div key={loc.id} className="ml-2">
+                  {loc.name}: "{loc.region}"
+                </div>
+              ))}
+              {locations.length > 5 && <div className="ml-2">... et {locations.length - 5} autres</div>}
             </div>
           </div>
         )}
