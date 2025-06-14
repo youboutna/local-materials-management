@@ -113,18 +113,31 @@ const createCustomIcon = (status?: string, type?: string) => {
 
 // Component to render warehouse shapes
 const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location }) => {
-  if (!location.warehouseShape || location.warehouseShape.length === 0) return null;
+  console.log('WarehouseShapeRenderer for location:', location.name, 'shape:', location.warehouseShape);
+  
+  if (!location.warehouseShape || location.warehouseShape.length === 0) {
+    console.log('No warehouse shape found for:', location.name);
+    return null;
+  }
 
-  const positions = location.warehouseShape.map(point => [point.lat, point.lng] as [number, number]);
+  const positions = location.warehouseShape.map(point => {
+    console.log('Converting point:', point);
+    return [point.lat, point.lng] as [number, number];
+  });
+  
+  console.log('Converted positions:', positions);
+  
   const shapeType = location.warehouseShapeType || 'polygon';
   
   const shapeStyle = {
     color: '#e67e22',
-    weight: 2,
+    weight: 3,
     fillColor: '#e67e22',
-    fillOpacity: 0.2,
+    fillOpacity: 0.3,
     dashArray: '5, 5'
   };
+
+  console.log('Rendering shape type:', shapeType, 'with positions:', positions);
 
   if (shapeType === 'circle' && positions.length >= 2) {
     const center = positions[0];
@@ -135,15 +148,20 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
       Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
     );
     
+    console.log('Rendering circle with center:', center, 'radius:', radius);
+    
     return (
       <Circle
         center={center}
-        radius={Math.max(radius, 50)} // Minimum 50m radius
+        radius={Math.max(radius, 100)} // Minimum 100m radius for visibility
         pathOptions={shapeStyle}
       />
     );
   } else if (shapeType === 'rectangle' && positions.length >= 2) {
     const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
+    
+    console.log('Rendering rectangle with bounds:', bounds);
+    
     return (
       <Rectangle
         bounds={bounds}
@@ -151,6 +169,8 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
       />
     );
   } else if (positions.length >= 3) {
+    console.log('Rendering polygon with positions:', positions);
+    
     return (
       <Polygon
         positions={positions}
@@ -159,6 +179,7 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
     );
   }
   
+  console.log('Could not render shape - insufficient points or invalid type');
   return null;
 };
 
@@ -178,6 +199,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
   useEffect(() => {
     if (locations) {
+      console.log('ProjectMap received locations:', locations);
       setMapLocations(locations);
     } else if (projects) {
       const projectLocations: MapLocation[] = projects
@@ -196,6 +218,8 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       setMapLocations(projectLocations);
     }
   }, [projects, locations]);
+
+  console.log('Current mapLocations:', mapLocations);
 
   const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
 
@@ -220,9 +244,10 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         <MapClickHandler selectable={selectable} onLocationSelect={onLocationSelect} />
 
         {/* Render warehouse shapes first (so they appear behind markers) */}
-        {mapLocations.map((location) => (
-          <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />
-        ))}
+        {mapLocations.map((location) => {
+          console.log('Attempting to render warehouse shape for:', location.name);
+          return <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />;
+        })}
 
         {/* Render markers */}
         {mapLocations.map((location) => (
@@ -253,7 +278,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 )}
                 {location.warehouseShape && location.warehouseShape.length > 0 && (
                   <p className="text-xs text-blue-600 mt-1">
-                    🏪 Zone tracée ({location.warehouseShapeType || 'polygon'})
+                    🏪 Zone tracée ({location.warehouseShapeType || 'polygon'}) - {location.warehouseShape.length} points
                   </p>
                 )}
                 {location.startDate && (
@@ -296,7 +321,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             ))}
             {/* Warehouse shape legend */}
             <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-              <div className="w-3 h-3 border border-orange-500 bg-orange-200 flex-shrink-0"></div>
+              <div className="w-3 h-3 border-2 border-orange-500 bg-orange-200 flex-shrink-0" style={{ borderStyle: 'dashed' }}></div>
               <span className="truncate">Zone d'entrepôt tracée</span>
             </div>
           </div>

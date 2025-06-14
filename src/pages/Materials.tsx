@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
@@ -125,8 +124,14 @@ const Materials = () => {
 
   // Convert materials to enhanced map locations with warehouse shapes
   const materialLocations: EnhancedMapLocation[] = useMemo(() => {
+    console.log('Processing materials for map:', filteredMaterials.length);
+    
     return filteredMaterials
-      .filter(material => (material as any).coordinates_latitude && (material as any).coordinates_longitude)
+      .filter(material => {
+        const hasCoords = (material as any).coordinates_latitude && (material as any).coordinates_longitude;
+        console.log(`Material ${(material as any).name}: hasCoords=${hasCoords}, localisation=`, (material as any).localisation);
+        return hasCoords;
+      })
       .map(material => {
         const baseLocation: EnhancedMapLocation = {
           id: (material as any).id,
@@ -139,16 +144,31 @@ const Materials = () => {
         };
 
         // Add warehouse shape data if available
-        if ((material as any).localisation && Array.isArray((material as any).localisation)) {
-          const localisation = (material as any).localisation;
-          
-          // Check if localisation contains warehouse shape data
-          if (localisation.length > 0 && localisation[0].warehouseShape) {
-            baseLocation.warehouseShape = localisation[0].warehouseShape;
-            baseLocation.warehouseShapeType = localisation[0].warehouseShapeType || 'polygon';
+        const localisation = (material as any).localisation;
+        console.log(`Processing localisation for ${(material as any).name}:`, localisation);
+        
+        if (localisation && Array.isArray(localisation)) {
+          // Check if any item in the localisation array has warehouseShape
+          for (const item of localisation) {
+            if (item && item.warehouseShape && Array.isArray(item.warehouseShape) && item.warehouseShape.length > 0) {
+              console.log(`Found warehouse shape for ${(material as any).name}:`, item.warehouseShape);
+              baseLocation.warehouseShape = item.warehouseShape;
+              baseLocation.warehouseShapeType = item.warehouseShapeType || 'polygon';
+              break;
+            }
+          }
+        }
+        
+        // Also check if localisation is directly a warehouse shape object
+        if (localisation && typeof localisation === 'object' && !Array.isArray(localisation)) {
+          if (localisation.warehouseShape && Array.isArray(localisation.warehouseShape) && localisation.warehouseShape.length > 0) {
+            console.log(`Found direct warehouse shape for ${(material as any).name}:`, localisation.warehouseShape);
+            baseLocation.warehouseShape = localisation.warehouseShape;
+            baseLocation.warehouseShapeType = localisation.warehouseShapeType || 'polygon';
           }
         }
 
+        console.log(`Final location for ${(material as any).name}:`, baseLocation);
         return baseLocation;
       });
   }, [filteredMaterials]);
@@ -268,6 +288,7 @@ const Materials = () => {
             </TabsList>
             
             <TabsContent value="grid" className="mt-6">
+              {/* ... keep existing code (grid view) */}
               {filteredMaterials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMaterials.map((material, index) => (
