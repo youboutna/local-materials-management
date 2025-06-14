@@ -249,14 +249,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 <div className="space-y-2">
                   <Label htmlFor="project_responsable_id">Responsable du projet</Label>
                   <Select 
-                    value={formData.project_responsable_id} 
-                    onValueChange={(value) => handleChange('project_responsable_id', value)}
+                    value={formData.project_responsable_id || 'no-selection'} 
+                    onValueChange={(value) => handleChange('project_responsable_id', value === 'no-selection' ? '' : value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sélectionner un responsable" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun responsable assigné</SelectItem>
+                      <SelectItem value="no-selection">Aucun responsable assigné</SelectItem>
                       {employees.map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
                           <div className="flex flex-col">
