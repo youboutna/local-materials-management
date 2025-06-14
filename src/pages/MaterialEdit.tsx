@@ -81,7 +81,7 @@ const MaterialEdit = () => {
         forme: updatedData.forme,
         coordinates_latitude: updatedData.coordinates?.lat,
         coordinates_longitude: updatedData.coordinates?.lng,
-        localisation: updatedData.localisation,
+        localisation: updatedData.localisation as any, // Cast to Json type
         updated_at: new Date().toISOString()
       };
 
@@ -125,9 +125,9 @@ const MaterialEdit = () => {
         pricePerUnit: Number(material.price_per_unit),
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
-        adresse: material.adresse || '',
+        adresse: material.adresse as string || '',
         forme: material.forme || '',
-        localisation: material.localisation || [],
+        localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
         supplier: {
           name: material.origin_location || '',
           contact: '',
@@ -145,6 +145,14 @@ const MaterialEdit = () => {
   const handleSubmit = (updatedData: Partial<EnhancedMaterial>) => {
     updateMaterial.mutate(updatedData);
   };
+
+  // Transform workspaces to match the expected interface
+  const transformedWorkspaces = workspaces.map(workspace => ({
+    id: workspace.id,
+    name: workspace.name,
+    location: workspace.location as any, // Cast to Location type
+    status: workspace.status as any // Cast to OperationalStatus type
+  }));
 
   if (isLoading) {
     return (
@@ -213,7 +221,7 @@ const MaterialEdit = () => {
               <EnhancedMaterialForm
                 onSubmit={handleSubmit}
                 initialData={formData}
-                workspaces={workspaces}
+                workspaces={transformedWorkspaces}
                 showSubmitButton={false}
               />
               
