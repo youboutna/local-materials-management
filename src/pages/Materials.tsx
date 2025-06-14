@@ -60,7 +60,9 @@ const Materials = () => {
   const mapLocations: MapLocation[] = materials
     .filter(material => material.coordinates_latitude && material.coordinates_longitude)
     .map(material => {
-      console.log(`Processing localisation for ${material.name}:`, material.localisation);
+      console.log(`Processing material for map: ${material.name}`);
+      console.log('Raw localisation data:', material.localisation);
+      console.log('Forme field:', material.forme);
       
       let warehouseShape: { lat: number; lng: number }[] | undefined;
       let warehouseShapeType: 'polygon' | 'rectangle' | 'circle' | undefined;
@@ -68,14 +70,27 @@ const Materials = () => {
       // Parse localisation data if it exists
       if (material.localisation) {
         try {
-          const parsedLocalisation = JSON.parse(material.localisation);
-          if (Array.isArray(parsedLocalisation) && parsedLocalisation.length > 0) {
-            warehouseShape = parsedLocalisation.map(point => ({
-              lat: point.lat,
-              lng: point.lng
-            }));
-            warehouseShapeType = material.forme as 'polygon' | 'rectangle' | 'circle' || 'polygon';
-            console.log(`Parsed warehouse shape for ${material.name}:`, warehouseShape, 'type:', warehouseShapeType);
+          let parsedData;
+          // Handle both string and already parsed JSON
+          if (typeof material.localisation === 'string') {
+            parsedData = JSON.parse(material.localisation);
+          } else {
+            parsedData = material.localisation;
+          }
+          
+          console.log('Parsed localisation data:', parsedData);
+          
+          // Check if it's an array of coordinates (warehouse shape)
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            // Verify the structure has lat/lng properties
+            if (parsedData[0] && typeof parsedData[0] === 'object' && 'lat' in parsedData[0] && 'lng' in parsedData[0]) {
+              warehouseShape = parsedData.map(point => ({
+                lat: point.lat,
+                lng: point.lng
+              }));
+              warehouseShapeType = (material.forme as 'polygon' | 'rectangle' | 'circle') || 'polygon';
+              console.log(`Successfully parsed warehouse shape for ${material.name}:`, warehouseShape, 'type:', warehouseShapeType);
+            }
           }
         } catch (error) {
           console.error(`Error parsing localisation for ${material.name}:`, error);
@@ -94,9 +109,11 @@ const Materials = () => {
         warehouseShapeType
       };
       
-      console.log(`Final location for ${material.name}:`, location);
+      console.log(`Final map location for ${material.name}:`, location);
       return location;
     });
+
+  console.log('Total map locations with warehouse shapes:', mapLocations.filter(loc => loc.warehouseShape).length);
 
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,6 +267,11 @@ const Materials = () => {
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
                   Localisation des matériaux ({mapLocations.length} matériaux géolocalisés)
+                  {mapLocations.filter(loc => loc.warehouseShape).length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {mapLocations.filter(loc => loc.warehouseShape).length} avec formes d'entrepôt
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
