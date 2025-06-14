@@ -1,11 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Users, ArrowUpRight } from 'lucide-react';
-import StatusBadge from './StatusBadge';
-import ProgressIndicator from './ProgressIndicator';
-import { ProjectStatus } from '@/types/project';
-import { useLanguage } from '@/contexts/LanguageContext';
+
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
 
 export interface ProjectData {
   id: string;
@@ -29,104 +23,68 @@ export interface ProjectData {
   selectionMode?: string;
   launchDate?: string;
   attributionDate?: string;
+  projectResponsableId?: string;
+  mainContractor?: string;
+  projectReference?: string;
+  // Payment settings
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
 }
 
-interface ProjectCardProps {
-  project: ProjectData;
-  index: number;
+export interface ProjectWithPayments extends ProjectData {
+  payments: Payment[];
+  inspections?: Inspection[];
 }
 
-const ProjectCard = ({ project, index }: ProjectCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const { t } = useLanguage();
+export interface Payment {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  progress_at_payment: number;
+  transaction_id: string;
+  // New contractor fields
+  contractor_id?: string;
+  contractor_name: string;
+  contractor_contact: string;
+  // Method-specific fields
+  bank_name?: string;
+  account_number?: string;
+  check_number?: string;
+  mobile_number?: string;
+  mobile_operator?: string;
+  receiver_name?: string;
+}
 
-  // Format budget to locale string
-  const formattedBudget = new Intl.NumberFormat(t('locale') || 'fr-MR', {
-    style: 'currency',
-    currency: 'MRU',
-    maximumFractionDigits: 0,
-  }).format(project.budget);
+export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="h-full"
-    >
-      <Link 
-        to={`/projects/${project.id}`}
-        className="block h-full"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="bg-white rounded-xl overflow-hidden shadow-elegant h-full transition-all duration-300 hover:shadow-soft transform hover:-translate-y-1">
-          <div className="relative h-48 overflow-hidden">
-            <img 
-              src={project.thumbnail} 
-              alt={project.title}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out"
-              style={{ 
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)'
-              }}
-            />
-            <div className="absolute top-4 right-4">
-              <StatusBadge status={project.status as any} />
-            </div>
-          </div>
-          
-          <div className="p-5">
-            <h3 className="text-xl font-serif font-semibold text-adrar-800 mb-2 line-clamp-1">
-              {project.title}
-            </h3>
-            
-            <p className="text-adrar-600 text-sm mb-4 line-clamp-2">
-              {project.description}
-            </p>
-            
-            <div className="space-y-3 mb-4">
-              <div className="flex items-center text-sm text-adrar-600">
-                <MapPin className="h-4 w-4 mr-2 text-terracotta-500" />
-                <span>{project.location}</span>
-                {project.coordinates && (
-                  <span className="ml-1 text-xs text-adrar-500">
-                    ({project.coordinates.latitude.toFixed(2)}, {project.coordinates.longitude.toFixed(2)})
-                  </span>
-                )}
-              </div>
-              
-              <div className="flex items-center text-sm text-adrar-600">
-                <Calendar className="h-4 w-4 mr-2 text-terracotta-500" />
-                <span>
-                  {t('projects.start_date') || 'Début'}: {new Date(project.startDate).toLocaleDateString(t('locale') || 'fr-FR')}
-                </span>
-              </div>
-              
-              <div className="flex items-center text-sm text-adrar-600">
-                <Users className="h-4 w-4 mr-2 text-terracotta-500" />
-                <span>
-                  {project.teamSize} {t('projects.team_members') || 'personnes'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <span className="text-xs text-adrar-500">{t('projects.budget') || 'Budget'}</span>
-                <p className="text-lg font-semibold text-adrar-800">{formattedBudget}</p>
-              </div>
-              <div className="inline-flex items-center text-terracotta-500 font-medium text-sm">
-                {t('projects.see_details') || 'Voir détails'}
-                <ArrowUpRight className="ml-1 h-4 w-4" />
-              </div>
-            </div>
-            
-            <ProgressIndicator value={project.progress} />
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-};
+export interface Inspection {
+  id: string;
+  date: string;
+  status: InspectionStatus;
+  inspector: string;
+  progress_at_inspection: number;
+  comments?: string | null;
+  documents?: any[];
+}
 
-export default ProjectCard;
+// Import types
+export interface ImportFile {
+  name: string;
+  size: number;
+  type: string;
+  data: ArrayBuffer | string;
+}
+
+export interface ImportOptions {
+  maxFileSize: number; // in bytes
+  allowedFormats: string[];
+  encoding?: string;
+}
+
+export interface ImportResult {
+  success: boolean;
+  message: string;
+  importedCount?: number;
+  errors?: string[];
+}

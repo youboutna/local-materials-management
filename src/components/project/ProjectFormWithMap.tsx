@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -81,6 +80,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load employees for project responsable selection
   useEffect(() => {
@@ -115,12 +115,27 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     setFacilitiesMapData(data);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      facilitiesLocation: facilitiesMapData
-    });
+    
+    // Validate required fields
+    if (!formData.title || !formData.description || !formData.location) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await onSubmit({
+        ...formData,
+        facilitiesLocation: facilitiesMapData
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -479,8 +494,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
       </Tabs>
 
       <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
-        <Button type="submit" className="bg-adrar-600 hover:bg-adrar-700 w-full sm:w-auto">
-          Enregistrer le projet
+        <Button 
+          type="submit" 
+          className="bg-adrar-600 hover:bg-adrar-700 w-full sm:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Enregistrement...' : 'Enregistrer le projet'}
         </Button>
       </div>
     </form>
