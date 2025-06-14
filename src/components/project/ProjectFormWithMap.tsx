@@ -1,13 +1,21 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Building } from 'lucide-react';
+import { Calendar, MapPin, Building, User, HardHat } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Employee {
+  id: string;
+  full_name: string;
+  position?: string;
+  department?: string;
+}
 
 interface ProjectFormData {
   title: string;
@@ -21,6 +29,8 @@ interface ProjectFormData {
   financing_source?: string;
   market_type?: string;
   selection_mode?: string;
+  project_responsable_id?: string;
+  main_contractor?: string;
 }
 
 interface MapData {
@@ -50,6 +60,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     financing_source: '',
     market_type: '',
     selection_mode: '',
+    project_responsable_id: '',
+    main_contractor: '',
     ...initialData
   });
 
@@ -58,6 +70,31 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     polygon: [],
     address: ''
   });
+
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
+
+  // Load employees for project responsable selection
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('id, full_name, position, department')
+          .eq('is_active', true)
+          .order('full_name');
+
+        if (error) throw error;
+        setEmployees(data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -160,6 +197,51 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 value={formData.team_size}
                 onChange={(e) => handleChange('team_size', parseInt(e.target.value) || 1)}
                 required
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Project Team & Contractor */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Équipe et Contractants
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="project_responsable_id">Responsable du projet</Label>
+              <Select 
+                value={formData.project_responsable_id} 
+                onValueChange={(value) => handleChange('project_responsable_id', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un responsable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucun responsable assigné</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.full_name}
+                      {employee.position && ` - ${employee.position}`}
+                      {employee.department && ` (${employee.department})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="main_contractor">Contractant principal</Label>
+              <Input
+                id="main_contractor"
+                value={formData.main_contractor}
+                onChange={(e) => handleChange('main_contractor', e.target.value)}
+                placeholder="Nom du contractant principal"
               />
             </div>
           </div>

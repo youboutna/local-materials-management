@@ -1,4 +1,3 @@
-
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
 
 export interface ProjectData {
@@ -23,6 +22,8 @@ export interface ProjectData {
   selectionMode?: string;
   launchDate?: string;
   attributionDate?: string;
+  projectResponsableId?: string;
+  mainContractor?: string;
 }
 
 export interface ProjectWithPayments extends ProjectData {

@@ -62,6 +62,13 @@ export class Project {
   @Column({ name: "attribution_date", type: "date", nullable: true })
   attributionDate!: Date | null;
 
+  // New fields for project responsable and main contractor
+  @Column({ name: "project_responsable_id", type: "uuid", nullable: true })
+  projectResponsableId!: string | null;
+
+  @Column({ name: "main_contractor", type: "varchar", nullable: true })
+  mainContractor!: string | null;
+
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project, { cascade: true })
   projectMaterials!: ProjectMaterial[];
 
@@ -93,7 +100,9 @@ export class Project {
       marketType: this.marketType || undefined,
       selectionMode: this.selectionMode || undefined,
       launchDate: this.launchDate ? this.launchDate.toISOString().split('T')[0] : undefined,
-      attributionDate: this.attributionDate ? this.attributionDate.toISOString().split('T')[0] : undefined
+      attributionDate: this.attributionDate ? this.attributionDate.toISOString().split('T')[0] : undefined,
+      projectResponsableId: this.projectResponsableId || undefined,
+      mainContractor: this.mainContractor || undefined
     };
   }
 }
