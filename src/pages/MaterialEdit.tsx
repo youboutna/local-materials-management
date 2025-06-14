@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,7 +71,7 @@ const MaterialEdit = () => {
       const materialUpdate = {
         name: updatedData.name,
         description: updatedData.description,
-        category: material?.category, // Use original category from database
+        category: updatedData.name, // Use name as category since category doesn't exist in DB
         unit: updatedData.unit,
         price_per_unit: updatedData.pricePerUnit,
         available_quantity: updatedData.availableQuantity,
@@ -78,8 +79,8 @@ const MaterialEdit = () => {
         origin_location: updatedData.supplier?.name,
         adresse: updatedData.adresse,
         forme: updatedData.forme,
-        coordinates_latitude: updatedData.coordinatesLatitude,
-        coordinates_longitude: updatedData.coordinatesLongitude,
+        coordinates_latitude: material?.coordinates_latitude, // Keep original values
+        coordinates_longitude: material?.coordinates_longitude, // Keep original values
         localisation: updatedData.localisation as any, // Cast to Json type
         updated_at: new Date().toISOString()
       };
@@ -130,9 +131,7 @@ const MaterialEdit = () => {
           name: material.origin_location || '',
           contact: '',
           leadTime: 7
-        },
-        coordinatesLatitude: material.coordinates_latitude ? Number(material.coordinates_latitude) : undefined,
-        coordinatesLongitude: material.coordinates_longitude ? Number(material.coordinates_longitude) : undefined
+        }
       };
       setFormData(transformedData);
     }
