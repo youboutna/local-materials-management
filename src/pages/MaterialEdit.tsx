@@ -70,7 +70,7 @@ const MaterialEdit = () => {
       const materialUpdate = {
         name: updatedData.name,
         description: updatedData.description,
-        category: updatedData.category || material?.category,
+        category: material?.category, // Use original category from database
         unit: updatedData.unit,
         price_per_unit: updatedData.pricePerUnit,
         available_quantity: updatedData.availableQuantity,
@@ -119,7 +119,6 @@ const MaterialEdit = () => {
       const transformedData: Partial<EnhancedMaterial> = {
         name: material.name,
         description: material.description,
-        category: material.category,
         unit: material.unit,
         pricePerUnit: Number(material.price_per_unit),
         availableQuantity: Number(material.available_quantity),
