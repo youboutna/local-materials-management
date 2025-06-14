@@ -926,38 +926,65 @@ export type Database = {
       }
       payments: {
         Row: {
+          account_number: string | null
           amount: number
+          bank_name: string | null
+          check_number: string | null
+          contractor_contact: string
+          contractor_id: string | null
+          contractor_name: string
           created_at: string
           id: string
           inspection_id: string | null
+          mobile_number: string | null
+          mobile_operator: string | null
           payment_date: string
           payment_method: string
           progress_at_payment: number
           project_id: string
+          receiver_name: string | null
           transaction_id: string
           updated_at: string
         }
         Insert: {
+          account_number?: string | null
           amount: number
+          bank_name?: string | null
+          check_number?: string | null
+          contractor_contact: string
+          contractor_id?: string | null
+          contractor_name: string
           created_at?: string
           id?: string
           inspection_id?: string | null
+          mobile_number?: string | null
+          mobile_operator?: string | null
           payment_date: string
           payment_method: string
           progress_at_payment: number
           project_id: string
+          receiver_name?: string | null
           transaction_id: string
           updated_at?: string
         }
         Update: {
+          account_number?: string | null
           amount?: number
+          bank_name?: string | null
+          check_number?: string | null
+          contractor_contact?: string
+          contractor_id?: string | null
+          contractor_name?: string
           created_at?: string
           id?: string
           inspection_id?: string | null
+          mobile_number?: string | null
+          mobile_operator?: string | null
           payment_date?: string
           payment_method?: string
           progress_at_payment?: number
           project_id?: string
+          receiver_name?: string | null
           transaction_id?: string
           updated_at?: string
         }

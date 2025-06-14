@@ -46,10 +46,26 @@ const ProjectDetail = () => {
         throw new Error('Project not found');
       }
 
-      // Fetch payments
+      // Fetch payments with all new fields
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
-        .select('*')
+        .select(`
+          id,
+          amount,
+          payment_date,
+          payment_method,
+          progress_at_payment,
+          transaction_id,
+          contractor_id,
+          contractor_name,
+          contractor_contact,
+          bank_name,
+          account_number,
+          check_number,
+          mobile_number,
+          mobile_operator,
+          receiver_name
+        `)
         .eq('project_id', projectId)
         .order('payment_date', { ascending: false });
 
