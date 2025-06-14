@@ -20,6 +20,24 @@ interface MapFiltersProps {
   onFilterChange: (filteredLocations: MapLocation[]) => void;
 }
 
+// Enhanced mapping of cities/locations to their respective regions
+const CITY_TO_REGION_MAP: Record<string, string[]> = {
+  'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane'], // Adrar
+  'ASA': ['kifa', 'guerou', 'barkeol'], // Assaba  
+  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé'], // Brakna
+  'DKN': ['nouadhibou', 'dakhlet nouadhibou'], // Dakhlet Nouadhibou
+  'GOG': ['kaédi', 'maghama', 'monguel'], // Gorgol
+  'GDM': ['sélibaby', 'ghabou', 'ould yengé'], // Guidimaka
+  'HEC': ['néma', 'bassiknou', 'amourj'], // Hodh Ech Chargui
+  'HEG': ['aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'], // Hodh El Gharbi
+  'INC': ['akjoujt', 'benichab'], // Inchiri
+  'NKC': ['nouakchott', 'nkc'], // Nouakchott
+  'NDB': ['nouadhibou', 'ndb'], // Nouadhibou (alternative)
+  'TGT': ['tidjikja', 'moudjéria', 'rachid'], // Tagant
+  'TRZ': ['rosso', 'keur macène', 'mederdra'], // Tiris Zemmour
+  'TRR': ['rosso', 'boutilimit', 'r'kiz'] // Trarza
+};
+
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
@@ -35,11 +53,66 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     return Array.from(statuses);
   }, [locations]);
 
-  // Apply filters with improved region matching
+  // Enhanced region matching function
+  const matchesRegion = (itemRegion: string, selectedRegionCode: string): boolean => {
+    if (!itemRegion) return false;
+    
+    const itemRegionLower = itemRegion.toLowerCase().trim();
+    const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === selectedRegionCode);
+    
+    if (!selectedRegion) return false;
+    
+    const regionName = selectedRegion.name.toLowerCase().trim();
+    const regionNameAr = selectedRegion.nameAr.toLowerCase().trim();
+    
+    // 1. Direct exact matches
+    if (itemRegionLower === regionName || itemRegionLower === regionNameAr) {
+      return true;
+    }
+    
+    // 2. Check if the item location is a known city in this region
+    const citiesInRegion = CITY_TO_REGION_MAP[selectedRegionCode] || [];
+    const cityMatch = citiesInRegion.some(city => 
+      itemRegionLower.includes(city.toLowerCase()) || 
+      city.toLowerCase().includes(itemRegionLower)
+    );
+    
+    if (cityMatch) {
+      return true;
+    }
+    
+    // 3. Partial name matching (contains)
+    if (itemRegionLower.includes(regionName) || 
+        itemRegionLower.includes(regionNameAr) ||
+        regionName.includes(itemRegionLower) ||
+        regionNameAr.includes(itemRegionLower)) {
+      return true;
+    }
+    
+    // 4. Clean matches (remove common administrative words)
+    const cleanItemRegion = itemRegionLower.replace(/wilaya|région|province|governorate|commune/gi, '').trim();
+    const cleanRegionName = regionName.replace(/wilaya|région|province|governorate/gi, '').trim();
+    
+    if (cleanItemRegion === cleanRegionName) {
+      return true;
+    }
+    
+    // 5. Word-by-word matching
+    const regionWords = regionName.split(' ').filter(word => word.length > 2);
+    const itemWords = itemRegionLower.split(' ').filter(word => word.length > 2);
+    
+    return regionWords.some(word => 
+      itemWords.some(itemWord => 
+        itemWord.includes(word) || word.includes(itemWord)
+      )
+    );
+  };
+
+  // Apply filters
   useEffect(() => {
     let filtered = [...locations];
     
-    console.log('MapFilters - Original locations:', locations.length);
+    console.log('MapFilters - Original locations:', filtered.length);
     console.log('MapFilters - Filter settings:', { statusFilter, regionFilter });
     
     if (statusFilter !== 'all') {
@@ -51,42 +124,17 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
       const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
       if (selectedRegion) {
         console.log('MapFilters - Selected region:', selectedRegion);
+        console.log('MapFilters - Cities in this region:', CITY_TO_REGION_MAP[regionFilter] || []);
         
         const beforeRegionFilter = filtered.length;
         filtered = filtered.filter(item => {
-          if (!item.region) {
-            console.log('MapFilters - Item has no region:', item);
-            return false;
-          }
+          const matches = matchesRegion(item.region || '', regionFilter);
           
-          const itemRegion = item.region.toLowerCase().trim();
-          const regionName = selectedRegion.name.toLowerCase().trim();
-          const regionNameAr = selectedRegion.nameAr.toLowerCase().trim();
-          
-          // Enhanced matching strategies
-          const matches = 
-            // Exact matches
-            itemRegion === regionName ||
-            itemRegion === regionNameAr ||
-            // Contains matches (both directions)
-            itemRegion.includes(regionName) ||
-            itemRegion.includes(regionNameAr) ||
-            regionName.includes(itemRegion) ||
-            regionNameAr.includes(itemRegion) ||
-            // Clean matches (remove common words)
-            itemRegion.replace(/wilaya|région|province|governorate/gi, '').trim() === regionName ||
-            regionName.replace(/wilaya|région|province|governorate/gi, '').trim() === itemRegion ||
-            // Partial word matches
-            regionName.split(' ').some(word => itemRegion.includes(word)) ||
-            regionNameAr.split(' ').some(word => itemRegion.includes(word)) ||
-            itemRegion.split(' ').some(word => regionName.includes(word));
-            
           console.log('MapFilters - Region matching for item:', {
             itemId: item.id,
             itemName: item.name,
-            itemRegion,
-            regionName,
-            regionNameAr,
+            itemRegion: item.region,
+            selectedRegion: selectedRegion.name,
             matches
           });
           
@@ -95,7 +143,6 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
         
         console.log(`MapFilters - Region filter: ${beforeRegionFilter} → ${filtered.length} locations`);
         
-        // Show which items were filtered out for debugging
         if (filtered.length < beforeRegionFilter) {
           const filteredOut = locations.filter(loc => !filtered.find(f => f.id === loc.id));
           console.log('MapFilters - Filtered out items:', filteredOut.map(item => ({
@@ -284,6 +331,15 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                 </div>
               ))}
               {locations.length > 5 && <div className="ml-2">... et {locations.length - 5} autres</div>}
+              
+              {regionFilter !== 'all' && (
+                <div className="mt-2 border-t pt-2">
+                  <div>Cities mapped to {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}:</div>
+                  <div className="ml-2">
+                    {(CITY_TO_REGION_MAP[regionFilter] || []).join(', ') || 'None mapped'}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
