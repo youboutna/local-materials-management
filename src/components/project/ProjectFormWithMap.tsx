@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,8 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface Employee {
   id: string;
   full_name: string;
-  position?: string;
-  department?: string;
+  position?: string | null;
+  department?: string | null;
 }
 
 interface ProjectFormData {
