@@ -10,7 +10,6 @@ import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
-import { supabase } from '@/integrations/supabase/client';
 
 const ProjectCreate = () => {
   const { t } = useLanguage();
@@ -35,7 +34,7 @@ const ProjectCreate = () => {
         description: data.description,
         location: data.location,
         status: data.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
-        progress: 0, // Default progress for new projects
+        progress: 0,
         budget: data.budget,
         startDate: data.start_date,
         endDate: data.end_date,
