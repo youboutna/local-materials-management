@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -102,9 +103,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
     ? maxInitialPayment
     : PaymentValidator.calculateAllowedAmount(project);
     
+  // Maximum allowed amount with 1.5x tolerance instead of 1.1x
   const maxToleranceAmount = isInitialPaymentPhase
     ? maxInitialPayment
-    : PaymentValidator.getMaxAllowedAmountWithTolerance(project);
+    : allowedPaymentAmount * 1.5; // Changed from PaymentValidator.getMaxAllowedAmountWithTolerance
   
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -134,9 +136,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
         return;
       }
     } else {
-      const validation = PaymentValidator.validatePaymentTransfer(project, values.amount);
-      if (!validation.valid) {
-        setValidationError(validation.message || "Erreur de validation du paiement");
+      // Use new tolerance of 1.5x instead of validation service
+      if (values.amount > maxToleranceAmount) {
+        setValidationError(`Le montant demandé (${values.amount.toLocaleString()}) dépasse le paiement autorisé maximum (${maxToleranceAmount.toLocaleString()}) basé sur le progrès actuel du projet (${project.progress}%)`);
         return;
       }
     }
@@ -249,9 +251,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                 </div>
               )}
               <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                <span className="text-sm text-green-700">Reste à payer</span>
+                <span className="text-sm text-green-700">Maximum autorisé (1.5x)</span>
                 <span className="font-bold text-xl text-green-800">
-                  {Math.max(0, isInitialPaymentPhase ? maxInitialPayment : progressBasedRemaining).toLocaleString()} MRU
+                  {maxToleranceAmount.toLocaleString()} MRU
                 </span>
               </div>
             </div>
@@ -309,11 +311,10 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       {paymentStatus === "requires_changes" && (
         <Alert variant="destructive" className="bg-amber-50 border-amber-200">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Paiement limité</AlertTitle>
+          <AlertTitle className="text-amber-800">Paiement avec tolérance étendue</AlertTitle>
           <AlertDescription className="text-amber-700">
-            L'inspection a révélé des modifications nécessaires. Le paiement maximal autorisé 
-            est de {allowedPaymentAmount.toLocaleString()} MRU (50% du montant basé sur la progression).
-            Avec tolérance de 10%: {maxToleranceAmount.toLocaleString()} MRU
+            L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à 
+            {maxToleranceAmount.toLocaleString()} MRU (1.5x le montant basé sur la progression).
           </AlertDescription>
         </Alert>
       )}
@@ -372,6 +373,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                           type="number" 
                           min="1" 
                           step="1000" 
+                          max={maxToleranceAmount}
                           {...field} 
                           onChange={e => field.onChange(e.target.valueAsNumber)}
                           disabled={paymentStatus === "rejected"}
@@ -389,7 +391,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                           <>
                             Montant basé sur progression: {allowedPaymentAmount.toLocaleString()} MRU
                             <br />
-                            Maximum autorisé: {maxToleranceAmount.toLocaleString()} MRU
+                            Maximum autorisé (1.5x): {maxToleranceAmount.toLocaleString()} MRU
                           </>
                         )}
                       </FormDescription>
