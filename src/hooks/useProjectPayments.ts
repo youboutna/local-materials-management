@@ -11,6 +11,16 @@ interface CreatePaymentPayload {
     amount: number;
     paymentDate: string;
     paymentMethod: string;
+    contractorId?: string;
+    contractorName: string;
+    contractorContact: string;
+    // Method-specific fields
+    bankName?: string;
+    accountNumber?: string;
+    checkNumber?: string;
+    mobileNumber?: string;
+    mobileOperator?: string;
+    receiverName?: string;
   };
 }
 
@@ -49,6 +59,15 @@ export const useCreateProjectPayment = () => {
           progress_at_payment: (project as any).progress,
           inspection_id: latestInspection?.id,
           transaction_id: `TX-${Date.now()}`,
+          contractor_id: payment.contractorId,
+          contractor_name: payment.contractorName,
+          contractor_contact: payment.contractorContact,
+          bank_name: payment.bankName,
+          account_number: payment.accountNumber,
+          check_number: payment.checkNumber,
+          mobile_number: payment.mobileNumber,
+          mobile_operator: payment.mobileOperator,
+          receiver_name: payment.receiverName,
         } as any)
         .select()
         .single();
@@ -132,6 +151,15 @@ export const useProjectPayments = (projectId: string) => {
           progress_at_payment: paymentData.progress_at_payment,
           inspection_id: paymentData.inspection_id,
           transaction_id: paymentData.transaction_id,
+          contractor_id: paymentData.contractor_id,
+          contractor_name: paymentData.contractor_name,
+          contractor_contact: paymentData.contractor_contact,
+          bank_name: paymentData.bank_name,
+          account_number: paymentData.account_number,
+          check_number: paymentData.check_number,
+          mobile_number: paymentData.mobile_number,
+          mobile_operator: paymentData.mobile_operator,
+          receiver_name: paymentData.receiver_name,
         } as any)
         .select()
         .single();

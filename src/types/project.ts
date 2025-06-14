@@ -37,6 +37,17 @@ export interface Payment {
   payment_method: string;
   progress_at_payment: number;
   transaction_id: string;
+  // New contractor fields
+  contractor_id?: string;
+  contractor_name: string;
+  contractor_contact: string;
+  // Method-specific fields
+  bank_name?: string;
+  account_number?: string;
+  check_number?: string;
+  mobile_number?: string;
+  mobile_operator?: string;
+  receiver_name?: string;
 }
 
 export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';

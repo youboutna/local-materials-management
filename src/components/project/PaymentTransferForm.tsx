@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -26,10 +25,25 @@ import { PaymentValidator } from '@/services/paymentValidation';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from '@/components/ui/progress';
+import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
 interface PaymentTransferFormProps {
   project: ProjectWithPayments;
-  onSubmit: (data: { amount: number; paymentMethod: string; paymentDate: string }) => void;
+  onSubmit: (data: { 
+    amount: number; 
+    paymentMethod: string; 
+    paymentDate: string;
+    contractorId?: string;
+    contractorName: string;
+    contractorContact: string;
+    // Method-specific fields
+    bankName?: string;
+    accountNumber?: string;
+    checkNumber?: string;
+    mobileNumber?: string;
+    mobileOperator?: string;
+    receiverName?: string;
+  }) => void;
   isSubmitting: boolean;
 }
 
@@ -37,6 +51,34 @@ const paymentFormSchema = z.object({
   amount: z.coerce.number().positive("Le montant doit être positif"),
   paymentMethod: z.string().min(1, "Veuillez sélectionner une méthode de paiement"),
   paymentDate: z.string().min(1, "Veuillez sélectionner une date"),
+  contractorName: z.string().min(1, "Le nom du contractant est requis"),
+  contractorContact: z.string().min(1, "Le contact du contractant est requis"),
+  contractorId: z.string().optional(),
+  // Method-specific fields
+  bankName: z.string().optional(),
+  accountNumber: z.string().optional(),
+  checkNumber: z.string().optional(),
+  mobileNumber: z.string().optional(),
+  mobileOperator: z.string().optional(),
+  receiverName: z.string().optional(),
+}).refine((data) => {
+  // Validation based on payment method
+  if (data.paymentMethod === "virement") {
+    return data.bankName && data.accountNumber;
+  }
+  if (data.paymentMethod === "cheque") {
+    return data.checkNumber && data.receiverName;
+  }
+  if (data.paymentMethod === "mobile") {
+    return data.mobileNumber && data.mobileOperator;
+  }
+  if (data.paymentMethod === "especes") {
+    return data.receiverName;
+  }
+  return true;
+}, {
+  message: "Veuillez remplir tous les champs requis pour cette méthode de paiement",
+  path: ["paymentMethod"],
 });
 
 export function PaymentTransferForm({ project, onSubmit, isSubmitting }: PaymentTransferFormProps) {
@@ -54,8 +96,19 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       amount: 0,
       paymentMethod: "virement",
       paymentDate: new Date().toISOString().split('T')[0],
+      contractorName: "",
+      contractorContact: "",
+      contractorId: undefined,
+      bankName: "",
+      accountNumber: "",
+      checkNumber: "",
+      mobileNumber: "",
+      mobileOperator: "",
+      receiverName: "",
     },
   });
+  
+  const selectedPaymentMethod = form.watch("paymentMethod");
   
   const validateAndSubmit = (values: z.infer<typeof paymentFormSchema>) => {
     const validation = PaymentValidator.validatePaymentTransfer(project, values.amount);
@@ -175,6 +228,22 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           </Alert>
         )}
         
+        {/* Contractor Selection */}
+        <SupplierSelector
+          value={{
+            id: form.watch('contractorId'),
+            name: form.watch('contractorName'),
+            contact: form.watch('contractorContact'),
+            leadTime: 7
+          }}
+          onChange={(supplier) => {
+            form.setValue('contractorId', supplier.id);
+            form.setValue('contractorName', supplier.name);
+            form.setValue('contractorContact', supplier.contact);
+          }}
+          allowCustom={true}
+        />
+        
         <FormField
           control={form.control}
           name="amount"
@@ -224,6 +293,133 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
             </FormItem>
           )}
         />
+
+        {/* Method-specific fields */}
+        {selectedPaymentMethod === "virement" && (
+          <div className="space-y-3 p-4 border rounded-lg bg-blue-50">
+            <h4 className="font-medium text-blue-800">Informations bancaires</h4>
+            <FormField
+              control={form.control}
+              name="bankName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom de la banque</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Ex: BMCI, BNM, GBM..." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accountNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro de compte</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Numéro de compte du bénéficiaire" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {selectedPaymentMethod === "cheque" && (
+          <div className="space-y-3 p-4 border rounded-lg bg-green-50">
+            <h4 className="font-medium text-green-800">Informations du chèque</h4>
+            <FormField
+              control={form.control}
+              name="checkNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro du chèque</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Numéro du chèque" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="receiverName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom du bénéficiaire</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nom sur le chèque" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {selectedPaymentMethod === "mobile" && (
+          <div className="space-y-3 p-4 border rounded-lg bg-purple-50">
+            <h4 className="font-medium text-purple-800">Paiement mobile</h4>
+            <FormField
+              control={form.control}
+              name="mobileOperator"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Opérateur mobile</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner l'opérateur" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="mauritel">Mauritel Money</SelectItem>
+                      <SelectItem value="mattel">Mattel Money</SelectItem>
+                      <SelectItem value="chinguitel">Chinguitel</SelectItem>
+                      <SelectItem value="bankily">Bankily</SelectItem>
+                      <SelectItem value="masrvi">Masrvi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="mobileNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numéro de téléphone</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Ex: 22234567" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {selectedPaymentMethod === "especes" && (
+          <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
+            <h4 className="font-medium text-yellow-800">Paiement en espèces</h4>
+            <FormField
+              control={form.control}
+              name="receiverName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom du bénéficiaire</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nom de la personne qui reçoit" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
         
         <FormField
           control={form.control}
