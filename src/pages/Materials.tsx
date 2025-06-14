@@ -1,206 +1,153 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, MapPin, Package, DollarSign, Truck, Search, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Trash2, Edit, Eye, Plus, Search, MapPin, Package2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProjectMap, { MapLocation } from '@/components/ProjectMap';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Database } from '@/integrations/supabase/types';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from "@/contexts/LanguageContext";
+import { MAURITANIA_REGIONS } from '@/types/mauritania';
 
-type Material = Database['public']['Tables']['materials']['Row'];
-type Workspace = Database['public']['Tables']['workspaces']['Row'];
-
-// Enhanced MapLocation interface to include warehouse shape data
-interface EnhancedMapLocation extends MapLocation {
-  warehouseShape?: { lat: number; lng: number }[];
-  warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
+interface Material {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  unit: string;
+  price_per_unit: number;
+  available_quantity: number;
+  origin_location: string;
+  image: string;
+  workspace_id?: string;
   adresse?: string;
+  localisation?: string;
+  forme?: string;
+  coordinates_latitude?: number;
+  coordinates_longitude?: number;
 }
 
 const Materials = () => {
   const { t } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sortOption, setSortOption] = useState('name');
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [regionFilter, setRegionFilter] = useState('');
+  const [showMap, setShowMap] = useState(false);
 
-  // Fetch materials with workspaces from Supabase
-  const { data: materials = [], isLoading, error } = useQuery({
+  // Fetch materials from Supabase
+  const { data: materials = [], isLoading } = useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('materials')
-        .select(`
-          *,
-          workspace:workspaces(
-            id,
-            name,
-            location,
-            status,
-            contact_manager,
-            contact_phone
-          )
-        `)
-        .order('name');
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as Material[];
     }
   });
 
-  // Fetch workspaces from Supabase
-  const { data: workspaces = [] } = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('*');
-      if (error) throw error;
-      return data;
-    }
+  // Process materials to create map locations with warehouse shapes
+  const mapLocations: MapLocation[] = materials
+    .filter(material => material.coordinates_latitude && material.coordinates_longitude)
+    .map(material => {
+      console.log(`Processing localisation for ${material.name}:`, material.localisation);
+      
+      let warehouseShape: { lat: number; lng: number }[] | undefined;
+      let warehouseShapeType: 'polygon' | 'rectangle' | 'circle' | undefined;
+      
+      // Parse localisation data if it exists
+      if (material.localisation) {
+        try {
+          const parsedLocalisation = JSON.parse(material.localisation);
+          if (Array.isArray(parsedLocalisation) && parsedLocalisation.length > 0) {
+            warehouseShape = parsedLocalisation.map(point => ({
+              lat: point.lat,
+              lng: point.lng
+            }));
+            warehouseShapeType = material.forme as 'polygon' | 'rectangle' | 'circle' || 'polygon';
+            console.log(`Parsed warehouse shape for ${material.name}:`, warehouseShape, 'type:', warehouseShapeType);
+          }
+        } catch (error) {
+          console.error(`Error parsing localisation for ${material.name}:`, error);
+        }
+      }
+      
+      const location: MapLocation = {
+        id: material.id,
+        name: material.name,
+        type: 'material',
+        latitude: material.coordinates_latitude!,
+        longitude: material.coordinates_longitude!,
+        region: material.origin_location,
+        adresse: material.adresse || '',
+        warehouseShape,
+        warehouseShapeType
+      };
+      
+      console.log(`Final location for ${material.name}:`, location);
+      return location;
+    });
+
+  const filteredMaterials = materials.filter(material => {
+    const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         material.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !categoryFilter || material.category === categoryFilter;
+    const matchesRegion = !regionFilter || material.origin_location === regionFilter;
+    
+    return matchesSearch && matchesCategory && matchesRegion;
   });
 
-  // Delete material mutation
-  const deleteMaterial = useMutation({
-    mutationFn: async (materialId: string) => {
+  const categories = [...new Set(materials.map(m => m.category))];
+  const regions = [...new Set(materials.map(m => m.origin_location))];
+
+  const handleDelete = async (id: string) => {
+    try {
       const { error } = await supabase
         .from('materials')
         .delete()
-        .eq('id', materialId);
-      
+        .eq('id', id);
+
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials'] });
+
       toast({
-        title: t("materials.deleted"),
-        description: t("materials.deleted_success"),
+        title: t('materials.toast.deleted'),
+        description: t('materials.toast.deleted_description'),
       });
-    },
-    onError: (error) => {
+
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+    } catch (error) {
+      console.error('Error deleting material:', error);
       toast({
-        title: t("materials.error"),
-        description: t("materials.delete_error"),
+        title: t('materials.toast.error'),
+        description: t('materials.toast.error_description'),
         variant: "destructive",
       });
     }
-  });
-
-  const handleDeleteMaterial = (materialId: string) => {
-    if (window.confirm(t("materials.confirm_delete"))) {
-      deleteMaterial.mutate(materialId);
-    }
   };
 
-  // Filter and sort materials
-  const filteredMaterials = materials
-    .filter(material => {
-      const matchesSearch = (material as any).name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           (material as any).description?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = categoryFilter === 'all' || (material as any).category === categoryFilter;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      switch (sortOption) {
-        case 'price':
-          return Number((a as any).price_per_unit) - Number((b as any).price_per_unit);
-        case 'quantity':
-          return Number((b as any).available_quantity) - Number((a as any).available_quantity);
-        case 'name':
-        default:
-          return (a as any).name?.localeCompare((b as any).name) || 0;
-      }
-    });
-
-  // Convert materials to enhanced map locations with warehouse shapes
-  const materialLocations: EnhancedMapLocation[] = useMemo(() => {
-    console.log('Processing materials for map:', filteredMaterials.length);
-    
-    return filteredMaterials
-      .filter(material => {
-        const hasCoords = (material as any).coordinates_latitude && (material as any).coordinates_longitude;
-        console.log(`Material ${(material as any).name}: hasCoords=${hasCoords}, localisation=`, (material as any).localisation);
-        return hasCoords;
-      })
-      .map(material => {
-        const baseLocation: EnhancedMapLocation = {
-          id: (material as any).id,
-          name: (material as any).name,
-          type: 'material' as const,
-          latitude: Number((material as any).coordinates_latitude!),
-          longitude: Number((material as any).coordinates_longitude!),
-          region: (material as any).origin_location || '',
-          adresse: (material as any).adresse || ''
-        };
-
-        // Add warehouse shape data if available
-        const localisation = (material as any).localisation;
-        console.log(`Processing localisation for ${(material as any).name}:`, localisation);
-        
-        if (localisation && Array.isArray(localisation)) {
-          // Check if any item in the localisation array has warehouseShape
-          for (const item of localisation) {
-            if (item && item.warehouseShape && Array.isArray(item.warehouseShape) && item.warehouseShape.length > 0) {
-              console.log(`Found warehouse shape for ${(material as any).name}:`, item.warehouseShape);
-              baseLocation.warehouseShape = item.warehouseShape;
-              baseLocation.warehouseShapeType = item.warehouseShapeType || 'polygon';
-              break;
-            }
-          }
-        }
-        
-        // Also check if localisation is directly a warehouse shape object
-        if (localisation && typeof localisation === 'object' && !Array.isArray(localisation)) {
-          if (localisation.warehouseShape && Array.isArray(localisation.warehouseShape) && localisation.warehouseShape.length > 0) {
-            console.log(`Found direct warehouse shape for ${(material as any).name}:`, localisation.warehouseShape);
-            baseLocation.warehouseShape = localisation.warehouseShape;
-            baseLocation.warehouseShapeType = localisation.warehouseShapeType || 'polygon';
-          }
-        }
-
-        console.log(`Final location for ${(material as any).name}:`, baseLocation);
-        return baseLocation;
-      });
-  }, [filteredMaterials]);
-
-  // Get unique categories
-  const categories = [...new Set(materials.map(m => (m as any).category))];
+  const getStockStatus = (quantity: number) => {
+    if (quantity === 0) return { status: 'Rupture', color: 'bg-red-500' };
+    if (quantity < 10) return { status: 'Faible', color: 'bg-orange-500' };
+    return { status: 'Disponible', color: 'bg-green-500' };
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">{t("materials.loading")}</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{t("materials.error_loading")}</p>
-            <Button onClick={() => window.location.reload()}>
-              {t("materials.retry")}
-            </Button>
+        <main className="flex-grow pt-24 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center">Chargement...</div>
           </div>
         </main>
         <Footer />
@@ -213,224 +160,216 @@ const Materials = () => {
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
-          <div className="flex flex-wrap justify-between items-center mb-6">
-            <motion.h1 
-              className="text-3xl font-bold text-adrar-900 font-serif"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {t("materials.title")}
-            </motion.h1>
-            
-            <Link to="/materials/create">
-              <Button className="bg-terracotta-500 hover:bg-terracotta-600">
-                <Plus className="h-4 w-4 mr-2" />
-                {t("materials.add")}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-adrar-900 mb-2">
+                {t('materials.title')}
+              </h1>
+              <p className="text-gray-600">
+                Gérez vos matériaux de construction et leur localisation
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowMap(!showMap)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                {showMap ? 'Masquer la carte' : 'Voir sur la carte'}
               </Button>
-            </Link>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={t("materials.search_placeholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder={t("materials.category")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("materials.all_categories")}</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={sortOption} onValueChange={setSortOption}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("materials.sort_by")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">{t("materials.sort.name")}</SelectItem>
-                  <SelectItem value="price">{t("materials.sort.price")}</SelectItem>
-                  <SelectItem value="quantity">{t("materials.sort.quantity")}</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button 
+                onClick={() => navigate('/materials/create')}
+                className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                {t('materials.new')}
+              </Button>
             </div>
           </div>
 
-          {/* Materials View */}
-          <Tabs defaultValue="grid" className="mb-6">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="grid" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                {t("materials.grid")}
-              </TabsTrigger>
-              <TabsTrigger value="map" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {t("materials.map")}
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="grid" className="mt-6">
-              {filteredMaterials.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredMaterials.map((material, index) => (
-                    <motion.div
-                      key={(material as any).id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <Card className="h-full hover:shadow-lg transition-shadow">
-                        <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
-                          <img 
-                            src={(material as any).image || '/img/material-placeholder.jpg'}
-                            alt={(material as any).name}
-                            className="w-full h-full object-cover"
-                          />
+          {/* Filters */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Rechercher un matériau..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toutes les catégories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={regionFilter} onValueChange={setRegionFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toutes les régions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Toutes les régions</SelectItem>
+                    {regions.map(region => (
+                      <SelectItem key={region} value={region}>
+                        {region}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCategoryFilter('');
+                    setRegionFilter('');
+                  }}
+                >
+                  Réinitialiser
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Map View */}
+          {showMap && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Localisation des matériaux ({mapLocations.length} matériaux géolocalisés)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProjectMap
+                  locations={mapLocations}
+                  height="500px"
+                  defaultZoom={6}
+                  className="rounded-lg border"
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Materials Grid */}
+          {filteredMaterials.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Package2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  Aucun matériau trouvé
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {searchTerm || categoryFilter || regionFilter
+                    ? "Essayez de modifier vos critères de recherche"
+                    : "Commencez par ajouter votre premier matériau"
+                  }
+                </p>
+                <Button onClick={() => navigate('/materials/create')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un matériau
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredMaterials.map((material) => {
+                const stockStatus = getStockStatus(material.available_quantity);
+                
+                return (
+                  <Card key={material.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg font-semibold text-adrar-900 line-clamp-2">
+                          {material.name}
+                        </CardTitle>
+                        <Badge className={`${stockStatus.color} text-white text-xs`}>
+                          {stockStatus.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-gray-600 text-sm line-clamp-2">
+                          {material.description}
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">Catégorie:</span>
+                            <br />
+                            <span className="text-gray-600">{material.category}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Unité:</span>
+                            <br />
+                            <span className="text-gray-600">{material.unit}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Prix:</span>
+                            <br />
+                            <span className="text-terracotta-600 font-semibold">
+                              {material.price_per_unit} MRU
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Stock:</span>
+                            <br />
+                            <span className="text-gray-600">{material.available_quantity}</span>
+                          </div>
                         </div>
                         
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg text-adrar-800 line-clamp-1">
-                              {(material as any).name}
-                            </CardTitle>
-                            <Badge variant="secondary" className="text-xs">
-                              {(material as any).category}
-                            </Badge>
-                          </div>
-                          <CardDescription className="line-clamp-2">
-                            {(material as any).description}
-                          </CardDescription>
-                        </CardHeader>
-                        
-                        <CardContent className="pt-0">
-                          <div className="space-y-2 text-sm text-adrar-600">
-                            <div className="flex justify-between">
-                              <span>{t("materials.unit_price")}:</span>
-                              <span className="font-medium">
-                                {Number((material as any).price_per_unit).toLocaleString()} MRU/{(material as any).unit}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>{t("materials.available")}:</span>
-                              <span className="font-medium">
-                                {Number((material as any).available_quantity)} {(material as any).unit}
-                              </span>
-                            </div>
+                        <div className="flex items-center gap-1 text-sm">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span className="text-gray-600">{material.origin_location}</span>
+                        </div>
 
-                            {/* --- Espace de travail et localisation --- */}
-                            <div className="flex items-center gap-2 mt-2">
-                              <MapPin className="h-4 w-4 text-terracotta-500" />
-                              <span className="font-semibold">{t("materials.workspace")}:</span>
-                              <span>
-                                {(material as any).workspace?.name || (
-                                  <span className="italic text-gray-400">{t("materials.not_defined")}</span>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{t("materials.warehouse_location")}:</span>
-                              <span>
-                                {Array.isArray((material as any).localisation) && (material as any).localisation.length > 0
-                                  ? (material as any).localisation.map((r: any) => r.name).join(', ')
-                                  : (material as any).origin_location || t("materials.not_defined")}
-                              </span>
-                            </div>
-                            {(material as any).adresse && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold">{t("materials.address")}:</span>
-                                <span>{(material as any).adresse}</span>
-                              </div>
-                            )}
-                            {(material as any).forme && (
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold">{t("materials.shape")}:</span>
-                                <span>{(material as any).forme}</span>
-                              </div>
-                            )}
-                            {/* --- End Espace de travail et localisation --- */}
-                          </div>
-                          <div className="flex justify-between mt-4">
-                            <Link to={`/materials/${(material as any).id}/edit`}>
-                              <Button variant="outline" size="sm">
-                                {t("materials.edit")}
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleDeleteMaterial((material as any).id)}
-                              disabled={deleteMaterial.isPending}
-                            >
-                              {deleteMaterial.isPending ? t("materials.deleting") : t("materials.delete")}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Package className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("materials.none_found")}</h3>
-                  <p className="text-adrar-600 mb-4">
-                    {searchQuery || categoryFilter !== 'all' 
-                      ? t("materials.no_match")
-                      : t("materials.add_first")
-                    }
-                  </p>
-                  <Link to="/materials/create">
-                    <Button className="bg-terracotta-500 hover:bg-terracotta-600">
-                      <Plus className="h-4 w-4 mr-2" />
-                      {t("materials.add")}
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="map" className="mt-6">
-              <div className="h-[600px]">
-                {materialLocations.length > 0 ? (
-                  <ProjectMap
-                    locations={materialLocations}
-                    defaultCenter={[18.079052, -15.965634]} // Nouakchott, Mauritania
-                    defaultZoom={6}
-                    height="600px"
-                    className="rounded-lg shadow-sm"
-                  />
-                ) : (
-                  <div className="bg-white rounded-xl shadow-elegant p-8 text-center h-full flex items-center justify-center">
-                    <div>
-                      <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("materials.no_geolocated")}</h3>
-                      <p className="text-adrar-600">
-                        {t("materials.geolocated_hint")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+                        <div className="flex gap-2 pt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/materials/${material.id}`)}
+                            className="flex-1"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Voir
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/materials/${material.id}/edit`)}
+                            className="flex-1"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(material.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
       
