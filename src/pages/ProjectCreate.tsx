@@ -57,7 +57,7 @@ const ProjectCreate = () => {
         financingSource: data.financing_source,
         marketType: data.market_type,
         selectionMode: data.selection_mode,
-        projectResponsable: data.project_responsable_id, // Changed from projectResponsableId
+        projectResponsableId: data.project_responsable_id, // Fixed: use projectResponsableId
         mainContractor: data.main_contractor,
         projectReference: data.project_reference,
         allowsInitialPayment: data.allows_initial_payment,
