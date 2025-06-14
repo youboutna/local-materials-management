@@ -78,8 +78,8 @@ const MaterialEdit = () => {
         origin_location: updatedData.supplier?.name,
         adresse: updatedData.adresse,
         forme: updatedData.forme,
-        coordinates_latitude: updatedData.coordinates?.lat,
-        coordinates_longitude: updatedData.coordinates?.lng,
+        coordinates_latitude: updatedData.coordinatesLatitude,
+        coordinates_longitude: updatedData.coordinatesLongitude,
         localisation: updatedData.localisation as any, // Cast to Json type
         updated_at: new Date().toISOString()
       };
@@ -131,10 +131,8 @@ const MaterialEdit = () => {
           contact: '',
           leadTime: 7
         },
-        coordinates: material.coordinates_latitude && material.coordinates_longitude ? {
-          lat: Number(material.coordinates_latitude),
-          lng: Number(material.coordinates_longitude)
-        } : undefined
+        coordinatesLatitude: material.coordinates_latitude ? Number(material.coordinates_latitude) : undefined,
+        coordinatesLongitude: material.coordinates_longitude ? Number(material.coordinates_longitude) : undefined
       };
       setFormData(transformedData);
     }
