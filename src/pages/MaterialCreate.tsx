@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,37 @@ const MaterialCreate = () => {
     polygon?: { lat: number; lng: number }[];
     warehouseShape?: { lat: number; lng: number }[];
     address?: string;
+    warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
   }>({});
+
+  // Regional coordinates for Mauritania wilayas
+  const REGION_COORDINATES = {
+    'NKC': [18.0735, -15.9582], // Nouakchott
+    'NDB': [20.9000, -17.0347], // Nouadhibou
+    'ADR': [20.5279, -10.0309], // Adrar
+    'ASB': [16.3333, -11.0000], // Assaba
+    'BRK': [16.5500, -12.8833], // Brakna
+    'DKL': [21.0000, -17.0000], // Dakhlet Nouadhibou
+    'GRL': [16.2500, -11.7500], // Gorgol
+    'GDM': [15.7500, -12.2500], // Guidimaka
+    'HEC': [18.5000, -7.0000],  // Hodh Ech Chargui
+    'HEG': [16.5000, -9.5000],  // Hodh El Gharbi
+    'ICH': [19.5000, -16.0000], // Inchiri
+    'TAG': [18.5000, -9.5000],  // Tagant
+    'TZM': [22.6667, -11.4000], // Tiris Zemmour
+    'TRZ': [17.5000, -15.5000]  // Trarza
+  } as const;
+
+  // Update map center when region changes
+  useEffect(() => {
+    if (selectedRegion && REGION_COORDINATES[selectedRegion as keyof typeof REGION_COORDINATES]) {
+      const [lat, lng] = REGION_COORDINATES[selectedRegion as keyof typeof REGION_COORDINATES];
+      setMapData(prev => ({
+        ...prev,
+        center: { lat, lng }
+      }));
+    }
+  }, [selectedRegion]);
 
   // Fetch workspaces from Supabase
   const { data: workspaces = [], refetch: refetchWorkspaces } = useQuery({
@@ -82,20 +113,23 @@ const MaterialCreate = () => {
         workspace_id: materialData.workspaceId || null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
-        forme: mapData.warehouseShape ? JSON.stringify(mapData.warehouseShape) : null,
+        forme: mapData.warehouseShape ? 
+          (mapData.warehouseShapeType || 'polygon') : null,
         coordinates_latitude: mapData.center?.lat || null,
         coordinates_longitude: mapData.center?.lng || null
       };
 
-      console.log('Saving material with location data:', {
+      console.log('Saving material with enhanced location data:', {
         selectedRegion,
         locationName,
         center: mapData.center,
         polygon: mapData.polygon,
         warehouseShape: mapData.warehouseShape,
+        warehouseShapeType: mapData.warehouseShapeType,
         dbData: {
           origin_location: dbData.origin_location,
           adresse: dbData.adresse,
+          forme: dbData.forme,
           coordinates_latitude: dbData.coordinates_latitude,
           coordinates_longitude: dbData.coordinates_longitude
         }
@@ -208,19 +242,52 @@ const MaterialCreate = () => {
               </Card>
             </div>
 
-            {/* Right Column - Map */}
+            {/* Right Column - Enhanced Interactive Map */}
             <div className="space-y-6">
               <div className="sticky top-24">
                 <InteractiveMap
                   value={mapData}
                   onChange={setMapData}
-                  title={t('materials.map.title')}
-                  description={t('materials.map.description')}
+                  title="Position GPS et forme de l'entrepôt"
+                  description={selectedRegion ? 
+                    `Définissez la position GPS et tracez la forme de stockage pour la région ${MAURITANIA_REGIONS.find(r => r.code === selectedRegion)?.name || selectedRegion}` :
+                    "Sélectionnez d'abord une région pour positionner l'entrepôt"
+                  }
                   allowPolygon={true}
                   allowCoordinateSelection={true}
                   allowWarehouseTracing={true}
                   className="h-[700px]"
                 />
+                
+                {/* Map Status Information */}
+                {selectedRegion && mapData.center && (
+                  <Card className="mt-4">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="font-medium">Région:</span>
+                          <span>{MAURITANIA_REGIONS.find(r => r.code === selectedRegion)?.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">GPS:</span>
+                          <span>{mapData.center.lat.toFixed(4)}, {mapData.center.lng.toFixed(4)}</span>
+                        </div>
+                        {mapData.polygon && (
+                          <div className="flex justify-between">
+                            <span className="font-medium">Zone délimitée:</span>
+                            <span>{mapData.polygon.length} points</span>
+                          </div>
+                        )}
+                        {mapData.warehouseShape && (
+                          <div className="flex justify-between">
+                            <span className="font-medium">Forme entrepôt:</span>
+                            <span>{mapData.warehouseShapeType || 'polygon'} - {mapData.warehouseShape.length} points</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
@@ -236,7 +303,7 @@ const MaterialCreate = () => {
                   formElement.dispatchEvent(submitEvent);
                 }
               }}
-              disabled={loading}
+              disabled={loading || !selectedRegion}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-12 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-semibold"
             >
               {loading ? t('materials.button.loading') : t('materials.button.save')}
