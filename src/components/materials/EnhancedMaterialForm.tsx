@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,13 +29,13 @@ interface EnhancedMaterialFormProps {
   language?: string;
 }
 
-const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
+const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   onSubmit,
   initialData,
   workspaces = [],
   showSubmitButton = true,
   language
-}) => {
+}, ref) => {
   const { t } = useLanguage();
 
   const [formData, setFormData] = useState<Partial<EnhancedMaterial>>({
@@ -62,6 +63,26 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({ ...prev, ...initialData }));
+    }
+  }, [initialData]);
+
+  // Call onSubmit whenever formData changes
+  useEffect(() => {
+    onSubmit(formData);
+  }, [formData, onSubmit]);
+
+  // Expose submit method to parent via ref
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      onSubmit(formData);
+    },
+    getFormData: () => formData
+  }));
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -363,6 +384,8 @@ const EnhancedMaterialForm: React.FC<EnhancedMaterialFormProps> = ({
       )}
     </form>
   );
-};
+});
+
+EnhancedMaterialForm.displayName = 'EnhancedMaterialForm';
 
 export default EnhancedMaterialForm;

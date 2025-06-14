@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ const MaterialCreate = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
+  const [formData, setFormData] = useState<Partial<EnhancedMaterial>>({});
+  const formRef = useRef<any>(null);
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
@@ -87,30 +89,34 @@ const MaterialCreate = () => {
     refetchWorkspaces();
   };
 
-  const handleSubmit = async (materialData: Partial<EnhancedMaterial>) => {
+  const handleFormDataChange = (data: Partial<EnhancedMaterial>) => {
+    setFormData(data);
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
     
     try {
       // Validate required fields
-      if (!materialData.name) {
+      if (!formData.name) {
         throw new Error(t('materials.error.name_required'));
       }
 
       // Get region name for location
       const region = MAURITANIA_REGIONS.find(r => r.code === selectedRegion);
-      const locationName = region ? region.name : (materialData.location || Location.Nouakchott);
+      const locationName = region ? region.name : (formData.location || Location.Nouakchott);
 
       // Transform enhanced material data to match current database schema
       const dbData = {
-        name: materialData.name,
-        description: materialData.description || '',
-        category: (materialData as any).category || 'Construction',
-        unit: materialData.unit || 'kg',
-        price_per_unit: materialData.pricePerUnit || 0,
-        available_quantity: materialData.availableQuantity || 0,
+        name: formData.name,
+        description: formData.description || '',
+        category: (formData as any).category || 'Construction',
+        unit: formData.unit || 'kg',
+        price_per_unit: formData.pricePerUnit || 0,
+        available_quantity: formData.availableQuantity || 0,
         origin_location: locationName,
         image: '/img/material-placeholder.jpg',
-        workspace_id: materialData.workspaceId || null,
+        workspace_id: selectedWorkspaceId || null,
         adresse: mapData.center ? JSON.stringify(mapData.center) : null,
         localisation: mapData.polygon ? JSON.stringify(mapData.polygon) : null,
         forme: mapData.warehouseShape ? 
@@ -126,13 +132,8 @@ const MaterialCreate = () => {
         polygon: mapData.polygon,
         warehouseShape: mapData.warehouseShape,
         warehouseShapeType: mapData.warehouseShapeType,
-        dbData: {
-          origin_location: dbData.origin_location,
-          adresse: dbData.adresse,
-          forme: dbData.forme,
-          coordinates_latitude: dbData.coordinates_latitude,
-          coordinates_longitude: dbData.coordinates_longitude
-        }
+        formData,
+        dbData
       });
 
       const { data, error } = await supabase
@@ -145,7 +146,7 @@ const MaterialCreate = () => {
 
       toast({
         title: t('materials.toast.created'),
-        description: `${t('materials.toast.created_description')} ${materialData.name}`,
+        description: `${t('materials.toast.created_description')} ${formData.name}`,
       });
 
       navigate('/materials');
@@ -233,7 +234,8 @@ const MaterialCreate = () => {
 
                   {/* Enhanced Material Form without submit button */}
                   <EnhancedMaterialForm
-                    onSubmit={(data) => handleSubmit({ ...data, workspaceId: selectedWorkspaceId })}
+                    ref={formRef}
+                    onSubmit={handleFormDataChange}
                     workspaces={workspaces}
                     showSubmitButton={false}
                     language={language}
@@ -295,15 +297,8 @@ const MaterialCreate = () => {
           {/* Submit Button at Bottom */}
           <div className="mt-8 flex justify-center">
             <Button 
-              onClick={() => {
-                // Trigger form submission with current map data
-                const formElement = document.querySelector('form');
-                if (formElement) {
-                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-                  formElement.dispatchEvent(submitEvent);
-                }
-              }}
-              disabled={loading || !selectedRegion}
+              onClick={handleSubmit}
+              disabled={loading || !selectedRegion || !formData.name}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-12 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-semibold"
             >
               {loading ? t('materials.button.loading') : t('materials.button.save')}
