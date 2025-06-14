@@ -22,7 +22,20 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
   const [open, setOpen] = useState(false);
   const { mutateAsync: createPayment, isPending } = useCreateProjectPayment();
 
-  const handleSubmit = async (paymentData: any) => {
+  const handleSubmit = async (paymentData: {
+    amount: number;
+    paymentDate: string;
+    paymentMethod: string;
+    contractorId?: string;
+    contractorName: string;
+    contractorContact: string;
+    bankName?: string;
+    accountNumber?: string;
+    checkNumber?: string;
+    mobileNumber?: string;
+    mobileOperator?: string;
+    receiverName?: string;
+  }) => {
     try {
       await createPayment({
         projectId: project.id,
@@ -30,6 +43,15 @@ export function PaymentDialog({ project, onPaymentComplete }: PaymentDialogProps
           amount: paymentData.amount,
           paymentDate: paymentData.paymentDate,
           paymentMethod: paymentData.paymentMethod,
+          contractorId: paymentData.contractorId,
+          contractorName: paymentData.contractorName,
+          contractorContact: paymentData.contractorContact,
+          bankName: paymentData.bankName,
+          accountNumber: paymentData.accountNumber,
+          checkNumber: paymentData.checkNumber,
+          mobileNumber: paymentData.mobileNumber,
+          mobileOperator: paymentData.mobileOperator,
+          receiverName: paymentData.receiverName,
         }
       });
       setOpen(false);

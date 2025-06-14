@@ -19,7 +19,7 @@ import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
 import { PaymentHistory } from '@/components/project/PaymentHistory';
 import { PaymentDialog } from '@/components/project/PaymentDialog';
 import { InspectionReportCard } from '@/components/project/InspectionReportCard';
-import { ProjectWithPayments, Inspection, InspectionStatus } from '@/types/project';
+import { ProjectWithPayments, Inspection, InspectionStatus, Payment } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
 import ProjectMaterials from '@/components/project/ProjectMaterials';
@@ -47,7 +47,7 @@ const ProjectDetail = () => {
       }
 
       // Fetch payments
-      const { data: payments, error: paymentsError } = await supabase
+      const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
         .eq('project_id', projectId)
@@ -56,6 +56,25 @@ const ProjectDetail = () => {
       if (paymentsError) {
         console.error('Error fetching payments:', paymentsError);
       }
+
+      // Transform payments to match Payment interface
+      const payments: Payment[] = paymentsData?.map(payment => ({
+        id: payment.id,
+        amount: payment.amount,
+        payment_date: payment.payment_date,
+        payment_method: payment.payment_method,
+        progress_at_payment: payment.progress_at_payment,
+        transaction_id: payment.transaction_id,
+        contractor_id: payment.contractor_id,
+        contractor_name: payment.contractor_name || '',
+        contractor_contact: payment.contractor_contact || '',
+        bank_name: payment.bank_name,
+        account_number: payment.account_number,
+        check_number: payment.check_number,
+        mobile_number: payment.mobile_number,
+        mobile_operator: payment.mobile_operator,
+        receiver_name: payment.receiver_name,
+      })) || [];
 
       // Fetch inspections
       const { data: inspectionsData, error: inspectionsError } = await supabase
@@ -82,7 +101,7 @@ const ProjectDetail = () => {
       // Combine data
       const projectWithDetails: ProjectWithPayments = {
         ...projectData,
-        payments: payments || [],
+        payments: payments,
         inspections: inspections
       };
 
