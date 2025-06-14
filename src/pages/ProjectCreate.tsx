@@ -17,6 +17,16 @@ const ProjectCreate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createProject } = useProjects();
 
+  // Status mapping from form values to database values
+  const statusMapping = {
+    'Planning': 'en attente',
+    'InProgress': 'en cours',
+    'Pending': 'en attente',
+    'OnHold': 'suspendu',
+    'Completed': 'terminé',
+    'Cancelled': 'annulé'
+  } as const;
+
   // Handle form submission from ProjectFormWithMap
   const handleFormSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -28,12 +38,15 @@ const ProjectCreate = () => {
         longitude: data.facilitiesLocation.center.lng
       } : undefined;
       
+      // Map the status from form to database value
+      const mappedStatus = statusMapping[data.status as keyof typeof statusMapping] || 'en attente';
+      
       // Create the new project with all the form data
       const projectResult = await createProject({
         title: data.title,
         description: data.description,
         location: data.location,
-        status: data.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+        status: mappedStatus as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
         progress: 0,
         budget: data.budget,
         startDate: data.start_date,
