@@ -288,7 +288,6 @@ const Materials = () => {
             </TabsList>
             
             <TabsContent value="grid" className="mt-6">
-              {/* ... keep existing code (grid view) */}
               {filteredMaterials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMaterials.map((material, index) => (
@@ -369,9 +368,11 @@ const Materials = () => {
                             {/* --- End Espace de travail et localisation --- */}
                           </div>
                           <div className="flex justify-between mt-4">
-                            <Button variant="outline" size="sm">
-                              {t("materials.edit")}
-                            </Button>
+                            <Link to={`/materials/${(material as any).id}/edit`}>
+                              <Button variant="outline" size="sm">
+                                {t("materials.edit")}
+                              </Button>
+                            </Link>
                             <Button 
                               variant="destructive" 
                               size="sm"
