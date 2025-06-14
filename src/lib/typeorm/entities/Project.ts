@@ -69,6 +69,16 @@ export class Project {
   @Column({ name: "main_contractor", type: "varchar", nullable: true })
   mainContractor!: string | null;
 
+  // New fields for project reference and payment settings
+  @Column({ name: "project_reference", type: "varchar", nullable: true })
+  projectReference!: string | null;
+
+  @Column({ name: "allows_initial_payment", type: "boolean", nullable: true, default: false })
+  allowsInitialPayment!: boolean | null;
+
+  @Column({ name: "initial_payment_percentage", type: "decimal", nullable: true, default: 0 })
+  initialPaymentPercentage!: number | null;
+
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project, { cascade: true })
   projectMaterials!: ProjectMaterial[];
 
@@ -102,7 +112,10 @@ export class Project {
       launchDate: this.launchDate ? this.launchDate.toISOString().split('T')[0] : undefined,
       attributionDate: this.attributionDate ? this.attributionDate.toISOString().split('T')[0] : undefined,
       projectResponsableId: this.projectResponsableId || undefined,
-      mainContractor: this.mainContractor || undefined
+      mainContractor: this.mainContractor || undefined,
+      projectReference: this.projectReference || undefined,
+      allowsInitialPayment: this.allowsInitialPayment || undefined,
+      initialPaymentPercentage: this.initialPaymentPercentage || undefined
     };
   }
 }

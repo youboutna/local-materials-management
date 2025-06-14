@@ -58,7 +58,10 @@ const ProjectCreate = () => {
         marketType: data.market_type,
         selectionMode: data.selection_mode,
         projectResponsableId: data.project_responsable_id,
-        mainContractor: data.main_contractor
+        mainContractor: data.main_contractor,
+        projectReference: data.project_reference,
+        allowsInitialPayment: data.allows_initial_payment,
+        initialPaymentPercentage: data.initial_payment_percentage
       });
       
       toast({

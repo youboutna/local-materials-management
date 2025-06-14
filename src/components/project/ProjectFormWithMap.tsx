@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Building, User, HardHat, Clock, FileText } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,6 +33,9 @@ interface ProjectFormData {
   selection_mode?: string;
   project_responsable_id?: string;
   main_contractor?: string;
+  project_reference?: string;
+  allows_initial_payment?: boolean;
+  initial_payment_percentage?: number;
 }
 
 interface MapData {
@@ -63,6 +67,9 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     selection_mode: '',
     project_responsable_id: '',
     main_contractor: '',
+    project_reference: '',
+    allows_initial_payment: false,
+    initial_payment_percentage: 0,
     ...initialData
   });
 
@@ -119,7 +126,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1 h-auto p-1">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline">Informations</span>
@@ -139,6 +146,11 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Détails</span>
             <span className="sm:hidden">Plus</span>
+          </TabsTrigger>
+          <TabsTrigger value="payment" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">Paiement</span>
+            <span className="sm:hidden">Pay</span>
           </TabsTrigger>
           <TabsTrigger value="location" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
             <MapPin className="h-4 w-4" />
@@ -176,6 +188,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="project_reference">Référence du projet</Label>
+                <Input
+                  id="project_reference"
+                  value={formData.project_reference}
+                  onChange={(e) => handleChange('project_reference', e.target.value)}
+                  placeholder="Ex: PRJ-2024-001"
+                />
               </div>
               
               <div>
@@ -389,6 +411,57 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   </Select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payment Settings Tab */}
+        <TabsContent value="payment" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Paramètres de paiement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="allows_initial_payment"
+                  checked={formData.allows_initial_payment}
+                  onCheckedChange={(checked) => handleChange('allows_initial_payment', checked)}
+                />
+                <Label htmlFor="allows_initial_payment" className="text-sm font-medium">
+                  Autoriser le paiement initial (0-30%)
+                </Label>
+              </div>
+              
+              {formData.allows_initial_payment && (
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div>
+                    <Label htmlFor="initial_payment_percentage">Pourcentage de paiement initial autorisé (%)</Label>
+                    <Input
+                      id="initial_payment_percentage"
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={formData.initial_payment_percentage}
+                      onChange={(e) => handleChange('initial_payment_percentage', parseFloat(e.target.value) || 0)}
+                      className="mt-2"
+                    />
+                    <p className="text-sm text-blue-600 mt-2">
+                      Ce pourcentage permet un paiement anticipé selon les termes du contrat (maximum 30%)
+                    </p>
+                  </div>
+                  
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-sm text-amber-800">
+                      <strong>Note :</strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement. 
+                      Cette option facilite le démarrage des projets nécessitant des investissements initiaux importants.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

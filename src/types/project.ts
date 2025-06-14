@@ -24,6 +24,10 @@ export interface ProjectData {
   attributionDate?: string;
   projectResponsableId?: string;
   mainContractor?: string;
+  projectReference?: string;
+  // Payment settings
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
 }
 
 export interface ProjectWithPayments extends ProjectData {
@@ -105,6 +109,11 @@ export interface ProjectEntity {
   selectionMode?: string;
   launchDate?: Date;
   attributionDate?: Date;
+  projectResponsableId?: string;
+  mainContractor?: string;
+  projectReference?: string;
+  allowsInitialPayment?: boolean;
+  initialPaymentPercentage?: number;
   createdAt: Date;
   updatedAt: Date;
   // Relations
