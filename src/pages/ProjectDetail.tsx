@@ -73,7 +73,7 @@ const ProjectDetail = () => {
         console.error('Error fetching payments:', paymentsError);
       }
 
-      // Transform payments to match Payment interface
+      // Transform payments to match Payment interface with proper null handling
       const payments: Payment[] = paymentsData?.map(payment => ({
         id: payment.id,
         amount: payment.amount,
@@ -81,15 +81,15 @@ const ProjectDetail = () => {
         payment_method: payment.payment_method,
         progress_at_payment: payment.progress_at_payment,
         transaction_id: payment.transaction_id,
-        contractor_id: payment.contractor_id,
+        contractor_id: payment.contractor_id || undefined,
         contractor_name: payment.contractor_name || '',
         contractor_contact: payment.contractor_contact || '',
-        bank_name: payment.bank_name,
-        account_number: payment.account_number,
-        check_number: payment.check_number,
-        mobile_number: payment.mobile_number,
-        mobile_operator: payment.mobile_operator,
-        receiver_name: payment.receiver_name,
+        bank_name: payment.bank_name || undefined,
+        account_number: payment.account_number || undefined,
+        check_number: payment.check_number || undefined,
+        mobile_number: payment.mobile_number || undefined,
+        mobile_operator: payment.mobile_operator || undefined,
+        receiver_name: payment.receiver_name || undefined,
       })) || [];
 
       // Fetch inspections
@@ -253,7 +253,7 @@ const ProjectDetail = () => {
       <Navbar />
       
       <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back button */}
           <Link to="/projects">
             <Button variant="ghost" className="mb-6">
@@ -266,29 +266,29 @@ const ProjectDetail = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="space-y-8"
+            className="space-y-6 lg:space-y-8"
           >
-            {/* Project header */}
-            <div className="bg-white rounded-xl shadow-elegant p-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                <div>
-                  <h1 className="text-3xl font-serif text-adrar-800 mb-2">{project.title}</h1>
-                  <div className="flex items-center gap-4 text-gray-600 mb-4">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{project.location}</span>
+            {/* Project header - Enhanced responsive design */}
+            <div className="bg-white rounded-xl shadow-elegant p-6 lg:p-8">
+              <div className="flex flex-col space-y-6 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+                <div className="flex-1">
+                  <h1 className="text-2xl lg:text-3xl font-serif text-adrar-800 mb-3">{project.title}</h1>
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:gap-6 sm:space-y-0 text-gray-600 mb-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm lg:text-base">{project.location}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(project.startDate).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm lg:text-base">{new Date(project.startDate).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <StatusBadge status={project.status} />
                 </div>
                 
-                <div className="flex gap-2 mt-4 lg:mt-0">
+                <div className="flex flex-col sm:flex-row gap-2 lg:ml-6">
                   <Link to={`/projects/${project.id}/edit`}>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <Edit className="mr-2 h-4 w-4" />
                       {t("materials.edit")}
                     </Button>
@@ -298,6 +298,7 @@ const ProjectDetail = () => {
                     size="sm" 
                     onClick={handleDelete}
                     disabled={isDeleting}
+                    className="w-full sm:w-auto"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     {isDeleting ? t("materials.deleting") : t("materials.delete")}
@@ -305,44 +306,56 @@ const ProjectDetail = () => {
                 </div>
               </div>
 
-              <p className="text-gray-700 leading-relaxed">{project.description}</p>
+              <p className="text-gray-700 leading-relaxed mt-4">{project.description}</p>
             </div>
 
-            {/* Quick Action Panel */}
-            <Card className="border-l-4 border-l-terracotta-500">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CreditCard className="h-5 w-5 text-terracotta-500" />
+            {/* Quick Action Panel - Enhanced design */}
+            <Card className="border-l-4 border-l-terracotta-500 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg lg:text-xl">
+                  <div className="p-2 bg-terracotta-100 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-terracotta-600" />
+                  </div>
                   {t("projects.payments_management")}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm lg:text-base">
                   {t("projects.quick_payment_actions")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {t("project_create.form.budget")}: <span className="font-medium">{project.budget.toLocaleString()} MRU</span>
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {t("project_create.form.progress")}: <span className="font-medium">{project.progress}%</span>
-                    </p>
+                  <div className="flex-1 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("project_create.form.budget")}
+                        </p>
+                        <p className="font-semibold text-lg">{project.budget.toLocaleString()} MRU</p>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("project_create.form.progress")}
+                        </p>
+                        <p className="font-semibold text-lg">{project.progress}%</p>
+                      </div>
+                    </div>
                   </div>
-                  <PaymentDialog 
-                    project={project} 
-                    onPaymentComplete={handleDataUpdate}
-                  />
+                  <div className="w-full sm:w-auto">
+                    <PaymentDialog 
+                      project={project} 
+                      onPaymentComplete={handleDataUpdate}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Project details grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Project details grid - Enhanced responsive design */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Progress Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t("project_create.form.progress")}</CardTitle>
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">{t("project_create.form.progress")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ProgressIndicator value={project.progress} />
@@ -353,47 +366,63 @@ const ProjectDetail = () => {
               </Card>
 
               {/* Budget Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg flex items-center gap-2">
                     <DollarSign className="h-5 w-5" />
                     {t("project_create.form.budget")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-terracotta-600">
+                  <p className="text-xl lg:text-2xl font-bold text-terracotta-600">
                     {project.budget.toLocaleString()} MRU
                   </p>
                 </CardContent>
               </Card>
 
               {/* Team Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <Card className="hover:shadow-md transition-shadow md:col-span-2 lg:col-span-1">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg flex items-center gap-2">
                     <Users className="h-5 w-5" />
                     {t("project_create.form.team_size")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-adrar-600">
+                  <p className="text-xl lg:text-2xl font-bold text-adrar-600">
                     {project.teamSize} {t("dashboard.members")}
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Main Tabs Section - Moved here after project summary */}
+            {/* Main Tabs Section - Enhanced responsive design */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-7">
-                <TabsTrigger value="overview">{t("projects.tab.overview")}</TabsTrigger>
-                <TabsTrigger value="materials">{t("projects.tab.materials")}</TabsTrigger>
-                <TabsTrigger value="payments">{t("projects.tab.payments")}</TabsTrigger>
-                <TabsTrigger value="inspections">{t("projects.tab.inspections")}</TabsTrigger>
-                <TabsTrigger value="workflow">{t("projects.tab.workflow")}</TabsTrigger>
-                <TabsTrigger value="documents">{t("projects.tab.documents")}</TabsTrigger>
-                <TabsTrigger value="takeoffs">{t("projects.tab.takeoffs")}</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto">
+                <TabsList className="grid w-full min-w-fit grid-cols-7 h-auto p-1">
+                  <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.overview")}
+                  </TabsTrigger>
+                  <TabsTrigger value="materials" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.materials")}
+                  </TabsTrigger>
+                  <TabsTrigger value="payments" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.payments")}
+                  </TabsTrigger>
+                  <TabsTrigger value="inspections" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.inspections")}
+                  </TabsTrigger>
+                  <TabsTrigger value="workflow" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.workflow")}
+                  </TabsTrigger>
+                  <TabsTrigger value="documents" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.documents")}
+                  </TabsTrigger>
+                  <TabsTrigger value="takeoffs" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                    {t("projects.tab.takeoffs")}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="overview">
                 <Card>
@@ -448,7 +477,7 @@ const ProjectDetail = () => {
                       {mapLocation && (
                         <div>
                           <h3 className="text-lg font-medium mb-4">{t("projects.location")}</h3>
-                          <div className="h-96 rounded-lg overflow-hidden">
+                          <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
                             <ProjectMap 
                               locations={[mapLocation]}
                               height="100%"
