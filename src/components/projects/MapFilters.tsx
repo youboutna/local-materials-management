@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -35,7 +34,7 @@ const CITY_TO_REGION_MAP: Record<string, string[]> = {
   'NDB': ['nouadhibou', 'ndb'], // Nouadhibou (alternative)
   'TGT': ['tidjikja', 'moudjéria', 'rachid'], // Tagant
   'TRZ': ['rosso', 'keur macène', 'mederdra'], // Tiris Zemmour
-  'TRR': ['rosso', 'boutilimit', 'r'kiz'] // Trarza
+  'TRR': ['rosso', 'boutilimit', 'rkiz'] // Trarza
 };
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
