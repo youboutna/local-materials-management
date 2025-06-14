@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,7 +70,7 @@ const MaterialEdit = () => {
       const materialUpdate = {
         name: updatedData.name,
         description: updatedData.description,
-        category: updatedData.category,
+        category: updatedData.category || material?.category,
         unit: updatedData.unit,
         price_per_unit: updatedData.pricePerUnit,
         available_quantity: updatedData.availableQuantity,
@@ -126,7 +125,7 @@ const MaterialEdit = () => {
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
         adresse: material.adresse as string || '',
-        forme: material.forme || '',
+        forme: material.forme as "polygon" | "rectangle" | "circle" | undefined,
         localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
         supplier: {
           name: material.origin_location || '',
