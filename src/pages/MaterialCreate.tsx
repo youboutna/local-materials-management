@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +11,14 @@ import InteractiveMap from '@/components/map/InteractiveMap';
 import { EnhancedMaterial, Location, OperationalStatus, MAURITANIA_REGIONS } from '@/types/mauritania';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from "@/contexts/LanguageContext";
+import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
 
 const MaterialCreate = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>('');
   const [mapData, setMapData] = useState<{
     center?: { lat: number; lng: number };
     polygon?: { lat: number; lng: number }[];
@@ -26,7 +27,7 @@ const MaterialCreate = () => {
   }>({});
 
   // Fetch workspaces from Supabase
-  const { data: workspaces = [] } = useQuery({
+  const { data: workspaces = [], refetch: refetchWorkspaces } = useQuery({
     queryKey: ['workspaces'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,6 +42,19 @@ const MaterialCreate = () => {
       }));
     }
   });
+
+  // Filter workspaces by selected region
+  const filteredWorkspaces = selectedRegion
+    ? workspaces.filter(workspace => {
+        const region = MAURITANIA_REGIONS.find(r => r.code === selectedRegion);
+        return workspace.location === region?.name;
+      })
+    : workspaces;
+
+  const handleWorkspaceCreated = (workspaceId: string) => {
+    setSelectedWorkspaceId(workspaceId);
+    refetchWorkspaces();
+  };
 
   const handleSubmit = async (materialData: Partial<EnhancedMaterial>) => {
     setLoading(true);
@@ -136,7 +150,10 @@ const MaterialCreate = () => {
                     </label>
                     <select
                       value={selectedRegion}
-                      onChange={(e) => setSelectedRegion(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedRegion(e.target.value);
+                        setSelectedWorkspaceId(''); // Reset workspace selection when region changes
+                      }}
                       className="w-full px-3 py-2 border border-sandstone-200 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta-500"
                     >
                       <option value="">Sélectionner une région</option>
@@ -148,9 +165,41 @@ const MaterialCreate = () => {
                     </select>
                   </div>
 
+                  {/* Workspace Selection with Add Button */}
+                  {selectedRegion && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-adrar-700">
+                          Espace de travail
+                        </label>
+                        <WorkspaceCreateDialog
+                          selectedRegion={selectedRegion}
+                          onWorkspaceCreated={handleWorkspaceCreated}
+                        />
+                      </div>
+                      <select
+                        value={selectedWorkspaceId}
+                        onChange={(e) => setSelectedWorkspaceId(e.target.value)}
+                        className="w-full px-3 py-2 border border-sandstone-200 rounded-md focus:outline-none focus:ring-2 focus:ring-terracotta-500"
+                      >
+                        <option value="">Sélectionner un espace de travail</option>
+                        {filteredWorkspaces.map(workspace => (
+                          <option key={workspace.id} value={workspace.id}>
+                            {workspace.name} - {workspace.location}
+                          </option>
+                        ))}
+                      </select>
+                      {filteredWorkspaces.length === 0 && (
+                        <p className="text-sm text-gray-500">
+                          Aucun espace de travail disponible dans cette région. Cliquez sur "Ajouter un espace" pour en créer un.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Enhanced Material Form without submit button */}
                   <EnhancedMaterialForm
-                    onSubmit={handleSubmit}
+                    onSubmit={(data) => handleSubmit({ ...data, workspaceId: selectedWorkspaceId })}
                     workspaces={workspaces}
                     showSubmitButton={false}
                     language={language}
