@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,17 +24,17 @@ interface MapFiltersProps {
 const CITY_TO_REGION_MAP: Record<string, string[]> = {
   'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane'], // Adrar
   'ASA': ['kifa', 'guerou', 'barkeol'], // Assaba  
-  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé'], // Brakna
+  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe'], // Brakna
   'DKN': ['nouadhibou', 'dakhlet nouadhibou'], // Dakhlet Nouadhibou
-  'GOG': ['kaédi', 'maghama', 'monguel'], // Gorgol
-  'GDM': ['sélibaby', 'ghabou', 'ould yengé'], // Guidimaka
-  'HEC': ['néma', 'bassiknou', 'amourj'], // Hodh Ech Chargui
+  'GOG': ['kaédi', 'kaedi', 'maghama', 'monguel'], // Gorgol
+  'GDM': ['sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'], // Guidimaka
+  'HEC': ['néma', 'nema', 'bassiknou', 'amourj'], // Hodh Ech Chargui
   'HEG': ['aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'], // Hodh El Gharbi
   'INC': ['akjoujt', 'benichab'], // Inchiri
   'NKC': ['nouakchott', 'nkc'], // Nouakchott
   'NDB': ['nouadhibou', 'ndb'], // Nouadhibou (alternative)
-  'TGT': ['tidjikja', 'moudjéria', 'rachid'], // Tagant
-  'TRZ': ['rosso', 'keur macène', 'mederdra'], // Tiris Zemmour
+  'TGT': ['tidjikja', 'moudjéria', 'moudjerria', 'rachid'], // Tagant
+  'TZM': ['zouerate', 'fderick', 'fderik'], // Tiris Zemmour
   'TRR': ['rosso', 'boutilimit', 'rkiz'] // Trarza
 };
 
@@ -64,27 +65,36 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     const regionName = selectedRegion.name.toLowerCase().trim();
     const regionNameAr = selectedRegion.nameAr.toLowerCase().trim();
     
+    console.log(`Matching "${itemRegionLower}" against region "${regionName}" (${selectedRegionCode})`);
+    
     // 1. Direct exact matches
     if (itemRegionLower === regionName || itemRegionLower === regionNameAr) {
+      console.log('✓ Exact match found');
       return true;
     }
     
     // 2. Check if the item location is a known city in this region
     const citiesInRegion = CITY_TO_REGION_MAP[selectedRegionCode] || [];
-    const cityMatch = citiesInRegion.some(city => 
-      itemRegionLower.includes(city.toLowerCase()) || 
-      city.toLowerCase().includes(itemRegionLower)
-    );
+    const cityMatch = citiesInRegion.some(city => {
+      const match = itemRegionLower.includes(city.toLowerCase()) || 
+                   city.toLowerCase().includes(itemRegionLower) ||
+                   itemRegionLower === city.toLowerCase();
+      if (match) console.log(`✓ City match found: "${city}"`);
+      return match;
+    });
     
     if (cityMatch) {
       return true;
     }
     
     // 3. Partial name matching (contains)
-    if (itemRegionLower.includes(regionName) || 
-        itemRegionLower.includes(regionNameAr) ||
-        regionName.includes(itemRegionLower) ||
-        regionNameAr.includes(itemRegionLower)) {
+    const partialMatch = itemRegionLower.includes(regionName) || 
+                        itemRegionLower.includes(regionNameAr) ||
+                        regionName.includes(itemRegionLower) ||
+                        regionNameAr.includes(itemRegionLower);
+    
+    if (partialMatch) {
+      console.log('✓ Partial match found');
       return true;
     }
     
@@ -93,6 +103,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     const cleanRegionName = regionName.replace(/wilaya|région|province|governorate/gi, '').trim();
     
     if (cleanItemRegion === cleanRegionName) {
+      console.log('✓ Clean match found');
       return true;
     }
     
@@ -100,18 +111,26 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     const regionWords = regionName.split(' ').filter(word => word.length > 2);
     const itemWords = itemRegionLower.split(' ').filter(word => word.length > 2);
     
-    return regionWords.some(word => 
+    const wordMatch = regionWords.some(word => 
       itemWords.some(itemWord => 
         itemWord.includes(word) || word.includes(itemWord)
       )
     );
+    
+    if (wordMatch) {
+      console.log('✓ Word match found');
+    } else {
+      console.log('✗ No match found');
+    }
+    
+    return wordMatch;
   };
 
   // Apply filters
   useEffect(() => {
     let filtered = [...locations];
     
-    console.log('MapFilters - Original locations:', filtered.length);
+    console.log('MapFilters - Starting with locations:', filtered.length);
     console.log('MapFilters - Filter settings:', { statusFilter, regionFilter });
     
     if (statusFilter !== 'all') {
@@ -128,27 +147,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
         const beforeRegionFilter = filtered.length;
         filtered = filtered.filter(item => {
           const matches = matchesRegion(item.region || '', regionFilter);
-          
-          console.log('MapFilters - Region matching for item:', {
-            itemId: item.id,
-            itemName: item.name,
-            itemRegion: item.region,
-            selectedRegion: selectedRegion.name,
-            matches
-          });
-          
           return matches;
         });
         
         console.log(`MapFilters - Region filter: ${beforeRegionFilter} → ${filtered.length} locations`);
-        
-        if (filtered.length < beforeRegionFilter) {
-          const filteredOut = locations.filter(loc => !filtered.find(f => f.id === loc.id));
-          console.log('MapFilters - Filtered out items:', filteredOut.map(item => ({
-            name: item.name,
-            region: item.region
-          })));
-        }
       }
     }
     
@@ -313,31 +315,6 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                     ×
                   </button>
                 </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Debug Panel - only show in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info</h4>
-            <div className="text-xs text-yellow-700 space-y-1">
-              <div>Available locations with regions:</div>
-              {locations.slice(0, 5).map(loc => (
-                <div key={loc.id} className="ml-2">
-                  {loc.name}: "{loc.region}"
-                </div>
-              ))}
-              {locations.length > 5 && <div className="ml-2">... et {locations.length - 5} autres</div>}
-              
-              {regionFilter !== 'all' && (
-                <div className="mt-2 border-t pt-2">
-                  <div>Cities mapped to {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}:</div>
-                  <div className="ml-2">
-                    {(CITY_TO_REGION_MAP[regionFilter] || []).join(', ') || 'None mapped'}
-                  </div>
-                </div>
               )}
             </div>
           </div>
