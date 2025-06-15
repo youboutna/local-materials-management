@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -124,8 +125,8 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesRegion;
   });
 
-  const categories = [...new Set(materials.map(m => m.category))];
-  const regions = [...new Set(materials.map(m => m.origin_location))];
+  const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
+  const regions = [...new Set(materials.map(m => m.origin_location).filter(Boolean))];
 
   const handleDelete = async (id: string) => {
     try {
@@ -353,10 +354,12 @@ const Materials = () => {
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-sm">
-                          <MapPin className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">{material.origin_location}</span>
-                        </div>
+                        {material.origin_location && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span className="text-gray-600">{material.origin_location}</span>
+                          </div>
+                        )}
 
                         <div className="flex gap-2 pt-3">
                           <Button
