@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash, Package, MapPin, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,6 +13,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -31,20 +34,42 @@ interface MaterialSelectorProps {
 const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: MaterialSelectorProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [totalCost, setTotalCost] = useState(0);
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Get unique categories
+  const categories = [...new Set(materials.map(m => m.category))].filter(Boolean);
+
+  // Filter materials based on search and category
+  const filteredMaterials = materials.filter(material => {
+    const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         material.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   // Fetch materials from Supabase
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
+        setLoading(true);
+        console.log('Fetching materials from Supabase...');
+        
         const { data, error } = await supabase
           .from('materials')
           .select('*')
+          .eq('is_active', true)
           .order('name');
         
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+        
+        console.log('Materials fetched:', data?.length || 0);
         setMaterials((data as unknown as Material[]) || []);
       } catch (error) {
         console.error('Error fetching materials:', error);
@@ -75,10 +100,17 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
 
   // Add a new material to the selection
   const addMaterial = () => {
-    if (materials.length === 0) return;
+    if (filteredMaterials.length === 0) {
+      toast({
+        title: "Aucun matériau disponible",
+        description: "Aucun matériau ne correspond aux critères de recherche.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Find the first material that's not already selected
-    const availableMaterial = materials.find(
+    const availableMaterial = filteredMaterials.find(
       material => !selectedMaterials.some(selected => selected.materialId === material.id)
     );
     
@@ -88,6 +120,12 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
         { materialId: availableMaterial.id, quantity: 1 }
       ];
       onChange(updatedMaterials);
+    } else {
+      toast({
+        title: "Tous les matériaux sont déjà sélectionnés",
+        description: "Vous avez déjà ajouté tous les matériaux disponibles.",
+        variant: "default",
+      });
     }
   };
 
@@ -107,6 +145,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
 
   // Update quantity
   const updateQuantity = (index: number, quantity: number) => {
+    if (quantity <= 0) return;
     const updatedMaterials = [...selectedMaterials];
     updatedMaterials[index].quantity = quantity;
     onChange(updatedMaterials);
@@ -118,140 +157,246 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   };
 
   if (loading) {
-    return <div className="text-center py-4">{t('materials.loading') || "Chargement des matériaux..."}</div>;
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-2">{t('materials.loading') || "Chargement des matériaux..."}</span>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{t('materials.required') || "Matériaux requis"}</h3>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm"
-          onClick={addMaterial}
-          disabled={materials.length === 0 || selectedMaterials.length >= materials.length}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          {t('materials.add') || "Ajouter un matériau"}
-        </Button>
-      </div>
-
-      {selectedMaterials.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-4 text-center text-gray-500">
-          {t('materials.none_found') || "Aucun matériau sélectionné"}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {selectedMaterials.map((selected, index) => {
-            const material = getMaterialDetails(selected.materialId);
-            const itemCost = material ? Number(material.price_per_unit) * selected.quantity : 0;
-            
-            return (
-              <div key={index} className="p-3 border rounded-md bg-gray-50">
-                <div className="flex gap-2 items-end">
-                  <div className="flex-grow">
-                    <label className="text-sm font-medium mb-1 block">{t('materials.name') || "Matériau"}</label>
-                    <Select
-                      value={selected.materialId}
-                      onValueChange={(value) => updateMaterialId(index, value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('materials.search_placeholder') || "Sélectionner un matériau"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materials.map(material => (
-                          <SelectItem 
-                            key={material.id} 
-                            value={material.id}
-                            disabled={selectedMaterials.some(
-                              (sm, i) => i !== index && sm.materialId === material.id
-                            )}
-                          >
-                            {material.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="w-32">
-                    <label className="text-sm font-medium mb-1 block">{t('materials.quantity') || "Quantité"}</label>
-                    <Input
-                      type="number"
-                      min="0.1"
-                      step="0.1"
-                      value={selected.quantity}
-                      onChange={(e) => updateQuantity(index, parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  <div className="w-16 flex-shrink-0 pb-2">
-                    {material && (
-                      <div className="text-sm text-gray-500 text-center">
-                        {material.unit}
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeMaterial(index)}
-                    className="flex-shrink-0"
-                  >
-                    <Trash className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-                
-                {material && (
-                  <div className="mt-2 flex flex-wrap gap-2 items-center">
-                    <Badge variant="outline" className="bg-blue-50">
-                      {material.category}
-                    </Badge>
-                    <Badge variant="outline" className="bg-amber-50">
-                      {t('materials.price') || "Prix"}: {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
-                    </Badge>
-                    <Badge variant="outline" className="bg-green-50">
-                      {t('materials.available_quantity') || "Stock"}: {Number(material.available_quantity)} {material.unit}
-                    </Badge>
-                    <Badge className="ml-auto bg-terracotta-100 text-terracotta-700 hover:bg-terracotta-200">
-                      {t('materials.total') || "Total"}: {itemCost.toLocaleString()} MRU
-                    </Badge>
-                  </div>
-                )}
+    <div className="space-y-6">
+      {/* Header with search and filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            {t('materials.required') || "Matériaux requis"}
+            <Badge variant="outline" className="ml-auto">
+              {materials.length} disponibles
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search and filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{t('materials.search') || "Rechercher"}</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('materials.search_placeholder') || "Nom ou description..."}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
               </div>
-            );
-          })}
-          
-          <div className="border-t pt-3 mt-4">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">{t('materials.total_cost') || "Coût total des matériaux:"}</span>
-              <span className="font-bold text-lg">{totalCost.toLocaleString()} MRU</span>
             </div>
             
-            {projectBudget && (
-              <div className="mt-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span>{t('materials.budget_percentage') || "Pourcentage du budget:"}</span>
-                  <span className={totalCost > projectBudget ? "text-red-500" : "text-green-600"}>
-                    {((totalCost / projectBudget) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full mt-1">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      totalCost > projectBudget ? "bg-red-500" : "bg-green-500"
-                    }`} 
-                    style={{ width: `${Math.min((totalCost / projectBudget) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>{t('materials.category') || "Catégorie"}</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Toutes les catégories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les catégories</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>&nbsp;</Label>
+              <Button 
+                onClick={addMaterial}
+                disabled={filteredMaterials.length === 0}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('materials.add') || "Ajouter un matériau"}
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Results info */}
+          <div className="text-sm text-muted-foreground">
+            {filteredMaterials.length} matériau(x) trouvé(s)
+            {searchTerm && ` pour "${searchTerm}"`}
+            {selectedCategory !== 'all' && ` dans "${selectedCategory}"`}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Selected materials */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Matériaux sélectionnés ({selectedMaterials.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {selectedMaterials.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>{t('materials.none_selected') || "Aucun matériau sélectionné"}</p>
+              <p className="text-sm">Utilisez le bouton "Ajouter un matériau" ci-dessus</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {selectedMaterials.map((selected, index) => {
+                const material = getMaterialDetails(selected.materialId);
+                const itemCost = material ? Number(material.price_per_unit) * selected.quantity : 0;
+                
+                return (
+                  <Card key={index} className="border border-border">
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                        {/* Material selection */}
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-sm font-medium">Matériau</Label>
+                          <Select
+                            value={selected.materialId}
+                            onValueChange={(value) => updateMaterialId(index, value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un matériau" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {filteredMaterials.map(material => (
+                                <SelectItem 
+                                  key={material.id} 
+                                  value={material.id}
+                                  disabled={selectedMaterials.some(
+                                    (sm, i) => i !== index && sm.materialId === material.id
+                                  )}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{material.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {material.category} • {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {material && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              <Badge variant="outline" className="text-xs">
+                                {material.category}
+                              </Badge>
+                              {material.origin_location && (
+                                <Badge variant="outline" className="text-xs">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  {material.origin_location}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quantity input */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Quantité</Label>
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="number"
+                              min="0.1"
+                              step="0.1"
+                              value={selected.quantity}
+                              onChange={(e) => updateQuantity(index, parseFloat(e.target.value) || 0)}
+                              className="w-24"
+                            />
+                            {material && (
+                              <span className="text-sm text-muted-foreground">
+                                {material.unit}
+                              </span>
+                            )}
+                          </div>
+                          {material && (
+                            <div className="text-xs text-muted-foreground">
+                              Stock: {Number(material.available_quantity)} {material.unit}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Cost and actions */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Total</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeMaterial(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="text-lg font-bold text-primary">
+                            {itemCost.toLocaleString()} MRU
+                          </div>
+                          {material && (
+                            <div className="text-xs text-muted-foreground">
+                              {Number(material.price_per_unit).toLocaleString()} MRU/{material.unit}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              
+              {/* Total summary */}
+              <Card className="border-2 border-primary/20 bg-primary/5">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium">Coût total des matériaux</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedMaterials.length} matériau(x) sélectionné(s)
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary">
+                        {totalCost.toLocaleString()} MRU
+                      </div>
+                      {projectBudget && (
+                        <div className="text-sm">
+                          <span className={totalCost > projectBudget ? "text-destructive" : "text-green-600"}>
+                            {((totalCost / projectBudget) * 100).toFixed(1)}% du budget
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {projectBudget && (
+                    <div className="mt-3">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all ${
+                            totalCost > projectBudget ? "bg-destructive" : "bg-green-500"
+                          }`} 
+                          style={{ width: `${Math.min((totalCost / projectBudget) * 100, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
