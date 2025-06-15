@@ -40,16 +40,28 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  // Get unique categories
-  const categories = [...new Set(materials.map(m => m.category))].filter(Boolean);
+  // Get unique categories from materials
+  const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
 
   // Filter materials based on search and category
   const filteredMaterials = materials.filter(material => {
-    const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         material.description.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!material) return false;
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    const nameMatch = material.name?.toLowerCase().includes(searchLower) || false;
+    const descriptionMatch = material.description?.toLowerCase().includes(searchLower) || false;
+    const categoryMatch = material.category?.toLowerCase().includes(searchLower) || false;
+    
+    const matchesSearch = searchTerm === '' || nameMatch || descriptionMatch || categoryMatch;
     const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
+    
     return matchesSearch && matchesCategory;
   });
+
+  // Get available materials (not already selected)
+  const availableMaterials = filteredMaterials.filter(
+    material => !selectedMaterials.some(selected => selected.materialId === material.id)
+  );
 
   // Fetch materials from Supabase
   useEffect(() => {
@@ -61,7 +73,6 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
         const { data, error } = await supabase
           .from('materials')
           .select('*')
-          .eq('is_active', true)
           .order('name');
         
         if (error) {
@@ -69,8 +80,9 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
           throw error;
         }
         
-        console.log('Materials fetched:', data?.length || 0);
-        setMaterials((data as unknown as Material[]) || []);
+        console.log('Materials fetched:', data?.length || 0, 'materials');
+        console.log('Sample material:', data?.[0]);
+        setMaterials((data as Material[]) || []);
       } catch (error) {
         console.error('Error fetching materials:', error);
         toast({
@@ -100,33 +112,34 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
 
   // Add a new material to the selection
   const addMaterial = () => {
-    if (filteredMaterials.length === 0) {
+    console.log('Add material clicked');
+    console.log('Available materials:', availableMaterials.length);
+    console.log('Filtered materials:', filteredMaterials.length);
+    console.log('Total materials:', materials.length);
+    
+    if (availableMaterials.length === 0) {
       toast({
         title: "Aucun matériau disponible",
-        description: "Aucun matériau ne correspond aux critères de recherche.",
-        variant: "destructive",
+        description: filteredMaterials.length === 0 
+          ? "Aucun matériau ne correspond aux critères de recherche."
+          : "Tous les matériaux correspondants sont déjà sélectionnés.",
+        variant: "default",
       });
       return;
     }
     
-    // Find the first material that's not already selected
-    const availableMaterial = filteredMaterials.find(
-      material => !selectedMaterials.some(selected => selected.materialId === material.id)
-    );
+    const materialToAdd = availableMaterials[0];
+    const updatedMaterials = [
+      ...selectedMaterials,
+      { materialId: materialToAdd.id, quantity: 1 }
+    ];
+    onChange(updatedMaterials);
     
-    if (availableMaterial) {
-      const updatedMaterials = [
-        ...selectedMaterials,
-        { materialId: availableMaterial.id, quantity: 1 }
-      ];
-      onChange(updatedMaterials);
-    } else {
-      toast({
-        title: "Tous les matériaux sont déjà sélectionnés",
-        description: "Vous avez déjà ajouté tous les matériaux disponibles.",
-        variant: "default",
-      });
-    }
+    toast({
+      title: "Matériau ajouté",
+      description: `${materialToAdd.name} a été ajouté à la sélection.`,
+      variant: "default",
+    });
   };
 
   // Remove a material from the selection
@@ -217,7 +230,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
               <Label>&nbsp;</Label>
               <Button 
                 onClick={addMaterial}
-                disabled={filteredMaterials.length === 0}
+                disabled={availableMaterials.length === 0}
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -231,7 +244,17 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
             {filteredMaterials.length} matériau(x) trouvé(s)
             {searchTerm && ` pour "${searchTerm}"`}
             {selectedCategory !== 'all' && ` dans "${selectedCategory}"`}
+            {availableMaterials.length !== filteredMaterials.length && 
+              ` (${availableMaterials.length} disponibles pour ajout)`
+            }
           </div>
+
+          {/* Debug info in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+              Debug: Total materials: {materials.length}, Filtered: {filteredMaterials.length}, Available: {availableMaterials.length}, Selected: {selectedMaterials.length}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -245,7 +268,12 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
             <div className="text-center py-8 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>{t('materials.none_selected') || "Aucun matériau sélectionné"}</p>
-              <p className="text-sm">Utilisez le bouton "Ajouter un matériau" ci-dessus</p>
+              <p className="text-sm">
+                {materials.length === 0 
+                  ? "Aucun matériau disponible dans la base de données"
+                  : "Utilisez le bouton \"Ajouter un matériau\" ci-dessus"
+                }
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -268,13 +296,10 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                               <SelectValue placeholder="Sélectionner un matériau" />
                             </SelectTrigger>
                             <SelectContent className="max-h-60">
-                              {filteredMaterials.map(material => (
+                              {materials.map(material => (
                                 <SelectItem 
                                   key={material.id} 
                                   value={material.id}
-                                  disabled={selectedMaterials.some(
-                                    (sm, i) => i !== index && sm.materialId === material.id
-                                  )}
                                 >
                                   <div className="flex flex-col">
                                     <span className="font-medium">{material.name}</span>
