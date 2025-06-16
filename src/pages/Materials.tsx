@@ -125,8 +125,16 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesRegion;
   });
 
-  const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
-  const regions = [...new Set(materials.map(m => m.origin_location).filter(Boolean))];
+  // Filter out empty, null, or undefined values and ensure strings are not empty
+  const categories = [...new Set(materials
+    .map(m => m.category)
+    .filter(category => category && typeof category === 'string' && category.trim() !== '')
+  )];
+  
+  const regions = [...new Set(materials
+    .map(m => m.origin_location)
+    .filter(region => region && typeof region === 'string' && region.trim() !== '')
+  )];
 
   const handleDelete = async (id: string) => {
     try {
