@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,30 @@ const Materials = () => {
       return data as Material[];
     }
   });
+
+  // Debug materials data
+  useEffect(() => {
+    if (materials.length > 0) {
+      console.log('Materials debug - checking for problematic data:');
+      materials.forEach((material, index) => {
+        console.log(`Material ${index}: ${material.name}`);
+        console.log('  - ID:', material.id, 'type:', typeof material.id, 'length:', material.id?.length);
+        console.log('  - Category:', material.category, 'type:', typeof material.category, 'length:', material.category?.length);
+        console.log('  - Origin:', material.origin_location, 'type:', typeof material.origin_location, 'length:', material.origin_location?.length);
+        
+        // Check for problematic values
+        if (!material.id || material.id.trim() === '') {
+          console.error('⚠️ Material has empty ID:', material);
+        }
+        if (!material.category || material.category.trim() === '') {
+          console.error('⚠️ Material has empty category:', material);
+        }
+        if (!material.origin_location || material.origin_location.trim() === '') {
+          console.error('⚠️ Material has empty origin_location:', material);
+        }
+      });
+    }
+  }, [materials]);
 
   // Process materials to create map locations with warehouse shapes
   const mapLocations: MapLocation[] = materials
@@ -124,16 +149,51 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesRegion;
   });
 
-  // Filter out empty, null, or undefined values and ensure strings are not empty
-  const categories = [...new Set(materials
-    .map(m => m.category)
-    .filter(category => category && typeof category === 'string' && category.trim() !== '')
-  )];
-  
-  const regions = [...new Set(materials
-    .map(m => m.origin_location)
-    .filter(region => region && typeof region === 'string' && region.trim() !== '')
-  )];
+  // Enhanced filtering with debugging
+  const getValidCategories = () => {
+    const allCategories = materials.map(m => m.category);
+    console.log('All categories before filtering:', allCategories);
+    
+    const validCategories = [...new Set(allCategories
+      .filter(category => {
+        const isValid = category && 
+                        typeof category === 'string' && 
+                        category.trim() !== '' && 
+                        category.length > 0;
+        if (!isValid && category !== null && category !== undefined) {
+          console.warn('Invalid category found:', category, 'type:', typeof category);
+        }
+        return isValid;
+      })
+    )];
+    
+    console.log('Valid categories after filtering:', validCategories);
+    return validCategories;
+  };
+
+  const getValidRegions = () => {
+    const allRegions = materials.map(m => m.origin_location);
+    console.log('All regions before filtering:', allRegions);
+    
+    const validRegions = [...new Set(allRegions
+      .filter(region => {
+        const isValid = region && 
+                       typeof region === 'string' && 
+                       region.trim() !== '' && 
+                       region.length > 0;
+        if (!isValid && region !== null && region !== undefined) {
+          console.warn('Invalid region found:', region, 'type:', typeof region);
+        }
+        return isValid;
+      })
+    )];
+    
+    console.log('Valid regions after filtering:', validRegions);
+    return validRegions;
+  };
+
+  const categories = getValidCategories();
+  const regions = getValidRegions();
 
   const handleDelete = async (id: string) => {
     try {
@@ -234,13 +294,14 @@ const Materials = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Toutes les catégories</SelectItem>
-                    {categories
-                      .filter(category => category && category.trim() !== '')
-                      .map(category => (
+                    {categories.map(category => {
+                      console.log('Rendering category SelectItem:', category, 'type:', typeof category, 'length:', category.length);
+                      return (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
-                      ))}
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <Select value={regionFilter} onValueChange={setRegionFilter}>
@@ -249,13 +310,14 @@ const Materials = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Toutes les régions</SelectItem>
-                    {regions
-                      .filter(region => region && region.trim() !== '')
-                      .map(region => (
+                    {regions.map(region => {
+                      console.log('Rendering region SelectItem:', region, 'type:', typeof region, 'length:', region.length);
+                      return (
                         <SelectItem key={region} value={region}>
                           {region}
                         </SelectItem>
-                      ))}
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <Button 
