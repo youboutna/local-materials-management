@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Trash, Package, MapPin, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,8 +39,11 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  // Get unique categories from materials
-  const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
+  // Get unique categories from materials with proper filtering
+  const categories = [...new Set(materials
+    .map(m => m.category)
+    .filter(category => category && typeof category === 'string' && category.trim() !== '')
+  )];
 
   // Filter materials based on search and category
   const filteredMaterials = materials.filter(material => {
@@ -289,14 +291,16 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-sm font-medium">Matériau</Label>
                           <Select
-                            value={selected.materialId}
+                            value={selected.materialId || undefined}
                             onValueChange={(value) => updateMaterialId(index, value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Sélectionner un matériau" />
                             </SelectTrigger>
                             <SelectContent className="max-h-60">
-                              {materials.map(material => (
+                              {materials
+                                .filter(material => material && material.id && material.id.trim() !== '')
+                                .map(material => (
                                 <SelectItem 
                                   key={material.id} 
                                   value={material.id}
