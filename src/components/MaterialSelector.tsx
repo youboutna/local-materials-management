@@ -219,11 +219,13 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les catégories</SelectItem>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
+                  {categories
+                    .filter(category => category && category.trim() !== '')
+                    .map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -291,7 +293,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-sm font-medium">Matériau</Label>
                           <Select
-                            value={selected.materialId || undefined}
+                            value={selected.materialId && selected.materialId.trim() !== '' ? selected.materialId : undefined}
                             onValueChange={(value) => updateMaterialId(index, value)}
                           >
                             <SelectTrigger>
@@ -299,7 +301,15 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                             </SelectTrigger>
                             <SelectContent className="max-h-60">
                               {materials
-                                .filter(material => material && material.id && material.id.trim() !== '')
+                                .filter(material => 
+                                  material && 
+                                  material.id && 
+                                  typeof material.id === 'string' && 
+                                  material.id.trim() !== '' &&
+                                  material.name &&
+                                  typeof material.name === 'string' &&
+                                  material.name.trim() !== ''
+                                )
                                 .map(material => (
                                 <SelectItem 
                                   key={material.id} 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -235,11 +234,13 @@ const Materials = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Toutes les catégories</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
+                    {categories
+                      .filter(category => category && category.trim() !== '')
+                      .map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Select value={regionFilter} onValueChange={setRegionFilter}>
@@ -248,11 +249,13 @@ const Materials = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Toutes les régions</SelectItem>
-                    {regions.map(region => (
-                      <SelectItem key={region} value={region}>
-                        {region}
-                      </SelectItem>
-                    ))}
+                    {regions
+                      .filter(region => region && region.trim() !== '')
+                      .map(region => (
+                        <SelectItem key={region} value={region}>
+                          {region}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button 
