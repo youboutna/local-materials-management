@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -256,8 +255,6 @@ const MaterialCreate = () => {
                     "Sélectionnez d'abord une région pour positionner l'entrepôt"
                   }
                   allowPolygon={true}
-                  allowCoordinateSelection={true}
-                  allowWarehouseTracing={true}
                   className="h-[700px]"
                 />
                 
