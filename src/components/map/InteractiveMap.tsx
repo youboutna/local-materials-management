@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Navigation, Save } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 
 interface MapData {
   center?: { lat: number; lng: number };
@@ -86,12 +86,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     );
   };
 
-  const handleApplyChanges = () => {
-    if (onChange) {
-      onChange(mapData);
-    }
-  };
-
   return (
     <Card className={className}>
       <CardHeader>
@@ -150,21 +144,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             {isGettingLocation ? 'Localisation...' : 'Utiliser ma position actuelle'}
           </Button>
         </div>
-
-        {/* Only show apply button if there are changes to apply */}
-        {onChange && (
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleApplyChanges}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              Appliquer les modifications
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
