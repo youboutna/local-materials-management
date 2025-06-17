@@ -47,48 +47,122 @@ const Materials = () => {
   const { data: materials = [], isLoading } = useQuery({
     queryKey: ['materials'],
     queryFn: async () => {
+      console.log('🔍 Fetching materials from Supabase...');
       const { data, error } = await supabase
         .from('materials')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Raw materials data:', data);
       return data as Material[];
     }
   });
 
-  // Debug materials data
+  // Enhanced debugging for materials data
   useEffect(() => {
-    if (materials.length > 0) {
-      console.log('Materials debug - checking for problematic data:');
-      materials.forEach((material, index) => {
-        console.log(`Material ${index}: ${material.name}`);
-        console.log('  - ID:', material.id, 'type:', typeof material.id, 'length:', material.id?.length);
-        console.log('  - Category:', material.category, 'type:', typeof material.category, 'length:', material.category?.length);
-        console.log('  - Origin:', material.origin_location, 'type:', typeof material.origin_location, 'length:', material.origin_location?.length);
-        
-        // Check for problematic values
-        if (!material.id || material.id.trim() === '') {
-          console.error('⚠️ Material has empty ID:', material);
-        }
-        if (!material.category || material.category.trim() === '') {
-          console.error('⚠️ Material has empty category:', material);
-        }
-        if (!material.origin_location || material.origin_location.trim() === '') {
-          console.error('⚠️ Material has empty origin_location:', material);
+    console.log('🧪 DEBUG: Materials data analysis starting...');
+    console.log('📊 Total materials loaded:', materials.length);
+    
+    if (materials.length === 0) {
+      console.log('⚠️ No materials found in database');
+      return;
+    }
+
+    // Analyze each material for problematic data
+    materials.forEach((material, index) => {
+      console.log(`\n🔍 Material ${index + 1}/${materials.length}: "${material.name}"`);
+      
+      // Check ID
+      if (!material.id || typeof material.id !== 'string' || material.id.trim() === '') {
+        console.error('❌ INVALID ID:', material.id, typeof material.id);
+      }
+      
+      // Check category
+      if (!material.category || typeof material.category !== 'string' || material.category.trim() === '') {
+        console.error('❌ INVALID CATEGORY:', material.category, typeof material.category);
+      }
+      
+      // Check origin_location
+      if (!material.origin_location || typeof material.origin_location !== 'string' || material.origin_location.trim() === '') {
+        console.error('❌ INVALID ORIGIN_LOCATION:', material.origin_location, typeof material.origin_location);
+      }
+      
+      // Check for unexpected properties
+      Object.keys(material).forEach(key => {
+        const value = material[key as keyof Material];
+        if (value === '' || value === null || value === undefined) {
+          console.warn(`⚠️ Empty/null value for ${key}:`, value);
         }
       });
-    }
+    });
+    
+    console.log('🧪 DEBUG: Materials data analysis complete\n');
   }, [materials]);
+
+  // Robust filtering functions with extensive validation
+  const getValidCategories = () => {
+    console.log('🔍 Processing categories...');
+    
+    const allCategories = materials.map(m => m.category);
+    console.log('📋 All raw categories:', allCategories);
+    
+    const validCategories = allCategories.filter(category => {
+      const isValid = category && 
+                     typeof category === 'string' && 
+                     category.trim() !== '' && 
+                     category.length > 0 &&
+                     !category.includes('undefined') &&
+                     category !== 'null';
+      
+      if (!isValid) {
+        console.warn('❌ Invalid category filtered out:', category, typeof category);
+      }
+      
+      return isValid;
+    });
+    
+    const uniqueCategories = [...new Set(validCategories)];
+    console.log('✅ Valid unique categories:', uniqueCategories);
+    
+    return uniqueCategories;
+  };
+
+  const getValidRegions = () => {
+    console.log('🔍 Processing regions...');
+    
+    const allRegions = materials.map(m => m.origin_location);
+    console.log('📋 All raw regions:', allRegions);
+    
+    const validRegions = allRegions.filter(region => {
+      const isValid = region && 
+                     typeof region === 'string' && 
+                     region.trim() !== '' && 
+                     region.length > 0 &&
+                     !region.includes('undefined') &&
+                     region !== 'null';
+      
+      if (!isValid) {
+        console.warn('❌ Invalid region filtered out:', region, typeof region);
+      }
+      
+      return isValid;
+    });
+    
+    const uniqueRegions = [...new Set(validRegions)];
+    console.log('✅ Valid unique regions:', uniqueRegions);
+    
+    return uniqueRegions;
+  };
 
   // Process materials to create map locations with warehouse shapes
   const mapLocations: MapLocation[] = materials
     .filter(material => material.coordinates_latitude && material.coordinates_longitude)
     .map(material => {
-      console.log(`Processing material for map: ${material.name}`);
-      console.log('Raw localisation data:', material.localisation);
-      console.log('Forme field:', material.forme);
-      
       let warehouseShape: { lat: number; lng: number }[] | undefined;
       let warehouseShapeType: 'polygon' | 'rectangle' | 'circle' | undefined;
       
@@ -103,8 +177,6 @@ const Materials = () => {
             parsedData = material.localisation;
           }
           
-          console.log('Parsed localisation data:', parsedData);
-          
           // Check if it's an array of coordinates (warehouse shape)
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             // Verify the structure has lat/lng properties
@@ -114,7 +186,6 @@ const Materials = () => {
                 lng: point.lng
               }));
               warehouseShapeType = (material.forme as 'polygon' | 'rectangle' | 'circle') || 'polygon';
-              console.log(`Successfully parsed warehouse shape for ${material.name}:`, warehouseShape, 'type:', warehouseShapeType);
             }
           }
         } catch (error) {
@@ -134,11 +205,8 @@ const Materials = () => {
         warehouseShapeType
       };
       
-      console.log(`Final map location for ${material.name}:`, location);
       return location;
     });
-
-  console.log('Total map locations with warehouse shapes:', mapLocations.filter(loc => loc.warehouseShape).length);
 
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,51 +217,30 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesRegion;
   });
 
-  // Enhanced filtering with debugging
-  const getValidCategories = () => {
-    const allCategories = materials.map(m => m.category);
-    console.log('All categories before filtering:', allCategories);
-    
-    const validCategories = [...new Set(allCategories
-      .filter(category => {
-        const isValid = category && 
-                        typeof category === 'string' && 
-                        category.trim() !== '' && 
-                        category.length > 0;
-        if (!isValid && category !== null && category !== undefined) {
-          console.warn('Invalid category found:', category, 'type:', typeof category);
-        }
-        return isValid;
-      })
-    )];
-    
-    console.log('Valid categories after filtering:', validCategories);
-    return validCategories;
-  };
-
-  const getValidRegions = () => {
-    const allRegions = materials.map(m => m.origin_location);
-    console.log('All regions before filtering:', allRegions);
-    
-    const validRegions = [...new Set(allRegions
-      .filter(region => {
-        const isValid = region && 
-                       typeof region === 'string' && 
-                       region.trim() !== '' && 
-                       region.length > 0;
-        if (!isValid && region !== null && region !== undefined) {
-          console.warn('Invalid region found:', region, 'type:', typeof region);
-        }
-        return isValid;
-      })
-    )];
-    
-    console.log('Valid regions after filtering:', validRegions);
-    return validRegions;
-  };
-
   const categories = getValidCategories();
   const regions = getValidRegions();
+
+  // Debug Select component values before rendering
+  useEffect(() => {
+    console.log('🎯 SELECT COMPONENT DEBUG:');
+    console.log('Categories for Select:', categories);
+    console.log('Regions for Select:', regions);
+    console.log('Current categoryFilter:', categoryFilter);
+    console.log('Current regionFilter:', regionFilter);
+    
+    // Check for any empty values that might cause Select.Item errors
+    categories.forEach((cat, idx) => {
+      if (!cat || cat === '') {
+        console.error(`❌ EMPTY CATEGORY AT INDEX ${idx}:`, cat);
+      }
+    });
+    
+    regions.forEach((reg, idx) => {
+      if (!reg || reg === '') {
+        console.error(`❌ EMPTY REGION AT INDEX ${idx}:`, reg);
+      }
+    });
+  }, [categories, regions, categoryFilter, regionFilter]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -288,41 +335,57 @@ const Materials = () => {
                     className="pl-10"
                   />
                 </div>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                
+                <Select value={categoryFilter || undefined} onValueChange={(value) => setCategoryFilter(value || '')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Toutes les catégories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
-                    {categories.map(category => {
-                      console.log('Rendering category SelectItem:', category, 'type:', typeof category, 'length:', category.length);
+                    <SelectItem value="__all__">Toutes les catégories</SelectItem>
+                    {categories.map((category, index) => {
+                      // Extra safety check before rendering
+                      if (!category || typeof category !== 'string' || category.trim() === '') {
+                        console.error(`❌ Skipping invalid category at index ${index}:`, category);
+                        return null;
+                      }
+                      
+                      console.log(`✅ Rendering category SelectItem: "${category}"`);
                       return (
-                        <SelectItem key={category} value={category}>
+                        <SelectItem key={`category-${index}-${category}`} value={category}>
                           {category}
                         </SelectItem>
                       );
                     })}
                   </SelectContent>
                 </Select>
-                <Select value={regionFilter} onValueChange={setRegionFilter}>
+                
+                <Select value={regionFilter || undefined} onValueChange={(value) => setRegionFilter(value || '')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Toutes les régions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les régions</SelectItem>
-                    {regions.map(region => {
-                      console.log('Rendering region SelectItem:', region, 'type:', typeof region, 'length:', region.length);
+                    <SelectItem value="__all__">Toutes les régions</SelectItem>
+                    {regions.map((region, index) => {
+                      // Extra safety check before rendering
+                      if (!region || typeof region !== 'string' || region.trim() === '') {
+                        console.error(`❌ Skipping invalid region at index ${index}:`, region);
+                        return null;
+                      }
+                      
+                      console.log(`✅ Rendering region SelectItem: "${region}"`);
                       return (
-                        <SelectItem key={region} value={region}>
+                        <SelectItem key={`region-${index}-${region}`} value={region}>
                           {region}
                         </SelectItem>
                       );
                     })}
                   </SelectContent>
                 </Select>
+                
                 <Button 
                   variant="outline" 
                   onClick={() => {
+                    console.log('🔄 Resetting filters');
                     setSearchTerm('');
                     setCategoryFilter('');
                     setRegionFilter('');
