@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (value) {
@@ -41,10 +43,39 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [value]);
 
+  // Initialize simple clickable map
+  useEffect(() => {
+    if (mapRef.current && !mapReady) {
+      setMapReady(true);
+    }
+  }, [mapReady]);
+
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
     const updatedData = { ...mapData, address: newAddress };
     setMapData(updatedData);
+    if (onChange) {
+      onChange(updatedData);
+    }
+  };
+
+  // Handle map click to set coordinates
+  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!mapRef.current) return;
+    
+    const rect = mapRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    // Convert pixel coordinates to approximate lat/lng
+    // This is a simplified conversion for demonstration
+    const lat = 18.0735 + (rect.height / 2 - y) / rect.height * 10; // Mauritania center area
+    const lng = -15.9582 + (x - rect.width / 2) / rect.width * 20;
+    
+    const center = { lat: Math.round(lat * 1000000) / 1000000, lng: Math.round(lng * 1000000) / 1000000 };
+    const updatedData = { ...mapData, center };
+    setMapData(updatedData);
+    
     if (onChange) {
       onChange(updatedData);
     }
@@ -121,24 +152,60 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Map placeholder */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-          <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-          <p className="text-gray-600 mb-4">Zone de carte interactive</p>
-          <p className="text-sm text-gray-500 mb-4">
-            {allowPolygon 
-              ? "Cliquez pour placer un point ou tracez une zone"
-              : "Cliquez pour sélectionner une localisation"
-            }
-          </p>
+        {/* Interactive Map */}
+        <div className="space-y-2">
+          <Label>Carte interactive</Label>
+          <div 
+            ref={mapRef}
+            onClick={handleMapClick}
+            className="relative w-full h-64 border border-gray-300 rounded-lg cursor-crosshair bg-gradient-to-br from-blue-100 to-green-100 overflow-hidden"
+            title="Cliquez sur la carte pour sélectionner une position"
+          >
+            {/* Map background with grid */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="w-full h-full bg-grid-pattern bg-repeat" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='%23000000' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E")`
+              }}></div>
+            </div>
 
-          {/* Current location button */}
+            {/* Selected position marker */}
+            {mapData.center && (
+              <div 
+                className="absolute w-6 h-6 transform -translate-x-3 -translate-y-6 z-10"
+                style={{
+                  left: `${50 + ((mapData.center.lng + 15.9582) / 20) * 100}%`,
+                  top: `${50 - ((mapData.center.lat - 18.0735) / 10) * 100}%`
+                }}
+              >
+                <MapPin className="w-6 h-6 text-red-500 fill-red-500" />
+              </div>
+            )}
+
+            {/* Instructions overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white/90 px-4 py-2 rounded-lg shadow-sm text-center">
+                <MapPin className="h-8 w-8 mx-auto text-gray-400 mb-1" />
+                <p className="text-sm text-gray-600">
+                  {mapData.center ? 'Position sélectionnée' : 'Cliquez pour sélectionner une position'}
+                </p>
+                {allowPolygon && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {allowPolygon ? "Tracez une zone en cliquant plusieurs points" : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Current location button */}
+        <div className="flex justify-center">
           <Button
             type="button"
             variant="outline"
             onClick={getCurrentLocation}
             disabled={isGettingLocation}
-            className="flex items-center gap-2 mx-auto"
+            className="flex items-center gap-2"
           >
             <Navigation className={`h-4 w-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
             {isGettingLocation ? 'Localisation...' : 'Utiliser ma position actuelle'}
