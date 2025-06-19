@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Navigation, ZoomIn, ZoomOut, Plus } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapPin, Navigation, ZoomIn, ZoomOut, Plus, Square, Circle, Diamond, Pentagon, Trash2 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -20,8 +19,9 @@ L.Icon.Default.mergeOptions({
 interface MapData {
   center?: { lat: number; lng: number };
   polygon?: { lat: number; lng: number }[];
+  warehouseShape?: { lat: number; lng: number }[];
   address?: string;
-  shapeType?: "polygon" | "rectangle" | "circle";
+  shapeType?: "polygon" | "rectangle" | "circle" | "diamond";
 }
 
 interface InteractiveMapProps {
@@ -34,11 +34,19 @@ interface InteractiveMapProps {
 }
 
 // Custom map click handler component
-const MapClickHandler: React.FC<{ onLocationSelect: (lat: number, lng: number) => void }> = ({ onLocationSelect }) => {
+const MapClickHandler: React.FC<{ 
+  onLocationSelect: (lat: number, lng: number) => void;
+  onShapeClick: (lat: number, lng: number) => void;
+  isDrawingShape: boolean;
+}> = ({ onLocationSelect, onShapeClick, isDrawingShape }) => {
   useMapEvents({
     click: (e) => {
       const { lat, lng } = e.latlng;
-      onLocationSelect(lat, lng);
+      if (isDrawingShape) {
+        onShapeClick(lat, lng);
+      } else {
+        onLocationSelect(lat, lng);
+      }
     },
   });
   return null;
@@ -102,6 +110,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isDrawingShape, setIsDrawingShape] = useState(false);
+  const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle' | 'circle' | 'diamond' | null>(null);
+  const [shapePoints, setShapePoints] = useState<{ lat: number; lng: number }[]>([]);
 
   // Mauritania major cities and regions coordinates
   const mauritaniaCities = [
@@ -141,6 +152,124 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     if (onChange) {
       onChange(updatedData);
     }
+  };
+
+  const handleShapeClick = (lat: number, lng: number) => {
+    if (!isDrawingShape || !drawingMode) return;
+
+    const newPoint = { lat, lng };
+    const newPoints = [...shapePoints, newPoint];
+    setShapePoints(newPoints);
+
+    // For polygons, allow multiple points
+    if (drawingMode === 'polygon') {
+      // Continue adding points
+      return;
+    }
+
+    // For other shapes, complete after specific number of points
+    if (drawingMode === 'rectangle' && newPoints.length === 2) {
+      completeRectangle(newPoints);
+    } else if (drawingMode === 'circle' && newPoints.length === 2) {
+      completeCircle(newPoints);
+    } else if (drawingMode === 'diamond' && newPoints.length === 2) {
+      completeDiamond(newPoints);
+    }
+  };
+
+  const completeRectangle = (points: { lat: number; lng: number }[]) => {
+    if (points.length !== 2) return;
+    
+    const [p1, p2] = points;
+    const rectanglePoints = [
+      p1,
+      { lat: p1.lat, lng: p2.lng },
+      p2,
+      { lat: p2.lat, lng: p1.lng }
+    ];
+    
+    finishShape(rectanglePoints, 'rectangle');
+  };
+
+  const completeCircle = (points: { lat: number; lng: number }[]) => {
+    if (points.length !== 2) return;
+    
+    const [center, edge] = points;
+    const radius = Math.sqrt(
+      Math.pow(edge.lat - center.lat, 2) + Math.pow(edge.lng - center.lng, 2)
+    );
+    
+    const circlePoints = [];
+    for (let i = 0; i < 32; i++) {
+      const angle = (i * 2 * Math.PI) / 32;
+      circlePoints.push({
+        lat: center.lat + radius * Math.cos(angle),
+        lng: center.lng + radius * Math.sin(angle)
+      });
+    }
+    
+    finishShape(circlePoints, 'circle');
+  };
+
+  const completeDiamond = (points: { lat: number; lng: number }[]) => {
+    if (points.length !== 2) return;
+    
+    const [p1, p2] = points;
+    const centerLat = (p1.lat + p2.lat) / 2;
+    const centerLng = (p1.lng + p2.lng) / 2;
+    const halfWidth = Math.abs(p2.lng - p1.lng) / 2;
+    const halfHeight = Math.abs(p2.lat - p1.lat) / 2;
+    
+    const diamondPoints = [
+      { lat: centerLat + halfHeight, lng: centerLng }, // Top
+      { lat: centerLat, lng: centerLng + halfWidth },  // Right
+      { lat: centerLat - halfHeight, lng: centerLng }, // Bottom
+      { lat: centerLat, lng: centerLng - halfWidth }   // Left
+    ];
+    
+    finishShape(diamondPoints, 'diamond');
+  };
+
+  const finishShape = (points: { lat: number; lng: number }[], shapeType: string) => {
+    const updatedData = { 
+      ...mapData, 
+      warehouseShape: points,
+      shapeType: shapeType as "polygon" | "rectangle" | "circle" | "diamond"
+    };
+    setMapData(updatedData);
+    
+    if (onChange) {
+      onChange(updatedData);
+    }
+    
+    setIsDrawingShape(false);
+    setDrawingMode(null);
+    setShapePoints([]);
+  };
+
+  const startDrawing = (mode: 'polygon' | 'rectangle' | 'circle' | 'diamond') => {
+    setIsDrawingShape(true);
+    setDrawingMode(mode);
+    setShapePoints([]);
+  };
+
+  const finishPolygon = () => {
+    if (shapePoints.length >= 3) {
+      finishShape(shapePoints, 'polygon');
+    }
+  };
+
+  const clearShape = () => {
+    const updatedData = { ...mapData, warehouseShape: undefined, shapeType: undefined };
+    setMapData(updatedData);
+    
+    if (onChange) {
+      onChange(updatedData);
+    }
+    
+    setIsDrawingShape(false);
+    setDrawingMode(null);
+    setShapePoints([]);
   };
 
   const getCurrentLocation = () => {
@@ -202,6 +331,88 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           />
         </div>
 
+        {/* Shape drawing tools */}
+        {allowPolygon && (
+          <div className="space-y-2">
+            <Label>Outils de traçage de forme</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={drawingMode === 'rectangle' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => startDrawing('rectangle')}
+                className="flex items-center gap-1"
+              >
+                <Square className="h-4 w-4" />
+                Rectangle
+              </Button>
+              <Button
+                type="button"
+                variant={drawingMode === 'diamond' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => startDrawing('diamond')}
+                className="flex items-center gap-1"
+              >
+                <Diamond className="h-4 w-4" />
+                Losange
+              </Button>
+              <Button
+                type="button"
+                variant={drawingMode === 'circle' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => startDrawing('circle')}
+                className="flex items-center gap-1"
+              >
+                <Circle className="h-4 w-4" />
+                Cercle
+              </Button>
+              <Button
+                type="button"
+                variant={drawingMode === 'polygon' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => startDrawing('polygon')}
+                className="flex items-center gap-1"
+              >
+                <Pentagon className="h-4 w-4" />
+                Polygone libre
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearShape}
+                className="flex items-center gap-1"
+              >
+                <Trash2 className="h-4 w-4" />
+                Effacer
+              </Button>
+            </div>
+            
+            {isDrawingShape && (
+              <div className="text-sm text-blue-600 p-2 bg-blue-50 rounded">
+                {drawingMode === 'rectangle' && "Cliquez pour définir 2 coins opposés du rectangle"}
+                {drawingMode === 'circle' && "Cliquez pour le centre puis pour définir le rayon"}
+                {drawingMode === 'diamond' && "Cliquez pour définir 2 coins opposés du losange"}
+                {drawingMode === 'polygon' && (
+                  <div className="flex items-center justify-between">
+                    <span>Cliquez pour ajouter des points ({shapePoints.length} points)</span>
+                    {shapePoints.length >= 3 && (
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="h-auto p-0 ml-2"
+                        onClick={finishPolygon}
+                      >
+                        Terminer
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* GPS Coordinates display */}
         {mapData.center && (
           <div className="bg-gray-50 p-3 rounded-md">
@@ -210,6 +421,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </p>
             <p className="text-sm font-mono">
               {mapData.center.lat.toFixed(6)}, {mapData.center.lng.toFixed(6)}
+            </p>
+          </div>
+        )}
+
+        {/* Shape info display */}
+        {mapData.warehouseShape && (
+          <div className="bg-blue-50 p-3 rounded-md">
+            <p className="text-sm text-blue-600">
+              <strong>Forme tracée:</strong> {mapData.shapeType || 'polygon'} - {mapData.warehouseShape.length} points
             </p>
           </div>
         )}
@@ -258,15 +478,55 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 </Marker>
               )}
 
+              {/* Warehouse shape polygon */}
+              {mapData.warehouseShape && mapData.warehouseShape.length > 0 && (
+                <Polygon
+                  positions={mapData.warehouseShape.map(point => [point.lat, point.lng])}
+                  pathOptions={{ 
+                    color: '#3b82f6', 
+                    fillColor: '#3b82f6', 
+                    fillOpacity: 0.2,
+                    weight: 2
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <strong className="text-blue-600">Forme de l'entrepôt</strong>
+                      <div className="text-xs text-gray-600">
+                        Type: {mapData.shapeType || 'polygon'}
+                      </div>
+                    </div>
+                  </Popup>
+                </Polygon>
+              )}
+
+              {/* Drawing points for current shape */}
+              {shapePoints.map((point, index) => (
+                <Marker 
+                  key={`drawing-${index}`} 
+                  position={[point.lat, point.lng]}
+                  icon={L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+                    iconSize: [10, 10],
+                    iconAnchor: [5, 5]
+                  })}
+                />
+              ))}
+
               {/* Click handler */}
-              <MapClickHandler onLocationSelect={handleLocationSelect} />
+              <MapClickHandler 
+                onLocationSelect={handleLocationSelect} 
+                onShapeClick={handleShapeClick}
+                isDrawingShape={isDrawingShape}
+              />
               
               {/* Custom zoom controls */}
               <ZoomControls />
             </MapContainer>
 
-            {/* Instructions overlay (only when no position selected) */}
-            {!mapData.center && (
+            {/* Instructions overlay */}
+            {!mapData.center && !isDrawingShape && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001] bg-black/20">
                 <div className="bg-white/95 px-6 py-4 rounded-lg shadow-lg text-center">
                   <MapPin className="h-10 w-10 mx-auto text-gray-400 mb-2" />
