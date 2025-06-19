@@ -4,7 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin, Navigation, ZoomIn, ZoomOut, Plus } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 interface MapData {
   center?: { lat: number; lng: number };
@@ -22,6 +33,64 @@ interface InteractiveMapProps {
   className?: string;
 }
 
+// Custom map click handler component
+const MapClickHandler: React.FC<{ onLocationSelect: (lat: number, lng: number) => void }> = ({ onLocationSelect }) => {
+  useMapEvents({
+    click: (e) => {
+      const { lat, lng } = e.latlng;
+      onLocationSelect(lat, lng);
+    },
+  });
+  return null;
+};
+
+// Custom zoom controls component
+const ZoomControls: React.FC = () => {
+  const map = useMap();
+
+  const handleZoomIn = () => {
+    map.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    map.zoomOut();
+  };
+
+  const handleReset = () => {
+    map.setView([20.0, -12.0], 6); // Center on Mauritania
+  };
+
+  return (
+    <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        className="bg-white shadow-md hover:bg-gray-50"
+        onClick={handleZoomIn}
+      >
+        <ZoomIn className="h-4 w-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="bg-white shadow-md hover:bg-gray-50"
+        onClick={handleZoomOut}
+      >
+        <ZoomOut className="h-4 w-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="bg-white shadow-md hover:bg-gray-50"
+        onClick={handleReset}
+        title="Recentrer sur la Mauritanie"
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
   title = "Carte interactive",
   description = "Sélectionnez une localisation sur la carte",
@@ -33,8 +102,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [mapReady, setMapReady] = useState(false);
 
   // Mauritania major cities and regions coordinates
   const mauritaniaCities = [
@@ -50,27 +117,12 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     { name: 'Tidjikja', lat: 18.5500, lng: -11.4333 }
   ];
 
-  // Regional boundaries (simplified)
-  const mauritaniaRegions = [
-    { name: 'Nouakchott', bounds: { north: 18.3, south: 17.8, east: -15.6, west: -16.2 } },
-    { name: 'Nouadhibou', bounds: { north: 21.2, south: 20.6, east: -16.8, west: -17.2 } },
-    { name: 'Adrar', bounds: { north: 21.5, south: 19.5, east: -11.0, west: -13.5 } },
-    { name: 'Trarza', bounds: { north: 18.0, south: 16.0, east: -14.5, west: -16.5 } },
-    { name: 'Brakna', bounds: { north: 17.5, south: 15.5, east: -12.0, west: -14.0 } }
-  ];
-
   useEffect(() => {
     if (value) {
       setMapData(value);
       setAddress(value.address || '');
     }
   }, [value]);
-
-  useEffect(() => {
-    if (mapRef.current && !mapReady) {
-      setMapReady(true);
-    }
-  }, [mapReady]);
 
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
@@ -81,18 +133,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapRef.current) return;
-    
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    // Convert pixel coordinates to Mauritania lat/lng bounds
-    // Mauritania bounds: roughly 15°N to 27°N, 17°W to 5°W
-    const lat = 27 - (y / rect.height) * 12; // 27 to 15 degrees N
-    const lng = -17 + (x / rect.width) * 12; // -17 to -5 degrees W
-    
+  const handleLocationSelect = (lat: number, lng: number) => {
     const center = { lat: Math.round(lat * 1000000) / 1000000, lng: Math.round(lng * 1000000) / 1000000 };
     const updatedData = { ...mapData, center };
     setMapData(updatedData);
@@ -138,18 +179,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     );
   };
 
-  // Convert lat/lng to pixel position for markers
-  const getMarkerPosition = (lat: number, lng: number) => {
-    if (!mapRef.current) return { x: 0, y: 0 };
-    const rect = mapRef.current.getBoundingClientRect();
-    
-    // Convert lat/lng to pixel coordinates
-    const x = ((lng + 17) / 12) * rect.width;
-    const y = ((27 - lat) / 12) * rect.height;
-    
-    return { x, y };
-  };
-
   return (
     <Card className={className}>
       <CardHeader>
@@ -185,107 +214,71 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Interactive Mauritania Map */}
+        {/* Interactive Leaflet Map */}
         <div className="space-y-2">
-          <Label>Carte de la Mauritanie</Label>
-          <div 
-            ref={mapRef}
-            onClick={handleMapClick}
-            className="relative w-full h-96 border-2 border-gray-300 rounded-lg cursor-crosshair bg-gradient-to-b from-yellow-50 to-orange-50 overflow-hidden"
-            title="Cliquez sur la carte pour sélectionner une position"
-          >
-            {/* Mauritania outline background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-100 to-orange-100 opacity-30"></div>
-            
-            {/* Atlantic Ocean (left side) */}
-            <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-blue-200 to-blue-100 opacity-60"></div>
-            
-            {/* Sahara Desert (northern region) */}
-            <div className="absolute top-0 right-0 w-full h-24 bg-gradient-to-b from-yellow-200 to-yellow-100 opacity-40"></div>
-            
-            {/* Senegal River (southern border) */}
-            <div className="absolute bottom-0 left-12 right-0 h-2 bg-blue-300 opacity-70"></div>
-
-            {/* Regional boundaries */}
-            {mauritaniaRegions.map((region, index) => {
-              const width = Math.abs(region.bounds.east - region.bounds.west) / 12 * 100;
-              const height = Math.abs(region.bounds.north - region.bounds.south) / 12 * 100;
-              const left = (region.bounds.west + 17) / 12 * 100;
-              const top = (27 - region.bounds.north) / 12 * 100;
+          <Label>Carte de la Mauritanie (OpenStreetMap)</Label>
+          <div className="relative w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden">
+            <MapContainer
+              center={mapData.center ? [mapData.center.lat, mapData.center.lng] : [20.0, -12.0]}
+              zoom={mapData.center ? 10 : 6}
+              style={{ height: '100%', width: '100%' }}
+              className="z-0"
+            >
+              {/* OpenStreetMap tiles */}
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
               
-              return (
-                <div
-                  key={index}
-                  className="absolute border border-dashed border-gray-400 opacity-30"
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                    width: `${width}%`,
-                    height: `${height}%`
-                  }}
-                >
-                  <span className="absolute top-1 left-1 text-xs text-gray-600 font-medium">
-                    {region.name}
-                  </span>
-                </div>
-              );
-            })}
+              {/* Major cities markers */}
+              {mauritaniaCities.map((city, index) => (
+                <Marker key={index} position={[city.lat, city.lng]}>
+                  <Popup>
+                    <div className="text-center">
+                      <strong className={city.isCapital ? 'text-red-600' : 'text-blue-600'}>
+                        {city.name}
+                      </strong>
+                      {city.isCapital && <div className="text-xs text-red-500">Capitale</div>}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
-            {/* Major cities */}
-            {mauritaniaCities.map((city, index) => {
-              const position = getMarkerPosition(city.lat, city.lng);
-              return (
-                <div
-                  key={index}
-                  className="absolute transform -translate-x-1 -translate-y-1 z-20"
-                  style={{
-                    left: `${position.x}px`,
-                    top: `${position.y}px`
-                  }}
-                >
-                  <div className={`w-3 h-3 rounded-full ${city.isCapital ? 'bg-red-600' : 'bg-blue-600'} border-2 border-white shadow-md`}></div>
-                  <span className="absolute top-4 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-700 bg-white/80 px-1 rounded whitespace-nowrap">
-                    {city.name}
-                  </span>
-                </div>
-              );
-            })}
+              {/* Selected position marker */}
+              {mapData.center && (
+                <Marker position={[mapData.center.lat, mapData.center.lng]}>
+                  <Popup>
+                    <div className="text-center">
+                      <strong className="text-green-600">Position sélectionnée</strong>
+                      <div className="text-xs text-gray-600">
+                        {mapData.center.lat.toFixed(6)}, {mapData.center.lng.toFixed(6)}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
 
-            {/* Selected position marker */}
-            {mapData.center && (
-              <div 
-                className="absolute w-8 h-8 transform -translate-x-4 -translate-y-8 z-30"
-                style={{
-                  left: `${getMarkerPosition(mapData.center.lat, mapData.center.lng).x}px`,
-                  top: `${getMarkerPosition(mapData.center.lat, mapData.center.lng).y}px`
-                }}
-              >
-                <MapPin className="w-8 h-8 text-green-600 fill-green-500 drop-shadow-lg" />
-                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  Position sélectionnée
-                </div>
-              </div>
-            )}
+              {/* Click handler */}
+              <MapClickHandler onLocationSelect={handleLocationSelect} />
+              
+              {/* Custom zoom controls */}
+              <ZoomControls />
+            </MapContainer>
 
-            {/* Instructions overlay */}
+            {/* Instructions overlay (only when no position selected) */}
             {!mapData.center && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/90 px-6 py-4 rounded-lg shadow-lg text-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001] bg-black/20">
+                <div className="bg-white/95 px-6 py-4 rounded-lg shadow-lg text-center">
                   <MapPin className="h-10 w-10 mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-700 font-medium">
                     Cliquez sur la carte pour sélectionner une position
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Villes principales et régions affichées
+                    Utilisez les contrôles de zoom pour naviguer
                   </p>
                 </div>
               </div>
             )}
-
-            {/* Scale indicator */}
-            <div className="absolute bottom-4 right-4 bg-white/90 px-2 py-1 rounded text-xs text-gray-600">
-              Échelle: ~1:4,000,000
-            </div>
           </div>
         </div>
 
