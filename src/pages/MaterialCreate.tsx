@@ -89,10 +89,16 @@ const MaterialCreate = () => {
   };
 
   const handleFormDataChange = (data: Partial<EnhancedMaterial>) => {
+    console.log('Form data changed:', data);
     setFormData(data);
   };
 
   const handleSubmit = async () => {
+    console.log('Submit button clicked');
+    console.log('Form data:', formData);
+    console.log('Selected region:', selectedRegion);
+    console.log('Map data:', mapData);
+    
     setLoading(true);
     
     try {
@@ -160,6 +166,16 @@ const MaterialCreate = () => {
       setLoading(false);
     }
   };
+
+  // Check if form is ready for submission
+  const isFormValid = selectedRegion && formData.name && formData.name.length > 0;
+
+  console.log('Form validation:', {
+    selectedRegion,
+    formDataName: formData.name,
+    isFormValid,
+    loading
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -295,12 +311,23 @@ const MaterialCreate = () => {
           <div className="mt-8 flex justify-center">
             <Button 
               onClick={handleSubmit}
-              disabled={loading || !selectedRegion || !formData.name}
+              disabled={loading || !isFormValid}
               className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-12 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-semibold"
             >
-              {loading ? t('materials.button.loading') : t('materials.button.save')}
+              {loading ? t('materials.button.loading') : 'Enregistrer le matériau'}
             </Button>
           </div>
+          
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm">
+              <p><strong>Debug Info:</strong></p>
+              <p>Selected Region: {selectedRegion}</p>
+              <p>Form Name: {formData.name || 'Not set'}</p>
+              <p>Is Valid: {isFormValid ? 'Yes' : 'No'}</p>
+              <p>Loading: {loading ? 'Yes' : 'No'}</p>
+            </div>
+          )}
         </div>
       </main>
       
