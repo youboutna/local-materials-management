@@ -181,7 +181,7 @@ const MaterialCreate = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow pt-24 pb-32">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Left Column - Form */}
@@ -271,7 +271,7 @@ const MaterialCreate = () => {
                     "Sélectionnez d'abord une région pour positionner l'entrepôt"
                   }
                   allowPolygon={true}
-                  className="h-[700px]"
+                  className="h-[600px]"
                 />
                 
                 {/* Map Status Information */}
@@ -307,8 +307,8 @@ const MaterialCreate = () => {
             </div>
           </div>
 
-          {/* Submit Button at Bottom */}
-          <div className="mt-8 flex justify-center">
+          {/* Submit Button at Bottom with proper spacing */}
+          <div className="mt-12 mb-8 flex justify-center">
             <Button 
               onClick={handleSubmit}
               disabled={loading || !isFormValid}
