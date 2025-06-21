@@ -56,7 +56,22 @@ const Materials = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMaterials(data || []);
+      
+      // Transform the data to match our Material interface
+      const transformedMaterials: Material[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        category: item.category,
+        unit: item.unit,
+        price_per_unit: item.price_per_unit,
+        available_quantity: item.available_quantity,
+        origin_location: item.origin_location || undefined, // Convert null to undefined
+        image: item.image || undefined,
+        created_at: item.created_at,
+      }));
+      
+      setMaterials(transformedMaterials);
     } catch (error) {
       console.error('Error fetching materials:', error);
       toast({
@@ -108,7 +123,7 @@ const Materials = () => {
     const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          material.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !selectedCategory || material.category === selectedCategory;
-    const matchesLocation = !selectedLocation || material.origin_location === selectedLocation;
+    const matchesLocation = !selectedLocation || (material.origin_location && material.origin_location === selectedLocation);
     
     return matchesSearch && matchesCategory && matchesLocation;
   });
