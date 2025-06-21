@@ -112,7 +112,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isDrawingShape, setIsDrawingShape] = useState(false);
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle' | 'circle' | 'diamond' | null>(null);
-  const [shapePoints, setShapePoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [shapePoints, setShapePoints] = useState<Array<{ lat: number; lng: number }>>([]);
 
   const mauritaniaCities = [
     { name: 'Nouakchott', lat: 18.0735, lng: -15.9582, isCapital: true },
