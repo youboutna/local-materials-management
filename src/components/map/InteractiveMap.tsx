@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Define coordinate type
+type Coordinate = { lat: number; lng: number };
+
 interface MapData {
-  center?: { lat: number; lng: number };
-  polygon?: { lat: number; lng: number }[];
-  warehouseShape?: { lat: number; lng: number }[];
+  center?: Coordinate;
+  polygon?: Coordinate[];
+  warehouseShape?: Coordinate[];
   address?: string;
   shapeType?: "polygon" | "rectangle" | "circle" | "diamond";
 }
@@ -112,7 +116,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isDrawingShape, setIsDrawingShape] = useState(false);
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle' | 'circle' | 'diamond' | null>(null);
-  const [shapePoints, setShapePoints] = useState<Array<{ lat: number; lng: number }>>([]);
+  const [shapePoints, setShapePoints] = useState<Coordinate[]>([]);
 
   const mauritaniaCities = [
     { name: 'Nouakchott', lat: 18.0735, lng: -15.9582, isCapital: true },
@@ -156,8 +160,8 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const handleShapeClick = (lat: number, lng: number) => {
     if (!isDrawingShape || !drawingMode) return;
 
-    const newPoint = { lat, lng };
-    const newPoints = [...shapePoints, newPoint];
+    const newPoint: Coordinate = { lat, lng };
+    const newPoints: Coordinate[] = [...shapePoints, newPoint];
     setShapePoints(newPoints);
 
     // For polygons, allow multiple points
@@ -176,11 +180,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  const completeRectangle = (points: { lat: number; lng: number }[]) => {
+  const completeRectangle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
     const [p1, p2] = points;
-    const rectanglePoints = [
+    const rectanglePoints: Coordinate[] = [
       p1,
       { lat: p1.lat, lng: p2.lng },
       p2,
@@ -190,7 +194,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(rectanglePoints, 'rectangle');
   };
 
-  const completeCircle = (points: { lat: number; lng: number }[]) => {
+  const completeCircle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
     const [center, edge] = points;
@@ -198,7 +202,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       Math.pow(edge.lat - center.lat, 2) + Math.pow(edge.lng - center.lng, 2)
     );
     
-    const circlePoints = [];
+    const circlePoints: Coordinate[] = [];
     for (let i = 0; i < 32; i++) {
       const angle = (i * 2 * Math.PI) / 32;
       circlePoints.push({
@@ -210,7 +214,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(circlePoints, 'circle');
   };
 
-  const completeDiamond = (points: { lat: number; lng: number }[]) => {
+  const completeDiamond = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
     const [p1, p2] = points;
@@ -219,7 +223,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const halfWidth = Math.abs(p2.lng - p1.lng) / 2;
     const halfHeight = Math.abs(p2.lat - p1.lat) / 2;
     
-    const diamondPoints = [
+    const diamondPoints: Coordinate[] = [
       { lat: centerLat + halfHeight, lng: centerLng }, // Top
       { lat: centerLat, lng: centerLng + halfWidth },  // Right
       { lat: centerLat - halfHeight, lng: centerLng }, // Bottom
@@ -229,7 +233,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(diamondPoints, 'diamond');
   };
 
-  const finishShape = (points: { lat: number; lng: number }[], shapeType: string) => {
+  const finishShape = (points: Coordinate[], shapeType: string) => {
     const updatedData = { 
       ...mapData, 
       warehouseShape: points,
