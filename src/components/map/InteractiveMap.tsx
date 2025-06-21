@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -115,7 +114,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [drawingMode, setDrawingMode] = useState<'polygon' | 'rectangle' | 'circle' | 'diamond' | null>(null);
   const [shapePoints, setShapePoints] = useState<{ lat: number; lng: number }[]>([]);
 
-  // Mauritania major cities and regions coordinates
   const mauritaniaCities = [
     { name: 'Nouakchott', lat: 18.0735, lng: -15.9582, isCapital: true },
     { name: 'Nouadhibou', lat: 20.9000, lng: -17.0347 },
