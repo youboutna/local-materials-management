@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,7 +127,7 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesLocation;
   });
 
-  const uniqueLocations = Array.from(new Set(materials.map(m => m.origin_location).filter(Boolean)));
+  const uniqueLocations = Array.from(new Set(materials.map(m => m.origin_location).filter((location): location is string => Boolean(location))));
 
   if (loading) {
     return (
