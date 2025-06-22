@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +27,8 @@ interface MaterialFormData {
   availableQuantity: number;
   workspaceId: string;
   adresse?: string;
+  forme?: "polygon" | "rectangle" | "circle";
+  localisation?: any[];
   timeline?: {
     start: Date;
     end: Date;
@@ -94,17 +95,17 @@ const MaterialEdit = () => {
       const materialUpdate = {
         name: updatedData.name,
         description: updatedData.description,
-        category: updatedData.name, // Use name as category since category doesn't exist in DB
+        category: updatedData.category || updatedData.name,
         unit: updatedData.unit,
         price_per_unit: updatedData.pricePerUnit,
         available_quantity: updatedData.availableQuantity,
         workspace_id: updatedData.workspaceId,
         origin_location: updatedData.supplier?.name,
         adresse: updatedData.adresse,
-        forme: material?.forme,
+        forme: updatedData.forme,
+        localisation: updatedData.localisation,
         coordinates_latitude: material?.coordinates_latitude,
         coordinates_longitude: material?.coordinates_longitude,
-        localisation: material?.localisation,
         updated_at: new Date().toISOString()
       };
 
@@ -143,11 +144,16 @@ const MaterialEdit = () => {
       const transformedData: Partial<MaterialFormData> = {
         name: material.name,
         description: material.description,
+        category: material.category,
         unit: material.unit,
+        quantity: Number(material.available_quantity),
+        minQuantity: 0,
         pricePerUnit: Number(material.price_per_unit),
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
         adresse: (material.adresse as string) || '',
+        forme: material.forme as "polygon" | "rectangle" | "circle" | undefined,
+        localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
         timeline: {
           start: new Date(),
           end: new Date(),
