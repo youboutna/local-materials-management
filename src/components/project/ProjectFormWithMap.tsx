@@ -112,6 +112,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   };
 
   const handleMapDataChange = (data: MapData) => {
+    console.log('Map data changed:', data);
     setFacilitiesMapData(data);
   };
 
@@ -481,15 +482,15 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Location Tab */}
+        {/* Location Tab - CRITICAL: Preserve all map/GPS functionality */}
         <TabsContent value="location" className="space-y-6">
-          <InteractiveMap
-            title="Localisation des installations du projet"
-            description="Définissez la position GPS du projet et tracez la zone des installations"
-            value={facilitiesMapData}
-            onChange={handleMapDataChange}
-            allowPolygon={true}
-          />
+          {React.createElement(InteractiveMap, {
+            title: "Localisation des installations du projet",
+            description: "Définissez la position GPS du projet et tracez la zone des installations",
+            value: facilitiesMapData,
+            onChange: handleMapDataChange,
+            allowPolygon: true
+          })}
         </TabsContent>
       </Tabs>
 
