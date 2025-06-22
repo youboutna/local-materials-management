@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,8 +32,8 @@ const Materials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
 
   const categories = [
     'Construction',
@@ -65,7 +66,7 @@ const Materials = () => {
         unit: item.unit,
         price_per_unit: item.price_per_unit,
         available_quantity: item.available_quantity,
-        origin_location: item.origin_location || undefined, // Convert null to undefined
+        origin_location: item.origin_location || undefined,
         image: item.image || undefined,
         created_at: item.created_at,
       }));
@@ -127,7 +128,14 @@ const Materials = () => {
     return matchesSearch && matchesCategory && matchesLocation;
   });
 
-  const uniqueLocations = Array.from(new Set(materials.map(m => m.origin_location).filter((location): location is string => Boolean(location))));
+  // Get unique locations from materials, filtering out null/undefined values
+  const uniqueLocations = Array.from(
+    new Set(
+      materials
+        .map(m => m.origin_location)
+        .filter((location): location is string => Boolean(location))
+    )
+  );
 
   if (loading) {
     return (
