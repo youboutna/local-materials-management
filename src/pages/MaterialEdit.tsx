@@ -11,18 +11,41 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import type { EnhancedMaterial } from '@/types/mauritania';
 import type { Database } from '@/integrations/supabase/types';
 
 type Material = Database['public']['Tables']['materials']['Row'];
 type Workspace = Database['public']['Tables']['workspaces']['Row'];
+
+interface MaterialFormData {
+  name: string;
+  description: string;
+  category: string;
+  subcategory?: string;
+  unit: string;
+  quantity: number;
+  minQuantity: number;
+  pricePerUnit: number;
+  availableQuantity: number;
+  workspaceId: string;
+  adresse?: string;
+  timeline?: {
+    start: Date;
+    end: Date;
+    estimatedDuration: number;
+  };
+  supplier?: {
+    name: string;
+    contact: string;
+    leadTime: number;
+  };
+}
 
 const MaterialEdit = () => {
   const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Partial<EnhancedMaterial>>({});
+  const [formData, setFormData] = useState<Partial<MaterialFormData>>({});
 
   if (!id) {
     return <Navigate to="/materials" replace />;
@@ -67,7 +90,7 @@ const MaterialEdit = () => {
 
   // Update material mutation
   const updateMaterial = useMutation({
-    mutationFn: async (updatedData: Partial<EnhancedMaterial>) => {
+    mutationFn: async (updatedData: Partial<MaterialFormData>) => {
       const materialUpdate = {
         name: updatedData.name,
         description: updatedData.description,
@@ -78,10 +101,10 @@ const MaterialEdit = () => {
         workspace_id: updatedData.workspaceId,
         origin_location: updatedData.supplier?.name,
         adresse: updatedData.adresse,
-        forme: updatedData.forme,
-        coordinates_latitude: material?.coordinates_latitude, // Keep original values
-        coordinates_longitude: material?.coordinates_longitude, // Keep original values
-        localisation: updatedData.localisation as any, // Cast to Json type
+        forme: material?.forme,
+        coordinates_latitude: material?.coordinates_latitude,
+        coordinates_longitude: material?.coordinates_longitude,
+        localisation: material?.localisation,
         updated_at: new Date().toISOString()
       };
 
@@ -117,16 +140,19 @@ const MaterialEdit = () => {
   // Transform material data to form format
   useEffect(() => {
     if (material) {
-      const transformedData: Partial<EnhancedMaterial> = {
+      const transformedData: Partial<MaterialFormData> = {
         name: material.name,
         description: material.description,
         unit: material.unit,
         pricePerUnit: Number(material.price_per_unit),
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
-        adresse: material.adresse as string || '',
-        forme: material.forme as "polygon" | "rectangle" | "circle" | undefined,
-        localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
+        adresse: (material.adresse as string) || '',
+        timeline: {
+          start: new Date(),
+          end: new Date(),
+          estimatedDuration: 7
+        },
         supplier: {
           name: material.origin_location || '',
           contact: '',
@@ -137,7 +163,7 @@ const MaterialEdit = () => {
     }
   }, [material]);
 
-  const handleSubmit = (updatedData: Partial<EnhancedMaterial>) => {
+  const handleSubmit = (updatedData: Partial<MaterialFormData>) => {
     updateMaterial.mutate(updatedData);
   };
 
@@ -145,8 +171,8 @@ const MaterialEdit = () => {
   const transformedWorkspaces = workspaces.map(workspace => ({
     id: workspace.id,
     name: workspace.name,
-    location: workspace.location as any, // Cast to Location type
-    status: workspace.status as any // Cast to OperationalStatus type
+    location: workspace.location,
+    status: workspace.status
   }));
 
   if (isLoading) {
