@@ -121,8 +121,8 @@ const Materials = () => {
   const filteredMaterials = materials.filter(material => {
     const matchesSearch = material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          material.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || material.category === selectedCategory;
-    const matchesLocation = !selectedLocation || (material.origin_location && material.origin_location === selectedLocation);
+    const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
+    const matchesLocation = selectedLocation === 'all' || (material.origin_location && material.origin_location === selectedLocation);
     
     return matchesSearch && matchesCategory && matchesLocation;
   });
@@ -202,7 +202,7 @@ const Materials = () => {
                       <SelectValue placeholder="Toutes les catégories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les catégories</SelectItem>
+                      <SelectItem value="all">Toutes les catégories</SelectItem>
                       {categories.map(category => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -221,7 +221,7 @@ const Materials = () => {
                       <SelectValue placeholder="Toutes les localisations" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les localisations</SelectItem>
+                      <SelectItem value="all">Toutes les localisations</SelectItem>
                       {uniqueLocations.map(location => (
                         <SelectItem key={location} value={location}>
                           {location}
