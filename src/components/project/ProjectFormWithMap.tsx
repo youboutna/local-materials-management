@@ -40,7 +40,9 @@ interface ProjectFormData {
 interface MapData {
   center?: { lat: number; lng: number };
   polygon?: { lat: number; lng: number }[];
+  warehouseShape?: { lat: number; lng: number }[];
   address?: string;
+  shapeType?: "polygon" | "rectangle" | "circle" | "diamond";
 }
 
 interface ProjectFormWithMapProps {
@@ -75,7 +77,9 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   const [facilitiesMapData, setFacilitiesMapData] = useState<MapData>({
     center: undefined,
     polygon: [],
-    address: ''
+    warehouseShape: [],
+    address: '',
+    shapeType: undefined
   });
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -484,13 +488,53 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
         {/* Location Tab - CRITICAL: Preserve all map/GPS functionality */}
         <TabsContent value="location" className="space-y-6">
-          {React.createElement(InteractiveMap, {
-            title: "Localisation des installations du projet",
-            description: "Définissez la position GPS du projet et tracez la zone des installations",
-            value: facilitiesMapData,
-            onChange: handleMapDataChange,
-            allowPolygon: true
-          })}
+          <InteractiveMap
+            title="Localisation et zone d'entrepôt du projet"
+            description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
+            value={facilitiesMapData}
+            onChange={handleMapDataChange}
+            allowPolygon={true}
+            className="min-h-[600px]"
+          />
+          
+          {/* Display current map data for debugging */}
+          {(facilitiesMapData.center || facilitiesMapData.warehouseShape?.length) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Données de localisation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {facilitiesMapData.center && (
+                  <div className="bg-green-50 p-3 rounded-md">
+                    <p className="text-sm font-medium text-green-800">Position GPS du projet:</p>
+                    <p className="text-sm text-green-700 font-mono">
+                      Latitude: {facilitiesMapData.center.lat.toFixed(6)}, 
+                      Longitude: {facilitiesMapData.center.lng.toFixed(6)}
+                    </p>
+                  </div>
+                )}
+                
+                {facilitiesMapData.warehouseShape && facilitiesMapData.warehouseShape.length > 0 && (
+                  <div className="bg-blue-50 p-3 rounded-md">
+                    <p className="text-sm font-medium text-blue-800">Zone d'entrepôt tracée:</p>
+                    <p className="text-sm text-blue-700">
+                      Type: {facilitiesMapData.shapeType || 'polygon'} - {facilitiesMapData.warehouseShape.length} points
+                    </p>
+                  </div>
+                )}
+                
+                {facilitiesMapData.address && (
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <p className="text-sm font-medium text-gray-800">Adresse:</p>
+                    <p className="text-sm text-gray-700">{facilitiesMapData.address}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
