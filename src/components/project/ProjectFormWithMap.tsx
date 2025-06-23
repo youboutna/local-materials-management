@@ -486,16 +486,18 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Location Tab - CRITICAL: Preserve all map/GPS functionality */}
+        {/* Location Tab - Fixed to prevent render2 error */}
         <TabsContent value="location" className="space-y-6">
-          <InteractiveMap
-            title="Localisation et zone d'entrepôt du projet"
-            description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
-            value={facilitiesMapData}
-            onChange={handleMapDataChange}
-            allowPolygon={true}
-            className="min-h-[600px]"
-          />
+          <div className="w-full">
+            <InteractiveMap
+              title="Localisation et zone d'entrepôt du projet"
+              description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
+              value={facilitiesMapData}
+              onChange={handleMapDataChange}
+              allowPolygon={true}
+              className="min-h-[600px]"
+            />
+          </div>
           
           {/* Display current map data for debugging */}
           {(facilitiesMapData.center || facilitiesMapData.warehouseShape?.length) && (
