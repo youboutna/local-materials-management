@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,6 +99,43 @@ const ZoomControls: React.FC = () => {
         <Plus className="h-4 w-4" />
       </Button>
     </div>
+  );
+};
+
+// Map component wrapper to handle initialization properly
+const MapWrapper: React.FC<{
+  center: [number, number];
+  zoom: number;
+  children: React.ReactNode;
+}> = ({ center, zoom, children }) => {
+  const [key, setKey] = useState(0);
+
+  // Force re-render on mount to prevent render2 error
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKey(1);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (key === 0) {
+    return (
+      <div className="w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden flex items-center justify-center">
+        <div className="text-gray-500">Chargement de la carte...</div>
+      </div>
+    );
+  }
+
+  return (
+    <MapContainer
+      key={key}
+      center={center}
+      zoom={zoom}
+      style={{ height: '100%', width: '100%' }}
+      className="z-0"
+    >
+      {children}
+    </MapContainer>
   );
 };
 
@@ -437,15 +473,13 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Interactive Leaflet Map */}
+        {/* Interactive Leaflet Map with proper error handling */}
         <div className="space-y-2">
           <Label>Carte de la Mauritanie (OpenStreetMap)</Label>
           <div className="relative w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden">
-            <MapContainer
+            <MapWrapper
               center={mapData.center ? [mapData.center.lat, mapData.center.lng] : [20.0, -12.0]}
               zoom={mapData.center ? 10 : 6}
-              style={{ height: '100%', width: '100%' }}
-              className="z-0"
             >
               {/* OpenStreetMap tiles */}
               <TileLayer
@@ -526,7 +560,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               
               {/* Custom zoom controls */}
               <ZoomControls />
-            </MapContainer>
+            </MapWrapper>
 
             {/* Instructions overlay */}
             {!mapData.center && !isDrawingShape && (
