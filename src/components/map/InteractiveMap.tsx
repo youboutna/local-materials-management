@@ -108,35 +108,52 @@ const MapWrapper: React.FC<{
   zoom: number;
   children: React.ReactNode;
 }> = ({ center, zoom, children }) => {
-  const [key, setKey] = useState(0);
+  const [isReady, setIsReady] = useState(false);
 
-  // Force re-render on mount to prevent render2 error
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setKey(1);
-    }, 100);
-    return () => clearTimeout(timer);
+    console.log('MapWrapper: Initializing map...');
+    // Use requestAnimationFrame to ensure DOM is ready
+    const frame = requestAnimationFrame(() => {
+      setIsReady(true);
+      console.log('MapWrapper: Map ready for rendering');
+    });
+    
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
-  if (key === 0) {
+  if (!isReady) {
+    console.log('MapWrapper: Showing loading state');
     return (
-      <div className="w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden flex items-center justify-center">
+      <div className="w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
         <div className="text-gray-500">Chargement de la carte...</div>
       </div>
     );
   }
 
-  return (
-    <MapContainer
-      key={key}
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      className="z-0"
-    >
-      {children}
-    </MapContainer>
-  );
+  console.log('MapWrapper: Rendering MapContainer with center:', center, 'zoom:', zoom);
+  
+  try {
+    return (
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        className="z-0"
+        key={`map-${center[0]}-${center[1]}-${zoom}`}
+      >
+        {children}
+      </MapContainer>
+    );
+  } catch (error) {
+    console.error('MapWrapper: Error rendering MapContainer:', error);
+    return (
+      <div className="w-full h-96 border-2 border-red-300 rounded-lg overflow-hidden flex items-center justify-center bg-red-50">
+        <div className="text-red-500">Erreur lors du chargement de la carte</div>
+      </div>
+    );
+  }
 };
 
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -147,6 +164,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   allowPolygon = false,
   className = ""
 }) => {
+  console.log('InteractiveMap: Rendering with value:', value);
+  
+  // State definitions
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -167,6 +187,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     { name: 'Tidjikja', lat: 18.5500, lng: -11.4333 }
   ];
 
+  // Effect to handle initial value
   useEffect(() => {
     if (value) {
       setMapData(value);
@@ -174,6 +195,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [value]);
 
+  // Handler for address change
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
     const updatedData = { ...mapData, address: newAddress };
@@ -183,6 +205,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
+  // Handler for location selection
   const handleLocationSelect = (lat: number, lng: number) => {
     const center = { lat: Math.round(lat * 1000000) / 1000000, lng: Math.round(lng * 1000000) / 1000000 };
     const updatedData = { ...mapData, center };
@@ -193,6 +216,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
+  // Handler for shape click
   const handleShapeClick = (lat: number, lng: number) => {
     if (!isDrawingShape || !drawingMode) return;
 
@@ -216,6 +240,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
+  // Function to complete a rectangle
   const completeRectangle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -230,6 +255,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(rectanglePoints, 'rectangle');
   };
 
+  // Function to complete a circle
   const completeCircle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -250,6 +276,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(circlePoints, 'circle');
   };
 
+  // Function to complete a diamond
   const completeDiamond = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -269,6 +296,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(diamondPoints, 'diamond');
   };
 
+  // Function to finish a shape
   const finishShape = (points: Coordinate[], shapeType: string) => {
     const updatedData = { 
       ...mapData, 
@@ -286,18 +314,21 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setShapePoints([]);
   };
 
+  // Function to start drawing a shape
   const startDrawing = (mode: 'polygon' | 'rectangle' | 'circle' | 'diamond') => {
     setIsDrawingShape(true);
     setDrawingMode(mode);
     setShapePoints([]);
   };
 
+  // Function to finish a polygon
   const finishPolygon = () => {
     if (shapePoints.length >= 3) {
       finishShape(shapePoints, 'polygon');
     }
   };
 
+  // Function to clear the shape
   const clearShape = () => {
     const updatedData = { ...mapData, warehouseShape: undefined, shapeType: undefined };
     setMapData(updatedData);
@@ -311,6 +342,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setShapePoints([]);
   };
 
+  // Function to get the current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert('La géolocalisation n\'est pas supportée par votre navigateur');
