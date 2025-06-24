@@ -85,6 +85,10 @@ const Projects: React.FC = () => {
     setMapLocations(filteredLocations);
   };
 
+  const handleMapFilterChange = (filteredLocations: MapLocation[]) => {
+    setMapLocations(filteredLocations);
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -146,7 +150,10 @@ const Projects: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <MapFilters locations={mapLocations} onFilterChange={handleFilterChange} />
+              <MapFilters 
+                locations={mapLocations} 
+                onFilterChange={handleMapFilterChange} 
+              />
             </CardContent>
           </Card>
           

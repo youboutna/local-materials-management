@@ -29,7 +29,7 @@ interface Material {
   coordinates_latitude?: number;
   coordinates_longitude?: number;
   forme?: string;
-  localisation?: any[];
+  localisation?: any;
 }
 
 const Materials: React.FC = () => {
@@ -64,13 +64,13 @@ const Materials: React.FC = () => {
           available_quantity: item.available_quantity,
           image: item.image || undefined,
           origin_location: item.origin_location || undefined,
-          minimum_quantity: item.minimum_quantity || undefined,
-          local_type: item.local_type || undefined,
+          minimum_quantity: (item as any).minimum_quantity || undefined,
+          local_type: (item as any).local_type || undefined,
           adresse: typeof item.adresse === 'string' ? item.adresse : undefined,
           coordinates_latitude: item.coordinates_latitude || undefined,
           coordinates_longitude: item.coordinates_longitude || undefined,
-          forme: item.forme || undefined,
-          localisation: item.localisation || undefined
+          forme: (item as any).forme || undefined,
+          localisation: (item as any).localisation || undefined
         }));
         
         setMaterials(transformedData);
