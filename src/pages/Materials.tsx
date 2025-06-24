@@ -113,11 +113,11 @@ const Materials: React.FC = () => {
       );
     }
 
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== 'all') {
       filtered = filtered.filter(material => material.category === selectedCategory);
     }
 
-    if (selectedLocalType) {
+    if (selectedLocalType && selectedLocalType !== 'all') {
       filtered = filtered.filter(material => material.local_type === selectedLocalType);
     }
 
