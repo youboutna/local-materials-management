@@ -78,7 +78,7 @@ const Materials: React.FC = () => {
         setMaterials(transformedData);
         setFilteredMaterials(transformedData);
         
-        // Convert materials to map locations
+        // Convert materials to map locations with proper adresse handling
         const locations: MapLocation[] = transformedData
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
           .map(material => ({
@@ -88,7 +88,7 @@ const Materials: React.FC = () => {
             latitude: material.coordinates_latitude!,
             longitude: material.coordinates_longitude!,
             region: material.origin_location || '',
-            adresse: material.adresse || ''
+            adresse: material.adresse || '' // Ensure adresse is always a string
           }));
         
         setMapLocations(locations);
@@ -123,7 +123,7 @@ const Materials: React.FC = () => {
 
     setFilteredMaterials(filtered);
     
-    // Update map locations based on filtered materials
+    // Update map locations based on filtered materials with proper adresse handling
     const filteredLocations: MapLocation[] = filtered
       .filter(material => material.coordinates_latitude && material.coordinates_longitude)
       .map(material => ({
@@ -133,7 +133,7 @@ const Materials: React.FC = () => {
         latitude: material.coordinates_latitude!,
         longitude: material.coordinates_longitude!,
         region: material.origin_location || '',
-        adresse: material.adresse || ''
+        adresse: material.adresse || '' // Ensure adresse is always a string
       }));
     
     setMapLocations(filteredLocations);
