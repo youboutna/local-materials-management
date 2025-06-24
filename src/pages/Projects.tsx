@@ -1,46 +1,30 @@
 
-import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Map, Grid, Filter } from 'lucide-react';
+import ProjectsGrid from '@/components/projects/ProjectsGrid';
 import ProjectsHeader from '@/components/projects/ProjectsHeader';
 import ProjectFilters from '@/components/projects/ProjectFilters';
-import ProjectsGrid from '@/components/projects/ProjectsGrid';
-import EmptyProjectsState from '@/components/projects/EmptyProjectsState';
-import { useProjectsFilter } from '@/hooks/useProjectsFilter';
-import { useProjects } from '@/hooks/projects/useProjects';
-import ProjectMap, { MapLocation } from '@/components/ProjectMap';
 import MapFilters from '@/components/projects/MapFilters';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, List } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import ProjectMap from '@/components/ProjectMap';
+import InteractiveMap from '@/components/map/InteractiveMap';
+import { useProjects } from '@/hooks/useProjects';
+import { ProjectData } from '@/types/project';
+import { MapLocation } from '@/components/ProjectMap';
 
-const Projects = () => {
-  const { t } = useLanguage();
-  const { projects, loading } = useProjects();
+const Projects: React.FC = () => {
+  const { projects, isLoading, error } = useProjects();
+  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
-  const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
-  
-  const {
-    searchQuery,
-    setSearchQuery,
-    statusFilter,
-    setStatusFilter,
-    regionFilter,
-    setRegionFilter,
-    sortOption,
-    setSortOption,
-    filteredProjects,
-    searchResults,
-    showSearchResults,
-    handleSelectSearchResult,
-    clearSearch,
-    availableRegions,
-    performSearch
-  } = useProjectsFilter(projects);
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  // Convert projects to map locations
   useEffect(() => {
-    if (projects && projects.length > 0) {
+    if (projects) {
+      setFilteredProjects(projects);
+      
+      // Convert projects to map locations
       const locations: MapLocation[] = projects
         .filter(project => project.coordinates?.latitude && project.coordinates?.longitude)
         .map(project => ({
@@ -49,112 +33,170 @@ const Projects = () => {
           type: 'project' as const,
           latitude: project.coordinates!.latitude,
           longitude: project.coordinates!.longitude,
-          status: project.status as any,
+          status: project.status,
           region: project.location,
           startDate: project.startDate,
           endDate: project.endDate
         }));
       
       setMapLocations(locations);
-      setFilteredMapLocations(locations);
     }
   }, [projects]);
 
-  if (loading) {
+  const handleFilterChange = (filters: any) => {
+    if (!projects) return;
+    
+    let filtered = [...projects];
+    
+    // Apply filters
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(project => project.status === filters.status);
+    }
+    
+    if (filters.location) {
+      filtered = filtered.filter(project => 
+        project.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+    
+    if (filters.dateRange) {
+      // Apply date range filter if needed
+    }
+    
+    setFilteredProjects(filtered);
+    setSelectedRegion(filters.location || '');
+    setSelectedStatus(filters.status || '');
+    
+    // Update map locations based on filtered projects
+    const filteredLocations: MapLocation[] = filtered
+      .filter(project => project.coordinates?.latitude && project.coordinates?.longitude)
+      .map(project => ({
+        id: project.id,
+        name: project.title,
+        type: 'project' as const,
+        latitude: project.coordinates!.latitude,
+        longitude: project.coordinates!.longitude,
+        status: project.status,
+        region: project.location,
+        startDate: project.startDate,
+        endDate: project.endDate
+      }));
+    
+    setMapLocations(filteredLocations);
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">{t("projects.loading")}</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Chargement des projets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-600">Erreur lors du chargement des projets</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <ProjectsHeader />
       
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <ProjectsHeader />
+      <Tabs defaultValue="grid" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="grid" className="flex items-center gap-2">
+            <Grid className="h-4 w-4" />
+            Vue Grille
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Carte des Projets
+          </TabsTrigger>
+          <TabsTrigger value="interactive" className="flex items-center gap-2">
+            <Map className="h-4 w-4" />
+            Carte Interactive
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="grid" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtres
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProjectFilters onFilterChange={handleFilterChange} />
+            </CardContent>
+          </Card>
           
-          {/* View Toggle Tabs */}
-          <Tabs defaultValue="list" className="mt-6 mb-6">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                {t("projects.tab.list")}
-              </TabsTrigger>
-              <TabsTrigger value="map" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {t("projects.tab.map")}
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="list" className="mt-6">
-              {/* Filters and Actions */}
-              <ProjectFilters 
-                searchQuery={searchQuery}
-                setSearchQuery={performSearch}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                regionFilter={regionFilter}
-                setRegionFilter={setRegionFilter}
-                sortOption={sortOption}
-                setSortOption={setSortOption}
-                searchResults={searchResults}
-                showSearchResults={showSearchResults}
-                handleSelectSearchResult={handleSelectSearchResult}
-                clearSearch={clearSearch}
-                availableRegions={availableRegions}
+          <ProjectsGrid projects={filteredProjects} />
+        </TabsContent>
+
+        <TabsContent value="map" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtres de la carte
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MapFilters onFilterChange={handleFilterChange} />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-0">
+              <ProjectMap 
+                locations={mapLocations}
+                height="600px"
+                focusRegion={selectedRegion}
+                className="rounded-lg"
               />
-              
-              {/* Projects Grid or Empty State */}
-              {filteredProjects.length > 0 ? (
-                <ProjectsGrid projects={filteredProjects} />
-              ) : (
-                <EmptyProjectsState />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="map" className="mt-6">
-              {/* Map Filters */}
-              <MapFilters 
-                locations={mapLocations} 
-                onFilterChange={setFilteredMapLocations} 
-              />
-              
-              {/* Map View */}
-              {mapLocations.length > 0 ? (
-                <div className="h-[600px]">
-                  <ProjectMap 
-                    locations={filteredMapLocations}
-                    defaultCenter={[20.5279, -10.0309]}
-                    defaultZoom={6}
-                    className="h-full"
-                  />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="interactive" className="space-y-6">
+          <InteractiveMap
+            title="Carte Interactive des Projets"
+            description="Explorez tous les projets sur une carte interactive de la Mauritanie"
+            allowPolygon={false}
+            className="min-h-[600px]"
+          />
+          
+          {mapLocations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Projets avec Coordonnées GPS</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {mapLocations.map((location) => (
+                    <div key={location.id} className="p-3 border rounded-lg">
+                      <h4 className="font-medium">{location.name}</h4>
+                      <p className="text-sm text-gray-600">{location.region}</p>
+                      <p className="text-xs text-gray-500">
+                        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                      </p>
+                      {location.status && (
+                        <span className="inline-block mt-1 px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                          {location.status}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow-elegant p-8 text-center">
-                  <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-adrar-800 mb-2">{t("projects.map.empty_title")}</h3>
-                  <p className="text-adrar-600">
-                    {t("projects.map.empty_desc")}
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-      
-      <Footer />
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
