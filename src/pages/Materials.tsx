@@ -30,6 +30,7 @@ interface Material {
   coordinates_longitude?: number;
   forme?: string;
   localisation?: any;
+  is_active?: boolean;
 }
 
 const Materials: React.FC = () => {
@@ -70,7 +71,8 @@ const Materials: React.FC = () => {
           coordinates_latitude: item.coordinates_latitude || undefined,
           coordinates_longitude: item.coordinates_longitude || undefined,
           forme: (item as any).forme || undefined,
-          localisation: (item as any).localisation || undefined
+          localisation: (item as any).localisation || undefined,
+          is_active: (item as any).is_active !== undefined ? (item as any).is_active : true
         }));
         
         setMaterials(transformedData);

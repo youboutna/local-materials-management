@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
+export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
+
 interface ProjectFiltersProps {
   onFilterChange: (filters: {
     status?: string;
