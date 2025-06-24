@@ -210,7 +210,7 @@ const Materials: React.FC = () => {
                     <SelectValue placeholder="Catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    <SelectItem value="all">Toutes les catégories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -224,7 +224,7 @@ const Materials: React.FC = () => {
                     <SelectValue placeholder="Type local" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les types</SelectItem>
+                    <SelectItem value="all">Tous les types</SelectItem>
                     {localTypes.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}

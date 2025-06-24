@@ -45,7 +45,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({ onFilterChange }) => {
             <SelectValue placeholder="Tous les statuts" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tous les statuts</SelectItem>
+            <SelectItem value="all">Tous les statuts</SelectItem>
             <SelectItem value="en cours">En cours</SelectItem>
             <SelectItem value="terminé">Terminé</SelectItem>
             <SelectItem value="en attente">En attente</SelectItem>
