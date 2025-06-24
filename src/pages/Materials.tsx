@@ -24,7 +24,6 @@ interface Material {
   image?: string;
   origin_location?: string;
   minimum_quantity?: number;
-  is_active: boolean;
   local_type?: string;
   adresse?: string;
   coordinates_latitude?: number;
@@ -50,16 +49,35 @@ const Materials: React.FC = () => {
         const { data, error } = await supabase
           .from('materials')
           .select('*')
-          .eq('is_active', true)
           .order('name');
 
         if (error) throw error;
         
-        setMaterials(data || []);
-        setFilteredMaterials(data || []);
+        // Transform the data to match our Material interface
+        const transformedData: Material[] = (data || []).map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          category: item.category,
+          unit: item.unit,
+          price_per_unit: item.price_per_unit,
+          available_quantity: item.available_quantity,
+          image: item.image || undefined,
+          origin_location: item.origin_location || undefined,
+          minimum_quantity: item.minimum_quantity || undefined,
+          local_type: item.local_type || undefined,
+          adresse: typeof item.adresse === 'string' ? item.adresse : undefined,
+          coordinates_latitude: item.coordinates_latitude || undefined,
+          coordinates_longitude: item.coordinates_longitude || undefined,
+          forme: item.forme || undefined,
+          localisation: item.localisation || undefined
+        }));
+        
+        setMaterials(transformedData);
+        setFilteredMaterials(transformedData);
         
         // Convert materials to map locations
-        const locations: MapLocation[] = (data || [])
+        const locations: MapLocation[] = transformedData
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
           .map(material => ({
             id: material.id,

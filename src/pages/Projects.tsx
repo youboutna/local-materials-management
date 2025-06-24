@@ -14,7 +14,7 @@ import { ProjectData } from '@/types/project';
 import { MapLocation } from '@/components/ProjectMap';
 
 const Projects: React.FC = () => {
-  const { projects, isLoading, error } = useProjects();
+  const { projects, loading: isLoading, error } = useProjects();
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string>('');
@@ -146,7 +146,7 @@ const Projects: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <MapFilters onFilterChange={handleFilterChange} />
+              <MapFilters locations={mapLocations} onFilterChange={handleFilterChange} />
             </CardContent>
           </Card>
           
