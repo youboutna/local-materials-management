@@ -87,7 +87,7 @@ const Materials: React.FC = () => {
             latitude: material.coordinates_latitude!,
             longitude: material.coordinates_longitude!,
             region: material.origin_location || '',
-            adresse: material.adresse || '' // Ensure adresse is always a string
+            adresse: material.adresse || '' // Fix: ensure adresse is always a string
           }));
         
         setMapLocations(locations);
@@ -132,7 +132,7 @@ const Materials: React.FC = () => {
         latitude: material.coordinates_latitude!,
         longitude: material.coordinates_longitude!,
         region: material.origin_location || '',
-        adresse: material.adresse || '' // Ensure adresse is always a string
+        adresse: material.adresse || '' // Fix: ensure adresse is always a string
       }));
     
     setMapLocations(filteredLocations);
