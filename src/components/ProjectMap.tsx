@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent, Polygon, Rectangle, Circle } from 'react-leaflet';
 import L from 'leaflet';
@@ -26,7 +25,7 @@ export interface MapLocation {
   endDate?: string;
   warehouseShape?: { lat: number; lng: number }[];
   warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
-  adresse?: string;
+  adresse?: string | undefined;
 }
 
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
