@@ -336,7 +336,7 @@ const Materials: React.FC = () => {
                     <div key={location.id} className="p-3 border rounded-lg">
                       <h4 className="font-medium">{location.name}</h4>
                       <p className="text-sm text-gray-600">{location.region}</p>
-                      {location.adresse && (
+                      {location.adresse && location.adresse.trim() !== '' && (
                         <p className="text-sm text-gray-600">{location.adresse}</p>
                       )}
                       <p className="text-xs text-gray-500">
