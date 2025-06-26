@@ -358,7 +358,7 @@ const Materials: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {mapLocations.map((location) => {
-                    const addressDisplay = location.adresse && location.adresse.trim() !== '' ? location.adresse : 'Adresse non spécifiée';
+                    const addressDisplay = location.adresse || 'Adresse non spécifiée';
                     return (
                       <div key={location.id} className="p-3 border rounded-lg">
                         <h4 className="font-medium">{location.name}</h4>
