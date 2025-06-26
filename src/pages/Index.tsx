@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,32 +24,32 @@ const Index = () => {
   const features = [
     {
       icon: Briefcase,
-      title: t("index.feature.projects.title"),
-      description: t("index.feature.projects.description"),
+      title: t("index.feature.projects.title") || "Projets",
+      description: t("index.feature.projects.description") || "Gérez vos projets de construction",
       link: "/projects"
     },
     {
       icon: Package,
-      title: t("index.feature.materials.title"),
-      description: t("index.feature.materials.description"),
+      title: t("index.feature.materials.title") || "Matériaux",
+      description: t("index.feature.materials.description") || "Gestion des matériaux",
       link: "/materials"
     },
     {
       icon: FileText,
-      title: t("index.feature.documents.title"),
-      description: t("index.feature.documents.description"),
+      title: t("index.feature.documents.title") || "Documents",
+      description: t("index.feature.documents.description") || "Gestion documentaire",
       link: "/documents"
     },
     {
       icon: Users,
-      title: t("index.feature.teams.title"),
-      description: t("index.feature.teams.description"),
+      title: t("index.feature.teams.title") || "Équipes",
+      description: t("index.feature.teams.description") || "Gestion des équipes",
       link: "/users"
     },
     {
       icon: BarChart3,
-      title: t("index.feature.dashboard.title"),
-      description: t("index.feature.dashboard.description"),
+      title: t("index.feature.dashboard.title") || "Tableau de bord",
+      description: t("index.feature.dashboard.description") || "Vue d'ensemble",
       link: "/dashboard"
     }
   ];
@@ -60,7 +61,7 @@ const Index = () => {
         <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">{t("index.loading")}</p>
+            <p className="text-adrar-600">{t("index.loading") || "Chargement..."}</p>
           </div>
         </main>
         <Footer />
@@ -84,10 +85,10 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-adrar-900 mb-4">
-                {t("index.features.title")}
+                {t("index.features.title") || "Fonctionnalités"}
               </h2>
               <p className="text-lg text-adrar-600 max-w-2xl mx-auto">
-                {t("index.features.description")}
+                {t("index.features.description") || "Découvrez nos outils de gestion"}
               </p>
             </div>
             
@@ -112,13 +113,13 @@ const Index = () => {
                     {isUserAuthenticated ? (
                       <Button asChild className="w-full">
                         <Link to={feature.link}>
-                          {t("index.features.discover")}
+                          {t("index.features.discover") || "Découvrir"}
                         </Link>
                       </Button>
                     ) : (
                       <Button asChild className="w-full" variant="outline">
                         <Link to="/auth">
-                          {t("index.features.login_to_access")}
+                          {t("index.features.login_to_access") || "Se connecter pour accéder"}
                         </Link>
                       </Button>
                     )}
@@ -133,12 +134,12 @@ const Index = () => {
         <section className="py-20 bg-gradient-to-r from-terracotta-500 to-adrar-600">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              {t("index.cta.title")}
+              {t("index.cta.title") || "Commencez dès maintenant"}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               {isUserAuthenticated 
-                ? t("index.cta.authenticated")
-                : t("index.cta.unauthenticated")
+                ? (t("index.cta.authenticated") || "Accédez à votre tableau de bord")
+                : (t("index.cta.unauthenticated") || "Créez votre compte pour commencer")
               }
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -146,12 +147,12 @@ const Index = () => {
                 <>
                   <Button size="lg" variant="secondary" asChild>
                     <Link to="/dashboard">
-                      {t("index.cta.dashboard")}
+                      {t("index.cta.dashboard") || "Tableau de bord"}
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-terracotta-600" asChild>
                     <Link to="/projects">
-                      {t("index.cta.my_projects")}
+                      {t("index.cta.my_projects") || "Mes projets"}
                     </Link>
                   </Button>
                 </>
@@ -159,12 +160,12 @@ const Index = () => {
                 <>
                   <Button size="lg" variant="secondary" asChild>
                     <Link to="/auth?mode=register">
-                      {t("index.cta.start_free")}
+                      {t("index.cta.start_free") || "Commencer gratuitement"}
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-terracotta-600" asChild>
                     <Link to="/auth?mode=login">
-                      {t("index.cta.login")}
+                      {t("index.cta.login") || "Se connecter"}
                     </Link>
                   </Button>
                 </>
