@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -98,15 +96,21 @@ const Materials: React.FC = () => {
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
           .map(material => {
             const addressString = getAddressString(material.adresse);
-            return {
+            const baseLocation: MapLocation = {
               id: material.id,
               name: material.name,
               type: 'material' as const,
               latitude: material.coordinates_latitude!,
               longitude: material.coordinates_longitude!,
-              region: material.origin_location || '',
-              ...(addressString ? { adresse: addressString } : {})
+              region: material.origin_location || ''
             };
+            
+            // Only add adresse if it's a non-empty string
+            if (addressString) {
+              return { ...baseLocation, adresse: addressString };
+            }
+            
+            return baseLocation;
           });
         
         setMapLocations(locations);
@@ -146,15 +150,21 @@ const Materials: React.FC = () => {
       .filter(material => material.coordinates_latitude && material.coordinates_longitude)
       .map(material => {
         const addressString = getAddressString(material.adresse);
-        return {
+        const baseLocation: MapLocation = {
           id: material.id,
           name: material.name,
           type: 'material' as const,
           latitude: material.coordinates_latitude!,
           longitude: material.coordinates_longitude!,
-          region: material.origin_location || '',
-          ...(addressString ? { adresse: addressString } : {})
+          region: material.origin_location || ''
         };
+        
+        // Only add adresse if it's a non-empty string
+        if (addressString) {
+          return { ...baseLocation, adresse: addressString };
+        }
+        
+        return baseLocation;
       });
     
     setMapLocations(filteredLocations);
@@ -392,4 +402,3 @@ const Materials: React.FC = () => {
 };
 
 export default Materials;
-
