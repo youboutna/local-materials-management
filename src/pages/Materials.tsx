@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -184,7 +185,7 @@ const Materials: React.FC = () => {
   }, [materials, searchTerm, selectedCategory, selectedLocalType]);
 
   const categories = Array.from(new Set(materials.map(m => m.category))).filter(Boolean);
-  const localTypes = Array.from(new Set(materials.map(m => m.local_type))).filter(Boolean);
+  const localTypes = Array.from(new Set(materials.map(m => m.local_type).filter(Boolean))) as string[];
 
   if (isLoading) {
     return (
