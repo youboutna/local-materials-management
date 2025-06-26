@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { ProjectData } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,12 +35,10 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {projects.map((project, index) => (
-        <motion.div
+      {projects.map((project) => (
+        <div
           key={project.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
+          className="animate-in fade-in duration-300"
         >
           <Card className="h-full hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -87,7 +84,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

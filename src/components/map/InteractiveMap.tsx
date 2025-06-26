@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,60 +103,6 @@ const ZoomControls: React.FC = () => {
   );
 };
 
-// Map component wrapper to handle initialization properly
-const MapWrapper: React.FC<{
-  center: [number, number];
-  zoom: number;
-  children: React.ReactNode;
-}> = ({ center, zoom, children }) => {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    console.log('MapWrapper: Initializing map...');
-    // Use requestAnimationFrame to ensure DOM is ready
-    const frame = requestAnimationFrame(() => {
-      setIsReady(true);
-      console.log('MapWrapper: Map ready for rendering');
-    });
-    
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  if (!isReady) {
-    console.log('MapWrapper: Showing loading state');
-    return (
-      <div className="w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Chargement de la carte...</div>
-      </div>
-    );
-  }
-
-  console.log('MapWrapper: Rendering MapContainer with center:', center, 'zoom:', zoom);
-  
-  try {
-    return (
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        style={{ height: '100%', width: '100%' }}
-        className="z-0"
-        key={`map-${center[0]}-${center[1]}-${zoom}`}
-      >
-        {children}
-      </MapContainer>
-    );
-  } catch (error) {
-    console.error('MapWrapper: Error rendering MapContainer:', error);
-    return (
-      <div className="w-full h-96 border-2 border-red-300 rounded-lg overflow-hidden flex items-center justify-center bg-red-50">
-        <div className="text-red-500">Erreur lors du chargement de la carte</div>
-      </div>
-    );
-  }
-};
-
 const InteractiveMap: React.FC<InteractiveMapProps> = ({
   title = "Carte interactive",
   description = "Sélectionnez une localisation sur la carte",
@@ -164,8 +111,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   allowPolygon = false,
   className = ""
 }) => {
-  console.log('InteractiveMap: Rendering with value:', value);
-  
   // State definitions
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
@@ -226,7 +171,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     // For polygons, allow multiple points
     if (drawingMode === 'polygon') {
-      // Continue adding points
       return;
     }
 
@@ -379,6 +323,9 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     );
   };
 
+  const mapCenter: [number, number] = mapData.center ? [mapData.center.lat, mapData.center.lng] : [20.0, -12.0];
+  const mapZoom = mapData.center ? 10 : 6;
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -505,13 +452,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Interactive Leaflet Map with proper error handling */}
+        {/* Interactive Leaflet Map */}
         <div className="space-y-2">
           <Label>Carte de la Mauritanie (OpenStreetMap)</Label>
           <div className="relative w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden">
-            <MapWrapper
-              center={mapData.center ? [mapData.center.lat, mapData.center.lng] : [20.0, -12.0]}
-              zoom={mapData.center ? 10 : 6}
+            <MapContainer
+              center={mapCenter}
+              zoom={mapZoom}
+              style={{ height: '100%', width: '100%' }}
+              className="z-0"
             >
               {/* OpenStreetMap tiles */}
               <TileLayer
@@ -592,7 +541,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               
               {/* Custom zoom controls */}
               <ZoomControls />
-            </MapWrapper>
+            </MapContainer>
 
             {/* Instructions overlay */}
             {!mapData.center && !isDrawingShape && (
