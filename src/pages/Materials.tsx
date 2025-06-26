@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,7 +42,7 @@ const Materials: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLocalType, setSelectedLocalType] = useState('');
 
-  // Helper function to safely extract address string
+  // Helper function to safely extract address string - always returns a string
   const getAddressString = (adresse: any): string => {
     if (!adresse) return '';
     if (typeof adresse === 'string') return adresse;
