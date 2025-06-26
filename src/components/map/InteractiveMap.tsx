@@ -17,7 +17,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Define coordinate type
 type Coordinate = { lat: number; lng: number };
 
 interface MapData {
@@ -37,7 +36,6 @@ interface InteractiveMapProps {
   className?: string;
 }
 
-// Custom map click handler component
 const MapClickHandler: React.FC<{ 
   onLocationSelect: (lat: number, lng: number) => void;
   onShapeClick: (lat: number, lng: number) => void;
@@ -56,7 +54,6 @@ const MapClickHandler: React.FC<{
   return null;
 };
 
-// Custom zoom controls component
 const ZoomControls: React.FC = () => {
   const map = useMap();
 
@@ -69,7 +66,7 @@ const ZoomControls: React.FC = () => {
   };
 
   const handleReset = () => {
-    map.setView([20.0, -12.0], 6); // Center on Mauritania
+    map.setView([20.0, -12.0], 6);
   };
 
   return (
@@ -111,7 +108,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   allowPolygon = false,
   className = ""
 }) => {
-  // State definitions
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -132,7 +128,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     { name: 'Tidjikja', lat: 18.5500, lng: -11.4333 }
   ];
 
-  // Effect to handle initial value
   useEffect(() => {
     if (value) {
       setMapData(value);
@@ -140,7 +135,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [value]);
 
-  // Handler for address change
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
     const updatedData = { ...mapData, address: newAddress };
@@ -150,7 +144,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  // Handler for location selection
   const handleLocationSelect = (lat: number, lng: number) => {
     const center = { lat: Math.round(lat * 1000000) / 1000000, lng: Math.round(lng * 1000000) / 1000000 };
     const updatedData = { ...mapData, center };
@@ -161,7 +154,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  // Handler for shape click
   const handleShapeClick = (lat: number, lng: number) => {
     if (!isDrawingShape || !drawingMode) return;
 
@@ -169,12 +161,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const newPoints: Coordinate[] = [...shapePoints, newPoint];
     setShapePoints(newPoints);
 
-    // For polygons, allow multiple points
     if (drawingMode === 'polygon') {
       return;
     }
 
-    // For other shapes, complete after specific number of points
     if (drawingMode === 'rectangle' && newPoints.length === 2) {
       completeRectangle(newPoints);
     } else if (drawingMode === 'circle' && newPoints.length === 2) {
@@ -184,7 +174,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  // Function to complete a rectangle
   const completeRectangle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -199,7 +188,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(rectanglePoints, 'rectangle');
   };
 
-  // Function to complete a circle
   const completeCircle = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -220,7 +208,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     finishShape(circlePoints, 'circle');
   };
 
-  // Function to complete a diamond
   const completeDiamond = (points: Coordinate[]) => {
     if (points.length !== 2) return;
     
@@ -231,16 +218,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const halfHeight = Math.abs(p2.lat - p1.lat) / 2;
     
     const diamondPoints: Coordinate[] = [
-      { lat: centerLat + halfHeight, lng: centerLng }, // Top
-      { lat: centerLat, lng: centerLng + halfWidth },  // Right
-      { lat: centerLat - halfHeight, lng: centerLng }, // Bottom
-      { lat: centerLat, lng: centerLng - halfWidth }   // Left
+      { lat: centerLat + halfHeight, lng: centerLng },
+      { lat: centerLat, lng: centerLng + halfWidth },
+      { lat: centerLat - halfHeight, lng: centerLng },
+      { lat: centerLat, lng: centerLng - halfWidth }
     ];
     
     finishShape(diamondPoints, 'diamond');
   };
 
-  // Function to finish a shape
   const finishShape = (points: Coordinate[], shapeType: string) => {
     const updatedData = { 
       ...mapData, 
@@ -258,21 +244,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setShapePoints([]);
   };
 
-  // Function to start drawing a shape
   const startDrawing = (mode: 'polygon' | 'rectangle' | 'circle' | 'diamond') => {
     setIsDrawingShape(true);
     setDrawingMode(mode);
     setShapePoints([]);
   };
 
-  // Function to finish a polygon
   const finishPolygon = () => {
     if (shapePoints.length >= 3) {
       finishShape(shapePoints, 'polygon');
     }
   };
 
-  // Function to clear the shape
   const clearShape = () => {
     const updatedData = { ...mapData, warehouseShape: undefined, shapeType: undefined };
     setMapData(updatedData);
@@ -286,7 +269,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setShapePoints([]);
   };
 
-  // Function to get the current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert('La géolocalisation n\'est pas supportée par votre navigateur');
@@ -338,7 +320,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Address input */}
         <div className="space-y-2">
           <Label htmlFor="map-address">Adresse</Label>
           <Input
@@ -349,7 +330,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           />
         </div>
 
-        {/* Shape drawing tools */}
         {allowPolygon && (
           <div className="space-y-2">
             <Label>Outils de traçage de forme</Label>
@@ -431,7 +411,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* GPS Coordinates display */}
         {mapData.center && (
           <div className="bg-gray-50 p-3 rounded-md">
             <p className="text-sm text-gray-600">
@@ -443,7 +422,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Shape info display */}
         {mapData.warehouseShape && (
           <div className="bg-blue-50 p-3 rounded-md">
             <p className="text-sm text-blue-600">
@@ -452,7 +430,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         )}
 
-        {/* Interactive Leaflet Map */}
         <div className="space-y-2">
           <Label>Carte de la Mauritanie (OpenStreetMap)</Label>
           <div className="relative w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden">
@@ -462,13 +439,11 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               style={{ height: '100%', width: '100%' }}
               className="z-0"
             >
-              {/* OpenStreetMap tiles */}
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               
-              {/* Major cities markers */}
               {mauritaniaCities.map((city, index) => (
                 <Marker key={index} position={[city.lat, city.lng]}>
                   <Popup>
@@ -482,7 +457,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 </Marker>
               ))}
 
-              {/* Selected position marker */}
               {mapData.center && (
                 <Marker position={[mapData.center.lat, mapData.center.lng]}>
                   <Popup>
@@ -496,7 +470,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 </Marker>
               )}
 
-              {/* Warehouse shape polygon */}
               {mapData.warehouseShape && mapData.warehouseShape.length > 0 && (
                 <Polygon
                   positions={mapData.warehouseShape.map(point => [point.lat, point.lng])}
@@ -518,7 +491,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 </Polygon>
               )}
 
-              {/* Drawing points for current shape */}
               {shapePoints.map((point, index) => (
                 <Marker 
                   key={`drawing-${index}`} 
@@ -532,18 +504,15 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 />
               ))}
 
-              {/* Click handler */}
               <MapClickHandler 
                 onLocationSelect={handleLocationSelect} 
                 onShapeClick={handleShapeClick}
                 isDrawingShape={isDrawingShape}
               />
               
-              {/* Custom zoom controls */}
               <ZoomControls />
             </MapContainer>
 
-            {/* Instructions overlay */}
             {!mapData.center && !isDrawingShape && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001] bg-black/20">
                 <div className="bg-white/95 px-6 py-4 rounded-lg shadow-lg text-center">
@@ -560,7 +529,6 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
         </div>
 
-        {/* Current location button */}
         <div className="flex justify-center">
           <Button
             type="button"

@@ -102,7 +102,7 @@ const getStatusColor = (status?: string) => {
 };
 
 const createCustomIcon = (status?: string, type?: string) => {
-  const color = type === 'material' ? '#e67e22' : getStatusColor(status); // Orange for materials
+  const color = type === 'material' ? '#e67e22' : getStatusColor(status);
   return L.divIcon({
     html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
     className: 'custom-marker',
@@ -113,20 +113,11 @@ const createCustomIcon = (status?: string, type?: string) => {
 
 // Component to render warehouse shapes
 const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location }) => {
-  console.log('WarehouseShapeRenderer for location:', location.name, 'shape:', location.warehouseShape);
-  
   if (!location.warehouseShape || location.warehouseShape.length === 0) {
-    console.log('No warehouse shape found for:', location.name);
     return null;
   }
 
-  const positions = location.warehouseShape.map(point => {
-    console.log('Converting point:', point);
-    return [point.lat, point.lng] as [number, number];
-  });
-  
-  console.log('Converted positions:', positions);
-  
+  const positions = location.warehouseShape.map(point => [point.lat, point.lng] as [number, number]);
   const shapeType = location.warehouseShapeType || 'polygon';
   
   const shapeStyle = {
@@ -137,30 +128,23 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
     dashArray: '5, 5'
   };
 
-  console.log('Rendering shape type:', shapeType, 'with positions:', positions);
-
   if (shapeType === 'circle' && positions.length >= 2) {
     const center = positions[0];
     const radiusPoint = positions[1];
-    // Calculate radius in meters
     const radius = Math.sqrt(
       Math.pow((radiusPoint[0] - center[0]) * 111000, 2) + 
       Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
     );
     
-    console.log('Rendering circle with center:', center, 'radius:', radius);
-    
     return (
       <Circle
         center={center}
-        radius={Math.max(radius, 100)} // Minimum 100m radius for visibility
+        radius={Math.max(radius, 100)}
         pathOptions={shapeStyle}
       />
     );
   } else if (shapeType === 'rectangle' && positions.length >= 2) {
     const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
-    
-    console.log('Rendering rectangle with bounds:', bounds);
     
     return (
       <Rectangle
@@ -169,8 +153,6 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
       />
     );
   } else if (positions.length >= 3) {
-    console.log('Rendering polygon with positions:', positions);
-    
     return (
       <Polygon
         positions={positions}
@@ -179,7 +161,6 @@ const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location 
     );
   }
   
-  console.log('Could not render shape - insufficient points or invalid type');
   return null;
 };
 
@@ -199,7 +180,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
   useEffect(() => {
     if (locations) {
-      console.log('ProjectMap received locations:', locations);
       setMapLocations(locations);
     } else if (projects) {
       const projectLocations: MapLocation[] = projects
@@ -219,18 +199,14 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     }
   }, [projects, locations]);
 
-  console.log('Current mapLocations:', mapLocations);
-
   const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
-
-  const mapStyle = { height: '100%', width: '100%' };
 
   return (
     <div className={`relative ${className}`} style={{ height }}>
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
-        style={mapStyle}
+        style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
         scrollWheelZoom={interactive}
         dragging={interactive}
@@ -243,13 +219,10 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         <MapFocusController focusRegion={focusRegion} />
         <MapClickHandler selectable={selectable} onLocationSelect={onLocationSelect} />
 
-        {/* Render warehouse shapes first (so they appear behind markers) */}
-        {mapLocations.map((location) => {
-          console.log('Attempting to render warehouse shape for:', location.name);
-          return <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />;
-        })}
+        {mapLocations.map((location) => (
+          <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />
+        ))}
 
-        {/* Render markers */}
         {mapLocations.map((location) => (
           <Marker
             key={location.id}
@@ -301,7 +274,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
           <h4 className="font-semibold text-sm mb-2">Légende</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
-            {/* Material legend */}
             <div className="flex items-center gap-2">
               <div 
                 className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
@@ -309,7 +281,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
               />
               <span className="truncate">Matériaux</span>
             </div>
-            {/* Status legends */}
             {uniqueStatuses.map((status) => (
               <div key={status} className="flex items-center gap-2">
                 <div 
@@ -319,7 +290,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <span className="truncate">{status}</span>
               </div>
             ))}
-            {/* Warehouse shape legend */}
             <div className="flex items-center gap-2 mt-2 pt-2 border-t">
               <div className="w-3 h-3 border-2 border-orange-500 bg-orange-200 flex-shrink-0" style={{ borderStyle: 'dashed' }}></div>
               <span className="truncate">Zone d'entrepôt tracée</span>
