@@ -133,7 +133,7 @@ const Materials: React.FC = () => {
         latitude: material.coordinates_latitude!,
         longitude: material.coordinates_longitude!,
         region: material.origin_location || '',
-        adresse: material.adresse ?? ''
+        adresse: material.adresse || ''
       }));
     
     setMapLocations(filteredLocations);
