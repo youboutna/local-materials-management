@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -104,7 +105,7 @@ const Materials: React.FC = () => {
               latitude: material.coordinates_latitude!,
               longitude: material.coordinates_longitude!,
               region: material.origin_location || '',
-              adresse: addressString || undefined
+              ...(addressString ? { adresse: addressString } : {})
             };
           });
         
@@ -152,7 +153,7 @@ const Materials: React.FC = () => {
           latitude: material.coordinates_latitude!,
           longitude: material.coordinates_longitude!,
           region: material.origin_location || '',
-          adresse: addressString || undefined
+          ...(addressString ? { adresse: addressString } : {})
         };
       });
     
@@ -391,3 +392,4 @@ const Materials: React.FC = () => {
 };
 
 export default Materials;
+
