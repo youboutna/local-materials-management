@@ -94,15 +94,18 @@ const Materials: React.FC = () => {
         // Convert materials to map locations with proper address handling
         const locations: MapLocation[] = transformedData
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
-          .map(material => ({
-            id: material.id,
-            name: material.name,
-            type: 'material' as const,
-            latitude: material.coordinates_latitude!,
-            longitude: material.coordinates_longitude!,
-            region: material.origin_location || '',
-            adresse: getAddressString(material.adresse) || undefined
-          }));
+          .map(material => {
+            const addressString = getAddressString(material.adresse);
+            return {
+              id: material.id,
+              name: material.name,
+              type: 'material' as const,
+              latitude: material.coordinates_latitude!,
+              longitude: material.coordinates_longitude!,
+              region: material.origin_location || '',
+              ...(addressString ? { adresse: addressString } : {})
+            };
+          });
         
         setMapLocations(locations);
       } catch (error) {
@@ -139,15 +142,18 @@ const Materials: React.FC = () => {
     // Update map locations based on filtered materials with proper address handling
     const filteredLocations: MapLocation[] = filtered
       .filter(material => material.coordinates_latitude && material.coordinates_longitude)
-      .map(material => ({
-        id: material.id,
-        name: material.name,
-        type: 'material' as const,
-        latitude: material.coordinates_latitude!,
-        longitude: material.coordinates_longitude!,
-        region: material.origin_location || '',
-        adresse: getAddressString(material.adresse) || undefined
-      }));
+      .map(material => {
+        const addressString = getAddressString(material.adresse);
+        return {
+          id: material.id,
+          name: material.name,
+          type: 'material' as const,
+          latitude: material.coordinates_latitude!,
+          longitude: material.coordinates_longitude!,
+          region: material.origin_location || '',
+          ...(addressString ? { adresse: addressString } : {})
+        };
+      });
     
     setMapLocations(filteredLocations);
   }, [materials, searchTerm, selectedCategory, selectedLocalType]);
