@@ -1,18 +1,23 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent, Polygon, Rectangle, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Rectangle, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ProjectData } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 
-// Fix for default markers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+// Fix for default markers - more robust approach
+const DefaultIcon = L.icon({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 export interface MapLocation {
   id: string;
@@ -44,51 +49,6 @@ interface ProjectMapProps {
   interactive?: boolean;
 }
 
-// Regional coordinates for Mauritania wilayas
-const MAURITANIA_REGIONS = {
-  'Nouakchott': [18.0735, -15.9582],
-  'Nouadhibou': [20.9000, -17.0347],
-  'Adrar': [20.5279, -10.0309],
-  'Assaba': [16.3333, -11.0000],
-  'Brakna': [16.5500, -12.8833],
-  'Dakhlet Nouadhibou': [21.0000, -17.0000],
-  'Gorgol': [16.2500, -11.7500],
-  'Guidimaka': [15.7500, -12.2500],
-  'Hodh Ech Chargui': [18.5000, -7.0000],
-  'Hodh El Gharbi': [16.5000, -9.5000],
-  'Inchiri': [19.5000, -16.0000],
-  'Tagant': [18.5000, -9.5000],
-  'Tiris Zemmour': [22.6667, -11.4000],
-  'Trarza': [17.5000, -15.5000]
-} as const;
-
-// Map Focus Controller Component
-const MapFocusController: React.FC<{ focusRegion?: string }> = ({ focusRegion }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (focusRegion && MAURITANIA_REGIONS[focusRegion as keyof typeof MAURITANIA_REGIONS]) {
-      const coordinates = MAURITANIA_REGIONS[focusRegion as keyof typeof MAURITANIA_REGIONS];
-      map.setView([coordinates[0], coordinates[1]], 8, { animate: true });
-    }
-  }, [focusRegion, map]);
-
-  return null;
-};
-
-// Click handler component
-const MapClickHandler: React.FC<{
-  selectable: boolean;
-  onLocationSelect?: (lat: number, lng: number) => void;
-}> = ({ selectable, onLocationSelect }) => {
-  useMapEvent('click', (e) => {
-    if (selectable && onLocationSelect) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    }
-  });
-  return null;
-};
-
 const getStatusColor = (status?: string) => {
   switch (status) {
     case 'en cours': return '#3b82f6';
@@ -109,59 +69,6 @@ const createCustomIcon = (status?: string, type?: string) => {
     iconSize: [20, 20],
     iconAnchor: [10, 10]
   });
-};
-
-// Component to render warehouse shapes
-const WarehouseShapeRenderer: React.FC<{ location: MapLocation }> = ({ location }) => {
-  if (!location.warehouseShape || location.warehouseShape.length === 0) {
-    return null;
-  }
-
-  const positions = location.warehouseShape.map(point => [point.lat, point.lng] as [number, number]);
-  const shapeType = location.warehouseShapeType || 'polygon';
-  
-  const shapeStyle = {
-    color: '#e67e22',
-    weight: 3,
-    fillColor: '#e67e22',
-    fillOpacity: 0.3,
-    dashArray: '5, 5'
-  };
-
-  if (shapeType === 'circle' && positions.length >= 2) {
-    const center = positions[0];
-    const radiusPoint = positions[1];
-    const radius = Math.sqrt(
-      Math.pow((radiusPoint[0] - center[0]) * 111000, 2) + 
-      Math.pow((radiusPoint[1] - center[1]) * 111000 * Math.cos(center[0] * Math.PI / 180), 2)
-    );
-    
-    return (
-      <Circle
-        center={center}
-        radius={Math.max(radius, 100)}
-        pathOptions={shapeStyle}
-      />
-    );
-  } else if (shapeType === 'rectangle' && positions.length >= 2) {
-    const bounds: [[number, number], [number, number]] = [positions[0], positions[1]];
-    
-    return (
-      <Rectangle
-        bounds={bounds}
-        pathOptions={shapeStyle}
-      />
-    );
-  } else if (positions.length >= 3) {
-    return (
-      <Polygon
-        positions={positions}
-        pathOptions={shapeStyle}
-      />
-    );
-  }
-  
-  return null;
 };
 
 const ProjectMap: React.FC<ProjectMapProps> = ({
@@ -201,6 +108,16 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
   const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
 
+  if (!mapLocations.length) {
+    return (
+      <div className={`relative ${className}`} style={{ height }}>
+        <div className="h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg">
+          Aucune donnée géolocalisée à afficher
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`relative ${className}`} style={{ height }}>
       <MapContainer
@@ -216,12 +133,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <MapFocusController focusRegion={focusRegion} />
-        <MapClickHandler selectable={selectable} onLocationSelect={onLocationSelect} />
-
-        {mapLocations.map((location) => (
-          <WarehouseShapeRenderer key={`shape-${location.id}`} location={location} />
-        ))}
 
         {mapLocations.map((location) => (
           <Marker
@@ -248,11 +159,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                   <Badge className="bg-orange-500 text-white text-xs mb-1">
                     MATÉRIAU
                   </Badge>
-                )}
-                {location.warehouseShape && location.warehouseShape.length > 0 && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    🏪 Zone tracée ({location.warehouseShapeType || 'polygon'}) - {location.warehouseShape.length} points
-                  </p>
                 )}
                 {location.startDate && (
                   <p className="text-xs">
@@ -290,10 +196,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <span className="truncate">{status}</span>
               </div>
             ))}
-            <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-              <div className="w-3 h-3 border-2 border-orange-500 bg-orange-200 flex-shrink-0" style={{ borderStyle: 'dashed' }}></div>
-              <span className="truncate">Zone d'entrepôt tracée</span>
-            </div>
           </div>
         </div>
       )}
