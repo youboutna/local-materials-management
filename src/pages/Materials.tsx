@@ -25,7 +25,7 @@ interface Material {
   origin_location?: string;
   minimum_quantity?: number;
   local_type?: string;
-  adresse?: string;
+  adresse?: string | any; // Can be string or jsonb from database
   coordinates_latitude?: number;
   coordinates_longitude?: number;
   forme?: string;
@@ -42,6 +42,20 @@ const Materials: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLocalType, setSelectedLocalType] = useState('');
+
+  // Helper function to safely extract address string
+  const getAddressString = (adresse: any): string => {
+    if (!adresse) return '';
+    if (typeof adresse === 'string') return adresse;
+    if (typeof adresse === 'object') {
+      // If it's a JSON object, try to extract a meaningful address string
+      if (adresse.address) return String(adresse.address);
+      if (adresse.street) return String(adresse.street);
+      if (Array.isArray(adresse) && adresse.length > 0) return String(adresse[0]);
+      return JSON.stringify(adresse);
+    }
+    return String(adresse);
+  };
 
   // Fetch materials from database
   useEffect(() => {
@@ -67,7 +81,7 @@ const Materials: React.FC = () => {
           origin_location: item.origin_location || undefined,
           minimum_quantity: (item as any).minimum_quantity || undefined,
           local_type: (item as any).local_type || undefined,
-          adresse: typeof item.adresse === 'string' ? item.adresse : undefined,
+          adresse: item.adresse || undefined,
           coordinates_latitude: item.coordinates_latitude || undefined,
           coordinates_longitude: item.coordinates_longitude || undefined,
           forme: (item as any).forme || undefined,
@@ -78,7 +92,7 @@ const Materials: React.FC = () => {
         setMaterials(transformedData);
         setFilteredMaterials(transformedData);
         
-        // Convert materials to map locations with proper adresse handling
+        // Convert materials to map locations with proper address handling
         const locations: MapLocation[] = transformedData
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
           .map(material => ({
@@ -88,7 +102,7 @@ const Materials: React.FC = () => {
             latitude: material.coordinates_latitude!,
             longitude: material.coordinates_longitude!,
             region: material.origin_location || '',
-            adresse: material.adresse || ''
+            adresse: getAddressString(material.adresse)
           }));
         
         setMapLocations(locations);
@@ -123,7 +137,7 @@ const Materials: React.FC = () => {
 
     setFilteredMaterials(filtered);
     
-    // Update map locations based on filtered materials with proper adresse handling
+    // Update map locations based on filtered materials with proper address handling
     const filteredLocations: MapLocation[] = filtered
       .filter(material => material.coordinates_latitude && material.coordinates_longitude)
       .map(material => ({
@@ -133,7 +147,7 @@ const Materials: React.FC = () => {
         latitude: material.coordinates_latitude!,
         longitude: material.coordinates_longitude!,
         region: material.origin_location || '',
-        adresse: material.adresse || ''
+        adresse: getAddressString(material.adresse)
       }));
     
     setMapLocations(filteredLocations);
@@ -338,18 +352,19 @@ const Materials: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mapLocations.map((location) => (
-                    <div key={location.id} className="p-3 border rounded-lg">
-                      <h4 className="font-medium">{location.name}</h4>
-                      <p className="text-sm text-gray-600">{location.region}</p>
-                      {location.adresse && location.adresse.trim() !== '' && (
-                        <p className="text-sm text-gray-600">{location.adresse}</p>
-                      )}
-                      <p className="text-xs text-gray-500">
-                        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                      </p>
-                    </div>
-                  ))}
+                  {mapLocations.map((location) => {
+                    const addressDisplay = location.adresse && location.adresse.trim() !== '' ? location.adresse : 'Adresse non spécifiée';
+                    return (
+                      <div key={location.id} className="p-3 border rounded-lg">
+                        <h4 className="font-medium">{location.name}</h4>
+                        <p className="text-sm text-gray-600">{location.region}</p>
+                        <p className="text-sm text-gray-600">{addressDisplay}</p>
+                        <p className="text-xs text-gray-500">
+                          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
