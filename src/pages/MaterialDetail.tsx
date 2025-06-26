@@ -9,6 +9,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import ProjectMap, { MapLocation } from '@/components/ProjectMap';
+import MaterialLocationMap from '@/components/materials/MaterialLocationMap';
+import MaterialAvailabilityCard from '@/components/materials/MaterialAvailabilityCard';
 import WarehouseShapeTracer from '@/components/materials/WarehouseShapeTracer';
 import { ArrowLeft, MapPin, Package, Warehouse, Info, Edit } from 'lucide-react';
 
@@ -44,6 +46,8 @@ const MaterialDetail = () => {
   }, [id]);
 
   const fetchMaterialDetail = async () => {
+    if (!id) return;
+    
     try {
       const { data, error } = await supabase
         .from('materials')
@@ -53,12 +57,31 @@ const MaterialDetail = () => {
 
       if (error) throw error;
       
-      setMaterial(data);
+      // Transform the Supabase data to match our interface
+      const transformedMaterial: MaterialDetail = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        unit: data.unit,
+        price_per_unit: data.price_per_unit,
+        available_quantity: data.available_quantity,
+        origin_location: data.origin_location || undefined,
+        image: data.image || undefined,
+        coordinates_latitude: data.coordinates_latitude || undefined,
+        coordinates_longitude: data.coordinates_longitude || undefined,
+        adresse: typeof data.adresse === 'string' ? data.adresse : undefined,
+        forme: data.forme || undefined,
+        localisation: data.localisation || [],
+        workspace_id: data.workspace_id || undefined,
+      };
+      
+      setMaterial(transformedMaterial);
       
       // Parse warehouse shape if it exists in forme field
-      if (data.forme) {
+      if (transformedMaterial.forme) {
         try {
-          const shapeData = JSON.parse(data.forme);
+          const shapeData = JSON.parse(transformedMaterial.forme);
           if (Array.isArray(shapeData)) {
             setWarehouseShape(shapeData);
           }
@@ -113,23 +136,6 @@ const MaterialDetail = () => {
       </div>
     );
   }
-
-  // Create map location from material data
-  const mapLocations: MapLocation[] = [];
-  if (material.coordinates_latitude && material.coordinates_longitude) {
-    mapLocations.push({
-      id: material.id,
-      name: material.name,
-      type: 'material',
-      latitude: material.coordinates_latitude,
-      longitude: material.coordinates_longitude,
-      adresse: material.adresse,
-      region: material.origin_location || 'Non spécifié'
-    });
-  }
-
-  const availabilityStatus = material.available_quantity > 0 ? 'available' : 'unavailable';
-  const availabilityColor = availabilityStatus === 'available' ? 'bg-green-500' : 'bg-red-500';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -190,29 +196,7 @@ const MaterialDetail = () => {
           </Card>
 
           {/* Availability Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Disponibilité
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-adrar-900">
-                    {material.available_quantity.toLocaleString('fr-FR')}
-                  </p>
-                  <p className="text-sm text-gray-600">{material.unit} disponibles</p>
-                </div>
-                <Badge 
-                  className={`${availabilityColor} text-white`}
-                >
-                  {availabilityStatus === 'available' ? 'Disponible' : 'Rupture de stock'}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <MaterialAvailabilityCard material={material} />
 
           {/* Location Card */}
           <Card>
@@ -281,34 +265,10 @@ const MaterialDetail = () => {
           )}
         </div>
 
-        {/* Map */}
+        {/* Map and Image */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Carte de localisation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {mapLocations.length > 0 ? (
-                <ProjectMap
-                  locations={mapLocations}
-                  height="400px"
-                  defaultCenter={[material.coordinates_latitude!, material.coordinates_longitude!]}
-                  defaultZoom={12}
-                  interactive={true}
-                />
-              ) : (
-                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600">Aucune localisation GPS disponible</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Map */}
+          <MaterialLocationMap material={material} height="400px" />
 
           {/* Material Image */}
           {material.image && (
