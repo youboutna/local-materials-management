@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -45,6 +44,7 @@ const Materials: React.FC = () => {
 
   // Helper function to safely extract address string - always returns a string
   const getAddressString = (adresse: any): string => {
+    console.log('Processing address:', adresse);
     if (!adresse) return '';
     if (typeof adresse === 'string') return adresse;
     if (typeof adresse === 'object') {
@@ -61,12 +61,15 @@ const Materials: React.FC = () => {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
+        console.log('Fetching materials from database...');
         const { data, error } = await supabase
           .from('materials')
           .select('*')
           .order('name');
 
         if (error) throw error;
+        
+        console.log('Raw materials data:', data);
         
         // Transform the data to match our Material interface
         const transformedData: Material[] = (data || []).map(item => ({
@@ -89,6 +92,7 @@ const Materials: React.FC = () => {
           is_active: (item as any).is_active !== undefined ? (item as any).is_active : true
         }));
         
+        console.log('Transformed materials:', transformedData);
         setMaterials(transformedData);
         setFilteredMaterials(transformedData);
         
@@ -97,6 +101,8 @@ const Materials: React.FC = () => {
           .filter(material => material.coordinates_latitude && material.coordinates_longitude)
           .map(material => {
             const addressString = getAddressString(material.adresse);
+            console.log(`Processing material ${material.name} with address:`, addressString);
+            
             const baseLocation: MapLocation = {
               id: material.id,
               name: material.name,
@@ -107,13 +113,14 @@ const Materials: React.FC = () => {
             };
             
             // Only add adresse if it's a non-empty string
-            if (addressString) {
-              return { ...baseLocation, adresse: addressString };
+            if (addressString && addressString.trim()) {
+              return { ...baseLocation, adresse: addressString.trim() };
             }
             
             return baseLocation;
           });
         
+        console.log('Generated map locations:', locations);
         setMapLocations(locations);
       } catch (error) {
         console.error('Error fetching materials:', error);
@@ -127,6 +134,7 @@ const Materials: React.FC = () => {
 
   // Filter materials based on search and category
   useEffect(() => {
+    console.log('Filtering materials with:', { searchTerm, selectedCategory, selectedLocalType });
     let filtered = materials;
 
     if (searchTerm) {
@@ -144,6 +152,7 @@ const Materials: React.FC = () => {
       filtered = filtered.filter(material => material.local_type === selectedLocalType);
     }
 
+    console.log('Filtered materials:', filtered);
     setFilteredMaterials(filtered);
     
     // Update map locations based on filtered materials with proper address handling
@@ -151,6 +160,8 @@ const Materials: React.FC = () => {
       .filter(material => material.coordinates_latitude && material.coordinates_longitude)
       .map(material => {
         const addressString = getAddressString(material.adresse);
+        console.log(`Processing filtered material ${material.name} with address:`, addressString);
+        
         const baseLocation: MapLocation = {
           id: material.id,
           name: material.name,
@@ -161,13 +172,14 @@ const Materials: React.FC = () => {
         };
         
         // Only add adresse if it's a non-empty string
-        if (addressString) {
-          return { ...baseLocation, adresse: addressString };
+        if (addressString && addressString.trim()) {
+          return { ...baseLocation, adresse: addressString.trim() };
         }
         
         return baseLocation;
       });
     
+    console.log('Updated filtered map locations:', filteredLocations);
     setMapLocations(filteredLocations);
   }, [materials, searchTerm, selectedCategory, selectedLocalType]);
 
