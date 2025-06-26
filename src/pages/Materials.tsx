@@ -88,7 +88,7 @@ const Materials: React.FC = () => {
             latitude: material.coordinates_latitude!,
             longitude: material.coordinates_longitude!,
             region: material.origin_location || '',
-            adresse: material.adresse || ''
+            adresse: material.adresse ?? ''
           }));
         
         setMapLocations(locations);
@@ -133,7 +133,7 @@ const Materials: React.FC = () => {
         latitude: material.coordinates_latitude!,
         longitude: material.coordinates_longitude!,
         region: material.origin_location || '',
-        adresse: material.adresse || ''
+        adresse: material.adresse ?? ''
       }));
     
     setMapLocations(filteredLocations);
@@ -317,11 +317,17 @@ const Materials: React.FC = () => {
         <TabsContent value="map" className="space-y-6">
           <Card>
             <CardContent className="p-0">
-              <ProjectMap 
-                locations={mapLocations}
-                height="600px"
-                className="rounded-lg"
-              />
+              {mapLocations.length > 0 ? (
+                <ProjectMap 
+                  locations={mapLocations}
+                  height="600px"
+                  className="rounded-lg"
+                />
+              ) : (
+                <div className="h-96 flex items-center justify-center text-gray-500">
+                  Aucun matériau géolocalisé à afficher
+                </div>
+              )}
             </CardContent>
           </Card>
           
