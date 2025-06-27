@@ -1,26 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  FileText, 
-  Upload, 
-  Download, 
-  Eye, 
-  Trash2, 
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  Upload,
+  Download,
+  Eye,
+  Trash2,
   Search,
   Filter,
   File,
   Image,
-  FileBarChart
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { useLanguage } from '@/contexts/LanguageContext';
+  FileBarChart,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProjectDocument {
   id: string;
@@ -44,54 +56,80 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
 
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadData, setUploadData] = useState({
-    description: '',
-    document_type: 'project_report',
-    file: null as File | null
+    description: "",
+    document_type: "project_report",
+    file: null as File | null,
   });
 
   const documentTypes = [
-    { value: 'project_report', label: t('documents.type.project_report'), icon: FileBarChart },
-    { value: 'contract', label: t('documents.type.contract'), icon: FileText },
-    { value: 'inspection_report', label: t('documents.type.inspection_report'), icon: FileText },
-    { value: 'location_photo', label: t('documents.type.location_photo'), icon: Image },
-    { value: 'supplier_info', label: t('documents.type.supplier_info'), icon: FileText },
-    { value: 'task_assignment', label: t('documents.type.task_assignment'), icon: FileText },
-    { value: 'employee_record', label: t('documents.type.employee_record'), icon: File }
+    {
+      value: "project_report",
+      label: t("documents.type.project_report"),
+      icon: FileBarChart,
+    },
+    { value: "contract", label: t("documents.type.contract"), icon: FileText },
+    {
+      value: "inspection_report",
+      label: t("documents.type.inspection_report"),
+      icon: FileText,
+    },
+    {
+      value: "location_photo",
+      label: t("documents.type.location_photo"),
+      icon: Image,
+    },
+    {
+      value: "supplier_info",
+      label: t("documents.type.supplier_info"),
+      icon: FileText,
+    },
+    {
+      value: "task_assignment",
+      label: t("documents.type.task_assignment"),
+      icon: FileText,
+    },
+    {
+      value: "employee_record",
+      label: t("documents.type.employee_record"),
+      icon: File,
+    },
   ];
 
   const fetchDocuments = async () => {
     try {
       const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+        .from("documents")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      const transformedDocuments: ProjectDocument[] = (data || []).map(doc => ({
-        id: doc.id,
-        description: doc.description || undefined,
-        file_name: doc.file_name || undefined,
-        file_url: doc.file_url || undefined,
-        mime_type: doc.mime_type || undefined,
-        file_size: doc.file_size || undefined,
-        document_type: doc.document_type,
-        status: doc.status || 'draft',
-        created_at: doc.created_at || new Date().toISOString(),
-        tags: doc.tags || undefined
-      }));
-      
+
+      const transformedDocuments: ProjectDocument[] = (data || []).map(
+        (doc) => ({
+          id: doc.id,
+          description: doc.description || undefined,
+          file_name: doc.file_name || undefined,
+          file_url: doc.file_url || undefined,
+          mime_type: doc.mime_type || undefined,
+          file_size: doc.file_size || undefined,
+          document_type: doc.document_type,
+          status: doc.status || "draft",
+          created_at: doc.created_at || new Date().toISOString(),
+          tags: doc.tags || undefined,
+        })
+      );
+
       setDocuments(transformedDocuments);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error("Error fetching documents:", error);
       toast({
-        title: t('error.title'),
-        description: t('error.fetch_documents'),
+        title: t("error.title"),
+        description: t("error.fetch_documents"),
         variant: "destructive",
       });
     } finally {
@@ -105,101 +143,102 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!uploadData.file) {
       toast({
-        title: t('error.title'),
-        description: t('error.select_file'),
+        title: t("error.title"),
+        description: t("error.select_file"),
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('documents')
-        .insert({
-          title: uploadData.file.name,
-          description: uploadData.description,
-          document_type: uploadData.document_type as any,
-          file_name: uploadData.file.name,
-          mime_type: uploadData.file.type,
-          file_size: uploadData.file.size,
-          project_id: projectId,
-          status: 'draft'
-        });
+      const { error } = await supabase.from("documents").insert({
+        title: uploadData.file.name,
+        description: uploadData.description,
+        document_type: uploadData.document_type as any,
+        file_name: uploadData.file.name,
+        mime_type: uploadData.file.type,
+        file_size: uploadData.file.size,
+        project_id: projectId,
+        status: "draft",
+      });
 
       if (error) throw error;
 
       toast({
-        title: t('success.title'),
-        description: t('success.add_document'),
+        title: t("success.title"),
+        description: t("success.add_document"),
       });
 
       setIsUploadDialogOpen(false);
       setUploadData({
-        description: '',
-        document_type: 'project_report',
-        file: null
+        description: "",
+        document_type: "project_report",
+        file: null,
       });
       fetchDocuments();
     } catch (error) {
-      console.error('Error uploading document:', error);
+      console.error("Error uploading document:", error);
       toast({
-        title: t('error.title'),
-        description: t('error.add_document'),
+        title: t("error.title"),
+        description: t("error.add_document"),
         variant: "destructive",
       });
     }
   };
 
   const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm(t('confirm.delete_document'))) return;
+    if (!confirm(t("confirm.delete_document"))) return;
 
     try {
       const { error } = await supabase
-        .from('documents')
+        .from("documents")
         .delete()
-        .eq('id', documentId);
+        .eq("id", documentId);
 
       if (error) throw error;
 
       toast({
-        title: t('success.title'),
-        description: t('success.delete_document'),
+        title: t("success.title"),
+        description: t("success.delete_document"),
       });
 
       fetchDocuments();
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error("Error deleting document:", error);
       toast({
-        title: t('error.title'),
-        description: t('error.delete_document'),
+        title: t("error.title"),
+        description: t("error.delete_document"),
         variant: "destructive",
       });
     }
   };
 
   const getDocumentIcon = (type: string) => {
-    const docType = documentTypes.find(dt => dt.value === type);
+    const docType = documentTypes.find((dt) => dt.value === type);
     return docType ? docType.icon : File;
   };
 
   const getDocumentTypeLabel = (type: string) => {
-    const docType = documentTypes.find(dt => dt.value === type);
-    return docType ? docType.label : t('documents.type.other') || 'Autre';
+    const docType = documentTypes.find((dt) => dt.value === type);
+    return docType ? docType.label : t("documents.type.other") || "Autre";
   };
 
   const formatFileSize = (bytes?: number) => {
-    if (!bytes) return t('documents.size.unknown');
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (!bytes) return t("documents.size.unknown");
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-    const matchesFilter = filterType === 'all' || doc.document_type === filterType;
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch =
+      doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      false;
+    const matchesFilter =
+      filterType === "all" || doc.document_type === filterType;
     return matchesSearch && matchesFilter;
   });
 
@@ -222,40 +261,54 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {t('documents.title')}
+              {t("documents.title")}
             </CardTitle>
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <Dialog
+              open={isUploadDialogOpen}
+              onOpenChange={setIsUploadDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Upload className="mr-2 h-4 w-4" />
-                  {t('documents.tabs.upload')}
+                  {t("documents.tabs.upload")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{t('documents.tender.add_title')}</DialogTitle>
+                  <DialogTitle>{t("documents.tender.add_title")}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleFileUpload} className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium">{t('tender.input.description')}</label>
+                    <label className="text-sm font-medium">
+                      {t("tender.input.description")}
+                    </label>
                     <Textarea
                       value={uploadData.description}
-                      onChange={(e) => setUploadData({...uploadData, description: e.target.value})}
-                      placeholder={t('tender.input.description')}
+                      onChange={(e) =>
+                        setUploadData({
+                          ...uploadData,
+                          description: e.target.value,
+                        })
+                      }
+                      placeholder={t("tender.input.description")}
                       rows={3}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">{t('documents.type.project_report')}</label>
-                    <Select 
-                      value={uploadData.document_type} 
-                      onValueChange={(value) => setUploadData({...uploadData, document_type: value})}
+                    <label className="text-sm font-medium">
+                      {t("documents.type.project_report")}
+                    </label>
+                    <Select
+                      value={uploadData.document_type}
+                      onValueChange={(value) =>
+                        setUploadData({ ...uploadData, document_type: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {documentTypes.map(type => (
+                        {documentTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}
                           </SelectItem>
@@ -264,20 +317,29 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">{t('documents.type.contract')}</label>
+                    <label className="text-sm font-medium">
+                      {t("documents.type.contract")}
+                    </label>
                     <Input
                       type="file"
-                      onChange={(e) => setUploadData({...uploadData, file: e.target.files?.[0] || null})}
+                      onChange={(e) =>
+                        setUploadData({
+                          ...uploadData,
+                          file: e.target.files?.[0] || null,
+                        })
+                      }
                       required
                     />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                      {t('project_create.cancel')}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsUploadDialogOpen(false)}
+                    >
+                      {t("project_create.cancel")}
                     </Button>
-                    <Button type="submit">
-                      {t('documents.tabs.upload')}
-                    </Button>
+                    <Button type="submit">{t("documents.tabs.upload")}</Button>
                   </div>
                 </form>
               </DialogContent>
@@ -289,7 +351,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder={t('projects.search')}
+                placeholder={t("projects.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -298,11 +360,11 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-full sm:w-48">
                 <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder={t('documents.tabs.documents')} />
+                <SelectValue placeholder={t("documents.tabs.documents")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('documents.tabs.all')}</SelectItem>
-                {documentTypes.map(type => (
+                <SelectItem value="all">{t("documents.tabs.all")}</SelectItem>
+                {documentTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
@@ -318,20 +380,24 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
           <CardContent className="p-8 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {documents.length === 0 ? t('documents.tabs.documents') : t('documents.tabs.documents')}
+              {documents.length === 0
+                ? t("documents.tabs.documents")
+                : t("documents.tabs.documents")}
             </h3>
             <p className="text-gray-600 mb-4">
-              {documents.length === 0 
-                ? t('documents.tender.add_description')
-                : t('projects.empty')
-              }
+              {documents.length === 0
+                ? t("documents.tender.add_description")
+                : t("projects.empty")}
             </p>
             {documents.length === 0 && (
-              <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <Dialog
+                open={isUploadDialogOpen}
+                onOpenChange={setIsUploadDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button>
                     <Upload className="mr-2 h-4 w-4" />
-                    {t('documents.tabs.upload')}
+                    {t("documents.tabs.upload")}
                   </Button>
                 </DialogTrigger>
               </Dialog>
@@ -351,10 +417,12 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                         <IconComponent className="h-6 w-6 text-adrar-600 mt-1" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">
-                            {doc.file_name || t('documents.tabs.documents')}
+                            {doc.file_name || t("documents.tabs.documents")}
                           </h3>
                           {doc.description && (
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{doc.description}</p>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                              {doc.description}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -369,37 +437,41 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">{getDocumentTypeLabel(doc.document_type)}</Badge>
+                      <Badge variant="secondary">
+                        {getDocumentTypeLabel(doc.document_type)}
+                      </Badge>
                       <Badge variant="outline">{doc.status}</Badge>
                     </div>
 
                     <div className="space-y-1 text-xs text-gray-500">
                       {doc.file_name && (
                         <div className="flex justify-between">
-                          <span>{t('documents.tabs.documents')}:</span>
+                          <span>{t("documents.tabs.documents")}:</span>
                           <span className="truncate ml-2">{doc.file_name}</span>
                         </div>
                       )}
                       {doc.file_size && (
                         <div className="flex justify-between">
-                          <span>{t('materials.price')}:</span>
+                          <span>{t("materials.price")}:</span>
                           <span>{formatFileSize(doc.file_size)}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span>{t('project_create.start_date')}:</span>
-                        <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                        <span>{t("project_create.start_date")}:</span>
+                        <span>
+                          {new Date(doc.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex gap-2 pt-2">
                       <Button variant="outline" size="sm" className="flex-1">
                         <Eye className="mr-1 h-3 w-3" />
-                        {t('documents.tabs.viewer')}
+                        {t("documents.tabs.viewer")}
                       </Button>
                       <Button variant="outline" size="sm" className="flex-1">
                         <Download className="mr-1 h-3 w-3" />
-                        {t('documents.tabs.upload')}
+                        {t("documents.tabs.upload")}
                       </Button>
                     </div>
                   </div>

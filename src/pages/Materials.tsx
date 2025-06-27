@@ -1,17 +1,23 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Package, Map, MapPin, Grid } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import InteractiveMap from '@/components/map/InteractiveMap';
-import ProjectMap from '@/components/ProjectMap';
-import { MapLocation } from '@/components/ProjectMap';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Filter, Package, Map, MapPin, Grid } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import InteractiveMap from "@/components/map/InteractiveMap";
+import ProjectMap from "@/components/ProjectMap";
+import { MapLocation } from "@/components/ProjectMap";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
 
 interface Material {
   id: string;
@@ -39,20 +45,21 @@ const Materials: React.FC = () => {
   const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedLocalType, setSelectedLocalType] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedLocalType, setSelectedLocalType] = useState("");
 
   // Helper function to safely extract address string - always returns a string
   const getAddressString = (adresse: any): string => {
-    console.log('Processing address:', adresse);
-    if (!adresse) return '';
-    if (typeof adresse === 'string') return adresse;
-    if (typeof adresse === 'object') {
+    console.log("Processing address:", adresse);
+    if (!adresse) return "";
+    if (typeof adresse === "string") return adresse;
+    if (typeof adresse === "object") {
       // If it's a JSON object, try to extract a meaningful address string
       if (adresse.address) return String(adresse.address);
       if (adresse.street) return String(adresse.street);
-      if (Array.isArray(adresse) && adresse.length > 0) return String(adresse[0]);
+      if (Array.isArray(adresse) && adresse.length > 0)
+        return String(adresse[0]);
       return JSON.stringify(adresse);
     }
     return String(adresse);
@@ -62,18 +69,18 @@ const Materials: React.FC = () => {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        console.log('Fetching materials from database...');
+        console.log("Fetching materials from database...");
         const { data, error } = await supabase
-          .from('materials')
-          .select('*')
-          .order('name');
+          .from("materials")
+          .select("*")
+          .order("name");
 
         if (error) throw error;
-        
-        console.log('Raw materials data:', data);
-        
+
+        console.log("Raw materials data:", data);
+
         // Transform the data to match our Material interface
-        const transformedData: Material[] = (data || []).map(item => ({
+        const transformedData: Material[] = (data || []).map((item) => ({
           id: item.id,
           name: item.name,
           description: item.description,
@@ -90,41 +97,50 @@ const Materials: React.FC = () => {
           coordinates_longitude: item.coordinates_longitude || undefined,
           forme: (item as any).forme || undefined,
           localisation: (item as any).localisation || undefined,
-          is_active: (item as any).is_active !== undefined ? (item as any).is_active : true
+          is_active:
+            (item as any).is_active !== undefined
+              ? (item as any).is_active
+              : true,
         }));
-        
-        console.log('Transformed materials:', transformedData);
+
+        console.log("Transformed materials:", transformedData);
         setMaterials(transformedData);
         setFilteredMaterials(transformedData);
-        
+
         // Convert materials to map locations with proper address handling
         const locations: MapLocation[] = transformedData
-          .filter(material => material.coordinates_latitude && material.coordinates_longitude)
-          .map(material => {
+          .filter(
+            (material) =>
+              material.coordinates_latitude && material.coordinates_longitude
+          )
+          .map((material) => {
             const addressString = getAddressString(material.adresse);
-            console.log(`Processing material ${material.name} with address:`, addressString);
-            
+            console.log(
+              `Processing material ${material.name} with address:`,
+              addressString
+            );
+
             const baseLocation: MapLocation = {
               id: material.id,
               name: material.name,
-              type: 'material' as const,
+              type: "material" as const,
               latitude: material.coordinates_latitude!,
               longitude: material.coordinates_longitude!,
-              region: material.origin_location || ''
+              region: material.origin_location || "",
             };
-            
+
             // Only add adresse if it's a non-empty string
             if (addressString && addressString.trim()) {
               return { ...baseLocation, adresse: addressString.trim() };
             }
-            
+
             return baseLocation;
           });
-        
-        console.log('Generated map locations:', locations);
+
+        console.log("Generated map locations:", locations);
         setMapLocations(locations);
       } catch (error) {
-        console.error('Error fetching materials:', error);
+        console.error("Error fetching materials:", error);
       } finally {
         setIsLoading(false);
       }
@@ -135,57 +151,76 @@ const Materials: React.FC = () => {
 
   // Filter materials based on search and category
   useEffect(() => {
-    console.log('Filtering materials with:', { searchTerm, selectedCategory, selectedLocalType });
+    console.log("Filtering materials with:", {
+      searchTerm,
+      selectedCategory,
+      selectedLocalType,
+    });
     let filtered = materials;
 
     if (searchTerm) {
-      filtered = filtered.filter(material =>
-        material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.description.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (material) =>
+          material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          material.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (selectedCategory && selectedCategory !== 'all') {
-      filtered = filtered.filter(material => material.category === selectedCategory);
+    if (selectedCategory && selectedCategory !== "all") {
+      filtered = filtered.filter(
+        (material) => material.category === selectedCategory
+      );
     }
 
-    if (selectedLocalType && selectedLocalType !== 'all') {
-      filtered = filtered.filter(material => material.local_type === selectedLocalType);
+    if (selectedLocalType && selectedLocalType !== "all") {
+      filtered = filtered.filter(
+        (material) => material.local_type === selectedLocalType
+      );
     }
 
-    console.log('Filtered materials:', filtered);
+    console.log("Filtered materials:", filtered);
     setFilteredMaterials(filtered);
-    
+
     // Update map locations based on filtered materials with proper address handling
     const filteredLocations: MapLocation[] = filtered
-      .filter(material => material.coordinates_latitude && material.coordinates_longitude)
-      .map(material => {
+      .filter(
+        (material) =>
+          material.coordinates_latitude && material.coordinates_longitude
+      )
+      .map((material) => {
         const addressString = getAddressString(material.adresse);
-        console.log(`Processing filtered material ${material.name} with address:`, addressString);
-        
+        console.log(
+          `Processing filtered material ${material.name} with address:`,
+          addressString
+        );
+
         const baseLocation: MapLocation = {
           id: material.id,
           name: material.name,
-          type: 'material' as const,
+          type: "material" as const,
           latitude: material.coordinates_latitude!,
           longitude: material.coordinates_longitude!,
-          region: material.origin_location || ''
+          region: material.origin_location || "",
         };
-        
+
         // Only add adresse if it's a non-empty string
         if (addressString && addressString.trim()) {
           return { ...baseLocation, adresse: addressString.trim() };
         }
-        
+
         return baseLocation;
       });
-    
-    console.log('Updated filtered map locations:', filteredLocations);
+
+    console.log("Updated filtered map locations:", filteredLocations);
     setMapLocations(filteredLocations);
   }, [materials, searchTerm, selectedCategory, selectedLocalType]);
 
-  const categories = Array.from(new Set(materials.map(m => m.category))).filter(Boolean);
-  const localTypes = Array.from(new Set(materials.map(m => m.local_type).filter(Boolean))) as string[];
+  const categories = Array.from(
+    new Set(materials.map((m) => m.category))
+  ).filter(Boolean);
+  const localTypes = Array.from(
+    new Set(materials.map((m) => m.local_type).filter(Boolean))
+  ) as string[];
 
   if (isLoading) {
     return (
@@ -196,221 +231,261 @@ const Materials: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Matériaux</h1>
-          <p className="text-gray-600 mt-1">
-            Gérez votre inventaire de matériaux de construction
-          </p>
+    <div className="container mx-auto px-4 py-8  ">
+      <Navbar />
+      <div className="mt-10 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Matériaux</h1>
+            <p className="text-gray-600 mt-1">
+              Gérez votre inventaire de matériaux de construction
+            </p>
+          </div>
+          <Button asChild className="bg-adrar-600 hover:bg-adrar-700">
+            <Link to="/materials/create">
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter un matériau
+            </Link>
+          </Button>
         </div>
-        <Button asChild className="bg-adrar-600 hover:bg-adrar-700">
-          <Link to="/materials/create">
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter un matériau
-          </Link>
-        </Button>
-      </div>
 
-      <Tabs defaultValue="grid" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="grid" className="flex items-center gap-2">
-            <Grid className="h-4 w-4" />
-            Vue Grille
-          </TabsTrigger>
-          <TabsTrigger value="map" className="flex items-center gap-2">
-            <Map className="h-4 w-4" />
-            Carte des Matériaux
-          </TabsTrigger>
-          <TabsTrigger value="interactive" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Carte Interactive
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="grid" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="grid" className="flex items-center gap-2">
+              <Grid className="h-4 w-4" />
+              Vue Grille
+            </TabsTrigger>
+            <TabsTrigger value="map" className="flex items-center gap-2">
+              <Map className="h-4 w-4" />
+              Carte des Matériaux
+            </TabsTrigger>
+            <TabsTrigger
+              value="interactive"
+              className="flex items-center gap-2"
+            >
+              <MapPin className="h-4 w-4" />
+              Carte Interactive
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="grid" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filtres
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Rechercher des matériaux..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+          <TabsContent value="grid" className="space-y-6">
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filtres
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Rechercher des matériaux..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les catégories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={selectedLocalType}
+                    onValueChange={setSelectedLocalType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type local" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      {localTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setSelectedCategory("");
+                      setSelectedLocalType("");
+                    }}
+                  >
+                    Réinitialiser
+                  </Button>
                 </div>
-                
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les catégories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              </CardContent>
+            </Card>
 
-                <Select value={selectedLocalType} onValueChange={setSelectedLocalType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Type local" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les types</SelectItem>
-                    {localTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('');
-                    setSelectedLocalType('');
-                  }}
+            {/* Materials Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredMaterials.map((material) => (
+                <Card
+                  key={material.id}
+                  className="hover:shadow-lg transition-shadow cursor-pointer"
                 >
-                  Réinitialiser
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  <CardContent
+                    className="p-4"
+                    onClick={() => navigate(`/materials/${material.id}`)}
+                  >
+                    <div className="space-y-3">
+                      {material.image && (
+                        <img
+                          src={material.image}
+                          alt={material.name}
+                          className="w-full h-32 object-cover rounded-md"
+                        />
+                      )}
 
-          {/* Materials Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredMaterials.map((material) => (
-              <Card key={material.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-4" onClick={() => navigate(`/materials/${material.id}`)}>
-                  <div className="space-y-3">
-                    {material.image && (
-                      <img 
-                        src={material.image} 
-                        alt={material.name}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                    )}
-                    
-                    <div>
-                      <h3 className="font-semibold text-lg">{material.name}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">{material.description}</p>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">{material.category}</Badge>
-                      {material.local_type && (
-                        <Badge variant="outline">{material.local_type}</Badge>
-                      )}
-                    </div>
-                    
-                    <div className="text-sm space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Prix:</span>
-                        <span className="font-medium">{material.price_per_unit} MRO/{material.unit}</span>
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {material.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {material.description}
+                        </p>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Stock:</span>
-                        <span className="font-medium">{material.available_quantity} {material.unit}</span>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary">{material.category}</Badge>
+                        {material.local_type && (
+                          <Badge variant="outline">{material.local_type}</Badge>
+                        )}
                       </div>
-                      {material.origin_location && (
+
+                      <div className="text-sm space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Origine:</span>
-                          <span className="font-medium text-xs">{material.origin_location}</span>
+                          <span className="text-gray-600">Prix:</span>
+                          <span className="font-medium">
+                            {material.price_per_unit} MRO/{material.unit}
+                          </span>
                         </div>
-                      )}
-                      {material.coordinates_latitude && material.coordinates_longitude && (
-                        <div className="flex items-center gap-1 text-xs text-blue-600">
-                          <MapPin className="h-3 w-3" />
-                          <span>Géolocalisé</span>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Stock:</span>
+                          <span className="font-medium">
+                            {material.available_quantity} {material.unit}
+                          </span>
                         </div>
-                      )}
+                        {material.origin_location && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Origine:</span>
+                            <span className="font-medium text-xs">
+                              {material.origin_location}
+                            </span>
+                          </div>
+                        )}
+                        {material.coordinates_latitude &&
+                          material.coordinates_longitude && (
+                            <div className="flex items-center gap-1 text-xs text-blue-600">
+                              <MapPin className="h-3 w-3" />
+                              <span>Géolocalisé</span>
+                            </div>
+                          )}
+                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredMaterials.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Aucun matériau trouvé
+                  </h3>
+                  <p className="text-gray-600">
+                    Aucun matériau ne correspond à vos critères de recherche.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="map" className="space-y-6">
+            <Card>
+              <CardContent className="p-0">
+                {mapLocations.length > 0 ? (
+                  <ProjectMap
+                    locations={mapLocations}
+                    height="600px"
+                    className="rounded-lg"
+                  />
+                ) : (
+                  <div className="h-96 flex items-center justify-center text-gray-500">
+                    Aucun matériau géolocalisé à afficher
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {mapLocations.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Matériaux Géolocalisés</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {mapLocations.map((location) => {
+                      const addressDisplay =
+                        location.adresse || "Adresse non spécifiée";
+                      return (
+                        <div
+                          key={location.id}
+                          className="p-3 border rounded-lg"
+                        >
+                          <h4 className="font-medium">{location.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {location.region}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {addressDisplay}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {location.latitude.toFixed(6)},{" "}
+                            {location.longitude.toFixed(6)}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            )}
+          </TabsContent>
 
-          {filteredMaterials.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun matériau trouvé</h3>
-                <p className="text-gray-600">
-                  Aucun matériau ne correspond à vos critères de recherche.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="map" className="space-y-6">
-          <Card>
-            <CardContent className="p-0">
-              {mapLocations.length > 0 ? (
-                <ProjectMap 
-                  locations={mapLocations}
-                  height="600px"
-                  className="rounded-lg"
-                />
-              ) : (
-                <div className="h-96 flex items-center justify-center text-gray-500">
-                  Aucun matériau géolocalisé à afficher
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {mapLocations.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Matériaux Géolocalisés</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mapLocations.map((location) => {
-                    const addressDisplay = location.adresse || 'Adresse non spécifiée';
-                    return (
-                      <div key={location.id} className="p-3 border rounded-lg">
-                        <h4 className="font-medium">{location.name}</h4>
-                        <p className="text-sm text-gray-600">{location.region}</p>
-                        <p className="text-sm text-gray-600">{addressDisplay}</p>
-                        <p className="text-xs text-gray-500">
-                          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="interactive" className="space-y-6">
-          <InteractiveMap
-            title="Carte Interactive des Matériaux"
-            description="Explorez tous les matériaux géolocalisés sur une carte interactive de la Mauritanie"
-            allowPolygon={false}
-            className="min-h-[600px]"
-          />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="interactive" className="space-y-6">
+            <InteractiveMap
+              title="Carte Interactive des Matériaux"
+              description="Explorez tous les matériaux géolocalisés sur une carte interactive de la Mauritanie"
+              allowPolygon={false}
+              className="min-h-[600px]"
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };

@@ -1,31 +1,50 @@
-
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Edit, Trash2, CreditCard } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Users,
+  DollarSign,
+  Edit,
+  Trash2,
+  CreditCard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { useProjects } from '@/hooks/projects/useProjects';
-import { ProjectData } from '@/components/ProjectCard';
-import StatusBadge from '@/components/StatusBadge';
-import ProgressIndicator from '@/components/ProgressIndicator';
-import ProjectMap from '@/components/ProjectMap';
-import { MapLocation } from '@/components/ProjectMap';
-import { WorkflowInspection } from '@/components/workflow/WorkflowInspection';
-import { PaymentHistory } from '@/components/project/PaymentHistory';
-import { PaymentDialog } from '@/components/project/PaymentDialog';
-import { InspectionReportCard } from '@/components/project/InspectionReportCard';
-import { ProjectWithPayments, Inspection, InspectionStatus, Payment } from '@/types/project';
-import { supabase } from '@/integrations/supabase/client';
-import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
-import ProjectMaterials from '@/components/project/ProjectMaterials';
-import ProjectDocuments from '@/components/project/ProjectDocuments';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from "@/hooks/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useProjects } from "@/hooks/projects/useProjects";
+import { ProjectData } from "@/components/ProjectCard";
+import StatusBadge from "@/components/StatusBadge";
+import ProgressIndicator from "@/components/ProgressIndicator";
+import ProjectMap from "@/components/ProjectMap";
+import { MapLocation } from "@/components/ProjectMap";
+import { WorkflowInspection } from "@/components/workflow/WorkflowInspection";
+import { PaymentHistory } from "@/components/project/PaymentHistory";
+import { PaymentDialog } from "@/components/project/PaymentDialog";
+import { InspectionReportCard } from "@/components/project/InspectionReportCard";
+import {
+  ProjectWithPayments,
+  Inspection,
+  InspectionStatus,
+  Payment,
+} from "@/types/project";
+import { supabase } from "@/integrations/supabase/client";
+import QuantityTakeoffs from "@/components/project/QuantityTakeoffs";
+import ProjectMaterials from "@/components/project/ProjectMaterials";
+import ProjectDocuments from "@/components/project/ProjectDocuments";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -34,23 +53,24 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<ProjectWithPayments | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const { getProject, deleteProject } = useProjects();
 
   const fetchProjectWithDetails = async (projectId: string) => {
     try {
-      console.log('Fetching project with details for ID:', projectId);
-      
+      console.log("Fetching project with details for ID:", projectId);
+
       // Fetch project data
       const projectData = await getProject(projectId);
       if (!projectData) {
-        throw new Error('Project not found');
+        throw new Error("Project not found");
       }
 
       // Fetch payments with all new fields
       const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
-        .select(`
+        .from("payments")
+        .select(
+          `
           id,
           amount,
           payment_date,
@@ -66,90 +86,97 @@ const ProjectDetail = () => {
           mobile_number,
           mobile_operator,
           receiver_name
-        `)
-        .eq('project_id', projectId)
-        .order('payment_date', { ascending: false });
+        `
+        )
+        .eq("project_id", projectId)
+        .order("payment_date", { ascending: false });
 
       if (paymentsError) {
-        console.error('Error fetching payments:', paymentsError);
+        console.error("Error fetching payments:", paymentsError);
       }
 
       // Transform payments to match Payment interface with proper null handling
-      const payments: Payment[] = paymentsData?.map(payment => ({
-        id: payment.id,
-        amount: payment.amount,
-        payment_date: payment.payment_date,
-        payment_method: payment.payment_method,
-        progress_at_payment: payment.progress_at_payment,
-        transaction_id: payment.transaction_id,
-        contractor_id: payment.contractor_id || undefined,
-        contractor_name: payment.contractor_name || '',
-        contractor_contact: payment.contractor_contact || '',
-        bank_name: payment.bank_name || undefined,
-        account_number: payment.account_number || undefined,
-        check_number: payment.check_number || undefined,
-        mobile_number: payment.mobile_number || undefined,
-        mobile_operator: payment.mobile_operator || undefined,
-        receiver_name: payment.receiver_name || undefined,
-      })) || [];
+      const payments: Payment[] =
+        paymentsData?.map((payment) => ({
+          id: payment.id,
+          amount: payment.amount,
+          payment_date: payment.payment_date,
+          payment_method: payment.payment_method,
+          progress_at_payment: payment.progress_at_payment,
+          transaction_id: payment.transaction_id,
+          contractor_id: payment.contractor_id || undefined,
+          contractor_name: payment.contractor_name || "",
+          contractor_contact: payment.contractor_contact || "",
+          bank_name: payment.bank_name || undefined,
+          account_number: payment.account_number || undefined,
+          check_number: payment.check_number || undefined,
+          mobile_number: payment.mobile_number || undefined,
+          mobile_operator: payment.mobile_operator || undefined,
+          receiver_name: payment.receiver_name || undefined,
+        })) || [];
 
       // Fetch inspections
       const { data: inspectionsData, error: inspectionsError } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('date', { ascending: false });
+        .from("inspections")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("date", { ascending: false });
 
       if (inspectionsError) {
-        console.error('Error fetching inspections:', inspectionsError);
+        console.error("Error fetching inspections:", inspectionsError);
       }
 
       // Transform inspections data to match the Inspection interface with proper type casting
-      const inspections: Inspection[] = inspectionsData?.map(inspection => ({
-        id: inspection.id,
-        date: inspection.date,
-        status: inspection.status as InspectionStatus,
-        inspector: inspection.inspector,
-        progress_at_inspection: inspection.progress_at_inspection,
-        comments: inspection.comments,
-        documents: inspection.documents ? (Array.isArray(inspection.documents) ? inspection.documents : []) : undefined
-      })) || [];
+      const inspections: Inspection[] =
+        inspectionsData?.map((inspection) => ({
+          id: inspection.id,
+          date: inspection.date,
+          status: inspection.status as InspectionStatus,
+          inspector: inspection.inspector,
+          progress_at_inspection: inspection.progress_at_inspection,
+          comments: inspection.comments,
+          documents: inspection.documents
+            ? Array.isArray(inspection.documents)
+              ? inspection.documents
+              : []
+            : undefined,
+        })) || [];
 
       // Combine data
       const projectWithDetails: ProjectWithPayments = {
         ...projectData,
         payments: payments,
-        inspections: inspections
+        inspections: inspections,
       };
 
-      console.log('Project with details loaded:', projectWithDetails);
+      console.log("Project with details loaded:", projectWithDetails);
       setProject(projectWithDetails);
     } catch (error) {
-      console.error('Error fetching project details:', error);
+      console.error("Error fetching project details:", error);
       throw error;
     }
   };
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!id || id === 'create') {
-        navigate('/projects/create');
+      if (!id || id === "create") {
+        navigate("/projects/create");
         return;
       }
 
-      console.log('Fetching project with ID:', id);
+      console.log("Fetching project with ID:", id);
       setIsLoading(true);
-      
+
       try {
         await fetchProjectWithDetails(id);
       } catch (error) {
-        console.error('Error fetching project:', error);
+        console.error("Error fetching project:", error);
         toast({
           title: t("error"),
           description: t("projects.loading_error"),
           variant: "destructive",
         });
-        navigate('/projects');
+        navigate("/projects");
       } finally {
         setIsLoading(false);
       }
@@ -162,8 +189,10 @@ const ProjectDetail = () => {
 
   const handleDelete = async () => {
     if (!project || !id) return;
-    
-    if (!confirm(t('projects.delete_confirm').replace('{title}', project.title))) {
+
+    if (
+      !confirm(t("projects.delete_confirm").replace("{title}", project.title))
+    ) {
       return;
     }
 
@@ -173,12 +202,15 @@ const ProjectDetail = () => {
       if (success) {
         toast({
           title: t("projects.deleted"),
-          description: t("projects.deleted_desc").replace('{title}', project.title),
+          description: t("projects.deleted_desc").replace(
+            "{title}",
+            project.title
+          ),
         });
-        navigate('/projects');
+        navigate("/projects");
       }
     } catch (error) {
-      console.error('Error deleting project:', error);
+      console.error("Error deleting project:", error);
       toast({
         title: t("projects.delete_error"),
         description: t("projects.delete_error_desc"),
@@ -221,8 +253,12 @@ const ProjectDetail = () => {
         <main className="flex-grow pt-24 pb-16">
           <div className="container mx-auto px-4">
             <div className="text-center py-16">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{t("projects.not_found")}</h1>
-              <p className="text-gray-600 mb-8">{t("projects.not_found_desc")}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                {t("projects.not_found")}
+              </h1>
+              <p className="text-gray-600 mb-8">
+                {t("projects.not_found_desc")}
+              </p>
               <Link to="/projects">
                 <Button>
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -238,21 +274,23 @@ const ProjectDetail = () => {
   }
 
   // Create map location if coordinates exist
-  const mapLocation: MapLocation | null = project.coordinates ? {
-    id: project.id,
-    name: project.title,
-    type: "project",
-    latitude: project.coordinates.latitude,
-    longitude: project.coordinates.longitude,
-    status: project.status as any,
-    region: project.location,
-    startDate: project.startDate
-  } : null;
+  const mapLocation: MapLocation | null = project.coordinates
+    ? {
+        id: project.id,
+        name: project.title,
+        type: "project",
+        latitude: project.coordinates.latitude,
+        longitude: project.coordinates.longitude,
+        status: project.status as any,
+        region: project.location,
+        startDate: project.startDate,
+      }
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      
+
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back button */}
@@ -273,41 +311,55 @@ const ProjectDetail = () => {
             <div className="bg-white rounded-xl shadow-elegant p-6 lg:p-8">
               <div className="flex flex-col space-y-6 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
                 <div className="flex-1">
-                  <h1 className="text-2xl lg:text-3xl font-serif text-adrar-800 mb-3">{project.title}</h1>
+                  <h1 className="text-2xl lg:text-3xl font-serif text-adrar-800 mb-3">
+                    {project.title}
+                  </h1>
                   <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:gap-6 sm:space-y-0 text-gray-600 mb-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm lg:text-base">{project.location}</span>
+                      <span className="text-sm lg:text-base">
+                        {project.location}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm lg:text-base">{new Date(project.startDate).toLocaleDateString()}</span>
+                      <span className="text-sm lg:text-base">
+                        {new Date(project.startDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                   <StatusBadge status={project.status} />
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row gap-2 lg:ml-6">
                   <Link to={`/projects/${project.id}/edit`}>
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
                       <Edit className="mr-2 h-4 w-4" />
                       {t("materials.edit")}
                     </Button>
                   </Link>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     onClick={handleDelete}
                     disabled={isDeleting}
                     className="w-full sm:w-auto"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    {isDeleting ? t("materials.deleting") : t("materials.delete")}
+                    {isDeleting
+                      ? t("materials.deleting")
+                      : t("materials.delete")}
                   </Button>
                 </div>
               </div>
 
-              <p className="text-gray-700 leading-relaxed mt-4">{project.description}</p>
+              <p className="text-gray-700 leading-relaxed mt-4">
+                {project.description}
+              </p>
             </div>
 
             {/* Quick Action Panel - Enhanced design */}
@@ -331,19 +383,23 @@ const ProjectDetail = () => {
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("project_create.form.budget")}
                         </p>
-                        <p className="font-semibold text-lg">{project.budget.toLocaleString()} MRU</p>
+                        <p className="font-semibold text-lg">
+                          {project.budget.toLocaleString()} MRU
+                        </p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("project_create.form.progress")}
                         </p>
-                        <p className="font-semibold text-lg">{project.progress}%</p>
+                        <p className="font-semibold text-lg">
+                          {project.progress}%
+                        </p>
                       </div>
                     </div>
                   </div>
                   <div className="w-full sm:w-auto">
-                    <PaymentDialog 
-                      project={project} 
+                    <PaymentDialog
+                      project={project}
                       onPaymentComplete={handleDataUpdate}
                     />
                   </div>
@@ -356,7 +412,9 @@ const ProjectDetail = () => {
               {/* Progress Card */}
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base lg:text-lg">{t("project_create.form.progress")}</CardTitle>
+                  <CardTitle className="text-base lg:text-lg">
+                    {t("project_create.form.progress")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ProgressIndicator value={project.progress} />
@@ -398,28 +456,53 @@ const ProjectDetail = () => {
             </div>
 
             {/* Main Tabs Section - Enhanced responsive design */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="space-y-6"
+            >
               <div className="overflow-x-auto">
                 <TabsList className="grid w-full min-w-fit grid-cols-7 h-auto p-1">
-                  <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="overview"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.overview")}
                   </TabsTrigger>
-                  <TabsTrigger value="materials" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="materials"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.materials")}
                   </TabsTrigger>
-                  <TabsTrigger value="payments" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="payments"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.payments")}
                   </TabsTrigger>
-                  <TabsTrigger value="inspections" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="inspections"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.inspections")}
                   </TabsTrigger>
-                  <TabsTrigger value="workflow" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="workflow"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.workflow")}
                   </TabsTrigger>
-                  <TabsTrigger value="documents" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="documents"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.documents")}
                   </TabsTrigger>
-                  <TabsTrigger value="takeoffs" className="text-xs sm:text-sm whitespace-nowrap px-2 py-2">
+                  <TabsTrigger
+                    value="takeoffs"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
                     {t("projects.tab.takeoffs")}
                   </TabsTrigger>
                 </TabsList>
@@ -432,42 +515,66 @@ const ProjectDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      <p className="text-gray-700 leading-relaxed">{project.description}</p>
-                      
+                      <p className="text-gray-700 leading-relaxed">
+                        {project.description}
+                      </p>
+
                       {/* Timeline */}
                       <div className="space-y-4">
-                        <h3 className="text-lg font-medium">{t("projects.timeline")}</h3>
+                        <h3 className="text-lg font-medium">
+                          {t("projects.timeline")}
+                        </h3>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                             <div>
-                              <p className="font-medium">{t("projects.start_date")}</p>
+                              <p className="font-medium">
+                                {t("projects.start_date")}
+                              </p>
                               <p className="text-sm text-gray-600">
-                                {new Date(project.startDate).toLocaleDateString(undefined, {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
+                                {new Date(project.startDate).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  }
+                                )}
                               </p>
                             </div>
-                            <Badge variant="outline">{t("projects.started")}</Badge>
+                            <Badge variant="outline">
+                              {t("projects.started")}
+                            </Badge>
                           </div>
-                          
+
                           {project.endDate && (
                             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                               <div>
-                                <p className="font-medium">{t("projects.end_date_expected")}</p>
+                                <p className="font-medium">
+                                  {t("projects.end_date_expected")}
+                                </p>
                                 <p className="text-sm text-gray-600">
-                                  {new Date(project.endDate).toLocaleDateString(undefined, {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
+                                  {new Date(project.endDate).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      weekday: "long",
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    }
+                                  )}
                                 </p>
                               </div>
-                              <Badge variant={project.status === 'terminé' ? 'default' : 'secondary'}>
-                                {project.status === 'terminé' ? t("projects.completed") : t("projects.expected")}
+                              <Badge
+                                variant={
+                                  project.status === "terminé"
+                                    ? "default"
+                                    : "secondary"
+                                }
+                              >
+                                {project.status === "terminé"
+                                  ? t("projects.completed")
+                                  : t("projects.expected")}
                               </Badge>
                             </div>
                           )}
@@ -477,19 +584,27 @@ const ProjectDetail = () => {
                       {/* Map section */}
                       {mapLocation && (
                         <div>
-                          <h3 className="text-lg font-medium mb-4">{t("projects.location")}</h3>
+                          <h3 className="text-lg font-medium mb-4">
+                            {t("projects.location")}
+                          </h3>
                           <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
-                            <ProjectMap 
+                            <ProjectMap
                               locations={[mapLocation]}
                               height="100%"
                               interactive={true}
-                              defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
+                              defaultCenter={[
+                                mapLocation.latitude,
+                                mapLocation.longitude,
+                              ]}
                               defaultZoom={12}
                             />
                           </div>
                           <div className="mt-4 text-sm text-gray-600">
                             <p>
-                              {t("map.latitude")}: {mapLocation.latitude.toFixed(6)}, {t("map.longitude")}: {mapLocation.longitude.toFixed(6)}
+                              {t("map.latitude")}:{" "}
+                              {mapLocation.latitude.toFixed(6)},{" "}
+                              {t("map.longitude")}:{" "}
+                              {mapLocation.longitude.toFixed(6)}
                             </p>
                           </div>
                         </div>
@@ -512,8 +627,8 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="workflow">
-                <WorkflowInspection 
-                  project={project} 
+                <WorkflowInspection
+                  project={project}
                   onInspectionUpdate={handleDataUpdate}
                 />
               </TabsContent>
@@ -529,7 +644,7 @@ const ProjectDetail = () => {
           </motion.div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

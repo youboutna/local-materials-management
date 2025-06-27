@@ -1,28 +1,26 @@
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { ProjectData } from "@/types/project";
+import { Badge } from "@/components/ui/badge";
 
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Rectangle, Circle } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { ProjectData } from '@/types/project';
-import { Badge } from '@/components/ui/badge';
-
-// Fix for default markers - more robust approach
+// Fix default marker icons
 const DefaultIcon = L.icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconUrl: "/node_modules/leaflet/dist/images/marker-icon.png",
+  iconRetinaUrl: "/node_modules/leaflet/dist/images/marker-icon-2x.png",
+  shadowUrl: "/node_modules/leaflet/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
-
 L.Marker.prototype.options.icon = DefaultIcon;
 
 export interface MapLocation {
   id: string;
   name: string;
-  type: 'project' | 'warehouse' | 'material';
+  type: "project" | "warehouse" | "material";
   latitude: number;
   longitude: number;
   status?: string;
@@ -30,11 +28,17 @@ export interface MapLocation {
   startDate?: string;
   endDate?: string;
   warehouseShape?: { lat: number; lng: number }[];
-  warehouseShapeType?: 'polygon' | 'rectangle' | 'circle';
+  warehouseShapeType?: "polygon" | "rectangle" | "circle";
   adresse?: string | undefined;
 }
 
-export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
+export type ProjectStatus =
+  | "en cours"
+  | "terminé"
+  | "en attente"
+  | "en inspection"
+  | "suspendu"
+  | "annulé";
 
 interface ProjectMapProps {
   projects?: ProjectData[];
@@ -51,23 +55,30 @@ interface ProjectMapProps {
 
 const getStatusColor = (status?: string) => {
   switch (status) {
-    case 'en cours': return '#3b82f6';
-    case 'terminé': return '#10b981';
-    case 'en attente': return '#f59e0b';
-    case 'en inspection': return '#eab308';
-    case 'suspendu': return '#8b5cf6';
-    case 'annulé': return '#ef4444';
-    default: return '#6b7280';
+    case "en cours":
+      return "#3b82f6";
+    case "terminé":
+      return "#10b981";
+    case "en attente":
+      return "#f59e0b";
+    case "en inspection":
+      return "#eab308";
+    case "suspendu":
+      return "#8b5cf6";
+    case "annulé":
+      return "#ef4444";
+    default:
+      return "#6b7280";
   }
 };
 
 const createCustomIcon = (status?: string, type?: string) => {
-  const color = type === 'material' ? '#e67e22' : getStatusColor(status);
+  const color = type === "material" ? "#e67e22" : getStatusColor(status);
   return L.divIcon({
     html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    className: 'custom-marker',
+    className: "custom-marker",
     iconSize: [20, 20],
-    iconAnchor: [10, 10]
+    iconAnchor: [10, 10],
   });
 };
 
@@ -81,7 +92,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   focusRegion,
   selectable = false,
   onLocationSelect,
-  interactive = true
+  interactive = true,
 }) => {
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
 
@@ -90,23 +101,28 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       setMapLocations(locations);
     } else if (projects) {
       const projectLocations: MapLocation[] = projects
-        .filter(project => project.coordinates?.latitude && project.coordinates?.longitude)
-        .map(project => ({
+        .filter(
+          (project) =>
+            project.coordinates?.latitude && project.coordinates?.longitude
+        )
+        .map((project) => ({
           id: project.id,
           name: project.title,
-          type: 'project' as const,
+          type: "project" as const,
           latitude: project.coordinates!.latitude,
           longitude: project.coordinates!.longitude,
           status: project.status,
           region: project.location,
           startDate: project.startDate,
-          endDate: project.endDate
+          endDate: project.endDate,
         }));
       setMapLocations(projectLocations);
     }
   }, [projects, locations]);
 
-  const uniqueStatuses = Array.from(new Set(mapLocations.map(loc => loc.status).filter(Boolean)));
+  const uniqueStatuses = Array.from(
+    new Set(mapLocations.map((loc) => loc.status).filter(Boolean))
+  );
 
   if (!mapLocations.length) {
     return (
@@ -119,11 +135,11 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`} style={{ height }}>
+    <div className={`relative ${className} z-0`} style={{ height }}>
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: "100%", width: "100%" }}
         className="rounded-lg"
         scrollWheelZoom={interactive}
         dragging={interactive}
@@ -145,29 +161,33 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <h3 className="font-semibold text-sm">{location.name}</h3>
                 <p className="text-xs text-gray-600 mb-2">{location.region}</p>
                 {location.adresse && (
-                  <p className="text-xs text-gray-600 mb-2">📍 {location.adresse}</p>
+                  <p className="text-xs text-gray-600 mb-2">
+                    📍 {location.adresse}
+                  </p>
                 )}
                 {location.status && (
-                  <Badge 
+                  <Badge
                     style={{ backgroundColor: getStatusColor(location.status) }}
                     className="text-white text-xs mb-1"
                   >
                     {location.status.toUpperCase()}
                   </Badge>
                 )}
-                {location.type === 'material' && (
+                {location.type === "material" && (
                   <Badge className="bg-orange-500 text-white text-xs mb-1">
                     MATÉRIAU
                   </Badge>
                 )}
                 {location.startDate && (
                   <p className="text-xs">
-                    Début: {new Date(location.startDate).toLocaleDateString('fr-FR')}
+                    Début:{" "}
+                    {new Date(location.startDate).toLocaleDateString("fr-FR")}
                   </p>
                 )}
                 {location.endDate && (
                   <p className="text-xs">
-                    Fin: {new Date(location.endDate).toLocaleDateString('fr-FR')}
+                    Fin:{" "}
+                    {new Date(location.endDate).toLocaleDateString("fr-FR")}
                   </p>
                 )}
               </div>
@@ -181,15 +201,15 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
           <h4 className="font-semibold text-sm mb-2">Légende</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
             <div className="flex items-center gap-2">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
-                style={{ backgroundColor: '#e67e22' }}
+                style={{ backgroundColor: "#e67e22" }}
               />
               <span className="truncate">Matériaux</span>
             </div>
             {uniqueStatuses.map((status) => (
               <div key={status} className="flex items-center gap-2">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
                   style={{ backgroundColor: getStatusColor(status) }}
                 />
