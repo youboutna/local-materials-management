@@ -167,14 +167,35 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   };
 
   const handleMapChange = (mapData: MapData) => {
+    console.log('Map data changed:', mapData);
+    
+    // Convert map coordinates to localisation format
+    let localisation: any[] = [];
+    
+    if (mapData.shape && mapData.shape.length > 0) {
+      // If there's a shape, use it as localisation
+      localisation = mapData.shape.map(point => ({
+        lat: point.lat,
+        lng: point.lng
+      }));
+    } else if (mapData.coordinates) {
+      // If there are coordinates but no shape, use coordinates as single point
+      localisation = [{
+        lat: mapData.coordinates.lat,
+        lng: mapData.coordinates.lng
+      }];
+    }
+
     setFormData(prev => ({
       ...prev,
       adresse: mapData.address,
       coordinatesLatitude: mapData.coordinates?.lat,
       coordinatesLongitude: mapData.coordinates?.lng,
-      localisation: mapData.shape || [],
-      forme: mapData.shapeType
+      localisation: localisation,
+      forme: mapData.shapeType || (mapData.coordinates ? 'point' : undefined)
     }));
+
+    console.log('Updated form data with localisation:', localisation, 'and forme:', mapData.shapeType);
   };
 
   const handleWorkspaceLocationChange = (workspace: any) => {
@@ -348,6 +369,28 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             onChange={handleMapChange}
             className="border-l-4 border-l-blue-500"
           />
+
+          {/* Debug Information */}
+          {(formData.localisation && formData.localisation.length > 0) && (
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader>
+                <CardTitle className="text-sm text-gray-700">Données de localisation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <strong>Forme:</strong> {formData.forme || 'Non définie'}
+                  </div>
+                  <div>
+                    <strong>Points de localisation:</strong> {formData.localisation.length}
+                  </div>
+                  <div className="max-h-32 overflow-y-auto bg-gray-50 p-2 rounded">
+                    <pre className="text-xs">{JSON.stringify(formData.localisation, null, 2)}</pre>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="quantities" className="space-y-6">
