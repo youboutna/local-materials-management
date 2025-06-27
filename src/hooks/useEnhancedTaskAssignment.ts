@@ -69,6 +69,7 @@ export const useEnhancedTaskAssignment = () => {
           .single();
 
         const assigneeName = profileData?.full_name || 'Utilisateur';
+        const assignerName = user.user_metadata?.full_name || user.email || 'Directeur';
 
         // Create internal notification
         await supabase
@@ -84,7 +85,7 @@ export const useEnhancedTaskAssignment = () => {
               priority,
               due_date: dueDate,
               assignee_name: assigneeName,
-              assigner_name: user.user_metadata?.full_name || user.email || 'Directeur'
+              assigner_name: assignerName
             }
           });
 
