@@ -1,3 +1,4 @@
+
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -180,7 +181,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     console.log('Workspace selected, focusing map on:', workspace);
     
     // Parse coordinates from workspace location if it contains coordinates
-    let coordinates = null;
+    let coordinates: { lat: number; lng: number } | undefined = undefined;
     if (workspace.location && typeof workspace.location === 'string') {
       // Try to extract coordinates from location string (format: "City, lat, lng" or similar)
       const coordMatch = workspace.location.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
