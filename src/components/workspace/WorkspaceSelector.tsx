@@ -2,7 +2,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Building } from 'lucide-react';
+import { MapPin, Building, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { Location, OperationalStatus } from '@/types/mauritania';
 
 interface Workspace {
@@ -44,6 +44,51 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     }
   };
 
+  const getStatusIcon = (status: OperationalStatus) => {
+    switch (status) {
+      case OperationalStatus.active:
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case OperationalStatus.inactive:
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      case OperationalStatus.closed:
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusLabel = (status: OperationalStatus) => {
+    switch (status) {
+      case OperationalStatus.active:
+        return 'Actif';
+      case OperationalStatus.inactive:
+        return 'Inactif';
+      case OperationalStatus.closed:
+        return 'Fermé';
+      default:
+        return 'Inconnu';
+    }
+  };
+
+  const getStatusColor = (status: OperationalStatus) => {
+    switch (status) {
+      case OperationalStatus.active:
+        return 'bg-green-100 text-green-800 border-green-200';
+      case OperationalStatus.inactive:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case OperationalStatus.closed:
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  // Log workspace data for debugging
+  React.useEffect(() => {
+    console.log('Available workspaces:', workspaces);
+    console.log('Selected workspace ID:', selectedWorkspaceId);
+  }, [workspaces, selectedWorkspaceId]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -51,30 +96,45 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
           Espace de travail
         </label>
         <Select value={selectedWorkspaceId} onValueChange={handleWorkspaceChange}>
-          <SelectTrigger>
+          <SelectTrigger className="min-h-[60px]">
             <SelectValue placeholder="Sélectionner un espace de travail" />
           </SelectTrigger>
-          <SelectContent>
-            {workspaces.map(workspace => (
-              <SelectItem key={workspace.id} value={workspace.id}>
-                <div className="flex items-center gap-2">
-                  <Building className="h-4 w-4" />
-                  <span>{workspace.name}</span>
-                  <span className="text-gray-500">- {workspace.location}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    workspace.status === OperationalStatus.active 
-                      ? 'bg-green-100 text-green-800' 
-                      : workspace.status === OperationalStatus.inactive
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {workspace.status}
-                  </span>
-                </div>
-              </SelectItem>
-            ))}
+          <SelectContent className="max-h-[300px] overflow-y-auto">
+            {workspaces.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Aucun espace de travail disponible</p>
+              </div>
+            ) : (
+              workspaces.map(workspace => (
+                <SelectItem key={workspace.id} value={workspace.id} className="min-h-[60px] py-3">
+                  <div className="flex items-start gap-3 w-full">
+                    <Building className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm truncate">{workspace.name}</span>
+                        {getStatusIcon(workspace.status)}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{workspace.location}</span>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(workspace.status)}`}>
+                        {getStatusLabel(workspace.status)}
+                      </span>
+                    </div>
+                  </div>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
+        
+        {workspaces.length === 0 && (
+          <p className="text-sm text-red-600 mt-2">
+            Aucun espace de travail configuré. Veuillez contacter l'administrateur.
+          </p>
+        )}
       </div>
 
       {showDetails && selectedWorkspace && (
@@ -116,15 +176,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
             )}
 
             <div className="pt-2 border-t">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                selectedWorkspace.status === OperationalStatus.active 
-                  ? 'bg-green-100 text-green-800' 
-                  : selectedWorkspace.status === OperationalStatus.inactive
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {selectedWorkspace.status === OperationalStatus.active ? 'Actif' :
-                 selectedWorkspace.status === OperationalStatus.inactive ? 'Inactif' : 'Fermé'}
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedWorkspace.status)}`}>
+                {getStatusIcon(selectedWorkspace.status)}
+                <span className="ml-1">{getStatusLabel(selectedWorkspace.status)}</span>
               </span>
             </div>
           </CardContent>

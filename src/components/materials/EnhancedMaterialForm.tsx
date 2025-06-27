@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Package, User } from 'lucide-react';
+import { Clock, MapPin, Package, User, Warehouse } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -23,6 +23,10 @@ interface MaterialFormData {
   availableQuantity: number;
   workspaceId: string;
   adresse?: string;
+  forme?: string;
+  localisation?: any[];
+  coordinatesLatitude?: number;
+  coordinatesLongitude?: number;
   timeline?: {
     start: Date;
     end: Date;
@@ -62,6 +66,10 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     pricePerUnit: 0,
     availableQuantity: 0,
     workspaceId: '',
+    forme: '',
+    localisation: [],
+    coordinatesLatitude: undefined,
+    coordinatesLongitude: undefined,
     timeline: {
       start: new Date(),
       end: new Date(),
@@ -142,6 +150,17 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     handleFormSubmit();
   };
 
+  const formeOptions = [
+    'Rectangulaire',
+    'Circulaire',
+    'Carré',
+    'Triangulaire',
+    'Cylindrique',
+    'Sphérique',
+    'Irrégulière',
+    'Autre'
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
@@ -149,20 +168,20 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
         <CardHeader className="bg-gradient-to-r from-terracotta-50 to-adrar-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <Package className="h-5 w-5" />
-            Informations de base
+            {t('materials.basic_info') || 'Informations de base'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Nom du matériau
+                {t('materials.name') || 'Nom du matériau'}
               </Label>
               <Input
                 id="name"
                 value={formData.name || ''}
                 onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="Nom du matériau"
+                placeholder={t('materials.name_placeholder') || 'Nom du matériau'}
                 className="border-gray-300 focus:border-terracotta-500"
                 required
               />
@@ -179,13 +198,13 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
           
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-              Description
+              {t('materials.description') || 'Description'}
             </Label>
             <Textarea
               id="description"
               value={formData.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Description du matériau"
+              placeholder={t('materials.description_placeholder') || 'Description du matériau'}
               rows={3}
               className="border-gray-300 focus:border-terracotta-500"
             />
@@ -193,51 +212,114 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
         </CardContent>
       </Card>
 
-      {/* Workspace and Location */}
+      {/* Warehouse and Location */}
       <Card className="border-l-4 border-l-adrar-500">
         <CardHeader className="bg-gradient-to-r from-adrar-50 to-terracotta-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
-            <MapPin className="h-5 w-5" />
-            Emplacement
+            <Warehouse className="h-5 w-5" />
+            {t('materials.warehouse_location') || 'Entrepôt et localisation'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="workspaceId" className="text-sm font-medium text-gray-700">
-              Espace de travail
-            </Label>
-            <Select
-              value={formData.workspaceId || ''}
-              onValueChange={value => handleChange('workspaceId', value)}
-            >
-              <SelectTrigger className="border-gray-300 focus:border-adrar-500">
-                <SelectValue placeholder="Sélectionner un espace de travail" />
-              </SelectTrigger>
-              <SelectContent>
-                {workspaces.map(workspace => (
-                  <SelectItem key={workspace.id} value={workspace.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{workspace.name}</span>
-                      <span className="text-sm text-gray-500">{workspace.location}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="workspaceId" className="text-sm font-medium text-gray-700">
+                {t('materials.workspace') || 'Espace de travail'}
+              </Label>
+              <Select
+                value={formData.workspaceId || ''}
+                onValueChange={value => handleChange('workspaceId', value)}
+              >
+                <SelectTrigger className="border-gray-300 focus:border-adrar-500">
+                  <SelectValue placeholder={t('materials.select_workspace') || 'Sélectionner un espace de travail'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {workspaces.map(workspace => (
+                    <SelectItem key={workspace.id} value={workspace.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{workspace.name}</span>
+                        <span className="text-sm text-gray-500">{workspace.location}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          workspace.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {workspace.status}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="forme" className="text-sm font-medium text-gray-700">
+                {t('materials.shape') || 'Forme'}
+              </Label>
+              <Select
+                value={formData.forme || ''}
+                onValueChange={value => handleChange('forme', value)}
+              >
+                <SelectTrigger className="border-gray-300 focus:border-adrar-500">
+                  <SelectValue placeholder={t('materials.select_shape') || 'Sélectionner une forme'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {formeOptions.map(forme => (
+                    <SelectItem key={forme} value={forme}>
+                      {forme}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="adresse" className="text-sm font-medium text-gray-700">
-              Adresse
+              {t('materials.address') || 'Adresse'}
             </Label>
             <Input
               id="adresse"
               type="text"
               value={formData.adresse || ''}
               onChange={(e) => handleChange('adresse', e.target.value)}
-              placeholder="Adresse du matériau"
+              placeholder={t('materials.address_placeholder') || 'Adresse du matériau'}
               className="border-gray-300 focus:border-adrar-500"
               autoComplete="street-address"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="coordinatesLatitude" className="text-sm font-medium text-gray-700">
+                {t('materials.latitude') || 'Latitude'}
+              </Label>
+              <Input
+                id="coordinatesLatitude"
+                type="number"
+                step="0.000001"
+                value={formData.coordinatesLatitude || ''}
+                onChange={(e) => handleChange('coordinatesLatitude', parseFloat(e.target.value) || undefined)}
+                placeholder="18.0735"
+                className="border-gray-300 focus:border-adrar-500"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="coordinatesLongitude" className="text-sm font-medium text-gray-700">
+                {t('materials.longitude') || 'Longitude'}
+              </Label>
+              <Input
+                id="coordinatesLongitude"
+                type="number"
+                step="0.000001"
+                value={formData.coordinatesLongitude || ''}
+                onChange={(e) => handleChange('coordinatesLongitude', parseFloat(e.target.value) || undefined)}
+                placeholder="-15.9582"
+                className="border-gray-300 focus:border-adrar-500"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -245,13 +327,15 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
       {/* Quantities and Pricing */}
       <Card className="border-l-4 border-l-green-500">
         <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardTitle className="text-adrar-800">Quantités et prix</CardTitle>
+          <CardTitle className="text-adrar-800">
+            {t('materials.quantities_pricing') || 'Quantités et prix'}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                Quantité
+                {t('materials.quantity') || 'Quantité'}
               </Label>
               <Input
                 id="quantity"
@@ -266,7 +350,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             
             <div className="space-y-2">
               <Label htmlFor="availableQuantity" className="text-sm font-medium text-gray-700">
-                Quantité disponible
+                {t('materials.available_quantity') || 'Quantité disponible'}
               </Label>
               <Input
                 id="availableQuantity"
@@ -281,7 +365,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             
             <div className="space-y-2">
               <Label htmlFor="minQuantity" className="text-sm font-medium text-gray-700">
-                Quantité minimale
+                {t('materials.min_quantity') || 'Quantité minimale'}
               </Label>
               <Input
                 id="minQuantity"
@@ -296,7 +380,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             
             <div className="space-y-2">
               <Label htmlFor="pricePerUnit" className="text-sm font-medium text-gray-700">
-                Prix unitaire
+                {t('materials.price_per_unit') || 'Prix unitaire'}
               </Label>
               <Input
                 id="pricePerUnit"
@@ -317,14 +401,14 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <Clock className="h-5 w-5" />
-            Planning
+            {t('materials.timeline') || 'Planning'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                Date de début
+                {t('materials.start_date') || 'Date de début'}
               </Label>
               <Input
                 id="startDate"
@@ -337,7 +421,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             
             <div className="space-y-2">
               <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                Date de fin
+                {t('materials.end_date') || 'Date de fin'}
               </Label>
               <Input
                 id="endDate"
@@ -350,7 +434,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             
             <div className="space-y-2">
               <Label htmlFor="estimatedDuration" className="text-sm font-medium text-gray-700">
-                Durée estimée (jours)
+                {t('materials.estimated_duration') || 'Durée estimée (jours)'}
               </Label>
               <Input
                 id="estimatedDuration"
@@ -370,7 +454,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
         <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
           <CardTitle className="flex items-center gap-2 text-adrar-800">
             <User className="h-5 w-5" />
-            Informations fournisseur
+            {t('materials.supplier_info') || 'Informations fournisseur'}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -389,7 +473,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             type="submit" 
             className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            Créer le matériau
+            {t('materials.create') || 'Créer le matériau'}
           </Button>
         </div>
       )}
