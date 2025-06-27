@@ -20,10 +20,12 @@ const SupplierPortal = () => {
   const { data: supplierProfile } = useQuery({
     queryKey: ['supplier-profile', user?.id],
     queryFn: async () => {
+      if (!user?.id) return null;
+      
       const { data, error } = await supabase
         .from('suppliers')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
       
       if (error) throw error;
@@ -36,13 +38,15 @@ const SupplierPortal = () => {
   const { data: assignedTasks = [] } = useQuery({
     queryKey: ['supplier-tasks', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('task_assignments')
         .select(`
           *,
           projects (title, location)
         `)
-        .eq('assigned_to', user?.id)
+        .eq('assigned_to', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -55,10 +59,12 @@ const SupplierPortal = () => {
   const { data: notifications = [] } = useQuery({
     queryKey: ['supplier-notifications', user?.id],
     queryFn: async () => {
+      if (!user?.id) return [];
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('recipient_id', user?.id)
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
       

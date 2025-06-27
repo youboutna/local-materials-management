@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,7 +71,7 @@ const MaterialDetail = () => {
         coordinates_longitude: data.coordinates_longitude || undefined,
         adresse: typeof data.adresse === 'string' ? data.adresse : undefined,
         forme: data.forme || undefined,
-        localisation: data.localisation || [],
+        localisation: Array.isArray(data.localisation) ? data.localisation : [],
         workspace_id: data.workspace_id || undefined,
       };
       
