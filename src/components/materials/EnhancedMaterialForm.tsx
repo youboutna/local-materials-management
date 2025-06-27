@@ -6,10 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, MapPin, Package, User, Warehouse } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
+import InteractiveMapGIS from './InteractiveMapGIS';
 
 interface MaterialFormData {
   name: string;
@@ -37,6 +40,13 @@ interface MaterialFormData {
     contact: string;
     leadTime: number;
   };
+}
+
+interface MapData {
+  coordinates?: { lat: number; lng: number };
+  address?: string;
+  shape?: { lat: number; lng: number }[];
+  shapeType?: 'polygon' | 'rectangle' | 'circle';
 }
 
 interface EnhancedMaterialFormProps {
@@ -85,6 +95,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
 
   const [selectedCategory, setSelectedCategory] = useState(initialData?.category || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
+  const [activeTab, setActiveTab] = useState('basic');
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -141,6 +152,17 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     }));
   };
 
+  const handleMapChange = (mapData: MapData) => {
+    setFormData(prev => ({
+      ...prev,
+      adresse: mapData.address,
+      coordinatesLatitude: mapData.coordinates?.lat,
+      coordinatesLongitude: mapData.coordinates?.lng,
+      localisation: mapData.shape || [],
+      forme: mapData.shapeType
+    }));
+  };
+
   const handleFormSubmit = () => {
     onSubmit(formData);
   };
@@ -150,321 +172,260 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     handleFormSubmit();
   };
 
-  const formeOptions = [
-    'Rectangulaire',
-    'Circulaire',
-    'Carré',
-    'Triangulaire',
-    'Cylindrique',
-    'Sphérique',
-    'Irrégulière',
-    'Autre'
-  ];
+  // Convert form data to map format
+  const getMapData = (): MapData => {
+    return {
+      coordinates: formData.coordinatesLatitude && formData.coordinatesLongitude 
+        ? { lat: formData.coordinatesLatitude, lng: formData.coordinatesLongitude }
+        : undefined,
+      address: formData.adresse,
+      shape: Array.isArray(formData.localisation) ? formData.localisation : [],
+      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined
+    };
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Basic Information */}
-      <Card className="border-l-4 border-l-terracotta-500">
-        <CardHeader className="bg-gradient-to-r from-terracotta-50 to-adrar-50">
-          <CardTitle className="flex items-center gap-2 text-adrar-800">
-            <Package className="h-5 w-5" />
-            {t('materials.basic_info') || 'Informations de base'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                {t('materials.name') || 'Nom du matériau'}
-              </Label>
-              <Input
-                id="name"
-                value={formData.name || ''}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder={t('materials.name_placeholder') || 'Nom du matériau'}
-                className="border-gray-300 focus:border-terracotta-500"
-                required
-              />
-            </div>
-            
-            <MaterialCategorySelector
-              selectedCategory={selectedCategory}
-              selectedSubcategory={selectedSubcategory}
-              onCategoryChange={handleCategoryChange}
-              onSubcategoryChange={handleSubcategoryChange}
-              onUnitChange={handleUnitChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-              {t('materials.description') || 'Description'}
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description || ''}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder={t('materials.description_placeholder') || 'Description du matériau'}
-              rows={3}
-              className="border-gray-300 focus:border-terracotta-500"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="basic">Informations</TabsTrigger>
+          <TabsTrigger value="location">Localisation</TabsTrigger>
+          <TabsTrigger value="quantities">Quantités</TabsTrigger>
+          <TabsTrigger value="timeline">Planning</TabsTrigger>
+          <TabsTrigger value="supplier">Fournisseur</TabsTrigger>
+        </TabsList>
 
-      {/* Warehouse and Location */}
-      <Card className="border-l-4 border-l-adrar-500">
-        <CardHeader className="bg-gradient-to-r from-adrar-50 to-terracotta-50">
-          <CardTitle className="flex items-center gap-2 text-adrar-800">
-            <Warehouse className="h-5 w-5" />
-            {t('materials.warehouse_location') || 'Entrepôt et localisation'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="workspaceId" className="text-sm font-medium text-gray-700">
-                {t('materials.workspace') || 'Espace de travail'}
-              </Label>
-              <Select
-                value={formData.workspaceId || ''}
-                onValueChange={value => handleChange('workspaceId', value)}
-              >
-                <SelectTrigger className="border-gray-300 focus:border-adrar-500">
-                  <SelectValue placeholder={t('materials.select_workspace') || 'Sélectionner un espace de travail'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {workspaces.map(workspace => (
-                    <SelectItem key={workspace.id} value={workspace.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{workspace.name}</span>
-                        <span className="text-sm text-gray-500">{workspace.location}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          workspace.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {workspace.status}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <TabsContent value="basic" className="space-y-6">
+          {/* Basic Information */}
+          <Card className="border-l-4 border-l-terracotta-500">
+            <CardHeader className="bg-gradient-to-r from-terracotta-50 to-adrar-50">
+              <CardTitle className="flex items-center gap-2 text-adrar-800">
+                <Package className="h-5 w-5" />
+                {t('materials.basic_info') || 'Informations de base'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                    {t('materials.name') || 'Nom du matériau'}
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name || ''}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    placeholder={t('materials.name_placeholder') || 'Nom du matériau'}
+                    className="border-gray-300 focus:border-terracotta-500"
+                    required
+                  />
+                </div>
+                
+                <MaterialCategorySelector
+                  selectedCategory={selectedCategory}
+                  selectedSubcategory={selectedSubcategory}
+                  onCategoryChange={handleCategoryChange}
+                  onSubcategoryChange={handleSubcategoryChange}
+                  onUnitChange={handleUnitChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                  {t('materials.description') || 'Description'}
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ''}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  placeholder={t('materials.description_placeholder') || 'Description du matériau'}
+                  rows={3}
+                  className="border-gray-300 focus:border-terracotta-500"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            <div className="space-y-2">
-              <Label htmlFor="forme" className="text-sm font-medium text-gray-700">
-                {t('materials.shape') || 'Forme'}
-              </Label>
-              <Select
-                value={formData.forme || ''}
-                onValueChange={value => handleChange('forme', value)}
-              >
-                <SelectTrigger className="border-gray-300 focus:border-adrar-500">
-                  <SelectValue placeholder={t('materials.select_shape') || 'Sélectionner une forme'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {formeOptions.map(forme => (
-                    <SelectItem key={forme} value={forme}>
-                      {forme}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        <TabsContent value="location" className="space-y-6">
+          {/* Warehouse and Location */}
+          <Card className="border-l-4 border-l-adrar-500">
+            <CardHeader className="bg-gradient-to-r from-adrar-50 to-terracotta-50">
+              <CardTitle className="flex items-center gap-2 text-adrar-800">
+                <Warehouse className="h-5 w-5" />
+                {t('materials.warehouse_location') || 'Entrepôt et localisation'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <WorkspaceSelector
+                workspaces={workspaces.map(w => ({
+                  id: w.id,
+                  name: w.name,
+                  location: w.location,
+                  status: w.status as any
+                }))}
+                selectedWorkspaceId={formData.workspaceId}
+                onWorkspaceChange={(id) => handleChange('workspaceId', id)}
+                showDetails={true}
+              />
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="adresse" className="text-sm font-medium text-gray-700">
-              {t('materials.address') || 'Adresse'}
-            </Label>
-            <Input
-              id="adresse"
-              type="text"
-              value={formData.adresse || ''}
-              onChange={(e) => handleChange('adresse', e.target.value)}
-              placeholder={t('materials.address_placeholder') || 'Adresse du matériau'}
-              className="border-gray-300 focus:border-adrar-500"
-              autoComplete="street-address"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="coordinatesLatitude" className="text-sm font-medium text-gray-700">
-                {t('materials.latitude') || 'Latitude'}
-              </Label>
-              <Input
-                id="coordinatesLatitude"
-                type="number"
-                step="0.000001"
-                value={formData.coordinatesLatitude || ''}
-                onChange={(e) => handleChange('coordinatesLatitude', parseFloat(e.target.value) || undefined)}
-                placeholder="18.0735"
-                className="border-gray-300 focus:border-adrar-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="coordinatesLongitude" className="text-sm font-medium text-gray-700">
-                {t('materials.longitude') || 'Longitude'}
-              </Label>
-              <Input
-                id="coordinatesLongitude"
-                type="number"
-                step="0.000001"
-                value={formData.coordinatesLongitude || ''}
-                onChange={(e) => handleChange('coordinatesLongitude', parseFloat(e.target.value) || undefined)}
-                placeholder="-15.9582"
-                className="border-gray-300 focus:border-adrar-500"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quantities and Pricing */}
-      <Card className="border-l-4 border-l-green-500">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardTitle className="text-adrar-800">
-            {t('materials.quantities_pricing') || 'Quantités et prix'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                {t('materials.quantity') || 'Quantité'}
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.quantity || 0}
-                onChange={(e) => handleChange('quantity', parseFloat(e.target.value) || 0)}
-                className="border-gray-300 focus:border-green-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="availableQuantity" className="text-sm font-medium text-gray-700">
-                {t('materials.available_quantity') || 'Quantité disponible'}
-              </Label>
-              <Input
-                id="availableQuantity"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.availableQuantity || 0}
-                onChange={(e) => handleChange('availableQuantity', parseFloat(e.target.value) || 0)}
-                className="border-gray-300 focus:border-green-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="minQuantity" className="text-sm font-medium text-gray-700">
-                {t('materials.min_quantity') || 'Quantité minimale'}
-              </Label>
-              <Input
-                id="minQuantity"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.minQuantity || 0}
-                onChange={(e) => handleChange('minQuantity', parseFloat(e.target.value) || 0)}
-                className="border-gray-300 focus:border-green-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pricePerUnit" className="text-sm font-medium text-gray-700">
-                {t('materials.price_per_unit') || 'Prix unitaire'}
-              </Label>
-              <Input
-                id="pricePerUnit"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.pricePerUnit || 0}
-                onChange={(e) => handleChange('pricePerUnit', parseFloat(e.target.value) || 0)}
-                className="border-gray-300 focus:border-green-500"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Timeline */}
-      <Card className="border-l-4 border-l-blue-500">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-          <CardTitle className="flex items-center gap-2 text-adrar-800">
-            <Clock className="h-5 w-5" />
-            {t('materials.timeline') || 'Planning'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                {t('materials.start_date') || 'Date de début'}
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={formData.timeline?.start ? new Date(formData.timeline.start).toISOString().split('T')[0] : ''}
-                onChange={(e) => handleTimelineChange('start', new Date(e.target.value))}
-                className="border-gray-300 focus:border-blue-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                {t('materials.end_date') || 'Date de fin'}
-              </Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={formData.timeline?.end ? new Date(formData.timeline.end).toISOString().split('T')[0] : ''}
-                onChange={(e) => handleTimelineChange('end', new Date(e.target.value))}
-                className="border-gray-300 focus:border-blue-500"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="estimatedDuration" className="text-sm font-medium text-gray-700">
-                {t('materials.estimated_duration') || 'Durée estimée (jours)'}
-              </Label>
-              <Input
-                id="estimatedDuration"
-                type="number"
-                min="1"
-                value={formData.timeline?.estimatedDuration || 0}
-                onChange={(e) => handleTimelineChange('estimatedDuration', parseInt(e.target.value) || 0)}
-                className="border-gray-300 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Supplier Information */}
-      <Card className="border-l-4 border-l-purple-500">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardTitle className="flex items-center gap-2 text-adrar-800">
-            <User className="h-5 w-5" />
-            {t('materials.supplier_info') || 'Informations fournisseur'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <SupplierSelector
-            value={formData.supplier}
-            onChange={handleSupplierChange}
-            allowCustom={true}
+          {/* Interactive Map GIS */}
+          <InteractiveMapGIS
+            value={getMapData()}
+            onChange={handleMapChange}
+            className="border-l-4 border-l-blue-500"
           />
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="quantities" className="space-y-6">
+          {/* Quantities and Pricing */}
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+              <CardTitle className="text-adrar-800">
+                {t('materials.quantities_pricing') || 'Quantités et prix'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                    {t('materials.quantity') || 'Quantité'}
+                  </Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.quantity || 0}
+                    onChange={(e) => handleChange('quantity', parseFloat(e.target.value) || 0)}
+                    className="border-gray-300 focus:border-green-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="availableQuantity" className="text-sm font-medium text-gray-700">
+                    {t('materials.available_quantity') || 'Quantité disponible'}
+                  </Label>
+                  <Input
+                    id="availableQuantity"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.availableQuantity || 0}
+                    onChange={(e) => handleChange('availableQuantity', parseFloat(e.target.value) || 0)}
+                    className="border-gray-300 focus:border-green-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="minQuantity" className="text-sm font-medium text-gray-700">
+                    {t('materials.min_quantity') || 'Quantité minimale'}
+                  </Label>
+                  <Input
+                    id="minQuantity"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.minQuantity || 0}
+                    onChange={(e) => handleChange('minQuantity', parseFloat(e.target.value) || 0)}
+                    className="border-gray-300 focus:border-green-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="pricePerUnit" className="text-sm font-medium text-gray-700">
+                    {t('materials.price_per_unit') || 'Prix unitaire'}
+                  </Label>
+                  <Input
+                    id="pricePerUnit"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.pricePerUnit || 0}
+                    onChange={(e) => handleChange('pricePerUnit', parseFloat(e.target.value) || 0)}
+                    className="border-gray-300 focus:border-green-500"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-6">
+          {/* Timeline */}
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardTitle className="flex items-center gap-2 text-adrar-800">
+                <Clock className="h-5 w-5" />
+                {t('materials.timeline') || 'Planning'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                    {t('materials.start_date') || 'Date de début'}
+                  </Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.timeline?.start ? new Date(formData.timeline.start).toISOString().split('T')[0] : ''}
+                    onChange={(e) => handleTimelineChange('start', new Date(e.target.value))}
+                    className="border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
+                    {t('materials.end_date') || 'Date de fin'}
+                  </Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.timeline?.end ? new Date(formData.timeline.end).toISOString().split('T')[0] : ''}
+                    onChange={(e) => handleTimelineChange('end', new Date(e.target.value))}
+                    className="border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedDuration" className="text-sm font-medium text-gray-700">
+                    {t('materials.estimated_duration') || 'Durée estimée (jours)'}
+                  </Label>
+                  <Input
+                    id="estimatedDuration"
+                    type="number"
+                    min="1"
+                    value={formData.timeline?.estimatedDuration || 0}
+                    onChange={(e) => handleTimelineChange('estimatedDuration', parseInt(e.target.value) || 0)}
+                    className="border-gray-300 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="supplier" className="space-y-6">
+          {/* Supplier Information */}
+          <Card className="border-l-4 border-l-purple-500">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardTitle className="flex items-center gap-2 text-adrar-800">
+                <User className="h-5 w-5" />
+                {t('materials.supplier_info') || 'Informations fournisseur'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <SupplierSelector
+                value={formData.supplier}
+                onChange={handleSupplierChange}
+                allowCustom={true}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Conditional Submit Button */}
       {showSubmitButton && (

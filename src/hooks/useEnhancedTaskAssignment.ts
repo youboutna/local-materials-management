@@ -1,119 +1,127 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { sendSupplierNotification } from '@/services/supplierNotificationService';
+
+interface TaskAssignment {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  due_date: string;
+  assigned_to: string;
+  assigned_by: string;
+  project_id: string;
+  completion_token: string;
+  completion_url: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useEnhancedTaskAssignment = () => {
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const [assignments, setAssignments] = useState<TaskAssignment[]>([]);
+  const queryClient = useQueryClient();
 
-  const createTaskAssignment = async (
-    title: string,
-    description: string,
-    assignedTo: string,
-    priority: 'low' | 'medium' | 'high' | 'urgent',
-    dueDate?: string,
-    projectId?: string
-  ) => {
-    if (!user?.id) return null;
-
-    // Type assertion since we've already checked user.id exists above
-    const userId = user.id as string;
-
-    setLoading(true);
-    try {
-      // Create the task assignment
-      const { data: taskData, error: taskError } = await supabase
+  // Fetch task assignments
+  const { data: taskAssignments, isLoading, error } = useQuery({
+    queryKey: ['task-assignments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('task_assignments')
-        .insert({
-          title,
-          description,
-          assigned_to: assignedTo,
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Create task assignment
+  const createAssignment = useMutation({
+    mutationFn: async (newAssignment: Partial<TaskAssignment>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const userId = user.id;
+      
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .insert([{
+          ...newAssignment,
           assigned_by: userId,
-          priority,
-          status: 'pending',
-          due_date: dueDate,
-          project_id: projectId
-        })
+          completion_token: crypto.randomUUID(),
+          completion_url: `${window.location.origin}/task-completion/${crypto.randomUUID()}`
+        }])
         .select()
         .single();
 
-      if (taskError) throw taskError;
-
-      // Get assignee information (check if it's a supplier or internal user)
-      const { data: supplierData } = await supabase
-        .from('suppliers')
-        .select('email, name, user_id')
-        .eq('user_id', assignedTo)
-        .single();
-
-      if (supplierData) {
-        // Send notification to supplier
-        await sendSupplierNotification({
-          type: 'task_assignment',
-          email: supplierData.email,
-          supplier_name: supplierData.name,
-          task_id: taskData.id,
-          task_title: title
-        });
-
-        toast({
-          title: "Tâche créée",
-          description: `La tâche "${title}" a été assignée au fournisseur ${supplierData.name} et un email de notification a été envoyé.`,
-        });
-      } else {
-        // Regular internal notification
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', assignedTo)
-          .single();
-
-        const assigneeName = profileData?.full_name || 'Utilisateur';
-        const assignerName = user.user_metadata?.full_name || user.email || 'Directeur';
-
-        // Create internal notification
-        await supabase
-          .from('notifications')
-          .insert({
-            recipient_id: assignedTo,
-            title: `Nouvelle tâche assignée: ${title}`,
-            message: `Vous avez été assigné(e) à une nouvelle tâche${priority === 'urgent' ? ' URGENTE' : priority === 'high' ? ' prioritaire' : ''}. ${description ? description.substring(0, 100) + '...' : ''}`,
-            type: 'task_assignment',
-            related_id: taskData.id,
-            metadata: {
-              task_type: 'general',
-              priority,
-              due_date: dueDate,
-              assignee_name: assigneeName,
-              assigner_name: assignerName
-            }
-          });
-
-        toast({
-          title: "Tâche créée",
-          description: `La tâche "${title}" a été assignée à ${assigneeName}`,
-        });
-      }
-
-      return taskData;
-    } catch (error) {
-      console.error('Error creating task assignment:', error);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
+      toast({
+        title: "Tâche assignée",
+        description: "La tâche a été assignée avec succès.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating assignment:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer la tâche.",
+        description: "Impossible de créer l'assignation.",
         variant: "destructive",
       });
-      return null;
-    } finally {
-      setLoading(false);
     }
-  };
+  });
+
+  // Update task assignment
+  const updateAssignment = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TaskAssignment> }) => {
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-assignments'] });
+      toast({
+        title: "Tâche mise à jour",
+        description: "La tâche a été mise à jour avec succès.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating assignment:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la tâche.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  useEffect(() => {
+    if (taskAssignments) {
+      setAssignments(taskAssignments);
+    }
+  }, [taskAssignments]);
 
   return {
-    createTaskAssignment,
-    loading
+    assignments: taskAssignments || [],
+    isLoading,
+    error,
+    createAssignment,
+    updateAssignment
   };
 };
