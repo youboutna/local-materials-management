@@ -28,7 +28,7 @@ export const useEnhancedTaskAssignment = () => {
           title,
           description,
           assigned_to: assignedTo,
-          assigned_by: user.id,
+          assigned_by: user.id, // user.id is guaranteed to be string here due to guard clause above
           priority,
           status: 'pending',
           due_date: dueDate,
