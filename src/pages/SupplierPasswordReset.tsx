@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,6 +90,15 @@ const SupplierPasswordReset = () => {
       return;
     }
 
+    if (!token) {
+      toast({
+        title: "Erreur",
+        description: "Token invalide.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -119,7 +127,7 @@ const SupplierPasswordReset = () => {
       }
 
       // Update the supplier record with the user_id
-      if (authData.user) {
+      if (authData.user && notification.supplier_id) {
         await supabase
           .from('suppliers')
           .update({ 

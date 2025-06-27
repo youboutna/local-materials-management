@@ -16,6 +16,7 @@ interface Task {
   priority: string;
   due_date?: string;
   completion_date?: string;
+  notes?: string; // Added missing notes property
   projects?: {
     title: string;
     location: string;
