@@ -105,6 +105,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   const [selectedCategory, setSelectedCategory] = useState(initialData?.category || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
   const [activeTab, setActiveTab] = useState('basic');
+  const [mapData, setMapData] = useState<MapData>({});
 
   // Use database workspaces if available, otherwise fall back to prop workspaces
   const availableWorkspaces = dbWorkspaces.length > 0 ? dbWorkspaces : workspaces;
@@ -175,6 +176,46 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     }));
   };
 
+  const handleWorkspaceLocationChange = (workspace: any) => {
+    console.log('Workspace selected, focusing map on:', workspace);
+    
+    // Parse coordinates from workspace location if it contains coordinates
+    let coordinates = null;
+    if (workspace.location && typeof workspace.location === 'string') {
+      // Try to extract coordinates from location string (format: "City, lat, lng" or similar)
+      const coordMatch = workspace.location.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
+      if (coordMatch) {
+        coordinates = {
+          lat: parseFloat(coordMatch[1]),
+          lng: parseFloat(coordMatch[2])
+        };
+      } else {
+        // Default coordinates for major Mauritanian cities
+        const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+          'nouakchott': { lat: 18.0735, lng: -15.9582 },
+          'nouadhibou': { lat: 20.9, lng: -17.0347 },
+          'rosso': { lat: 16.5167, lng: -15.8 },
+          'kaédi': { lat: 16.15, lng: -13.5 },
+          'zouérat': { lat: 22.75, lng: -12.4667 },
+          'kiffa': { lat: 16.6167, lng: -11.4 }
+        };
+        
+        const cityName = workspace.location.toLowerCase();
+        coordinates = cityCoordinates[cityName] || { lat: 18.0735, lng: -15.9582 }; // Default to Nouakchott
+      }
+    }
+
+    // Update map data to focus on workspace location
+    const newMapData: MapData = {
+      ...mapData,
+      coordinates,
+      address: `${workspace.name} - ${workspace.location}`
+    };
+    
+    setMapData(newMapData);
+    handleMapChange(newMapData);
+  };
+
   const handleFormSubmit = () => {
     onSubmit(formData);
   };
@@ -189,10 +230,10 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     return {
       coordinates: formData.coordinatesLatitude && formData.coordinatesLongitude 
         ? { lat: formData.coordinatesLatitude, lng: formData.coordinatesLongitude }
-        : undefined,
-      address: formData.adresse,
-      shape: Array.isArray(formData.localisation) ? formData.localisation : [],
-      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined
+        : mapData.coordinates,
+      address: formData.adresse || mapData.address,
+      shape: Array.isArray(formData.localisation) ? formData.localisation : mapData.shape || [],
+      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined || mapData.shapeType
     };
   };
 
@@ -287,6 +328,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                     workspaces={transformedWorkspaces}
                     selectedWorkspaceId={formData.workspaceId}
                     onWorkspaceChange={(id) => handleChange('workspaceId', id)}
+                    onLocationChange={handleWorkspaceLocationChange}
                     showDetails={true}
                   />
                 </div>

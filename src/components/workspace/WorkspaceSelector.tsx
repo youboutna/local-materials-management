@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Check, ChevronsUpDown, Building, MapPin, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,7 +33,7 @@ interface WorkspaceSelectorProps {
   workspaces: Workspace[];
   selectedWorkspaceId?: string;
   onWorkspaceChange: (workspaceId: string) => void;
-  onLocationChange?: (location: string) => void;
+  onLocationChange?: (workspace: Workspace) => void;
   showDetails?: boolean;
 }
 
@@ -52,9 +51,9 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     const workspace = workspaces.find(w => w.id === workspaceId);
     onWorkspaceChange(workspaceId);
     
-    // Notify parent about location change for map focusing
+    // Notify parent about workspace change for map focusing and form updates
     if (workspace && onLocationChange) {
-      onLocationChange(workspace.location);
+      onLocationChange(workspace);
     }
     setOpen(false);
   };
