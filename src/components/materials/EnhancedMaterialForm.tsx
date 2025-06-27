@@ -13,6 +13,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
 import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
 import InteractiveMapGIS from './InteractiveMapGIS';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 
 interface MaterialFormData {
   name: string;
@@ -72,6 +73,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   language
 }, ref) => {
   const { t } = useLanguage();
+  const { workspaces: dbWorkspaces, createWorkspace } = useWorkspaces();
 
   const [formData, setFormData] = useState<Partial<MaterialFormData>>({
     name: '',
@@ -103,6 +105,9 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   const [selectedCategory, setSelectedCategory] = useState(initialData?.category || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
   const [activeTab, setActiveTab] = useState('basic');
+
+  // Use database workspaces if available, otherwise fall back to prop workspaces
+  const availableWorkspaces = dbWorkspaces.length > 0 ? dbWorkspaces : workspaces;
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -192,7 +197,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   };
 
   // Transform workspaces to match WorkspaceSelector interface
-  const transformedWorkspaces = workspaces.map(workspace => ({
+  const transformedWorkspaces = availableWorkspaces.map(workspace => ({
     id: workspace.id,
     name: workspace.name,
     location: workspace.location as any, // Cast to satisfy Location type
