@@ -52,12 +52,19 @@ export const useEnhancedTaskAssignment = () => {
       
       const { data, error } = await supabase
         .from('task_assignments')
-        .insert([{
-          ...newAssignment,
+        .insert({
+          title: newAssignment.title || '',
+          description: newAssignment.description || '',
+          assigned_to: newAssignment.assigned_to || '',
           assigned_by: userId,
           completion_token: crypto.randomUUID(),
-          completion_url: `${window.location.origin}/task-completion/${crypto.randomUUID()}`
-        }])
+          completion_url: `${window.location.origin}/task-completion/${crypto.randomUUID()}`,
+          priority: newAssignment.priority || 'medium',
+          status: newAssignment.status || 'pending',
+          due_date: newAssignment.due_date,
+          project_id: newAssignment.project_id,
+          notes: newAssignment.notes || ''
+        })
         .select()
         .single();
 
@@ -113,7 +120,24 @@ export const useEnhancedTaskAssignment = () => {
 
   useEffect(() => {
     if (taskAssignments) {
-      setAssignments(taskAssignments);
+      // Transform the data to match TaskAssignment interface
+      const transformedAssignments: TaskAssignment[] = taskAssignments.map(assignment => ({
+        id: assignment.id,
+        title: assignment.title || '',
+        description: assignment.description || '',
+        status: assignment.status || 'pending',
+        priority: assignment.priority || 'medium',
+        due_date: assignment.due_date || '',
+        assigned_to: assignment.assigned_to || '',
+        assigned_by: assignment.assigned_by || '',
+        project_id: assignment.project_id || '',
+        completion_token: assignment.completion_token || '',
+        completion_url: assignment.completion_url || '',
+        notes: assignment.notes || '',
+        created_at: assignment.created_at || '',
+        updated_at: assignment.updated_at || ''
+      }));
+      setAssignments(transformedAssignments);
     }
   }, [taskAssignments]);
 

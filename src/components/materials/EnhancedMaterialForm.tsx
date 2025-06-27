@@ -49,10 +49,17 @@ interface MapData {
   shapeType?: 'polygon' | 'rectangle' | 'circle';
 }
 
+interface SimpleWorkspace {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+}
+
 interface EnhancedMaterialFormProps {
   onSubmit: (material: Partial<MaterialFormData>) => void;
   initialData?: Partial<MaterialFormData>;
-  workspaces?: Array<{ id: string; name: string; location: string; status: string }>;
+  workspaces?: SimpleWorkspace[];
   showSubmitButton?: boolean;
   language?: string;
 }
@@ -184,6 +191,14 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     };
   };
 
+  // Transform workspaces to match WorkspaceSelector interface
+  const transformedWorkspaces = workspaces.map(workspace => ({
+    id: workspace.id,
+    name: workspace.name,
+    location: workspace.location as any, // Cast to satisfy Location type
+    status: workspace.status as any, // Cast to satisfy OperationalStatus type
+  }));
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -257,12 +272,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <WorkspaceSelector
-                workspaces={workspaces.map(w => ({
-                  id: w.id,
-                  name: w.name,
-                  location: w.location,
-                  status: w.status as any
-                }))}
+                workspaces={transformedWorkspaces}
                 selectedWorkspaceId={formData.workspaceId}
                 onWorkspaceChange={(id) => handleChange('workspaceId', id)}
                 showDetails={true}
