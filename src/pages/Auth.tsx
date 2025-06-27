@@ -1,729 +1,309 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, User, Lock, Mail, Phone, ArrowRight, Fingerprint } from 'lucide-react';
-import MainNavbar from '@/components/MainNavbar';
-import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { DEV_MODE } from '@/config/constants';
-import { useToast } from '@/hooks/use-toast';
-import OAuthErrorHandler from '@/components/auth/OAuthErrorHandler';
-import OAuthConfigGuide from '@/components/auth/OAuthConfigGuide';
-import PasswordResetForm from '@/components/auth/PasswordResetForm';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Info } from 'lucide-react';
-import { useLanguage } from "@/contexts/LanguageContext";
-
-type LoginFormValues = {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-};
-
-type RegisterFormValues = {
-  fullName: string;
-  email: string;
-  phone: string;
-  nationalId: string;
-  password: string;
-  acceptTerms: boolean;
-};
-
-type PhoneLoginValues = {
-  phone: string;
-};
-
-type PhoneVerifyValues = {
-  token: string;
-};
-
-type NationalIdValues = {
-  nationalId: string;
-  password: string;
-};
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  rememberMe: z.boolean().optional(),
-});
-
-const registerSchema = z.object({
-  fullName: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(8),
-  nationalId: z.string().min(4),
-  password: z.string().min(6),
-  acceptTerms: z.boolean().refine(val => val === true, {
-    message: "You must accept the terms",
-  }),
-});
-
-const phoneLoginSchema = z.object({
-  phone: z.string().min(8),
-});
-
-const phoneVerifySchema = z.object({
-  token: z.string().min(4),
-});
-
-const nationalIdSchema = z.object({
-  nationalId: z.string().min(4),
-  password: z.string().min(6),
-});
+import { toast } from '@/hooks/use-toast';
+import { Eye, EyeOff, User, Mail, Lock, UserPlus } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const Auth = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { signIn, signUp, user, signInWithGoogle, signInWithPhone, verifyPhoneOTP, signInWithNationalId, isDevelopmentMode } = useAuth();
-  const { toast } = useToast();
-  const queryParams = new URLSearchParams(location.search);
-  const urlMode = queryParams.get('mode');
-  const { t } = useLanguage();
-  
-  // Handle different modes including reset-password
-  const getInitialMode = () => {
-    if (urlMode === 'register') return 'register';
-    if (urlMode === 'reset-password') return 'reset-password';
-    return 'login';
-  };
-  
-  const [mode, setMode] = useState(getInitialMode());
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone' | 'nationalId'>('email');
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [nationalId, setNationalId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [phoneSubmitted, setPhoneSubmitted] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [showOAuthConfig, setShowOAuthConfig] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [showPasswordReset, setShowPasswordReset] = useState(urlMode === 'reset-password');
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      rememberMe: false,
-    },
-  });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      fullName: '',
-      email: '',
-      phone: '',
-      nationalId: '',
-      password: '',
-      acceptTerms: false,
-    },
-  });
-
-  const phoneLoginForm = useForm<PhoneLoginValues>({
-    resolver: zodResolver(phoneLoginSchema),
-    defaultValues: {
-      phone: '',
-    },
-  });
-
-  const phoneVerifyForm = useForm<PhoneVerifyValues>({
-    resolver: zodResolver(phoneVerifySchema),
-    defaultValues: {
-      token: '',
-    },
-  });
-
-  const nationalIdForm = useForm<NationalIdValues>({
-    resolver: zodResolver(nationalIdSchema),
-    defaultValues: {
-      nationalId: '',
-      password: '',
-    },
-  });
-  
-  useEffect(() => {
-    // Check if we're in reset-password mode
-    if (urlMode === 'reset-password') {
-      setShowPasswordReset(true);
-      setMode('reset-password');
-    }
-  }, [urlMode]);
-
-  useEffect(() => {
-    try {
-      if (DEV_MODE) {
-        // Use history API safely in dev mode
-        const newUrl = `/auth?mode=${mode}`;
-        if (window.location.pathname + window.location.search !== newUrl) {
-          window.history.replaceState(null, '', newUrl);
-        }
-      } else {
-        // Only use navigate in production mode
-        navigate(`/auth?mode=${mode}`, { replace: true });
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
-  }, [mode, navigate]);
-
+  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      try {
-        if (DEV_MODE) {
-          // Use direct window location change to avoid security errors
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 100);
-        } else {
-          navigate('/dashboard');
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from);
+    }
+  }, [user, navigate, location]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté.",
+      });
+
+      // Redirect based on user role
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erreur de connexion",
+        description: error.message === 'Invalid login credentials' 
+          ? "Email ou mot de passe incorrect." 
+          : error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            phone: phone,
+            national_id: nationalId,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
-      } catch (error) {
-        console.error('Redirect error:', error);
-        // Fallback to direct navigation
-        window.location.href = '/dashboard';
-      }
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
-    if (isDevelopmentMode) {
-      toast({
-        title: t("auth.development_mode_active"),
-        description: t("auth.simulated_login"),
-        duration: 5000,
       });
-    }
-  }, [isDevelopmentMode, toast, t]);
-  
-  const getAuthErrorMessage = (error: any) => {
-    if (error?.code) {
-      switch (error.code) {
-        case 'email_not_confirmed':
-          return {
-            title: t("auth.email_not_confirmed"),
-            description: t("auth.email_not_confirmed_description"),
-            type: 'warning' as const
-          };
-        case 'invalid_credentials':
-          return {
-            title: t("auth.invalid_credentials"),
-            description: t("auth.invalid_credentials_description"),
-            type: 'error' as const
-          };
-        case 'too_many_requests':
-          return {
-            title: t("auth.too_many_requests"),
-            description: t("auth.too_many_requests_description"),
-            type: 'error' as const
-          };
-        case 'user_not_found':
-          return {
-            title: t("auth.user_not_found"),
-            description: t("auth.user_not_found_description"),
-            type: 'error' as const
-          };
-        case 'weak_password':
-          return {
-            title: t("auth.weak_password"),
-            description: t("auth.weak_password_description"),
-            type: 'error' as const
-          };
-        case 'signup_disabled':
-          return {
-            title: t("auth.signup_disabled"),
-            description: t("auth.signup_disabled_description"),
-            type: 'error' as const
-          };
-        case 'account_locked':
-          toast({
-            title: t("auth.account_locked"),
-            description: t("auth.account_locked_description"),
-          });
-          return {
-            title: t("auth.account_locked"),
-            description: t("auth.account_locked_description"),
-            type: 'error' as const
-          };
-        default:
-          return {
-            title: t("auth.authentication_error"),
-            description: error.message || t("auth.unexpected_error"),
-            type: 'error' as const
-          };
-      }
-    }
-    
-    return {
-      title: t("auth.authentication_error"),
-      description: error?.message || t("auth.unexpected_error"),
-      type: 'error' as const
-    };
-  };
-  
-  const onLoginSubmit = async (values: LoginFormValues) => {
-    setLoading(true);
-    setAuthError(null);
-    
-    try {
-      if (isDevelopmentMode) {
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 100);
-        return;
-      }
 
-      await signIn(values.email, values.password);
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error("Login error:", error);
-      const errorInfo = getAuthErrorMessage(error);
-      setAuthError(errorInfo.description);
-      
-      toast({
-        title: errorInfo.title,
-        description: errorInfo.description,
-        variant: errorInfo.type === 'error' ? 'destructive' : 'default'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const onRegisterSubmit = async (values: RegisterFormValues) => {
-    setLoading(true);
-    setAuthError(null);
-    
-    try {
-      if (isDevelopmentMode) {
+      if (error) throw error;
+
+      if (data.user && !data.user.email_confirmed_at) {
         toast({
-          title: t("auth.simulated_registration"),
-          description: t("auth.simulated_registration_description"),
+          title: "Inscription réussie",
+          description: "Veuillez vérifier votre email pour confirmer votre compte.",
         });
-        setMode('login');
-        return;
+      } else {
+        toast({
+          title: "Inscription réussie",
+          description: "Votre compte a été créé avec succès.",
+        });
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      let errorMessage = error.message;
+      
+      if (error.message.includes('User already registered')) {
+        errorMessage = "Un compte existe déjà avec cette adresse email.";
+      } else if (error.message.includes('Password should be at least 6 characters')) {
+        errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
       }
 
-      await signUp(
-        values.email, 
-        values.password, 
-        values.fullName, 
-        values.phone, 
-        values.nationalId
-      );
-      
       toast({
-        title: t("auth.registration_success"),
-        description: t("auth.registration_success_description"),
-      });
-      
-      setMode('login');
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      const errorInfo = getAuthErrorMessage(error);
-      setAuthError(errorInfo.description);
-      
-      toast({
-        title: errorInfo.title,
-        description: errorInfo.description,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onGoogleSignIn = async () => {
-    console.log('Google sign-in attempt started');
-    
-    if (isDevelopmentMode) {
-      toast({
-        title: t("auth.development_mode"),
-        description: t("auth.simulated_google_login"),
-      });
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-      return;
-    }
-
-    try {
-      setGoogleLoading(true);
-      setAuthError(null);
-      
-      console.log('Calling signInWithGoogle...');
-      
-      await signInWithGoogle();
-      
-      console.log('Google sign-in completed successfully');
-      
-      // Success case - redirect will happen automatically via auth state change
-      toast({
-        title: t("auth.google_login_success"),
-        description: t("auth.google_login_success_description"),
-      });
-      
-    } catch (error: any) {
-      console.error("Google sign in error:", error);
-      
-      let errorMessage = t("auth.google_login_error");
-      
-      // Handle specific error cases
-      if (error.message?.includes('popup_closed')) {
-        errorMessage = t("auth.google_popup_closed");
-      } else if (error.message?.includes('access_denied')) {
-        errorMessage = t("auth.google_access_denied");
-      } else if (error.message?.includes('unauthorized')) {
-        errorMessage = t("auth.google_unauthorized");
-        setShowOAuthConfig(true);
-      } else if (error.message?.includes('network')) {
-        errorMessage = t("auth.google_network_error");
-      }
-      
-      setAuthError(errorMessage);
-      
-      toast({
-        title: t("auth.google_login_error"),
+        title: "Erreur d'inscription",
         description: errorMessage,
         variant: "destructive",
       });
     } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const onPhoneSubmit = async (values: PhoneLoginValues) => {
-    setLoading(true);
-    try {
-      const formattedPhone = values.phone.startsWith('+') 
-        ? values.phone 
-        : `+${values.phone}`;
-      
-      setPhoneNumber(formattedPhone);
-      const result = await signInWithPhone(formattedPhone);
-      
-      if (result.success) {
-        setPhoneSubmitted(true);
-      }
-    } catch (error) {
-      console.error("Phone login error:", error);
-    } finally {
       setLoading(false);
     }
   };
-
-  const onPhoneVerifySubmit = async (values: PhoneVerifyValues) => {
-    setLoading(true);
-    try {
-      await verifyPhoneOTP(phoneNumber, values.token);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error("Phone verification error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onNationalIdSubmit = async (values: NationalIdValues) => {
-    setLoading(true);
-    try {
-      await signInWithNationalId(values.nationalId, values.password);
-      // After verification, user would need to login with email/password
-      setLoginMethod('email');
-    } catch (error) {
-      console.error("National ID login error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const backgroundPatterns = [
-    { top: '10%', left: '5%', size: '300px', delay: 0 },
-    { top: '50%', right: '8%', size: '250px', delay: 0.1 },
-    { bottom: '15%', left: '10%', size: '200px', delay: 0.2 },
-  ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <MainNavbar />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
+      <Navbar />
       
-      {isDevelopmentMode && (
-        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ {t('auth.simulated_login')}
-        </div>
-      )}
-      
-      <main className="flex-grow flex items-center justify-center py-20 px-4 relative overflow-hidden bg-gray-50">
-        {backgroundPatterns.map((pattern, index) => (
-          <motion.div
-            key={index}
-            className="absolute opacity-10 z-0"
-            style={{
-              top: pattern.top,
-              left: pattern.left,
-              right: pattern.right,
-              bottom: pattern.bottom,
-              width: pattern.size,
-              height: pattern.size,
-              backgroundImage: `url('/img/pattern-${index + 1}.png')`,
-              backgroundSize: 'contain',
-              backgroundRepeat: 'no-repeat',
-            }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.1, scale: 1 }}
-            transition={{ 
-              duration: 1.5, 
-              delay: pattern.delay,
-              repeat: Infinity,
-              repeatType: 'reverse',
-              repeatDelay: 3,
-            }}
-          />
-        ))}
-        
-        <div className="w-full max-w-md z-10 space-y-6">
-          <OAuthErrorHandler />
-          
-          {authError && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{authError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {showPasswordReset || mode === 'reset-password' ? (
-            <PasswordResetForm onBack={() => {
-              setShowPasswordReset(false);
-              setMode('login');
-              // Update URL without the reset-password mode
-              const newUrl = '/auth?mode=login';
-              window.history.replaceState(null, '', newUrl);
-            }} />
-          ) : (
-            <Card className="shadow-elegant border-none overflow-hidden">
-              <Tabs value={mode} onValueChange={(newMode) => {
-                setMode(newMode);
-                setAuthError(null);
-              }} className="w-full">
-                <TabsList className="grid grid-cols-2 w-full rounded-none">
-                  <TabsTrigger value="login" className="rounded-none data-[state=active]:bg-white">
-                    {t('auth.login')}
-                  </TabsTrigger>
-                  <TabsTrigger value="register" className="rounded-none data-[state=active]:bg-white">
-                    {t('auth.register')}
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="login" className="m-0">
-                  {loginMethod === 'email' && !phoneSubmitted && (
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
-                        <CardHeader>
-                          <CardTitle className="text-2xl font-serif text-center text-adrar-800">
-                            {t('auth.welcome')}
-                          </CardTitle>
-                          <CardDescription className="text-center">
-                            {t('auth.connect_to_continue')}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <FormField
-                            control={loginForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('auth.email')}</FormLabel>
-                                <div className="relative">
-                                  <Mail className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                                  <FormControl>
-                                    <Input 
-                                      placeholder={t('auth.email')} 
-                                      className="pl-10" 
-                                      {...field}
-                                      onChange={(e) => {
-                                        field.onChange(e);
-                                        setAuthError(null);
-                                      }}
-                                    />
-                                  </FormControl>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={loginForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex justify-between">
-                                  <FormLabel>{t('auth.password')}</FormLabel>
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowPasswordReset(true)}
-                                    className="text-xs text-terracotta-500 hover:text-terracotta-600"
-                                  >
-                                    {t('auth.forgot_password')}
-                                  </button>
-                                </div>
-                                <div className="relative">
-                                  <Lock className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-                                  <FormControl>
-                                    <Input
-                                      type={showPassword ? 'text' : 'password'}
-                                      placeholder="••••••••"
-                                      className="pl-10"
-                                      {...field}
-                                      onChange={(e) => {
-                                        field.onChange(e);
-                                        setAuthError(null);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <button
-                                    type="button"
-                                    className="absolute right-3 top-3 text-adrar-400 hover:text-adrar-600"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                  >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                  </button>
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={loginForm.control}
-                            name="rememberMe"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                                <div className="leading-none">
-                                  <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-adrar-600">
-                                    {t('auth.remember_me')}
-                                  </FormLabel>
-                                </div>
-                              </FormItem>
-                            )}
-                          />
+      <main className="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-adrar-800">
+              Accès au Portail
+            </CardTitle>
+            <p className="text-gray-600">
+              Connectez-vous ou créez un compte
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Connexion
+                </TabsTrigger>
+                <TabsTrigger value="register" className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Inscription
+                </TabsTrigger>
+              </TabsList>
 
-                          <div className="grid grid-cols-2 gap-3 mt-6">
-                            <Button
-                              type="button"
-                              onClick={() => setLoginMethod('phone')}
-                              variant="outline"
-                              className="flex items-center justify-center"
-                            >
-                              <Phone className="h-4 w-4 mr-2" />
-                              {t('auth.sign_in_with_phone')}
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={() => setLoginMethod('nationalId')}
-                              variant="outline"
-                              className="flex items-center justify-center"
-                            >
-                              <Fingerprint className="h-4 w-4 mr-2" />
-                              {t('auth.sign_in_with_national_id')}
-                            </Button>
-                          </div>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
 
-                          <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                              <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-white px-2 text-muted-foreground">
-                                {t('auth.or_continue_with')}
-                              </span>
-                            </div>
-                          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Mot de passe</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Votre mot de passe"
+                        className="pl-10 pr-10"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
 
-                          <Button
-                            type="button"
-                            onClick={onGoogleSignIn}
-                            variant="outline"
-                            className="w-full"
-                            disabled={googleLoading || loading}
-                          >
-                            {googleLoading ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
-                            ) : (
-                              <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
-                                <path
-                                  d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
-                                  fill="#EA4335"
-                                />
-                                <path
-                                  d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
-                                  fill="#4285F4"
-                                />
-                                <path
-                                  d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z"
-                                  fill="#FBBC05"
-                                />
-                                <path
-                                  d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.2154 17.135 5.2654 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z"
-                                fill="#34A853"
-                              />
-                            </svg>
-                          )}
-                          {googleLoading ? t('auth.button.loading') : t('auth.sign_in_with_google')}
-                        </Button>
-                      </CardContent>
-                      <CardFooter className="flex flex-col">
-                        <Button 
-                          type="submit"
-                          className="w-full bg-terracotta-500 hover:bg-terracotta-600 text-white"
-                          disabled={loading}
-                        >
-                          {loading ? t('auth.button.loading') : t('auth.login')}
-                          {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-                        </Button>
-                      </CardFooter>
-                    </form>
-                  </Form>
-                )}
-                {/* ...repeat for other login methods and registration, using t('key') for all labels, placeholders, and menu items... */}
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading ? "Connexion..." : "Se connecter"}
+                  </Button>
+                </form>
               </TabsContent>
-              {/* ...register tab, use t('key') for all fields... */}
+
+              <TabsContent value="register">
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">Nom complet</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-name"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Votre nom complet"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com"
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="register-phone">Téléphone</Label>
+                      <Input
+                        id="register-phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+222 XX XX XX XX"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="register-national-id">CIN</Label>
+                      <Input
+                        id="register-national-id"
+                        type="text"
+                        value={nationalId}
+                        onChange={(e) => setNationalId(e.target.value)}
+                        placeholder="Numéro CIN"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Mot de passe</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Minimum 6 caractères"
+                        className="pl-10 pr-10"
+                        required
+                        minLength={6}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading ? "Inscription..." : "Créer le compte"}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
-          </Card>
-          )}
-          
-          {showOAuthConfig && <OAuthConfigGuide />}
-        </div>
+          </CardContent>
+        </Card>
       </main>
       
       <Footer />

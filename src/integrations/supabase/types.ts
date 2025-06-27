@@ -1627,12 +1627,70 @@ export type Database = {
           },
         ]
       }
+      supplier_notifications: {
+        Row: {
+          created_by: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          notification_type: string
+          reset_token: string | null
+          sent_at: string | null
+          supplier_id: string | null
+          task_id: string | null
+          used_at: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          reset_token?: string | null
+          sent_at?: string | null
+          supplier_id?: string | null
+          task_id?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          reset_token?: string | null
+          sent_at?: string | null
+          supplier_id?: string | null
+          task_id?: string | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "supplier_notifications_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
           category: string | null
           contact_person: string | null
           created_at: string | null
+          default_password_reset_required: boolean | null
           email: string | null
           id: string
           is_active: boolean | null
@@ -1640,12 +1698,14 @@ export type Database = {
           phone: string | null
           rating: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           address?: string | null
           category?: string | null
           contact_person?: string | null
           created_at?: string | null
+          default_password_reset_required?: boolean | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -1653,12 +1713,14 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           address?: string | null
           category?: string | null
           contact_person?: string | null
           created_at?: string | null
+          default_password_reset_required?: boolean | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -1666,8 +1728,17 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
       }
       supply_categories: {
         Row: {
@@ -1784,6 +1855,8 @@ export type Database = {
           assigned_by: string | null
           assigned_to: string | null
           completion_date: string | null
+          completion_token: string | null
+          completion_url: string | null
           created_at: string | null
           description: string | null
           due_date: string | null
@@ -1799,6 +1872,8 @@ export type Database = {
           assigned_by?: string | null
           assigned_to?: string | null
           completion_date?: string | null
+          completion_token?: string | null
+          completion_url?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
@@ -1814,6 +1889,8 @@ export type Database = {
           assigned_by?: string | null
           assigned_to?: string | null
           completion_date?: string | null
+          completion_token?: string | null
+          completion_url?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
@@ -2195,6 +2272,10 @@ export type Database = {
       assign_user_role: {
         Args: { target_user_id: string; role_name: string }
         Returns: undefined
+      }
+      generate_supplier_reset_token: {
+        Args: { supplier_email: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_id: string }

@@ -35,6 +35,7 @@ import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
 import SupplierDashboard from './pages/SupplierDashboard';
 import SupplierPortal from './pages/SupplierPortal';
+import SupplierPasswordReset from './pages/SupplierPasswordReset';
 import NotFound from './pages/NotFound';
 import PasswordResetHandler from './components/auth/PasswordResetHandler';
 
@@ -65,6 +66,7 @@ function App() {
                     <Route path="/policy" element={<Policy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/reset-password" element={<PasswordResetHandler />} />
+                    <Route path="/supplier/reset-password" element={<SupplierPasswordReset />} />
                     
                     {/* Supplier Portal Route */}
                     <Route 
