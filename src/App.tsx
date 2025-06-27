@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -35,6 +34,7 @@ import Users from './pages/Users';
 import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
 import SupplierDashboard from './pages/SupplierDashboard';
+import SupplierPortal from './pages/SupplierPortal';
 import NotFound from './pages/NotFound';
 import PasswordResetHandler from './components/auth/PasswordResetHandler';
 
@@ -65,6 +65,19 @@ function App() {
                     <Route path="/policy" element={<Policy />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/reset-password" element={<PasswordResetHandler />} />
+                    
+                    {/* Supplier Portal Route */}
+                    <Route 
+                      path="/supplier-portal" 
+                      element={
+                        <RoleBasedRoute 
+                          allowedRoles={['supplier']}
+                          publicInDev={DEV_MODE}
+                        >
+                          <SupplierPortal />
+                        </RoleBasedRoute>
+                      } 
+                    />
                     
                     {/* Protected routes with role-based access */}
                     <Route 
