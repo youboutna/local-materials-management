@@ -19,6 +19,9 @@ export const useEnhancedTaskAssignment = () => {
   ) => {
     if (!user?.id) return null;
 
+    // Type assertion since we've already checked user.id exists above
+    const userId = user.id as string;
+
     setLoading(true);
     try {
       // Create the task assignment
@@ -28,7 +31,7 @@ export const useEnhancedTaskAssignment = () => {
           title,
           description,
           assigned_to: assignedTo,
-          assigned_by: user.id, // user.id is guaranteed to be string here due to guard clause above
+          assigned_by: userId,
           priority,
           status: 'pending',
           due_date: dueDate,
