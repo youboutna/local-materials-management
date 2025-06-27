@@ -1,4 +1,3 @@
-
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
+import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
 import InteractiveMapGIS from './InteractiveMapGIS';
 
 interface MaterialFormData {
@@ -199,6 +199,11 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     status: workspace.status as any, // Cast to satisfy OperationalStatus type
   }));
 
+  const handleWorkspaceCreated = (workspaceId: string) => {
+    // Update the selected workspace to the newly created one
+    handleChange('workspaceId', workspaceId);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -271,12 +276,21 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
-              <WorkspaceSelector
-                workspaces={transformedWorkspaces}
-                selectedWorkspaceId={formData.workspaceId}
-                onWorkspaceChange={(id) => handleChange('workspaceId', id)}
-                showDetails={true}
-              />
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <WorkspaceSelector
+                    workspaces={transformedWorkspaces}
+                    selectedWorkspaceId={formData.workspaceId}
+                    onWorkspaceChange={(id) => handleChange('workspaceId', id)}
+                    showDetails={true}
+                  />
+                </div>
+                <div className="flex-shrink-0">
+                  <WorkspaceCreateDialog
+                    onWorkspaceCreated={handleWorkspaceCreated}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
