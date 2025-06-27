@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,8 +28,10 @@ interface MaterialFormData {
   availableQuantity: number;
   workspaceId: string;
   adresse?: string;
-  forme?: "polygon" | "rectangle" | "circle";
+  forme?: string;
   localisation?: any[];
+  coordinatesLatitude?: number;
+  coordinatesLongitude?: number;
   timeline?: {
     start: Date;
     end: Date;
@@ -104,8 +107,8 @@ const MaterialEdit = () => {
         adresse: updatedData.adresse,
         forme: updatedData.forme,
         localisation: updatedData.localisation,
-        coordinates_latitude: material?.coordinates_latitude,
-        coordinates_longitude: material?.coordinates_longitude,
+        coordinates_latitude: updatedData.coordinatesLatitude,
+        coordinates_longitude: updatedData.coordinatesLongitude,
         updated_at: new Date().toISOString()
       };
 
@@ -152,8 +155,10 @@ const MaterialEdit = () => {
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
         adresse: (material.adresse as string) || '',
-        forme: material.forme as "polygon" | "rectangle" | "circle" | undefined,
+        forme: material.forme as string | undefined,
         localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
+        coordinatesLatitude: material.coordinates_latitude ? Number(material.coordinates_latitude) : undefined,
+        coordinatesLongitude: material.coordinates_longitude ? Number(material.coordinates_longitude) : undefined,
         timeline: {
           start: new Date(),
           end: new Date(),
