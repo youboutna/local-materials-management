@@ -1,8 +1,21 @@
 
-import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState } from 'react';
+import { Check, ChevronsUpDown, Building, MapPin, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Building, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { Location, OperationalStatus } from '@/types/mauritania';
 
 interface Workspace {
@@ -32,6 +45,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   onLocationChange,
   showDetails = false
 }) => {
+  const [open, setOpen] = useState(false);
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
 
   const handleWorkspaceChange = (workspaceId: string) => {
@@ -42,6 +56,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
     if (workspace && onLocationChange) {
       onLocationChange(workspace.location);
     }
+    setOpen(false);
   };
 
   const getStatusIcon = (status: OperationalStatus) => {
@@ -95,40 +110,88 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
         <label className="text-sm font-medium text-gray-700 mb-2 block">
           Espace de travail
         </label>
-        <Select value={selectedWorkspaceId} onValueChange={handleWorkspaceChange}>
-          <SelectTrigger className="min-h-[60px]">
-            <SelectValue placeholder="Sélectionner un espace de travail" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px] overflow-y-auto">
-            {workspaces.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>Aucun espace de travail disponible</p>
-              </div>
-            ) : (
-              workspaces.map(workspace => (
-                <SelectItem key={workspace.id} value={workspace.id} className="min-h-[60px] py-3">
-                  <div className="flex items-start gap-3 w-full">
-                    <Building className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm truncate">{workspace.name}</span>
-                        {getStatusIcon(workspace.status)}
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{workspace.location}</span>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(workspace.status)}`}>
-                        {getStatusLabel(workspace.status)}
-                      </span>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between min-h-[60px] text-left"
+            >
+              {selectedWorkspace ? (
+                <div className="flex items-start gap-3 w-full">
+                  <Building className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm truncate">{selectedWorkspace.name}</span>
+                      {getStatusIcon(selectedWorkspace.status)}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{selectedWorkspace.location}</span>
                     </div>
                   </div>
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Building className="h-4 w-4" />
+                  <span>Sélectionner un espace de travail</span>
+                </div>
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+            <Command>
+              <CommandInput placeholder="Rechercher un espace de travail..." />
+              <CommandEmpty>
+                {workspaces.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Aucun espace de travail disponible</p>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    <p>Aucun espace de travail trouvé</p>
+                  </div>
+                )}
+              </CommandEmpty>
+              <CommandGroup>
+                {workspaces.map((workspace) => (
+                  <CommandItem
+                    key={workspace.id}
+                    value={`${workspace.name} ${workspace.location}`}
+                    onSelect={() => handleWorkspaceChange(workspace.id)}
+                    className="min-h-[60px] py-3"
+                  >
+                    <div className="flex items-start gap-3 w-full">
+                      <Building className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm truncate">{workspace.name}</span>
+                          {getStatusIcon(workspace.status)}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{workspace.location}</span>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(workspace.status)}`}>
+                          {getStatusLabel(workspace.status)}
+                        </span>
+                      </div>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          selectedWorkspaceId === workspace.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
         
         {workspaces.length === 0 && (
           <p className="text-sm text-red-600 mt-2">
