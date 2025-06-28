@@ -42,7 +42,7 @@ const ProjectCreate = () => {
       const mappedStatus = statusMapping[data.status as keyof typeof statusMapping] || 'en attente';
       
       // Create the new project with all the form data
-      const projectResult = await createProject({
+      const projectData = {
         title: data.title,
         description: data.description,
         location: data.location,
@@ -65,7 +65,9 @@ const ProjectCreate = () => {
         // Construction workflow fields - ensuring proper type casting
         currentPhase: data.current_phase,
         currentStage: data.current_stage
-      });
+      };
+
+      const projectResult = await createProject(projectData);
       
       toast({
         title: t("project_create.toast.created"),
