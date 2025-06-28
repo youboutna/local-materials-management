@@ -1,3 +1,4 @@
+
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
 
 // New construction phase types
@@ -53,7 +54,7 @@ export interface ProjectData {
   // Payment settings
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
-  // Construction workflow fields
+  // Construction workflow fields - making sure these are included
   currentPhase?: ConstructionPhase;
   currentStage?: ConstructionStage;
   plannedPhases?: {
