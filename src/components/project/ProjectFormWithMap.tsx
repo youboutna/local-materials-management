@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
 import ConstructionPhaseSelector from '@/components/project/ConstructionPhaseSelector';
+import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
@@ -92,6 +93,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contractorSupplier, setContractorSupplier] = useState<{
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }>({
+    name: formData.main_contractor || '',
+    contact: '',
+    leadTime: 7
+  });
 
   // Load employees for project responsable selection
   useEffect(() => {
@@ -133,6 +144,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   const handleMapDataChange = (data: MapData) => {
     console.log('Map data changed:', data);
     setFacilitiesMapData(data);
+  };
+
+  const handleContractorChange = (supplier: {
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }) => {
+    setContractorSupplier(supplier);
+    handleChange('main_contractor', supplier.name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -307,7 +328,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           />
         </TabsContent>
 
-        {/* Team & Contractors Tab */}
+        {/* Team & Contractors Tab - Updated with supplier selector */}
         <TabsContent value="team" className="space-y-6">
           <Card>
             <CardHeader>
@@ -352,16 +373,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="main_contractor">Contractant principal</Label>
-                  <Input
-                    id="main_contractor"
-                    value={formData.main_contractor}
-                    onChange={(e) => handleChange('main_contractor', e.target.value)}
-                    placeholder="Nom du contractant principal"
-                    className="w-full"
+                  <Label>Contractant principal</Label>
+                  <SupplierSelector
+                    value={contractorSupplier}
+                    onChange={handleContractorChange}
+                    allowCustom={true}
                   />
                   <p className="text-sm text-gray-600">
-                    Nom de l'entreprise ou du contractant principal (optionnel)
+                    Sélectionnez un fournisseur existant ou saisissez un contractant personnalisé
                   </p>
                 </div>
               </div>
