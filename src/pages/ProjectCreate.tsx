@@ -62,7 +62,7 @@ const ProjectCreate = () => {
         projectReference: data.project_reference,
         allowsInitialPayment: data.allows_initial_payment,
         initialPaymentPercentage: data.initial_payment_percentage,
-        // Construction workflow fields
+        // Construction workflow fields - using correct property names
         currentPhase: data.current_phase,
         currentStage: data.current_stage
       });
