@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { Eye, EyeOff, User, Mail, Lock, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, UserPlus, KeyRound } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import PasswordResetForm from '@/components/auth/PasswordResetForm';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +26,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+
+  // Check for reset password mode from URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const mode = searchParams.get('mode');
+    if (mode === 'reset-password') {
+      setActiveTab('reset-password');
+    }
+  }, [location]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -137,7 +146,7 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Connexion
@@ -145,6 +154,10 @@ const Auth = () => {
                 <TabsTrigger value="register" className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
                   Inscription
+                </TabsTrigger>
+                <TabsTrigger value="reset-password" className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4" />
+                  Mot de passe
                 </TabsTrigger>
               </TabsList>
 
@@ -202,6 +215,17 @@ const Auth = () => {
                   >
                     {loading ? "Connexion..." : "Se connecter"}
                   </Button>
+
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => setActiveTab('reset-password')}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Mot de passe oublié ?
+                    </Button>
+                  </div>
                 </form>
               </TabsContent>
 
@@ -300,6 +324,10 @@ const Auth = () => {
                     {loading ? "Inscription..." : "Créer le compte"}
                   </Button>
                 </form>
+              </TabsContent>
+
+              <TabsContent value="reset-password">
+                <PasswordResetForm onBack={() => setActiveTab('login')} />
               </TabsContent>
             </Tabs>
           </CardContent>

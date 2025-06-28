@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Mail, ArrowLeft } from 'lucide-react';
+import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 
 interface PasswordResetFormProps {
   onBack: () => void;
@@ -15,34 +14,21 @@ interface PasswordResetFormProps {
 
 const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
+  
+  const { loading, requestPasswordReset } = usePasswordManagement();
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    try {
-      const redirectUrl = `${window.location.origin}/reset-password`;
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
-
-      if (error) throw error;
-
+    const result = await requestPasswordReset(email);
+    
+    if (result.success) {
       setEmailSent(true);
-      toast({
-        title: "Email envoyé",
-        description: "Un lien de réinitialisation a été envoyé à votre adresse email.",
-      });
-    } catch (error: any) {
-      console.error('Error sending password reset email:', error);
-      setError(error.message || 'Une erreur est survenue lors de l\'envoi de l\'email.');
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.error || 'Une erreur est survenue lors de l\'envoi de l\'email.');
     }
   };
 

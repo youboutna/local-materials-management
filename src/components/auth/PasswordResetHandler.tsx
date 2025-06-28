@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,33 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Lock } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { usePasswordManagement } from '@/hooks/usePasswordManagement';
+import { supabase } from '@/integrations/supabase/client';
 
 const PasswordResetHandler = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isValidLink, setIsValidLink] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  // Check if we have the required tokens or if user is authenticated
+  const { loading, updatePassword, validateResetToken } = usePasswordManagement();
+
+  // Get URL parameters
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
 
   useEffect(() => {
     const checkAuthState = async () => {
-      // If this is a password recovery link, set the session
-      if (accessToken && refreshToken && type === 'recovery') {
-        try {
+      try {
+        // If this is a password recovery link, set the session
+        if (accessToken && refreshToken && type === 'recovery') {
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -39,22 +40,27 @@ const PasswordResetHandler = () => {
           
           if (!error) {
             setIsValidLink(true);
+            setChecking(false);
             return;
           }
-        } catch (err) {
-          console.error('Error setting session:', err);
         }
-      }
 
-      // Check if user is already authenticated (might have clicked link while logged in)
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsValidLink(true);
-        return;
-      }
+        // Check if user is already authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsValidLink(true);
+          setChecking(false);
+          return;
+        }
 
-      // If no valid session and no valid tokens, link is invalid
-      setIsValidLink(false);
+        // If no valid session, link is invalid
+        setIsValidLink(false);
+        setChecking(false);
+      } catch (err) {
+        console.error('Error checking auth state:', err);
+        setIsValidLink(false);
+        setChecking(false);
+      }
     };
 
     checkAuthState();
@@ -65,58 +71,49 @@ const PasswordResetHandler = () => {
     setError('');
 
     if (password !== confirmPassword) {
-      setError(t('auth.passwords_do_not_match') || 'Les mots de passe ne correspondent pas.');
+      setError('Les mots de passe ne correspondent pas.');
       return;
     }
 
     if (password.length < 6) {
-      setError(t('auth.password_too_short') || 'Le mot de passe doit contenir au moins 6 caractères.');
+      setError('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: t('auth.password_updated') || "Mot de passe mis à jour",
-        description: t('auth.password_updated_desc') || "Votre mot de passe a été mis à jour avec succès.",
-      });
-
-      // Sign out and redirect to login page
-      await supabase.auth.signOut();
-      navigate('/auth');
-    } catch (error: any) {
-      console.error('Error updating password:', error);
-      setError(error.message || t('auth.password_update_error') || 'Une erreur est survenue lors de la mise à jour du mot de passe.');
-    } finally {
-      setLoading(false);
+    const result = await updatePassword('', password, confirmPassword);
+    
+    if (!result.success && result.error) {
+      setError(result.error);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-adrar-600"></div>
+      </div>
+    );
+  }
 
   if (!isValidLink) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">{t('auth.invalid_link') || 'Lien invalide'}</CardTitle>
+            <CardTitle className="text-center">Lien invalide</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
               <AlertDescription>
-                {t('auth.invalid_link_desc') || 'Ce lien de réinitialisation de mot de passe est invalide ou a expiré. Veuillez demander un nouveau lien de réinitialisation.'}
+                Ce lien de réinitialisation de mot de passe est invalide ou a expiré. 
+                Veuillez demander un nouveau lien de réinitialisation.
               </AlertDescription>
             </Alert>
             <Button 
               className="w-full mt-4" 
-              onClick={() => navigate('/auth?mode=reset-password')}
+              onClick={() => navigate('/auth')}
             >
-              {t('auth.request_new_link') || 'Demander un nouveau lien'}
+              Retour à la connexion
             </Button>
           </CardContent>
         </Card>
@@ -130,7 +127,7 @@ const PasswordResetHandler = () => {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="h-5 w-5" />
-            {t('auth.new_password') || 'Nouveau mot de passe'}
+            Nouveau mot de passe
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -142,7 +139,7 @@ const PasswordResetHandler = () => {
             )}
 
             <div>
-              <Label htmlFor="password">{t('auth.new_password') || 'Nouveau mot de passe'}</Label>
+              <Label htmlFor="password">Nouveau mot de passe</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -151,7 +148,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder={t('auth.enter_new_password') || 'Entrez votre nouveau mot de passe'}
+                  placeholder="Entrez votre nouveau mot de passe"
                 />
                 <Button
                   type="button"
@@ -170,7 +167,7 @@ const PasswordResetHandler = () => {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">{t('auth.confirm_password') || 'Confirmer le mot de passe'}</Label>
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -179,7 +176,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder={t('auth.confirm_new_password') || 'Confirmez votre nouveau mot de passe'}
+                  placeholder="Confirmez votre nouveau mot de passe"
                 />
                 <Button
                   type="button"
@@ -202,7 +199,7 @@ const PasswordResetHandler = () => {
               className="w-full" 
               disabled={loading}
             >
-              {loading ? t('auth.updating') || 'Mise à jour...' : t('auth.update_password') || 'Mettre à jour le mot de passe'}
+              {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
             </Button>
           </form>
         </CardContent>
