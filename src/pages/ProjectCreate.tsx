@@ -57,11 +57,14 @@ const ProjectCreate = () => {
         financingSource: data.financing_source,
         marketType: data.market_type,
         selectionMode: data.selection_mode,
-        projectResponsableId: data.project_responsable_id, // Fixed: use projectResponsableId
+        projectResponsableId: data.project_responsable_id,
         mainContractor: data.main_contractor,
         projectReference: data.project_reference,
         allowsInitialPayment: data.allows_initial_payment,
-        initialPaymentPercentage: data.initial_payment_percentage
+        initialPaymentPercentage: data.initial_payment_percentage,
+        // Construction workflow fields
+        currentPhase: data.current_phase,
+        currentStage: data.current_stage
       });
       
       toast({

@@ -1,5 +1,30 @@
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
 
+// New construction phase types
+export type ConstructionPhase = 
+  | 'pre_construction' 
+  | 'site_preparation' 
+  | 'foundation' 
+  | 'framing' 
+  | 'structural_work' 
+  | 'finishing' 
+  | 'post_construction' 
+  | 'handover';
+
+export type ConstructionStage = 
+  | 'planning_design'
+  | 'permits_approvals'
+  | 'site_clearing'
+  | 'excavation'
+  | 'foundation_work'
+  | 'structural_framing'
+  | 'roofing'
+  | 'electrical_plumbing'
+  | 'interior_finishing'
+  | 'exterior_finishing'
+  | 'final_inspection'
+  | 'handover_complete';
+
 export interface ProjectData {
   id: string;
   title: string;
@@ -28,6 +53,26 @@ export interface ProjectData {
   // Payment settings
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
+  // Construction workflow fields
+  currentPhase?: ConstructionPhase;
+  currentStage?: ConstructionStage;
+  plannedPhases?: {
+    phase: ConstructionPhase;
+    startDate: string;
+    endDate: string;
+    estimatedDuration: number;
+    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  }[];
+  constructionMilestones?: {
+    id: string;
+    title: string;
+    phase: ConstructionPhase;
+    stage: ConstructionStage;
+    targetDate: string;
+    completedDate?: string;
+    status: 'pending' | 'completed' | 'overdue';
+    notes?: string;
+  }[];
 }
 
 export interface ProjectWithPayments extends ProjectData {
@@ -114,6 +159,11 @@ export interface ProjectEntity {
   projectReference?: string;
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
+  // Construction workflow fields
+  currentPhase?: ConstructionPhase;
+  currentStage?: ConstructionStage;
+  plannedPhases?: any; // JSON field
+  constructionMilestones?: any; // JSON field
   createdAt: Date;
   updatedAt: Date;
   // Relations

@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard } from 'lucide-react';
+import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
+import ConstructionPhaseSelector from '@/components/project/ConstructionPhaseSelector';
 import { supabase } from '@/integrations/supabase/client';
+import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
 interface Employee {
   id: string;
@@ -35,6 +37,9 @@ interface ProjectFormData {
   project_reference?: string;
   allows_initial_payment?: boolean;
   initial_payment_percentage?: number;
+  // Construction workflow fields
+  current_phase?: ConstructionPhase;
+  current_stage?: ConstructionStage;
 }
 
 interface MapData {
@@ -71,6 +76,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     project_reference: '',
     allows_initial_payment: false,
     initial_payment_percentage: 0,
+    current_phase: 'pre_construction',
+    current_stage: 'planning_design',
     ...initialData
   });
 
@@ -115,6 +122,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     }));
   };
 
+  const handlePhaseChange = (phase: ConstructionPhase) => {
+    handleChange('current_phase', phase);
+  };
+
+  const handleStageChange = (stage: ConstructionStage) => {
+    handleChange('current_stage', stage);
+  };
+
   const handleMapDataChange = (data: MapData) => {
     console.log('Map data changed:', data);
     setFacilitiesMapData(data);
@@ -146,11 +161,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 h-auto p-1">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline">Informations</span>
             <span className="sm:hidden">Info</span>
+          </TabsTrigger>
+          <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Construction</span>
+            <span className="sm:hidden">Phases</span>
           </TabsTrigger>
           <TabsTrigger value="team" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
             <User className="h-4 w-4" />
@@ -275,6 +295,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Construction Phase Tab */}
+        <TabsContent value="construction" className="space-y-6">
+          <ConstructionPhaseSelector
+            currentPhase={formData.current_phase}
+            currentStage={formData.current_stage}
+            onPhaseChange={handlePhaseChange}
+            onStageChange={handleStageChange}
+          />
         </TabsContent>
 
         {/* Team & Contractors Tab */}

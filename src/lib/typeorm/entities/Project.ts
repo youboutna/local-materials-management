@@ -4,6 +4,8 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 import { ProjectMaterial } from "./ProjectMaterial";
 
 export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
+export type ConstructionPhase = 'pre_construction' | 'site_preparation' | 'foundation' | 'framing' | 'structural_work' | 'finishing' | 'post_construction' | 'handover';
+export type ConstructionStage = 'planning_design' | 'permits_approvals' | 'site_clearing' | 'excavation' | 'foundation_work' | 'structural_framing' | 'roofing' | 'electrical_plumbing' | 'interior_finishing' | 'exterior_finishing' | 'final_inspection' | 'handover_complete';
 
 @Entity({ name: "projects" })
 export class Project {
@@ -79,6 +81,19 @@ export class Project {
   @Column({ name: "initial_payment_percentage", type: "decimal", nullable: true, default: 0 })
   initialPaymentPercentage!: number | null;
 
+  // Construction workflow fields
+  @Column({ name: "current_phase", type: "varchar", nullable: true })
+  currentPhase!: ConstructionPhase | null;
+
+  @Column({ name: "current_stage", type: "varchar", nullable: true })
+  currentStage!: ConstructionStage | null;
+
+  @Column({ name: "planned_phases", type: "jsonb", nullable: true })
+  plannedPhases!: any;
+
+  @Column({ name: "construction_milestones", type: "jsonb", nullable: true })
+  constructionMilestones!: any;
+
   @OneToMany(() => ProjectMaterial, (projectMaterial) => projectMaterial.project, { cascade: true })
   projectMaterials!: ProjectMaterial[];
 
@@ -115,7 +130,11 @@ export class Project {
       mainContractor: this.mainContractor || undefined,
       projectReference: this.projectReference || undefined,
       allowsInitialPayment: this.allowsInitialPayment || undefined,
-      initialPaymentPercentage: this.initialPaymentPercentage || undefined
+      initialPaymentPercentage: this.initialPaymentPercentage || undefined,
+      currentPhase: this.currentPhase || undefined,
+      currentStage: this.currentStage || undefined,
+      plannedPhases: this.plannedPhases || undefined,
+      constructionMilestones: this.constructionMilestones || undefined
     };
   }
 }
