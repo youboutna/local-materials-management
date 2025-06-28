@@ -10,11 +10,19 @@ import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
+import MaterialFormSection from '@/components/MaterialFormSection';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface SelectedMaterial {
+  materialId: string;
+  quantity: number;
+}
 
 const ProjectCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState<SelectedMaterial[]>([]);
   const { createProject } = useProjects();
 
   // Status mapping from form values to database values
@@ -69,6 +77,11 @@ const ProjectCreate = () => {
 
       const projectResult = await createProject(projectData);
       
+      // Add materials to the project if any are selected
+      if (selectedMaterials.length > 0 && projectResult?.id) {
+        await addMaterialsToProject(projectResult.id, selectedMaterials);
+      }
+      
       toast({
         title: t("project_create.toast.created"),
         description: t("project_create.toast.created_desc") + data.title,
@@ -84,6 +97,56 @@ const ProjectCreate = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Add materials to project and create automatic quantity takeoffs
+  const addMaterialsToProject = async (projectId: string, materials: SelectedMaterial[]) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Add materials to project_materials table
+      const materialsToAdd = materials.map(material => ({
+        project_id: projectId,
+        material_id: material.materialId,
+        quantity: material.quantity
+      }));
+
+      const { error: materialsError } = await supabase
+        .from('project_materials')
+        .insert(materialsToAdd);
+
+      if (materialsError) throw materialsError;
+
+      // Automatically create quantity takeoffs for each material
+      const takeoffsToCreate = materials.map(material => ({
+        project_id: projectId,
+        material_id: material.materialId,
+        element_type: 'Standard Element',
+        unit: 'unité', // Default unit
+        length: material.quantity,
+        width: null,
+        height: null,
+        note: 'Auto-généré lors de la création du projet'
+      }));
+
+      const { error: takeoffsError } = await supabase
+        .from('quantity_takeoffs')
+        .insert(takeoffsToCreate);
+
+      if (takeoffsError) throw takeoffsError;
+
+      toast({
+        title: "Matériaux ajoutés",
+        description: `${materials.length} matériau(x) et métré(s) créé(s) automatiquement.`,
+      });
+    } catch (error) {
+      console.error('Error adding materials to project:', error);
+      toast({
+        title: "Avertissement",
+        description: "Projet créé mais erreur lors de l'ajout des matériaux.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -105,8 +168,9 @@ const ProjectCreate = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-6xl mx-auto"
+            className="max-w-6xl mx-auto space-y-6"
           >
+            {/* Project Form */}
             <div className="bg-white rounded-xl shadow-elegant p-6">
               <h1 className="text-2xl font-serif text-adrar-800 mb-6">{t("project_create.title")}</h1>
               
@@ -114,6 +178,24 @@ const ProjectCreate = () => {
                 onSubmit={handleFormSubmit}
               />
             </div>
+
+            {/* Materials Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-serif text-adrar-800">
+                  Sélection des matériaux
+                </CardTitle>
+                <p className="text-gray-600">
+                  Sélectionnez les matériaux nécessaires pour ce projet. Les métrés seront calculés automatiquement.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <MaterialFormSection
+                  selectedMaterials={selectedMaterials}
+                  onChange={setSelectedMaterials}
+                />
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
       </main>
