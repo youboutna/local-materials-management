@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { PasswordServiceFactory } from '@/services/password/PasswordServiceFactory';
 import { IPasswordResetRequest, IPasswordUpdateRequest } from '@/interfaces/IPasswordService';
 
