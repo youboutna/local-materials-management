@@ -66,18 +66,18 @@ const MainNavbar = () => {
         
         {/* Show full navigation only for authenticated users or in dev mode */}
         {isUserAuthenticated && (
-          <NavigationMenu className="hidden md:flex">
+          <NavigationMenu className="hidden md:flex z-50">
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-white hover:text-gray-200">
+                <NavigationMenuTrigger className="text-white hover:text-gray-200 bg-transparent hover:bg-adrar-600">
                   {t('nav.projects') || 'Projets'}
                 </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[400px]">
+                <NavigationMenuContent className="z-50 bg-white border shadow-lg">
+                  <div className="grid gap-3 p-6 w-[400px] bg-white">
                     <NavigationMenuLink asChild>
                       <Link
                         to="/projects"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                       >
                         <div className="text-sm font-medium leading-none">{t('projects.all') || 'Tous les projets'}</div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -88,7 +88,7 @@ const MainNavbar = () => {
                     <NavigationMenuLink asChild>
                       <Link
                         to="/projects/create"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                       >
                         <div className="text-sm font-medium leading-none">{t('projects.new') || 'Nouveau projet'}</div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -99,7 +99,7 @@ const MainNavbar = () => {
                     <NavigationMenuLink asChild>
                       <Link
                         to="/projects/import"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                       >
                         <div className="text-sm font-medium leading-none flex items-center">
                           <Upload className="h-4 w-4 mr-2" />
@@ -117,7 +117,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
@@ -130,7 +130,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
@@ -143,7 +143,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
@@ -159,7 +159,7 @@ const MainNavbar = () => {
                 <NavigationMenuItem>
                   <Button 
                     variant="ghost" 
-                    className="text-white hover:text-gray-200"
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
                     size="sm"
                     asChild
                   >
@@ -174,7 +174,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
@@ -187,7 +187,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
@@ -202,7 +202,7 @@ const MainNavbar = () => {
               <NavigationMenuItem>
                 <Button 
                   variant="ghost" 
-                  className="text-white hover:text-gray-200"
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
                   size="sm"
                   asChild
                 >
