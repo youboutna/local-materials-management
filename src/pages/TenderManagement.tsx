@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, FileText, Users, Calendar, Upload } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Edit, Trash2, FileText, Users, Calendar, Upload, Workflow } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import ContractStatusDisplay from '@/components/projects/ContractStatusDisplay';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -315,208 +317,228 @@ const TenderManagement = () => {
             Nouvel Appel d'Offres
           </Button>
         </div>
+      </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTender ? 'Modifier l\'Appel d\'Offres' : 'Créer un Nouvel Appel d\'Offres'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations de Base</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Titre de l'appel d'offres</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Tabs defaultValue="tenders" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="tenders" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Appels d'Offres
+          </TabsTrigger>
+          <TabsTrigger value="workflow" className="flex items-center gap-2">
+            <Workflow className="h-4 w-4" />
+            Workflow Officiel
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="tenders" className="space-y-6">
+          {/* Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingTender ? 'Modifier l\'Appel d\'Offres' : 'Créer un Nouvel Appel d\'Offres'}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informations de Base</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="project">Projet associé (optionnel)</Label>
-                      <Select 
-                        value={formData.project_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un projet existant ou créer un nouveau" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="new_project">Nouveau projet (à créer)</SelectItem>
-                          {projects?.map((project) => (
-                            <SelectItem key={project.id} value={project.id}>
-                              {project.title} - {project.location}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="title">Titre de l'appel d'offres</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        required
+                      />
                     </div>
                     
                     <div>
-                      <Label htmlFor="status">Statut</Label>
-                      <Select 
-                        value={formData.status} 
-                        onValueChange={(value: 'draft' | 'published' | 'closed' | 'awarded') => setFormData(prev => ({ ...prev, status: value }))}
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="project">Projet associé (optionnel)</Label>
+                        <Select 
+                          value={formData.project_id} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un projet existant ou créer un nouveau" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="new_project">Nouveau projet (à créer)</SelectItem>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.title} - {project.location}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="status">Statut</Label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value: 'draft' | 'published' | 'closed' | 'awarded') => setFormData(prev => ({ ...prev, status: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Brouillon</SelectItem>
+                            <SelectItem value="published">Publié</SelectItem>
+                            <SelectItem value="closed">Fermé</SelectItem>
+                            <SelectItem value="awarded">Attribué</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Tender Project Fields */}
+                <TenderProjectFields
+                  formData={getTenderProjectFieldsData()}
+                  onChange={handleTenderProjectFieldsChange}
+                />
+
+                {/* Suppliers Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Soumissionnaires
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Les soumissionnaires seront gérés après la création de l'appel d'offres
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={tenderMutation.isPending}>
+                    {tenderMutation.isPending ? 'En cours...' : editingTender ? 'Modifier' : 'Créer'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Tenders List */}
+          <div className="grid gap-6">
+            {tenders?.map((tender) => (
+              <Card key={tender.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        {tender.title}
+                      </CardTitle>
+                      <p className="text-gray-600 mt-1">{tender.description}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(tender.status)}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(tender)}
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Brouillon</SelectItem>
-                          <SelectItem value="published">Publié</SelectItem>
-                          <SelectItem value="closed">Fermé</SelectItem>
-                          <SelectItem value="awarded">Attribué</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteMutation.mutate(tender.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Tender Project Fields */}
-              <TenderProjectFields
-                formData={getTenderProjectFieldsData()}
-                onChange={handleTenderProjectFieldsChange}
-              />
-
-              {/* Suppliers Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Soumissionnaires
-                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Les soumissionnaires seront gérés après la création de l'appel d'offres
-                  </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4" />
+                        <span>Créé le {format(new Date(tender.created_at), 'dd MMMM yyyy', { locale: fr })}</span>
+                      </div>
+                      
+                      {tender.project && (
+                        <div>
+                          <h4 className="font-medium mb-2">Projet associé</h4>
+                          <p className="text-sm text-gray-600">
+                            {tender.project.title} - {tender.project.location}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {tender.launch_date && (
+                        <div>
+                          <h4 className="font-medium mb-1">Date de lancement</h4>
+                          <p className="text-sm">{format(new Date(tender.launch_date), 'dd MMMM yyyy', { locale: fr })}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {tender.project && (
+                      <ContractStatusDisplay
+                        project={{
+                          launchDate: tender.launch_date,
+                          attributionDate: tender.attribution_date,
+                          startDate: tender.project.start_date || new Date().toISOString(),
+                          endDate: tender.project.end_date,
+                          status: tender.project.status,
+                          marketType: tender.market_type,
+                          selectionMode: tender.selection_mode,
+                          financingSource: tender.financing_source,
+                          projectReference: tender.project_reference
+                        }}
+                      />
+                    )}
+                  </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
 
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                  Annuler
+          {tenders?.length === 0 && (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">Aucun appel d'offres</h3>
+                <p className="text-gray-600 mb-4">Commencez par créer votre premier appel d'offres.</p>
+                <Button onClick={() => setIsDialogOpen(true)}>
+                  Créer un Appel d'Offres
                 </Button>
-                <Button type="submit" disabled={tenderMutation.isPending}>
-                  {tenderMutation.isPending ? 'En cours...' : editingTender ? 'Modifier' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Tenders List */}
-      <div className="grid gap-6">
-        {tenders?.map((tender) => (
-          <Card key={tender.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {tender.title}
-                  </CardTitle>
-                  <p className="text-gray-600 mt-1">{tender.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(tender.status)}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(tender)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteMutation.mutate(tender.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>Créé le {format(new Date(tender.created_at), 'dd MMMM yyyy', { locale: fr })}</span>
-                  </div>
-                  
-                  {tender.project && (
-                    <div>
-                      <h4 className="font-medium mb-2">Projet associé</h4>
-                      <p className="text-sm text-gray-600">
-                        {tender.project.title} - {tender.project.location}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {tender.launch_date && (
-                    <div>
-                      <h4 className="font-medium mb-1">Date de lancement</h4>
-                      <p className="text-sm">{format(new Date(tender.launch_date), 'dd MMMM yyyy', { locale: fr })}</p>
-                    </div>
-                  )}
-                </div>
-                
-                {tender.project && (
-                  <ContractStatusDisplay
-                    project={{
-                      launchDate: tender.launch_date,
-                      attributionDate: tender.attribution_date,
-                      startDate: tender.project.start_date || new Date().toISOString(),
-                      endDate: tender.project.end_date,
-                      status: tender.project.status,
-                      marketType: tender.market_type,
-                      selectionMode: tender.selection_mode,
-                      financingSource: tender.financing_source,
-                      projectReference: tender.project_reference
-                    }}
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {tenders?.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun appel d'offres</h3>
-            <p className="text-gray-600 mb-4">Commencez par créer votre premier appel d'offres.</p>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              Créer un Appel d'Offres
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="workflow">
+          <PublicProcurementWorkflow />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
