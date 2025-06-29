@@ -1,0 +1,470 @@
+
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, Calculator } from 'lucide-react';
+import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, TenderDocumentSubcategory } from '@/types/tender';
+import { useToast } from '@/hooks/use-toast';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+
+interface TenderDocumentManagerProps {
+  tenderId: string;
+  projectId?: string;
+  readonly?: boolean;
+}
+
+const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: TenderDocumentManagerProps) => {
+  const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadFormData, setUploadFormData] = useState({
+    category: 'administrative' as TenderDocumentCategory,
+    subcategory: 'lettre_soumission' as TenderDocumentSubcategory,
+    title: '',
+    description: '',
+    is_required: true
+  });
+  const [financialData, setFinancialData] = useState({
+    total_cost: 0,
+    labor_cost: 0,
+    material_cost: 0,
+    equipment_cost: 0,
+    overhead_percentage: 15,
+    profit_margin: 10
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { hasRole } = useCurrentUserRoles();
+  const { uploadFile, uploading } = useDocumentStorage();
+
+  // Check if user is bidder/supplier
+  const isBidder = hasRole('supplier') || hasRole('agent');
+
+  const { data: tenderDocuments, isLoading } = useQuery({
+    queryKey: ['tender-documents', tenderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tender_documents')
+        .select(`
+          *,
+          document:documents(
+            id,
+            title,
+            description,
+            file_url,
+            file_name,
+            mime_type,
+            file_size
+          )
+        `)
+        .eq('project_id', projectId || tenderId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return (data || []) as TenderDocumentWithDetails[];
+    },
+    enabled: !!tenderId
+  });
+
+  // Upload document mutation
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
+      // Upload file first
+      const uploadResult = await uploadFile(file, `tender-documents/${tenderId}`);
+      
+      if (!uploadResult.success) {
+        throw new Error('File upload failed');
+      }
+
+      // Create document record
+      const { data: document, error: docError } = await supabase
+        .from('documents')
+        .insert([{
+          title: documentData.title,
+          description: documentData.description,
+          file_url: uploadResult.url,
+          file_name: file.name,
+          mime_type: file.type,
+          file_size: file.size,
+          document_type: 'tender',
+          project_id: projectId
+        }])
+        .select()
+        .single();
+
+      if (docError) throw docError;
+
+      // Create tender document record
+      const { data: tenderDoc, error: tenderDocError } = await supabase
+        .from('tender_documents')
+        .insert([{
+          project_id: projectId || tenderId,
+          document_id: document.id,
+          category: documentData.category,
+          subcategory: documentData.subcategory,
+          is_required: documentData.is_required,
+          is_submitted: true,
+          submission_date: new Date().toISOString(),
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (tenderDocError) throw tenderDocError;
+
+      return { document, tenderDoc };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
+      toast({
+        title: 'Document ajouté',
+        description: 'Le document a été téléchargé avec succès.',
+      });
+      setIsUploadDialogOpen(false);
+      setSelectedFile(null);
+      setUploadFormData({
+        category: 'administrative',
+        subcategory: 'lettre_soumission',
+        title: '',
+        description: '',
+        is_required: true
+      });
+    },
+    onError: (error) => {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors du téléchargement du document.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      if (!uploadFormData.title) {
+        setUploadFormData(prev => ({ ...prev, title: file.name }));
+      }
+    }
+  };
+
+  const handleUpload = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un fichier.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    uploadMutation.mutate({ 
+      file: selectedFile, 
+      documentData: uploadFormData 
+    });
+  };
+
+  const calculateTotalCost = () => {
+    const subtotal = financialData.labor_cost + financialData.material_cost + financialData.equipment_cost;
+    const overhead = subtotal * (financialData.overhead_percentage / 100);
+    const profit = (subtotal + overhead) * (financialData.profit_margin / 100);
+    return subtotal + overhead + profit;
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'rejected': return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'requires_revision': return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      default: return <Clock className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'requires_revision': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
+    return tenderDocuments?.filter(doc => doc.category === category) || [];
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-terracotta-600" />
+              Documents d'Appel d'Offres
+            </CardTitle>
+            {isBidder && !readonly && (
+              <Button onClick={() => setIsUploadDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter Document
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="administrative">Administratifs</TabsTrigger>
+              <TabsTrigger value="technical">Techniques</TabsTrigger>
+              <TabsTrigger value="financial">Financières</TabsTrigger>
+            </TabsList>
+
+            {(['administrative', 'technical', 'financial'] as TenderDocumentCategory[]).map((category) => (
+              <TabsContent key={category} value={category} className="space-y-4">
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium text-adrar-800 mb-2">
+                    {TENDER_CATEGORY_LABELS[category]}
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filterDocumentsByCategory(category).map((tenderDoc) => (
+                    <Card key={tenderDoc.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm mb-1">
+                              {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                            </h4>
+                            {tenderDoc.document?.title && (
+                              <p className="text-xs text-gray-600 mb-2">
+                                {tenderDoc.document.title}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {tenderDoc.is_required && (
+                              <Badge variant="outline" className="text-xs">
+                                Requis
+                              </Badge>
+                            )}
+                            <Badge className={getStatusColor(tenderDoc.status)}>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(tenderDoc.status)}
+                                {tenderDoc.status === 'approved' ? 'Approuvé' : 
+                                 tenderDoc.status === 'rejected' ? 'Rejeté' : 
+                                 tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
+                              </div>
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        {tenderDoc.document?.file_name && (
+                          <div className="text-xs text-gray-500 mb-3">
+                            Fichier: {tenderDoc.document.file_name}
+                          </div>
+                        )}
+                        
+                        {tenderDoc.reviewer_notes && (
+                          <div className="text-xs text-gray-600 mb-3 p-2 bg-gray-50 rounded">
+                            <strong>Notes:</strong> {tenderDoc.reviewer_notes}
+                          </div>
+                        )}
+
+                        <div className="flex justify-end space-x-2">
+                          {tenderDoc.document && (
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {category === 'financial' && isBidder && (
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calculator className="h-5 w-5" />
+                        Évaluation Financière
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Coût de la main-d'œuvre</Label>
+                          <Input
+                            type="number"
+                            value={financialData.labor_cost}
+                            onChange={(e) => setFinancialData(prev => ({ ...prev, labor_cost: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Coût des matériaux</Label>
+                          <Input
+                            type="number"
+                            value={financialData.material_cost}
+                            onChange={(e) => setFinancialData(prev => ({ ...prev, material_cost: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Coût des équipements</Label>
+                          <Input
+                            type="number"
+                            value={financialData.equipment_cost}
+                            onChange={(e) => setFinancialData(prev => ({ ...prev, equipment_cost: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Frais généraux (%)</Label>
+                          <Input
+                            type="number"
+                            value={financialData.overhead_percentage}
+                            onChange={(e) => setFinancialData(prev => ({ ...prev, overhead_percentage: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Marge bénéficiaire (%)</Label>
+                          <Input
+                            type="number"
+                            value={financialData.profit_margin}
+                            onChange={(e) => setFinancialData(prev => ({ ...prev, profit_margin: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <div className="w-full">
+                            <Label>Coût total calculé</Label>
+                            <div className="text-2xl font-bold text-green-600">
+                              {calculateTotalCost().toFixed(2)} MRU
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {filterDocumentsByCategory(category).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p>Aucun document {TENDER_CATEGORY_LABELS[category].toLowerCase()} trouvé.</p>
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Upload Dialog */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajouter un Document</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div>
+              <Label>Catégorie</Label>
+              <Select 
+                value={uploadFormData.category} 
+                onValueChange={(value: TenderDocumentCategory) => setUploadFormData(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="administrative">Administratifs</SelectItem>
+                  <SelectItem value="technical">Techniques</SelectItem>
+                  <SelectItem value="financial">Financières</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Sous-catégorie</Label>
+              <Select 
+                value={uploadFormData.subcategory} 
+                onValueChange={(value: TenderDocumentSubcategory) => setUploadFormData(prev => ({ ...prev, subcategory: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TENDER_DOCUMENT_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key as TenderDocumentSubcategory}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Titre</Label>
+              <Input
+                value={uploadFormData.title}
+                onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={uploadFormData.description}
+                onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label>Fichier</Label>
+              <Input
+                type="file"
+                onChange={handleFileSelect}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={uploading || uploadMutation.isPending}>
+                {uploading || uploadMutation.isPending ? 'Téléchargement...' : 'Ajouter'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default TenderDocumentManager;
