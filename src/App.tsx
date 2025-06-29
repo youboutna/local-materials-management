@@ -22,6 +22,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/ProjectCreate';
 import ProjectEdit from './pages/ProjectEdit';
 import ProjectImport from './pages/ProjectImport';
+import TenderManagement from './pages/TenderManagement';
 import Materials from './pages/Materials';
 import MaterialDetail from './pages/MaterialDetail';
 import MaterialCreate from './pages/MaterialCreate';
@@ -151,6 +152,19 @@ function App() {
                           publicInDev={DEV_MODE}
                         >
                           <ProjectEdit />
+                        </RoleBasedRoute>
+                      } 
+                    />
+                    
+                    {/* Tender Management Route */}
+                    <Route 
+                      path="/tender-management" 
+                      element={
+                        <RoleBasedRoute 
+                          allowedRoles={['admin', 'manager', 'director']}
+                          publicInDev={DEV_MODE}
+                        >
+                          <TenderManagement />
                         </RoleBasedRoute>
                       } 
                     />

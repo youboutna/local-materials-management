@@ -189,6 +189,63 @@ const MainNavbar = () => {
                   </Link>
                 </Button>
               </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="text-white hover:text-gray-200">
+                  {t('nav.tender_management') || 'Gestion Appels d\'Offres'}
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid gap-3 p-6 w-[400px]">
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/tender-management"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">{t('tender.management') || 'Gestion des Appels d\'Offres'}</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t('tender.management_desc') || 'Créer et gérer les appels d\'offres'}
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/projects"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">{t('projects.all') || 'Projets'}</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t('projects.for_tender_desc') || 'Associer des projets aux appels d\'offres'}
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/documents"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">{t('tender.documents') || 'Documents d\'Appel d\'Offres'}</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t('tender.documents_desc') || 'Gérer les documents des appels d\'offres'}
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/materials"
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none flex items-center">
+                          <Users className="h-4 w-4 mr-2" />
+                          {t('suppliers.bidders') || 'Soumissionnaires'}
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {t('suppliers.bidders_desc') || 'Gérer les fournisseurs et soumissionnaires'}
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         )}
