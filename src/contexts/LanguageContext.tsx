@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Language = 'fr' | 'ar' | 'en';
+export type Language = 'fr' | 'ar' | 'en';
 
 interface LanguageContextType {
   language: Language;
@@ -105,7 +105,15 @@ const translations = {
     "role_based_route.denied_title": "Accès refusé",
     "role_based_route.denied_desc": "Vous n'avez pas les autorisations nécessaires pour accéder à cette page.",
     "role_based_route.required_roles": "Rôles requis",
-    "role_based_route.back": "Retour"
+    "role_based_route.back": "Retour",
+    "nav.tender_management": "Appels d'Offres",
+    "nav.projects": "Projets",
+    "nav.materials": "Matériaux",
+    "nav.users": "Utilisateurs",
+    "nav.login": "Se connecter",
+    "language.french": "Français",
+    "language.arabic": "العربية",
+    "language.english": "English"
   },
   ar: {
     "home.welcome": "مرحبا",
@@ -203,7 +211,15 @@ const translations = {
     "role_based_route.denied_title": "تم رفض الوصول",
     "role_based_route.denied_desc": "ليس لديك الصلاحيات اللازمة للوصول إلى هذه الصفحة.",
     "role_based_route.required_roles": "الأدوار المطلوبة",
-    "role_based_route.back": "العودة"
+    "role_based_route.back": "العودة",
+    "nav.tender_management": "المناقصات",
+    "nav.projects": "المشاريع",
+    "nav.materials": "المواد",
+    "nav.users": "المستخدمون",
+    "nav.login": "تسجيل الدخول",
+    "language.french": "Français",
+    "language.arabic": "العربية",
+    "language.english": "English"
   },
   en: {
     "home.welcome": "Welcome",
@@ -301,7 +317,15 @@ const translations = {
     "role_based_route.denied_title": "Access Denied",
     "role_based_route.denied_desc": "You don't have the necessary permissions to access this page.",
     "role_based_route.required_roles": "Required roles",
-    "role_based_route.back": "Back"
+    "role_based_route.back": "Back",
+    "nav.tender_management": "Tender Management",
+    "nav.projects": "Projects",
+    "nav.materials": "Materials",
+    "nav.users": "Users",
+    "nav.login": "Login",
+    "language.french": "Français",
+    "language.arabic": "العربية",
+    "language.english": "English"
   }
 };
 
