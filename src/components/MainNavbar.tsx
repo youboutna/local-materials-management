@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -186,6 +187,21 @@ const MainNavbar = () => {
                   <Link to="/settings">
                     <Cog className="h-4 w-4 mr-2" />
                     {t('settings.title') || 'Settings'}
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+              
+              {/* New Tender Management link */}
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/tender-management">
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t('nav.tender_management') || 'Appels d\'Offres'}
                   </Link>
                 </Button>
               </NavigationMenuItem>
