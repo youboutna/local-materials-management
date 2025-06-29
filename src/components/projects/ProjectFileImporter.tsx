@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { ImportFile, ImportOptions, ImportResult } from '@/types/project';
+import * as XLSX from 'xlsx';
 
 const IMPORT_OPTIONS: ImportOptions = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -81,19 +82,21 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
   };
 
   const parseExcelFile = async (file: File): Promise<any[]> => {
-    // This would require a library like xlsx or exceljs
-    // For now, return empty array - implement based on your needs
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          // Placeholder for Excel parsing logic
-          // You would use a library like 'xlsx' here
-          resolve([]);
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          resolve(jsonData);
         } catch (error) {
-          throw new Error('Erreur lors de la lecture du fichier Excel');
+          reject(new Error('Erreur lors de la lecture du fichier Excel'));
         }
       };
+      reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'));
       reader.readAsArrayBuffer(file);
     });
   };
@@ -184,8 +187,10 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
 
     try {
       // Parse file
+      console.log('Starting file parsing...');
       setImportProgress(25);
       const rawData = await parseFile(selectedFile);
+      console.log('File parsed successfully, rows:', rawData.length);
       
       if (!rawData || rawData.length === 0) {
         throw new Error('Aucune donnée trouvée dans le fichier');
@@ -200,17 +205,20 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       for (let i = 0; i < rawData.length; i++) {
         try {
           const projectData = transformToProjectData(rawData[i]);
+          console.log('Creating project:', projectData.title);
           await createProject(projectData);
           importedCount++;
         } catch (error) {
-          errors.push(`Ligne ${i + 1}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+          const errorMsg = `Ligne ${i + 1}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          console.error(errorMsg);
+          errors.push(errorMsg);
         }
         setImportProgress(50 + (i / rawData.length) * 50);
       }
 
       const result: ImportResult = {
         success: importedCount > 0,
-        message: `${importedCount} projet(s) importé(s) avec succès`,
+        message: `${importedCount} projet(s) importé(s) avec succès${errors.length > 0 ? ` (${errors.length} erreur(s))` : ''}`,
         importedCount,
         errors: errors.length > 0 ? errors : undefined
       };
@@ -226,6 +234,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       }
 
     } catch (error) {
+      console.error('Import error:', error);
       const result: ImportResult = {
         success: false,
         message: error instanceof Error ? error.message : 'Erreur lors de l\'import',
