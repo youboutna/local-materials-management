@@ -9,6 +9,7 @@ import TenderCrud from '@/components/tenders/TenderCrud';
 import TenderDocumentManager from '@/components/tenders/TenderDocumentManager';
 import TenderImportManager from '@/components/tenders/TenderImportManager';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
+import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 interface Tender {
@@ -87,17 +88,21 @@ const TenderManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="tenders" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Appels d'Offres
+          </TabsTrigger>
+          <TabsTrigger value="steps" className="flex items-center gap-2">
+            <Workflow className="h-4 w-4" />
+            Étapes
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Documents
           </TabsTrigger>
           <TabsTrigger value="workflow" className="flex items-center gap-2">
-            <Workflow className="h-4 w-4" />
+            <Users className="h-4 w-4" />
             Workflow Officiel
           </TabsTrigger>
           {isAdmin && (
@@ -113,6 +118,42 @@ const TenderManagement = () => {
             onTenderSelect={handleTenderSelect}
             selectedTenderId={selectedTender?.id}
           />
+        </TabsContent>
+
+        <TabsContent value="steps" className="space-y-6">
+          {selectedTender ? (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Workflow className="h-5 w-5" />
+                    Étapes - {selectedTender.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">{selectedTender.description}</p>
+                </CardContent>
+              </Card>
+              
+              <TenderWorkflowSteps 
+                tenderId={selectedTender.id}
+                readonly={!isAdmin && !hasRole('manager')}
+              />
+            </>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Workflow className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
+                <p className="text-gray-600 mb-4">
+                  Choisissez un appel d'offres dans l'onglet précédent pour gérer ses étapes.
+                </p>
+                <Button onClick={() => setActiveTab('tenders')}>
+                  Voir les Appels d'Offres
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         
         <TabsContent value="documents" className="space-y-6">
