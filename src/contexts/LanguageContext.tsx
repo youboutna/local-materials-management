@@ -200,7 +200,7 @@ const translations = {
     "global.import": "استيراد",
     "global.export": "تصدير",
     "global.search": "بحث",
-    "global.loading": "جار التحميل...",
+    "global.loading": "جاري التحميل...",
     "global.confirm": "تأكيد",
     "global.error": "خطأ",
     "global.success": "نجاح",
