@@ -7,12 +7,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
+import { 
+  TenderDocumentCategory, 
+  TenderDocumentSubcategory, 
+  TENDER_DOCUMENT_LABELS, 
+  TENDER_CATEGORY_LABELS 
+} from '@/types/tender';
 
 interface TenderStep {
   id: string;
@@ -66,10 +73,11 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     step_number: 1
   });
   const [documentFormData, setDocumentFormData] = useState({
-    document_type: '',
-    is_required: true,
+    category: 'administrative' as TenderDocumentCategory,
+    subcategory: 'lettre_soumission' as TenderDocumentSubcategory,
     title: '',
-    description: ''
+    description: '',
+    is_required: true
   });
 
   const { toast } = useToast();
@@ -92,7 +100,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     enabled: !!tenderId
   });
 
-  // Fetch step documents
+  // Fetch step documents with tender document integration
   const { data: stepDocuments, isLoading: documentsLoading } = useQuery({
     queryKey: ['step-documents', tenderId],
     queryFn: async () => {
@@ -197,7 +205,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     },
   });
 
-  // Add document to step mutation
+  // Add document to step mutation using tender document model
   const addDocumentMutation = useMutation({
     mutationFn: async ({ file, documentData, stepId }: { file: File; documentData: any; stepId: string }) => {
       // Upload file first
@@ -224,13 +232,31 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
 
       if (docError) throw docError;
 
+      // Create tender document record (for integration with Documents d'Appel d'Offres model)
+      const { data: tenderDoc, error: tenderDocError } = await supabase
+        .from('tender_documents')
+        .insert([{
+          project_id: tenderId,
+          document_id: document.id,
+          category: documentData.category,
+          subcategory: documentData.subcategory,
+          is_required: documentData.is_required,
+          is_submitted: true,
+          submission_date: new Date().toISOString(),
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (tenderDocError) throw tenderDocError;
+
       // Create step document record
       const { data: stepDoc, error: stepDocError } = await supabase
         .from('tender_step_documents')
         .insert([{
           step_id: stepId,
           document_id: document.id,
-          document_type: documentData.document_type,
+          document_type: `${documentData.category}_${documentData.subcategory}`,
           is_required: documentData.is_required,
           status: 'submitted',
           submitted_at: new Date().toISOString()
@@ -240,17 +266,24 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
 
       if (stepDocError) throw stepDocError;
 
-      return { document, stepDoc };
+      return { document, tenderDoc, stepDoc };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['step-documents', tenderId] });
+      queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
       toast({
         title: 'Document ajouté',
         description: 'Le document a été ajouté à l\'étape avec succès.',
       });
       setIsAddDocumentDialogOpen(false);
       setSelectedFile(null);
-      setDocumentFormData({ document_type: '', is_required: true, title: '', description: '' });
+      setDocumentFormData({ 
+        category: 'administrative', 
+        subcategory: 'lettre_soumission', 
+        title: '', 
+        description: '', 
+        is_required: true 
+      });
     },
     onError: (error) => {
       console.error('Add document error:', error);
@@ -564,22 +597,66 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         </DialogContent>
       </Dialog>
 
-      {/* Add Document Dialog */}
+      {/* Add Document Dialog - Updated to use Documents d'Appel d'Offres model */}
       <Dialog open={isAddDocumentDialogOpen} onOpenChange={setIsAddDocumentDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un Document à l'Étape</DialogTitle>
+            <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleAddDocument} className="space-y-4">
             <div>
-              <Label>Type de document</Label>
-              <Input
-                value={documentFormData.document_type}
-                onChange={(e) => setDocumentFormData(prev => ({ ...prev, document_type: e.target.value }))}
-                placeholder="ex: Cahier des charges, Contrat, etc."
-                required
-              />
+              <Label>Catégorie</Label>
+              <Select 
+                value={documentFormData.category} 
+                onValueChange={(value: TenderDocumentCategory) => {
+                  setDocumentFormData(prev => ({ 
+                    ...prev, 
+                    category: value,
+                    subcategory: value === 'administrative' ? 'lettre_soumission' : 
+                                value === 'technical' ? 'preuves_capacites_techniques' : 
+                                'preuves_capacites_financieres'
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="administrative">{TENDER_CATEGORY_LABELS.administrative}</SelectItem>
+                  <SelectItem value="technical">{TENDER_CATEGORY_LABELS.technical}</SelectItem>
+                  <SelectItem value="financial">{TENDER_CATEGORY_LABELS.financial}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Sous-catégorie</Label>
+              <Select 
+                value={documentFormData.subcategory} 
+                onValueChange={(value: TenderDocumentSubcategory) => setDocumentFormData(prev => ({ ...prev, subcategory: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TENDER_DOCUMENT_LABELS)
+                    .filter(([key]) => {
+                      if (documentFormData.category === 'administrative') {
+                        return ['lettre_soumission', 'pouvoir_signature', 'acte_groupement', 'attestation_impot', 'attestation_cnss', 'attestation_non_faillite', 'renseignement_soumissionnaire'].includes(key);
+                      } else if (documentFormData.category === 'technical') {
+                        return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques'].includes(key);
+                      } else {
+                        return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission'].includes(key);
+                      }
+                    })
+                    .map(([key, label]) => (
+                      <SelectItem key={key} value={key as TenderDocumentSubcategory}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -587,6 +664,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               <Input
                 value={documentFormData.title}
                 onChange={(e) => setDocumentFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder={TENDER_DOCUMENT_LABELS[documentFormData.subcategory]}
                 required
               />
             </div>
@@ -596,6 +674,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               <Textarea
                 value={documentFormData.description}
                 onChange={(e) => setDocumentFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description optionnelle du document"
               />
             </div>
 
@@ -606,7 +685,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                 checked={documentFormData.is_required}
                 onChange={(e) => setDocumentFormData(prev => ({ ...prev, is_required: e.target.checked }))}
               />
-              <Label htmlFor="is_required">Document requis</Label>
+              <Label htmlFor="is_required">Document requis pour cette étape</Label>
             </div>
 
             <div>
@@ -617,6 +696,11 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                 required
               />
+              {selectedFile && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Fichier sélectionné: {selectedFile.name}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">
@@ -624,7 +708,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                 Annuler
               </Button>
               <Button type="submit" disabled={uploading || addDocumentMutation.isPending}>
-                {uploading || addDocumentMutation.isPending ? 'Téléchargement...' : 'Ajouter'}
+                {uploading || addDocumentMutation.isPending ? 'Téléchargement...' : 'Ajouter Document'}
               </Button>
             </div>
           </form>
