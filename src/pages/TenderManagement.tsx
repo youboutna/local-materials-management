@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -316,10 +315,10 @@ const TenderManagement = () => {
                         onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un projet existant" />
+                          <SelectValue placeholder="Sélectionner un projet existant ou créer un nouveau" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Aucun projet (nouveau projet)</SelectItem>
+                          <SelectItem value="new_project">Nouveau projet (à créer)</SelectItem>
                           {projects?.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.title} - {project.location}
