@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, FileText, Users, Calendar } from 'lucide-react';
+import { Edit, Trash2, FileText, Users, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
@@ -267,12 +267,6 @@ const TenderManagement = () => {
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvel Appel d'Offres
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -468,7 +462,6 @@ const TenderManagement = () => {
             <h3 className="text-lg font-medium mb-2">Aucun appel d'offres</h3>
             <p className="text-gray-600 mb-4">Commencez par créer votre premier appel d'offres.</p>
             <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
               Créer un Appel d'Offres
             </Button>
           </CardContent>
