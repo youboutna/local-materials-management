@@ -105,11 +105,24 @@ const TenderManagement = () => {
 
   // Create/Update tender mutation
   const tenderMutation = useMutation({
-    mutationFn: async (tender: Partial<Tender>) => {
+    mutationFn: async (tenderData: typeof formData) => {
+      const dataToSubmit = {
+        title: tenderData.title,
+        description: tenderData.description,
+        project_id: tenderData.project_id || null,
+        launch_date: tenderData.launch_date || null,
+        attribution_date: tenderData.attribution_date || null,
+        selection_mode: tenderData.selection_mode || null,
+        market_type: tenderData.market_type || null,
+        financing_source: tenderData.financing_source || null,
+        project_reference: tenderData.project_reference || null,
+        status: tenderData.status
+      };
+
       if (editingTender) {
         const { data, error } = await supabase
           .from('tenders')
-          .update(tender)
+          .update(dataToSubmit)
           .eq('id', editingTender.id)
           .select()
           .single();
@@ -118,7 +131,7 @@ const TenderManagement = () => {
       } else {
         const { data, error } = await supabase
           .from('tenders')
-          .insert([tender])
+          .insert([dataToSubmit])
           .select()
           .single();
         if (error) throw error;
