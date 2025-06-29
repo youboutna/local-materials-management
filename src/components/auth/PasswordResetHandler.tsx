@@ -21,49 +21,57 @@ const PasswordResetHandler = () => {
   const [isValidLink, setIsValidLink] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  const { loading, updatePassword, validateResetToken } = usePasswordManagement();
+  const { loading, updatePassword } = usePasswordManagement();
 
-  // Get URL parameters
+  // Get URL parameters for password recovery
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
 
   useEffect(() => {
-    const checkAuthState = async () => {
+    const handlePasswordRecovery = async () => {
       try {
-        // If this is a password recovery link, set the session
+        console.log('Checking password recovery parameters:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+
+        // If this is a password recovery link from email
         if (accessToken && refreshToken && type === 'recovery') {
-          const { error } = await supabase.auth.setSession({
+          console.log('Setting session with recovery tokens');
+          
+          const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           
-          if (!error) {
+          if (error) {
+            console.error('Error setting session:', error);
+            setError('Lien de réinitialisation invalide ou expiré.');
+            setIsValidLink(false);
+          } else {
+            console.log('Session set successfully:', data);
             setIsValidLink(true);
-            setChecking(false);
-            return;
+          }
+        } else {
+          // Check if user is already authenticated (direct access)
+          const { data: { session } } = await supabase.auth.getSession();
+          console.log('Current session:', session);
+          
+          if (session && session.user) {
+            setIsValidLink(true);
+          } else {
+            setError('Lien de réinitialisation manquant ou invalide.');
+            setIsValidLink(false);
           }
         }
-
-        // Check if user is already authenticated
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setIsValidLink(true);
-          setChecking(false);
-          return;
-        }
-
-        // If no valid session, link is invalid
-        setIsValidLink(false);
-        setChecking(false);
       } catch (err) {
-        console.error('Error checking auth state:', err);
+        console.error('Error in password recovery check:', err);
+        setError('Une erreur est survenue lors de la vérification du lien.');
         setIsValidLink(false);
+      } finally {
         setChecking(false);
       }
     };
 
-    checkAuthState();
+    handlePasswordRecovery();
   }, [accessToken, refreshToken, type]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -103,10 +111,9 @@ const PasswordResetHandler = () => {
             <CardTitle className="text-center">Lien invalide</CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert>
+            <Alert variant="destructive">
               <AlertDescription>
-                Ce lien de réinitialisation de mot de passe est invalide ou a expiré. 
-                Veuillez demander un nouveau lien de réinitialisation.
+                {error || 'Ce lien de réinitialisation de mot de passe est invalide ou a expiré. Veuillez demander un nouveau lien de réinitialisation.'}
               </AlertDescription>
             </Alert>
             <Button 

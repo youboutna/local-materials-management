@@ -5,19 +5,24 @@ import { IPasswordService, IPasswordResetRequest, IPasswordUpdateRequest } from 
 export class SupabasePasswordService implements IPasswordService {
   async requestPasswordReset(request: IPasswordResetRequest): Promise<{ success: boolean; error?: string }> {
     try {
-      // Use your domain for password reset instead of Supabase's default
       const redirectUrl = request.redirectUrl || `${window.location.origin}/reset-password`;
+      
+      console.log('Sending password reset email to:', request.email);
+      console.log('Redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(request.email, {
         redirectTo: redirectUrl,
       });
 
       if (error) {
+        console.error('Password reset error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('Password reset email sent successfully');
       return { success: true };
     } catch (error: any) {
+      console.error('Password reset exception:', error);
       return { success: false, error: error.message };
     }
   }
@@ -32,23 +37,27 @@ export class SupabasePasswordService implements IPasswordService {
         return { success: false, error: 'Le mot de passe doit contenir au moins 6 caractères.' };
       }
 
+      console.log('Updating password...');
+      
       const { error } = await supabase.auth.updateUser({
         password: request.newPassword
       });
 
       if (error) {
+        console.error('Password update error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('Password updated successfully');
       return { success: true };
     } catch (error: any) {
+      console.error('Password update exception:', error);
       return { success: false, error: error.message };
     }
   }
 
   async validateResetToken(token: string): Promise<{ valid: boolean; email?: string; error?: string }> {
     try {
-      // Check if user is authenticated with valid session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session && session.user) {
@@ -63,6 +72,7 @@ export class SupabasePasswordService implements IPasswordService {
         error: 'Token de réinitialisation invalide ou expiré.' 
       };
     } catch (error: any) {
+      console.error('Token validation error:', error);
       return { 
         valid: false, 
         error: error.message 
