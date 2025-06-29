@@ -25,17 +25,17 @@ const CITY_TO_REGION_MAP: Record<string, string[]> = {
   'NKC': ['nouakchott', 'nkc', 'capital', 'capitale'],
   'NDB': ['nouadhibou', 'ndb', 'port', 'economic capital'],
   'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane', 'choum'],
-  'ASA': ['kifa', 'kiffa', 'guerou', 'barkeol', 'boumdeid'], 
-  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe', 'mbagne'],
-  'DKN': ['nouadhibou', 'dakhlet nouadhibou', 'port autonome'],
-  'GOG': ['kaédi', 'kaedi', 'maghama', 'monguel', 'lexeiba'],
-  'GDM': ['sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'],
-  'HEC': ['néma', 'nema', 'bassiknou', 'amourj', 'djiguenni'],
-  'HEG': ['aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'],
-  'INC': ['akjoujt', 'benichab', 'inchiri'],
-  'TGT': ['tidjikja', 'moudjéria', 'moudjerria', 'rachid', 'tagant'],
-  'TZM': ['zouerate', 'fderick', 'fderik', 'tiris zemmour', 'bir moghrein'],
-  'TRR': ['rosso', 'boutilimit', 'rkiz', 'mederdra', 'keur macene']
+  'ASA': ['assaba', 'kifa', 'kiffa', 'guerou', 'barkeol', 'boumdeid', 'kankossa'], 
+  'BRK': ['brakna', 'aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe', 'mbagne'],
+  'DKN': ['dakhlet nouadhibou', 'nouadhibou', 'port autonome'],
+  'GOG': ['gorgol', 'kaédi', 'kaedi', 'maghama', 'monguel', 'lexeiba'],
+  'GDM': ['guidimaka', 'sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'],
+  'HEC': ['hodh ech chargui', 'néma', 'nema', 'bassiknou', 'amourj', 'djiguenni'],
+  'HEG': ['hodh el gharbi', 'aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'],
+  'INC': ['inchiri', 'akjoujt', 'benichab'],
+  'TGT': ['tagant', 'tidjikja', 'moudjéria', 'moudjerria', 'rachid'],
+  'TZM': ['tiris zemmour', 'zouerate', 'fderick', 'fderik', 'bir moghrein'],
+  'TRR': ['trarza', 'rosso', 'boutilimit', 'rkiz', 'mederdra', 'keur macene']
 };
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
@@ -54,22 +54,36 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     return Array.from(statuses);
   }, [originalLocations]);
 
-  // Enhanced region matching function
+  // Enhanced region matching function with better normalization
   const matchesRegion = (itemRegion: string, selectedRegionCode: string): boolean => {
     if (!itemRegion) return false;
     
-    const itemRegionLower = itemRegion.toLowerCase().trim();
+    const normalizeText = (text: string) => {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[àáâãäå]/g, 'a')
+        .replace(/[èéêë]/g, 'e')
+        .replace(/[ìíîï]/g, 'i')
+        .replace(/[òóôõö]/g, 'o')
+        .replace(/[ùúûü]/g, 'u')
+        .replace(/[ç]/g, 'c')
+        .replace(/[\s\-_]/g, ' ')
+        .replace(/\s+/g, ' ');
+    };
+    
+    const itemRegionNormalized = normalizeText(itemRegion);
     const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === selectedRegionCode);
     
     if (!selectedRegion) return false;
     
-    const regionName = selectedRegion.name.toLowerCase().trim();
-    const regionNameAr = selectedRegion.nameAr.toLowerCase().trim();
+    const regionName = normalizeText(selectedRegion.name);
+    const regionNameAr = normalizeText(selectedRegion.nameAr);
     
-    console.log(`Matching "${itemRegionLower}" against region "${regionName}" (${selectedRegionCode})`);
+    console.log(`Matching "${itemRegionNormalized}" against region "${regionName}" (${selectedRegionCode})`);
     
     // 1. Direct exact matches
-    if (itemRegionLower === regionName || itemRegionLower === regionNameAr) {
+    if (itemRegionNormalized === regionName || itemRegionNormalized === regionNameAr) {
       console.log('✓ Exact match found');
       return true;
     }
@@ -77,10 +91,11 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     // 2. Check if the item location is a known city in this region
     const citiesInRegion = CITY_TO_REGION_MAP[selectedRegionCode] || [];
     const cityMatch = citiesInRegion.some(city => {
-      const match = itemRegionLower.includes(city.toLowerCase()) || 
-                   city.toLowerCase().includes(itemRegionLower) ||
-                   itemRegionLower === city.toLowerCase();
-      if (match) console.log(`✓ City match found: "${city}"`);
+      const normalizedCity = normalizeText(city);
+      const match = itemRegionNormalized.includes(normalizedCity) || 
+                   normalizedCity.includes(itemRegionNormalized) ||
+                   itemRegionNormalized === normalizedCity;
+      if (match) console.log(`✓ City match found: "${city}" -> "${normalizedCity}"`);
       return match;
     });
     
@@ -89,10 +104,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     }
     
     // 3. Partial name matching (contains)
-    const partialMatch = itemRegionLower.includes(regionName) || 
-                        itemRegionLower.includes(regionNameAr) ||
-                        regionName.includes(itemRegionLower) ||
-                        regionNameAr.includes(itemRegionLower);
+    const partialMatch = itemRegionNormalized.includes(regionName) || 
+                        itemRegionNormalized.includes(regionNameAr) ||
+                        regionName.includes(itemRegionNormalized) ||
+                        regionNameAr.includes(itemRegionNormalized);
     
     if (partialMatch) {
       console.log('✓ Partial match found');
@@ -100,8 +115,8 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     }
     
     // 4. Clean matches (remove common administrative words)
-    const cleanItemRegion = itemRegionLower.replace(/wilaya|région|province|governorate|commune/gi, '').trim();
-    const cleanRegionName = regionName.replace(/wilaya|région|province|governorate/gi, '').trim();
+    const cleanItemRegion = itemRegionNormalized.replace(/wilaya|region|province|governorate|commune/gi, '').trim();
+    const cleanRegionName = regionName.replace(/wilaya|region|province|governorate/gi, '').trim();
     
     if (cleanItemRegion === cleanRegionName) {
       console.log('✓ Clean match found');
@@ -110,7 +125,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     
     // 5. Word-by-word matching
     const regionWords = regionName.split(' ').filter(word => word.length > 2);
-    const itemWords = itemRegionLower.split(' ').filter(word => word.length > 2);
+    const itemWords = itemRegionNormalized.split(' ').filter(word => word.length > 2);
     
     const wordMatch = regionWords.some(word => 
       itemWords.some(itemWord => 
