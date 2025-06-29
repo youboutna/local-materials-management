@@ -22,8 +22,8 @@ interface ImportedTender {
 interface ProcessedTender {
   title: string;
   description: string;
-  launch_date: string;
-  attribution_date: string;
+  launch_date: string | null;
+  attribution_date: string | null;
   market_type: string;
   selection_mode: string;
   financing_source: string;
@@ -39,6 +39,7 @@ const TenderExcelImporter: React.FC = () => {
     success: number;
     errors: number;
     total: number;
+    errorMessages: string[];
   } | null>(null);
 
   const { toast } = useToast();
@@ -62,17 +63,34 @@ const TenderExcelImporter: React.FC = () => {
     return modeMap[mode] || 'open_tender';
   };
 
-  const parseDate = (dateStr: string): string => {
-    if (!dateStr) return '';
+  const parseDate = (dateStr: string): string | null => {
+    if (!dateStr || dateStr.trim() === '') return null;
     
-    // Handle DD/MM/YYYY format
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const [day, month, year] = parts;
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    try {
+      // Handle DD/MM/YYYY format
+      const parts = dateStr.toString().split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toISOString().split('T')[0];
+        }
+      }
+      
+      // Try parsing as Excel serial date
+      const excelDate = parseFloat(dateStr.toString());
+      if (!isNaN(excelDate) && excelDate > 1) {
+        const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+        if (!isNaN(jsDate.getTime())) {
+          return jsDate.toISOString().split('T')[0];
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return null;
     }
-    
-    return dateStr;
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,15 +118,23 @@ const TenderExcelImporter: React.FC = () => {
       const rows = jsonData.slice(1) as any[][];
       const importedData: ImportedTender[] = rows
         .filter(row => row.length >= 7 && row[0]) // Filter out empty rows
-        .map(row => ({
-          ordre: parseInt(row[0]) || 0,
-          objet: row[1] || '',
-          imputation_budgetaire: row[2] || '',
-          type_contrat: row[3] || '',
-          mode_selection: row[4] || '',
-          date_lancement: row[5] || '',
-          date_attribution: row[6] || ''
-        }));
+        .map((row, index) => {
+          try {
+            return {
+              ordre: parseInt(row[0]) || (index + 1),
+              objet: (row[1] || '').toString().trim(),
+              imputation_budgetaire: (row[2] || '').toString().trim(),
+              type_contrat: (row[3] || '').toString().trim(),
+              mode_selection: (row[4] || '').toString().trim(),
+              date_lancement: (row[5] || '').toString().trim(),
+              date_attribution: (row[6] || '').toString().trim()
+            };
+          } catch (error) {
+            console.error(`Error processing row ${index + 1}:`, error);
+            return null;
+          }
+        })
+        .filter(item => item !== null) as ImportedTender[];
 
       setPreview(importedData);
       setShowPreview(true);
@@ -121,7 +147,7 @@ const TenderExcelImporter: React.FC = () => {
       console.error('Error parsing Excel file:', error);
       toast({
         title: 'Erreur de lecture',
-        description: 'Impossible de lire le fichier Excel.',
+        description: 'Impossible de lire le fichier Excel. Vérifiez le format.',
         variant: 'destructive',
       });
     }
@@ -130,16 +156,35 @@ const TenderExcelImporter: React.FC = () => {
   const handleImport = async () => {
     if (!preview.length) return;
 
+    // Check authentication first
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      toast({
+        title: 'Authentification requise',
+        description: 'Vous devez être connecté pour importer des appels d\'offres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setImporting(true);
     let successCount = 0;
     let errorCount = 0;
+    const errorMessages: string[] = [];
 
     try {
-      for (const item of preview) {
+      for (const [index, item] of preview.entries()) {
         try {
+          if (!item.objet || item.objet.trim() === '') {
+            errorMessages.push(`Ligne ${index + 1}: Objet manquant`);
+            errorCount++;
+            continue;
+          }
+
           const processedTender: ProcessedTender = {
             title: item.objet.substring(0, 200), // Limit title length
-            description: `${item.objet}\n\nImputation: ${item.imputation_budgetaire}\nType: ${item.type_contrat}`,
+            description: `Ordre: ${item.ordre}\n\nObjet: ${item.objet}\n\nImputation: ${item.imputation_budgetaire}\nType: ${item.type_contrat}\nMode: ${item.mode_selection}`,
             launch_date: parseDate(item.date_lancement),
             attribution_date: parseDate(item.date_attribution),
             market_type: mapContractType(item.type_contrat),
@@ -148,18 +193,23 @@ const TenderExcelImporter: React.FC = () => {
             status: 'draft' as const
           };
 
+          console.log(`Importing tender ${index + 1}:`, processedTender);
+
           const { error } = await supabase
             .from('tenders')
             .insert([processedTender]);
 
           if (error) {
             console.error(`Error importing tender ${item.ordre}:`, error);
+            errorMessages.push(`Ligne ${index + 1} (${item.objet.substring(0, 50)}...): ${error.message}`);
             errorCount++;
           } else {
             successCount++;
+            console.log(`Successfully imported tender ${index + 1}`);
           }
-        } catch (itemError) {
+        } catch (itemError: any) {
           console.error(`Error processing tender ${item.ordre}:`, itemError);
+          errorMessages.push(`Ligne ${index + 1}: ${itemError.message || 'Erreur inconnue'}`);
           errorCount++;
         }
       }
@@ -167,7 +217,8 @@ const TenderExcelImporter: React.FC = () => {
       setImportResults({
         success: successCount,
         errors: errorCount,
-        total: preview.length
+        total: preview.length,
+        errorMessages
       });
 
       if (successCount > 0) {
@@ -180,16 +231,16 @@ const TenderExcelImporter: React.FC = () => {
       if (errorCount === preview.length) {
         toast({
           title: 'Échec de l\'import',
-          description: 'Aucun appel d\'offres n\'a pu être importé.',
+          description: 'Aucun appel d\'offres n\'a pu être importé. Vérifiez les erreurs ci-dessous.',
           variant: 'destructive',
         });
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Import error:', error);
       toast({
         title: 'Erreur d\'import',
-        description: 'Une erreur s\'est produite lors de l\'import.',
+        description: `Une erreur s'est produite: ${error.message || 'Erreur inconnue'}`,
         variant: 'destructive',
       });
     } finally {
@@ -308,7 +359,7 @@ const TenderExcelImporter: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
                 <div className="text-2xl font-bold text-green-600">{importResults.success}</div>
                 <div className="text-sm text-gray-600">Succès</div>
@@ -322,6 +373,19 @@ const TenderExcelImporter: React.FC = () => {
                 <div className="text-sm text-gray-600">Total</div>
               </div>
             </div>
+            
+            {importResults.errorMessages.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-medium text-sm mb-2">Détails des erreurs:</h4>
+                <div className="max-h-32 overflow-auto bg-red-50 border border-red-200 rounded p-2">
+                  {importResults.errorMessages.map((error, index) => (
+                    <div key={index} className="text-xs text-red-700 mb-1">
+                      {error}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
