@@ -21,6 +21,7 @@ import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/ProjectCreate';
 import ProjectEdit from './pages/ProjectEdit';
+import ProjectImport from './pages/ProjectImport';
 import Materials from './pages/Materials';
 import MaterialDetail from './pages/MaterialDetail';
 import MaterialCreate from './pages/MaterialCreate';
@@ -102,6 +103,18 @@ function App() {
                           publicInDev={DEV_MODE}
                         >
                           <Projects />
+                        </RoleBasedRoute>
+                      } 
+                    />
+                    
+                    <Route 
+                      path="/projects/import" 
+                      element={
+                        <RoleBasedRoute 
+                          allowedRoles={['admin', 'manager', 'director', 'agent']}
+                          publicInDev={DEV_MODE}
+                        >
+                          <ProjectImport />
                         </RoleBasedRoute>
                       } 
                     />
