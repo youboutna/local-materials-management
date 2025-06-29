@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -43,6 +42,7 @@ import SupplierPortal from './pages/SupplierPortal';
 import SupplierDashboard from './pages/SupplierDashboard';
 import SupplierPasswordReset from './pages/SupplierPasswordReset';
 import TenderManagement from './pages/TenderManagement';
+import TenderImport from './pages/TenderImport';
 
 const queryClient = new QueryClient();
 
@@ -87,6 +87,7 @@ function App() {
                       <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
                       <Route path="/tender-management" element={<TenderManagement />} />
+                      <Route path="/tender-import" element={<TenderImport />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>

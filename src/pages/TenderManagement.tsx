@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,13 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, FileText, Users, Calendar } from 'lucide-react';
+import { Edit, Trash2, FileText, Users, Calendar, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import ContractStatusDisplay from '@/components/projects/ContractStatusDisplay';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface Tender {
   id: string;
@@ -300,6 +300,22 @@ const TenderManagement = () => {
           <p className="text-gray-600 mt-2">Gérer les appels d'offres, projets associés et soumissionnaires</p>
         </div>
         
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline"
+            asChild
+          >
+            <Link to="/tender-import">
+              <Upload className="h-4 w-4 mr-2" />
+              Importer Excel
+            </Link>
+          </Button>
+          
+          <Button onClick={() => setIsDialogOpen(true)}>
+            Nouvel Appel d'Offres
+          </Button>
+        </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
