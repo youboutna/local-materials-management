@@ -1,3 +1,4 @@
+
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
@@ -23,8 +24,8 @@ const RoleBasedRoute = ({
   const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 
-  // In dev mode, some routes can be public
-  if (DEV_MODE && publicInDev) {
+  // In dev mode, allow access to all pages if DEV_MODE is true
+  if (DEV_MODE) {
     return <>{children}</>;
   }
 

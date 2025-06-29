@@ -6,6 +6,7 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { DEV_MODE } from '@/config/constants';
 import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
@@ -25,10 +26,11 @@ const MainNavbar = () => {
   const { hasRole, hasAnyRole } = useCurrentUserRoles();
 
   // Check if user is authenticated (either through AuthContext or KeycloakAuthContext)
-  const isUserAuthenticated = !!authUser || isAuthenticated;
+  // In dev mode, consider user as authenticated for navigation purposes
+  const isUserAuthenticated = DEV_MODE || !!authUser || isAuthenticated;
 
   // Check if user can manage users (admin or director)
-  const canManageUsers = hasAnyRole(['admin', 'director']);
+  const canManageUsers = DEV_MODE || hasAnyRole(['admin', 'director']);
 
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
@@ -55,9 +57,14 @@ const MainNavbar = () => {
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link to="/" className="text-xl font-bold">
           Construction ERP
+          {DEV_MODE && (
+            <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded">
+              DEV
+            </span>
+          )}
         </Link>
         
-        {/* Show full navigation only for authenticated users */}
+        {/* Show full navigation only for authenticated users or in dev mode */}
         {isUserAuthenticated && (
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList className="gap-2">
@@ -147,7 +154,7 @@ const MainNavbar = () => {
                 </Button>
               </NavigationMenuItem>
 
-              {/* Users link - only for admin and director */}
+              {/* Users link - only for admin and director or in dev mode */}
               {canManageUsers && (
                 <NavigationMenuItem>
                   <Button 
@@ -213,7 +220,7 @@ const MainNavbar = () => {
           {/* Language Switcher - Always visible */}
           <LanguageSwitcher />
           
-          {/* Show different buttons based on authentication status */}
+          {/* Show different buttons based on authentication status and dev mode */}
           {isUserAuthenticated ? (
             <div className="flex items-center gap-2">
               <Button 
@@ -225,15 +232,18 @@ const MainNavbar = () => {
                   {t('dashboard.title') || 'Dashboard'}
                 </Link>
               </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={handleDisconnect}
-                className="text-white border-white hover:bg-white hover:text-adrar-700"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                {t('auth.logout') || 'Déconnexion'}
-              </Button>
+              {/* Only show logout if not in dev mode or actually authenticated */}
+              {!DEV_MODE && (authUser || isAuthenticated) && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisconnect}
+                  className="text-white border-white hover:bg-white hover:text-adrar-700"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t('auth.logout') || 'Déconnexion'}
+                </Button>
+              )}
             </div>
           ) : (
             <Button 
