@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import WorkflowStepSelector from './WorkflowStepSelector';
+import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
 
 interface TenderStep {
   id: string;
@@ -54,6 +55,7 @@ interface TenderWorkflowStepsProps {
 
 const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowStepsProps) => {
   const [isAddStepDialogOpen, setIsAddStepDialogOpen] = useState(false);
+  const [isOfficialWorkflowDialogOpen, setIsOfficialWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -117,6 +119,44 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
       return (data || []) as StepDocument[];
     },
     enabled: !!tenderSteps?.length
+  });
+
+  // Add official workflow step
+  const addOfficialStepMutation = useMutation({
+    mutationFn: async (officialStep: OfficialWorkflowStep) => {
+      const nextStepNumber = Math.max(...(tenderSteps?.map(s => s.step_number) || [0])) + 1;
+      
+      const { data, error } = await supabase
+        .from('tender_steps')
+        .insert([{
+          tender_id: tenderId,
+          title: officialStep.title,
+          description: officialStep.description,
+          step_number: nextStepNumber,
+          required_documents: officialStep.requiredDocuments,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
+      toast({
+        title: 'Étape officielle ajoutée',
+        description: 'L\'étape du workflow officiel a été ajoutée avec succès.',
+      });
+    },
+    onError: (error) => {
+      console.error('Add official step error:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'ajout de l\'étape officielle.',
+        variant: 'destructive',
+      });
+    },
   });
 
   // Add new step mutation
@@ -288,6 +328,14 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     setIsAddDocumentDialogOpen(true);
   };
 
+  const handleSelectOfficialStep = (officialStep: OfficialWorkflowStep) => {
+    addOfficialStepMutation.mutate(officialStep);
+  };
+
+  const getExistingStepNumbers = () => {
+    return tenderSteps?.map(step => step.step_number) || [];
+  };
+
   if (stepsLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -306,10 +354,19 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               Étapes du Processus d'Appel d'Offres
             </CardTitle>
             {!readonly && (
-              <Button onClick={() => setIsAddStepDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter Étape
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsOfficialWorkflowDialogOpen(true)}
+                >
+                  <Workflow className="h-4 w-4 mr-2" />
+                  Workflow Officiel
+                </Button>
+                <Button onClick={() => setIsAddStepDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Étape Personnalisée
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -420,13 +477,21 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p>Aucune étape définie pour cet appel d'offres.</p>
                 {!readonly && (
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => setIsAddStepDialogOpen(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter la première étape
-                  </Button>
+                  <div className="flex justify-center gap-2 mt-4">
+                    <Button 
+                      onClick={() => setIsOfficialWorkflowDialogOpen(true)}
+                      variant="outline"
+                    >
+                      <Workflow className="h-4 w-4 mr-2" />
+                      Utiliser le Workflow Officiel
+                    </Button>
+                    <Button 
+                      onClick={() => setIsAddStepDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter une Étape Personnalisée
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
@@ -434,11 +499,19 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         </CardContent>
       </Card>
 
-      {/* Add Step Dialog */}
+      {/* Official Workflow Selector */}
+      <WorkflowStepSelector
+        isOpen={isOfficialWorkflowDialogOpen}
+        onClose={() => setIsOfficialWorkflowDialogOpen(false)}
+        onSelectStep={handleSelectOfficialStep}
+        existingStepNumbers={getExistingStepNumbers()}
+      />
+
+      {/* Add Custom Step Dialog */}
       <Dialog open={isAddStepDialogOpen} onOpenChange={setIsAddStepDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter une Étape</DialogTitle>
+            <DialogTitle>Ajouter une Étape Personnalisée</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleAddStep} className="space-y-4">
