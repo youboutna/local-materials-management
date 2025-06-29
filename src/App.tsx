@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import Footer from './components/Footer';
 import { Toaster } from "./components/ui/sonner";
 import { Toaster as UIToaster } from "./components/ui/toaster";
 import ErrorBoundary from './components/ErrorBoundary';
+import RoleBasedRoute from './components/auth/RoleBasedRoute';
 import './App.css';
 
 // Import pages
@@ -86,7 +88,14 @@ function App() {
                       <Route path="/supplier-portal" element={<SupplierPortal />} />
                       <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
-                      <Route path="/tender-management" element={<TenderManagement />} />
+                      <Route 
+                        path="/tender-management" 
+                        element={
+                          <RoleBasedRoute publicInDev={true}>
+                            <TenderManagement />
+                          </RoleBasedRoute>
+                        } 
+                      />
                       <Route path="/tender-import" element={<TenderImport />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
