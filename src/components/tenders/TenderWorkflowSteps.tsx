@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +36,15 @@ interface StepDocument {
   status: 'pending' | 'submitted' | 'approved' | 'rejected';
   reviewer_notes?: string;
   created_at: string;
+  document?: {
+    id: string;
+    title: string;
+    description?: string;
+    file_url?: string;
+    file_name?: string;
+    mime_type?: string;
+    file_size?: number;
+  };
 }
 
 interface TenderWorkflowStepsProps {
@@ -106,7 +114,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         .in('step_id', stepIds);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as StepDocument[];
     },
     enabled: !!tenderSteps?.length
   });
@@ -169,7 +177,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           file_name: file.name,
           mime_type: file.type,
           file_size: file.size,
-          document_type: 'tender_step'
+          document_type: 'tender'
         }])
         .select()
         .single();
@@ -358,7 +366,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                   {stepDocs.length > 0 && (
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {stepDocs.map((stepDoc: any) => (
+                        {stepDocs.map((stepDoc: StepDocument) => (
                           <div key={stepDoc.id} className="border rounded-lg p-3 bg-gray-50">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium text-sm">

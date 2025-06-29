@@ -1986,6 +1986,104 @@ export type Database = {
           },
         ]
       }
+      tender_step_documents: {
+        Row: {
+          created_at: string
+          document_id: string
+          document_type: string
+          id: string
+          is_required: boolean
+          reviewer_notes: string | null
+          status: string
+          step_id: string
+          submitted_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          document_type: string
+          id?: string
+          is_required?: boolean
+          reviewer_notes?: string | null
+          status?: string
+          step_id: string
+          submitted_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          document_type?: string
+          id?: string
+          is_required?: boolean
+          reviewer_notes?: string | null
+          status?: string
+          step_id?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_step_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_step_documents_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "tender_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_steps: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          required_documents: string[] | null
+          status: string
+          step_number: number
+          tender_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          required_documents?: string[] | null
+          status?: string
+          step_number: number
+          tender_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          required_documents?: string[] | null
+          status?: string
+          step_number?: number
+          tender_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_steps_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tender_suppliers: {
         Row: {
           created_at: string
