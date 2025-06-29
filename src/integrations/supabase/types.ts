@@ -1986,6 +1986,98 @@ export type Database = {
           },
         ]
       }
+      tender_suppliers: {
+        Row: {
+          created_at: string
+          id: string
+          supplier_id: string
+          tender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          supplier_id: string
+          tender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          supplier_id?: string
+          tender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_suppliers_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenders: {
+        Row: {
+          attribution_date: string | null
+          created_at: string
+          description: string
+          financing_source: string | null
+          id: string
+          launch_date: string | null
+          market_type: string | null
+          project_id: string | null
+          project_reference: string | null
+          selection_mode: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attribution_date?: string | null
+          created_at?: string
+          description: string
+          financing_source?: string | null
+          id?: string
+          launch_date?: string | null
+          market_type?: string | null
+          project_id?: string | null
+          project_reference?: string | null
+          selection_mode?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attribution_date?: string | null
+          created_at?: string
+          description?: string
+          financing_source?: string | null
+          id?: string
+          launch_date?: string | null
+          market_type?: string | null
+          project_id?: string | null
+          project_reference?: string | null
+          selection_mode?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           assigned_at: string | null

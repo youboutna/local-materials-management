@@ -31,9 +31,22 @@ interface Tender {
   status: 'draft' | 'published' | 'closed' | 'awarded';
   created_at: string;
   updated_at: string;
-  suppliers?: any[];
-  documents?: any[];
-  project?: any;
+  project?: {
+    id: string;
+    title: string;
+    status: string;
+    location: string;
+    start_date?: string;
+    end_date?: string;
+  };
+  tender_suppliers?: {
+    supplier: {
+      id: string;
+      name: string;
+      contact_person?: string;
+      email?: string;
+    };
+  }[];
 }
 
 const TenderManagement = () => {
@@ -49,7 +62,7 @@ const TenderManagement = () => {
     market_type: '',
     financing_source: '',
     project_reference: '',
-    status: 'draft' as const
+    status: 'draft' as 'draft' | 'published' | 'closed' | 'awarded'
   });
   const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
   
@@ -64,18 +77,15 @@ const TenderManagement = () => {
         .from('tenders')
         .select(`
           *,
-          project:projects(id, title, status, location),
-          tender_suppliers:tender_suppliers(
+          project:projects(id, title, status, location, start_date, end_date),
+          tender_suppliers(
             supplier:suppliers(id, name, contact_person, email)
-          ),
-          tender_documents:tender_documents(
-            document:documents(id, title, file_name)
           )
         `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return data as Tender[] || [];
     },
   });
 
@@ -202,6 +212,30 @@ const TenderManagement = () => {
     return <Badge className={`${config.color} text-white`}>{config.label}</Badge>;
   };
 
+  // Convert formData to TenderProjectFields format
+  const getTenderProjectFieldsData = () => ({
+    launchDate: formData.launch_date,
+    attributionDate: formData.attribution_date,
+    selectionMode: formData.selection_mode,
+    marketType: formData.market_type,
+    financingSource: formData.financing_source,
+    projectReference: formData.project_reference,
+  });
+
+  const handleTenderProjectFieldsChange = (field: string, value: string) => {
+    const fieldMapping: Record<string, string> = {
+      launchDate: 'launch_date',
+      attributionDate: 'attribution_date',
+      selectionMode: 'selection_mode',
+      marketType: 'market_type',
+      financingSource: 'financing_source',
+      projectReference: 'project_reference',
+    };
+    
+    const mappedField = fieldMapping[field] || field;
+    setFormData(prev => ({ ...prev, [mappedField]: value }));
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -286,7 +320,7 @@ const TenderManagement = () => {
                       <Label htmlFor="status">Statut</Label>
                       <Select 
                         value={formData.status} 
-                        onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}
+                        onValueChange={(value: 'draft' | 'published' | 'closed' | 'awarded') => setFormData(prev => ({ ...prev, status: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -305,8 +339,8 @@ const TenderManagement = () => {
 
               {/* Tender Project Fields */}
               <TenderProjectFields
-                formData={formData}
-                onChange={(field, value) => setFormData(prev => ({ ...prev, [field]: value }))}
+                formData={getTenderProjectFieldsData()}
+                onChange={handleTenderProjectFieldsChange}
               />
 
               {/* Suppliers Section */}
