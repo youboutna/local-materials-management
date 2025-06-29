@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export type Language = 'fr' | 'ar' | 'en';
@@ -48,11 +49,11 @@ const translations = {
     'dashboard.announcements': 'Annonces',
     'dashboard.dev_mode': 'Mode Développement Actif',
 
-    // Dashboard metrics
+    // Dashboard metrics - Updated with specific translations
     'dashboard.active_projects': 'Projets Actifs',
-    'dashboard.active_projects_label': 'projets',
+    'dashboard.active_projects_label': 'projets actifs',
     'dashboard.total_budget': 'Budget Total',
-    'dashboard.total_budget_label': 'budget',
+    'dashboard.total_budget_label': 'budget total',
     'dashboard.team': 'Équipe',
     'dashboard.team_size': 'Taille de l\'équipe',
     'dashboard.members': 'membres',
@@ -68,7 +69,7 @@ const translations = {
     'dashboard.tasks_overview': 'Vue d\'ensemble des Tâches',
     'dashboard.documents_overview': 'Vue d\'ensemble des Documents',
 
-    // Dashboard status and progress
+    // Dashboard status and progress - Updated
     'dashboard.status_overview': 'Vue d\'ensemble du statut',
     'dashboard.financial_resources': 'Ressources financières',
     'dashboard.project_staff': 'Personnel de projet',
@@ -423,11 +424,11 @@ const translations = {
     'dashboard.announcements': 'الإعلانات',
     'dashboard.dev_mode': 'وضع التطوير نشط',
 
-    // Dashboard metrics
+    // Dashboard metrics - Updated with specific translations
     'dashboard.active_projects': 'المشاريع النشطة',
-    'dashboard.active_projects_label': 'مشاريع',
+    'dashboard.active_projects_label': 'مشاريع نشطة',
     'dashboard.total_budget': 'إجمالي الميزانية',
-    'dashboard.total_budget_label': 'ميزانية',
+    'dashboard.total_budget_label': 'إجمالي الميزانية',
     'dashboard.team': 'الفريق',
     'dashboard.team_size': 'حجم الفريق',
     'dashboard.members': 'عضو',
@@ -443,7 +444,7 @@ const translations = {
     'dashboard.tasks_overview': 'نظرة عامة على المهام',
     'dashboard.documents_overview': 'نظرة عامة على الوثائق',
 
-    // Dashboard status and progress
+    // Dashboard status and progress - Updated
     'dashboard.status_overview': 'نظرة عامة على الحالة',
     'dashboard.financial_resources': 'الموارد المالية',
     'dashboard.project_staff': 'موظفو المشروع',
@@ -798,11 +799,11 @@ const translations = {
     'dashboard.announcements': 'Announcements',
     'dashboard.dev_mode': 'Development Mode Active',
 
-    // Dashboard metrics
+    // Dashboard metrics - Updated with specific translations
     'dashboard.active_projects': 'Active Projects',
-    'dashboard.active_projects_label': 'projects',
+    'dashboard.active_projects_label': 'active projects',
     'dashboard.total_budget': 'Total Budget',
-    'dashboard.total_budget_label': 'budget',
+    'dashboard.total_budget_label': 'total budget',
     'dashboard.team': 'Team',
     'dashboard.team_size': 'Team size',
     'dashboard.members': 'members',
@@ -818,7 +819,7 @@ const translations = {
     'dashboard.tasks_overview': 'Tasks Overview',
     'dashboard.documents_overview': 'Documents Overview',
 
-    // Dashboard status and progress
+    // Dashboard status and progress - Updated
     'dashboard.status_overview': 'Status overview',
     'dashboard.financial_resources': 'Financial resources',
     'dashboard.project_staff': 'Project staff',
