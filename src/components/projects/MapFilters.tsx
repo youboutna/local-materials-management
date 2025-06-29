@@ -22,36 +22,37 @@ interface MapFiltersProps {
 
 // Enhanced mapping of cities/locations to their respective regions
 const CITY_TO_REGION_MAP: Record<string, string[]> = {
-  'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane'], // Adrar
-  'ASA': ['kifa', 'guerou', 'barkeol'], // Assaba  
-  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe'], // Brakna
-  'DKN': ['nouadhibou', 'dakhlet nouadhibou'], // Dakhlet Nouadhibou
-  'GOG': ['kaédi', 'kaedi', 'maghama', 'monguel'], // Gorgol
-  'GDM': ['sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'], // Guidimaka
-  'HEC': ['néma', 'nema', 'bassiknou', 'amourj'], // Hodh Ech Chargui
-  'HEG': ['aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'], // Hodh El Gharbi
-  'INC': ['akjoujt', 'benichab'], // Inchiri
-  'NKC': ['nouakchott', 'nkc'], // Nouakchott
-  'NDB': ['nouadhibou', 'ndb'], // Nouadhibou (alternative)
-  'TGT': ['tidjikja', 'moudjéria', 'moudjerria', 'rachid'], // Tagant
-  'TZM': ['zouerate', 'fderick', 'fderik'], // Tiris Zemmour
-  'TRR': ['rosso', 'boutilimit', 'rkiz'] // Trarza
+  'NKC': ['nouakchott', 'nkc', 'capital', 'capitale'],
+  'NDB': ['nouadhibou', 'ndb', 'port', 'economic capital'],
+  'ADR': ['adrar', 'atar', 'chinguetti', 'ouadane', 'choum'],
+  'ASA': ['kifa', 'kiffa', 'guerou', 'barkeol', 'boumdeid'], 
+  'BRK': ['aleg', 'magta lahjar', 'matka lahjar', 'boghé', 'boghe', 'mbagne'],
+  'DKN': ['nouadhibou', 'dakhlet nouadhibou', 'port autonome'],
+  'GOG': ['kaédi', 'kaedi', 'maghama', 'monguel', 'lexeiba'],
+  'GDM': ['sélibaby', 'selibaby', 'ghabou', 'ould yengé', 'ould yenge'],
+  'HEC': ['néma', 'nema', 'bassiknou', 'amourj', 'djiguenni'],
+  'HEG': ['aioun', 'ayoun', 'ayoun el atrous', 'tintane', 'kobani'],
+  'INC': ['akjoujt', 'benichab', 'inchiri'],
+  'TGT': ['tidjikja', 'moudjéria', 'moudjerria', 'rachid', 'tagant'],
+  'TZM': ['zouerate', 'fderick', 'fderik', 'tiris zemmour', 'bir moghrein'],
+  'TRR': ['rosso', 'boutilimit', 'rkiz', 'mederdra', 'keur macene']
 };
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
+  const [originalLocations] = useState<MapLocation[]>(locations);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
 
   // Get unique statuses from locations
   const availableStatuses = React.useMemo(() => {
     const statuses = new Set<string>();
-    locations.forEach(location => {
+    originalLocations.forEach(location => {
       if (location.status) {
         statuses.add(location.status);
       }
     });
     return Array.from(statuses);
-  }, [locations]);
+  }, [originalLocations]);
 
   // Enhanced region matching function
   const matchesRegion = (itemRegion: string, selectedRegionCode: string): boolean => {
@@ -126,9 +127,9 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     return wordMatch;
   };
 
-  // Apply filters
+  // Apply filters and update the parent component
   useEffect(() => {
-    let filtered = [...locations];
+    let filtered = [...originalLocations];
     
     console.log('MapFilters - Starting with locations:', filtered.length);
     console.log('MapFilters - Filter settings:', { statusFilter, regionFilter });
@@ -147,6 +148,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
         const beforeRegionFilter = filtered.length;
         filtered = filtered.filter(item => {
           const matches = matchesRegion(item.region || '', regionFilter);
+          console.log(`MapFilters - Item "${item.name}" in "${item.region}" matches: ${matches}`);
           return matches;
         });
         
@@ -156,7 +158,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
     
     console.log('MapFilters - Final filtered locations:', filtered.length);
     onFilterChange(filtered);
-  }, [statusFilter, regionFilter, locations, onFilterChange]);
+  }, [statusFilter, regionFilter, originalLocations, onFilterChange]);
 
   return (
     <Card className="mb-6 shadow-md">
@@ -165,7 +167,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           <Filter className="h-5 w-5 text-gray-600" />
           <h3 className="text-lg font-medium">Filtres de la carte</h3>
           <Badge variant="secondary" className="ml-auto">
-            {locations.length} projet{locations.length > 1 ? 's' : ''}
+            {originalLocations.length} projet{originalLocations.length > 1 ? 's' : ''}
           </Badge>
         </div>
         
@@ -265,15 +267,63 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
             </Label>
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="text-lg font-bold text-gray-900">
-                {locations.length}
+                {(() => {
+                  let count = originalLocations.length;
+                  
+                  if (statusFilter !== 'all') {
+                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                  }
+                  
+                  if (regionFilter !== 'all') {
+                    let filtered = originalLocations;
+                    if (statusFilter !== 'all') {
+                      filtered = filtered.filter(item => item.status === statusFilter);
+                    }
+                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                  }
+                  
+                  return count;
+                })()}
               </div>
               <div className="text-xs text-muted-foreground">
-                projet{locations.length > 1 ? 's' : ''} affiché{locations.length > 1 ? 's' : ''}
+                projet{(() => {
+                  let count = originalLocations.length;
+                  
+                  if (statusFilter !== 'all') {
+                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                  }
+                  
+                  if (regionFilter !== 'all') {
+                    let filtered = originalLocations;
+                    if (statusFilter !== 'all') {
+                      filtered = filtered.filter(item => item.status === statusFilter);
+                    }
+                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                  }
+                  
+                  return count > 1 ? 's' : '';
+                })()} affiché{(() => {
+                  let count = originalLocations.length;
+                  
+                  if (statusFilter !== 'all') {
+                    count = originalLocations.filter(item => item.status === statusFilter).length;
+                  }
+                  
+                  if (regionFilter !== 'all') {
+                    let filtered = originalLocations;
+                    if (statusFilter !== 'all') {
+                      filtered = filtered.filter(item => item.status === statusFilter);
+                    }
+                    count = filtered.filter(item => matchesRegion(item.region || '', regionFilter)).length;
+                  }
+                  
+                  return count > 1 ? 's' : '';
+                })()}
               </div>
               
               {/* Debug info */}
               <div className="mt-2 text-xs text-gray-500 border-t pt-2">
-                <div>Total disponible: {locations.length}</div>
+                <div>Total disponible: {originalLocations.length}</div>
                 {regionFilter !== 'all' && (
                   <div>
                     Région: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
