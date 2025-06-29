@@ -30,9 +30,21 @@ interface Tender {
 const TenderManagement = () => {
   const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
   const [activeTab, setActiveTab] = useState('tenders');
-  const { hasRole, hasAnyRole } = useCurrentUserRoles();
+  const { hasRole, hasAnyRole, isLoading, error } = useCurrentUserRoles();
 
-  // Check user roles
+  // Show loading only if explicitly loading and no error
+  if (isLoading && !error) {
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check user roles - default to basic access if roles can't be determined
   const isBidder = hasRole('supplier') || hasRole('agent');
   const isAdmin = hasAnyRole(['admin', 'director', 'manager']);
 

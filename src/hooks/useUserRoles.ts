@@ -22,16 +22,15 @@ export interface Role {
 }
 
 export const useUserRoles = (userId?: string) => {
-  // Fetch user roles using direct query with type assertion
-  const { data: userRoles, isLoading: rolesLoading } = useQuery({
+  // Fetch user roles
+  const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
     queryKey: ['userRoles', userId],
     queryFn: async () => {
       if (!userId) return [];
       
       console.log('Fetching user roles for:', userId);
       
-      // Use type assertion for the user_roles table
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', userId);
@@ -42,33 +41,26 @@ export const useUserRoles = (userId?: string) => {
       }
       return data as UserRole[] || [];
     },
-    enabled: !!userId
+    enabled: !!userId,
+    retry: 3,
+    retryDelay: 1000
   });
 
-  // Fetch all available roles
-  const { data: availableRoles, isLoading: availableRolesLoading } = useQuery({
-    queryKey: ['roles'],
-    queryFn: async () => {
-      console.log('Fetching available roles');
-      
-      // Use type assertion for the roles table
-      const { data, error } = await (supabase as any)
-        .from('roles')
-        .select('*')
-        .order('name');
-      
-      if (error) {
-        console.error('Error fetching roles:', error);
-        throw error;
-      }
-      return data as Role[] || [];
-    }
-  });
+  // Fetch all available roles (simplified - using role names directly)
+  const availableRoles = [
+    { id: 'admin', name: 'admin', description: 'Administrator' },
+    { id: 'director', name: 'director', description: 'Director' },
+    { id: 'manager', name: 'manager', description: 'Manager' },
+    { id: 'agent', name: 'agent', description: 'Agent' },
+    { id: 'supplier', name: 'supplier', description: 'Supplier' },
+    { id: 'user', name: 'user', description: 'User' }
+  ];
 
   return {
     userRoles: userRoles || [],
-    availableRoles: availableRoles || [],
-    isLoading: rolesLoading || availableRolesLoading,
+    availableRoles,
+    isLoading: rolesLoading,
+    error: rolesError
   };
 };
 
@@ -83,26 +75,32 @@ export const useCurrentUserRoles = () => {
     getUser();
   }, []);
 
-  const { data: userRoles, isLoading } = useQuery({
+  const { data: userRoles, isLoading, error } = useQuery({
     queryKey: ['currentUserRoles', currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
       
       console.log('Fetching current user roles for:', currentUser.id);
       
-      // Use type assertion for the user_roles table
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role_name')
         .eq('user_id', currentUser.id);
       
       if (error) {
         console.error('Error fetching current user roles:', error);
-        throw error;
+        // Don't throw error to prevent infinite loading
+        return [];
       }
       return data?.map((r: any) => r.role_name) || [];
     },
-    enabled: !!currentUser?.id
+    enabled: !!currentUser?.id,
+    retry: 2,
+    retryDelay: 500,
+    // Add stale time to prevent excessive refetching
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    // Set default data to prevent loading states
+    placeholderData: []
   });
 
   const hasRole = (roleName: string) => {
@@ -110,6 +108,7 @@ export const useCurrentUserRoles = () => {
   };
 
   const hasAnyRole = (roleNames: string[]) => {
+    if (!userRoles || userRoles.length === 0) return false;
     return roleNames.some(role => hasRole(role));
   };
 
@@ -118,7 +117,8 @@ export const useCurrentUserRoles = () => {
     hasRole,
     hasAnyRole,
     isLoading,
-    currentUser
+    currentUser,
+    error
   };
 };
 
@@ -129,8 +129,7 @@ export const useRoleManagement = () => {
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
       console.log('Assigning role:', roleName, 'to user:', userId);
       
-      // Use type assertion for the user_roles table
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_roles')
         .insert({ user_id: userId, role_name: roleName });
       
@@ -161,8 +160,7 @@ export const useRoleManagement = () => {
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
       console.log('Removing role:', roleName, 'from user:', userId);
       
-      // Use type assertion for the user_roles table
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
