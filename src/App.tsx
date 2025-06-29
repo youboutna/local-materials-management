@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -53,46 +53,48 @@ function App() {
         <LanguageProvider>
           <AuthProvider>
             <KeycloakAuthProvider>
-              <div className="min-h-screen bg-background">
-                <MainNavbar />
-                <main className="pt-20">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/projects" element={<Projects />} />
-                    <Route path="/projects/create" element={<ProjectCreate />} />
-                    <Route path="/projects/:id" element={<ProjectDetail />} />
-                    <Route path="/projects/:id/edit" element={<ProjectEdit />} />
-                    <Route path="/projects/import" element={<ProjectImport />} />
-                    <Route path="/materials" element={<Materials />} />
-                    <Route path="/materials/create" element={<MaterialCreate />} />
-                    <Route path="/materials/:id" element={<MaterialDetail />} />
-                    <Route path="/materials/:id/edit" element={<MaterialEdit />} />
-                    <Route path="/documents" element={<Documents />} />
-                    <Route path="/tasks" element={<Tasks />} />
-                    <Route path="/users" element={<Users />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/user-profile" element={<UserProfile />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/policy" element={<Policy />} />
-                    <Route path="/inspections/create" element={<InspectionCreate />} />
-                    <Route path="/inspections/:id/edit" element={<InspectionEdit />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/supplier-portal" element={<SupplierPortal />} />
-                    <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
-                    <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
-                    <Route path="/tender-management" element={<TenderManagement />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
-                <Toaster />
-                <UIToaster />
-              </div>
+              <BrowserRouter>
+                <div className="min-h-screen bg-background">
+                  <MainNavbar />
+                  <main className="pt-20">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/projects" element={<Projects />} />
+                      <Route path="/projects/create" element={<ProjectCreate />} />
+                      <Route path="/projects/:id" element={<ProjectDetail />} />
+                      <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+                      <Route path="/projects/import" element={<ProjectImport />} />
+                      <Route path="/materials" element={<Materials />} />
+                      <Route path="/materials/create" element={<MaterialCreate />} />
+                      <Route path="/materials/:id" element={<MaterialDetail />} />
+                      <Route path="/materials/:id/edit" element={<MaterialEdit />} />
+                      <Route path="/documents" element={<Documents />} />
+                      <Route path="/tasks" element={<Tasks />} />
+                      <Route path="/users" element={<Users />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/user-profile" element={<UserProfile />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/policy" element={<Policy />} />
+                      <Route path="/inspections/create" element={<InspectionCreate />} />
+                      <Route path="/inspections/:id/edit" element={<InspectionEdit />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/supplier-portal" element={<SupplierPortal />} />
+                      <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
+                      <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
+                      <Route path="/tender-management" element={<TenderManagement />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                  <Toaster />
+                  <UIToaster />
+                </div>
+              </BrowserRouter>
             </KeycloakAuthProvider>
           </AuthProvider>
         </LanguageProvider>
