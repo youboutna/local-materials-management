@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -105,10 +106,12 @@ const TenderManagement = () => {
   // Create/Update tender mutation
   const tenderMutation = useMutation({
     mutationFn: async (tenderData: typeof formData) => {
+      console.log('Submitting tender data:', tenderData);
+      
       const dataToSubmit = {
         title: tenderData.title,
         description: tenderData.description,
-        project_id: tenderData.project_id || null,
+        project_id: tenderData.project_id === 'new_project' ? null : (tenderData.project_id || null),
         launch_date: tenderData.launch_date || null,
         attribution_date: tenderData.attribution_date || null,
         selection_mode: tenderData.selection_mode || null,
@@ -118,6 +121,8 @@ const TenderManagement = () => {
         status: tenderData.status
       };
 
+      console.log('Data to submit:', dataToSubmit);
+
       if (editingTender) {
         const { data, error } = await supabase
           .from('tenders')
@@ -125,7 +130,10 @@ const TenderManagement = () => {
           .eq('id', editingTender.id)
           .select()
           .single();
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         return data;
       } else {
         const { data, error } = await supabase
@@ -133,11 +141,15 @@ const TenderManagement = () => {
           .insert([dataToSubmit])
           .select()
           .single();
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         return data;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Tender operation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['tenders'] });
       toast({
         title: editingTender ? 'Appel d\'offres modifié' : 'Appel d\'offres créé',
@@ -146,6 +158,7 @@ const TenderManagement = () => {
       handleCloseDialog();
     },
     onError: (error) => {
+      console.error('Tender operation error:', error);
       toast({
         title: 'Erreur',
         description: 'Une erreur s\'est produite lors de l\'opération.',
@@ -174,6 +187,27 @@ const TenderManagement = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
+    
+    // Basic validation
+    if (!formData.title.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Le titre est requis.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.description.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'La description est requise.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     tenderMutation.mutate(formData);
   };
 
