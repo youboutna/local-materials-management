@@ -1,25 +1,31 @@
-import { Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
+
+import { Button } from "@/components/ui/button";
+import { Plus, FileSpreadsheet } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const ProjectsHeader = () => {
-  const { t } = useLanguage();
-
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-serif text-adrar-800 mb-2">{t("projects.header.title")}</h1>
-        <p className="text-gray-600">
-          {t("projects.header.subtitle")}
+        <h1 className="text-3xl font-bold tracking-tight">Projets</h1>
+        <p className="text-muted-foreground">
+          Gérez et suivez tous vos projets de construction
         </p>
       </div>
-      <Link to="/projects/create">
-        <Button className="bg-terracotta-500 hover:bg-terracotta-600 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          {t("projects.header.add")}
+      <div className="flex gap-2">
+        <Button asChild variant="outline">
+          <Link to="/projects/import">
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Import/Export
+          </Link>
         </Button>
-      </Link>
+        <Button asChild>
+          <Link to="/projects/create">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau Projet
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };
