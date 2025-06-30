@@ -205,15 +205,19 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     },
   });
 
-  // Add document to step mutation using tender document model
+  // Fixed Add document to step mutation using tender document model
   const addDocumentMutation = useMutation({
     mutationFn: async ({ file, documentData, stepId }: { file: File; documentData: any; stepId: string }) => {
+      console.log('Starting document upload process...');
+      
       // Upload file first
       const uploadResult = await uploadFile(file, `tender-steps/${tenderId}/${stepId}`);
       
-      if (!uploadResult.success) {
-        throw new Error('File upload failed');
+      if (!uploadResult.success || !uploadResult.url) {
+        throw new Error(`File upload failed: ${uploadResult.error || 'Unknown error'}`);
       }
+
+      console.log('File uploaded successfully:', uploadResult.url);
 
       // Create document record
       const { data: document, error: docError } = await supabase
@@ -225,12 +229,19 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           file_name: file.name,
           mime_type: file.type,
           file_size: file.size,
-          document_type: 'tender'
+          document_type: 'tender',
+          project_id: tenderId,
+          status: 'draft'
         }])
         .select()
         .single();
 
-      if (docError) throw docError;
+      if (docError) {
+        console.error('Document creation error:', docError);
+        throw new Error(`Document creation failed: ${docError.message}`);
+      }
+
+      console.log('Document created successfully:', document.id);
 
       // Create tender document record (for integration with Documents d'Appel d'Offres model)
       const { data: tenderDoc, error: tenderDocError } = await supabase
@@ -248,7 +259,12 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         .select()
         .single();
 
-      if (tenderDocError) throw tenderDocError;
+      if (tenderDocError) {
+        console.error('Tender document creation error:', tenderDocError);
+        throw new Error(`Tender document creation failed: ${tenderDocError.message}`);
+      }
+
+      console.log('Tender document created successfully:', tenderDoc.id);
 
       // Create step document record
       const { data: stepDoc, error: stepDocError } = await supabase
@@ -264,7 +280,12 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         .select()
         .single();
 
-      if (stepDocError) throw stepDocError;
+      if (stepDocError) {
+        console.error('Step document creation error:', stepDocError);
+        throw new Error(`Step document creation failed: ${stepDocError.message}`);
+      }
+
+      console.log('Step document created successfully:', stepDoc.id);
 
       return { document, tenderDoc, stepDoc };
     },
@@ -273,10 +294,11 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
       toast({
         title: 'Document ajouté',
-        description: 'Le document a été ajouté à l\'étape avec succès.',
+        description: 'Le document d\'appel d\'offres a été ajouté à l\'étape avec succès.',
       });
       setIsAddDocumentDialogOpen(false);
       setSelectedFile(null);
+      setSelectedStepId(null);
       setDocumentFormData({ 
         category: 'administrative', 
         subcategory: 'lettre_soumission', 
@@ -289,7 +311,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
       console.error('Add document error:', error);
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de l\'ajout du document.',
+        description: `Erreur lors de l'ajout du document: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -597,7 +619,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         </DialogContent>
       </Dialog>
 
-      {/* Add Document Dialog - Updated to use Documents d'Appel d'Offres model */}
+      {/* Add Document Dialog - Fixed to properly use Documents d'Appel d'Offres model */}
       <Dialog open={isAddDocumentDialogOpen} onOpenChange={setIsAddDocumentDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
