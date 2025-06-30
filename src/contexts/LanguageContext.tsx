@@ -28,6 +28,7 @@ const translations = {
     'nav.forward': 'Suivant',
     'nav.close': 'Fermer',
     'nav.open': 'Ouvrir',
+    'nav.tender_management': 'Appels d\'Offres',
 
     // Dashboard translations
     'dashboard.title': 'Tableau de Bord',
@@ -538,6 +539,7 @@ const translations = {
     'nav.forward': 'التالي',
     'nav.close': 'إغلاق',
     'nav.open': 'فتح',
+    'nav.tender_management': 'المناقصات',
 
     // Dashboard translations
     'dashboard.title': 'لوحة القيادة',
@@ -1048,6 +1050,7 @@ const translations = {
     'nav.forward': 'Forward',
     'nav.close': 'Close',
     'nav.open': 'Open',
+    'nav.tender_management': 'Tenders',
 
     // Dashboard translations
     'dashboard.title': 'Dashboard',
