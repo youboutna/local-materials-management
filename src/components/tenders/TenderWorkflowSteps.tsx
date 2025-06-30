@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -210,8 +211,13 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     mutationFn: async ({ file, documentData, stepId }: { file: File; documentData: any; stepId: string }) => {
       console.log('Starting document upload process...');
       
-      // Upload file first
-      const uploadResult = await uploadFile(file, `tender-steps/${tenderId}/${stepId}`);
+      // Generate unique file path with timestamp to avoid conflicts
+      const timestamp = new Date().getTime();
+      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const uniqueFilePath = `tender-steps/${tenderId}/${stepId}/${timestamp}_${sanitizedFileName}`;
+      
+      // Upload file with unique path
+      const uploadResult = await uploadFile(file, uniqueFilePath);
       
       if (!uploadResult.success || !uploadResult.url) {
         throw new Error(`File upload failed: ${uploadResult.error || 'Unknown error'}`);
