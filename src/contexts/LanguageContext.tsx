@@ -20,6 +20,49 @@ export const useLanguage = () => {
 
 const translations = {
   fr: {
+    nav: {
+      home: "Accueil",
+      projects: "Projets", 
+      materials: "Matériaux",
+      documents: "Documents",
+      users: "Utilisateurs",
+      profile: "Profil",
+      settings: "Paramètres",
+      tender_management: "Gestion des appels d'offres"
+    },
+    dashboard: {
+      title: "Tableau de bord"
+    },
+    documents: {
+      title: "Documents"
+    },
+    task: {
+      title: "Tâches"
+    },
+    projects: {
+      title: "Projets"
+    },
+    materials: {
+      title: "Matériaux"
+    },
+    settings: {
+      title: "Paramètres"
+    },
+    auth: {
+      login: "Se connecter",
+      register: "S'inscrire", 
+      logout: "Se déconnecter",
+      terms: "Conditions d'utilisation",
+      privacy: "Politique de confidentialité"
+    },
+    footer: {
+      about: "À propos",
+      about_desc: "Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
+      rights: "Tous droits réservés",
+      by_hadratech: "Développé par HadraTech",
+      quick_links: "Liens rapides",
+      legal: "Légal"
+    },
     common: {
       yes: "Oui",
       no: "Non",
@@ -198,6 +241,49 @@ const translations = {
   },
   
   ar: {
+    nav: {
+      home: "الرئيسية",
+      projects: "المشاريع",
+      materials: "المواد",
+      documents: "الوثائق",
+      users: "المستخدمون",
+      profile: "الملف الشخصي",
+      settings: "الإعدادات",
+      tender_management: "إدارة العطاءات"
+    },
+    dashboard: {
+      title: "لوحة التحكم"
+    },
+    documents: {
+      title: "الوثائق"
+    },
+    task: {
+      title: "المهام"
+    },
+    projects: {
+      title: "المشاريع"
+    },
+    materials: {
+      title: "المواد"
+    },
+    settings: {
+      title: "الإعدادات"
+    },
+    auth: {
+      login: "تسجيل الدخول",
+      register: "التسجيل",
+      logout: "تسجيل الخروج",
+      terms: "شروط الاستخدام",
+      privacy: "سياسة الخصوصية"
+    },
+    footer: {
+      about: "حول",
+      about_desc: "نظام إدارة البناء ERP مصمم لتبسيط وتحسين جميع جوانب مشاريع البناء الخاصة بك.",
+      rights: "جميع الحقوق محفوظة",
+      by_hadratech: "تطوير هدرة تك",
+      quick_links: "روابط سريعة",
+      legal: "قانوني"
+    },
     common: {
       yes: "نعم",
       no: "لا",
@@ -376,6 +462,49 @@ const translations = {
   },
   
   en: {
+    nav: {
+      home: "Home",
+      projects: "Projects",
+      materials: "Materials",
+      documents: "Documents",
+      users: "Users",
+      profile: "Profile",
+      settings: "Settings",
+      tender_management: "Tender Management"
+    },
+    dashboard: {
+      title: "Dashboard"
+    },
+    documents: {
+      title: "Documents"
+    },
+    task: {
+      title: "Tasks"
+    },
+    projects: {
+      title: "Projects"
+    },
+    materials: {
+      title: "Materials"
+    },
+    settings: {
+      title: "Settings"
+    },
+    auth: {
+      login: "Sign in",
+      register: "Sign up",
+      logout: "Sign out",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy"
+    },
+    footer: {
+      about: "About",
+      about_desc: "Our construction management ERP system is designed to simplify and optimize all aspects of your construction projects.",
+      rights: "All rights reserved",
+      by_hadratech: "Developed by HadraTech",
+      quick_links: "Quick Links",
+      legal: "Legal"
+    },
     common: {
       yes: "Yes",
       no: "No",
