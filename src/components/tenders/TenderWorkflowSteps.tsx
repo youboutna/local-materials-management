@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -168,17 +167,21 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     },
   });
 
-  // Add new step mutation
+  // Add new step mutation - Fixed to calculate next step number properly
   const addStepMutation = useMutation({
     mutationFn: async (stepData: typeof stepFormData) => {
+      // Calculate next step number properly
+      const nextStepNumber = Math.max(...(tenderSteps?.map(s => s.step_number) || [0])) + 1;
+      
       const { data, error } = await supabase
         .from('tender_steps')
         .insert([{
           tender_id: tenderId,
           title: stepData.title,
           description: stepData.description,
-          step_number: stepData.step_number,
+          step_number: nextStepNumber, // Use calculated step number
           due_date: stepData.due_date || null,
+          required_documents: [], // Initialize with empty array
           status: 'pending'
         }])
         .select()
@@ -206,7 +209,6 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     },
   });
 
-  // Fixed Add document to step mutation using tender document model
   const addDocumentMutation = useMutation({
     mutationFn: async ({ file, documentData, stepId }: { file: File; documentData: any; stepId: string }) => {
       console.log('Starting document upload process...');
@@ -506,7 +508,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                             
                             {stepDoc.document?.file_name && (
                               <div className="text-xs text-gray-500 mb-2">
-                                {stepDoc.document.file_name}
+                                Fichier: {stepDoc.document.file_name}
                               </div>
                             )}
                             
@@ -568,7 +570,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         existingStepNumbers={getExistingStepNumbers()}
       />
 
-      {/* Add Custom Step Dialog */}
+      {/* Add Custom Step Dialog - Fixed form */}
       <Dialog open={isAddStepDialogOpen} onOpenChange={setIsAddStepDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -577,21 +579,11 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           
           <form onSubmit={handleAddStep} className="space-y-4">
             <div>
-              <Label>Numéro d'étape</Label>
-              <Input
-                type="number"
-                value={stepFormData.step_number}
-                onChange={(e) => setStepFormData(prev => ({ ...prev, step_number: parseInt(e.target.value) || 1 }))}
-                min="1"
-                required
-              />
-            </div>
-
-            <div>
               <Label>Titre</Label>
               <Input
                 value={stepFormData.title}
                 onChange={(e) => setStepFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Titre de l'étape"
                 required
               />
             </div>
@@ -601,11 +593,12 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               <Textarea
                 value={stepFormData.description}
                 onChange={(e) => setStepFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description de l'étape"
               />
             </div>
 
             <div>
-              <Label>Date d'échéance</Label>
+              <Label>Date d'échéance (optionnelle)</Label>
               <Input
                 type="date"
                 value={stepFormData.due_date}
@@ -625,7 +618,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         </DialogContent>
       </Dialog>
 
-      {/* Add Document Dialog - Fixed to properly use Documents d'Appel d'Offres model */}
+      {/* Add Document Dialog */}
       <Dialog open={isAddDocumentDialogOpen} onOpenChange={setIsAddDocumentDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
