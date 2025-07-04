@@ -10,1316 +10,588 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations = {
-  fr: {
-    // App info
-    'app.name': 'ADRAR Construct',
-    'app.description': 'Système de gestion de construction',
-
-    // Navigation
-    'nav.home': 'Accueil',
-    'nav.dashboard': 'Tableau de bord',
-    'nav.projects': 'Projets',
-    'nav.materials': 'Matériaux',
-    'nav.documents': 'Documents',
-    'nav.users': 'Utilisateurs',
-    'nav.profile': 'Profil',
-    'nav.login': 'Connexion',
-    'nav.logout': 'Déconnexion',
-    'nav.settings': 'Paramètres',
-    'nav.back': 'Retour',
-    'nav.next': 'Suivant',
-    'nav.previous': 'Précédent',
-    'nav.forward': 'Suivant',
-    'nav.close': 'Fermer',
-    'nav.open': 'Ouvrir',
-    'nav.tender_management': 'Appels d\'Offres',
-
-    // Dashboard translations
-    'dashboard.title': 'Tableau de Bord',
-    'dashboard.welcome': 'Bienvenue sur le tableau de bord',
-    'dashboard.overview': 'Vue d\'ensemble',
-    'dashboard.statistics': 'Statistiques',
-    'dashboard.recent_projects': 'Projets récents',
-    'dashboard.quick_actions': 'Actions rapides',
-    'dashboard.loading': 'Chargement...',
-    'dashboard.dev_mode': 'Mode développement',
-    'dashboard.active_projects': 'Projets actifs',
-    'dashboard.status_overview': 'Vue d\'ensemble du statut',
-    'dashboard.active_projects_label': 'actifs',
-    'dashboard.total_budget': 'Budget total',
-    'dashboard.financial_resources': 'Ressources financières',
-    'dashboard.team': 'Équipe',
-    'dashboard.project_staff': 'Personnel des projets',
-    'dashboard.members': 'membres',
-    'dashboard.materials': 'Matériaux',
-    'dashboard.available_resources': 'Ressources disponibles',
-    'dashboard.types': 'types',
-    'dashboard.project_progress': 'Progression des projets',
-    'dashboard.no_data': 'Aucune donnée disponible',
-    'dashboard.view_all': 'Voir tout',
-    'dashboard.no_projects': 'Aucun projet disponible',
-    'dashboard.distribution_by_region': 'Répartition par région',
-    'dashboard.project_distribution': 'Répartition des projets',
-    'dashboard.no_geolocated_projects': 'Aucun projet géolocalisé',
-    'dashboard.financial_overview': 'Vue d\'ensemble financière',
-    'dashboard.project_status': 'Statut des projets',
-    'dashboard.team_overview': 'Vue d\'ensemble de l\'équipe',
-    'dashboard.material_overview': 'Vue d\'ensemble des matériaux',
-    'dashboard.recent_activity': 'Activité récente',
-    'dashboard.notifications': 'Notifications',
-    'dashboard.alerts': 'Alertes',
-    'dashboard.performance': 'Performance',
-    'dashboard.reports': 'Rapports',
-
-    // Projects - Enhanced
-    'projects.title': 'Projets',
-    'projects.all': 'Tous les projets',
-    'projects.all_desc': 'Gérer et visualiser tous les projets',
-    'projects.new': 'Nouveau projet',
-    'projects.new_desc': 'Créer un nouveau projet',
-    'projects.create': 'Créer un projet',
-    'projects.edit': 'Modifier le projet',
-    'projects.delete': 'Supprimer le projet',
-    'projects.details': 'Détails du projet',
-    'projects.status': 'Statut',
-    'projects.progress': 'Progression',
-    'projects.budget': 'Budget',
-    'projects.location': 'Localisation',
-    'projects.start_date': 'Date de début',
-    'projects.end_date': 'Date de fin',
-    'projects.description': 'Description',
-    'projects.team_size': 'Taille de l\'équipe',
-    'projects.overview': 'Vue d\'ensemble',
-    'projects.timeline': 'Chronologie',
-    'projects.tasks': 'Tâches',
-    'projects.team': 'Équipe',
-    'projects.documents': 'Documents',
-    'projects.budget_overview': 'Vue d\'ensemble du budget',
-    'projects.progress_report': 'Rapport de progression',
-    'projects.milestones': 'Jalons',
-    'projects.deliverables': 'Livrables',
-    'projects.financing_source': 'Source de financement',
-    'projects.market_type': 'Type de marché',
-    'projects.selection_mode': 'Mode de sélection',
-    'projects.launch_date': 'Date de lancement',
-    'projects.attribution_date': 'Date d\'attribution',
-    'projects.project_responsable': 'Responsable du projet',
-    'projects.main_contractor': 'Entrepreneur principal',
-    'projects.project_reference': 'Référence du projet',
-    'projects.allows_initial_payment': 'Permet le paiement initial',
-    'projects.initial_payment_percentage': 'Pourcentage de paiement initial',
-    'projects.thumbnail': 'Image de présentation',
-    'projects.coordinates': 'Coordonnées',
-    'projects.latitude': 'Latitude',
-    'projects.longitude': 'Longitude',
-
-    // Project forms and actions
-    'project.add': 'Ajouter',
-    'project.edit': 'Modifier',
-    'project.delete': 'Supprimer',
-    'project.cancel': 'Annuler',
-    'project.save': 'Enregistrer',
-    'project.update': 'Mettre à jour',
-    'project.view': 'Voir',
-    'project.back': 'Retour',
-    'project.next': 'Suivant',
-    'project.previous': 'Précédent',
-    'project.submit': 'Soumettre',
-    'project.draft': 'Brouillon',
-    'project.published': 'Publié',
-    'project.archived': 'Archivé',
-
-    // Project creation form
-    'project_create.title': 'Créer un nouveau projet',
-    'project_create.basic_info': 'Informations de base',
-    'project_create.project_title': 'Titre du projet',
-    'project_create.project_description': 'Description du projet',
-    'project_create.project_location': 'Localisation du projet',
-    'project_create.start_date': 'Date de début',
-    'project_create.end_date': 'Date de fin',
-    'project_create.budget': 'Budget',
-    'project_create.team_size': 'Taille de l\'équipe',
-    'project_create.status': 'Statut',
-    'project_create.progress': 'Progression',
-    'project_create.additional_info': 'Informations supplémentaires',
-    'project_create.financing_source': 'Source de financement',
-    'project_create.market_type': 'Type de marché',
-    'project_create.selection_mode': 'Mode de sélection',
-    'project_create.launch_date': 'Date de lancement',
-    'project_create.attribution_date': 'Date d\'attribution',
-    'project_create.main_contractor': 'Entrepreneur principal',
-    'project_create.project_reference': 'Référence du projet',
-    'project_create.payment_settings': 'Paramètres de paiement',
-    'project_create.allows_initial_payment': 'Permet le paiement initial',
-    'project_create.initial_payment_percentage': 'Pourcentage de paiement initial',
-    'project_create.location_settings': 'Paramètres de localisation',
-    'project_create.select_location': 'Sélectionner l\'emplacement',
-    'project_create.coordinates': 'Coordonnées',
-    'project_create.latitude': 'Latitude',
-    'project_create.longitude': 'Longitude',
-
-    // Users and Employees - Enhanced
-    'users.title': 'Utilisateurs',
-    'users.employees': 'Employés',
-    'users.new': 'Nouvel employé',
-    'users.create': 'Créer un employé',
-    'users.edit': 'Modifier l\'employé',
-    'users.delete': 'Supprimer l\'employé',
-    'users.view': 'Voir l\'employé',
-    'users.search': 'Rechercher des employés',
-    'users.search_placeholder': 'Rechercher par nom, ID ou poste...',
-    'users.none_found': 'Aucun employé trouvé',
-    'users.active': 'Actif',
-    'users.inactive': 'Inactif',
-    'users.created_successfully': 'Employé créé avec succès',
-    'users.updated_successfully': 'Employé mis à jour avec succès',
-    'users.deleted_successfully': 'Employé supprimé avec succès',
-
-    // User/Employee table headers
-    'users.table.employee_id': 'ID Employé',
-    'users.table.national_id': 'ID National',
-    'users.table.full_name': 'Nom complet',
-    'users.table.position': 'Poste',
-    'users.table.department': 'Département',
-    'users.table.phone': 'Téléphone',
-    'users.table.email': 'Email',
-    'users.table.hire_date': 'Date d\'embauche',
-    'users.table.salary': 'Salaire',
-    'users.table.status': 'Statut',
-    'users.table.role': 'Rôle',
-    'users.table.actions': 'Actions',
-    'users.table.skills': 'Compétences',
-    'users.table.certifications': 'Certifications',
-    'users.table.manager': 'Manager',
-    'users.table.superior': 'Supérieur',
-
-    // Authentication forms - Enhanced
-    'auth.login': 'Connexion',
-    'auth.register': 'Inscription',
-    'auth.logout': 'Déconnexion',
-    'auth.email': 'Email',
-    'auth.password': 'Mot de passe',
-    'auth.confirm_password': 'Confirmer le mot de passe',
-    'auth.forgot_password': 'Mot de passe oublié',
-    'auth.reset_password': 'Réinitialiser le mot de passe',
-    'auth.terms': 'Conditions d\'utilisation',
-    'auth.privacy': 'Politique de confidentialité',
-    'auth.full_name': 'Nom complet',
-    'auth.phone': 'Téléphone',
-    'auth.username': 'Nom d\'utilisateur',
-    'auth.first_name': 'Prénom',
-    'auth.last_name': 'Nom de famille',
-    'auth.date_of_birth': 'Date de naissance',
-    'auth.address': 'Adresse',
-    'auth.city': 'Ville',
-    'auth.country': 'Pays',
-    'auth.postal_code': 'Code postal',
-
-    // Error messages
-    'error.title': 'Erreur',
-    'error.generic': 'Une erreur s\'est produite',
-    'error.network': 'Erreur de réseau',
-    'error.unauthorized': 'Non autorisé',
-    'error.forbidden': 'Interdit',
-    'error.not_found': 'Non trouvé',
-    'error.validation': 'Erreur de validation',
-    'error.required_field': 'Ce champ est requis',
-    'error.invalid_email': 'Email invalide',
-    'error.invalid_phone': 'Numéro de téléphone invalide',
-    'error.password_too_short': 'Le mot de passe est trop court',
-    'error.passwords_dont_match': 'Les mots de passe ne correspondent pas',
-
-    // Success messages
-    'success.title': 'Succès',
-    'success.saved': 'Enregistré avec succès',
-    'success.created': 'Créé avec succès',
-    'success.updated': 'Mis à jour avec succès',
-    'success.deleted': 'Supprimé avec succès',
-    'success.uploaded': 'Téléchargé avec succès',
-    'success.sent': 'Envoyé avec succès',
-
-    // Loading states
-    'loading': 'Chargement...',
-    'loading.projects': 'Chargement des projets...',
-    'loading.employees': 'Chargement des employés...',
-    'loading.documents': 'Chargement des documents...',
-    'loading.tasks': 'Chargement des tâches...',
-    'loading.materials': 'Chargement des matériaux...',
-
-    // Documents - Enhanced translations
-    'documents.title': 'Documents',
-    'documents.subtitle': 'Gérer tous vos documents de projet',
-    'documents.tabs.all': 'Tous',
-    'documents.tabs.documents': 'Documents',
-    'documents.tabs.tender': 'Appels d\'offres',
-    'documents.tabs.suppliers': 'Fournisseurs',
-    'documents.tabs.tasks': 'Tâches',
-    'documents.tabs.employees': 'Employés',
-    'documents.tabs.upload': 'Télécharger',
-    'documents.tabs.viewer': 'Visionneuse',
-    'documents.card.click_to_view': 'Cliquer pour voir',
-    'documents.type.inspection_report': 'Rapport d\'inspection',
-    'documents.type.location_photo': 'Photo de localisation',
-    'documents.type.project_report': 'Rapport de projet',
-    'documents.type.contract': 'Contrat',
-    'documents.type.supplier_info': 'Information fournisseur',
-    'documents.type.task_assignment': 'Affectation de tâche',
-    'documents.type.employee_record': 'Dossier employé',
-    'documents.type.tender_documents': 'Documents d\'appel d\'offres',
-    'documents.type.other': 'Autre',
-    'documents.tender.title': 'Documents d\'appel d\'offres',
-    'documents.tender.select_project': 'Sélectionnez un projet pour voir ses documents d\'appel d\'offres',
-    'documents.tender.select_project_placeholder': 'Choisir un projet...',
-    'documents.tender.add_title': 'Ajouter un document',
-    'documents.tender.add_description': 'Télécharger un nouveau document pour ce projet',
-    'documents.size.unknown': 'Taille inconnue',
-    'documents.search': 'Rechercher des documents...',
-    'documents.filter.all_types': 'Tous les types',
-    'documents.filter.all_status': 'Tous les statuts',
-    'documents.status.draft': 'Brouillon',
-    'documents.status.pending_review': 'En attente de révision',
-    'documents.status.approved': 'Approuvé',
-    'documents.empty.title': 'Aucun document',
-    'documents.empty.description': 'Aucun document trouvé pour les critères sélectionnés',
-    'documents.empty.no_documents': 'Aucun document disponible',
-    'documents.empty.upload_first': 'Téléchargez votre premier document',
-    'documents.upload.title': 'Télécharger un document',
-    'documents.upload.description': 'Sélectionnez et téléchargez un nouveau document',
-    'documents.upload.file_label': 'Fichier',
-    'documents.upload.type_label': 'Type de document',
-    'documents.upload.project_label': 'Projet (optionnel)',
-    'documents.upload.description_label': 'Description',
-    'documents.upload.status_label': 'Statut',
-    'documents.upload.button': 'Créer le document',
-    'documents.upload.uploading': 'Téléchargement en cours...',
-    'documents.actions.view': 'Voir',
-    'documents.actions.download': 'Télécharger',
-    'documents.actions.edit': 'Modifier',
-    'documents.actions.delete': 'Supprimer',
-    'documents.confirm.delete': 'Êtes-vous sûr de vouloir supprimer ce document ?',
-    'documents.error.fetch': 'Erreur lors du chargement des documents',
-    'documents.error.add': 'Erreur lors de l\'ajout du document',
-    'documents.error.delete': 'Erreur lors de la suppression du document',
-    'documents.error.download': 'Erreur lors du téléchargement du document',
-    'documents.error.select_file': 'Veuillez sélectionner un fichier',
-    'documents.error.no_file': 'Aucun fichier disponible pour ce document',
-    'documents.success.add': 'Document ajouté avec succès',
-    'documents.success.delete': 'Document supprimé avec succès',
-    'documents.success.upload': 'Document téléchargé avec succès',
-
-    // Tender specific translations
-    'tender.input.description': 'Description',
-    'tender.input.document_type': 'Type de document',
-    'tender.input.file': 'Fichier',
-    'tender.form.title': 'Informations du document',
-    'tender.form.required': 'Champs obligatoires',
-
-    // Materials translations
-    'materials.title': 'Matériaux',
-    'materials.price': 'Taille',
-    'materials.empty': 'Aucun matériau disponible',
-
-    // Projects translations (additional)
-    'projects.search': 'Rechercher des projets...',
-    'projects.empty': 'Aucun résultat trouvé',
-
-    // Form translations
-    'form.required': 'Ce champ est requis',
-    'form.cancel': 'Annuler',
-    'form.save': 'Enregistrer',
-    'form.submit': 'Soumettre',
-    'form.update': 'Mettre à jour',
-
-    // Confirmation translations
-    'confirm.delete_document': 'Êtes-vous sûr de vouloir supprimer ce document ?',
-    'confirm.action': 'Confirmer l\'action',
-
-    // Settings translations
-    'settings.title': 'Paramètres',
-    'settings.tabs.database': 'Base de données',
-    'settings.tabs.storage': 'Stockage',
-    'settings.tabs.keycloak': 'Keycloak',
-    'settings.tabs.keycloak_config': 'Config Keycloak',
-    'settings.tabs.system': 'Système',
-    'settings.dev_mode_active': 'Mode développement actif',
-    'settings.dev_mode_desc': 'Vous êtes en mode développement avec des rôles simulés',
-    'settings.current_role': 'Rôle actuel',
-    'settings.dev_role_updated': 'Rôle de développement mis à jour',
-    'settings.dev_role_changed': 'Rôle changé pour {role}',
-    'settings.system.title': 'Paramètres système',
-    'settings.system.desc': 'Configuration générale du système',
-    'settings.system.coming_soon': 'Fonctionnalités à venir...',
-
-    // Language translations
-    'language.french': 'Français',
-    'language.arabic': 'العربية',
-    'language.english': 'English',
-    'language.switch': 'Changer de langue',
-    'language.current': 'Langue actuelle',
-
-    // Task translations
-    'tasks.title': 'Tâches',
-    'tasks.create': 'Créer une tâche',
-    'tasks.edit': 'Modifier la tâche',
-    'tasks.delete': 'Supprimer la tâche',
-    'tasks.assign': 'Assigner la tâche',
-    'tasks.complete': 'Terminer la tâche',
-    'tasks.pending': 'En attente',
-    'tasks.in_progress': 'En cours',
-    'tasks.completed': 'Terminée',
-    'tasks.cancelled': 'Annulée',
-    'tasks.overdue': 'En retard',
-    'tasks.due_date': 'Date d\'échéance',
-    'tasks.priority': 'Priorité',
-    'tasks.high': 'Haute',
-    'tasks.medium': 'Moyenne',
-    'tasks.low': 'Basse',
-    'tasks.assigned_to': 'Assignée à',
-    'tasks.assigned_by': 'Assignée par',
-    'tasks.description': 'Description',
-    'tasks.notes': 'Notes',
-    'tasks.completion_date': 'Date de completion',
-    'tasks.no_tasks': 'Aucune tâche disponible',
-    'tasks.filter_all': 'Toutes',
-    'tasks.filter_assigned': 'Assignées',
-    'tasks.filter_completed': 'Terminées',
-    'tasks.search_placeholder': 'Rechercher des tâches...',
-
-    // Common actions
-    'actions.add': 'Ajouter',
-    'actions.edit': 'Modifier',
-    'actions.delete': 'Supprimer',
-    'actions.view': 'Voir',
-    'actions.save': 'Enregistrer',
-    'actions.cancel': 'Annuler',
-    'actions.submit': 'Soumettre',
-    'actions.update': 'Mettre à jour',
-    'actions.create': 'Créer',
-    'actions.search': 'Rechercher',
-    'actions.filter': 'Filtrer',
-    'actions.export': 'Exporter',
-    'actions.import': 'Importer',
-    'actions.download': 'Télécharger',
-    'actions.upload': 'Télécharger',
-    'actions.send': 'Envoyer',
-    'actions.confirm': 'Confirmer',
-    'actions.reject': 'Rejeter',
-    'actions.approve': 'Approuver',
-
-    // Status translations
-    'status.active': 'Actif',
-    'status.inactive': 'Inactif',
-    'status.pending': 'En attente',
-    'status.approved': 'Approuvé',
-    'status.rejected': 'Rejeté',
-    'status.draft': 'Brouillon',
-    'status.published': 'Publié',
-    'status.archived': 'Archivé',
-    'status.completed': 'Terminé',
-    'status.in_progress': 'En cours',
-    'status.cancelled': 'Annulé',
-    'status.suspended': 'Suspendu',
-
-    // Common labels
-    'common.name': 'Nom',
-    'common.title': 'Titre',
-    'common.description': 'Description',
-    'common.date': 'Date',
-    'common.time': 'Heure',
-    'common.category': 'Catégorie',
-    'common.type': 'Type',
-    'common.status': 'Statut',
-    'common.priority': 'Priorité',
-    'common.location': 'Emplacement',
-    'common.address': 'Adresse',
-    'common.phone': 'Téléphone',
-    'common.email': 'Email',
-    'common.website': 'Site web',
-    'common.notes': 'Notes',
-    'common.comments': 'Commentaires',
-    'common.tags': 'Étiquettes',
-    'common.id': 'ID',
-    'common.reference': 'Référence',
-    'common.code': 'Code',
-    'common.amount': 'Montant',
-    'common.quantity': 'Quantité',
-    'common.price': 'Prix',
-    'common.total': 'Total',
-    'common.subtotal': 'Sous-total',
-    'common.tax': 'Taxe',
-    'common.discount': 'Remise',
-    'common.size': 'Taille',
-    'common.weight': 'Poids',
-    'common.dimensions': 'Dimensions',
-    'common.color': 'Couleur',
-    'common.image': 'Image',
-    'common.file': 'Fichier',
-    'common.document': 'Document',
-    'common.attachment': 'Pièce jointe',
-    'common.link': 'Lien',
-    'common.url': 'URL',
-    'common.username': 'Nom d\'utilisateur',
-    'common.password': 'Mot de passe',
-    'common.role': 'Rôle',
-    'common.permission': 'Permission',
-    'common.access': 'Accès',
-    'common.settings': 'Paramètres',
-    'common.configuration': 'Configuration',
-    'common.options': 'Options',
-    'common.preferences': 'Préférences',
-    'common.profile': 'Profil',
-    'common.account': 'Compte',
-    'common.user': 'Utilisateur',
-    'common.admin': 'Administrateur',
-    'common.manager': 'Gestionnaire',
-    'common.employee': 'Employé',
-    'common.client': 'Client',
-    'common.supplier': 'Fournisseur',
-    'common.contractor': 'Entrepreneur',
-    'common.project': 'Projet',
-    'common.task': 'Tâche',
-    'common.material': 'Matériau',
-    'common.document_type': 'Type de document',
-    'common.created_at': 'Créé le',
-    'common.updated_at': 'Mis à jour le',
-    'common.created_by': 'Créé par',
-    'common.updated_by': 'Mis à jour par',
-    'common.version': 'Version',
-    'common.language': 'Langue',
-  },
-  
-  ar: {
-    // App info
-    'app.name': 'أدرار للبناء',
-    'app.description': 'نظام إدارة البناء',
-
-    // Navigation
-    'nav.home': 'الرئيسية',
-    'nav.dashboard': 'لوحة التحكم',
-    'nav.projects': 'المشاريع',
-    'nav.materials': 'المواد',
-    'nav.documents': 'الوثائق',
-    'nav.users': 'المستخدمون',
-    'nav.profile': 'الملف الشخصي',
-    'nav.login': 'تسجيل الدخول',
-    'nav.logout': 'تسجيل الخروج',
-    'nav.settings': 'الإعدادات',
-    'nav.back': 'العودة',
-    'nav.next': 'التالي',
-    'nav.previous': 'السابق',
-    'nav.forward': 'التالي',
-    'nav.close': 'إغلاق',
-    'nav.open': 'فتح',
-    'nav.tender_management': 'المناقصات',
-
-    // Dashboard translations
-    'dashboard.title': 'لوحة القيادة',
-    'dashboard.welcome': 'مرحباً بك في لوحة التحكم',
-    'dashboard.overview': 'نظرة عامة',
-    'dashboard.statistics': 'الإحصائيات',
-    'dashboard.recent_projects': 'المشاريع الأخيرة',
-    'dashboard.quick_actions': 'الإجراءات السريعة',
-    'dashboard.loading': 'جاري التحميل...',
-    'dashboard.dev_mode': 'وضع التطوير',
-    'dashboard.active_projects': 'المشاريع النشطة',
-    'dashboard.status_overview': 'نظرة عامة على الحالة',
-    'dashboard.active_projects_label': 'نشط',
-    'dashboard.total_budget': 'إجمالي الميزانية',
-    'dashboard.financial_resources': 'الموارد المالية',
-    'dashboard.team': 'الفريق',
-    'dashboard.project_staff': 'موظفو المشاريع',
-    'dashboard.members': 'أعضاء',
-    'dashboard.materials': 'المواد',
-    'dashboard.available_resources': 'الموارد المتاحة',
-    'dashboard.types': 'أنواع',
-    'dashboard.project_progress': 'تقدم المشاريع',
-    'dashboard.no_data': 'لا توجد بيانات متاحة',
-    'dashboard.view_all': 'عرض الكل',
-    'dashboard.no_projects': 'لا توجد مشاريع متاحة',
-    'dashboard.distribution_by_region': 'التوزيع حسب المنطقة',
-    'dashboard.project_distribution': 'توزيع المشاريع',
-    'dashboard.no_geolocated_projects': 'لا توجد مشاريع محددة جغرافياً',
-    'dashboard.financial_overview': 'النظرة المالية العامة',
-    'dashboard.project_status': 'حالة المشاريع',
-    'dashboard.team_overview': 'نظرة عامة على الفريق',
-    'dashboard.material_overview': 'نظرة عامة على المواد',
-    'dashboard.recent_activity': 'النشاط الأخير',
-    'dashboard.notifications': 'الإشعارات',
-    'dashboard.alerts': 'التنبيهات',
-    'dashboard.performance': 'الأداء',
-    'dashboard.reports': 'التقارير',
-
-    // Projects - Enhanced
-    'projects.title': 'المشاريع',
-    'projects.all': 'جميع المشاريع',
-    'projects.all_desc': 'إدارة وعرض جميع المشاريع',
-    'projects.new': 'مشروع جديد',
-    'projects.new_desc': 'إنشاء مشروع جديد',
-    'projects.create': 'إنشاء مشروع',
-    'projects.edit': 'تعديل المشروع',
-    'projects.delete': 'حذف المشروع',
-    'projects.details': 'تفاصيل المشروع',
-    'projects.status': 'الحالة',
-    'projects.progress': 'التقدم',
-    'projects.budget': 'الميزانية',
-    'projects.location': 'الموقع',
-    'projects.start_date': 'تاريخ البداية',
-    'projects.end_date': 'تاريخ الانتهاء',
-    'projects.description': 'الوصف',
-    'projects.team_size': 'حجم الفريق',
-    'projects.overview': 'نظرة عامة',
-    'projects.timeline': 'الجدول الزمني',
-    'projects.tasks': 'المهام',
-    'projects.team': 'الفريق',
-    'projects.documents': 'الوثائق',
-    'projects.budget_overview': 'نظرة عامة على الميزانية',
-    'projects.progress_report': 'تقرير التقدم',
-    'projects.milestones': 'المعالم',
-    'projects.deliverables': 'المخرجات',
-    'projects.financing_source': 'مصدر التمويل',
-    'projects.market_type': 'نوع السوق',
-    'projects.selection_mode': 'طريقة الاختيار',
-    'projects.launch_date': 'تاريخ الإطلاق',
-    'projects.attribution_date': 'تاريخ الإسناد',
-    'projects.project_responsable': 'مسؤول المشروع',
-    'projects.main_contractor': 'المقاول الرئيسي',
-    'projects.project_reference': 'مرجع المشروع',
-    'projects.allows_initial_payment': 'يسمح بالدفع الأولي',
-    'projects.initial_payment_percentage': 'نسبة الدفع الأولي',
-    'projects.thumbnail': 'صورة المعاينة',
-    'projects.coordinates': 'الإحداثيات',
-    'projects.latitude': 'خط العرض',
-    'projects.longitude': 'خط الطول',
-
-    // Project forms and actions
-    'project.add': 'إضافة',
-    'project.edit': 'تعديل',
-    'project.delete': 'حذف',
-    'project.cancel': 'إلغاء',
-    'project.save': 'حفظ',
-    'project.update': 'تحديث',
-    'project.view': 'عرض',
-    'project.back': 'العودة',
-    'project.next': 'التالي',
-    'project.previous': 'السابق',
-    'project.submit': 'إرسال',
-    'project.draft': 'مسودة',
-    'project.published': 'منشور',
-    'project.archived': 'مؤرشف',
-
-    // Project creation form
-    'project_create.title': 'إنشاء مشروع جديد',
-    'project_create.basic_info': 'المعلومات الأساسية',
-    'project_create.project_title': 'عنوان المشروع',
-    'project_create.project_description': 'وصف المشروع',
-    'project_create.project_location': 'موقع المشروع',
-    'project_create.start_date': 'تاريخ البداية',
-    'project_create.end_date': 'تاريخ الانتهاء',
-    'project_create.budget': 'الميزانية',
-    'project_create.team_size': 'حجم الفريق',
-    'project_create.status': 'الحالة',
-    'project_create.progress': 'التقدم',
-    'project_create.additional_info': 'معلومات إضافية',
-    'project_create.financing_source': 'مصدر التمويل',
-    'project_create.market_type': 'نوع السوق',
-    'project_create.selection_mode': 'طريقة الاختيار',
-    'project_create.launch_date': 'تاريخ الإطلاق',
-    'project_create.attribution_date': 'تاريخ الإسناد',
-    'project_create.main_contractor': 'المقاول الرئيسي',
-    'project_create.project_reference': 'مرجع المشروع',
-    'project_create.payment_settings': 'إعدادات الدفع',
-    'project_create.allows_initial_payment': 'يسمح بالدفع الأولي',
-    'project_create.initial_payment_percentage': 'نسبة الدفع الأولي',
-    'project_create.location_settings': 'إعدادات الموقع',
-    'project_create.select_location': 'اختيار الموقع',
-    'project_create.coordinates': 'الإحداثيات',
-    'project_create.latitude': 'خط العرض',
-    'project_create.longitude': 'خط الطول',
-
-    // Users and Employees - Enhanced
-    'users.title': 'المستخدمون',
-    'users.employees': 'الموظفون',
-    'users.new': 'موظف جديد',
-    'users.create': 'إنشاء موظف',
-    'users.edit': 'تعديل الموظف',
-    'users.delete': 'حذف الموظف',
-    'users.view': 'عرض الموظف',
-    'users.search': 'البحث عن الموظفين',
-    'users.search_placeholder': 'البحث بالاسم أو المعرف أو المنصب...',
-    'users.none_found': 'لم يتم العثور على موظفين',
-    'users.active': 'نشط',
-    'users.inactive': 'غير نشط',
-    'users.created_successfully': 'تم إنشاء الموظف بنجاح',
-    'users.updated_successfully': 'تم تحديث الموظف بنجاح',
-    'users.deleted_successfully': 'تم حذف الموظف بنجاح',
-
-    // User/Employee table headers
-    'users.table.employee_id': 'معرف الموظف',
-    'users.table.national_id': 'المعرف الوطني',
-    'users.table.full_name': 'الاسم الكامل',
-    'users.table.position': 'المنصب',
-    'users.table.department': 'القسم',
-    'users.table.phone': 'الهاتف',
-    'users.table.email': 'البريد الإلكتروني',
-    'users.table.hire_date': 'تاريخ التوظيف',
-    'users.table.salary': 'الراتب',
-    'users.table.status': 'الحالة',
-    'users.table.role': 'الدور',
-    'users.table.actions': 'الإجراءات',
-    'users.table.skills': 'المهارات',
-    'users.table.certifications': 'الشهادات',
-    'users.table.manager': 'المدير',
-    'users.table.superior': 'المشرف',
-
-    // Authentication forms - Enhanced
-    'auth.login': 'تسجيل الدخول',
-    'auth.register': 'التسجيل',
-    'auth.logout': 'تسجيل الخروج',
-    'auth.email': 'البريد الإلكتروني',
-    'auth.password': 'كلمة المرور',
-    'auth.confirm_password': 'تأكيد كلمة المرور',
-    'auth.forgot_password': 'نسيت كلمة المرور',
-    'auth.reset_password': 'إعادة تعيين كلمة المرور',
-    'auth.terms': 'شروط الاستخدام',
-    'auth.privacy': 'سياسة الخصوصية',
-    'auth.full_name': 'الاسم الكامل',
-    'auth.phone': 'الهاتف',
-    'auth.username': 'اسم المستخدم',
-    'auth.first_name': 'الاسم الأول',
-    'auth.last_name': 'اسم العائلة',
-    'auth.date_of_birth': 'تاريخ الميلاد',
-    'auth.address': 'العنوان',
-    'auth.city': 'المدينة',
-    'auth.country': 'البلد',
-    'auth.postal_code': 'الرمز البريدي',
-
-    // Error messages
-    'error.title': 'خطأ',
-    'error.generic': 'حدث خطأ',
-    'error.network': 'خطأ في الشبكة',
-    'error.unauthorized': 'غير مصرح',
-    'error.forbidden': 'محظور',
-    'error.not_found': 'غير موجود',
-    'error.validation': 'خطأ في التحقق',
-    'error.required_field': 'هذا الحقل مطلوب',
-    'error.invalid_email': 'بريد إلكتروني غير صالح',
-    'error.invalid_phone': 'رقم هاتف غير صالح',
-    'error.password_too_short': 'كلمة المرور قصيرة جداً',
-    'error.passwords_dont_match': 'كلمات المرور غير متطابقة',
-
-    // Success messages
-    'success.title': 'نجح',
-    'success.saved': 'تم الحفظ بنجاح',
-    'success.created': 'تم الإنشاء بنجاح',
-    'success.updated': 'تم التحديث بنجاح',
-    'success.deleted': 'تم الحذف بنجاح',
-    'success.uploaded': 'تم الرفع بنجاح',
-    'success.sent': 'تم الإرسال بنجاح',
-
-    // Loading states
-    'loading': 'جاري التحميل...',
-    'loading.projects': 'جاري تحميل المشاريع...',
-    'loading.employees': 'جاري تحميل الموظفين...',
-    'loading.documents': 'جاري تحميل الوثائق...',
-    'loading.tasks': 'جاري تحميل المهام...',
-    'loading.materials': 'جاري تحميل المواد...',
-
-    // Documents - Enhanced translations
-    'documents.title': 'الوثائق',
-    'documents.subtitle': 'إدارة جميع وثائق مشروعك',
-    'documents.tabs.all': 'الكل',
-    'documents.tabs.documents': 'الوثائق',
-    'documents.tabs.tender': 'المناقصات',
-    'documents.tabs.suppliers': 'الموردون',
-    'documents.tabs.tasks': 'المهام',
-    'documents.tabs.employees': 'الموظفون',
-    'documents.tabs.upload': 'رفع',
-    'documents.tabs.viewer': 'المشاهد',
-    'documents.card.click_to_view': 'انقر للعرض',
-    'documents.type.inspection_report': 'تقرير التفتيش',
-    'documents.type.location_photo': 'صورة الموقع',
-    'documents.type.project_report': 'تقرير المشروع',
-    'documents.type.contract': 'العقد',
-    'documents.type.supplier_info': 'معلومات المورد',
-    'documents.type.task_assignment': 'تكليف المهمة',
-    'documents.type.employee_record': 'سجل الموظف',
-    'documents.type.tender_documents': 'وثائق المناقصة',
-    'documents.type.other': 'أخرى',
-    'documents.tender.title': 'وثائق المناقصة',
-    'documents.tender.select_project': 'اختر مشروعاً لعرض وثائق المناقصة الخاصة به',
-    'documents.tender.select_project_placeholder': 'اختيار مشروع...',
-    'documents.tender.add_title': 'إضافة وثيقة',
-    'documents.tender.add_description': 'رفع وثيقة جديدة لهذا المشروع',
-    'documents.size.unknown': 'حجم غير معروف',
-    'documents.search': 'البحث في الوثائق...',
-    'documents.filter.all_types': 'جميع الأنواع',
-    'documents.filter.all_status': 'جميع الحالات',
-    'documents.status.draft': 'مسودة',
-    'documents.status.pending_review': 'في انتظار المراجعة',
-    'documents.status.approved': 'موافق عليه',
-    'documents.empty.title': 'لا توجد وثائق',
-    'documents.empty.description': 'لم يتم العثور على وثائق للمعايير المحددة',
-    'documents.empty.no_documents': 'لا توجد وثائق متاحة',
-    'documents.empty.upload_first': 'ارفع وثيقتك الأولى',
-    'documents.upload.title': 'رفع وثيقة',
-    'documents.upload.description': 'اختر وارفع وثيقة جديدة',
-    'documents.upload.file_label': 'الملف',
-    'documents.upload.type_label': 'نوع الوثيقة',
-    'documents.upload.project_label': 'المشروع (اختياري)',
-    'documents.upload.description_label': 'الوصف',
-    'documents.upload.status_label': 'الحالة',
-    'documents.upload.button': 'إنشاء الوثيقة',
-    'documents.upload.uploading': 'جاري الرفع...',
-    'documents.actions.view': 'عرض',
-    'documents.actions.download': 'تحميل',
-    'documents.actions.edit': 'تعديل',
-    'documents.actions.delete': 'حذف',
-    'documents.confirm.delete': 'هل أنت متأكد من أنك تريد حذف هذه الوثيقة؟',
-    'documents.error.fetch': 'خطأ في تحميل الوثائق',
-    'documents.error.add': 'خطأ في إضافة الوثيقة',
-    'documents.error.delete': 'خطأ في حذف الوثيقة',
-    'documents.error.download': 'خطأ في تحميل الوثيقة',
-    'documents.error.select_file': 'يرجى اختيار ملف',
-    'documents.error.no_file': 'لا يوجد ملف متاح لهذه الوثيقة',
-    'documents.success.add': 'تم إضافة الوثيقة بنجاح',
-    'documents.success.delete': 'تم حذف الوثيقة بنجاح',
-    'documents.success.upload': 'تم رفع الوثيقة بنجاح',
-
-    // Tender specific translations
-    'tender.input.description': 'الوصف',
-    'tender.input.document_type': 'نوع الوثيقة',
-    'tender.input.file': 'الملف',
-    'tender.form.title': 'معلومات الوثيقة',
-    'tender.form.required': 'الحقول المطلوبة',
-
-    // Materials translations
-    'materials.title': 'المواد',
-    'materials.price': 'الحجم',
-    'materials.empty': 'لا توجد مواد متاحة',
-
-    // Projects translations (additional)
-    'projects.search': 'البحث في المشاريع...',
-    'projects.empty': 'لم يتم العثور على نتائج',
-
-    // Form translations
-    'form.required': 'هذا الحقل مطلوب',
-    'form.cancel': 'إلغاء',
-    'form.save': 'حفظ',
-    'form.submit': 'إرسال',
-    'form.update': 'تحديث',
-
-    // Confirmation translations
-    'confirm.delete_document': 'هل أنت متأكد من أنك تريد حذف هذه الوثيقة؟',
-    'confirm.action': 'تأكيد العملية',
-
-    // Settings translations
-    'settings.title': 'الإعدادات',
-    'settings.tabs.database': 'قاعدة البيانات',
-    'settings.tabs.storage': 'التخزين',
-    'settings.tabs.keycloak': 'Keycloak',
-    'settings.tabs.keycloak_config': 'إعداد Keycloak',
-    'settings.tabs.system': 'النظام',
-    'settings.dev_mode_active': 'وضع التطوير نشط',
-    'settings.dev_mode_desc': 'أنت في وضع التطوير مع أدوار محاكاة',
-    'settings.current_role': 'الدور الحالي',
-    'settings.dev_role_updated': 'تم تحديث دور التطوير',
-    'settings.dev_role_changed': 'تم تغيير الدور إلى {role}',
-    'settings.system.title': 'إعدادات النظام',
-    'settings.system.desc': 'التكوين العام للنظام',
-    'settings.system.coming_soon': 'ميزات قادمة...',
-
-    // Language translations
-    'language.french': 'Français',
-    'language.arabic': 'العربية',
-    'language.english': 'English',
-    'language.switch': 'تغيير اللغة',
-    'language.current': 'اللغة الحالية',
-
-    // Task translations
-    'tasks.title': 'المهام',
-    'tasks.create': 'إنشاء مهمة',
-    'tasks.edit': 'تعديل المهمة',
-    'tasks.delete': 'حذف المهمة',
-    'tasks.assign': 'تكليف المهمة',
-    'tasks.complete': 'إنهاء المهمة',
-    'tasks.pending': 'في الانتظار',
-    'tasks.in_progress': 'قيد التنفيذ',
-    'tasks.completed': 'مكتملة',
-    'tasks.cancelled': 'ملغية',
-    'tasks.overdue': 'متأخرة',
-    'tasks.due_date': 'تاريخ الاستحقاق',
-    'tasks.priority': 'الأولوية',
-    'tasks.high': 'عالية',
-    'tasks.medium': 'متوسطة',
-    'tasks.low': 'منخفضة',
-    'tasks.assigned_to': 'مكلف إلى',
-    'tasks.assigned_by': 'مكلف من',
-    'tasks.description': 'الوصف',
-    'tasks.notes': 'الملاحظات',
-    'tasks.completion_date': 'تاريخ الإنجاز',
-    'tasks.no_tasks': 'لا توجد مهام متاحة',
-    'tasks.filter_all': 'الكل',
-    'tasks.filter_assigned': 'المكلفة',
-    'tasks.filter_completed': 'المكتملة',
-    'tasks.search_placeholder': 'البحث في المهام...',
-
-    // Common actions
-    'actions.add': 'إضافة',
-    'actions.edit': 'تعديل',
-    'actions.delete': 'حذف',
-    'actions.view': 'عرض',
-    'actions.save': 'حفظ',
-    'actions.cancel': 'إلغاء',
-    'actions.submit': 'إرسال',
-    'actions.update': 'تحديث',
-    'actions.create': 'إنشاء',
-    'actions.search': 'بحث',
-    'actions.filter': 'تصفية',
-    'actions.export': 'تصدير',
-    'actions.import': 'استيراد',
-    'actions.download': 'تحميل',
-    'actions.upload': 'رفع',
-    'actions.send': 'إرسال',
-    'actions.confirm': 'تأكيد',
-    'actions.reject': 'رفض',
-    'actions.approve': 'موافقة',
-
-    // Status translations
-    'status.active': 'نشط',
-    'status.inactive': 'غير نشط',
-    'status.pending': 'في الانتظار',
-    'status.approved': 'موافق عليه',
-    'status.rejected': 'مرفوض',
-    'status.draft': 'مسودة',
-    'status.published': 'منشور',
-    'status.archived': 'مؤرشف',
-    'status.completed': 'مكتمل',
-    'status.in_progress': 'قيد التنفيذ',
-    'status.cancelled': 'ملغي',
-    'status.suspended': 'معلق',
-
-    // Common labels
-    'common.name': 'الاسم',
-    'common.title': 'العنوان',
-    'common.description': 'الوصف',
-    'common.date': 'التاريخ',
-    'common.time': 'الوقت',
-    'common.category': 'الفئة',
-    'common.type': 'النوع',
-    'common.status': 'الحالة',
-    'common.priority': 'الأولوية',
-    'common.location': 'الموقع',
-    'common.address': 'العنوان',
-    'common.phone': 'الهاتف',
-    'common.email': 'البريد الإلكتروني',
-    'common.website': 'الموقع الإلكتروني',
-    'common.notes': 'الملاحظات',
-    'common.comments': 'التعليقات',
-    'common.tags': 'العلامات',
-    'common.id': 'المعرف',
-    'common.reference': 'المرجع',
-    'common.code': 'الرمز',
-    'common.amount': 'المبلغ',
-    'common.quantity': 'الكمية',
-    'common.price': 'السعر',
-    'common.total': 'الإجمالي',
-    'common.subtotal': 'المجموع الفرعي',
-    'common.tax': 'الضريبة',
-    'common.discount': 'الخصم',
-    'common.size': 'الحجم',
-    'common.weight': 'الوزن',
-    'common.dimensions': 'الأبعاد',
-    'common.color': 'اللون',
-    'common.image': 'الصورة',
-    'common.file': 'الملف',
-    'common.document': 'الوثيقة',
-    'common.attachment': 'المرفق',
-    'common.link': 'الرابط',
-    'common.url': 'الرابط',
-    'common.username': 'اسم المستخدم',
-    'common.password': 'كلمة المرور',
-    'common.role': 'الدور',
-    'common.permission': 'الصلاحية',
-    'common.access': 'الوصول',
-    'common.settings': 'الإعدادات',
-    'common.configuration': 'التكوين',
-    'common.options': 'الخيارات',
-    'common.preferences': 'التفضيلات',
-    'common.profile': 'الملف الشخصي',
-    'common.account': 'الحساب',
-    'common.user': 'المستخدم',
-    'common.admin': 'المشرف',
-    'common.manager': 'المدير',
-    'common.employee': 'الموظف',
-    'common.client': 'العميل',
-    'common.supplier': 'المورد',
-    'common.contractor': 'المقاول',
-    'common.project': 'المشروع',
-    'common.task': 'المهمة',
-    'common.material': 'المادة',
-    'common.document_type': 'نوع الوثيقة',
-    'common.created_at': 'تم الإنشاء في',
-    'common.updated_at': 'تم التحديث في',
-    'common.created_by': 'تم الإنشاء بواسطة',
-    'common.updated_by': 'تم التحديث بواسطة',
-    'common.version': 'الإصدار',
-    'common.language': 'اللغة',
-  },
-  
-  en: {
-    // App info
-    'app.name': 'ADRAR Construct',
-    'app.description': 'Construction Management System',
-
-    // Navigation
-    'nav.home': 'Home',
-    'nav.dashboard': 'Dashboard',
-    'nav.projects': 'Projects',
-    'nav.materials': 'Materials',
-    'nav.documents': 'Documents',
-    'nav.users': 'Users',
-    'nav.profile': 'Profile',
-    'nav.login': 'Login',
-    'nav.logout': 'Logout',
-    'nav.settings': 'Settings',
-    'nav.back': 'Back',
-    'nav.next': 'Next',
-    'nav.previous': 'Previous',
-    'nav.forward': 'Forward',
-    'nav.close': 'Close',
-    'nav.open': 'Open',
-    'nav.tender_management': 'Tenders',
-
-    // Dashboard translations
-    'dashboard.title': 'Dashboard',
-    'dashboard.welcome': 'Welcome to the dashboard',
-    'dashboard.overview': 'Overview',
-    'dashboard.statistics': 'Statistics',
-    'dashboard.recent_projects': 'Recent Projects',
-    'dashboard.quick_actions': 'Quick Actions',
-    'dashboard.loading': 'Loading...',
-    'dashboard.dev_mode': 'Development mode',
-    'dashboard.active_projects': 'Active Projects',
-    'dashboard.status_overview': 'Status overview',
-    'dashboard.active_projects_label': 'active',
-    'dashboard.total_budget': 'Total Budget',
-    'dashboard.financial_resources': 'Financial resources',
-    'dashboard.team': 'Team',
-    'dashboard.project_staff': 'Project staff',
-    'dashboard.members': 'members',
-    'dashboard.materials': 'Materials',
-    'dashboard.available_resources': 'Available resources',
-    'dashboard.types': 'types',
-    'dashboard.project_progress': 'Project Progress',
-    'dashboard.no_data': 'No data available',
-    'dashboard.view_all': 'View all',
-    'dashboard.no_projects': 'No projects available',
-    'dashboard.distribution_by_region': 'Distribution by Region',
-    'dashboard.project_distribution': 'Project Distribution',
-    'dashboard.no_geolocated_projects': 'No geolocated projects',
-    'dashboard.financial_overview': 'Financial Overview',
-    'dashboard.project_status': 'Project Status',
-    'dashboard.team_overview': 'Team Overview',
-    'dashboard.material_overview': 'Material Overview',
-    'dashboard.recent_activity': 'Recent Activity',
-    'dashboard.notifications': 'Notifications',
-    'dashboard.alerts': 'Alerts',
-    'dashboard.performance': 'Performance',
-    'dashboard.reports': 'Reports',
-
-    // Projects - Enhanced
-    'projects.title': 'Projects',
-    'projects.all': 'All Projects',
-    'projects.all_desc': 'Manage and view all projects',
-    'projects.new': 'New Project',
-    'projects.new_desc': 'Create a new project',
-    'projects.create': 'Create Project',
-    'projects.edit': 'Edit Project',
-    'projects.delete': 'Delete Project',
-    'projects.details': 'Project Details',
-    'projects.status': 'Status',
-    'projects.progress': 'Progress',
-    'projects.budget': 'Budget',
-    'projects.location': 'Location',
-    'projects.start_date': 'Start Date',
-    'projects.end_date': 'End Date',
-    'projects.description': 'Description',
-    'projects.team_size': 'Team Size',
-    'projects.overview': 'Overview',
-    'projects.timeline': 'Timeline',
-    'projects.tasks': 'Tasks',
-    'projects.team': 'Team',
-    'projects.documents': 'Documents',
-    'projects.budget_overview': 'Budget Overview',
-    'projects.progress_report': 'Progress Report',
-    'projects.milestones': 'Milestones',
-    'projects.deliverables': 'Deliverables',
-    'projects.financing_source': 'Financing Source',
-    'projects.market_type': 'Market Type',
-    'projects.selection_mode': 'Selection Mode',
-    'projects.launch_date': 'Launch Date',
-    'projects.attribution_date': 'Attribution Date',
-    'projects.project_responsable': 'Project Manager',
-    'projects.main_contractor': 'Main Contractor',
-    'projects.project_reference': 'Project Reference',
-    'projects.allows_initial_payment': 'Allows Initial Payment',
-    'projects.initial_payment_percentage': 'Initial Payment Percentage',
-    'projects.thumbnail': 'Thumbnail',
-    'projects.coordinates': 'Coordinates',
-    'projects.latitude': 'Latitude',
-    'projects.longitude': 'Longitude',
-
-    // Project forms and actions
-    'project.add': 'Add',
-    'project.edit': 'Edit',
-    'project.delete': 'Delete',
-    'project.cancel': 'Cancel',
-    'project.save': 'Save',
-    'project.update': 'Update',
-    'project.view': 'View',
-    'project.back': 'Back',
-    'project.next': 'Next',
-    'project.previous': 'Previous',
-    'project.submit': 'Submit',
-    'project.draft': 'Draft',
-    'project.published': 'Published',
-    'project.archived': 'Archived',
-
-    // Project creation form
-    'project_create.title': 'Create New Project',
-    'project_create.basic_info': 'Basic Information',
-    'project_create.project_title': 'Project Title',
-    'project_create.project_description': 'Project Description',
-    'project_create.project_location': 'Project Location',
-    'project_create.start_date': 'Start Date',
-    'project_create.end_date': 'End Date',
-    'project_create.budget': 'Budget',
-    'project_create.team_size': 'Team Size',
-    'project_create.status': 'Status',
-    'project_create.progress': 'Progress',
-    'project_create.additional_info': 'Additional Information',
-    'project_create.financing_source': 'Financing Source',
-    'project_create.market_type': 'Market Type',
-    'project_create.selection_mode': 'Selection Mode',
-    'project_create.launch_date': 'Launch Date',
-    'project_create.attribution_date': 'Attribution Date',
-    'project_create.main_contractor': 'Main Contractor',
-    'project_create.project_reference': 'Project Reference',
-    'project_create.payment_settings': 'Payment Settings',
-    'project_create.allows_initial_payment': 'Allows Initial Payment',
-    'project_create.initial_payment_percentage': 'Initial Payment Percentage',
-    'project_create.location_settings': 'Location Settings',
-    'project_create.select_location': 'Select Location',
-    'project_create.coordinates': 'Coordinates',
-    'project_create.latitude': 'Latitude',
-    'project_create.longitude': 'Longitude',
-
-    // Users and Employees - Enhanced
-    'users.title': 'Users',
-    'users.employees': 'Employees',
-    'users.new': 'New Employee',
-    'users.create': 'Create Employee',
-    'users.edit': 'Edit Employee',
-    'users.delete': 'Delete Employee',
-    'users.view': 'View Employee',
-    'users.search': 'Search Employees',
-    'users.search_placeholder': 'Search by name, ID, or position...',
-    'users.none_found': 'No employees found',
-    'users.active': 'Active',
-    'users.inactive': 'Inactive',
-    'users.created_successfully': 'Employee created successfully',
-    'users.updated_successfully': 'Employee updated successfully',
-    'users.deleted_successfully': 'Employee deleted successfully',
-
-    // User/Employee table headers
-    'users.table.employee_id': 'Employee ID',
-    'users.table.national_id': 'National ID',
-    'users.table.full_name': 'Full Name',
-    'users.table.position': 'Position',
-    'users.table.department': 'Department',
-    'users.table.phone': 'Phone',
-    'users.table.email': 'Email',
-    'users.table.hire_date': 'Hire Date',
-    'users.table.salary': 'Salary',
-    'users.table.status': 'Status',
-    'users.table.role': 'Role',
-    'users.table.actions': 'Actions',
-    'users.table.skills': 'Skills',
-    'users.table.certifications': 'Certifications',
-    'users.table.manager': 'Manager',
-    'users.table.superior': 'Superior',
-
-    // Authentication forms - Enhanced
-    'auth.login': 'Login',
-    'auth.register': 'Register',
-    'auth.logout': 'Logout',
-    'auth.email': 'Email',
-    'auth.password': 'Password',
-    'auth.confirm_password': 'Confirm Password',
-    'auth.forgot_password': 'Forgot Password',
-    'auth.reset_password': 'Reset Password',
-    'auth.terms': 'Terms of Service',
-    'auth.privacy': 'Privacy Policy',
-    'auth.full_name': 'Full Name',
-    'auth.phone': 'Phone',
-    'auth.username': 'Username',
-    'auth.first_name': 'First Name',
-    'auth.last_name': 'Last Name',
-    'auth.date_of_birth': 'Date of Birth',
-    'auth.address': 'Address',
-    'auth.city': 'City',
-    'auth.country': 'Country',
-    'auth.postal_code': 'Postal Code',
-
-    // Error messages
-    'error.title': 'Error',
-    'error.generic': 'An error occurred',
-    'error.network': 'Network error',
-    'error.unauthorized': 'Unauthorized',
-    'error.forbidden': 'Forbidden',
-    'error.not_found': 'Not found',
-    'error.validation': 'Validation error',
-    'error.required_field': 'This field is required',
-    'error.invalid_email': 'Invalid email',
-    'error.invalid_phone': 'Invalid phone number',
-    'error.password_too_short': 'Password is too short',
-    'error.passwords_dont_match': 'Passwords do not match',
-
-    // Success messages
-    'success.title': 'Success',
-    'success.saved': 'Saved successfully',
-    'success.created': 'Created successfully',
-    'success.updated': 'Updated successfully',
-    'success.deleted': 'Deleted successfully',
-    'success.uploaded': 'Uploaded successfully',
-    'success.sent': 'Sent successfully',
-
-    // Loading states
-    'loading': 'Loading...',
-    'loading.projects': 'Loading projects...',
-    'loading.employees': 'Loading employees...',
-    'loading.documents': 'Loading documents...',
-    'loading.tasks': 'Loading tasks...',
-    'loading.materials': 'Loading materials...',
-
-    // Documents - Enhanced translations
-    'documents.title': 'Documents',
-    'documents.subtitle': 'Manage all your project documents',
-    'documents.tabs.all': 'All',
-    'documents.tabs.documents': 'Documents',
-    'documents.tabs.tender': 'Tenders',
-    'documents.tabs.suppliers': 'Suppliers',
-    'documents.tabs.tasks': 'Tasks',
-    'documents.tabs.employees': 'Employees',
-    'documents.tabs.upload': 'Upload',
-    'documents.tabs.viewer': 'Viewer',
-    'documents.card.click_to_view': 'Click to view',
-    'documents.type.inspection_report': 'Inspection Report',
-    'documents.type.location_photo': 'Location Photo',
-    'documents.type.project_report': 'Project Report',
-    'documents.type.contract': 'Contract',
-    'documents.type.supplier_info': 'Supplier Information',
-    'documents.type.task_assignment': 'Task Assignment',
-    'documents.type.employee_record': 'Employee Record',
-    'documents.type.tender_documents': 'Tender Documents',
-    'documents.type.other': 'Other',
-    'documents.tender.title': 'Tender Documents',
-    'documents.tender.select_project': 'Select a project to view its tender documents',
-    'documents.tender.select_project_placeholder': 'Choose a project...',
-    'documents.tender.add_title': 'Add Document',
-    'documents.tender.add_description': 'Upload a new document for this project',
-    'documents.size.unknown': 'Unknown size',
-    'documents.search': 'Search documents...',
-    'documents.filter.all_types': 'All types',
-    'documents.filter.all_status': 'All statuses',
-    'documents.status.draft': 'Draft',
-    'documents.status.pending_review': 'Pending Review',
-    'documents.status.approved': 'Approved',
-    'documents.empty.title': 'No documents',
-    'documents.empty.description': 'No documents found for the selected criteria',
-    'documents.empty.no_documents': 'No documents available',
-    'documents.empty.upload_first': 'Upload your first document',
-    'documents.upload.title': 'Upload Document',
-    'documents.upload.description': 'Select and upload a new document',
-    'documents.upload.file_label': 'File',
-    'documents.upload.type_label': 'Document Type',
-    'documents.upload.project_label': 'Project (optional)',
-    'documents.upload.description_label': 'Description',
-    'documents.upload.status_label': 'Status',
-    'documents.upload.button': 'Create Document',
-    'documents.upload.uploading': 'Uploading...',
-    'documents.actions.view': 'View',
-    'documents.actions.download': 'Download',
-    'documents.actions.edit': 'Edit',
-    'documents.actions.delete': 'Delete',
-    'documents.confirm.delete': 'Are you sure you want to delete this document?',
-    'documents.error.fetch': 'Error loading documents',
-    'documents.error.add': 'Error adding document',
-    'documents.error.delete': 'Error deleting document',
-    'documents.error.download': 'Error downloading document',
-    'documents.error.select_file': 'Please select a file',
-    'documents.error.no_file': 'No file available for this document',
-    'documents.success.add': 'Document added successfully',
-    'documents.success.delete': 'Document deleted successfully',
-    'documents.success.upload': 'Document uploaded successfully',
-
-    // Tender specific translations
-    'tender.input.description': 'Description',
-    'tender.input.document_type': 'Document Type',
-    'tender.input.file': 'File',
-    'tender.form.title': 'Document Information',
-    'tender.form.required': 'Required Fields',
-
-    // Materials translations
-    'materials.title': 'Materials',
-    'materials.price': 'Size',
-    'materials.empty': 'No materials available',
-
-    // Projects translations (additional)
-    'projects.search': 'Search projects...',
-    'projects.empty': 'No results found',
-
-    // Form translations
-    'form.required': 'This field is required',
-    'form.cancel': 'Cancel',
-    'form.save': 'Save',
-    'form.submit': 'Submit',
-    'form.update': 'Update',
-
-    // Confirmation translations
-    'confirm.delete_document': 'Are you sure you want to delete this document?',
-    'confirm.action': 'Confirm action',
-  }
-};
-
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved as Language) || 'fr';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('language', language);
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, [language]);
-
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
+};
+
+const translations = {
+  fr: {
+    common: {
+      yes: "Oui",
+      no: "Non",
+      cancel: "Annuler",
+      save: "Enregistrer",
+      delete: "Supprimer",
+      edit: "Modifier",
+      update: "Mettre à jour",
+      loading: "Chargement...",
+      error: "Erreur",
+      success: "Succès",
+      back: "Retour",
+      search: "Rechercher",
+      filter: "Filtrer",
+      reset: "Réinitialiser",
+      submit: "Soumettre",
+      close: "Fermer",
+      confirm: "Confirmer",
+      optional: "Optionnel",
+      required: "Requis",
+      yes_delete: "Oui, supprimer",
+      no_cancel: "Non, annuler"
+    },
+    notfound: {
+      message: "Page non trouvée",
+      return_home: "Retour à l'accueil"
+    },
+    inspection: {
+      edit: {
+        title: "Modifier l'inspection",
+        description: "Modification de l'inspection pour le projet",
+        in_development: "En développement"
+      },
+      create: {
+        title: "Créer une inspection",
+        description: "Créer une nouvelle inspection pour le projet",
+        in_development: "En développement"
+      }
+    },
+    roles: {
+      user: "Utilisateur"
+    },
+    policy: {
+      title: "Politique de confidentialité",
+      last_update: "Dernière mise à jour : 15 décembre 2024",
+      section1: {
+        title: "Collecte des informations",
+        text: "Nous collectons les informations que vous nous fournissez directement lors de votre inscription et utilisation de nos services."
+      },
+      section2: {
+        title: "Utilisation des données",
+        text: "Nous utilisons vos données pour :",
+        item1: "Fournir et améliorer nos services",
+        item2: "Communiquer avec vous",
+        item3: "Assurer la sécurité de nos services",
+        item4: "Respecter nos obligations légales"
+      },
+      section3: {
+        title: "Partage des données",
+        text: "Nous ne partageons vos données personnelles qu'avec :",
+        item1: "Nos partenaires de confiance",
+        item2: "Les autorités compétentes si requis par la loi",
+        item3: "Nos prestataires de services",
+        item4: "Avec votre consentement explicite",
+        item5: "Pour protéger nos droits et notre sécurité"
+      },
+      section4: {
+        title: "Vos droits",
+        text: "Vous avez le droit de :",
+        item1: "Accéder à vos données personnelles",
+        item2: "Corriger vos informations",
+        item3: "Supprimer votre compte"
+      },
+      section5: {
+        title: "Sécurité",
+        text: "Nous mettons en place des mesures de sécurité appropriées pour protéger vos données."
+      },
+      section6: {
+        title: "Cookies",
+        text: "Nous utilisons des cookies pour :",
+        item1: "Améliorer votre expérience utilisateur",
+        item2: "Analyser l'utilisation de notre site",
+        item3: "Personnaliser le contenu",
+        item4: "Assurer la sécurité",
+        item5: "Mémoriser vos préférences"
+      },
+      section7: {
+        title: "Modifications",
+        text: "Nous nous réservons le droit de modifier cette politique. Les modifications seront communiquées sur cette page."
+      },
+      section8: {
+        title: "Contact",
+        text: "Pour toute question concernant cette politique, contactez-nous à contact@example.com"
+      }
+    },
+    contact: {
+      title: "Contactez-nous",
+      alert: {
+        sent: "Message envoyé avec succès !"
+      },
+      form: {
+        title: "Envoyez-nous un message",
+        name: "Nom",
+        name_placeholder: "Votre nom complet",
+        email: "Email",
+        email_placeholder: "votre@email.com",
+        subject: "Sujet",
+        subject_placeholder: "Sujet de votre message",
+        message: "Message",
+        message_placeholder: "Votre message...",
+        send: "Envoyer le message"
+      },
+      info: {
+        title: "Informations de contact",
+        address: "Adresse",
+        address_value: "Nouakchott, Mauritanie",
+        phone: "Téléphone",
+        phone_value: "+222 XX XX XX XX",
+        email: "Email",
+        email_value: "contact@example.com",
+        hours: "Heures d'ouverture",
+        hours_value: "Lun-Ven : 8h00-17h00",
+        social: "Réseaux sociaux"
+      }
+    },
+    index: {
+      loading: "Chargement...",
+      feature: {
+        projects: {
+          title: "Projets",
+          description: "Gérez vos projets de construction"
+        },
+        materials: {
+          title: "Matériaux",
+          description: "Gestion des matériaux"
+        },
+        documents: {
+          title: "Documents",
+          description: "Gestion documentaire"
+        },
+        teams: {
+          title: "Équipes",
+          description: "Gestion des équipes"
+        },
+        dashboard: {
+          title: "Tableau de bord",
+          description: "Vue d'ensemble"
+        }
+      },
+      features: {
+        title: "Fonctionnalités",
+        description: "Découvrez nos outils de gestion",
+        discover: "Découvrir",
+        login_to_access: "Se connecter pour accéder"
+      },
+      cta: {
+        title: "Commencez dès maintenant",
+        authenticated: "Accédez à votre tableau de bord",
+        unauthenticated: "Créez votre compte pour commencer",
+        dashboard: "Tableau de bord",
+        my_projects: "Mes projets",
+        start_free: "Commencer gratuitement",
+        login: "Se connecter"
+      }
+    },
+    project_create: {
+      title: "Créer un nouveau projet",
+      back_to_projects: "Retour aux projets",
+      toast: {
+        created: "Projet créé",
+        created_desc: "Le projet a été créé avec succès : ",
+        error: "Erreur",
+        error_desc: "Une erreur est survenue lors de la création du projet."
+      }
+    }
+  },
+  
+  ar: {
+    common: {
+      yes: "نعم",
+      no: "لا",
+      cancel: "إلغاء",
+      save: "حفظ",
+      delete: "حذف",
+      edit: "تعديل",
+      update: "تحديث",
+      loading: "جاري التحميل...",
+      error: "خطأ",
+      success: "نجاح",
+      back: "عودة",
+      search: "بحث",
+      filter: "تصفية",
+      reset: "إعادة تعيين",
+      submit: "إرسال",
+      close: "إغلاق",
+      confirm: "تأكيد",
+      optional: "اختياري",
+      required: "مطلوب",
+      yes_delete: "نعم، احذف",
+      no_cancel: "لا، إلغاء"
+    },
+    notfound: {
+      message: "الصفحة غير موجودة",
+      return_home: "العودة للرئيسية"
+    },
+    inspection: {
+      edit: {
+        title: "تعديل التفتيش",
+        description: "تعديل التفتيش للمشروع",
+        in_development: "قيد التطوير"
+      },
+      create: {
+        title: "إنشاء تفتيش",
+        description: "إنشاء تفتيش جديد للمشروع",
+        in_development: "قيد التطوير"
+      }
+    },
+    roles: {
+      user: "مستخدم"
+    },
+    policy: {
+      title: "سياسة الخصوصية",
+      last_update: "آخر تحديث: 15 ديسمبر 2024",
+      section1: {
+        title: "جمع المعلومات",
+        text: "نحن نجمع المعلومات التي تقدمها لنا مباشرة عند التسجيل واستخدام خدماتنا."
+      },
+      section2: {
+        title: "استخدام البيانات",
+        text: "نستخدم بياناتك من أجل:",
+        item1: "تقديم وتحسين خدماتنا",
+        item2: "التواصل معك",
+        item3: "ضمان أمان خدماتنا",
+        item4: "احترام التزاماتنا القانونية"
+      },
+      section3: {
+        title: "مشاركة البيانات",
+        text: "نحن لا نشارك بياناتك الشخصية إلا مع:",
+        item1: "شركاؤنا الموثوقون",
+        item2: "السلطات المختصة إذا طلب القانون",
+        item3: "مقدمي الخدمات",
+        item4: "بموافقتك الصريحة",
+        item5: "لحماية حقوقنا وأمننا"
+      },
+      section4: {
+        title: "حقوقك",
+        text: "لديك الحق في:",
+        item1: "الوصول إلى بياناتك الشخصية",
+        item2: "تصحيح معلوماتك",
+        item3: "حذف حسابك"
+      },
+      section5: {
+        title: "الأمان",
+        text: "نضع تدابير أمنية مناسبة لحماية بياناتك."
+      },
+      section6: {
+        title: "ملفات تعريف الارتباط",
+        text: "نستخدم ملفات تعريف الارتباط من أجل:",
+        item1: "تحسين تجربة المستخدم",
+        item2: "تحليل استخدام موقعنا",
+        item3: "تخصيص المحتوى",
+        item4: "ضمان الأمان",
+        item5: "تذكر تفضيلاتك"
+      },
+      section7: {
+        title: "التعديلات",
+        text: "نحتفظ بالحق في تعديل هذه السياسة. سيتم الإعلان عن التعديلات في هذه الصفحة."
+      },
+      section8: {
+        title: "الاتصال",
+        text: "لأي أسئلة حول هذه السياسة، اتصل بنا على contact@example.com"
+      }
+    },
+    contact: {
+      title: "اتصل بنا",
+      alert: {
+        sent: "تم إرسال الرسالة بنجاح!"
+      },
+      form: {
+        title: "أرسل لنا رسالة",
+        name: "الاسم",
+        name_placeholder: "اسمك الكامل",
+        email: "البريد الإلكتروني",
+        email_placeholder: "your@email.com",
+        subject: "الموضوع",
+        subject_placeholder: "موضوع رسالتك",
+        message: "الرسالة",
+        message_placeholder: "رسالتك...",
+        send: "إرسال الرسالة"
+      },
+      info: {
+        title: "معلومات الاتصال",
+        address: "العنوان",
+        address_value: "نواكشوط، موريتانيا",
+        phone: "الهاتف",
+        phone_value: "+222 XX XX XX XX",
+        email: "البريد الإلكتروني",
+        email_value: "contact@example.com",
+        hours: "ساعات العمل",
+        hours_value: "الاثنين-الجمعة: 8:00-17:00",
+        social: "وسائل التواصل الاجتماعي"
+      }
+    },
+    index: {
+      loading: "جاري التحميل...",
+      feature: {
+        projects: {
+          title: "المشاريع",
+          description: "إدارة مشاريع البناء"
+        },
+        materials: {
+          title: "المواد",
+          description: "إدارة المواد"
+        },
+        documents: {
+          title: "الوثائق",
+          description: "إدارة الوثائق"
+        },
+        teams: {
+          title: "الفرق",
+          description: "إدارة الفرق"
+        },
+        dashboard: {
+          title: "لوحة التحكم",
+          description: "نظرة عامة"
+        }
+      },
+      features: {
+        title: "الميزات",
+        description: "اكتشف أدوات الإدارة لدينا",
+        discover: "اكتشف",
+        login_to_access: "تسجيل الدخول للوصول"
+      },
+      cta: {
+        title: "ابدأ الآن",
+        authenticated: "انتقل إلى لوحة التحكم",
+        unauthenticated: "أنشئ حسابك للبدء",
+        dashboard: "لوحة التحكم",
+        my_projects: "مشاريعي",
+        start_free: "ابدأ مجاناً",
+        login: "تسجيل الدخول"
+      }
+    },
+    project_create: {
+      title: "إنشاء مشروع جديد",
+      back_to_projects: "العودة للمشاريع",
+      toast: {
+        created: "تم إنشاء المشروع",
+        created_desc: "تم إنشاء المشروع بنجاح: ",
+        error: "خطأ",
+        error_desc: "حدث خطأ أثناء إنشاء المشروع."
+      }
+    }
+  },
+  
+  en: {
+    common: {
+      yes: "Yes",
+      no: "No",
+      cancel: "Cancel",
+      save: "Save",
+      delete: "Delete",
+      edit: "Edit",
+      update: "Update",
+      loading: "Loading...",
+      error: "Error",
+      success: "Success",
+      back: "Back",
+      search: "Search",
+      filter: "Filter",
+      reset: "Reset",
+      submit: "Submit",
+      close: "Close",
+      confirm: "Confirm",
+      optional: "Optional",
+      required: "Required",
+      yes_delete: "Yes, delete",
+      no_cancel: "No, cancel"
+    },
+    notfound: {
+      message: "Page not found",
+      return_home: "Return home"
+    },
+    inspection: {
+      edit: {
+        title: "Edit Inspection",
+        description: "Edit inspection for project",
+        in_development: "In development"
+      },
+      create: {
+        title: "Create Inspection",
+        description: "Create new inspection for project",
+        in_development: "In development"
+      }
+    },
+    roles: {
+      user: "User"
+    },
+    policy: {
+      title: "Privacy Policy",
+      last_update: "Last updated: December 15, 2024",
+      section1: {
+        title: "Information Collection",
+        text: "We collect information that you provide to us directly when registering and using our services."
+      },
+      section2: {
+        title: "Data Usage",
+        text: "We use your data to:",
+        item1: "Provide and improve our services",
+        item2: "Communicate with you",
+        item3: "Ensure the security of our services",
+        item4: "Comply with our legal obligations"
+      },
+      section3: {
+        title: "Data Sharing",
+        text: "We only share your personal data with:",
+        item1: "Our trusted partners",
+        item2: "Competent authorities if required by law",
+        item3: "Our service providers",
+        item4: "With your explicit consent",
+        item5: "To protect our rights and security"
+      },
+      section4: {
+        title: "Your Rights",
+        text: "You have the right to:",
+        item1: "Access your personal data",
+        item2: "Correct your information",
+        item3: "Delete your account"
+      },
+      section5: {
+        title: "Security",
+        text: "We implement appropriate security measures to protect your data."
+      },
+      section6: {
+        title: "Cookies",
+        text: "We use cookies to:",
+        item1: "Improve your user experience",
+        item2: "Analyze our site usage",
+        item3: "Personalize content",
+        item4: "Ensure security",
+        item5: "Remember your preferences"
+      },
+      section7: {
+        title: "Modifications",
+        text: "We reserve the right to modify this policy. Changes will be communicated on this page."
+      },
+      section8: {
+        title: "Contact",
+        text: "For any questions about this policy, contact us at contact@example.com"
+      }
+    },
+    contact: {
+      title: "Contact Us",
+      alert: {
+        sent: "Message sent successfully!"
+      },
+      form: {
+        title: "Send us a message",
+        name: "Name",
+        name_placeholder: "Your full name",
+        email: "Email",
+        email_placeholder: "your@email.com",
+        subject: "Subject",
+        subject_placeholder: "Subject of your message",
+        message: "Message",
+        message_placeholder: "Your message...",
+        send: "Send message"
+      },
+      info: {
+        title: "Contact Information",
+        address: "Address",
+        address_value: "Nouakchott, Mauritania",
+        phone: "Phone",
+        phone_value: "+222 XX XX XX XX",
+        email: "Email",
+        email_value: "contact@example.com",
+        hours: "Opening Hours",
+        hours_value: "Mon-Fri: 8:00 AM - 5:00 PM",
+        social: "Social Media"
+      }
+    },
+    index: {
+      loading: "Loading...",
+      feature: {
+        projects: {
+          title: "Projects",
+          description: "Manage your construction projects"
+        },
+        materials: {
+          title: "Materials",
+          description: "Materials management"
+        },
+        documents: {
+          title: "Documents",
+          description: "Document management"
+        },
+        teams: {
+          title: "Teams",
+          description: "Team management"
+        },
+        dashboard: {
+          title: "Dashboard",
+          description: "Overview"
+        }
+      },
+      features: {
+        title: "Features",
+        description: "Discover our management tools",
+        discover: "Discover",
+        login_to_access: "Login to access"
+      },
+      cta: {
+        title: "Get Started Now",
+        authenticated: "Access your dashboard",
+        unauthenticated: "Create your account to get started",
+        dashboard: "Dashboard",
+        my_projects: "My projects",
+        start_free: "Start for free",
+        login: "Sign in"
+      }
+    },
+    project_create: {
+      title: "Create New Project",
+      back_to_projects: "Back to projects",
+      toast: {
+        created: "Project created",
+        created_desc: "Project created successfully: ",
+        error: "Error",
+        error_desc: "An error occurred while creating the project."
+      }
+    }
+  }
+};
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>('fr');
+
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && ['fr', 'ar', 'en'].includes(savedLanguage)) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
+
+  const t = (key: string): string => {
+    const keys = key.split('.');
+    let value: any = translations[language];
+    
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k];
+      } else {
+        console.warn(`Translation key "${key}" not found for language "${language}"`);
+        return key;
+      }
+    }
+    
+    return typeof value === 'string' ? value : key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
 };
