@@ -34,10 +34,62 @@ const translations = {
       title: "Tableau de bord"
     },
     documents: {
-      title: "Documents"
+      title: "Documents",
+      upload: "Télécharger",
+      view: "Voir", 
+      download: "Télécharger",
+      delete: "Supprimer",
+      edit: "Modifier",
+      no_documents: "Aucun document trouvé",
+      upload_success: "Document téléchargé avec succès",
+      upload_error: "Erreur lors du téléchargement",
+      delete_success: "Document supprimé avec succès",
+      delete_error: "Erreur lors de la suppression",
+      delete_confirm: "Êtes-vous sûr de vouloir supprimer ce document ?",
+      file_name: "Nom du fichier",
+      file_size: "Taille du fichier",
+      file_type: "Type de fichier",
+      uploaded_by: "Téléchargé par",
+      uploaded_at: "Téléchargé le",
+      description: "Description",
+      add_document: "Ajouter un document",
+      document_type: "Type de document",
+      select_file: "Sélectionner un fichier",
+      drag_drop: "Glissez-déposez vos fichiers ici ou cliquez pour sélectionner"
     },
     task: {
-      title: "Tâches"
+      title: "Tâches",
+      subtitle: "Assignez et suivez les tâches de votre équipe",
+      create: "Créer une tâche",
+      assign: "Assigner",
+      complete: "Terminer",
+      pending: "En attente",
+      in_progress: "En cours",
+      completed: "Terminée",
+      cancelled: "Annulée",
+      priority: "Priorité",
+      high: "Élevée",
+      medium: "Moyenne",
+      low: "Faible",
+      due_date: "Date d'échéance",
+      assigned_to: "Assigné à",
+      assigned_by: "Assigné par",
+      description: "Description",
+      notes: "Notes",
+      status: "Statut",
+      no_tasks: "Aucune tâche trouvée",
+      create_task: "Créer une tâche",
+      edit_task: "Modifier la tâche",
+      delete_task: "Supprimer la tâche",
+      task_created: "Tâche créée avec succès",
+      task_updated: "Tâche mise à jour avec succès",
+      task_deleted: "Tâche supprimée avec succès",
+      task_completed: "Tâche terminée avec succès",
+      overdue: "En retard",
+      today: "Aujourd'hui",
+      tomorrow: "Demain",
+      this_week: "Cette semaine",
+      next_week: "Semaine prochaine"
     },
     projects: {
       title: "Projets"
@@ -237,6 +289,38 @@ const translations = {
         error: "Erreur",
         error_desc: "Une erreur est survenue lors de la création du projet."
       }
+    },
+    language: {
+      french: "Français",
+      arabic: "العربية",
+      english: "English"
+    },
+    tender: {
+      input: {
+        title: "Titre",
+        description: "Description",
+        category: "Catégorie",
+        subcategory: "Sous-catégorie"
+      },
+      button: {
+        add: "Ajouter",
+        loading: "Chargement..."
+      },
+      alert: {
+        success: "Document ajouté avec succès",
+        upload_error: "Erreur lors du téléchargement",
+        document_error: "Erreur lors de la création du document",
+        tenderdoc_error: "Erreur lors de la création du document d'appel d'offres"
+      }
+    },
+    tender_category: {
+      administrative: "Administratif",
+      technical: "Technique",
+      financial: "Financier"
+    },
+    tender_subcategory: {
+      lettre_soumission: "Lettre de soumission",
+      pouvoir_signature: "Pouvoir de signature"
     }
   },
   
@@ -255,10 +339,62 @@ const translations = {
       title: "لوحة التحكم"
     },
     documents: {
-      title: "الوثائق"
+      title: "الوثائق",
+      upload: "رفع",
+      view: "عرض",
+      download: "تحميل",
+      delete: "حذف",
+      edit: "تعديل",
+      no_documents: "لا توجد وثائق",
+      upload_success: "تم رفع الوثيقة بنجاح",
+      upload_error: "خطأ في رفع الوثيقة",
+      delete_success: "تم حذف الوثيقة بنجاح",
+      delete_error: "خطأ في حذف الوثيقة",
+      delete_confirm: "هل أنت متأكد من حذف هذه الوثيقة؟",
+      file_name: "اسم الملف",
+      file_size: "حجم الملف",
+      file_type: "نوع الملف",
+      uploaded_by: "رفع بواسطة",
+      uploaded_at: "تاريخ الرفع",
+      description: "الوصف",
+      add_document: "إضافة وثيقة",
+      document_type: "نوع الوثيقة",
+      select_file: "اختر ملف",
+      drag_drop: "اسحب وأفلت ملفاتك هنا أو انقر للاختيار"
     },
     task: {
-      title: "المهام"
+      title: "المهام",
+      subtitle: "قم بتعيين ومتابعة مهام فريقك",
+      create: "إنشاء مهمة",
+      assign: "تعيين",
+      complete: "إكمال",
+      pending: "في الانتظار",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتملة",
+      cancelled: "ملغية",
+      priority: "الأولوية",
+      high: "عالية",
+      medium: "متوسطة",
+      low: "منخفضة",
+      due_date: "تاريخ الاستحقاق",
+      assigned_to: "معين إلى",
+      assigned_by: "معين بواسطة",
+      description: "الوصف",
+      notes: "ملاحظات",
+      status: "الحالة",
+      no_tasks: "لا توجد مهام",
+      create_task: "إنشاء مهمة",
+      edit_task: "تعديل المهمة",
+      delete_task: "حذف المهمة",
+      task_created: "تم إنشاء المهمة بنجاح",
+      task_updated: "تم تحديث المهمة بنجاح",
+      task_deleted: "تم حذف المهمة بنجاح",
+      task_completed: "تم إكمال المهمة بنجاح",
+      overdue: "متأخرة",
+      today: "اليوم",
+      tomorrow: "غداً",
+      this_week: "هذا الأسبوع",
+      next_week: "الأسبوع القادم"
     },
     projects: {
       title: "المشاريع"
@@ -458,6 +594,38 @@ const translations = {
         error: "خطأ",
         error_desc: "حدث خطأ أثناء إنشاء المشروع."
       }
+    },
+    language: {
+      french: "Français",
+      arabic: "العربية",
+      english: "English"
+    },
+    tender: {
+      input: {
+        title: "العنوان",
+        description: "الوصف",
+        category: "الفئة",
+        subcategory: "الفئة الفرعية"
+      },
+      button: {
+        add: "إضافة",
+        loading: "جاري التحميل..."
+      },
+      alert: {
+        success: "تم إضافة الوثيقة بنجاح",
+        upload_error: "خطأ في الرفع",
+        document_error: "خطأ في إنشاء الوثيقة",
+        tenderdoc_error: "خطأ في إنشاء وثيقة العطاء"
+      }
+    },
+    tender_category: {
+      administrative: "إداري",
+      technical: "تقني",
+      financial: "مالي"
+    },
+    tender_subcategory: {
+      lettre_soumission: "خطاب التقديم",
+      pouvoir_signature: "تفويض التوقيع"
     }
   },
   
@@ -476,10 +644,62 @@ const translations = {
       title: "Dashboard"
     },
     documents: {
-      title: "Documents"
+      title: "Documents",
+      upload: "Upload",
+      view: "View",
+      download: "Download",
+      delete: "Delete",
+      edit: "Edit",
+      no_documents: "No documents found",
+      upload_success: "Document uploaded successfully",
+      upload_error: "Error uploading document",
+      delete_success: "Document deleted successfully",
+      delete_error: "Error deleting document",
+      delete_confirm: "Are you sure you want to delete this document?",
+      file_name: "File name",
+      file_size: "File size",
+      file_type: "File type",
+      uploaded_by: "Uploaded by",
+      uploaded_at: "Uploaded at",
+      description: "Description",
+      add_document: "Add document",
+      document_type: "Document type",
+      select_file: "Select file",
+      drag_drop: "Drag and drop your files here or click to select"
     },
     task: {
-      title: "Tasks"
+      title: "Tasks",
+      subtitle: "Assign and track your team's tasks",
+      create: "Create task",
+      assign: "Assign",
+      complete: "Complete",
+      pending: "Pending",
+      in_progress: "In progress",
+      completed: "Completed",
+      cancelled: "Cancelled",
+      priority: "Priority",
+      high: "High",
+      medium: "Medium",
+      low: "Low",
+      due_date: "Due date",
+      assigned_to: "Assigned to",
+      assigned_by: "Assigned by",
+      description: "Description",
+      notes: "Notes",
+      status: "Status",
+      no_tasks: "No tasks found",
+      create_task: "Create task",
+      edit_task: "Edit task",
+      delete_task: "Delete task",
+      task_created: "Task created successfully",
+      task_updated: "Task updated successfully",
+      task_deleted: "Task deleted successfully",
+      task_completed: "Task completed successfully",
+      overdue: "Overdue",
+      today: "Today",
+      tomorrow: "Tomorrow",
+      this_week: "This week",
+      next_week: "Next week"
     },
     projects: {
       title: "Projects"
@@ -679,6 +899,38 @@ const translations = {
         error: "Error",
         error_desc: "An error occurred while creating the project."
       }
+    },
+    language: {
+      french: "Français",
+      arabic: "العربية",
+      english: "English"
+    },
+    tender: {
+      input: {
+        title: "Title",
+        description: "Description",
+        category: "Category",
+        subcategory: "Subcategory"
+      },
+      button: {
+        add: "Add",
+        loading: "Loading..."
+      },
+      alert: {
+        success: "Document added successfully",
+        upload_error: "Upload error",
+        document_error: "Document creation error",
+        tenderdoc_error: "Tender document creation error"
+      }
+    },
+    tender_category: {
+      administrative: "Administrative",
+      technical: "Technical",
+      financial: "Financial"
+    },
+    tender_subcategory: {
+      lettre_soumission: "Submission Letter",
+      pouvoir_signature: "Signature Power"
     }
   }
 };
