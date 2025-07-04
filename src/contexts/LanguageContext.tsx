@@ -35,6 +35,7 @@ const translations = {
     },
     documents: {
       title: "Documents",
+      subtitle: "Gérez tous vos documents de projet en un seul endroit",
       upload: "Télécharger",
       view: "Voir", 
       download: "Télécharger",
@@ -55,7 +56,37 @@ const translations = {
       add_document: "Ajouter un document",
       document_type: "Type de document",
       select_file: "Sélectionner un fichier",
-      drag_drop: "Glissez-déposez vos fichiers ici ou cliquez pour sélectionner"
+      drag_drop: "Glissez-déposez vos fichiers ici ou cliquez pour sélectionner",
+      type: {
+        inspection_report: "Rapport d'inspection",
+        location_photo: "Photo de localisation",
+        project_report: "Rapport de projet",
+        contract: "Contrat",
+        supplier_info: "Information fournisseur",
+        task_assignment: "Affectation de tâche",
+        employee_record: "Dossier employé",
+        tender_documents: "Documents d'appel d'offres"
+      },
+      card: {
+        click_to_view: "Cliquez pour voir les documents de ce type"
+      },
+      tabs: {
+        all: "Tous",
+        documents: "Documents",
+        tender: "Appels d'offres",
+        suppliers: "Fournisseurs",
+        tasks: "Tâches",
+        employees: "Employés",
+        upload: "Télécharger",
+        viewer: "Visualiser"
+      },
+      tender: {
+        title: "Documents d'appel d'offres",
+        select_project: "Sélectionnez un projet pour voir ses documents d'appel d'offres",
+        select_project_placeholder: "Choisir un projet...",
+        add_title: "Ajouter un document d'appel d'offres",
+        add_description: "Téléchargez un nouveau document pour l'appel d'offres"
+      }
     },
     task: {
       title: "Tâches",
@@ -340,6 +371,7 @@ const translations = {
     },
     documents: {
       title: "الوثائق",
+      subtitle: "إدارة جميع وثائق مشروعك في مكان واحد",
       upload: "رفع",
       view: "عرض",
       download: "تحميل",
@@ -360,7 +392,37 @@ const translations = {
       add_document: "إضافة وثيقة",
       document_type: "نوع الوثيقة",
       select_file: "اختر ملف",
-      drag_drop: "اسحب وأفلت ملفاتك هنا أو انقر للاختيار"
+      drag_drop: "اسحب وأفلت ملفاتك هنا أو انقر للاختيار",
+      type: {
+        inspection_report: "تقرير التفتيش",
+        location_photo: "صورة الموقع",
+        project_report: "تقرير المشروع",
+        contract: "العقد",
+        supplier_info: "معلومات المورد",
+        task_assignment: "تعيين المهمة",
+        employee_record: "سجل الموظف",
+        tender_documents: "وثائق العطاء"
+      },
+      card: {
+        click_to_view: "انقر لعرض وثائق هذا النوع"
+      },
+      tabs: {
+        all: "الكل",
+        documents: "الوثائق",
+        tender: "العطاءات",
+        suppliers: "الموردون",
+        tasks: "المهام",
+        employees: "الموظفون",
+        upload: "رفع",
+        viewer: "عارض"
+      },
+      tender: {
+        title: "وثائق العطاء",
+        select_project: "اختر مشروع لعرض وثائق العطاء الخاصة به",
+        select_project_placeholder: "اختر مشروع...",
+        add_title: "إضافة وثيقة عطاء",
+        add_description: "ارفع وثيقة جديدة للعطاء"
+      }
     },
     task: {
       title: "المهام",
@@ -645,6 +707,7 @@ const translations = {
     },
     documents: {
       title: "Documents",
+      subtitle: "Manage all your project documents in one place",
       upload: "Upload",
       view: "View",
       download: "Download",
@@ -665,7 +728,37 @@ const translations = {
       add_document: "Add document",
       document_type: "Document type",
       select_file: "Select file",
-      drag_drop: "Drag and drop your files here or click to select"
+      drag_drop: "Drag and drop your files here or click to select",
+      type: {
+        inspection_report: "Inspection Report",
+        location_photo: "Location Photo",
+        project_report: "Project Report",
+        contract: "Contract",
+        supplier_info: "Supplier Information",
+        task_assignment: "Task Assignment",
+        employee_record: "Employee Record",
+        tender_documents: "Tender Documents"
+      },
+      card: {
+        click_to_view: "Click to view documents of this type"
+      },
+      tabs: {
+        all: "All",
+        documents: "Documents",
+        tender: "Tenders",
+        suppliers: "Suppliers",
+        tasks: "Tasks",
+        employees: "Employees",
+        upload: "Upload",
+        viewer: "Viewer"
+      },
+      tender: {
+        title: "Tender Documents",
+        select_project: "Select a project to view its tender documents",
+        select_project_placeholder: "Choose a project...",
+        add_title: "Add Tender Document",
+        add_description: "Upload a new document for the tender"
+      }
     },
     task: {
       title: "Tasks",
