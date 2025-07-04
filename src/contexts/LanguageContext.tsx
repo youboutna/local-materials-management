@@ -129,6 +129,7 @@ const translations = {
       high: "Élevée",
       medium: "Moyenne",
       low: "Faible",
+      urgent: "Urgente",
       due_date: "Date d'échéance",
       assigned_to: "Assigné à",
       assigned_by: "Assigné par",
@@ -147,7 +148,19 @@ const translations = {
       today: "Aujourd'hui",
       tomorrow: "Demain",
       this_week: "Cette semaine",
-      next_week: "Semaine prochaine"
+      next_week: "Semaine prochaine",
+      completion_notes: "Notes de completion",
+      completion_notes_placeholder: "Ajoutez des notes sur la completion de cette tâche...",
+      mark_completed: "Marquer comme terminé",
+      marking_progress: "Marquage en cours...",
+      completion_success: "Tâche terminée le",
+      assignment: "Affectation",
+      assignments: "Affectations",
+      project: "Projet",
+      location: "Localisation",
+      completion_date: "Date de completion",
+      task_details: "Détails de la tâche",
+      optional: "optionnel"
     },
     projects: {
       title: "Projets"
@@ -492,6 +505,7 @@ const translations = {
       high: "عالية",
       medium: "متوسطة",
       low: "منخفضة",
+      urgent: "عاجلة",
       due_date: "تاريخ الاستحقاق",
       assigned_to: "معين إلى",
       assigned_by: "معين بواسطة",
@@ -510,7 +524,19 @@ const translations = {
       today: "اليوم",
       tomorrow: "غداً",
       this_week: "هذا الأسبوع",
-      next_week: "الأسبوع القادم"
+      next_week: "الأسبوع القادم",
+      completion_notes: "ملاحظات الإكمال",
+      completion_notes_placeholder: "أضف ملاحظات حول إكمال هذه المهمة...",
+      mark_completed: "تحديد كمكتملة",
+      marking_progress: "جاري التحديد...",
+      completion_success: "تم إكمال المهمة في",
+      assignment: "تعيين",
+      assignments: "التعيينات",
+      project: "المشروع",
+      location: "الموقع",
+      completion_date: "تاريخ الإكمال",
+      task_details: "تفاصيل المهمة",
+      optional: "اختياري"
     },
     projects: {
       title: "المشاريع"
@@ -855,6 +881,7 @@ const translations = {
       high: "High",
       medium: "Medium",
       low: "Low",
+      urgent: "Urgent",
       due_date: "Due date",
       assigned_to: "Assigned to",
       assigned_by: "Assigned by",
@@ -873,7 +900,19 @@ const translations = {
       today: "Today",
       tomorrow: "Tomorrow",
       this_week: "This week",
-      next_week: "Next week"
+      next_week: "Next week",
+      completion_notes: "Completion notes",
+      completion_notes_placeholder: "Add notes about completing this task...",
+      mark_completed: "Mark as completed",
+      marking_progress: "Marking in progress...",
+      completion_success: "Task completed on",
+      assignment: "Assignment",
+      assignments: "Assignments",
+      project: "Project",
+      location: "Location",
+      completion_date: "Completion date",
+      task_details: "Task details",
+      optional: "optional"
     }
   }
 };
