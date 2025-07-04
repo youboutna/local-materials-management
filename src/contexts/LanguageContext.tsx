@@ -86,6 +86,33 @@ const translations = {
         select_project_placeholder: "Choisir un projet...",
         add_title: "Ajouter un document d'appel d'offres",
         add_description: "Téléchargez un nouveau document pour l'appel d'offres"
+      },
+      employee: {
+        add: "Ajouter un employé",
+        add_title: "Ajouter un nouvel employé",
+        edit_title: "Modifier l'employé",
+        employee_id: "ID Employé",
+        employee_id_placeholder: "Entrez l'ID de l'employé",
+        full_name: "Nom complet",
+        full_name_placeholder: "Nom complet de l'employé",
+        position: "Poste",
+        position_placeholder: "Poste de l'employé",
+        department: "Département",
+        department_placeholder: "Département de l'employé",
+        phone: "Téléphone",
+        phone_placeholder: "+222 XX XX XX XX",
+        email: "Email",
+        email_placeholder: "email@exemple.com",
+        hire_date: "Date d'embauche",
+        salary: "Salaire",
+        salary_placeholder: "Salaire mensuel",
+        search_placeholder: "Rechercher par nom, ID ou poste...",
+        id_label: "ID",
+        active: "Actif",
+        inactive: "Inactif",
+        no_employees: "Aucun employé trouvé",
+        created_successfully: "Employé créé avec succès",
+        deleted_successfully: "Employé supprimé avec succès"
       }
     },
     task: {
@@ -422,6 +449,33 @@ const translations = {
         select_project_placeholder: "اختر مشروع...",
         add_title: "إضافة وثيقة عطاء",
         add_description: "ارفع وثيقة جديدة للعطاء"
+      },
+      employee: {
+        add: "إضافة موظف",
+        add_title: "إضافة موظف جديد",
+        edit_title: "تعديل الموظف",
+        employee_id: "رقم الموظف",
+        employee_id_placeholder: "أدخل رقم الموظف",
+        full_name: "الاسم الكامل",
+        full_name_placeholder: "الاسم الكامل للموظف",
+        position: "المنصب",
+        position_placeholder: "منصب الموظف",
+        department: "القسم",
+        department_placeholder: "قسم الموظف",
+        phone: "الهاتف",
+        phone_placeholder: "+222 XX XX XX XX",
+        email: "البريد الإلكتروني",
+        email_placeholder: "email@example.com",
+        hire_date: "تاريخ التوظيف",
+        salary: "الراتب",
+        salary_placeholder: "الراتب الشهري",
+        search_placeholder: "البحث بالاسم أو الرقم أو المنصب...",
+        id_label: "الرقم",
+        active: "نشط",
+        inactive: "غير نشط",
+        no_employees: "لا يوجد موظفون",
+        created_successfully: "تم إنشاء الموظف بنجاح",
+        deleted_successfully: "تم حذف الموظف بنجاح"
       }
     },
     task: {
@@ -758,6 +812,33 @@ const translations = {
         select_project_placeholder: "Choose a project...",
         add_title: "Add Tender Document",
         add_description: "Upload a new document for the tender"
+      },
+      employee: {
+        add: "Add Employee",
+        add_title: "Add New Employee",
+        edit_title: "Edit Employee",
+        employee_id: "Employee ID",
+        employee_id_placeholder: "Enter employee ID",
+        full_name: "Full Name",
+        full_name_placeholder: "Employee full name",
+        position: "Position",
+        position_placeholder: "Employee position",
+        department: "Department",
+        department_placeholder: "Employee department",
+        phone: "Phone",
+        phone_placeholder: "+222 XX XX XX XX",
+        email: "Email",
+        email_placeholder: "email@example.com",
+        hire_date: "Hire Date",
+        salary: "Salary",
+        salary_placeholder: "Monthly salary",
+        search_placeholder: "Search by name, ID, or position...",
+        id_label: "ID",
+        active: "Active",
+        inactive: "Inactive",
+        no_employees: "No employees found",
+        created_successfully: "Employee created successfully",
+        deleted_successfully: "Employee deleted successfully"
       }
     },
     task: {
@@ -793,237 +874,6 @@ const translations = {
       tomorrow: "Tomorrow",
       this_week: "This week",
       next_week: "Next week"
-    },
-    projects: {
-      title: "Projects"
-    },
-    materials: {
-      title: "Materials"
-    },
-    settings: {
-      title: "Settings"
-    },
-    auth: {
-      login: "Sign in",
-      register: "Sign up",
-      logout: "Sign out",
-      terms: "Terms of Service",
-      privacy: "Privacy Policy"
-    },
-    footer: {
-      about: "About",
-      about_desc: "Our construction management ERP system is designed to simplify and optimize all aspects of your construction projects.",
-      rights: "All rights reserved",
-      by_hadratech: "Developed by HadraTech",
-      quick_links: "Quick Links",
-      legal: "Legal"
-    },
-    common: {
-      yes: "Yes",
-      no: "No",
-      cancel: "Cancel",
-      save: "Save",
-      delete: "Delete",
-      edit: "Edit",
-      update: "Update",
-      loading: "Loading...",
-      error: "Error",
-      success: "Success",
-      back: "Back",
-      search: "Search",
-      filter: "Filter",
-      reset: "Reset",
-      submit: "Submit",
-      close: "Close",
-      confirm: "Confirm",
-      optional: "Optional",
-      required: "Required",
-      yes_delete: "Yes, delete",
-      no_cancel: "No, cancel"
-    },
-    notfound: {
-      message: "Page not found",
-      return_home: "Return home"
-    },
-    inspection: {
-      edit: {
-        title: "Edit Inspection",
-        description: "Edit inspection for project",
-        in_development: "In development"
-      },
-      create: {
-        title: "Create Inspection",
-        description: "Create new inspection for project",
-        in_development: "In development"
-      }
-    },
-    roles: {
-      user: "User"
-    },
-    policy: {
-      title: "Privacy Policy",
-      last_update: "Last updated: December 15, 2024",
-      section1: {
-        title: "Information Collection",
-        text: "We collect information that you provide to us directly when registering and using our services."
-      },
-      section2: {
-        title: "Data Usage",
-        text: "We use your data to:",
-        item1: "Provide and improve our services",
-        item2: "Communicate with you",
-        item3: "Ensure the security of our services",
-        item4: "Comply with our legal obligations"
-      },
-      section3: {
-        title: "Data Sharing",
-        text: "We only share your personal data with:",
-        item1: "Our trusted partners",
-        item2: "Competent authorities if required by law",
-        item3: "Our service providers",
-        item4: "With your explicit consent",
-        item5: "To protect our rights and security"
-      },
-      section4: {
-        title: "Your Rights",
-        text: "You have the right to:",
-        item1: "Access your personal data",
-        item2: "Correct your information",
-        item3: "Delete your account"
-      },
-      section5: {
-        title: "Security",
-        text: "We implement appropriate security measures to protect your data."
-      },
-      section6: {
-        title: "Cookies",
-        text: "We use cookies to:",
-        item1: "Improve your user experience",
-        item2: "Analyze our site usage",
-        item3: "Personalize content",
-        item4: "Ensure security",
-        item5: "Remember your preferences"
-      },
-      section7: {
-        title: "Modifications",
-        text: "We reserve the right to modify this policy. Changes will be communicated on this page."
-      },
-      section8: {
-        title: "Contact",
-        text: "For any questions about this policy, contact us at contact@example.com"
-      }
-    },
-    contact: {
-      title: "Contact Us",
-      alert: {
-        sent: "Message sent successfully!"
-      },
-      form: {
-        title: "Send us a message",
-        name: "Name",
-        name_placeholder: "Your full name",
-        email: "Email",
-        email_placeholder: "your@email.com",
-        subject: "Subject",
-        subject_placeholder: "Subject of your message",
-        message: "Message",
-        message_placeholder: "Your message...",
-        send: "Send message"
-      },
-      info: {
-        title: "Contact Information",
-        address: "Address",
-        address_value: "Nouakchott, Mauritania",
-        phone: "Phone",
-        phone_value: "+222 XX XX XX XX",
-        email: "Email",
-        email_value: "contact@example.com",
-        hours: "Opening Hours",
-        hours_value: "Mon-Fri: 8:00 AM - 5:00 PM",
-        social: "Social Media"
-      }
-    },
-    index: {
-      loading: "Loading...",
-      feature: {
-        projects: {
-          title: "Projects",
-          description: "Manage your construction projects"
-        },
-        materials: {
-          title: "Materials",
-          description: "Materials management"
-        },
-        documents: {
-          title: "Documents",
-          description: "Document management"
-        },
-        teams: {
-          title: "Teams",
-          description: "Team management"
-        },
-        dashboard: {
-          title: "Dashboard",
-          description: "Overview"
-        }
-      },
-      features: {
-        title: "Features",
-        description: "Discover our management tools",
-        discover: "Discover",
-        login_to_access: "Login to access"
-      },
-      cta: {
-        title: "Get Started Now",
-        authenticated: "Access your dashboard",
-        unauthenticated: "Create your account to get started",
-        dashboard: "Dashboard",
-        my_projects: "My projects",
-        start_free: "Start for free",
-        login: "Sign in"
-      }
-    },
-    project_create: {
-      title: "Create New Project",
-      back_to_projects: "Back to projects",
-      toast: {
-        created: "Project created",
-        created_desc: "Project created successfully: ",
-        error: "Error",
-        error_desc: "An error occurred while creating the project."
-      }
-    },
-    language: {
-      french: "Français",
-      arabic: "العربية",
-      english: "English"
-    },
-    tender: {
-      input: {
-        title: "Title",
-        description: "Description",
-        category: "Category",
-        subcategory: "Subcategory"
-      },
-      button: {
-        add: "Add",
-        loading: "Loading..."
-      },
-      alert: {
-        success: "Document added successfully",
-        upload_error: "Upload error",
-        document_error: "Document creation error",
-        tenderdoc_error: "Tender document creation error"
-      }
-    },
-    tender_category: {
-      administrative: "Administrative",
-      technical: "Technical",
-      financial: "Financial"
-    },
-    tender_subcategory: {
-      lettre_soumission: "Submission Letter",
-      pouvoir_signature: "Signature Power"
     }
   }
 };

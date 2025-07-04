@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,7 @@ const EmployeeManagement = () => {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useLanguage(); // Add translation hook
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -67,13 +68,13 @@ const EmployeeManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: t('users.created_successfully') });
+      toast({ title: t('common.success'), description: t('documents.employee.created_successfully') });
       setShowCreateDialog(false);
       resetForm();
     },
     onError: (error) => {
       toast({
-        title: t('error.title'),
+        title: t('common.error'),
         description: (error as Error).message,
         variant: "destructive"
       });
@@ -90,11 +91,11 @@ const EmployeeManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({ title: t('users.deleted_successfully') });
+      toast({ title: t('common.success'), description: t('documents.employee.deleted_successfully') });
     },
     onError: (error) => {
       toast({
-        title: t('error.title'),
+        title: t('common.error'),
         description: (error as Error).message,
         variant: "destructive"
       });
@@ -140,7 +141,7 @@ const EmployeeManagement = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-4">{t('loading')}</div>;
+    return <div className="flex justify-center py-4">{t('common.loading')}</div>;
   }
 
   return (
@@ -156,73 +157,79 @@ const EmployeeManagement = () => {
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
                   <Plus className="h-4 w-4 mr-2" />
-                  {t('users.new')}
+                  {t('documents.employee.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingEmployee ? t('project.edit') + ' ' + t('documents.tabs.employees') : t('users.new')}
+                    {editingEmployee ? t('documents.employee.edit_title') : t('documents.employee.add_title')}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('users.table.national_id')} *</Label>
+                      <Label>{t('documents.employee.employee_id')} *</Label>
                       <Input
                         value={formData.employee_id}
                         onChange={(e) => setFormData(prev => ({...prev, employee_id: e.target.value}))}
                         required
+                        placeholder={t('documents.employee.employee_id_placeholder')}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('auth.full_name')} *</Label>
+                      <Label>{t('documents.employee.full_name')} *</Label>
                       <Input
                         value={formData.full_name}
                         onChange={(e) => setFormData(prev => ({...prev, full_name: e.target.value}))}
                         required
+                        placeholder={t('documents.employee.full_name_placeholder')}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('users.table.role')}</Label>
+                      <Label>{t('documents.employee.position')}</Label>
                       <Input
                         value={formData.position}
                         onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
+                        placeholder={t('documents.employee.position_placeholder')}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('users.table.status')}</Label>
+                      <Label>{t('documents.employee.department')}</Label>
                       <Input
                         value={formData.department}
                         onChange={(e) => setFormData(prev => ({...prev, department: e.target.value}))}
+                        placeholder={t('documents.employee.department_placeholder')}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('auth.phone')}</Label>
+                      <Label>{t('documents.employee.phone')}</Label>
                       <Input
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                        placeholder={t('documents.employee.phone_placeholder')}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('auth.email')}</Label>
+                      <Label>{t('documents.employee.email')}</Label>
                       <Input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                        placeholder={t('documents.employee.email_placeholder')}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>{t('project_create.start_date')}</Label>
+                      <Label>{t('documents.employee.hire_date')}</Label>
                       <Input
                         type="date"
                         value={formData.hire_date}
@@ -230,21 +237,22 @@ const EmployeeManagement = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('materials.price')}</Label>
+                      <Label>{t('documents.employee.salary')}</Label>
                       <Input
                         type="number"
                         value={formData.salary}
                         onChange={(e) => setFormData(prev => ({...prev, salary: Number(e.target.value)}))}
+                        placeholder={t('documents.employee.salary_placeholder')}
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                      {t('project.cancel')}
+                      {t('common.cancel')}
                     </Button>
                     <Button type="submit">
-                      {editingEmployee ? t('project.edit') : t('project.add')}
+                      {editingEmployee ? t('common.update') : t('common.save')}
                     </Button>
                   </div>
                 </form>
@@ -257,7 +265,7 @@ const EmployeeManagement = () => {
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-gray-400" />
               <Input
-                placeholder={t('users.search_placeholder')}
+                placeholder={t('documents.employee.search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -273,14 +281,14 @@ const EmployeeManagement = () => {
                     <div className="flex items-center space-x-4">
                       <div>
                         <h3 className="font-medium">{employee.full_name}</h3>
-                        <p className="text-sm text-gray-500">ID: {employee.employee_id}</p>
+                        <p className="text-sm text-gray-500">{t('documents.employee.id_label')}: {employee.employee_id}</p>
                       </div>
                       <div>
                         <p className="text-sm">{employee.position}</p>
                         <p className="text-sm text-gray-500">{employee.department}</p>
                       </div>
                       <Badge variant={employee.is_active ? "default" : "secondary"}>
-                        {employee.is_active ? t('users.active') : t('users.inactive')}
+                        {employee.is_active ? t('documents.employee.active') : t('documents.employee.inactive')}
                       </Badge>
                     </div>
                   </div>
@@ -291,7 +299,7 @@ const EmployeeManagement = () => {
                       onClick={() => handleEdit(employee)}
                     >
                       <Edit className="h-4 w-4" />
-                      {t('project.edit')}
+                      {t('common.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -300,7 +308,7 @@ const EmployeeManagement = () => {
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
-                      {t('project.delete')}
+                      {t('common.delete')}
                     </Button>
                   </div>
                 </div>
@@ -310,7 +318,7 @@ const EmployeeManagement = () => {
 
           {employees?.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              {t('users.none_found')}
+              {t('documents.employee.no_employees')}
             </div>
           )}
         </CardContent>
