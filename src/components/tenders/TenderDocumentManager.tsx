@@ -44,6 +44,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
 
+  // Use projectId if available, otherwise fall back to tenderId for project_id lookup
+  const effectiveProjectId = projectId || tenderId;
+
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
@@ -61,7 +64,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             file_size
           )
         `)
-        .eq('project_id', projectId || tenderId)
+        .eq('project_id', effectiveProjectId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -80,8 +83,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         throw new Error('File upload failed');
       }
 
-      // Create document record - don't include project_id to avoid foreign key issues
-      const documentInsertData = {
+      // Create document record with project_id if available
+      const documentInsertData: any = {
         title: documentData.title,
         description: documentData.description,
         file_url: uploadResult.url,
@@ -90,6 +93,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         file_size: file.size,
         document_type: 'tender' as const
       };
+
+      // Add project_id if we have a valid projectId
+      if (projectId) {
+        documentInsertData.project_id = projectId;
+      }
 
       const { data: document, error: docError } = await supabase
         .from('documents')
@@ -103,7 +111,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       const { data: tenderDoc, error: tenderDocError } = await supabase
         .from('tender_documents')
         .insert([{
-          project_id: projectId || tenderId,
+          project_id: effectiveProjectId,
           document_id: document.id,
           category: documentData.category,
           subcategory: documentData.subcategory,
@@ -221,6 +229,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-terracotta-600" />
               Documents d'Appel d'Offres
+              {projectId && (
+                <Badge variant="outline" className="ml-2">
+                  Projet: {projectId.slice(0, 8)}...
+                </Badge>
+              )}
             </CardTitle>
             {isBidder && !readonly && (
               <Button onClick={() => setIsUploadDialogOpen(true)}>
