@@ -44,9 +44,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
 
-  // Use projectId if available, otherwise fall back to tenderId for project_id lookup
-  const effectiveProjectId = projectId || tenderId;
-
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
@@ -64,7 +61,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             file_size
           )
         `)
-        .eq('project_id', effectiveProjectId)
+        .eq('tender_id', tenderId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -83,8 +80,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         throw new Error('File upload failed');
       }
 
-      // Create document record - don't include project_id for tender documents
-      // The relationship is managed through tender_documents table
+      // Create document record first
       const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
@@ -107,7 +103,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       const { data: tenderDoc, error: tenderDocError } = await supabase
         .from('tender_documents')
         .insert([{
-          project_id: effectiveProjectId,
+          tender_id: tenderId,
           document_id: document.id,
           category: documentData.category,
           subcategory: documentData.subcategory,
@@ -120,6 +116,14 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         .single();
 
       if (tenderDocError) throw tenderDocError;
+
+      // Link the document to the tender document
+      const { error: updateDocError } = await supabase
+        .from('documents')
+        .update({ tender_document_id: tenderDoc.id })
+        .eq('id', document.id);
+
+      if (updateDocError) throw updateDocError;
 
       return { document, tenderDoc };
     },
