@@ -69,8 +69,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
   const [stepFormData, setStepFormData] = useState({
     title: '',
     description: '',
-    due_date: '',
-    step_number: 1
+    due_date: ''
   });
   const [documentFormData, setDocumentFormData] = useState({
     category: 'administrative' as TenderDocumentCategory,
@@ -132,7 +131,10 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
   // Add official workflow step
   const addOfficialStepMutation = useMutation({
     mutationFn: async (officialStep: OfficialWorkflowStep) => {
-      const nextStepNumber = Math.max(...(tenderSteps?.map(s => s.step_number) || [0])) + 1;
+      const existingSteps = tenderSteps || [];
+      const nextStepNumber = existingSteps.length > 0 
+        ? Math.max(...existingSteps.map(s => s.step_number)) + 1 
+        : 1;
       
       const { data, error } = await supabase
         .from('tender_steps')
@@ -141,7 +143,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           title: officialStep.title,
           description: officialStep.description,
           step_number: nextStepNumber,
-          required_documents: officialStep.requiredDocuments,
+          required_documents: officialStep.requiredDocuments || [],
           status: 'pending'
         }])
         .select()
@@ -156,6 +158,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         title: 'Étape officielle ajoutée',
         description: 'L\'étape du workflow officiel a été ajoutée avec succès.',
       });
+      setIsOfficialWorkflowDialogOpen(false);
     },
     onError: (error) => {
       console.error('Add official step error:', error);
@@ -170,18 +173,24 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
   // Add new step mutation - Fixed to calculate next step number properly
   const addStepMutation = useMutation({
     mutationFn: async (stepData: typeof stepFormData) => {
-      // Calculate next step number properly
-      const nextStepNumber = Math.max(...(tenderSteps?.map(s => s.step_number) || [0])) + 1;
+      if (!stepData.title.trim()) {
+        throw new Error('Le titre de l\'étape est requis');
+      }
+
+      const existingSteps = tenderSteps || [];
+      const nextStepNumber = existingSteps.length > 0 
+        ? Math.max(...existingSteps.map(s => s.step_number)) + 1 
+        : 1;
       
       const { data, error } = await supabase
         .from('tender_steps')
         .insert([{
           tender_id: tenderId,
-          title: stepData.title,
-          description: stepData.description,
-          step_number: nextStepNumber, // Use calculated step number
+          title: stepData.title.trim(),
+          description: stepData.description?.trim() || null,
+          step_number: nextStepNumber,
           due_date: stepData.due_date || null,
-          required_documents: [], // Initialize with empty array
+          required_documents: [],
           status: 'pending'
         }])
         .select()
@@ -197,13 +206,13 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         description: 'La nouvelle étape a été ajoutée avec succès.',
       });
       setIsAddStepDialogOpen(false);
-      setStepFormData({ title: '', description: '', due_date: '', step_number: 1 });
+      setStepFormData({ title: '', description: '', due_date: '' });
     },
     onError: (error) => {
       console.error('Add step error:', error);
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de l\'ajout de l\'étape.',
+        description: error.message || 'Erreur lors de l\'ajout de l\'étape.',
         variant: 'destructive',
       });
     },
@@ -365,6 +374,14 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
 
   const handleAddStep = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!stepFormData.title.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Le titre de l\'étape est requis.',
+        variant: 'destructive',
+      });
+      return;
+    }
     addStepMutation.mutate(stepFormData);
   };
 
@@ -570,7 +587,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
         existingStepNumbers={getExistingStepNumbers()}
       />
 
-      {/* Add Custom Step Dialog - Fixed form */}
+      {/* Add Custom Step Dialog - Fixed form validation */}
       <Dialog open={isAddStepDialogOpen} onOpenChange={setIsAddStepDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -579,38 +596,55 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           
           <form onSubmit={handleAddStep} className="space-y-4">
             <div>
-              <Label>Titre</Label>
+              <Label htmlFor="step-title">Titre <span className="text-red-500">*</span></Label>
               <Input
+                id="step-title"
                 value={stepFormData.title}
                 onChange={(e) => setStepFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Titre de l'étape"
                 required
+                className={!stepFormData.title.trim() ? 'border-red-300' : ''}
               />
+              {!stepFormData.title.trim() && (
+                <p className="text-xs text-red-500 mt-1">Le titre est requis</p>
+              )}
             </div>
 
             <div>
-              <Label>Description</Label>
+              <Label htmlFor="step-description">Description</Label>
               <Textarea
+                id="step-description"
                 value={stepFormData.description}
                 onChange={(e) => setStepFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description de l'étape"
+                placeholder="Description de l'étape (optionnelle)"
               />
             </div>
 
             <div>
-              <Label>Date d'échéance (optionnelle)</Label>
+              <Label htmlFor="step-due-date">Date d'échéance (optionnelle)</Label>
               <Input
+                id="step-due-date"
                 type="date"
                 value={stepFormData.due_date}
                 onChange={(e) => setStepFormData(prev => ({ ...prev, due_date: e.target.value }))}
               />
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsAddStepDialogOpen(false)}>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddStepDialogOpen(false);
+                  setStepFormData({ title: '', description: '', due_date: '' });
+                }}
+              >
                 Annuler
               </Button>
-              <Button type="submit" disabled={addStepMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={addStepMutation.isPending || !stepFormData.title.trim()}
+              >
                 {addStepMutation.isPending ? 'Ajout...' : 'Ajouter'}
               </Button>
             </div>
