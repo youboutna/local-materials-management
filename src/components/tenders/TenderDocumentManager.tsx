@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,8 +47,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
-      // Query tender_documents with tender_id if the column exists, otherwise use project_id
-      let query = supabase
+      // Query tender_documents with project_id
+      const { data, error } = await supabase
         .from('tender_documents')
         .select(`
           *,
@@ -62,39 +61,16 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             mime_type,
             file_size
           )
-        `);
-
-      // Try to query by tender_id first, fall back to project_id if needed
-      try {
-        const { data, error } = await query.eq('tender_id', tenderId).order('created_at', { ascending: true });
-        if (error && error.message.includes('column "tender_id" does not exist')) {
-          // Fall back to project_id if tender_id doesn't exist yet
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('tender_documents')
-            .select(`
-              *,
-              document:documents(
-                id,
-                title,
-                description,
-                file_url,
-                file_name,
-                mime_type,
-                file_size
-              )
-            `)
-            .eq('project_id', projectId || tenderId)
-            .order('created_at', { ascending: true });
-          
-          if (fallbackError) throw fallbackError;
-          return (fallbackData || []) as TenderDocumentWithDetails[];
-        }
-        if (error) throw error;
-        return (data || []) as TenderDocumentWithDetails[];
-      } catch (err) {
-        console.error('Query error:', err);
+        `)
+        .eq('project_id', projectId || tenderId)
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        console.error('Query error:', error);
         return [] as TenderDocumentWithDetails[];
       }
+      
+      return (data || []) as TenderDocumentWithDetails[];
     },
     enabled: !!tenderId
   });
@@ -113,7 +89,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record first - don't set project_id if it might cause constraint issues
+      // Create document record without project_id to avoid foreign key constraint
       const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
@@ -121,9 +97,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         file_name: file.name,
         mime_type: file.type,
         file_size: file.size,
-        document_type: 'tender' as const,
-        // Only set project_id if we have a valid projectId, otherwise leave it null
-        ...(projectId && { project_id: projectId })
+        document_type: 'tender' as const
+        // Don't set project_id here to avoid foreign key constraint issues
       };
 
       console.log('Creating document record:', documentInsertData);
@@ -141,7 +116,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record
+      // Create tender document record with proper project_id validation
       const tenderDocData: any = {
         document_id: document.id,
         category: documentData.category,
@@ -152,15 +127,23 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         status: 'pending'
       };
 
-      // Add project_id (required field) - use projectId if available, otherwise use tenderId
+      // Use projectId if provided and valid, otherwise use tenderId
+      // This assumes that either the tender exists as a project or we handle it appropriately
       if (projectId) {
-        tenderDocData.project_id = projectId;
+        // Verify the project exists before setting it
+        const { data: projectExists } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('id', projectId)
+          .single();
+        
+        if (projectExists) {
+          tenderDocData.project_id = projectId;
+        } else {
+          console.warn('Project does not exist, using tenderId as fallback');
+          tenderDocData.project_id = tenderId;
+        }
       } else {
-        // If no projectId is provided, we need to ensure the tender exists as a project
-        // or handle this case appropriately
-        console.warn('No projectId provided for tender document');
-        // For now, let's try to use tenderId as project_id, but this might need adjustment
-        // based on your database schema
         tenderDocData.project_id = tenderId;
       }
 
