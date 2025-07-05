@@ -98,15 +98,19 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     enabled: !!tenderId
   });
 
-  // Upload document mutation
+  // Simplified upload document mutation
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
+      console.log('Starting document upload...', { fileName: file.name, documentData });
+      
       // Upload file first
       const uploadResult = await uploadFile(file, `tender-documents/${tenderId}`);
       
       if (!uploadResult.success) {
         throw new Error('File upload failed');
       }
+
+      console.log('File uploaded successfully:', uploadResult.url);
 
       // Create document record first
       const documentInsertData = {
@@ -119,73 +123,51 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         document_type: 'tender' as const
       };
 
+      console.log('Creating document record:', documentInsertData);
+
       const { data: document, error: docError } = await supabase
         .from('documents')
         .insert(documentInsertData)
         .select()
         .single();
 
-      if (docError) throw docError;
+      if (docError) {
+        console.error('Document creation error:', docError);
+        throw docError;
+      }
 
-      // Create tender document record - try with tender_id first, fall back to project_id
-      const tenderDocInsertData: any = {
+      console.log('Document created:', document);
+
+      // Create tender document record
+      const tenderDocData = {
         document_id: document.id,
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
         is_submitted: true,
         submission_date: new Date().toISOString(),
-        status: 'pending'
+        status: 'pending',
+        // Try tender_id first, use project_id as fallback
+        ...(tenderId ? { tender_id: tenderId } : {}),
+        ...(projectId ? { project_id: projectId } : {})
       };
 
-      let tenderDocResult;
-      try {
-        // Try inserting with tender_id first
-        const insertDataWithTenderId = { ...tenderDocInsertData, tender_id: tenderId };
-        const { data: tenderDoc, error: tenderDocError } = await supabase
-          .from('tender_documents')
-          .insert(insertDataWithTenderId)
-          .select()
-          .single();
+      console.log('Creating tender document record:', tenderDocData);
 
-        if (tenderDocError && tenderDocError.message.includes('column "tender_id" does not exist')) {
-          // Fall back to project_id
-          const insertDataWithProjectId = { ...tenderDocInsertData, project_id: projectId || tenderId };
-          const { data: fallbackTenderDoc, error: fallbackError } = await supabase
-            .from('tender_documents')
-            .insert(insertDataWithProjectId)
-            .select()
-            .single();
-          
-          if (fallbackError) throw fallbackError;
-          tenderDocResult = fallbackTenderDoc;
-        } else {
-          if (tenderDocError) throw tenderDocError;
-          tenderDocResult = tenderDoc;
-        }
-      } catch (err) {
-        console.error('Tender document creation error:', err);
-        throw err;
+      const { data: tenderDoc, error: tenderDocError } = await supabase
+        .from('tender_documents')
+        .insert(tenderDocData)
+        .select()
+        .single();
+
+      if (tenderDocError) {
+        console.error('Tender document creation error:', tenderDocError);
+        throw tenderDocError;
       }
 
-      // Try to link the document to the tender document if the column exists
-      try {
-        const updateData: any = { tender_document_id: tenderDocResult.id };
-        const { error: updateDocError } = await supabase
-          .from('documents')
-          .update(updateData)
-          .eq('id', document.id);
+      console.log('Tender document created:', tenderDoc);
 
-        // If the column doesn't exist, that's fine - just continue
-        if (updateDocError && !updateDocError.message.includes('column "tender_document_id" does not exist')) {
-          throw updateDocError;
-        }
-      } catch (err) {
-        console.warn('Could not link document to tender document:', err);
-        // Non-critical error, continue
-      }
-
-      return { document, tenderDoc: tenderDocResult };
+      return { document, tenderDoc };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
@@ -234,6 +216,16 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       return;
     }
 
+    if (!uploadFormData.title.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir un titre pour le document.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    console.log('Starting upload mutation with:', { file: selectedFile, documentData: uploadFormData });
     uploadMutation.mutate({ 
       file: selectedFile, 
       documentData: uploadFormData 
@@ -398,10 +390,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       </Card>
 
       {/* Upload Dialog */}
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+      <Dialog open={isUploadDialogOpen} onValueChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un Document</DialogTitle>
+            <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
           </DialogHeader>
           
           <form onSubmit={handleUpload} className="space-y-4">
@@ -469,6 +461,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               <Input
                 value={uploadFormData.title}
                 onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Titre du document..."
                 required
               />
             </div>
@@ -478,6 +471,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               <Textarea
                 value={uploadFormData.description}
                 onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description du document (optionnel)..."
               />
             </div>
 
@@ -489,6 +483,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                 required
               />
+              {selectedFile && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Fichier sélectionné: {selectedFile.name}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">
