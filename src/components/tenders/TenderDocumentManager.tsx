@@ -83,8 +83,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         throw new Error('File upload failed');
       }
 
-      // Create document record with project_id if available
-      const documentInsertData: any = {
+      // Create document record - don't include project_id for tender documents
+      // The relationship is managed through tender_documents table
+      const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
         file_url: uploadResult.url,
@@ -93,11 +94,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         file_size: file.size,
         document_type: 'tender' as const
       };
-
-      // Add project_id if we have a valid projectId
-      if (projectId) {
-        documentInsertData.project_id = projectId;
-      }
 
       const { data: document, error: docError } = await supabase
         .from('documents')
