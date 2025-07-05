@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +28,12 @@ interface Tender {
   status: 'draft' | 'published' | 'closed' | 'awarded';
   created_at: string;
   updated_at: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
 }
 
 interface TenderCrudProps {
@@ -66,6 +71,20 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       
       if (error) throw error;
       return data as Tender[] || [];
+    },
+  });
+
+  // Fetch projects for dropdown
+  const { data: projects } = useQuery({
+    queryKey: ['projects-for-tender'],
+    queryFn: async (): Promise<Project[]> => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title, description')
+        .order('title', { ascending: true });
+      
+      if (error) throw error;
+      return data as Project[] || [];
     },
   });
 
@@ -248,6 +267,26 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   required
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="project_id">Projet associé (optionnel)</Label>
+                <Select 
+                  value={formData.project_id} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un projet..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Aucun projet associé</SelectItem>
+                    {projects?.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
