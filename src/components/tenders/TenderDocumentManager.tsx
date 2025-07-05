@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,21 +80,16 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         throw new Error('File upload failed');
       }
 
-      // Create document record - only include project_id if it exists
-      const documentInsertData: any = {
+      // Create document record - don't include project_id to avoid foreign key issues
+      const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
         file_url: uploadResult.url,
         file_name: file.name,
         mime_type: file.type,
         file_size: file.size,
-        document_type: 'tender'
+        document_type: 'tender' as const
       };
-
-      // Only add project_id if it's provided and not null/undefined
-      if (projectId) {
-        documentInsertData.project_id = projectId;
-      }
 
       const { data: document, error: docError } = await supabase
         .from('documents')
