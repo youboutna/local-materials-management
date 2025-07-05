@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -273,13 +274,13 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 <Label htmlFor="project_id">Projet associé (optionnel)</Label>
                 <Select 
                   value={formData.project_id} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value === 'none' ? '' : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un projet..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun projet associé</SelectItem>
+                    <SelectItem value="none">Aucun projet associé</SelectItem>
                     {projects?.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.title}
