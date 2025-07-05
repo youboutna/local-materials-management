@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,14 +121,14 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       const { data: document, error: docError } = await supabase
         .from('documents')
-        .insert([documentInsertData])
+        .insert(documentInsertData)
         .select()
         .single();
 
       if (docError) throw docError;
 
       // Create tender document record - try with tender_id first, fall back to project_id
-      let tenderDocInsertData = {
+      const tenderDocInsertData: any = {
         document_id: document.id,
         category: documentData.category,
         subcategory: documentData.subcategory,
@@ -141,18 +140,20 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       let tenderDocResult;
       try {
-        // Try inserting with tender_id
+        // Try inserting with tender_id first
+        const insertDataWithTenderId = { ...tenderDocInsertData, tender_id: tenderId };
         const { data: tenderDoc, error: tenderDocError } = await supabase
           .from('tender_documents')
-          .insert([{ ...tenderDocInsertData, tender_id: tenderId }])
+          .insert(insertDataWithTenderId)
           .select()
           .single();
 
         if (tenderDocError && tenderDocError.message.includes('column "tender_id" does not exist')) {
           // Fall back to project_id
+          const insertDataWithProjectId = { ...tenderDocInsertData, project_id: projectId || tenderId };
           const { data: fallbackTenderDoc, error: fallbackError } = await supabase
             .from('tender_documents')
-            .insert([{ ...tenderDocInsertData, project_id: projectId || tenderId }])
+            .insert(insertDataWithProjectId)
             .select()
             .single();
           
@@ -169,9 +170,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       // Try to link the document to the tender document if the column exists
       try {
+        const updateData: any = { tender_document_id: tenderDocResult.id };
         const { error: updateDocError } = await supabase
           .from('documents')
-          .update({ tender_document_id: tenderDocResult.id })
+          .update(updateData)
           .eq('id', document.id);
 
         // If the column doesn't exist, that's fine - just continue
