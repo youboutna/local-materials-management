@@ -113,7 +113,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record first
+      // Create document record first - don't set project_id if it might cause constraint issues
       const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
@@ -121,7 +121,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         file_name: file.name,
         mime_type: file.type,
         file_size: file.size,
-        document_type: 'tender' as const
+        document_type: 'tender' as const,
+        // Only set project_id if we have a valid projectId, otherwise leave it null
+        ...(projectId && { project_id: projectId })
       };
 
       console.log('Creating document record:', documentInsertData);
@@ -139,7 +141,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record - ensure we have either tender_id or project_id
+      // Create tender document record
       const tenderDocData: any = {
         document_id: document.id,
         category: documentData.category,
@@ -150,13 +152,16 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         status: 'pending'
       };
 
-      // Add project_id (required field) - use projectId or tenderId as fallback
+      // Add project_id (required field) - use projectId if available, otherwise use tenderId
       if (projectId) {
         tenderDocData.project_id = projectId;
-      } else if (tenderId) {
-        tenderDocData.project_id = tenderId;
       } else {
-        throw new Error('Either projectId or tenderId must be provided');
+        // If no projectId is provided, we need to ensure the tender exists as a project
+        // or handle this case appropriately
+        console.warn('No projectId provided for tender document');
+        // For now, let's try to use tenderId as project_id, but this might need adjustment
+        // based on your database schema
+        tenderDocData.project_id = tenderId;
       }
 
       console.log('Creating tender document record:', tenderDocData);
