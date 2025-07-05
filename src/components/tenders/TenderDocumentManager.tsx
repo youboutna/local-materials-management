@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +15,7 @@ import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABE
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
 
 interface TenderDocumentManagerProps {
   tenderId: string;
@@ -34,14 +34,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     description: '',
     is_required: true
   });
-  const [financialData, setFinancialData] = useState({
-    total_cost: 0,
-    labor_cost: 0,
-    material_cost: 0,
-    equipment_cost: 0,
-    overhead_percentage: 15,
-    profit_margin: 10
-  });
+  const [showQuantitativeEstimate, setShowQuantitativeEstimate] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -178,13 +171,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     });
   };
 
-  const calculateTotalCost = () => {
-    const subtotal = financialData.labor_cost + financialData.material_cost + financialData.equipment_cost;
-    const overhead = subtotal * (financialData.overhead_percentage / 100);
-    const profit = (subtotal + overhead) * (financialData.profit_margin / 100);
-    return subtotal + overhead + profit;
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved': return <CheckCircle className="h-4 w-4 text-green-600" />;
@@ -205,6 +191,17 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
   const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
     return tenderDocuments?.filter(doc => doc.category === category) || [];
+  };
+
+  const handleSubcategoryChange = (value: TenderDocumentSubcategory) => {
+    setUploadFormData(prev => ({ ...prev, subcategory: value }));
+    
+    // Show quantitative estimate component for "devis_quantitatif_estimatif"
+    if (value === 'devis_quantitatif_estimatif') {
+      setShowQuantitativeEstimate(true);
+    } else {
+      setShowQuantitativeEstimate(false);
+    }
   };
 
   if (isLoading) {
@@ -247,6 +244,14 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                     {TENDER_CATEGORY_LABELS[category]}
                   </h3>
                 </div>
+
+                {/* Show Quantitative Estimate component for financial category */}
+                {category === 'financial' && (
+                  <TenderQuantitativeEstimate 
+                    tenderId={tenderId}
+                    projectId={projectId}
+                  />
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filterDocumentsByCategory(category).map((tenderDoc) => (
@@ -306,69 +311,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                   ))}
                 </div>
 
-                {category === 'financial' && isBidder && (
-                  <Card className="mt-6">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calculator className="h-5 w-5" />
-                        Évaluation Financière
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Coût de la main-d'œuvre</Label>
-                          <Input
-                            type="number"
-                            value={financialData.labor_cost}
-                            onChange={(e) => setFinancialData(prev => ({ ...prev, labor_cost: Number(e.target.value) }))}
-                          />
-                        </div>
-                        <div>
-                          <Label>Coût des matériaux</Label>
-                          <Input
-                            type="number"
-                            value={financialData.material_cost}
-                            onChange={(e) => setFinancialData(prev => ({ ...prev, material_cost: Number(e.target.value) }))}
-                          />
-                        </div>
-                        <div>
-                          <Label>Coût des équipements</Label>
-                          <Input
-                            type="number"
-                            value={financialData.equipment_cost}
-                            onChange={(e) => setFinancialData(prev => ({ ...prev, equipment_cost: Number(e.target.value) }))}
-                          />
-                        </div>
-                        <div>
-                          <Label>Frais généraux (%)</Label>
-                          <Input
-                            type="number"
-                            value={financialData.overhead_percentage}
-                            onChange={(e) => setFinancialData(prev => ({ ...prev, overhead_percentage: Number(e.target.value) }))}
-                          />
-                        </div>
-                        <div>
-                          <Label>Marge bénéficiaire (%)</Label>
-                          <Input
-                            type="number"
-                            value={financialData.profit_margin}
-                            onChange={(e) => setFinancialData(prev => ({ ...prev, profit_margin: Number(e.target.value) }))}
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <div className="w-full">
-                            <Label>Coût total calculé</Label>
-                            <div className="text-2xl font-bold text-green-600">
-                              {calculateTotalCost().toFixed(2)} MRU
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
                 {filterDocumentsByCategory(category).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -410,20 +352,43 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               <Label>Sous-catégorie</Label>
               <Select 
                 value={uploadFormData.subcategory} 
-                onValueChange={(value: TenderDocumentSubcategory) => setUploadFormData(prev => ({ ...prev, subcategory: value }))}
+                onValueChange={handleSubcategoryChange}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(TENDER_DOCUMENT_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key as TenderDocumentSubcategory}>
-                      {label}
-                    </SelectItem>
-                  ))}
+                  {Object.entries(TENDER_DOCUMENT_LABELS)
+                    .filter(([key]) => {
+                      if (uploadFormData.category === 'administrative') {
+                        return ['lettre_soumission', 'pouvoir_signature', 'acte_groupement', 'attestation_impot', 'attestation_cnss', 'attestation_non_faillite', 'renseignement_soumissionnaire'].includes(key);
+                      } else if (uploadFormData.category === 'technical') {
+                        return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques'].includes(key);
+                      } else {
+                        return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission'].includes(key);
+                      }
+                    })
+                    .map(([key, label]) => (
+                      <SelectItem key={key} value={key as TenderDocumentSubcategory}>
+                        {label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Show special message for quantitative estimate */}
+            {uploadFormData.subcategory === 'devis_quantitatif_estimatif' && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                <div className="flex items-start gap-2">
+                  <Calculator className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium">Devis Quantitatif Estimatif</p>
+                    <p>Vous pouvez créer un devis calculé à partir du référentiel matériaux ou télécharger une facture/bon de commande existant.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <Label>Titre</Label>

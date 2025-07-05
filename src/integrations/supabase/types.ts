@@ -967,6 +967,68 @@ export type Database = {
         }
         Relationships: []
       }
+      parsed_invoices: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          file_name: string | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          items: Json | null
+          parsed_data: Json | null
+          parsing_errors: string | null
+          parsing_status: string | null
+          supplier_info: Json | null
+          tax_amount: number | null
+          tender_id: string
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          file_name?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          items?: Json | null
+          parsed_data?: Json | null
+          parsing_errors?: string | null
+          parsing_status?: string | null
+          supplier_info?: Json | null
+          tax_amount?: number | null
+          tender_id: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          file_name?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          items?: Json | null
+          parsed_data?: Json | null
+          parsing_errors?: string | null
+          parsing_status?: string | null
+          supplier_info?: Json | null
+          tax_amount?: number | null
+          tender_id?: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parsed_invoices_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           address: string | null
@@ -1988,6 +2050,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tender_estimate_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          estimate_id: string
+          id: string
+          item_type: string | null
+          material_id: string | null
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          estimate_id: string
+          id?: string
+          item_type?: string | null
+          material_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          estimate_id?: string
+          id?: string
+          item_type?: string | null
+          material_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_estimate_items_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "tender_estimates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_estimate_items_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_estimates: {
+        Row: {
+          created_at: string
+          currency: string | null
+          estimate_type: string
+          final_total: number | null
+          id: string
+          overhead_amount: number | null
+          overhead_percentage: number | null
+          profit_margin_amount: number | null
+          profit_margin_percentage: number | null
+          project_id: string | null
+          status: string | null
+          subtotal: number | null
+          tax_amount: number | null
+          tax_rate: number | null
+          tender_id: string
+          total_equipment_cost: number | null
+          total_labor_cost: number | null
+          total_materials_cost: number | null
+          total_with_tax: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          estimate_type?: string
+          final_total?: number | null
+          id?: string
+          overhead_amount?: number | null
+          overhead_percentage?: number | null
+          profit_margin_amount?: number | null
+          profit_margin_percentage?: number | null
+          project_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          tender_id: string
+          total_equipment_cost?: number | null
+          total_labor_cost?: number | null
+          total_materials_cost?: number | null
+          total_with_tax?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          estimate_type?: string
+          final_total?: number | null
+          id?: string
+          overhead_amount?: number | null
+          overhead_percentage?: number | null
+          profit_margin_amount?: number | null
+          profit_margin_percentage?: number | null
+          project_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          tender_id?: string
+          total_equipment_cost?: number | null
+          total_labor_cost?: number | null
+          total_materials_cost?: number | null
+          total_with_tax?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       tender_step_documents: {
         Row: {
