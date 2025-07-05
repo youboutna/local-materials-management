@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -138,19 +139,25 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record
-      const tenderDocData = {
+      // Create tender document record - ensure we have either tender_id or project_id
+      const tenderDocData: any = {
         document_id: document.id,
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
         is_submitted: true,
         submission_date: new Date().toISOString(),
-        status: 'pending',
-        // Try tender_id first, use project_id as fallback
-        ...(tenderId ? { tender_id: tenderId } : {}),
-        ...(projectId ? { project_id: projectId } : {})
+        status: 'pending'
       };
+
+      // Add project_id (required field) - use projectId or tenderId as fallback
+      if (projectId) {
+        tenderDocData.project_id = projectId;
+      } else if (tenderId) {
+        tenderDocData.project_id = tenderId;
+      } else {
+        throw new Error('Either projectId or tenderId must be provided');
+      }
 
       console.log('Creating tender document record:', tenderDocData);
 
@@ -390,7 +397,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       </Card>
 
       {/* Upload Dialog */}
-      <Dialog open={isUploadDialogOpen} onValueChange={setIsUploadDialogOpen}>
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
