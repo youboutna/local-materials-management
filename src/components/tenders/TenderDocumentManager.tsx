@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +48,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Query tender_documents with tender_id if the column exists, otherwise use project_id
+      let query = supabase
         .from('tender_documents')
         .select(`
           *,
@@ -60,12 +62,39 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             mime_type,
             file_size
           )
-        `)
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: true });
+        `);
 
-      if (error) throw error;
-      return (data || []) as TenderDocumentWithDetails[];
+      // Try to query by tender_id first, fall back to project_id if needed
+      try {
+        const { data, error } = await query.eq('tender_id', tenderId).order('created_at', { ascending: true });
+        if (error && error.message.includes('column "tender_id" does not exist')) {
+          // Fall back to project_id if tender_id doesn't exist yet
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('tender_documents')
+            .select(`
+              *,
+              document:documents(
+                id,
+                title,
+                description,
+                file_url,
+                file_name,
+                mime_type,
+                file_size
+              )
+            `)
+            .eq('project_id', projectId || tenderId)
+            .order('created_at', { ascending: true });
+          
+          if (fallbackError) throw fallbackError;
+          return (fallbackData || []) as TenderDocumentWithDetails[];
+        }
+        if (error) throw error;
+        return (data || []) as TenderDocumentWithDetails[];
+      } catch (err) {
+        console.error('Query error:', err);
+        return [] as TenderDocumentWithDetails[];
+      }
     },
     enabled: !!tenderId
   });
@@ -99,33 +128,62 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       if (docError) throw docError;
 
-      // Create tender document record
-      const { data: tenderDoc, error: tenderDocError } = await supabase
-        .from('tender_documents')
-        .insert([{
-          tender_id: tenderId,
-          document_id: document.id,
-          category: documentData.category,
-          subcategory: documentData.subcategory,
-          is_required: documentData.is_required,
-          is_submitted: true,
-          submission_date: new Date().toISOString(),
-          status: 'pending'
-        }])
-        .select()
-        .single();
+      // Create tender document record - try with tender_id first, fall back to project_id
+      let tenderDocInsertData = {
+        document_id: document.id,
+        category: documentData.category,
+        subcategory: documentData.subcategory,
+        is_required: documentData.is_required,
+        is_submitted: true,
+        submission_date: new Date().toISOString(),
+        status: 'pending'
+      };
 
-      if (tenderDocError) throw tenderDocError;
+      let tenderDocResult;
+      try {
+        // Try inserting with tender_id
+        const { data: tenderDoc, error: tenderDocError } = await supabase
+          .from('tender_documents')
+          .insert([{ ...tenderDocInsertData, tender_id: tenderId }])
+          .select()
+          .single();
 
-      // Link the document to the tender document
-      const { error: updateDocError } = await supabase
-        .from('documents')
-        .update({ tender_document_id: tenderDoc.id })
-        .eq('id', document.id);
+        if (tenderDocError && tenderDocError.message.includes('column "tender_id" does not exist')) {
+          // Fall back to project_id
+          const { data: fallbackTenderDoc, error: fallbackError } = await supabase
+            .from('tender_documents')
+            .insert([{ ...tenderDocInsertData, project_id: projectId || tenderId }])
+            .select()
+            .single();
+          
+          if (fallbackError) throw fallbackError;
+          tenderDocResult = fallbackTenderDoc;
+        } else {
+          if (tenderDocError) throw tenderDocError;
+          tenderDocResult = tenderDoc;
+        }
+      } catch (err) {
+        console.error('Tender document creation error:', err);
+        throw err;
+      }
 
-      if (updateDocError) throw updateDocError;
+      // Try to link the document to the tender document if the column exists
+      try {
+        const { error: updateDocError } = await supabase
+          .from('documents')
+          .update({ tender_document_id: tenderDocResult.id })
+          .eq('id', document.id);
 
-      return { document, tenderDoc };
+        // If the column doesn't exist, that's fine - just continue
+        if (updateDocError && !updateDocError.message.includes('column "tender_document_id" does not exist')) {
+          throw updateDocError;
+        }
+      } catch (err) {
+        console.warn('Could not link document to tender document:', err);
+        // Non-critical error, continue
+      }
+
+      return { document, tenderDoc: tenderDocResult };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
