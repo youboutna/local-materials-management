@@ -59,13 +59,22 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const [estimateData, setEstimateData] = useState<Partial<TenderEstimate>>({
+  const [estimateData, setEstimateData] = useState<Omit<TenderEstimate, 'id'>>({
     tender_id: tenderId,
     project_id: projectId,
     estimate_type: 'quantitative',
+    total_materials_cost: 0,
+    total_labor_cost: 0,
+    total_equipment_cost: 0,
+    subtotal: 0,
     tax_rate: 14, // Default TVA rate
+    tax_amount: 0,
+    total_with_tax: 0,
     overhead_percentage: 15,
+    overhead_amount: 0,
     profit_margin_percentage: 10,
+    profit_margin_amount: 0,
+    final_total: 0,
     currency: 'MRU',
     status: 'draft'
   });
@@ -148,7 +157,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
   // Create estimate mutation
   const createEstimateMutation = useMutation({
-    mutationFn: async (estimate: Partial<TenderEstimate>) => {
+    mutationFn: async (estimate: Omit<TenderEstimate, 'id'>) => {
       const { data, error } = await supabase
         .from('tender_estimates')
         .insert([estimate])
@@ -217,8 +226,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
           file_name: file.name,
           mime_type: file.type,
           file_size: file.size,
-          document_type: 'tender',
-          project_id: projectId
+          document_type: 'tender'
         }])
         .select()
         .single();
