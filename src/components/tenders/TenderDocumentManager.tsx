@@ -75,7 +75,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     enabled: !!tenderId
   });
 
-  // Fixed upload document mutation
+  // Corrected upload document mutation - remove project_id from documents entirely
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
       console.log('Starting document upload...', { fileName: file.name, documentData });
@@ -89,8 +89,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record - only set project_id if it's a valid UUID and exists
-      const documentInsertData: any = {
+      // Create document record WITHOUT project_id to avoid foreign key constraint
+      const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
         file_url: uploadResult.url,
@@ -98,20 +98,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         mime_type: file.type,
         file_size: file.size,
         document_type: 'tender' as const
+        // DO NOT set project_id here - it causes the foreign key constraint violation
       };
-
-      // Only set project_id if we have a valid projectId that exists in projects table
-      if (projectId) {
-        const { data: projectExists } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('id', projectId)
-          .maybeSingle();
-        
-        if (projectExists) {
-          documentInsertData.project_id = projectId;
-        }
-      }
 
       console.log('Creating document record:', documentInsertData);
 
@@ -128,10 +116,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record - use the determined project_id
+      // Create tender document record - use projectId or tenderId
       const tenderDocData = {
         document_id: document.id,
-        project_id: document.project_id || tenderId, // Use document's project_id or fallback to tenderId
+        project_id: projectId || tenderId,
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
