@@ -89,7 +89,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record without project_id to avoid foreign key constraint
+      // Create document record without project_id reference
       const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
@@ -98,7 +98,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         mime_type: file.type,
         file_size: file.size,
         document_type: 'tender' as const
-        // Don't set project_id here to avoid foreign key constraint issues
       };
 
       console.log('Creating document record:', documentInsertData);
@@ -116,9 +115,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record with proper project_id validation
-      const tenderDocData: any = {
+      // For tender documents, we'll use the tenderId directly without foreign key validation
+      // This assumes the tender_documents table doesn't have a strict foreign key to projects
+      const tenderDocData = {
         document_id: document.id,
+        project_id: projectId || tenderId, // Use projectId if available, otherwise tenderId
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
@@ -126,26 +127,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         submission_date: new Date().toISOString(),
         status: 'pending'
       };
-
-      // Use projectId if provided and valid, otherwise use tenderId
-      // This assumes that either the tender exists as a project or we handle it appropriately
-      if (projectId) {
-        // Verify the project exists before setting it
-        const { data: projectExists } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('id', projectId)
-          .single();
-        
-        if (projectExists) {
-          tenderDocData.project_id = projectId;
-        } else {
-          console.warn('Project does not exist, using tenderId as fallback');
-          tenderDocData.project_id = tenderId;
-        }
-      } else {
-        tenderDocData.project_id = tenderId;
-      }
 
       console.log('Creating tender document record:', tenderDocData);
 
