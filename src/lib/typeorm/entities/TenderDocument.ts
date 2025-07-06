@@ -1,3 +1,4 @@
+
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { Document } from "./Document";
 
@@ -6,8 +7,11 @@ export class TenderDocument {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: "varchar" })
-  project_id!: string;
+  @Column({ type: "varchar", nullable: true })
+  project_id?: string;
+
+  @Column({ type: "varchar", nullable: true })
+  tender_id?: string;
 
   @Column({ type: "varchar" })
   document_id!: string;

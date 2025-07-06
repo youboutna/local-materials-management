@@ -1992,11 +1992,12 @@ export type Database = {
           id: string
           is_required: boolean | null
           is_submitted: boolean | null
-          project_id: string
+          project_id: string | null
           reviewer_notes: string | null
           status: string | null
           subcategory: Database["public"]["Enums"]["tender_document_subcategory"]
           submission_date: string | null
+          tender_id: string | null
           updated_at: string
         }
         Insert: {
@@ -2006,11 +2007,12 @@ export type Database = {
           id?: string
           is_required?: boolean | null
           is_submitted?: boolean | null
-          project_id: string
+          project_id?: string | null
           reviewer_notes?: string | null
           status?: string | null
           subcategory: Database["public"]["Enums"]["tender_document_subcategory"]
           submission_date?: string | null
+          tender_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -2020,11 +2022,12 @@ export type Database = {
           id?: string
           is_required?: boolean | null
           is_submitted?: boolean | null
-          project_id?: string
+          project_id?: string | null
           reviewer_notes?: string | null
           status?: string | null
           subcategory?: Database["public"]["Enums"]["tender_document_subcategory"]
           submission_date?: string | null
+          tender_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2036,10 +2039,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tender_documents_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "tender_documents_tender_id_fkey"
+            columns: ["tender_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "tenders"
             referencedColumns: ["id"]
           },
         ]

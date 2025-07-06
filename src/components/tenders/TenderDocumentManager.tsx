@@ -47,7 +47,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const { data: tenderDocuments, isLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
-      // Query tender_documents with project_id
+      // Query tender_documents with tender_id
       const { data, error } = await supabase
         .from('tender_documents')
         .select(`
@@ -62,7 +62,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             file_size
           )
         `)
-        .eq('project_id', projectId || tenderId)
+        .eq('tender_id', tenderId)
         .order('created_at', { ascending: true });
       
       if (error) {
@@ -75,7 +75,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     enabled: !!tenderId
   });
 
-  // Corrected upload document mutation - remove project_id from documents entirely
+  // Updated upload document mutation to use tender_id
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
       console.log('Starting document upload...', { fileName: file.name, documentData });
@@ -89,7 +89,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record WITHOUT project_id to avoid foreign key constraint
+      // Create document record without any foreign key constraints
       const documentInsertData = {
         title: documentData.title,
         description: documentData.description,
@@ -98,7 +98,6 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         mime_type: file.type,
         file_size: file.size,
         document_type: 'tender' as const
-        // DO NOT set project_id here - it causes the foreign key constraint violation
       };
 
       console.log('Creating document record:', documentInsertData);
@@ -116,10 +115,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // Create tender document record - use projectId or tenderId
+      // Create tender document record using tender_id
       const tenderDocData = {
         document_id: document.id,
-        project_id: projectId || tenderId,
+        tender_id: tenderId,
+        project_id: projectId || null, // Keep for legacy compatibility
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
