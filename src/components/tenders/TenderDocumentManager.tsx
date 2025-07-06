@@ -75,7 +75,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     enabled: !!tenderId
   });
 
-  // Simplified upload document mutation
+  // Fixed upload document mutation
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
       console.log('Starting document upload...', { fileName: file.name, documentData });
@@ -89,8 +89,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('File uploaded successfully:', uploadResult.url);
 
-      // Create document record without project_id reference
-      const documentInsertData = {
+      // Create document record - only set project_id if it's a valid UUID and exists
+      const documentInsertData: any = {
         title: documentData.title,
         description: documentData.description,
         file_url: uploadResult.url,
@@ -99,6 +99,19 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         file_size: file.size,
         document_type: 'tender' as const
       };
+
+      // Only set project_id if we have a valid projectId that exists in projects table
+      if (projectId) {
+        const { data: projectExists } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('id', projectId)
+          .maybeSingle();
+        
+        if (projectExists) {
+          documentInsertData.project_id = projectId;
+        }
+      }
 
       console.log('Creating document record:', documentInsertData);
 
@@ -115,11 +128,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Document created:', document);
 
-      // For tender documents, we'll use the tenderId directly without foreign key validation
-      // This assumes the tender_documents table doesn't have a strict foreign key to projects
+      // Create tender document record - use the determined project_id
       const tenderDocData = {
         document_id: document.id,
-        project_id: projectId || tenderId, // Use projectId if available, otherwise tenderId
+        project_id: document.project_id || tenderId, // Use document's project_id or fallback to tenderId
         category: documentData.category,
         subcategory: documentData.subcategory,
         is_required: documentData.is_required,
