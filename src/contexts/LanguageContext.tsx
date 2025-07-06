@@ -56,6 +56,55 @@ const translations = {
       last_login: "Dernière connexion",
       never: "Jamais"
     },
+    users: {
+      title: "Utilisateurs",
+      subtitle: "Gérer les utilisateurs du système",
+      add_user: "Ajouter un utilisateur",
+      edit_user: "Modifier l'utilisateur",
+      delete_user: "Supprimer l'utilisateur",
+      user_list: "Liste des utilisateurs",
+      user_details: "Détails de l'utilisateur",
+      no_users: "Aucun utilisateur trouvé",
+      search_placeholder: "Rechercher un utilisateur...",
+      filter_by_role: "Filtrer par rôle",
+      filter_by_status: "Filtrer par statut",
+      total_users: "Total des utilisateurs",
+      active_users: "Utilisateurs actifs",
+      inactive_users: "Utilisateurs inactifs",
+      recent_users: "Utilisateurs récents",
+      user_created: "Utilisateur créé avec succès",
+      user_updated: "Utilisateur mis à jour avec succès",
+      user_deleted: "Utilisateur supprimé avec succès",
+      confirm_delete_message: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+      bulk_actions: "Actions en lot",
+      select_all: "Tout sélectionner",
+      deselect_all: "Tout désélectionner",
+      export_users: "Exporter les utilisateurs",
+      import_users: "Importer les utilisateurs",
+      management: {
+        title: "Gestion des utilisateurs",
+        description: "Administrer les comptes utilisateurs et leurs permissions",
+        roles: {
+          admin: "Administrateur",
+          user: "Utilisateur",
+          manager: "Gestionnaire",
+          viewer: "Observateur"
+        },
+        permissions: {
+          read: "Lecture",
+          write: "Écriture",
+          delete: "Suppression",
+          admin: "Administration"
+        },
+        actions: {
+          activate: "Activer",
+          deactivate: "Désactiver",
+          reset_password: "Réinitialiser le mot de passe",
+          send_invitation: "Envoyer une invitation",
+          revoke_access: "Révoquer l'accès"
+        }
+      }
+    },
     dashboard: {
       title: "Tableau de bord",
       welcome: "Bienvenue",
@@ -84,6 +133,7 @@ const translations = {
     task: {
       title: "Tâches",
       subtitle: "Assignez et suivez les tâches de votre équipe",
+      assignments_title: "Affectations de tâches",
       create: "Créer une tâche",
       assign: "Assigner",
       complete: "Terminer",
@@ -126,7 +176,27 @@ const translations = {
       location: "Localisation",
       completion_date: "Date de completion",
       task_details: "Détails de la tâche",
-      optional: "optionnel"
+      optional: "optionnel",
+      task_list: "Liste des tâches",
+      filter_tasks: "Filtrer les tâches",
+      sort_tasks: "Trier les tâches",
+      task_progress: "Progression de la tâche",
+      task_comments: "Commentaires de la tâche",
+      add_comment: "Ajouter un commentaire",
+      task_history: "Historique de la tâche",
+      task_files: "Fichiers de la tâche",
+      attach_file: "Joindre un fichier",
+      task_reminders: "Rappels de tâche",
+      set_reminder: "Définir un rappel",
+      task_dependencies: "Dépendances de la tâche",
+      add_dependency: "Ajouter une dépendance",
+      task_subtasks: "Sous-tâches",
+      add_subtask: "Ajouter une sous-tâche",
+      task_time_tracking: "Suivi du temps",
+      start_timer: "Démarrer le minuteur",
+      stop_timer: "Arrêter le minuteur",
+      time_spent: "Temps passé",
+      estimated_time: "Temps estimé"
     },
     documents: {
       title: "Documents",
@@ -480,6 +550,55 @@ const translations = {
       last_login: "آخر تسجيل دخول",
       never: "أبداً"
     },
+    users: {
+      title: "المستخدمون",
+      subtitle: "إدارة مستخدمي النظام",
+      add_user: "إضافة مستخدم",
+      edit_user: "تعديل المستخدم",
+      delete_user: "حذف المستخدم",
+      user_list: "قائمة المستخدمين",
+      user_details: "تفاصيل المستخدم",
+      no_users: "لا يوجد مستخدمون",
+      search_placeholder: "البحث عن مستخدم...",
+      filter_by_role: "تصفية حسب الدور",
+      filter_by_status: "تصفية حسب الحالة",
+      total_users: "إجمالي المستخدمين",
+      active_users: "المستخدمون النشطون",
+      inactive_users: "المستخدمون غير النشطين",
+      recent_users: "المستخدمون الجدد",
+      user_created: "تم إنشاء المستخدم بنجاح",
+      user_updated: "تم تحديث المستخدم بنجاح",
+      user_deleted: "تم حذف المستخدم بنجاح",
+      confirm_delete_message: "هل أنت متأكد من حذف هذا المستخدم؟",
+      bulk_actions: "إجراءات مجمعة",
+      select_all: "تحديد الكل",
+      deselect_all: "إلغاء تحديد الكل",
+      export_users: "تصدير المستخدمين",
+      import_users: "استيراد المستخدمين",
+      management: {
+        title: "إدارة المستخدمين",
+        description: "إدارة حسابات المستخدمين وصلاحياتهم",
+        roles: {
+          admin: "مدير",
+          user: "مستخدم",
+          manager: "مدير قسم",
+          viewer: "مشاهد"
+        },
+        permissions: {
+          read: "قراءة",
+          write: "كتابة",
+          delete: "حذف",
+          admin: "إدارة"
+        },
+        actions: {
+          activate: "تفعيل",
+          deactivate: "إلغاء التفعيل",
+          reset_password: "إعادة تعيين كلمة المرور",
+          send_invitation: "إرسال دعوة",
+          revoke_access: "إلغاء الوصول"
+        }
+      }
+    },
     dashboard: {
       title: "لوحة التحكم",
       welcome: "مرحباً",
@@ -508,6 +627,7 @@ const translations = {
     task: {
       title: "المهام",
       subtitle: "قم بتعيين ومتابعة مهام فريقك",
+      assignments_title: "تعيينات المهام",
       create: "إنشاء مهمة",
       assign: "تعيين",
       complete: "إكمال",
@@ -550,7 +670,27 @@ const translations = {
       location: "الموقع",
       completion_date: "تاريخ الإكمال",
       task_details: "تفاصيل المهمة",
-      optional: "اختياري"
+      optional: "اختياري",
+      task_list: "قائمة المهام",
+      filter_tasks: "تصفية المهام",
+      sort_tasks: "ترتيب المهام",
+      task_progress: "تقدم المهمة",
+      task_comments: "تعليقات المهمة",
+      add_comment: "إضافة تعليق",
+      task_history: "تاريخ المهمة",
+      task_files: "ملفات المهمة",
+      attach_file: "إرفاق ملف",
+      task_reminders: "تذكيرات المهمة",
+      set_reminder: "تعيين تذكير",
+      task_dependencies: "تبعيات المهمة",
+      add_dependency: "إضافة تبعية",
+      task_subtasks: "المهام الفرعية",
+      add_subtask: "إضافة مهمة فرعية",
+      task_time_tracking: "تتبع الوقت",
+      start_timer: "بدء المؤقت",
+      stop_timer: "إيقاف المؤقت",
+      time_spent: "الوقت المستغرق",
+      estimated_time: "الوقت المقدر"
     },
     documents: {
       title: "الوثائق",
@@ -857,7 +997,7 @@ const translations = {
       }
     },
     tender_category: {
-      administrative: "إداري",
+      administrative: "مدير",
       technical: "تقني",
       financial: "مالي"
     },
@@ -904,6 +1044,55 @@ const translations = {
       last_login: "Last Login",
       never: "Never"
     },
+    users: {
+      title: "Users",
+      subtitle: "Manage system users",
+      add_user: "Add User",
+      edit_user: "Edit User",
+      delete_user: "Delete User",
+      user_list: "User List",
+      user_details: "User Details",
+      no_users: "No users found",
+      search_placeholder: "Search for a user...",
+      filter_by_role: "Filter by role",
+      filter_by_status: "Filter by status",
+      total_users: "Total Users",
+      active_users: "Active Users",
+      inactive_users: "Inactive Users",
+      recent_users: "Recent Users",
+      user_created: "User created successfully",
+      user_updated: "User updated successfully",
+      user_deleted: "User deleted successfully",
+      confirm_delete_message: "Are you sure you want to delete this user?",
+      bulk_actions: "Bulk Actions",
+      select_all: "Select All",
+      deselect_all: "Deselect All",
+      export_users: "Export Users",
+      import_users: "Import Users",
+      management: {
+        title: "User Management",
+        description: "Manage user accounts and their permissions",
+        roles: {
+          admin: "Administrator",
+          user: "User",
+          manager: "Manager",
+          viewer: "Viewer"
+        },
+        permissions: {
+          read: "Read",
+          write: "Write",
+          delete: "Delete",
+          admin: "Administration"
+        },
+        actions: {
+          activate: "Activate",
+          deactivate: "Deactivate",
+          reset_password: "Reset Password",
+          send_invitation: "Send Invitation",
+          revoke_access: "Revoke Access"
+        }
+      }
+    },
     dashboard: {
       title: "Dashboard",
       welcome: "Welcome",
@@ -932,6 +1121,7 @@ const translations = {
     task: {
       title: "Tasks",
       subtitle: "Assign and track your team's tasks",
+      assignments_title: "Task Assignments",
       create: "Create task",
       assign: "Assign",
       complete: "Complete",
@@ -974,7 +1164,27 @@ const translations = {
       location: "Location",
       completion_date: "Completion date",
       task_details: "Task details",
-      optional: "optional"
+      optional: "optional",
+      task_list: "Task List",
+      filter_tasks: "Filter Tasks",
+      sort_tasks: "Sort Tasks",
+      task_progress: "Task Progress",
+      task_comments: "Task Comments",
+      add_comment: "Add Comment",
+      task_history: "Task History",
+      task_files: "Task Files",
+      attach_file: "Attach File",
+      task_reminders: "Task Reminders",
+      set_reminder: "Set Reminder",
+      task_dependencies: "Task Dependencies",
+      add_dependency: "Add Dependency",
+      task_subtasks: "Subtasks",
+      add_subtask: "Add Subtask",
+      task_time_tracking: "Time Tracking",
+      start_timer: "Start Timer",
+      stop_timer: "Stop Timer",
+      time_spent: "Time Spent",
+      estimated_time: "Estimated Time"
     }
   }
 };
