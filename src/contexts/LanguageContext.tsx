@@ -302,7 +302,37 @@ const translations = {
       title: "Projets"
     },
     materials: {
-      title: "Matériaux"
+      title: "Matériaux",
+      basic_info: "Informations de base",
+      name: "Nom",
+      category: "Catégorie",
+      description: "Description",
+      unit: "Unité",
+      price_per_unit: "Prix par unité",
+      available_quantity: "Quantité disponible",
+      location_info: "Informations de localisation",
+      origin_location: "Lieu d'origine",
+      coordinates: "Coordonnées",
+      image: "Image",
+      workspace: "Espace de travail",
+      form: {
+        name_placeholder: "Nom du matériau",
+        description_placeholder: "Description du matériau",
+        category_placeholder: "Sélectionner une catégorie",
+        unit_placeholder: "ex: m², kg, unité",
+        price_placeholder: "Prix unitaire",
+        quantity_placeholder: "Quantité disponible",
+        location_placeholder: "Lieu d'origine",
+        select_workspace: "Sélectionner un espace de travail"
+      },
+      validation: {
+        name_required: "Le nom est requis",
+        category_required: "La catégorie est requise",
+        description_required: "La description est requise",
+        unit_required: "L'unité est requise",
+        price_required: "Le prix est requis",
+        quantity_required: "La quantité est requise"
+      }
     },
     settings: {
       title: "Paramètres"
@@ -495,6 +525,29 @@ const translations = {
         created_desc: "Le projet a été créé avec succès : ",
         error: "Erreur",
         error_desc: "Une erreur est survenue lors de la création du projet."
+      },
+      form: {
+        title: "Titre",
+        description: "Description",
+        location: "Localisation",
+        status: "Statut",
+        budget: "Budget",
+        start_date: "Date de début",
+        end_date: "Date de fin",
+        team_size: "Taille de l'équipe",
+        progress: "Progression",
+        financing_source: "Source de financement",
+        market_type: "Type de marché",
+        selection_mode: "Mode de sélection",
+        project_responsable: "Responsable du projet",
+        main_contractor: "Entrepreneur principal",
+        project_reference: "Référence du projet",
+        allows_initial_payment: "Autoriser le paiement initial",
+        initial_payment_percentage: "Pourcentage de paiement initial",
+        current_phase: "Phase actuelle",
+        current_stage: "Étape actuelle",
+        coordinates: "Coordonnées",
+        facilities_location: "Localisation des installations"
       }
     },
     language: {
@@ -814,7 +867,37 @@ const translations = {
       title: "المشاريع"
     },
     materials: {
-      title: "المواد"
+      title: "المواد",
+      basic_info: "المعلومات الأساسية",
+      name: "الاسم",
+      category: "الفئة",
+      description: "الوصف",
+      unit: "الوحدة",
+      price_per_unit: "السعر لكل وحدة",
+      available_quantity: "الكمية المتاحة",
+      location_info: "معلومات الموقع",
+      origin_location: "موقع المنشأ",
+      coordinates: "الإحداثيات",
+      image: "الصورة",
+      workspace: "مساحة العمل",
+      form: {
+        name_placeholder: "اسم المادة",
+        description_placeholder: "وصف المادة",
+        category_placeholder: "اختر فئة",
+        unit_placeholder: "مثل: م²، كغ، وحدة",
+        price_placeholder: "السعر للوحدة",
+        quantity_placeholder: "الكمية المتاحة",
+        location_placeholder: "موقع المنشأ",
+        select_workspace: "اختر مساحة عمل"
+      },
+      validation: {
+        name_required: "الاسم مطلوب",
+        category_required: "الفئة مطلوبة",
+        description_required: "الوصف مطلوب",
+        unit_required: "الوحدة مطلوبة",
+        price_required: "السعر مطلوب",
+        quantity_required: "الكمية مطلوبة"
+      }
     },
     settings: {
       title: "الإعدادات"
@@ -1007,6 +1090,29 @@ const translations = {
         created_desc: "تم إنشاء المشروع بنجاح: ",
         error: "خطأ",
         error_desc: "حدث خطأ أثناء إنشاء المشروع."
+      },
+      form: {
+        title: "العنوان",
+        description: "الوصف",
+        location: "الموقع",
+        status: "الحالة",
+        budget: "الميزانية",
+        start_date: "تاريخ البداية",
+        end_date: "تاريخ النهاية",
+        team_size: "حجم الفريق",
+        progress: "التقدم",
+        financing_source: "مصدر التمويل",
+        market_type: "نوع السوق",
+        selection_mode: "طريقة الاختيار",
+        project_responsable: "مسؤول المشروع",
+        main_contractor: "المقاول الرئيسي",
+        project_reference: "مرجع المشروع",
+        allows_initial_payment: "السماح بالدفع الأولي",
+        initial_payment_percentage: "نسبة الدفع الأولي",
+        current_phase: "المرحلة الحالية",
+        current_stage: "الخطوة الحالية",
+        coordinates: "الإحداثيات",
+        facilities_location: "موقع المرافق"
       }
     },
     language: {
@@ -1239,6 +1345,372 @@ const translations = {
       stop_timer: "Stop Timer",
       time_spent: "Time Spent",
       estimated_time: "Estimated Time"
+    },
+    documents: {
+      title: "Documents",
+      subtitle: "Manage all your project documents in one place",
+      upload: "Upload",
+      view: "View",
+      download: "Download",
+      delete: "Delete",
+      edit: "Edit",
+      no_documents: "No documents found",
+      upload_success: "Document uploaded successfully",
+      upload_error: "Error uploading document",
+      delete_success: "Document deleted successfully",
+      delete_error: "Error deleting document",
+      delete_confirm: "Are you sure you want to delete this document?",
+      file_name: "File name",
+      file_size: "File size",
+      file_type: "File type",
+      uploaded_by: "Uploaded by",
+      uploaded_at: "Uploaded at",
+      description: "Description",
+      add_document: "Add document",
+      document_type: "Document type",
+      select_file: "Select file",
+      drag_drop: "Drag and drop your files here or click to select",
+      type: {
+        inspection_report: "Inspection Report",
+        location_photo: "Location Photo",
+        project_report: "Project Report",
+        contract: "Contract",
+        supplier_info: "Supplier Information",
+        task_assignment: "Task Assignment",
+        employee_record: "Employee Record",
+        tender_documents: "Tender Documents"
+      },
+      card: {
+        click_to_view: "Click to view documents of this type"
+      },
+      tabs: {
+        all: "All",
+        documents: "Documents",
+        tender: "Tenders",
+        suppliers: "Suppliers",
+        tasks: "Tasks",
+        employees: "Employees",
+        upload: "Upload",
+        viewer: "Viewer"
+      },
+      tender: {
+        title: "Tender Documents",
+        select_project: "Select a project to view its tender documents",
+        select_project_placeholder: "Choose a project...",
+        add_title: "Add tender document",
+        add_description: "Upload a new document for the tender"
+      },
+      employee: {
+        add: "Add Employee",
+        add_title: "Add New Employee",
+        edit_title: "Edit Employee",
+        employee_id: "Employee ID",
+        employee_id_placeholder: "Enter employee ID",
+        full_name: "Full Name",
+        full_name_placeholder: "Employee full name",
+        position: "Position",
+        position_placeholder: "Employee position",
+        department: "Department",
+        department_placeholder: "Employee department",
+        phone: "Phone",
+        phone_placeholder: "+222 XX XX XX XX",
+        email: "Email",
+        email_placeholder: "email@example.com",
+        hire_date: "Hire Date",
+        salary: "Salary",
+        salary_placeholder: "Monthly salary",
+        search_placeholder: "Search by name, ID or position...",
+        id_label: "ID",
+        active: "Active",
+        inactive: "Inactive",
+        no_employees: "No employees found",
+        created_successfully: "Employee created successfully",
+        deleted_successfully: "Employee deleted successfully"
+      }
+    },
+    projects: {
+      title: "Projects"
+    },
+    materials: {
+      title: "Materials",
+      basic_info: "Basic Information",
+      name: "Name",
+      category: "Category",
+      description: "Description",
+      unit: "Unit",
+      price_per_unit: "Price per Unit",
+      available_quantity: "Available Quantity",
+      location_info: "Location Information",
+      origin_location: "Origin Location",
+      coordinates: "Coordinates",
+      image: "Image",
+      workspace: "Workspace",
+      form: {
+        name_placeholder: "Material name",
+        description_placeholder: "Material description",
+        category_placeholder: "Select a category",
+        unit_placeholder: "e.g: m², kg, unit",
+        price_placeholder: "Unit price",
+        quantity_placeholder: "Available quantity",
+        location_placeholder: "Origin location",
+        select_workspace: "Select a workspace"
+      },
+      validation: {
+        name_required: "Name is required",
+        category_required: "Category is required",
+        description_required: "Description is required",
+        unit_required: "Unit is required",
+        price_required: "Price is required",
+        quantity_required: "Quantity is required"
+      }
+    },
+    settings: {
+      title: "Settings"
+    },
+    auth: {
+      login: "Login",
+      register: "Register",
+      logout: "Logout",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy"
+    },
+    footer: {
+      about: "About",
+      about_desc: "Our construction management ERP system is designed to simplify and optimize all aspects of your construction projects.",
+      rights: "All rights reserved",
+      by_hadratech: "Developed by HadraTech",
+      quick_links: "Quick Links",
+      legal: "Legal"
+    },
+    common: {
+      yes: "Yes",
+      no: "No",
+      cancel: "Cancel",
+      save: "Save",
+      delete: "Delete",
+      edit: "Edit",
+      update: "Update",
+      loading: "Loading...",
+      error: "Error",
+      success: "Success",
+      back: "Back",
+      search: "Search",
+      filter: "Filter",
+      reset: "Reset",
+      submit: "Submit",
+      close: "Close",
+      confirm: "Confirm",
+      optional: "Optional",
+      required: "Required",
+      yes_delete: "Yes, delete",
+      no_cancel: "No, cancel"
+    },
+    notfound: {
+      message: "Page not found",
+      return_home: "Return home"
+    },
+    inspection: {
+      edit: {
+        title: "Edit Inspection",
+        description: "Edit inspection for project",
+        in_development: "In development"
+      },
+      create: {
+        title: "Create Inspection",
+        description: "Create new inspection for project",
+        in_development: "In development"
+      }
+    },
+    roles: {
+      user: "User"
+    },
+    policy: {
+      title: "Privacy Policy",
+      last_update: "Last updated: December 15, 2024",
+      section1: {
+        title: "Information Collection",
+        text: "We collect information that you provide to us directly when you register and use our services."
+      },
+      section2: {
+        title: "Data Usage",
+        text: "We use your data to:",
+        item1: "Provide and improve our services",
+        item2: "Communicate with you",
+        item3: "Ensure the security of our services",
+        item4: "Comply with our legal obligations"
+      },
+      section3: {
+        title: "Data Sharing",
+        text: "We only share your personal data with:",
+        item1: "Our trusted partners",
+        item2: "Competent authorities if required by law",
+        item3: "Our service providers",
+        item4: "With your explicit consent",
+        item5: "To protect our rights and security"
+      },
+      section4: {
+        title: "Your Rights",
+        text: "You have the right to:",
+        item1: "Access your personal data",
+        item2: "Correct your information",
+        item3: "Delete your account"
+      },
+      section5: {
+        title: "Security",
+        text: "We implement appropriate security measures to protect your data."
+      },
+      section6: {
+        title: "Cookies",
+        text: "We use cookies to:",
+        item1: "Improve your user experience",
+        item2: "Analyze our site usage",
+        item3: "Personalize content",
+        item4: "Ensure security",
+        item5: "Remember your preferences"
+      },
+      section7: {
+        title: "Modifications",
+        text: "We reserve the right to modify this policy. Changes will be communicated on this page."
+      },
+      section8: {
+        title: "Contact",
+        text: "For any questions about this policy, contact us at contact@example.com"
+      }
+    },
+    contact: {
+      title: "Contact Us",
+      alert: {
+        sent: "Message sent successfully!"
+      },
+      form: {
+        title: "Send us a message",
+        name: "Name",
+        name_placeholder: "Your full name",
+        email: "Email",
+        email_placeholder: "your@email.com",
+        subject: "Subject",
+        subject_placeholder: "Subject of your message",
+        message: "Message",
+        message_placeholder: "Your message...",
+        send: "Send Message"
+      },
+      info: {
+        title: "Contact Information",
+        address: "Address",
+        address_value: "Nouakchott, Mauritania",
+        phone: "Phone",
+        phone_value: "+222 XX XX XX XX",
+        email: "Email",
+        email_value: "contact@example.com",
+        hours: "Opening Hours",
+        hours_value: "Mon-Fri: 8:00-17:00",
+        social: "Social Media"
+      }
+    },
+    index: {
+      loading: "Loading...",
+      feature: {
+        projects: {
+          title: "Projects",
+          description: "Manage your construction projects"
+        },
+        materials: {
+          title: "Materials",
+          description: "Materials management"
+        },
+        documents: {
+          title: "Documents",
+          description: "Document management"
+        },
+        teams: {
+          title: "Teams",
+          description: "Team management"
+        },
+        dashboard: {
+          title: "Dashboard",
+          description: "Overview"
+        }
+      },
+      features: {
+        title: "Features",
+        description: "Discover our management tools",
+        discover: "Discover",
+        login_to_access: "Login to access"
+      },
+      cta: {
+        title: "Get Started Now",
+        authenticated: "Go to your dashboard",
+        unauthenticated: "Create your account to get started",
+        dashboard: "Dashboard",
+        my_projects: "My Projects",
+        start_free: "Start Free",
+        login: "Login"
+      }
+    },
+    project_create: {
+      title: "Create New Project",
+      back_to_projects: "Back to Projects",
+      toast: {
+        created: "Project Created",
+        created_desc: "Project created successfully: ",
+        error: "Error",
+        error_desc: "An error occurred while creating the project."
+      },
+      form: {
+        title: "Title",
+        description: "Description",
+        location: "Location",
+        status: "Status",
+        budget: "Budget",
+        start_date: "Start Date",
+        end_date: "End Date",
+        team_size: "Team Size",
+        progress: "Progress",
+        financing_source: "Financing Source",
+        market_type: "Market Type",
+        selection_mode: "Selection Mode",
+        project_responsable: "Project Manager",
+        main_contractor: "Main Contractor",
+        project_reference: "Project Reference",
+        allows_initial_payment: "Allow Initial Payment",
+        initial_payment_percentage: "Initial Payment Percentage",
+        current_phase: "Current Phase",
+        current_stage: "Current Stage",
+        coordinates: "Coordinates",
+        facilities_location: "Facilities Location"
+      }
+    },
+    language: {
+      french: "Français",
+      arabic: "العربية",
+      english: "English"
+    },
+    tender: {
+      input: {
+        title: "Title",
+        description: "Description",
+        category: "Category",
+        subcategory: "Subcategory"
+      },
+      button: {
+        add: "Add",
+        loading: "Loading..."
+      },
+      alert: {
+        success: "Document added successfully",
+        upload_error: "Upload error",
+        document_error: "Document creation error",
+        tenderdoc_error: "Tender document creation error"
+      }
+    },
+    tender_category: {
+      administrative: "Administrative",
+      technical: "Technical",
+      financial: "Financial"
+    },
+    tender_subcategory: {
+      lettre_soumission: "Submission Letter",
+      pouvoir_signature: "Signature Authority"
     }
   }
 };
