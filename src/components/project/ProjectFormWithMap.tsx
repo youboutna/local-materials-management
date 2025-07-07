@@ -325,6 +325,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             currentStage={formData.current_stage}
             onPhaseChange={handlePhaseChange}
             onStageChange={handleStageChange}
+            enableSubProjectMode={true}
+            projectBudget={formData.budget}
           />
         </TabsContent>
 

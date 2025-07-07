@@ -1,17 +1,35 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ConstructionPhaseSelectorProps {
   currentPhase?: ConstructionPhase;
   currentStage?: ConstructionStage;
   onPhaseChange: (phase: ConstructionPhase) => void;
   onStageChange: (stage: ConstructionStage) => void;
+  // New props for sub-project management
+  enableSubProjectMode?: boolean;
+  projectBudget?: number;
+}
+
+interface ConstructionPhaseData {
+  phase: ConstructionPhase;
+  stage: ConstructionStage;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  actualCost: number;
+  resources: any[];
+  payments: any[];
+  progress: number;
+  notes?: string;
 }
 
 const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; description: string }[] = [
@@ -25,54 +43,28 @@ const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; descriptio
   { value: 'handover', label: 'Livraison', description: 'Remise des clés' }
 ];
 
-const CONSTRUCTION_STAGES: { [key in ConstructionPhase]: { value: ConstructionStage; label: string }[] } = {
-  pre_construction: [
-    { value: 'planning_design', label: 'Planification et conception' },
-    { value: 'permits_approvals', label: 'Permis et approbations' }
-  ],
-  site_preparation: [
-    { value: 'site_clearing', label: 'Déblayage du site' },
-    { value: 'excavation', label: 'Excavation' }
-  ],
-  foundation: [
-    { value: 'foundation_work', label: 'Travaux de fondation' }
-  ],
-  framing: [
-    { value: 'structural_framing', label: 'Charpente structurelle' }
-  ],
-  structural_work: [
-    { value: 'roofing', label: 'Toiture' },
-    { value: 'electrical_plumbing', label: 'Électricité et plomberie' }
-  ],
-  finishing: [
-    { value: 'interior_finishing', label: 'Finitions intérieures' },
-    { value: 'exterior_finishing', label: 'Finitions extérieures' }
-  ],
-  post_construction: [
-    { value: 'final_inspection', label: 'Inspection finale' }
-  ],
-  handover: [
-    { value: 'handover_complete', label: 'Livraison complète' }
-  ]
-};
-
 const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
   currentPhase,
   currentStage,
   onPhaseChange,
-  onStageChange
+  onStageChange,
+  enableSubProjectMode = true,
+  projectBudget = 0
 }) => {
-  const handlePhaseChange = (phase: ConstructionPhase) => {
-    onPhaseChange(phase);
-    // Auto-select first stage of the new phase
-    const firstStage = CONSTRUCTION_STAGES[phase]?.[0]?.value;
-    if (firstStage) {
-      onStageChange(firstStage);
-    }
-  };
+  const [phases, setPhases] = React.useState<ConstructionPhaseData[]>([]);
 
-  const availableStages = currentPhase ? CONSTRUCTION_STAGES[currentPhase] : [];
+  // If sub-project mode is enabled, show the enhanced phase manager
+  if (enableSubProjectMode) {
+    return (
+      <ConstructionPhaseManager
+        phases={phases}
+        onChange={setPhases}
+        projectBudget={projectBudget}
+      />
+    );
+  }
 
+  // original simple phase selector for backward compatibility
   return (
     <Card className="border-l-4 border-l-blue-600">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -82,49 +74,6 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
-        {/* Phase Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="construction-phase" className="text-sm font-medium text-gray-700">
-            Phase actuelle
-          </Label>
-          <Select value={currentPhase || ''} onValueChange={handlePhaseChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une phase" />
-            </SelectTrigger>
-            <SelectContent>
-              {CONSTRUCTION_PHASES.map((phase) => (
-                <SelectItem key={phase.value} value={phase.value}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{phase.label}</span>
-                    <span className="text-sm text-gray-500">{phase.description}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Stage Selection */}
-        {currentPhase && (
-          <div className="space-y-2">
-            <Label htmlFor="construction-stage" className="text-sm font-medium text-gray-700">
-              Étape actuelle
-            </Label>
-            <Select value={currentStage || ''} onValueChange={onStageChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une étape" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableStages.map((stage) => (
-                  <SelectItem key={stage.value} value={stage.value}>
-                    {stage.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {/* Construction Timeline Preview */}
         {currentPhase && (
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
