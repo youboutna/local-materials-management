@@ -18,7 +18,7 @@ export const useLanguage = () => {
   return context;
 };
 
-const translations = {
+export const translations = {
   fr: {
     nav: {
       home: "Accueil",
@@ -103,6 +103,14 @@ const translations = {
           send_invitation: "Envoyer une invitation",
           revoke_access: "Révoquer l'accès"
         }
+      },
+      table: {
+        name: "Nom",
+        phone: "Téléphone",
+        national_id: "ID National",
+        role: "Rôle",
+        status: "Statut",
+        actions: "Actions"
       }
     },
     dashboard: {
@@ -214,7 +222,11 @@ const translations = {
       start_timer: "Démarrer le minuteur",
       stop_timer: "Arrêter le minuteur",
       time_spent: "Temps passé",
-      estimated_time: "Temps estimé"
+      estimated_time: "Temps estimé",
+      priority_high: "Haute priorité",
+      priority_medium: "Priorité moyenne",
+      priority_low: "Basse priorité",
+      priority_urgent: "Priorité urgente"
     },
     documents: {
       title: "Documents",
@@ -668,6 +680,14 @@ const translations = {
           send_invitation: "إرسال دعوة",
           revoke_access: "إلغاء الوصول"
         }
+      },
+      table: {
+        name: "الاسم",
+        phone: "الهاتف",
+        national_id: "الرقم الوطني",
+        role: "الدور",
+        status: "الحالة",
+        actions: "إجراءات"
       }
     },
     dashboard: {
@@ -779,7 +799,11 @@ const translations = {
       start_timer: "بدء المؤقت",
       stop_timer: "إيقاف المؤقت",
       time_spent: "الوقت المستغرق",
-      estimated_time: "الوقت المقدر"
+      estimated_time: "الوقت المقدر",
+      priority_high: "أولوية عالية",
+      priority_medium: "أولوية متوسطة",
+      priority_low: "أولوية منخفضة",
+      priority_urgent: "أولوية عاجلة"
     },
     documents: {
       title: "الوثائق",
@@ -1233,6 +1257,14 @@ const translations = {
           send_invitation: "Send Invitation",
           revoke_access: "Revoke Access"
         }
+      },
+      table: {
+        name: "Name",
+        phone: "Phone",
+        national_id: "National ID",
+        role: "Role",
+        status: "Status",
+        actions: "Actions"
       }
     },
     dashboard: {
@@ -1344,7 +1376,11 @@ const translations = {
       start_timer: "Start Timer",
       stop_timer: "Stop Timer",
       time_spent: "Time Spent",
-      estimated_time: "Estimated Time"
+      estimated_time: "Estimated Time",
+      priority_high: "High priority",
+      priority_medium: "Medium priority",
+      priority_low: "Low priority",
+      priority_urgent: "Urgent priority"
     },
     documents: {
       title: "Documents",
