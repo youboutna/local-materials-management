@@ -367,14 +367,14 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
-            {t('project.cancel')}
+            {t('users.cancel')}
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={loading || (mode === 'create' && (!formData.email || !formData.password || !formData.full_name))}
             className="min-w-[120px]"
           >
-            {loading ? t('auth.button.loading') : mode === 'create' ? t('users.new') : t('project.save')}
+            {loading ? t('auth.button.loading') : mode === 'create' ? t('users.new') : t('users.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

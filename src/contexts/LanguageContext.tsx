@@ -111,7 +111,21 @@ export const translations = {
         role: "Rôle",
         status: "Statut",
         actions: "Actions"
-      }
+      },
+      details: {
+        login: "Se connecter",
+        register: "S'inscrire",
+        logout: "Se déconnecter",
+        terms: "Conditions d'utilisation",
+        privacy: "Politique de confidentialité"
+      },
+      details_title: "Détails de l'utilisateur",
+      new: "Nouvel utilisateur",
+      created: "Utilisateur créé",
+      updated: "Utilisateur mis à jour",
+      manage_roles: "Gérer les rôles",
+      none_found: "Aucun utilisateur trouvé",
+      no_results: "Aucun résultat trouvé"
     },
     dashboard: {
       title: "Tableau de bord",
@@ -226,7 +240,19 @@ export const translations = {
       priority_high: "Haute priorité",
       priority_medium: "Priorité moyenne",
       priority_low: "Basse priorité",
-      priority_urgent: "Priorité urgente"
+      priority_urgent: "Priorité urgente",
+      status_in_progress: "En cours",
+      status_pending: "En attente",
+      status_completed: "Terminée",
+      status_cancelled: "Annulée",
+      create_sample_data: "Créer des données d'exemple",
+      new: "Nouvelle Tâche",
+      select_project: "Sélectionner un projet",
+      select_employee: "Sélectionner un employé",
+      unassigned: "Non assigné",
+      due: "Échéance",
+      created: "Créé",
+      none_found: "Aucune tâche trouvée"
     },
     documents: {
       title: "Documents",
@@ -354,7 +380,16 @@ export const translations = {
       register: "S'inscrire", 
       logout: "Se déconnecter",
       terms: "Conditions d'utilisation",
-      privacy: "Politique de confidentialité"
+      privacy: "Politique de confidentialité",
+      full_name: "Nom complet",
+      phone: "Téléphone",
+      national_id: "ID National",
+      email: "Email",
+      password: "Mot de passe",
+      password_requirements: "Exigences du mot de passe",
+      button: {
+        loading: "Chargement..."
+      }
     },
     footer: {
       about: "À propos",
@@ -404,7 +439,19 @@ export const translations = {
       }
     },
     roles: {
-      user: "Utilisateur"
+      user: "Utilisateur",
+      admin: "Administrateur",
+      project_manager: "Gestionnaire de projet",
+      supervisor: "Superviseur",
+      inspector: "Inspecteur",
+      supplier: "Fournisseur",
+      viewer: "Observateur",
+      assigned: "Rôle assigné",
+      assigned_success: "Rôle assigné avec succès",
+      assign_error: "Erreur lors de l'assignation du rôle",
+      removed: "Rôle supprimé",
+      removed_success: "Rôle supprimé avec succès",
+      remove_error: "Erreur lors de la suppression du rôle"
     },
     policy: {
       title: "Politique de confidentialité",
@@ -688,7 +735,21 @@ export const translations = {
         role: "الدور",
         status: "الحالة",
         actions: "إجراءات"
-      }
+      },
+      details: {
+        login: "تسجيل الدخول",
+        register: "التسجيل",
+        logout: "تسجيل الخروج",
+        terms: "شروط الاستخدام",
+        privacy: "سياسة الخصوصية"
+      },
+      details_title: "تفاصيل المستخدم",
+      new: "مستخدم جديد",
+      created: "تم إنشاء المستخدم",
+      updated: "تم تحديث المستخدم",
+      manage_roles: "إدارة الأدوار",
+      none_found: "لا يوجد مستخدمون",
+      no_results: "لا توجد نتائج"
     },
     dashboard: {
       title: "لوحة التحكم",
@@ -803,7 +864,19 @@ export const translations = {
       priority_high: "أولوية عالية",
       priority_medium: "أولوية متوسطة",
       priority_low: "أولوية منخفضة",
-      priority_urgent: "أولوية عاجلة"
+      priority_urgent: "أولوية عاجلة",
+      status_in_progress: "قيد التنفيذ",
+      status_pending: "في الانتظار",
+      status_completed: "مكتملة",
+      status_cancelled: "ملغية",
+      create_sample_data: "إنشاء بيانات عينة",
+      new: "مهمة جديدة",
+      select_project: "اختر مشروعًا",
+      select_employee: "اختر موظفًا",
+      unassigned: "غير معين",
+      due: "مستحق",
+      created: "تم الإنشاء",
+      none_found: "لا توجد مهام"
     },
     documents: {
       title: "الوثائق",
@@ -931,7 +1004,16 @@ export const translations = {
       register: "التسجيل",
       logout: "تسجيل الخروج",
       terms: "شروط الاستخدام",
-      privacy: "سياسة الخصوصية"
+      privacy: "سياسة الخصوصية",
+      full_name: "الاسم الكامل",
+      phone: "الهاتف",
+      national_id: "رقم الهوية الوطنية",
+      email: "البريد الإلكتروني",
+      password: "كلمة المرور",
+      password_requirements: "متطلبات كلمة المرور",
+      button: {
+        loading: "جاري التحميل..."
+      }
     },
     footer: {
       about: "حول",
@@ -981,7 +1063,19 @@ export const translations = {
       }
     },
     roles: {
-      user: "مستخدم"
+      user: "مستخدم",
+      admin: "مدير",
+      project_manager: "مدير مشروع",
+      supervisor: "مشرف",
+      inspector: "مفتش",
+      supplier: "مورد",
+      viewer: "مشاهد",
+      assigned: "دور معين",
+      assigned_success: "تم تعيين الدور بنجاح",
+      assign_error: "خطأ في تعيين الدور",
+      removed: "دور مزال",
+      removed_success: "تم إزالة الدور بنجاح",
+      remove_error: "خطأ في إزالة الدور"
     },
     policy: {
       title: "سياسة الخصوصية",
@@ -1265,7 +1359,21 @@ export const translations = {
         role: "Role",
         status: "Status",
         actions: "Actions"
-      }
+      },
+      details: {
+        login: "Login",
+        register: "Register",
+        logout: "Logout",
+        terms: "Terms of Service",
+        privacy: "Privacy Policy"
+      },
+      details_title: "User Details",
+      new: "New User",
+      created: "User created",
+      updated: "User updated",
+      manage_roles: "Manage Roles",
+      none_found: "No users found",
+      no_results: "No results found"
     },
     dashboard: {
       title: "Dashboard",
@@ -1380,7 +1488,19 @@ export const translations = {
       priority_high: "High priority",
       priority_medium: "Medium priority",
       priority_low: "Low priority",
-      priority_urgent: "Urgent priority"
+      priority_urgent: "Urgent priority",
+      status_in_progress: "In progress",
+      status_pending: "Pending",
+      status_completed: "Completed",
+      status_cancelled: "Cancelled",
+      create_sample_data: "Create sample data",
+      new: "New Task",
+      select_project: "Select a project",
+      select_employee: "Select an employee",
+      unassigned: "Unassigned",
+      due: "Due",
+      created: "Created",
+      none_found: "No tasks found"
     },
     documents: {
       title: "Documents",
@@ -1508,7 +1628,16 @@ export const translations = {
       register: "Register",
       logout: "Logout",
       terms: "Terms of Service",
-      privacy: "Privacy Policy"
+      privacy: "Privacy Policy",
+      full_name: "Full Name",
+      phone: "Phone",
+      national_id: "National ID",
+      email: "Email",
+      password: "Password",
+      password_requirements: "Password requirements",
+      button: {
+        loading: "Loading..."
+      }
     },
     footer: {
       about: "About",
@@ -1558,7 +1687,19 @@ export const translations = {
       }
     },
     roles: {
-      user: "User"
+      user: "User",
+      admin: "Administrator",
+      project_manager: "Project Manager",
+      supervisor: "Supervisor",
+      inspector: "Inspector",
+      supplier: "Supplier",
+      viewer: "Viewer",
+      assigned: "Role assigned",
+      assigned_success: "Role assigned successfully",
+      assign_error: "Error assigning role",
+      removed: "Role removed",
+      removed_success: "Role removed successfully",
+      remove_error: "Error removing role"
     },
     policy: {
       title: "Privacy Policy",
