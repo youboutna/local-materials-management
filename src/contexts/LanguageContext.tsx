@@ -57,6 +57,7 @@ export const translations = {
       never: "Jamais"
     },
     users: {
+      edit: "Modifier la tâche",
       title: "Utilisateurs",
       subtitle: "Gérer les utilisateurs du système",
       add_user: "Ajouter un utilisateur",
@@ -681,6 +682,7 @@ export const translations = {
       never: "أبداً"
     },
     users: {
+      edit: "تعديل المهمة",
       title: "المستخدمون",
       subtitle: "إدارة مستخدمي النظام",
       add_user: "إضافة مستخدم",
@@ -1305,6 +1307,7 @@ export const translations = {
       never: "Never"
     },
     users: {
+      edit: "Modifier la tâche", 
       title: "Users",
       subtitle: "Manage system users",
       add_user: "Add User",
