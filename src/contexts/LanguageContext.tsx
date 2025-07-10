@@ -1693,27 +1693,6 @@ export const translations = {
       location: "Location",
       empty: "No projects available"
     },
-    project_create: {
-      // ...existing code...
-      status: {
-        ongoing: "Ongoing",
-        completed: "Completed",
-        pending: "Pending",
-        inspection: "Inspection",
-        suspended: "Suspended",
-        cancelled: "Cancelled"
-      },
-      form: {
-        // ...existing code...
-        title_placeholder: "Enter project title",
-        location_placeholder: "Enter project location",
-        status_placeholder: "Select status",
-        progress_desc: "Project progress description",
-        progress_current: "Current progress",
-        description_placeholder: "Enter project description"
-      }
-    },
-
     materials: {
       edit: "Edit Material",
       deleting: "Deleting material...",
