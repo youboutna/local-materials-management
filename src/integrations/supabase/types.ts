@@ -2648,6 +2648,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_user_email: {
+        Args: { target_user_id: string; new_email: string }
+        Returns: undefined
+      }
       assign_user_role: {
         Args: { target_user_id: string; role_name: string }
         Returns: undefined

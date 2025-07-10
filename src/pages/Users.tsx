@@ -463,7 +463,7 @@ const Users = () => {
             </div>
           )}
           
-          {canManageUsers && (
+          {canManageUsers && selectedUser && (
             <SheetFooter className="pt-4 flex gap-2 justify-center sm:justify-end">
               <Button 
                 variant="outline"
