@@ -22,13 +22,28 @@ export const translations = {
   fr: {
     nav: {
       home: "Accueil",
-      projects: "Projets", 
+      projects: "Projets",
       materials: "Matériaux",
       documents: "Documents",
       users: "Utilisateurs",
       profile: "Profil",
       settings: "Paramètres",
-      tender_management: "Gestion des appels d'offres"
+      tender_management: "Gestion des appels d'offres",
+          login: "Login",
+      register: "Register",
+      logout: "Logout",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
+      full_name: "Full Name",
+      phone: "Phone",
+      national_id: "National ID",
+      email: "Email",
+      password: "Password",
+      password_requirements: "Password requirements",
+      button: {
+        loading: "Loading..."
+      }
+
     },
     user: {
       profile: "Profil utilisateur",
@@ -57,7 +72,7 @@ export const translations = {
       never: "Jamais"
     },
     users: {
-      edit: "Modifier la tâche",
+      edit: "Modifier la utilisateur",
       title: "Utilisateurs",
       subtitle: "Gérer les utilisateurs du système",
       add_user: "Ajouter un utilisateur",
@@ -133,6 +148,7 @@ export const translations = {
     dashboard: {
       title: "Tableau de bord",
       welcome: "Bienvenue",
+      members: "Members",
       overview: "Vue d'ensemble",
       statistics: "Statistiques",
       recent_activity: "Activité récente",
@@ -261,7 +277,7 @@ export const translations = {
       title: "Documents",
       subtitle: "Gérez tous vos documents de projet en un seul endroit",
       upload: "Télécharger",
-      view: "Voir", 
+      view: "Voir",
       download: "Télécharger",
       delete: "Supprimer",
       edit: "Modifier",
@@ -380,7 +396,7 @@ export const translations = {
     },
     auth: {
       login: "Se connecter",
-      register: "S'inscrire", 
+      register: "S'inscrire",
       logout: "Se déconnecter",
       terms: "Conditions d'utilisation",
       privacy: "Politique de confidentialité",
@@ -394,6 +410,7 @@ export const translations = {
         loading: "Chargement..."
       }
     },
+  
     footer: {
       about: "À propos",
       about_desc: "Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
@@ -645,9 +662,23 @@ export const translations = {
       pouvoir_signature: "Pouvoir de signature"
     }
   },
-  
+
   ar: {
     nav: {
+        login: "تسجيل الدخول",
+      register: "التسجيل",
+      logout: "تسجيل الخروج",
+      terms: "شروط الاستخدام",
+      privacy: "سياسة الخصوصية",
+      full_name: "الاسم الكامل",
+      phone: "الهاتف",
+      national_id: "رقم الهوية الوطنية",
+      email: "البريد الإلكتروني",
+      password: "كلمة المرور",
+      password_requirements: "متطلبات كلمة المرور",
+      button: {
+        loading: "جاري التحميل..."
+      },
       home: "الرئيسية",
       projects: "المشاريع",
       materials: "المواد",
@@ -1271,7 +1302,7 @@ export const translations = {
       pouvoir_signature: "تفويض التوقيع"
     }
   },
-  
+
   en: {
     nav: {
       home: "Home",
@@ -1281,7 +1312,21 @@ export const translations = {
       users: "Users",
       profile: "Profile",
       settings: "Settings",
-      tender_management: "Tender Management"
+      tender_management: "Tender Management",
+            login: "Login",
+      register: "Register",
+      logout: "Logout",
+      terms: "Terms of Service",
+      privacy: "Privacy Policy",
+      full_name: "Full Name",
+      phone: "Phone",
+      national_id: "National ID",
+      email: "Email",
+      password: "Password",
+      password_requirements: "Password requirements",
+      button: {
+        loading: "Loading..."
+      }
     },
     user: {
       profile: "User Profile",
@@ -1310,7 +1355,7 @@ export const translations = {
       never: "Never"
     },
     users: {
-      edit: "Modifier la tâche", 
+      edit: "edit user",
       title: "Users",
       subtitle: "Manage system users",
       add_user: "Add User",
@@ -1591,10 +1636,88 @@ export const translations = {
         deleted_successfully: "Employee deleted successfully"
       }
     },
+    // Add these keys to your translations object for each language
+
     projects: {
-      title: "Projects"
+      title: "Projects",
+      // ...existing code...
+      edit: {
+        title: "Edit Project",
+        subtitle: "Edit project details",
+        location_desc: "Project location details",
+        status_desc: "Project status details",
+        sync_with_inspection: "Sync with inspection",
+        saved: "Project saved",
+        saved_desc: "Project saved successfully",
+        error: "Error",
+        save_error: "Error saving project",
+        progress_synced: "Progress synced",
+        progress_synced_desc: "Project progress synced with inspection",
+        info: "Info",
+        no_inspection: "No inspection data",
+        not_found: "Project not found",
+        load_error: "Error loading project",
+        back_to_detail: "Back to project details",
+        market_type: "Market Type",
+        market_type_placeholder: "Select market type",
+        selection_mode: "Selection Mode",
+        selection_mode_placeholder: "Select selection mode"
+      },
+      loading_error: "Error loading projects",
+      delete_confirm: "Are you sure you want to delete this project?",
+      deleted: "Project deleted",
+      deleted_desc: "Project deleted successfully",
+      delete_error: "Error deleting project",
+      delete_error_desc: "An error occurred while deleting the project.",
+      loading_detail: "Loading project details...",
+      not_found: "Project not found",
+      not_found_desc: "The requested project could not be found.",
+      progress_done: "Progress done",
+      tab: {
+        overview: "Overview",
+        materials: "Materials",
+        payments: "Payments",
+        inspections: "Inspections",
+        workflow: "Workflow",
+        documents: "Documents",
+        takeoffs: "Takeoffs"
+      },
+      overview: {
+        description: "Project overview"
+      },
+      timeline: "Timeline",
+      payments_management: "Payments Management",
+      quick_payment_actions: "Quick Payment Actions",
+      completed: "Completed",
+      expected: "Expected",
+      location: "Location",
+      empty: "No projects available"
     },
+    project_create: {
+      // ...existing code...
+      status: {
+        ongoing: "Ongoing",
+        completed: "Completed",
+        pending: "Pending",
+        inspection: "Inspection",
+        suspended: "Suspended",
+        cancelled: "Cancelled"
+      },
+      form: {
+        // ...existing code...
+        title_placeholder: "Enter project title",
+        location_placeholder: "Enter project location",
+        status_placeholder: "Select status",
+        progress_desc: "Project progress description",
+        progress_current: "Current progress",
+        description_placeholder: "Enter project description"
+      }
+    },
+
     materials: {
+      edit: "Edit Material",
+      deleting: "Deleting material...",
+      delete: "Delete Material",
       title: "Materials",
       basic_info: "Basic Information",
       name: "Name",
@@ -1921,7 +2044,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const t = (key: string): string => {
     const keys = key.split('.');
     let value: any = translations[language];
-    
+
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
@@ -1930,7 +2053,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         return key;
       }
     }
-    
+
     return typeof value === 'string' ? value : key;
   };
 
