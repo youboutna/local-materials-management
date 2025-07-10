@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ interface UserProfile {
   avatar_url: string | null;
   roles?: string[];
   is_active?: boolean;
+  email?: string; // Add email to the interface
 }
 
 interface UserManagementDialogProps {
@@ -44,8 +46,10 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     full_name: user?.full_name || '',
     phone: user?.phone || '',
     national_id: user?.national_id || '',
-    email: '',
+    email: user?.email || '',
     password: '',
+    new_password: '', // For password updates
+    confirm_password: '', // For password confirmation
     is_active: user?.is_active ?? true
   });
   const [selectedRole, setSelectedRole] = useState<RoleType>('viewer');
@@ -111,6 +115,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           throw new Error(t('error.user_id_required'));
         }
 
+        // Update profile information
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -122,6 +127,70 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
         if (profileError) throw profileError;
 
+        // Update email if changed
+        if (formData.email && formData.email !== user.email) {
+          const { error: emailError } = await supabase.auth.admin.updateUserById(
+            user.id,
+            { email: formData.email }
+          );
+          if (emailError) {
+            console.warn('Email update warning:', emailError);
+            toast({
+              title: t('error.title'),
+              description: `Email update failed: ${emailError.message}`,
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: t('users.updated'),
+              description: 'Email updated successfully'
+            });
+          }
+        }
+
+        // Update password if provided
+        if (formData.new_password) {
+          if (formData.new_password !== formData.confirm_password) {
+            toast({
+              title: t('error.title'),
+              description: 'Passwords do not match',
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
+
+          if (formData.new_password.length < 6) {
+            toast({
+              title: t('error.title'),
+              description: 'Password must be at least 6 characters',
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
+
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(
+            user.id,
+            { password: formData.new_password }
+          );
+
+          if (passwordError) {
+            console.warn('Password update warning:', passwordError);
+            toast({
+              title: t('error.title'),
+              description: `Password update failed: ${passwordError.message}`,
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: t('users.updated'),
+              description: 'Password updated successfully'
+            });
+          }
+        }
+
+        // Update user status
         if (formData.is_active !== user.is_active) {
           try {
             if (formData.is_active) {
@@ -248,20 +317,20 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             />
           </div>
 
+          <div>
+            <Label htmlFor="email">{t('auth.email')} *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required={mode === 'create'}
+              placeholder="utilisateur@example.com"
+            />
+          </div>
+
           {mode === 'create' && (
             <>
-              <div>
-                <Label htmlFor="email">{t('auth.email')} *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                  placeholder="utilisateur@example.com"
-                />
-              </div>
-              
               <div>
                 <Label htmlFor="password">{t('auth.password')} *</Label>
                 <Input
@@ -296,58 +365,88 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             </>
           )}
 
-          {mode === 'edit' && user && (
-            <div className="space-y-4">
-              <div>
-                <Label>{t('users.manage_roles')}</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {user.roles && user.roles.length > 0 ? (
-                    user.roles.map(role => (
-                      <div key={role} className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
-                        <RoleBadge role={role as RoleType} />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRoleRemove(role)}
-                          className="h-6 w-6 p-0 hover:bg-red-100"
-                          title={t('project.delete')}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-sm text-gray-500">{t('users.none_found')}</span>
-                  )}
+          {mode === 'edit' && (
+            <>
+              <div className="space-y-3 border-t pt-4">
+                <h4 className="font-medium">Password Update</h4>
+                <div>
+                  <Label htmlFor="new_password">New Password</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    value={formData.new_password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, new_password: e.target.value }))}
+                    placeholder="Leave empty to keep current password"
+                    minLength={6}
+                  />
+                </div>
+                {formData.new_password && (
+                  <div>
+                    <Label htmlFor="confirm_password">Confirm New Password</Label>
+                    <Input
+                      id="confirm_password"
+                      type="password"
+                      value={formData.confirm_password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, confirm_password: e.target.value }))}
+                      placeholder="Confirm new password"
+                      minLength={6}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <Label>{t('users.manage_roles')}</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {user && user.roles && user.roles.length > 0 ? (
+                      user.roles.map(role => (
+                        <div key={role} className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                          <RoleBadge role={role as RoleType} />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRoleRemove(role)}
+                            className="h-6 w-6 p-0 hover:bg-red-100"
+                            title={t('project.delete')}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-500">{t('users.none_found')}</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>{t('users.table.role')}</Label>
+                  <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('users.table.role')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoles
+                        .filter(role => !user?.roles?.includes(role))
+                        .map(role => (
+                          <SelectItem key={role} value={role}>
+                            <div className="flex items-center gap-2">
+                              <RoleBadge role={role} />
+                              <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      {availableRoles.filter(role => !user?.roles?.includes(role)).length === 0 && (
+                        <SelectItem value="no-roles" disabled>
+                          {t('users.no_results')}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              
-              <div>
-                <Label>{t('users.table.role')}</Label>
-                <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('users.table.role')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableRoles
-                      .filter(role => !user.roles?.includes(role))
-                      .map(role => (
-                        <SelectItem key={role} value={role}>
-                          <div className="flex items-center gap-2">
-                            <RoleBadge role={role} />
-                            <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    {availableRoles.filter(role => !user.roles?.includes(role)).length === 0 && (
-                      <SelectItem value="no-roles" disabled>
-                        {t('users.no_results')}
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            </>
           )}
 
           <div className="flex items-center space-x-2 p-3 border rounded-lg">

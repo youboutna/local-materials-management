@@ -26,7 +26,7 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import UserManagementDialog from '@/components/users/UserManagementDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Define user profile type with roles array (without the old role property)
+// Define user profile type with roles array and email
 type UserProfile = {
   id: string;
   full_name: string | null;
@@ -38,9 +38,10 @@ type UserProfile = {
   roles?: string[];
   primaryRole?: RoleType;
   is_active?: boolean;
+  email?: string;
 };
 
-// Mock profiles for development mode
+// Mock profiles for development mode with email
 const DEV_PROFILES: UserProfile[] = [
   {
     id: "dev-user-id",
@@ -52,7 +53,8 @@ const DEV_PROFILES: UserProfile[] = [
     updated_at: new Date().toISOString(),
     roles: ['admin'],
     primaryRole: 'admin',
-    is_active: true
+    is_active: true,
+    email: "dev@example.com"
   },
   {
     id: "dev-user-id-2",
@@ -64,7 +66,8 @@ const DEV_PROFILES: UserProfile[] = [
     updated_at: new Date().toISOString(),
     roles: ['project_manager'],
     primaryRole: 'project_manager',
-    is_active: true
+    is_active: true,
+    email: "marie@example.com"
   }
 ];
 
@@ -99,7 +102,7 @@ const Users = () => {
     }
   }, [user, navigate, toast, isDevelopmentMode]);
 
-  // Fetch profiles with roles
+  // Fetch profiles with roles and email
   useEffect(() => {
     if (isDevelopmentMode) {
       console.log('Using mock profiles in development mode');
@@ -119,13 +122,17 @@ const Users = () => {
         if (profilesError) throw profilesError;
 
         if (profilesData) {
-          // Fetch roles for each user
+          // Fetch roles and email for each user
           const profilesWithRoles = await Promise.all(
             profilesData.map(async (profile) => {
+              // Get user roles
               const { data: rolesData } = await (supabase as any)
                 .from('user_roles')
                 .select('role_name')
                 .eq('user_id', profile.id);
+
+              // Get user email from auth.users (this requires admin privileges)
+              const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
 
               const roles = rolesData?.map((r: any) => r.role_name) || [];
               const primaryRole = roles[0] as RoleType || 'viewer';
@@ -133,7 +140,8 @@ const Users = () => {
               return {
                 ...profile,
                 roles,
-                primaryRole
+                primaryRole,
+                email: userData.user?.email || null
               } as UserProfile;
             })
           );
@@ -141,6 +149,7 @@ const Users = () => {
           setProfiles(profilesWithRoles);
         }
       } catch (error: any) {
+        console.error('Error fetching profiles:', error);
         toast({
           title: "Erreur",
           description: `Impossible de récupérer les utilisateurs: ${error.message}`,
@@ -209,11 +218,12 @@ const Users = () => {
     // ... existing fetchProfilesWithRoles logic
   };
 
-  // Filter profiles based on search query
+  // Filter profiles based on search query (now including email)
   const filteredProfiles = profiles.filter(profile => 
     profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     profile.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    profile.national_id?.toLowerCase().includes(searchQuery.toLowerCase())
+    profile.national_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    profile.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Get user initials for avatar
@@ -275,6 +285,7 @@ const Users = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('users.table.name') || "Utilisateur"}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('auth.email') || "Email"}</TableHead>
                   <TableHead className="hidden md:table-cell">{t('users.table.phone') || "Téléphone"}</TableHead>
                   <TableHead className="hidden md:table-cell">{t('users.table.national_id') || "ID National"}</TableHead>
                   <TableHead className="hidden md:table-cell">{t('users.table.role') || "Rôle principal"}</TableHead>
@@ -285,7 +296,7 @@ const Users = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-10">
+                    <TableCell colSpan={7} className="text-center py-10">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta-500"></div>
                       </div>
@@ -293,7 +304,7 @@ const Users = () => {
                   </TableRow>
                 ) : filteredProfiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-10 text-adrar-600">
+                    <TableCell colSpan={7} className="text-center py-10 text-adrar-600">
                       {searchQuery
                         ? t('users.no_results') || "Aucun utilisateur ne correspond à la recherche"
                         : t('users.none_found') || "Aucun utilisateur trouvé"}
@@ -315,6 +326,9 @@ const Users = () => {
                             <p className="font-medium text-sm">{profile.full_name || t('users.no_name') || 'Utilisateur sans nom'}</p>
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className="text-sm text-gray-600">{profile.email || '-'}</span>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{profile.phone || '-'}</TableCell>
                       <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
@@ -381,7 +395,7 @@ const Users = () => {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground text-xs text-right">
+                  <TableCell colSpan={7} className="text-muted-foreground text-xs text-right">
                     {t('users.total') ? t('users.total').replace('{count}', filteredProfiles.length.toString()) : `Total: ${filteredProfiles.length} utilisateur(s)`}
                   </TableCell>
                 </TableRow>
@@ -418,6 +432,11 @@ const Users = () => {
               
               <div className="space-y-4">
                 <div>
+                  <label className="text-muted-foreground text-sm">{t('auth.email') || "Email"}</label>
+                  <p className="font-medium">{selectedUser.email || '-'}</p>
+                </div>
+                
+                <div>
                   <label className="text-muted-foreground text-sm">{t('users.phone') || "Téléphone"}</label>
                   <p className="font-medium">{selectedUser.phone || '-'}</p>
                 </div>
@@ -449,9 +468,10 @@ const Users = () => {
               <Button 
                 variant="outline"
                 className="border-terracotta-200 hover:border-terracotta-300 flex items-center gap-2"
+                onClick={() => handleEditUser(selectedUser)}
               >
                 <Edit className="h-4 w-4" />
-                <span>{t('users.manage_roles') || "Gérer les rôles"}</span>
+                <span>{t('users.edit') || "Modifier"}</span>
               </Button>
             </SheetFooter>
           )}
