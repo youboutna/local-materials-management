@@ -645,6 +645,57 @@ export type Database = {
           },
         ]
       }
+      material_suppliers: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_preferred: boolean | null
+          last_price_update: string | null
+          lead_time_days: number | null
+          material_id: string
+          minimum_order_quantity: number | null
+          supplier_id: string
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          last_price_update?: string | null
+          lead_time_days?: number | null
+          material_id: string
+          minimum_order_quantity?: number | null
+          supplier_id: string
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_preferred?: boolean | null
+          last_price_update?: string | null
+          lead_time_days?: number | null
+          material_id?: string
+          minimum_order_quantity?: number | null
+          supplier_id?: string
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_suppliers_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_suppliers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials: {
         Row: {
           adresse: Json | null
@@ -1379,6 +1430,51 @@ export type Database = {
           },
         ]
       }
+      project_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          parent_comment_id: string | null
+          project_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          parent_comment_id?: string | null
+          project_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          parent_comment_id?: string | null
+          project_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "project_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_materials: {
         Row: {
           created_at: string
@@ -1414,6 +1510,112 @@ export type Database = {
           },
           {
             foreignKeyName: "project_materials_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_milestones: {
+        Row: {
+          completion_date: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          progress_percentage: number | null
+          project_id: string
+          status: string | null
+          target_date: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          project_id: string
+          status?: string | null
+          target_date?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          project_id?: string
+          status?: string | null
+          target_date?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_risks: {
+        Row: {
+          created_at: string | null
+          id: string
+          identified_by: string | null
+          identified_date: string | null
+          impact: string | null
+          mitigation_strategy: string | null
+          probability: string | null
+          project_id: string
+          risk_description: string | null
+          risk_level: string | null
+          risk_title: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          identified_by?: string | null
+          identified_date?: string | null
+          impact?: string | null
+          mitigation_strategy?: string | null
+          probability?: string | null
+          project_id: string
+          risk_description?: string | null
+          risk_level?: string | null
+          risk_title: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          identified_by?: string | null
+          identified_date?: string | null
+          impact?: string | null
+          mitigation_strategy?: string | null
+          probability?: string | null
+          project_id?: string
+          risk_description?: string | null
+          risk_level?: string | null
+          risk_title?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_risks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
