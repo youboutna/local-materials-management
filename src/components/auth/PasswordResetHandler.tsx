@@ -88,7 +88,7 @@ const PasswordResetHandler = () => {
       return;
     }
 
-    const result = await updatePassword('', password, confirmPassword);
+    const result = await updatePassword(password, confirmPassword);
     
     if (!result.success && result.error) {
       setError(result.error);

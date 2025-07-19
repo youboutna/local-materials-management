@@ -5,7 +5,6 @@ export interface IPasswordResetRequest {
 }
 
 export interface IPasswordUpdateRequest {
-  token: string;
   newPassword: string;
   confirmPassword: string;
 }

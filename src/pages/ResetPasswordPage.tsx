@@ -70,7 +70,7 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    const result = await updatePassword('', newPassword, confirmPassword);
+    const result = await updatePassword(newPassword, confirmPassword);
     
     if (result.success) {
       navigate('/auth');

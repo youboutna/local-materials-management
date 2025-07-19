@@ -8,7 +8,6 @@ export const updateUserPassword = async (userId: string, newPassword: string) =>
   // This would typically be handled through a secure API endpoint
   // For now, we'll use the existing password service
   return await passwordService.updatePassword({
-    token: '', // Token validation handled in the service
     newPassword,
     confirmPassword: newPassword
   });

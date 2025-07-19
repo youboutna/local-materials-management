@@ -47,11 +47,10 @@ export const usePasswordManagement = () => {
     }
   };
 
-  const updatePassword = async (token: string, newPassword: string, confirmPassword: string) => {
+  const updatePassword = async (newPassword: string, confirmPassword: string) => {
     setLoading(true);
     try {
       const request: IPasswordUpdateRequest = {
-        token,
         newPassword,
         confirmPassword
       };
