@@ -10,10 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Plus, Eye } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import WorkflowStepSelector from './WorkflowStepSelector';
+import { OFFICIAL_WORKFLOW_STEPS, OfficialWorkflowStep } from './OfficialWorkflowSteps';
 
 interface Tender {
   id: string;
@@ -45,6 +47,8 @@ interface TenderCrudProps {
 const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
+  const [isWorkflowSelectorOpen, setIsWorkflowSelectorOpen] = useState(false);
+  const [selectedWorkflowSteps, setSelectedWorkflowSteps] = useState<OfficialWorkflowStep[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -121,6 +125,28 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
           .select()
           .single();
         if (error) throw error;
+        
+        // Add workflow steps if creating new tender and steps are selected
+        if (selectedWorkflowSteps.length > 0) {
+          const stepsToInsert = selectedWorkflowSteps.map((step, index) => ({
+            tender_id: data.id,
+            title: step.title,
+            description: step.description,
+            step_number: index + 1,
+            required_documents: step.requiredDocuments || [],
+            status: 'pending'
+          }));
+
+          const { error: stepsError } = await supabase
+            .from('tender_steps')
+            .insert(stepsToInsert);
+          
+          if (stepsError) {
+            console.error('Error adding workflow steps:', stepsError);
+            // Don't throw error, tender was created successfully
+          }
+        }
+        
         return data;
       }
     },
@@ -195,6 +221,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingTender(null);
+    setSelectedWorkflowSteps([]);
     setFormData({
       title: '',
       description: '',
@@ -207,6 +234,21 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       project_reference: '',
       status: 'draft'
     });
+  };
+
+  const handleSelectWorkflowStep = (step: OfficialWorkflowStep) => {
+    if (!selectedWorkflowSteps.find(s => s.id === step.id)) {
+      setSelectedWorkflowSteps(prev => [...prev, step]);
+    }
+    setIsWorkflowSelectorOpen(false);
+  };
+
+  const removeWorkflowStep = (stepId: number) => {
+    setSelectedWorkflowSteps(prev => prev.filter(s => s.id !== stepId));
+  };
+
+  const getExistingStepIds = () => {
+    return selectedWorkflowSteps.map(step => step.id);
   };
 
   const getStatusBadge = (status: string) => {
@@ -329,6 +371,47 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
             </div>
 
+            {/* Workflow Steps Section */}
+            {!editingTender && (
+              <div className="md:col-span-2 space-y-3">
+                <Label>Étapes du Workflow (optionnel)</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsWorkflowSelectorOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Workflow className="h-4 w-4" />
+                    Ajouter Étapes Officielles
+                  </Button>
+                </div>
+                
+                {selectedWorkflowSteps.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Étapes sélectionnées :</p>
+                    <div className="space-y-2">
+                      {selectedWorkflowSteps.map((step) => (
+                        <div key={step.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm font-medium">
+                            Étape {step.id}: {step.title}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeWorkflowStep(step.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Annuler
@@ -340,6 +423,14 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Workflow Step Selector */}
+      <WorkflowStepSelector
+        isOpen={isWorkflowSelectorOpen}
+        onClose={() => setIsWorkflowSelectorOpen(false)}
+        onSelectStep={handleSelectWorkflowStep}
+        existingStepNumbers={getExistingStepIds()}
+      />
 
       {/* Tenders List */}
       <div className="grid gap-4">
