@@ -51,7 +51,7 @@ const TenderManagement = () => {
 
   const handleTenderSelect = (tender: Tender) => {
     setSelectedTender(tender);
-    setActiveTab('documents');
+    setActiveTab('steps'); // Switch to steps tab to show workflow functionality
   };
 
   const handleImportComplete = (result: any) => {
@@ -127,17 +127,28 @@ const TenderManagement = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Workflow className="h-5 w-5" />
-                    Étapes - {selectedTender.title}
+                    Workflow - {selectedTender.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600">{selectedTender.description}</p>
+                  <div className="space-y-3">
+                    <p className="text-gray-600">{selectedTender.description}</p>
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">🔧 Gestion des Étapes</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• <strong>Workflow Officiel</strong> : Ajouter des étapes standards du processus mauritanien</li>
+                        <li>• <strong>Étape Personnalisée</strong> : Créer vos propres étapes sur mesure</li>
+                        <li>• <strong>Documents</strong> : Ajouter des documents requis pour chaque étape</li>
+                        <li>• <strong>Suggestions</strong> : Obtenir des recommandations de documents par étape</li>
+                      </ul>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               
               <TenderWorkflowSteps 
                 tenderId={selectedTender.id}
-                readonly={!isAdmin && !hasRole('manager')}
+                readonly={false}
               />
             </>
           ) : (
@@ -146,7 +157,7 @@ const TenderManagement = () => {
                 <Workflow className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
                 <p className="text-gray-600 mb-4">
-                  Choisissez un appel d'offres dans l'onglet précédent pour gérer ses étapes.
+                  Choisissez un appel d'offres dans l'onglet "Appels d'Offres" pour gérer ses étapes et documents.
                 </p>
                 <Button onClick={() => setActiveTab('tenders')}>
                   Voir les Appels d'Offres
