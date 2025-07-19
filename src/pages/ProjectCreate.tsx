@@ -105,34 +105,38 @@ const ProjectCreate = () => {
     }
   };
 
-  // Save construction phases to a dedicated table
+  // Save construction phases to the project_phases table
   const saveProjectPhases = async (projectId: string, phases: any[]) => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // First check if the table exists or create a simple solution using project metadata
-      // For now, we'll store phases in the project's metadata field if it exists
+      // Map form phase data to database structure
       const phasesData = phases.map(phase => ({
-        id: phase.id,
-        title: phase.title,
-        description: phase.description,
-        startDate: phase.startDate,
-        endDate: phase.endDate,
-        status: phase.status,
-        budget: phase.budget,
-        progress: phase.progress,
-        phase: phase.phase,
-        stage: phase.stage,
-        customPhase: phase.customPhase,
-        materials: phase.materials,
-        humanResources: phase.humanResources,
-        suppliers: phase.suppliers,
-        location: phase.location,
-        notes: phase.notes
+        project_id: projectId,
+        phase_name: phase.title,
+        phase_type: phase.phase || 'construction',
+        start_date: phase.startDate || null,
+        end_date: phase.endDate || null,
+        status: phase.status || 'pending',
+        progress: phase.progress || 0,
+        description: phase.description || null,
+        estimated_cost: phase.budget || null,
+        actual_cost: phase.actualCost || null,
+        dependencies: JSON.stringify(phase.materials || []),
+        milestones: JSON.stringify({
+          materials: phase.materials || [],
+          humanResources: phase.humanResources || [],
+          suppliers: phase.suppliers || [],
+          location: phase.location || '',
+          notes: phase.notes || ''
+        })
       }));
 
-      // Store phases data in the project metadata for now
-      console.log('Saving project phases:', phasesData);
+      const { error } = await supabase
+        .from('project_phases')
+        .insert(phasesData);
+
+      if (error) throw error;
       
       toast({
         title: "Phases sauvegardées",
