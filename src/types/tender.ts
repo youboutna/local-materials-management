@@ -1,4 +1,4 @@
-export type TenderDocumentCategory = 'administrative' | 'technical' | 'financial' | 'planification' | 'initiation' | 'selection' | 'attribution' | 'archivage';
+export type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 
 export type TenderDocumentSubcategory = 
   // Administrative subcategories
@@ -9,39 +9,19 @@ export type TenderDocumentSubcategory =
   | 'attestation_cnss'
   | 'attestation_non_faillite'
   | 'renseignement_soumissionnaire'
-  // Technical subcategories
-  | 'preuves_capacites_techniques'
-  | 'experience_generale_marche'
-  | 'methodologie'
-  | 'personnel_cle'
-  | 'planning_travaux'
-  | 'calendrier_livraison'
-  | 'conformite_techniques'
-  // Financial subcategories
-  | 'preuves_capacites_financieres'
-  | 'chiffre_affaires_annuel'
-  | 'devis_quantitatif_estimatif'
-  | 'garantie_bancaire'
-  | 'garantie_soumission'
-  // Planification (PAA) subcategories
+  // Planification (PAA) - Administrative
   | 'plan_annuel_achats'
   | 'modele_paa'
   | 'validation_ordonnateur'
   | 'publication_armp'
-  // Initiation subcategories
+  // Initiation - Administrative
   | 'demande_initiation'
-  | 'description_besoin'
-  | 'source_financement'
-  | 'montant_alloue'
   | 'procedure_proposee'
-  // Sélection subcategories
+  // Sélection - Administrative
   | 'consultation_directe'
-  | 'devis_comparatifs'
-  | 'factures_commandes'
   | 'consultation_concurrentielle'
   | 'lettre_consultation'
   | 'modele_soumission'
-  | 'ddqe'
   | 'modele_contrat'
   | 'registre_reception_plis'
   | 'recu_depot_plis'
@@ -50,22 +30,47 @@ export type TenderDocumentSubcategory =
   | 'selection_consultants'
   | 'dossier_smc_sfqc_sci'
   | 'lettre_invitation'
-  | 'termes_reference'
-  | 'pv_evaluation_technique'
-  // Attribution subcategories
+  // Attribution - Administrative
   | 'lettre_notification'
   | 'nom_attributaire'
-  | 'montant_marche'
   | 'delai_execution'
   | 'publication_provisoire'
   | 'signature_contrat'
-  // Archivage subcategories
+  // Archivage - Administrative
   | 'original_offres'
   | 'pv_archivage'
   | 'contrats_signes'
   | 'preuves_publication'
   | 'chemises_archivage'
-  | 'double_numerique';
+  | 'double_numerique'
+  // Technical subcategories
+  | 'preuves_capacites_techniques'
+  | 'experience_generale_marche'
+  | 'methodologie'
+  | 'personnel_cle'
+  | 'planning_travaux'
+  | 'calendrier_livraison'
+  | 'conformite_techniques'
+  // Initiation - Technical
+  | 'description_besoin'
+  // Sélection - Technical
+  | 'ddqe'
+  | 'termes_reference'
+  | 'pv_evaluation_technique'
+  // Financial subcategories
+  | 'preuves_capacites_financieres'
+  | 'chiffre_affaires_annuel'
+  | 'devis_quantitatif_estimatif'
+  | 'garantie_bancaire'
+  | 'garantie_soumission'
+  // Initiation - Financial
+  | 'source_financement'
+  | 'montant_alloue'
+  // Sélection - Financial
+  | 'devis_comparatifs'
+  | 'factures_commandes'
+  // Attribution - Financial
+  | 'montant_marche';
 
 export type TenderDocumentStatus = 'pending' | 'approved' | 'rejected' | 'requires_revision';
 
@@ -174,10 +179,5 @@ export const TENDER_DOCUMENT_LABELS = {
 export const TENDER_CATEGORY_LABELS = {
   administrative: 'A - Administratifs',
   technical: 'B - Techniques',
-  financial: 'C - Financières',
-  planification: 'D - Planification (PAA)',
-  initiation: 'E - Initiation de la Procédure',
-  selection: 'F - Sélection des Contractants',
-  attribution: 'G - Attribution et Notification',
-  archivage: 'H - Archivage'
+  financial: 'C - Financières'
 };
