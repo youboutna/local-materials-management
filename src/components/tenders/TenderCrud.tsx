@@ -371,10 +371,10 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
             </div>
 
-            {/* Workflow Steps Section */}
+            {/* Workflow Steps Section - only show during creation */}
             {!editingTender && (
               <div className="md:col-span-2 space-y-3">
-                <Label>Étapes du Workflow (optionnel)</Label>
+                <Label>Étapes du Workflow Initial (optionnel)</Label>
                 <div className="flex flex-wrap gap-2">
                   <Button 
                     type="button"
@@ -409,6 +409,10 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                     </div>
                   </div>
                 )}
+                
+                <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+                  💡 Vous pourrez ajouter d'autres étapes personnalisées ou officielles après la création de l'appel d'offres dans la section "Workflow".
+                </div>
               </div>
             )}
 
