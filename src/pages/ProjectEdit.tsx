@@ -203,21 +203,46 @@ const ProjectEdit = () => {
   };
 
 
-  // Save construction phases
+  // Save construction phases to the project_phases table
   const saveProjectPhases = async (projectId: string, phases: any[]) => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // First delete existing phases for this project
+      const { error: deleteError } = await supabase
+        .from('project_phases')
+        .delete()
+        .eq('project_id', projectId);
+
+      if (deleteError) throw deleteError;
+
+      // Map form phase data to database structure
       const phasesData = phases.map(phase => ({
-        id: phase.id,
-        title: phase.title,
-        description: phase.description,
-        startDate: phase.startDate,
-        endDate: phase.endDate,
-        status: phase.status,
-        budget: phase.budget,
-        progress: phase.progress
+        project_id: projectId,
+        phase_name: phase.title,
+        phase_type: phase.phase || 'construction',
+        start_date: phase.startDate || null,
+        end_date: phase.endDate || null,
+        status: phase.status || 'pending',
+        progress: phase.progress || 0,
+        description: phase.description || null,
+        estimated_cost: phase.budget || null,
+        actual_cost: phase.actualCost || null,
+        dependencies: JSON.stringify(phase.materials || []),
+        milestones: JSON.stringify({
+          materials: phase.materials || [],
+          humanResources: phase.humanResources || [],
+          suppliers: phase.suppliers || [],
+          location: phase.location || '',
+          notes: phase.notes || ''
+        })
       }));
 
-      console.log('Saving project phases:', phasesData);
+      const { error } = await supabase
+        .from('project_phases')
+        .insert(phasesData);
+
+      if (error) throw error;
       
       toast({
         title: "Phases sauvegardées",
