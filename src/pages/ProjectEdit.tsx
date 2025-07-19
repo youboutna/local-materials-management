@@ -208,6 +208,11 @@ const ProjectEdit = () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
+      // Skip saving if no phases provided
+      if (!phases || phases.length === 0) {
+        return;
+      }
+      
       // First delete existing phases for this project
       const { error: deleteError } = await supabase
         .from('project_phases')
@@ -216,15 +221,23 @@ const ProjectEdit = () => {
 
       if (deleteError) throw deleteError;
 
+      // Status mapping from PhaseData to database values
+      const statusMapping = {
+        'not_started': 'pending',
+        'in_progress': 'in_progress', 
+        'completed': 'completed',
+        'delayed': 'pending'
+      } as const;
+
       // Map form phase data to database structure
       const phasesData = phases.map(phase => ({
         project_id: projectId,
-        phase_name: phase.title,
+        phase_name: phase.title || 'Phase sans nom',
         phase_type: phase.phase || 'construction',
         start_date: phase.startDate || null,
         end_date: phase.endDate || null,
-        status: phase.status || 'pending',
-        progress: phase.progress || 0,
+        status: statusMapping[phase.status as keyof typeof statusMapping] || 'pending',
+        progress: Math.max(0, Math.min(100, phase.progress || 0)), // Ensure progress is between 0-100
         description: phase.description || null,
         estimated_cost: phase.budget || null,
         actual_cost: phase.actualCost || null,
@@ -234,7 +247,9 @@ const ProjectEdit = () => {
           humanResources: phase.humanResources || [],
           suppliers: phase.suppliers || [],
           location: phase.location || '',
-          notes: phase.notes || ''
+          notes: phase.notes || '',
+          stage: phase.stage || null,
+          customPhase: phase.customPhase || null
         })
       }));
 
@@ -242,7 +257,10 @@ const ProjectEdit = () => {
         .from('project_phases')
         .insert(phasesData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error saving phases:', error);
+        throw error;
+      }
       
       toast({
         title: "Phases sauvegardées",
@@ -252,9 +270,11 @@ const ProjectEdit = () => {
       console.error('Error saving project phases:', error);
       toast({
         title: "Avertissement",
-        description: "Erreur lors de la sauvegarde des phases.",
+        description: `Erreur lors de la sauvegarde des phases: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: "destructive",
       });
+      // Re-throw to prevent false success indication
+      throw error;
     }
   };
 
