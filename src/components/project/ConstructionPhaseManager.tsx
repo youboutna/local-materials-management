@@ -136,7 +136,13 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
+    console.log('=== AUTH CHECK ===');
+    console.log('User:', !!user);
+    console.log('DEV_MODE:', DEV_MODE);
+    console.log('Action:', actionName);
+    
     if (!user && !DEV_MODE) {
+      console.log('Authentication failed - no user and not DEV_MODE');
       toast({
         title: "Authentification requise",
         description: `Vous devez être connecté pour ${actionName}. Veuillez vous connecter et réessayer.`,
@@ -144,6 +150,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       });
       return;
     }
+    console.log('Authentication passed - executing action');
     action();
   };
 
