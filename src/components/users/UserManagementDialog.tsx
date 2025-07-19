@@ -50,6 +50,8 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
     password: '',
     new_password: '',
     confirm_password: '',
+    newPassword: '',
+    confirmPassword: '',
     is_active: user?.is_active ?? true
   });
   const [selectedRole, setSelectedRole] = useState<RoleType>('viewer');
@@ -398,6 +400,33 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               {formData.is_active ? t('users.active') || 'Actif' : t('users.inactive') || 'Inactif'}
             </span>
           </div>
+          
+          {/* Admin Password Reset Section */}
+          {mode === 'edit' && (
+            <div className="space-y-4 pt-4 border-t">
+              <h4 className="text-sm font-medium text-gray-700">Réinitialisation du mot de passe</h4>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nouveau mot de passe (optionnel)</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={formData.newPassword || ''}
+                  onChange={(e) => setFormData(prev => ({...prev, newPassword: e.target.value}))}
+                  placeholder="Laisser vide pour ne pas changer"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword || ''}
+                  onChange={(e) => setFormData(prev => ({...prev, confirmPassword: e.target.value}))}
+                  placeholder="Confirmer le nouveau mot de passe"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2">

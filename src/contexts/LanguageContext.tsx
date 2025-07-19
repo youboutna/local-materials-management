@@ -148,7 +148,7 @@ export const translations = {
     dashboard: {
       title: "Tableau de bord",
       welcome: "Bienvenue",
-      members: "Members",
+      team_members: "Members",
       overview: "Vue d'ensemble",
       statistics: "Statistiques",
       recent_activity: "Activité récente",

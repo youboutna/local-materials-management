@@ -1,9 +1,9 @@
 
 import React from 'react';
-import PasswordResetHandler from '@/components/auth/PasswordResetHandler';
+import ResetPasswordPage from './ResetPasswordPage';
 
 const ResetPassword = () => {
-  return <PasswordResetHandler />;
+  return <ResetPasswordPage />;
 };
 
 export default ResetPassword;

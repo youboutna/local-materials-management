@@ -30,6 +30,11 @@ interface ConstructionPhaseData {
   payments: any[];
   progress: number;
   notes?: string;
+  // Add required fields for compatibility
+  suppliers: any[];
+  humanResources: any[];
+  materials: any[];
+  location: string;
 }
 
 const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; description: string }[] = [
@@ -51,7 +56,7 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
   enableSubProjectMode = true,
   projectBudget = 0
 }) => {
-  const [phases, setPhases] = React.useState<ConstructionPhaseData[]>([]);
+  const [phases, setPhases] = React.useState<any[]>([]);
 
   // If sub-project mode is enabled, show the enhanced phase manager
   if (enableSubProjectMode) {
