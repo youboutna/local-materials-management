@@ -64,13 +64,23 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   };
 
   useEffect(() => {
+    console.log('useEffect triggered - ProjectPhases', { projectId, formMode, hasInitialPhases: initialPhases.length });
+    
     if (formMode) {
       setPhases(initialPhases);
       setLoading(false);
       return;
     }
     fetchProjectPhases();
-  }, [projectId, formMode, initialPhases]);
+  }, [projectId, formMode]); // Removed initialPhases from dependencies to prevent infinite loop
+
+  // Separate effect to handle initialPhases changes in form mode
+  useEffect(() => {
+    if (formMode && initialPhases.length > 0) {
+      console.log('Updating phases from initialPhases in form mode');
+      setPhases(initialPhases);
+    }
+  }, [formMode]); // Only trigger when formMode changes, not initialPhases
 
   // Handle phase changes and save to database
   const handlePhasesChange = async (newPhases: PhaseData[]) => {
