@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
-import ConstructionPhaseManager from '@/components/project/ConstructionPhaseManager';
+import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
@@ -366,9 +366,10 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
         {/* Construction Phase Tab */}
         <TabsContent value="construction" className="space-y-6">
-          <ConstructionPhaseManager
-            phases={phases}
-            onChange={setPhases}
+          <ProjectPhases
+            formMode={true}
+            initialPhases={phases}
+            onPhasesChange={setPhases}
             projectBudget={formData.budget}
           />
         </TabsContent>

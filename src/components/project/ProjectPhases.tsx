@@ -6,22 +6,30 @@ import { PhaseService, PhaseData } from '@/services/phaseService';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ProjectPhasesProps {
-  projectId: string;
+  projectId?: string;
   onUpdate?: () => void;
   projectBudget?: number;
+  formMode?: boolean; // When true, don't save to database, just manage state
+  initialPhases?: PhaseData[];
+  onPhasesChange?: (phases: PhaseData[]) => void;
 }
 
 const ProjectPhases: React.FC<ProjectPhasesProps> = ({ 
   projectId, 
   onUpdate, 
-  projectBudget = 0 
+  projectBudget = 0,
+  formMode = false,
+  initialPhases = [],
+  onPhasesChange
 }) => {
   const { t } = useLanguage();
-  const [phases, setPhases] = useState<PhaseData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [phases, setPhases] = useState<PhaseData[]>(initialPhases);
+  const [loading, setLoading] = useState(!formMode);
 
   // Load phases from database
   const fetchProjectPhases = async () => {
+    if (!projectId || formMode) return;
+    
     try {
       setLoading(true);
       const loadedPhases = await PhaseService.loadProjectPhases(projectId);
@@ -39,13 +47,31 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   };
 
   useEffect(() => {
+    if (formMode) {
+      setPhases(initialPhases);
+      setLoading(false);
+      return;
+    }
     fetchProjectPhases();
-  }, [projectId]);
+  }, [projectId, formMode, initialPhases]);
 
   // Handle phase changes and save to database
   const handlePhasesChange = async (newPhases: PhaseData[]) => {
+    setPhases(newPhases);
+    
+    // In form mode, just update state and notify parent
+    if (formMode) {
+      onPhasesChange?.(newPhases);
+      return;
+    }
+    
+    // In database mode, save to database
+    if (!projectId) {
+      console.error('No projectId provided for saving phases');
+      return;
+    }
+    
     try {
-      setPhases(newPhases);
       await PhaseService.saveProjectPhases(projectId, newPhases);
       
       toast({
