@@ -617,7 +617,11 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="phases">
-                <ProjectPhases projectId={id!} onUpdate={handleDataUpdate} />
+                <ProjectPhases 
+                  projectId={id!} 
+                  onUpdate={handleDataUpdate} 
+                  projectBudget={project?.budget || 0}
+                />
               </TabsContent>
 
               <TabsContent value="materials">
