@@ -28,6 +28,7 @@ import {
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { DEV_MODE } from '@/config/constants';
 
 // Standard construction stages mapping
 const CONSTRUCTION_STAGES: { [key in ConstructionPhase]: { value: ConstructionStage; label: string }[] } = {
@@ -135,7 +136,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
-    if (!user) {
+    if (!user && !DEV_MODE) {
       toast({
         title: "Authentification requise",
         description: `Vous devez être connecté pour ${actionName}. Veuillez vous connecter et réessayer.`,
@@ -218,7 +219,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   };
 
   const handleViewPhaseDetail = (phaseId: string) => {
-    if (!user) {
+    if (!user && !DEV_MODE) {
       toast({
         title: "Authentification requise",
         description: "Vous devez être connecté pour voir les détails d'une phase.",
@@ -259,7 +260,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           </CardTitle>
           <Dialog open={isAddingPhase} onOpenChange={setIsAddingPhase}>
             <DialogTrigger asChild>
-              <Button disabled={!user}>
+              <Button disabled={!user && !DEV_MODE}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter une phase
               </Button>
@@ -294,7 +295,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       
       <CardContent>
         {/* Authentication warning - same as project forms */}
-        {!user && (
+        {!user && !DEV_MODE && (
           <Alert className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -330,7 +331,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         size="sm"
                         onClick={() => handleViewPhaseDetail(phase.id)}
                         className="flex items-center gap-1"
-                        disabled={!user}
+                        disabled={!user && !DEV_MODE}
                       >
                         <Eye className="h-4 w-4" />
                         Détails
@@ -339,7 +340,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditingPhase(phase)}
-                        disabled={!user}
+                        disabled={!user && !DEV_MODE}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -347,7 +348,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => deletePhase(phase.id)}
-                        disabled={!user}
+                        disabled={!user && !DEV_MODE}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

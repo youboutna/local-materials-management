@@ -6,6 +6,7 @@ import { AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { DEV_MODE } from '@/config/constants';
 import { PhaseService, PhaseData } from '@/services/phaseService';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
@@ -123,7 +124,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   return (
     <div className="space-y-6">
       {/* Authentication warning - same as project forms */}
-      {!formMode && !user && (
+      {!formMode && !user && !DEV_MODE && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
