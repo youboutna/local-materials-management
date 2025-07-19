@@ -356,7 +356,58 @@ export const translations = {
       }
     },
     projects: {
-      title: "Projets"
+      title: "Projets",
+      tab: {
+        overview: "Vue d'ensemble",
+        materials: "Matériaux",
+        payments: "Paiements",
+        inspections: "Inspections",
+        workflow: "Flux de travail",
+        documents: "Documents",
+        takeoffs: "Quantitatifs"
+      },
+      edit: {
+        title: "Modifier le projet",
+        subtitle: "Modifier les détails du projet",
+        location_desc: "Détails de l'emplacement du projet",
+        status_desc: "Détails du statut du projet",
+        sync_with_inspection: "Synchroniser avec l'inspection",
+        saved: "Projet enregistré",
+        saved_desc: "Projet enregistré avec succès",
+        error: "Erreur",
+        save_error: "Erreur lors de l'enregistrement du projet",
+        progress_synced: "Progression synchronisée",
+        progress_synced_desc: "Progression du projet synchronisée avec l'inspection",
+        info: "Info",
+        no_inspection: "Aucune donnée d'inspection",
+        not_found: "Projet non trouvé",
+        load_error: "Erreur lors du chargement du projet",
+        back_to_detail: "Retour aux détails du projet",
+        market_type: "Type de marché",
+        market_type_placeholder: "Sélectionner le type de marché",
+        selection_mode: "Mode de sélection",
+        selection_mode_placeholder: "Sélectionner le mode de sélection"
+      },
+      loading_error: "Erreur lors du chargement des projets",
+      delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
+      deleted: "Projet supprimé",
+      deleted_desc: "Projet supprimé avec succès",
+      delete_error: "Erreur lors de la suppression du projet",
+      delete_error_desc: "Une erreur est survenue lors de la suppression du projet.",
+      loading_detail: "Chargement des détails du projet...",
+      not_found: "Projet non trouvé",
+      not_found_desc: "Le projet demandé est introuvable.",
+      payments_management: "Gestion des paiements",
+      quick_payment_actions: "Actions de paiement rapides",
+      progress_done: "Progression réalisée",
+      overview: {
+        description: "Vue d'ensemble du projet"
+      },
+      timeline: "Chronologie",
+      completed: "Terminé",
+      expected: "Prévu",
+      location: "Localisation",
+      empty: "Aucun projet disponible"
     },
     materials: {
       title: "Matériaux",
@@ -626,7 +677,8 @@ export const translations = {
         current_phase: "Phase actuelle",
         current_stage: "Étape actuelle",
         coordinates: "Coordonnées",
-        facilities_location: "Localisation des installations"
+        facilities_location: "Localisation des installations",
+      
       }
     },
     language: {
@@ -997,9 +1049,63 @@ export const translations = {
       }
     },
     projects: {
-      title: "المشاريع"
+      title: "المشاريع",
+      tab: {
+        overview: "نظرة عامة",
+        materials: "المواد",
+        payments: "المدفوعات",
+        inspections: "التفتيشات",
+        workflow: "سير العمل",
+        documents: "الوثائق",
+        takeoffs: "الكميات"
+      },
+      edit: {
+        title: "تعديل المشروع",
+        subtitle: "تعديل تفاصيل المشروع",
+        location_desc: "تفاصيل موقع المشروع",
+        status_desc: "تفاصيل حالة المشروع",
+        sync_with_inspection: "مزامنة مع التفتيش",
+        saved: "تم حفظ المشروع",
+        saved_desc: "تم حفظ المشروع بنجاح",
+        error: "خطأ",
+        save_error: "خطأ في حفظ المشروع",
+        progress_synced: "تمت مزامنة التقدم",
+        progress_synced_desc: "تمت مزامنة تقدم المشروع مع التفتيش",
+        info: "معلومات",
+        no_inspection: "لا توجد بيانات تفتيش",
+        not_found: "المشروع غير موجود",
+        load_error: "خطأ في تحميل المشروع",
+        back_to_detail: "العودة إلى تفاصيل المشروع",
+        market_type: "نوع السوق",
+        market_type_placeholder: "اختر نوع السوق",
+        selection_mode: "وضع الاختيار",
+        selection_mode_placeholder: "اختر وضع الاختيار"
+      },
+      loading_error: "خطأ في تحميل المشاريع",
+      delete_confirm: "هل أنت متأكد من حذف هذا المشروع؟",
+      deleted: "تم حذف المشروع",
+      deleted_desc: "تم حذف المشروع بنجاح",
+      delete_error: "خطأ في حذف المشروع",
+      delete_error_desc: "حدث خطأ أثناء حذف المشروع.",
+      loading_detail: "جاري تحميل تفاصيل المشروع...",
+      not_found: "المشروع غير موجود",
+      not_found_desc: "المشروع المطلوب غير موجود.",
+      payments_management: "إدارة المدفوعات",
+      quick_payment_actions: "إجراءات الدفع السريعة",
+      progress_done: "التقدم المنجز",
+      overview: {
+        description: "نظرة عامة على المشروع"
+      },
+      timeline: "الجدول الزمني",
+      completed: "مكتمل",
+      expected: "متوقع",
+      location: "الموقع",
+      empty: "لا توجد مشاريع متاحة"
     },
     materials: {
+      edit: "تعديل المادة",
+      deleting: "جاري حذف المادة...",
+      delete: "حذف المادة",
       title: "المواد",
       basic_info: "المعلومات الأساسية",
       name: "الاسم",
@@ -1266,7 +1372,8 @@ export const translations = {
         current_phase: "المرحلة الحالية",
         current_stage: "الخطوة الحالية",
         coordinates: "الإحداثيات",
-        facilities_location: "موقع المرافق"
+        facilities_location: "موقع المرافق",
+
       }
     },
     language: {
@@ -1636,11 +1743,17 @@ export const translations = {
         deleted_successfully: "Employee deleted successfully"
       }
     },
-    // Add these keys to your translations object for each language
-
     projects: {
       title: "Projects",
-      // ...existing code...
+      tab: {
+        overview: "Overview",
+        materials: "Materials",
+        payments: "Payments",
+        inspections: "Inspections",
+        workflow: "Workflow",
+        documents: "Documents",
+        takeoffs: "Takeoffs"
+      },
       edit: {
         title: "Edit Project",
         subtitle: "Edit project details",
@@ -1672,22 +1785,13 @@ export const translations = {
       loading_detail: "Loading project details...",
       not_found: "Project not found",
       not_found_desc: "The requested project could not be found.",
+      payments_management: "Payments Management",
+      quick_payment_actions: "Quick Payment Actions",
       progress_done: "Progress done",
-      tab: {
-        overview: "Overview",
-        materials: "Materials",
-        payments: "Payments",
-        inspections: "Inspections",
-        workflow: "Workflow",
-        documents: "Documents",
-        takeoffs: "Takeoffs"
-      },
       overview: {
         description: "Project overview"
       },
       timeline: "Timeline",
-      payments_management: "Payments Management",
-      quick_payment_actions: "Quick Payment Actions",
       completed: "Completed",
       expected: "Expected",
       location: "Location",
@@ -1963,7 +2067,7 @@ export const translations = {
         current_phase: "Current Phase",
         current_stage: "Current Stage",
         coordinates: "Coordinates",
-        facilities_location: "Facilities Location"
+        facilities_location: "Facilities Location",
       }
     },
     language: {
