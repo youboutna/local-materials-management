@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { DEV_MODE } from '@/config/constants';
 
 export interface PhaseData {
   id: string;
@@ -162,10 +163,14 @@ export class PhaseService {
         return;
       }
 
-      // Check if user is authenticated
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        throw new Error('User not authenticated. Please log in and try again.');
+      // Check if user is authenticated (skip in DEV_MODE)
+      let user: any = null;
+      if (!DEV_MODE) {
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (authError || !authUser) {
+          throw new Error('User not authenticated. Please log in and try again.');
+        }
+        user = authUser;
       }
 
       console.log(`Saving ${phases.length} phases for project ${projectId}`);
@@ -184,7 +189,7 @@ export class PhaseService {
       // Map phases to database format
       const phasesData = phases.map(phase => ({
         ...this.mapPhaseToDatabase(phase, projectId),
-        created_by: user.id
+        created_by: user?.id || null // Allow null in DEV_MODE
       }));
 
       console.log('Phase data to insert:', phasesData);
