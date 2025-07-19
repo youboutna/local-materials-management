@@ -3158,6 +3158,35 @@ export type Database = {
         | "attestation_cnss"
         | "attestation_non_faillite"
         | "renseignement_soumissionnaire"
+        | "plan_annuel_achats"
+        | "modele_paa"
+        | "validation_ordonnateur"
+        | "publication_armp"
+        | "demande_initiation"
+        | "procedure_proposee"
+        | "consultation_directe"
+        | "consultation_concurrentielle"
+        | "lettre_consultation"
+        | "modele_soumission"
+        | "modele_contrat"
+        | "registre_reception_plis"
+        | "recu_depot_plis"
+        | "pv_ouverture_plis"
+        | "pv_evaluation_attribution"
+        | "selection_consultants"
+        | "dossier_smc_sfqc_sci"
+        | "lettre_invitation"
+        | "lettre_notification"
+        | "nom_attributaire"
+        | "delai_execution"
+        | "publication_provisoire"
+        | "signature_contrat"
+        | "original_offres"
+        | "pv_archivage"
+        | "contrats_signes"
+        | "preuves_publication"
+        | "chemises_archivage"
+        | "double_numerique"
         | "preuves_capacites_techniques"
         | "experience_generale_marche"
         | "methodologie"
@@ -3165,11 +3194,20 @@ export type Database = {
         | "planning_travaux"
         | "calendrier_livraison"
         | "conformite_techniques"
+        | "description_besoin"
+        | "ddqe"
+        | "termes_reference"
+        | "pv_evaluation_technique"
         | "preuves_capacites_financieres"
         | "chiffre_affaires_annuel"
         | "devis_quantitatif_estimatif"
         | "garantie_bancaire"
         | "garantie_soumission"
+        | "source_financement"
+        | "montant_alloue"
+        | "devis_comparatifs"
+        | "factures_commandes"
+        | "montant_marche"
       user_role:
         | "insurance_company"
         | "practitioner"
@@ -3335,6 +3373,35 @@ export const Constants = {
         "attestation_cnss",
         "attestation_non_faillite",
         "renseignement_soumissionnaire",
+        "plan_annuel_achats",
+        "modele_paa",
+        "validation_ordonnateur",
+        "publication_armp",
+        "demande_initiation",
+        "procedure_proposee",
+        "consultation_directe",
+        "consultation_concurrentielle",
+        "lettre_consultation",
+        "modele_soumission",
+        "modele_contrat",
+        "registre_reception_plis",
+        "recu_depot_plis",
+        "pv_ouverture_plis",
+        "pv_evaluation_attribution",
+        "selection_consultants",
+        "dossier_smc_sfqc_sci",
+        "lettre_invitation",
+        "lettre_notification",
+        "nom_attributaire",
+        "delai_execution",
+        "publication_provisoire",
+        "signature_contrat",
+        "original_offres",
+        "pv_archivage",
+        "contrats_signes",
+        "preuves_publication",
+        "chemises_archivage",
+        "double_numerique",
         "preuves_capacites_techniques",
         "experience_generale_marche",
         "methodologie",
@@ -3342,11 +3409,20 @@ export const Constants = {
         "planning_travaux",
         "calendrier_livraison",
         "conformite_techniques",
+        "description_besoin",
+        "ddqe",
+        "termes_reference",
+        "pv_evaluation_technique",
         "preuves_capacites_financieres",
         "chiffre_affaires_annuel",
         "devis_quantitatif_estimatif",
         "garantie_bancaire",
         "garantie_soumission",
+        "source_financement",
+        "montant_alloue",
+        "devis_comparatifs",
+        "factures_commandes",
+        "montant_marche",
       ],
       user_role: [
         "insurance_company",

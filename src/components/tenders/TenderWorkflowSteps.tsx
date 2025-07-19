@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
@@ -19,7 +20,8 @@ import {
   TenderDocumentCategory, 
   TenderDocumentSubcategory, 
   TENDER_DOCUMENT_LABELS, 
-  TENDER_CATEGORY_LABELS 
+  TENDER_CATEGORY_LABELS,
+  ADMINISTRATIVE_SUBCATEGORY_GROUPS 
 } from '@/types/tender';
 
 interface TenderStep {
@@ -482,7 +484,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               <FileText className="h-5 w-5 text-terracotta-600" />
               Étapes du Processus d'Appel d'Offres
             </CardTitle>
-            {!readonly && (
+            {(!readonly || DEV_MODE) && (
               <div className="flex gap-2">
                 <Button 
                   variant="outline"
@@ -495,6 +497,9 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                   <Plus className="h-4 w-4 mr-2" />
                   Étape Personnalisée
                 </Button>
+                {DEV_MODE && (
+                  <Badge variant="secondary" className="text-xs">DEV MODE</Badge>
+                )}
               </div>
             )}
           </div>
@@ -541,28 +546,28 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                           </p>
                         )}
                       </div>
-                       {!readonly && (
-                         <div className="flex gap-2">
-                           <Button
-                             size="sm"
-                             variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
-                             onClick={() => setSelectedStepForSuggestions(
-                               selectedStepForSuggestions === step.step_number ? null : step.step_number
-                             )}
-                           >
-                             <FileText className="h-4 w-4 mr-1" />
-                             {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => openAddDocumentDialog(step.id)}
-                           >
-                             <Upload className="h-4 w-4 mr-1" />
-                             Ajouter Document
-                           </Button>
-                         </div>
-                       )}
+                        {(!readonly || DEV_MODE) && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
+                              onClick={() => setSelectedStepForSuggestions(
+                                selectedStepForSuggestions === step.step_number ? null : step.step_number
+                              )}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openAddDocumentDialog(step.id)}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Ajouter Document
+                            </Button>
+                          </div>
+                        )}
                     </div>
                   </CardHeader>
                   
@@ -775,22 +780,37 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TENDER_DOCUMENT_LABELS)
-                    .filter(([key]) => {
-                      if (documentFormData.category === 'administrative') {
-                        return ['lettre_soumission', 'pouvoir_signature', 'acte_groupement', 'attestation_impot', 'attestation_cnss', 'attestation_non_faillite', 'renseignement_soumissionnaire'].includes(key);
-                      } else if (documentFormData.category === 'technical') {
-                        return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques'].includes(key);
-                      } else {
-                        return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission'].includes(key);
-                      }
-                    })
-                    .map(([key, label]) => (
-                      <SelectItem key={key} value={key as TenderDocumentSubcategory}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                <SelectContent className="bg-background border border-border shadow-lg">
+                  {documentFormData.category === 'administrative' ? (
+                    Object.entries(ADMINISTRATIVE_SUBCATEGORY_GROUPS).map(([groupKey, group]) => (
+                      <div key={groupKey}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 border-b">
+                          {group.label}
+                        </div>
+                        {group.subcategories
+                          .filter(subcat => Object.keys(TENDER_DOCUMENT_LABELS).includes(subcat))
+                          .map((subcat) => (
+                            <SelectItem key={subcat} value={subcat as TenderDocumentSubcategory} className="pl-6">
+                              {TENDER_DOCUMENT_LABELS[subcat as keyof typeof TENDER_DOCUMENT_LABELS]}
+                            </SelectItem>
+                          ))}
+                      </div>
+                    ))
+                  ) : (
+                    Object.entries(TENDER_DOCUMENT_LABELS)
+                      .filter(([key]) => {
+                        if (documentFormData.category === 'technical') {
+                          return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques', 'description_besoin', 'ddqe', 'termes_reference', 'pv_evaluation_technique'].includes(key);
+                        } else {
+                          return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission', 'source_financement', 'montant_alloue', 'devis_comparatifs', 'factures_commandes', 'montant_marche'].includes(key);
+                        }
+                      })
+                      .map(([key, label]) => (
+                        <SelectItem key={key} value={key as TenderDocumentSubcategory}>
+                          {label}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

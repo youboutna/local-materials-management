@@ -357,9 +357,10 @@ export const translations = {
     },
     projects: {
       title: "Projets",
-      all_desc : "tous les projects",
-      new : "nouveau",
-      all : "tous",
+      all_desc: "tous les projects",
+      new: "nouveau",
+      new_desc: "Créer un nouveau projet",
+      all: "tous",
       tab: {
         overview: "Vue d'ensemble",
         materials: "Matériaux",
@@ -454,6 +455,10 @@ export const translations = {
         price_required: "Le prix est requis",
         quantity_required: "La quantité est requise"
       }
+    },
+    project_import: {
+      title: "Import de projet",
+      desc: "Importer des projets depuis un fichier Excel"
     },
     settings: {
       title: "Paramètres"
@@ -735,8 +740,76 @@ export const translations = {
       financial: "Financier"
     },
     tender_subcategory: {
+      // Administrative subcategories
       lettre_soumission: "Lettre de soumission",
-      pouvoir_signature: "Pouvoir de signature"
+      pouvoir_signature: "Pouvoir de signature",
+      acte_groupement: "Acte de groupement",
+      attestation_impot: "Attestation d'impôt",
+      attestation_cnss: "Attestation CNSS",
+      attestation_non_faillite: "Attestation non faillite",
+      renseignement_soumissionnaire: "Renseignement sur le soumissionnaire",
+      // Planification (PAA) - Administrative
+      plan_annuel_achats: "Plan Annuel d'Achats (PAA)",
+      modele_paa: "Modèle de Plan Annuel des Achats",
+      validation_ordonnateur: "Validation par l'Ordonnateur",
+      publication_armp: "Publication sur le site ARMP",
+      // Initiation - Administrative
+      demande_initiation: "Demande d'Initiation d'une Procédure",
+      procedure_proposee: "Procédure proposée",
+      // Sélection - Administrative
+      consultation_directe: "Consultation Directe (≤ 600 000 MRU)",
+      consultation_concurrentielle: "Consultation Concurrentielle",
+      lettre_consultation: "Lettre de consultation (Pièce N°1)",
+      modele_soumission: "Modèle de soumission (Pièce N°2)",
+      modele_contrat: "Modèle de contrat (Pièce N°4)",
+      registre_reception_plis: "Registre de Réception des Plis",
+      recu_depot_plis: "Reçu de Dépôt de Plis",
+      pv_ouverture_plis: "Procès-Verbal d'Ouverture des Plis",
+      pv_evaluation_attribution: "PV d'Évaluation et Proposition d'Attribution",
+      selection_consultants: "Sélection de Consultants",
+      dossier_smc_sfqc_sci: "Dossier Type pour SMC/SFQC/SCI",
+      lettre_invitation: "Lettre d'invitation (Pièce N°1)",
+      // Attribution - Administrative
+      lettre_notification: "Lettre de Notification d'Attribution",
+      nom_attributaire: "Nom de l'attributaire",
+      delai_execution: "Délai d'exécution",
+      publication_provisoire: "Publication provisoire (2 jours pour recours)",
+      signature_contrat: "Signature du contrat",
+      // Archivage - Administrative
+      original_offres: "Original des offres",
+      pv_archivage: "PV d'ouverture et d'évaluation",
+      contrats_signes: "Contrats signés",
+      preuves_publication: "Preuves de publication",
+      chemises_archivage: "Chemises ou boîtes d'archivage étiquetées",
+      double_numerique: "Double numérique recommandé",
+      // Technical subcategories
+      preuves_capacites_techniques: "Preuves de capacités techniques (projets similaires)",
+      experience_generale_marche: "Expérience générale dans l'objet du marché",
+      methodologie: "Méthodologie",
+      personnel_cle: "Personnel clé",
+      planning_travaux: "Planning travaux",
+      calendrier_livraison: "Calendrier de livraison",
+      conformite_techniques: "Conformité techniques",
+      // Initiation - Technical
+      description_besoin: "Description détaillée du besoin",
+      // Sélection - Technical
+      ddqe: "Devis Descriptif Quantitatif Estimatif - DDQE (Pièce N°3)",
+      termes_reference: "Termes de Référence - TdR (Pièce N°3)",
+      pv_evaluation_technique: "PV d'évaluation technique et financière",
+      // Financial subcategories
+      preuves_capacites_financieres: "Preuves de capacités financières",
+      chiffre_affaires_annuel: "Chiffre d'affaires annuel moyen des activités",
+      devis_quantitatif_estimatif: "Devis quantitatif estimatif",
+      garantie_bancaire: "Garantie bancaire",
+      garantie_soumission: "Garantie de soumission pour la période",
+      // Initiation - Financial
+      source_financement: "Source de financement",
+      montant_alloue: "Montant alloué",
+      // Sélection - Financial
+      devis_comparatifs: "Devis comparatifs (3 minimum)",
+      factures_commandes: "Factures et bons de commande",
+      // Attribution - Financial
+      montant_marche: "Montant du marché"
     }
   },
 
@@ -1075,8 +1148,10 @@ export const translations = {
     },
     projects: {
       title: "المشاريع",
-      all_desc : "المشاريع",
-       new : "new",
+      all_desc: "جميع المشاريع",
+      new: "جديد",
+      new_desc: "إنشاء مشروع جديد",
+      all: "الكل",
       tab: {
         overview: "نظرة عامة",
         materials: "المواد",
@@ -1174,6 +1249,10 @@ export const translations = {
         price_required: "السعر مطلوب",
         quantity_required: "الكمية مطلوبة"
       }
+    },
+    project_import: {
+      title: "استيراد المشاريع",
+      desc: "استيراد المشاريع من ملف Excel"
     },
     settings: {
       title: "الإعدادات"
@@ -1449,8 +1528,76 @@ export const translations = {
       financial: "مالي"
     },
     tender_subcategory: {
+      // Administrative subcategories
       lettre_soumission: "خطاب التقديم",
-      pouvoir_signature: "تفويض التوقيع"
+      pouvoir_signature: "تفويض التوقيع",
+      acte_groupement: "عقد التجمع",
+      attestation_impot: "شهادة ضريبية",
+      attestation_cnss: "شهادة الضمان الاجتماعي",
+      attestation_non_faillite: "شهادة عدم الإفلاس",
+      renseignement_soumissionnaire: "معلومات مقدم العرض",
+      // Planification (PAA) - Administrative
+      plan_annuel_achats: "خطة المشتريات السنوية (PAA)",
+      modele_paa: "نموذج خطة المشتريات السنوية",
+      validation_ordonnateur: "مصادقة الآمر بالصرف",
+      publication_armp: "النشر على موقع ARMP",
+      // Initiation - Administrative
+      demande_initiation: "طلب بدء إجراء",
+      procedure_proposee: "الإجراء المقترح",
+      // Sélection - Administrative
+      consultation_directe: "الاستشارة المباشرة (≤ 600,000 أوقية)",
+      consultation_concurrentielle: "الاستشارة التنافسية",
+      lettre_consultation: "خطاب الاستشارة (الوثيقة رقم 1)",
+      modele_soumission: "نموذج العرض (الوثيقة رقم 2)",
+      modele_contrat: "نموذج العقد (الوثيقة رقم 4)",
+      registre_reception_plis: "سجل استلام المظاريف",
+      recu_depot_plis: "إيصال إيداع المظاريف",
+      pv_ouverture_plis: "محضر فتح المظاريف",
+      pv_evaluation_attribution: "محضر التقييم واقتراح المنح",
+      selection_consultants: "اختيار الاستشاريين",
+      dossier_smc_sfqc_sci: "ملف نموذجي لـ SMC/SFQC/SCI",
+      lettre_invitation: "خطاب الدعوة (الوثيقة رقم 1)",
+      // Attribution - Administrative
+      lettre_notification: "خطاب إشعار المنح",
+      nom_attributaire: "اسم صاحب العرض الفائز",
+      delai_execution: "مدة التنفيذ",
+      publication_provisoire: "النشر المؤقت (يومان للطعن)",
+      signature_contrat: "توقيع العقد",
+      // Archivage - Administrative
+      original_offres: "أصل العروض",
+      pv_archivage: "محضر الفتح والتقييم",
+      contrats_signes: "العقود الموقعة",
+      preuves_publication: "إثباتات النشر",
+      chemises_archivage: "ملفات أو صناديق الأرشفة المُوسمة",
+      double_numerique: "نسخة رقمية موصى بها",
+      // Technical subcategories
+      preuves_capacites_techniques: "إثباتات القدرات التقنية (مشاريع مماثلة)",
+      experience_generale_marche: "الخبرة العامة في موضوع الصفقة",
+      methodologie: "المنهجية",
+      personnel_cle: "الموظفون الرئيسيون",
+      planning_travaux: "برنامج الأعمال",
+      calendrier_livraison: "جدول التسليم",
+      conformite_techniques: "المطابقة التقنية",
+      // Initiation - Technical
+      description_besoin: "وصف مفصل للحاجة",
+      // Sélection - Technical
+      ddqe: "تقدير وصفي كمي تقديري - DDQE (الوثيقة رقم 3)",
+      termes_reference: "شروط المرجع - TdR (الوثيقة رقم 3)",
+      pv_evaluation_technique: "محضر التقييم التقني والمالي",
+      // Financial subcategories
+      preuves_capacites_financieres: "إثباتات القدرات المالية",
+      chiffre_affaires_annuel: "متوسط رقم الأعمال السنوي للأنشطة",
+      devis_quantitatif_estimatif: "تقدير كمي تقديري",
+      garantie_bancaire: "ضمان مصرفي",
+      garantie_soumission: "ضمان العرض للفترة",
+      // Initiation - Financial
+      source_financement: "مصدر التمويل",
+      montant_alloue: "المبلغ المخصص",
+      // Sélection - Financial
+      devis_comparatifs: "عروض أسعار مقارنة (3 كحد أدنى)",
+      factures_commandes: "فواتير وأوامر الشراء",
+      // Attribution - Financial
+      montant_marche: "مبلغ الصفقة"
     }
   },
 
@@ -1789,9 +1936,10 @@ export const translations = {
     },
     projects: {
       title: "Projects",
-      all_desc: "Projects",
-      all: "Projects",
-      new :"add",
+      all_desc: "All projects",
+      new: "New",
+      new_desc: "Create a new project",
+      all: "All",
       tab: {
         overview: "Overview",
         materials: "Materials",
@@ -1889,6 +2037,10 @@ export const translations = {
         price_required: "Price is required",
         quantity_required: "Quantity is required"
       }
+    },
+    project_import: {
+      title: "Project Import",
+      desc: "Import projects from Excel file"
     },
     settings: {
       title: "Settings"
@@ -2169,8 +2321,76 @@ export const translations = {
       financial: "Financial"
     },
     tender_subcategory: {
+      // Administrative subcategories
       lettre_soumission: "Submission Letter",
-      pouvoir_signature: "Signature Authority"
+      pouvoir_signature: "Signature Authority",
+      acte_groupement: "Grouping Agreement",
+      attestation_impot: "Tax Certificate",
+      attestation_cnss: "Social Security Certificate",
+      attestation_non_faillite: "Non-Bankruptcy Certificate",
+      renseignement_soumissionnaire: "Bidder Information",
+      // Planification (PAA) - Administrative
+      plan_annuel_achats: "Annual Procurement Plan (PAA)",
+      modele_paa: "Annual Procurement Plan Template",
+      validation_ordonnateur: "Authorizing Officer Validation",
+      publication_armp: "Publication on ARMP website",
+      // Initiation - Administrative
+      demande_initiation: "Procedure Initiation Request",
+      procedure_proposee: "Proposed Procedure",
+      // Sélection - Administrative
+      consultation_directe: "Direct Consultation (≤ 600,000 MRU)",
+      consultation_concurrentielle: "Competitive Consultation",
+      lettre_consultation: "Consultation Letter (Document No. 1)",
+      modele_soumission: "Submission Template (Document No. 2)",
+      modele_contrat: "Contract Template (Document No. 4)",
+      registre_reception_plis: "Bid Reception Register",
+      recu_depot_plis: "Bid Deposit Receipt",
+      pv_ouverture_plis: "Bid Opening Minutes",
+      pv_evaluation_attribution: "Evaluation and Award Proposal Minutes",
+      selection_consultants: "Consultant Selection",
+      dossier_smc_sfqc_sci: "Standard File for SMC/SFQC/SCI",
+      lettre_invitation: "Invitation Letter (Document No. 1)",
+      // Attribution - Administrative
+      lettre_notification: "Award Notification Letter",
+      nom_attributaire: "Awardee Name",
+      delai_execution: "Execution Period",
+      publication_provisoire: "Provisional Publication (2 days for appeals)",
+      signature_contrat: "Contract Signing",
+      // Archivage - Administrative
+      original_offres: "Original Bids",
+      pv_archivage: "Opening and Evaluation Minutes",
+      contrats_signes: "Signed Contracts",
+      preuves_publication: "Publication Proofs",
+      chemises_archivage: "Labeled Archive Folders or Boxes",
+      double_numerique: "Digital Copy Recommended",
+      // Technical subcategories
+      preuves_capacites_techniques: "Technical Capacity Evidence (similar projects)",
+      experience_generale_marche: "General Experience in Contract Subject",
+      methodologie: "Methodology",
+      personnel_cle: "Key Personnel",
+      planning_travaux: "Work Schedule",
+      calendrier_livraison: "Delivery Schedule",
+      conformite_techniques: "Technical Compliance",
+      // Initiation - Technical
+      description_besoin: "Detailed Need Description",
+      // Sélection - Technical
+      ddqe: "Descriptive Quantitative Estimate - DDQE (Document No. 3)",
+      termes_reference: "Terms of Reference - ToR (Document No. 3)",
+      pv_evaluation_technique: "Technical and Financial Evaluation Minutes",
+      // Financial subcategories
+      preuves_capacites_financieres: "Financial Capacity Evidence",
+      chiffre_affaires_annuel: "Average Annual Turnover of Activities",
+      devis_quantitatif_estimatif: "Quantitative Estimate",
+      garantie_bancaire: "Bank Guarantee",
+      garantie_soumission: "Bid Guarantee for the Period",
+      // Initiation - Financial
+      source_financement: "Financing Source",
+      montant_alloue: "Allocated Amount",
+      // Sélection - Financial
+      devis_comparatifs: "Comparative Quotes (3 minimum)",
+      factures_commandes: "Invoices and Purchase Orders",
+      // Attribution - Financial
+      montant_marche: "Contract Amount"
     }
   }
 };
