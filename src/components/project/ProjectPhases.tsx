@@ -34,14 +34,21 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
 
   // Load phases from database
   const fetchProjectPhases = async () => {
+    console.log('=== FETCH PROJECT PHASES ===');
+    console.log('ProjectId:', projectId);
+    console.log('FormMode:', formMode);
+    
     if (!projectId || formMode) {
+      console.log('Skipping fetch - no projectId or formMode is true');
       setLoading(false);
       return;
     }
     
     try {
+      console.log('Starting to fetch phases...');
       setLoading(true);
       const loadedPhases = await PhaseService.loadProjectPhases(projectId);
+      console.log('Loaded phases from database:', loadedPhases);
       setPhases(loadedPhases);
     } catch (error) {
       console.error('Error fetching project phases:', error);
@@ -51,6 +58,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         variant: "destructive",
       });
     } finally {
+      console.log('Fetch complete - setting loading false');
       setLoading(false);
     }
   };

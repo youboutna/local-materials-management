@@ -228,6 +228,9 @@ export class PhaseService {
    * Load phases from database
    */
   static async loadProjectPhases(projectId: string): Promise<PhaseData[]> {
+    console.log('=== LOADING PHASES FROM DATABASE ===');
+    console.log('Project ID:', projectId);
+    
     try {
       const { data, error } = await supabase
         .from('project_phases')
@@ -235,12 +238,17 @@ export class PhaseService {
         .eq('project_id', projectId)
         .order('created_at');
 
+      console.log('Database query result:', { data, error });
+
       if (error) {
         console.error('Error loading project phases:', error);
         throw error;
       }
 
-      return (data || []).map(dbPhase => this.mapDatabaseToPhase(dbPhase));
+      const mappedPhases = (data || []).map(dbPhase => this.mapDatabaseToPhase(dbPhase));
+      console.log('Mapped phases:', mappedPhases);
+      
+      return mappedPhases;
     } catch (error) {
       console.error('Error loading project phases:', error);
       throw error;
