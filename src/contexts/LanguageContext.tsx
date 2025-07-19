@@ -1198,7 +1198,7 @@ export const translations = {
       about: "حول",
       about_desc: "نظام إدارة البناء ERP مصمم لتبسيط وتحسين جميع جوانب مشاريع البناء الخاصة بك.",
       rights: "جميع الحقوق محفوظة",
-      by_hadratech: "تطوير هدرة تك",
+      by_hadratech:"By HADRATECH حضراتك",
       quick_links: "روابط سريعة",
       legal: "قانوني"
     },

@@ -198,23 +198,23 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              {t('documents.tabs.takeoffs')}
+              {t('materials.tabs.takeoffs')}
             </CardTitle>
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  {t('documents.tabs.takeoffs') + ' ' + t('project.add')}
+                  {t('materials.tabs.takeoffs') + ' ' + t('project.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{t('documents.tabs.takeoffs') + ' ' + t('project.add')}</DialogTitle>
+                  <DialogTitle>{t('materials.tabs.takeoffs') + ' ' + t('project.add')}</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="manual" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="manual">{t('materials.form.basic_info')}</TabsTrigger>
-                    <TabsTrigger value="advanced">{t('map.draw.zone')}</TabsTrigger>
+                    <TabsTrigger value="manual">{t('materials.takeoffs.form.basic_info')}</TabsTrigger>
+                    <TabsTrigger value="advanced">{t('materials.takeoffs.form.advanced')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="manual" className="space-y-4">
