@@ -77,6 +77,11 @@ function App() {
                           <Home />
                         </RoleBasedRoute>
                       } />
+                      <Route path="/dashboard" element={
+                        <RoleBasedRoute>
+                          <Dashboard />
+                        </RoleBasedRoute>
+                      } />
                       <Route path="/projects" element={
                         <RoleBasedRoute>
                           <Projects />
@@ -140,11 +145,6 @@ function App() {
                       <Route path="/users" element={
                         <RoleBasedRoute allowedRoles={['admin', 'director']}>
                           <Users />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/dashboard" element={
-                        <RoleBasedRoute>
-                          <Dashboard />
                         </RoleBasedRoute>
                       } />
                       <Route path="/settings" element={

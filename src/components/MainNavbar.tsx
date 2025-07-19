@@ -68,6 +68,18 @@ const MainNavbar = () => {
         {isUserAuthenticated && (
           <NavigationMenu className="hidden md:flex z-50">
             <NavigationMenuList className="gap-2">
+               <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/dashboard">
+                    {t('dashboard.title') || 'Dashboard'}
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-white hover:text-gray-200 bg-transparent hover:bg-adrar-600">
                   {t('nav.projects') || 'Projets'}
@@ -170,19 +182,6 @@ const MainNavbar = () => {
                   </Button>
                 </NavigationMenuItem>
               )}
-              
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/dashboard">
-                    {t('dashboard.title') || 'Dashboard'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
               
               <NavigationMenuItem>
                 <Button 

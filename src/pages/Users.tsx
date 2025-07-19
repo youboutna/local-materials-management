@@ -487,7 +487,7 @@ const Users = () => {
         mode={managementMode}
       />
       
-      <Footer />
+   
     </div>
   );
 };

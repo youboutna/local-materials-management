@@ -209,7 +209,7 @@ const Documents = () => {
         </div>
       </main>
       
-      <Footer />
+      
     </div>
   );
 };

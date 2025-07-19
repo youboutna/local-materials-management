@@ -94,7 +94,7 @@ const Index = () => {
         <Hero />
         
         {/* About System Section */}
-        <AboutEditor />
+       
         
         {/* Features Section */}
         <section className="py-20 bg-white">
@@ -191,7 +191,6 @@ const Index = () => {
         </section>
       </main>
       
-      <Footer />
     </div>
   );
 };
