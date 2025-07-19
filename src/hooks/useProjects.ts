@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectData } from '@/components/ProjectCard';
+import { ProjectData } from '@/types/project';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectData[]>([]);
@@ -43,7 +43,13 @@ export const useProjects = () => {
         selectionMode: project.selection_mode || undefined,
         launchDate: project.launch_date || undefined,
         attributionDate: project.attribution_date || undefined,
-        projectReference: project.project_reference || undefined
+        projectReference: project.project_reference || undefined,
+        projectResponsableId: project.project_responsable_id || undefined,
+        mainContractor: project.main_contractor || undefined,
+        allowsInitialPayment: project.allows_initial_payment || false,
+        initialPaymentPercentage: project.initial_payment_percentage || 0,
+        currentPhase: project.current_phase as any || undefined,
+        currentStage: project.current_stage as any || undefined
       }));
 
       setProjects(transformedData);
@@ -82,7 +88,13 @@ export const useProjects = () => {
         selection_mode: projectData.selectionMode,
         launch_date: projectData.launchDate,
         attribution_date: projectData.attributionDate,
-        project_reference: projectData.projectReference
+        project_reference: projectData.projectReference,
+        project_responsable_id: projectData.projectResponsableId,
+        main_contractor: projectData.mainContractor,
+        allows_initial_payment: projectData.allowsInitialPayment,
+        initial_payment_percentage: projectData.initialPaymentPercentage,
+        current_phase: projectData.currentPhase,
+        current_stage: projectData.currentStage
       };
 
       const { data, error } = await supabase
@@ -115,7 +127,13 @@ export const useProjects = () => {
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
         attributionDate: (data as any).attribution_date || undefined,
-        projectReference: (data as any).project_reference || undefined
+        projectReference: (data as any).project_reference || undefined,
+        projectResponsableId: (data as any).project_responsable_id || undefined,
+        mainContractor: (data as any).main_contractor || undefined,
+        allowsInitialPayment: (data as any).allows_initial_payment || false,
+        initialPaymentPercentage: (data as any).initial_payment_percentage || 0,
+        currentPhase: (data as any).current_phase as any || undefined,
+        currentStage: (data as any).current_stage as any || undefined
       };
 
       // Update the local state
@@ -172,7 +190,13 @@ export const useProjects = () => {
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
         attributionDate: (data as any).attribution_date || undefined,
-        projectReference: (data as any).project_reference || undefined
+        projectReference: (data as any).project_reference || undefined,
+        projectResponsableId: (data as any).project_responsable_id || undefined,
+        mainContractor: (data as any).main_contractor || undefined,
+        allowsInitialPayment: (data as any).allows_initial_payment || false,
+        initialPaymentPercentage: (data as any).initial_payment_percentage || 0,
+        currentPhase: (data as any).current_phase as any || undefined,
+        currentStage: (data as any).current_stage as any || undefined
       };
     } catch (err) {
       console.error(`Error fetching project with id ${id}:`, err);

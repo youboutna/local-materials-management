@@ -3,7 +3,7 @@ import { useProjects as useSupabaseProjects } from '@/hooks/useProjects';
 import { useTypeOrmProjectOperations } from './useTypeOrmProjectOperations';
 import { USE_TYPEORM } from './constants';
 import { projectToasts } from './projectToasts';
-import { ProjectData } from '@/components/ProjectCard';
+import { ProjectData } from '@/types/project';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -56,6 +56,14 @@ export const useProjects = () => {
       if (projectData.launchDate !== undefined) dbData.launch_date = projectData.launchDate;
       if (projectData.attributionDate !== undefined) dbData.attribution_date = projectData.attributionDate;
       if (projectData.projectReference !== undefined) dbData.project_reference = projectData.projectReference;
+      
+      // Handle missing fields from edit form
+      if (projectData.projectResponsableId !== undefined) dbData.project_responsable_id = projectData.projectResponsableId;
+      if (projectData.mainContractor !== undefined) dbData.main_contractor = projectData.mainContractor;
+      if (projectData.allowsInitialPayment !== undefined) dbData.allows_initial_payment = projectData.allowsInitialPayment;
+      if (projectData.initialPaymentPercentage !== undefined) dbData.initial_payment_percentage = projectData.initialPaymentPercentage;
+      if (projectData.currentPhase !== undefined) dbData.current_phase = projectData.currentPhase;
+      if (projectData.currentStage !== undefined) dbData.current_stage = projectData.currentStage;
       // If projectData.coordinates is undefined, we don't update the coordinates
 
       const { data, error } = await supabase
@@ -91,7 +99,13 @@ export const useProjects = () => {
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
         attributionDate: (data as any).attribution_date || undefined,
-        projectReference: (data as any).project_reference || undefined
+        projectReference: (data as any).project_reference || undefined,
+        projectResponsableId: (data as any).project_responsable_id || undefined,
+        mainContractor: (data as any).main_contractor || undefined,
+        allowsInitialPayment: (data as any).allows_initial_payment || false,
+        initialPaymentPercentage: (data as any).initial_payment_percentage || 0,
+        currentPhase: (data as any).current_phase || undefined,
+        currentStage: (data as any).current_stage || undefined
       };
 
       toast({
