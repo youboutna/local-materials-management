@@ -161,6 +161,12 @@ export class PhaseService {
         return;
       }
 
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('User not authenticated. Please log in and try again.');
+      }
+
       // First, delete existing phases for this project
       const { error: deleteError } = await supabase
         .from('project_phases')
@@ -169,11 +175,14 @@ export class PhaseService {
 
       if (deleteError) {
         console.error('Error deleting existing phases:', deleteError);
-        throw deleteError;
+        throw new Error(`Failed to delete existing phases: ${deleteError.message}`);
       }
 
       // Map phases to database format
-      const phasesData = phases.map(phase => this.mapPhaseToDatabase(phase, projectId));
+      const phasesData = phases.map(phase => ({
+        ...this.mapPhaseToDatabase(phase, projectId),
+        created_by: user.id
+      }));
 
       // Insert new phases
       const { error: insertError } = await supabase
@@ -182,7 +191,7 @@ export class PhaseService {
 
       if (insertError) {
         console.error('Database error saving phases:', insertError);
-        throw insertError;
+        throw new Error(`Failed to save phases: ${insertError.message}`);
       }
 
     } catch (error) {
