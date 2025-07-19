@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,28 +14,6 @@ interface ConstructionPhaseSelectorProps {
   // New props for sub-project management
   enableSubProjectMode?: boolean;
   projectBudget?: number;
-}
-
-interface ConstructionPhaseData {
-  phase: ConstructionPhase;
-  stage: ConstructionStage;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  estimatedDuration: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  budget: number;
-  actualCost: number;
-  resources: any[];
-  payments: any[];
-  progress: number;
-  notes?: string;
-  // Add required fields for compatibility
-  suppliers: any[];
-  humanResources: any[];
-  materials: any[];
-  location: string;
 }
 
 const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; description: string }[] = [
