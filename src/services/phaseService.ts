@@ -202,7 +202,8 @@ export class PhaseService {
 
       if (insertError) {
         console.error('Database error saving phases:', insertError);
-        throw new Error(`Failed to save phases: ${insertError.message}`);
+        console.error('Failed data:', phasesData);
+        throw new Error(`Failed to save phases: ${insertError.message}. Details: ${JSON.stringify(insertError, null, 2)}`);
       }
 
       console.log('Successfully saved phases:', insertData);
