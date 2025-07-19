@@ -66,7 +66,13 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
 
   // Handle phase changes and save to database
   const handlePhasesChange = async (newPhases: PhaseData[]) => {
-    console.log('Handling phases change:', { formMode, projectId, phasesCount: newPhases.length });
+    console.log('=== PHASE CHANGE HANDLER ===');
+    console.log('Handling phases change:', { 
+      formMode, 
+      projectId, 
+      phasesCount: newPhases.length,
+      newPhases: newPhases.map(p => ({ id: p.id, title: p.title }))
+    });
     setPhases(newPhases);
     
     // In form mode, just update state and notify parent
@@ -88,7 +94,9 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     }
     
     try {
-      console.log('Saving phases to database...');
+      console.log('=== ATTEMPTING TO SAVE PHASES ===');
+      console.log('ProjectId:', projectId);
+      console.log('Phases to save:', newPhases.length);
       await PhaseService.saveProjectPhases(projectId, newPhases);
       
       toast({

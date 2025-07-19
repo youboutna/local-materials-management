@@ -156,21 +156,31 @@ export class PhaseService {
    * Save phases to database
    */
   static async saveProjectPhases(projectId: string, phases: PhaseData[]): Promise<void> {
+    console.log('=== PHASE SERVICE SAVE START ===');
+    console.log('ProjectId:', projectId);
+    console.log('Phases count:', phases.length);
+    console.log('DEV_MODE:', DEV_MODE);
+    
     try {
       // Skip saving if no phases provided
       if (!phases || phases.length === 0) {
-        console.log('No phases to save');
+        console.log('No phases to save - returning early');
         return;
       }
 
       // Check if user is authenticated (skip in DEV_MODE)
       let user: any = null;
       if (!DEV_MODE) {
+        console.log('Checking authentication (not DEV_MODE)...');
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
         if (authError || !authUser) {
+          console.error('Authentication failed:', authError);
           throw new Error('User not authenticated. Please log in and try again.');
         }
         user = authUser;
+        console.log('User authenticated:', user.id);
+      } else {
+        console.log('DEV_MODE enabled - skipping authentication');
       }
 
       console.log(`Saving ${phases.length} phases for project ${projectId}`);
