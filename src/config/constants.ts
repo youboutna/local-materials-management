@@ -1,5 +1,6 @@
 // Set this to false to enable proper authentication behavior
-export const DEV_MODE = true;
+export const DEV_MODE = false;
+export const CLIENT_ETRML = true;
 
 // Mock user for development mode
 export const DEV_USER = {
