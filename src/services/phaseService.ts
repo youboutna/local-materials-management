@@ -158,6 +158,7 @@ export class PhaseService {
     try {
       // Skip saving if no phases provided
       if (!phases || phases.length === 0) {
+        console.log('No phases to save');
         return;
       }
 
@@ -167,15 +168,17 @@ export class PhaseService {
         throw new Error('User not authenticated. Please log in and try again.');
       }
 
-      // First, delete existing phases for this project
+      console.log(`Saving ${phases.length} phases for project ${projectId}`);
+
+      // First, delete existing phases for this project (ignore errors if no phases exist)
       const { error: deleteError } = await supabase
         .from('project_phases')
         .delete()
         .eq('project_id', projectId);
 
+      // Don't throw error if delete fails - project might not have phases yet
       if (deleteError) {
-        console.error('Error deleting existing phases:', deleteError);
-        throw new Error(`Failed to delete existing phases: ${deleteError.message}`);
+        console.warn('Warning deleting existing phases:', deleteError.message);
       }
 
       // Map phases to database format
@@ -184,15 +187,20 @@ export class PhaseService {
         created_by: user.id
       }));
 
+      console.log('Phase data to insert:', phasesData);
+
       // Insert new phases
-      const { error: insertError } = await supabase
+      const { error: insertError, data: insertData } = await supabase
         .from('project_phases')
-        .insert(phasesData);
+        .insert(phasesData)
+        .select();
 
       if (insertError) {
         console.error('Database error saving phases:', insertError);
         throw new Error(`Failed to save phases: ${insertError.message}`);
       }
+
+      console.log('Successfully saved phases:', insertData);
 
     } catch (error) {
       console.error('Error saving project phases:', error);

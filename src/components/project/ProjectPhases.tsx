@@ -57,10 +57,12 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
 
   // Handle phase changes and save to database
   const handlePhasesChange = async (newPhases: PhaseData[]) => {
+    console.log('Handling phases change:', { formMode, projectId, phasesCount: newPhases.length });
     setPhases(newPhases);
     
     // In form mode, just update state and notify parent
     if (formMode) {
+      console.log('Form mode: updating parent with phases');
       onPhasesChange?.(newPhases);
       return;
     }
@@ -68,10 +70,16 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
     // In database mode, save to database
     if (!projectId) {
       console.error('No projectId provided for saving phases');
+      toast({
+        title: "Erreur",
+        description: "ID du projet manquant pour sauvegarder les phases",
+        variant: "destructive",
+      });
       return;
     }
     
     try {
+      console.log('Saving phases to database...');
       await PhaseService.saveProjectPhases(projectId, newPhases);
       
       toast({
@@ -88,8 +96,10 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
         variant: "destructive",
       });
       
-      // Reload phases from database on error
-      await fetchProjectPhases();
+      // Only reload phases from database on error if not in form mode
+      if (!formMode) {
+        await fetchProjectPhases();
+      }
     }
   };
 
