@@ -181,3 +181,27 @@ export const TENDER_CATEGORY_LABELS = {
   technical: 'B - Techniques',
   financial: 'C - Financières'
 };
+
+// Administrative subcategory groups for better organization
+export const ADMINISTRATIVE_SUBCATEGORY_GROUPS = {
+  paa: {
+    label: 'PAA - Plan Annuel d\'Achats',
+    subcategories: ['plan_annuel_achats', 'modele_paa', 'validation_ordonnateur', 'publication_armp']
+  },
+  initiation: {
+    label: 'Initiation',
+    subcategories: ['demande_initiation', 'procedure_proposee', 'description_besoin', 'source_financement', 'montant_alloue']
+  },
+  selection: {
+    label: 'Sélection',
+    subcategories: ['consultation_directe', 'consultation_concurrentielle', 'lettre_consultation', 'modele_soumission', 'modele_contrat', 'registre_reception_plis', 'recu_depot_plis', 'pv_ouverture_plis', 'pv_evaluation_attribution', 'selection_consultants', 'dossier_smc_sfqc_sci', 'lettre_invitation', 'devis_comparatifs', 'factures_commandes']
+  },
+  attribution: {
+    label: 'Attribution',
+    subcategories: ['lettre_notification', 'nom_attributaire', 'delai_execution', 'publication_provisoire', 'signature_contrat', 'montant_marche']
+  },
+  archival: {
+    label: 'Archivage',
+    subcategories: ['original_offres', 'pv_archivage', 'contrats_signes', 'preuves_publication', 'chemises_archivage', 'double_numerique']
+  }
+} as const;
