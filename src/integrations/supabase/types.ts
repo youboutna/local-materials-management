@@ -181,6 +181,7 @@ export type Database = {
           inspection_id: string | null
           metadata: Json | null
           mime_type: string | null
+          phase_id: string | null
           project_id: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           tags: string[] | null
@@ -200,6 +201,7 @@ export type Database = {
           inspection_id?: string | null
           metadata?: Json | null
           mime_type?: string | null
+          phase_id?: string | null
           project_id?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           tags?: string[] | null
@@ -219,6 +221,7 @@ export type Database = {
           inspection_id?: string | null
           metadata?: Json | null
           mime_type?: string | null
+          phase_id?: string | null
           project_id?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           tags?: string[] | null
@@ -239,6 +242,13 @@ export type Database = {
             columns: ["inspection_id"]
             isOneToOne: false
             referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
             referencedColumns: ["id"]
           },
         ]
@@ -528,6 +538,7 @@ export type Database = {
           documents: Json | null
           id: string
           inspector: string
+          phase_id: string | null
           progress_at_inspection: number
           project_id: string
           status: string
@@ -540,6 +551,7 @@ export type Database = {
           documents?: Json | null
           id?: string
           inspector: string
+          phase_id?: string | null
           progress_at_inspection: number
           project_id: string
           status: string
@@ -552,12 +564,20 @@ export type Database = {
           documents?: Json | null
           id?: string
           inspector?: string
+          phase_id?: string | null
           progress_at_inspection?: number
           project_id?: string
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inspections_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inspections_project_id_fkey"
             columns: ["project_id"]
@@ -1141,6 +1161,7 @@ export type Database = {
           mobile_operator: string | null
           payment_date: string
           payment_method: string
+          phase_id: string | null
           progress_at_payment: number
           project_id: string
           receiver_name: string | null
@@ -1162,6 +1183,7 @@ export type Database = {
           mobile_operator?: string | null
           payment_date: string
           payment_method: string
+          phase_id?: string | null
           progress_at_payment: number
           project_id: string
           receiver_name?: string | null
@@ -1183,6 +1205,7 @@ export type Database = {
           mobile_operator?: string | null
           payment_date?: string
           payment_method?: string
+          phase_id?: string | null
           progress_at_payment?: number
           project_id?: string
           receiver_name?: string | null
@@ -1190,6 +1213,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_project_id_fkey"
             columns: ["project_id"]
@@ -1225,6 +1255,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      phase_employees: {
+        Row: {
+          created_at: string | null
+          daily_rate: number | null
+          employee_contact: string | null
+          employee_name: string
+          employee_role: string
+          end_date: string | null
+          id: string
+          is_primary_supplier: boolean | null
+          phase_id: string
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_rate?: number | null
+          employee_contact?: string | null
+          employee_name: string
+          employee_role: string
+          end_date?: string | null
+          id?: string
+          is_primary_supplier?: boolean | null
+          phase_id: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_rate?: number | null
+          employee_contact?: string | null
+          employee_name?: string
+          employee_role?: string
+          end_date?: string | null
+          id?: string
+          is_primary_supplier?: boolean | null
+          phase_id?: string
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_employees_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prescription_medications: {
         Row: {
@@ -1480,6 +1560,7 @@ export type Database = {
           created_at: string
           id: string
           material_id: string
+          phase_id: string | null
           project_id: string
           quantity: number
           updated_at: string
@@ -1488,6 +1569,7 @@ export type Database = {
           created_at?: string
           id?: string
           material_id: string
+          phase_id?: string | null
           project_id: string
           quantity: number
           updated_at?: string
@@ -1496,6 +1578,7 @@ export type Database = {
           created_at?: string
           id?: string
           material_id?: string
+          phase_id?: string | null
           project_id?: string
           quantity?: number
           updated_at?: string
@@ -1506,6 +1589,13 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_materials_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
             referencedColumns: ["id"]
           },
           {
@@ -2247,6 +2337,7 @@ export type Database = {
           due_date: string | null
           id: string
           notes: string | null
+          phase_id: string | null
           priority: string | null
           project_id: string | null
           status: string | null
@@ -2264,6 +2355,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          phase_id?: string | null
           priority?: string | null
           project_id?: string | null
           status?: string | null
@@ -2281,6 +2373,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           notes?: string | null
+          phase_id?: string | null
           priority?: string | null
           project_id?: string | null
           status?: string | null
@@ -2300,6 +2393,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignments_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
             referencedColumns: ["id"]
           },
           {

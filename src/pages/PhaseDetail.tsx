@@ -8,10 +8,12 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PhaseService, PhaseData } from '@/services/phaseService';
-import ProjectDocuments from '@/components/project/ProjectDocuments';
-import ProjectMaterials from '@/components/project/ProjectMaterials';
-import TaskAssignments from '@/components/documents/TaskAssignments';
-import { PaymentHistory } from '@/components/project/PaymentHistory';
+import PhaseTasks from '@/components/project/PhaseTasks';
+import PhaseMaterials from '@/components/project/PhaseMaterials';
+import PhaseEmployees from '@/components/project/PhaseEmployees';
+import PhaseDocuments from '@/components/project/PhaseDocuments';
+import PhasePayments from '@/components/project/PhasePayments';
+import PhaseInspections from '@/components/project/PhaseInspections';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -275,137 +277,25 @@ const PhaseDetail: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="materials">
-          <Card>
-            <CardHeader>
-              <CardTitle>Matériaux de la phase</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {phase.materials.map((material, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <span className="font-medium">{material.name || `Matériau ${material.materialId}`}</span>
-                      <p className="text-sm text-muted-foreground">ID: {material.materialId}</p>
-                    </div>
-                    <Badge variant="outline">{material.quantity} unités</Badge>
-                  </div>
-                ))}
-                {phase.materials.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Aucun matériau assigné à cette phase.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="team">
-          <Card>
-            <CardHeader>
-              <CardTitle>Équipe et fournisseurs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Human Resources */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Ressources humaines</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {phase.humanResources.map((resource, index) => (
-                      <div key={index} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">{resource.role || `Rôle ${resource.roleId}`}</span>
-                          <Badge>{resource.quantity} personnes</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Suppliers */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Fournisseurs</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {phase.suppliers.map((supplier, index) => (
-                      <div key={index} className="p-4 border rounded-lg">
-                        <h4 className="font-medium">{supplier.name || `Fournisseur ${supplier.supplierId}`}</h4>
-                        {supplier.contact && (
-                          <p className="text-sm text-muted-foreground mt-1">{supplier.contact}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PhaseEmployees phaseId={phaseId!} />
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Documents de la phase
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Documents spécifiques à cette phase seront affichés ici.
-              </p>
-              <div className="mt-4">
-                <Button variant="outline" className="w-full">
-                  Gérer les documents de la phase
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="tasks">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tâches de la phase</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Tâches assignées spécifiquement à cette phase seront affichées ici.
-              </p>
-              <div className="mt-4">
-                <Button variant="outline" className="w-full">
-                  Gérer les tâches de la phase
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <PhaseTasks phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="monitoring">
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Paiements de la phase</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Paiements liés à cette phase seront affichés ici.
-                </p>
-                <div className="mt-4">
-                  <Button variant="outline" className="w-full">
-                    Gérer les paiements de la phase
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Inspections de la phase</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Inspections liées à cette phase seront affichées ici.
-                </p>
-              </CardContent>
-            </Card>
+            <PhasePayments phaseId={phaseId!} projectId={projectId!} />
+            <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
           </div>
         </TabsContent>
       </Tabs>
