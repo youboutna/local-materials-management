@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle, Plus, Calculator } from 'lucide-react';
-import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, TenderDocumentSubcategory } from '@/types/tender';
+import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS, TenderDocumentSubcategory, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/types/tender';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
@@ -399,22 +399,37 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TENDER_DOCUMENT_LABELS)
-                    .filter(([key]) => {
-                      if (uploadFormData.category === 'administrative') {
-                        return ['lettre_soumission', 'pouvoir_signature', 'acte_groupement', 'attestation_impot', 'attestation_cnss', 'attestation_non_faillite', 'renseignement_soumissionnaire'].includes(key);
-                      } else if (uploadFormData.category === 'technical') {
-                        return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques'].includes(key);
-                      } else {
-                        return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission'].includes(key);
-                      }
-                    })
-                    .map(([key, label]) => (
-                      <SelectItem key={key} value={key as TenderDocumentSubcategory}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                <SelectContent className="bg-background border border-border shadow-lg">
+                  {uploadFormData.category === 'administrative' ? (
+                    Object.entries(ADMINISTRATIVE_SUBCATEGORY_GROUPS).map(([groupKey, group]) => (
+                      <div key={groupKey}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 border-b">
+                          {group.label}
+                        </div>
+                        {group.subcategories
+                          .filter(subcat => Object.keys(TENDER_DOCUMENT_LABELS).includes(subcat))
+                          .map((subcat) => (
+                            <SelectItem key={subcat} value={subcat as TenderDocumentSubcategory} className="pl-6">
+                              {TENDER_DOCUMENT_LABELS[subcat as keyof typeof TENDER_DOCUMENT_LABELS]}
+                            </SelectItem>
+                          ))}
+                      </div>
+                    ))
+                  ) : (
+                    Object.entries(TENDER_DOCUMENT_LABELS)
+                      .filter(([key]) => {
+                        if (uploadFormData.category === 'technical') {
+                          return ['preuves_capacites_techniques', 'experience_generale_marche', 'methodologie', 'personnel_cle', 'planning_travaux', 'calendrier_livraison', 'conformite_techniques', 'description_besoin', 'ddqe', 'termes_reference', 'pv_evaluation_technique'].includes(key);
+                        } else {
+                          return ['preuves_capacites_financieres', 'chiffre_affaires_annuel', 'devis_quantitatif_estimatif', 'garantie_bancaire', 'garantie_soumission', 'source_financement', 'montant_alloue', 'devis_comparatifs', 'factures_commandes', 'montant_marche'].includes(key);
+                        }
+                      })
+                      .map(([key, label]) => (
+                        <SelectItem key={key} value={key as TenderDocumentSubcategory}>
+                          {label}
+                        </SelectItem>
+                      ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
