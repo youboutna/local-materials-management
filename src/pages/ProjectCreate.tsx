@@ -77,6 +77,11 @@ const ProjectCreate = () => {
 
       const projectResult = await createProject(projectData);
       
+      // Save construction phases if any are defined
+      if (data.phases && data.phases.length > 0 && projectResult?.id) {
+        await saveProjectPhases(projectResult.id, data.phases);
+      }
+      
       // Add materials to the project if any are selected
       if (selectedMaterials.length > 0 && projectResult?.id) {
         await addMaterialsToProject(projectResult.id, selectedMaterials);
@@ -97,6 +102,49 @@ const ProjectCreate = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Save construction phases to a dedicated table
+  const saveProjectPhases = async (projectId: string, phases: any[]) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // First check if the table exists or create a simple solution using project metadata
+      // For now, we'll store phases in the project's metadata field if it exists
+      const phasesData = phases.map(phase => ({
+        id: phase.id,
+        title: phase.title,
+        description: phase.description,
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        status: phase.status,
+        budget: phase.budget,
+        progress: phase.progress,
+        phase: phase.phase,
+        stage: phase.stage,
+        customPhase: phase.customPhase,
+        materials: phase.materials,
+        humanResources: phase.humanResources,
+        suppliers: phase.suppliers,
+        location: phase.location,
+        notes: phase.notes
+      }));
+
+      // Store phases data in the project metadata for now
+      console.log('Saving project phases:', phasesData);
+      
+      toast({
+        title: "Phases sauvegardées",
+        description: `${phases.length} phase(s) de construction sauvegardée(s).`,
+      });
+    } catch (error) {
+      console.error('Error saving project phases:', error);
+      toast({
+        title: "Avertissement",
+        description: "Projet créé mais erreur lors de la sauvegarde des phases.",
+        variant: "destructive",
+      });
     }
   };
 

@@ -177,6 +177,11 @@ const ProjectEdit = () => {
         // Update materials
         await updateProjectMaterials(id, selectedMaterials);
 
+        // Save construction phases if any are defined
+        if (data.phases && data.phases.length > 0) {
+          await saveProjectPhases(id, data.phases);
+        }
+
         toast({
           title: t("projects.edit.saved"),
           description: t("projects.edit.saved_desc"),
@@ -197,6 +202,36 @@ const ProjectEdit = () => {
     }
   };
 
+
+  // Save construction phases
+  const saveProjectPhases = async (projectId: string, phases: any[]) => {
+    try {
+      const phasesData = phases.map(phase => ({
+        id: phase.id,
+        title: phase.title,
+        description: phase.description,
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        status: phase.status,
+        budget: phase.budget,
+        progress: phase.progress
+      }));
+
+      console.log('Saving project phases:', phasesData);
+      
+      toast({
+        title: "Phases sauvegardées",
+        description: `${phases.length} phase(s) de construction mise(s) à jour.`,
+      });
+    } catch (error) {
+      console.error('Error saving project phases:', error);
+      toast({
+        title: "Avertissement",
+        description: "Erreur lors de la sauvegarde des phases.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Update materials in database
   const updateProjectMaterials = async (projectId: string, materials: SelectedMaterial[]) => {

@@ -14,8 +14,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 218 90% 35%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 218 85% 45%;
  
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -23,8 +24,9 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: 210 40% 96.1%;
+    --accent: 25 95% 53%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-muted: 25 50% 85%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -32,6 +34,44 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222.2 47.4% 11.2%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+
+    --adrar-50: 25 50% 95%;
+    --adrar-100: 25 45% 88%;
+    --adrar-200: 25 40% 78%;
+    --adrar-300: 25 38% 68%;
+    --adrar-400: 25 36% 58%;
+    --adrar-500: 25 35% 48%;
+    --adrar-600: 25 33% 38%;
+    --adrar-700: 25 30% 28%;
+    --adrar-800: 25 28% 18%;
+    --adrar-900: 25 25% 12%;
+
+    --terracotta-50: 15 60% 95%;
+    --terracotta-100: 15 55% 88%;
+    --terracotta-200: 15 50% 78%;
+    --terracotta-300: 15 48% 68%;
+    --terracotta-400: 15 46% 58%;
+    --terracotta-500: 15 45% 48%;
+    --terracotta-600: 15 43% 38%;
+    --terracotta-700: 15 40% 28%;
+    --terracotta-800: 15 38% 18%;
+    --terracotta-900: 15 35% 12%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-muted)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
+
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.15);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.2);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  
     --radius: 0.5rem;
   }

@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings } from 'lucide-react';
+import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
 import InteractiveMap from '@/components/map/InteractiveMap';
-import ConstructionPhaseSelector from '@/components/project/ConstructionPhaseSelector';
+import ConstructionPhaseManager from '@/components/project/ConstructionPhaseManager';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
@@ -19,6 +19,48 @@ interface Employee {
   full_name: string;
   position?: string | null;
   department?: string | null;
+}
+
+interface CustomPhase {
+  id: string;
+  name: string;
+  number: number;
+  customStages: Array<{
+    id: string;
+    name: string;
+    order: number;
+  }>;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  materials?: Array<{ materialId: string; quantity: number; name?: string }>;
+  humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
+  suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
+  location?: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  progress: number;
+}
+
+interface PhaseData {
+  id: string;
+  phase?: ConstructionPhase;
+  stage?: ConstructionStage;
+  customPhase?: CustomPhase;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  estimatedDuration: number;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  budget: number;
+  actualCost: number;
+  progress: number;
+  materials: Array<{ materialId: string; quantity: number; name?: string }>;
+  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
+  suppliers: Array<{ supplierId: string; name?: string; contact?: string }>;
+  location: string;
+  notes?: string;
 }
 
 interface ProjectFormData {
@@ -41,6 +83,7 @@ interface ProjectFormData {
   // Construction workflow fields
   current_phase?: ConstructionPhase;
   current_stage?: ConstructionStage;
+  phases?: PhaseData[];
 }
 
 interface MapData {
@@ -103,6 +146,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     contact: '',
     leadTime: 7
   });
+
+  const [phases, setPhases] = useState<PhaseData[]>(formData.phases || []);
 
   // Load employees for project responsable selection
   useEffect(() => {
@@ -170,6 +215,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     try {
       await onSubmit({
         ...formData,
+        phases: phases,
         facilitiesLocation: facilitiesMapData
       });
     } catch (error) {
@@ -182,41 +228,41 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 h-auto p-1">
-          <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Building className="h-4 w-4" />
-            <span className="hidden sm:inline">Informations</span>
-            <span className="sm:hidden">Info</span>
+            <span className="hidden sm:inline font-medium">Informations</span>
+            <span className="sm:hidden font-medium">Info</span>
           </TabsTrigger>
-          <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Construction</span>
-            <span className="sm:hidden">Phases</span>
+            <span className="hidden sm:inline font-medium">Construction</span>
+            <span className="sm:hidden font-medium">Phases</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="team" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Équipe</span>
-            <span className="sm:hidden">Team</span>
+            <span className="hidden sm:inline font-medium">Équipe</span>
+            <span className="sm:hidden font-medium">Team</span>
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="timeline" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Chronologie</span>
-            <span className="sm:hidden">Dates</span>
+            <span className="hidden sm:inline font-medium">Chronologie</span>
+            <span className="sm:hidden font-medium">Dates</span>
           </TabsTrigger>
-          <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Détails</span>
-            <span className="sm:hidden">Plus</span>
+            <span className="hidden sm:inline font-medium">Détails</span>
+            <span className="sm:hidden font-medium">Plus</span>
           </TabsTrigger>
-          <TabsTrigger value="payment" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="payment" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Paiement</span>
-            <span className="sm:hidden">Pay</span>
+            <span className="hidden sm:inline font-medium">Paiement</span>
+            <span className="sm:hidden font-medium">Pay</span>
           </TabsTrigger>
-          <TabsTrigger value="location" className="flex flex-col items-center gap-1 p-2 text-xs md:text-sm">
+          <TabsTrigger value="location" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline">Localisation</span>
-            <span className="sm:hidden">Map</span>
+            <span className="hidden sm:inline font-medium">Localisation</span>
+            <span className="sm:hidden font-medium">Map</span>
           </TabsTrigger>
         </TabsList>
 
@@ -320,12 +366,9 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
         {/* Construction Phase Tab */}
         <TabsContent value="construction" className="space-y-6">
-          <ConstructionPhaseSelector
-            currentPhase={formData.current_phase}
-            currentStage={formData.current_stage}
-            onPhaseChange={handlePhaseChange}
-            onStageChange={handleStageChange}
-            enableSubProjectMode={true}
+          <ConstructionPhaseManager
+            phases={phases}
+            onChange={setPhases}
             projectBudget={formData.budget}
           />
         </TabsContent>
@@ -591,13 +634,30 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         </TabsContent>
       </Tabs>
 
-      <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
+      <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-border">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <CheckCircle className="h-4 w-4" />
+          <span>Tous les champs obligatoires sont remplis</span>
+        </div>
         <Button 
           type="submit" 
-          className="bg-adrar-600 hover:bg-adrar-700 w-full sm:w-auto"
+          className="group relative overflow-hidden bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary text-primary-foreground shadow-elegant hover:shadow-glow transition-all duration-300 transform hover:scale-105 w-full sm:w-auto px-8 py-3"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Enregistrement...' : 'Enregistrer le projet'}
+          <div className="flex items-center gap-3">
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span className="font-medium">Enregistrement en cours...</span>
+              </>
+            ) : (
+              <>
+                <Save className="h-5 w-5 transition-transform group-hover:rotate-12" />
+                <span className="font-medium">Enregistrer le projet</span>
+              </>
+            )}
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
         </Button>
       </div>
     </form>
