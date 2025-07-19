@@ -392,7 +392,7 @@ const StandardPhaseCreator: React.FC<{
       {selectedPhase && (
         <div>
           <Label>Étape</Label>
-          <Select value={selectedStage} onValueChange={setSelectedStage}>
+          <Select value={selectedStage} onValueChange={(value) => setSelectedStage(value as ConstructionStage)}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner une étape" />
             </SelectTrigger>
