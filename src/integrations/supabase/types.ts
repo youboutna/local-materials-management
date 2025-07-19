@@ -1567,6 +1567,71 @@ export type Database = {
           },
         ]
       }
+      project_phases: {
+        Row: {
+          actual_cost: number | null
+          created_at: string
+          created_by: string | null
+          dependencies: Json | null
+          description: string | null
+          end_date: string | null
+          estimated_cost: number | null
+          id: string
+          milestones: Json | null
+          phase_name: string
+          phase_type: string
+          progress: number | null
+          project_id: string
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          end_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          milestones?: Json | null
+          phase_name: string
+          phase_type?: string
+          progress?: number | null
+          project_id: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          end_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          milestones?: Json | null
+          phase_name?: string
+          phase_type?: string
+          progress?: number | null
+          project_id?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_project_phases_project"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_risks: {
         Row: {
           created_at: string | null
