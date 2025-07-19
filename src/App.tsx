@@ -45,6 +45,7 @@ import SupplierDashboard from './pages/SupplierDashboard';
 import SupplierPasswordReset from './pages/SupplierPasswordReset';
 import TenderManagement from './pages/TenderManagement';
 import TenderImport from './pages/TenderImport';
+import PhaseDetail from './pages/PhaseDetail';
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,11 @@ function App() {
                       <Route path="/projects/:id/edit" element={
                         <RoleBasedRoute>
                           <ProjectEdit />
+                        </RoleBasedRoute>
+                      } />
+                      <Route path="/projects/:projectId/phases/:phaseId" element={
+                        <RoleBasedRoute>
+                          <PhaseDetail />
                         </RoleBasedRoute>
                       } />
                       <Route path="/projects/import" element={

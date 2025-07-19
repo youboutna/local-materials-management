@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,8 @@ import {
   MapPin, 
   Package, 
   Building,
-  Settings
+  Settings,
+  Eye
 } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
@@ -120,6 +122,8 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   onChange,
   projectBudget = 0
 }) => {
+  const navigate = useNavigate();
+  const { id: projectId } = useParams<{ id: string }>();
   const [isAddingPhase, setIsAddingPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
   const [phaseType, setPhaseType] = useState<'standard' | 'custom'>('standard');
@@ -183,6 +187,12 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   const deletePhase = (phaseId: string) => {
     onChange(phases.filter(p => p.id !== phaseId));
+  };
+
+  const handleViewPhaseDetail = (phaseId: string) => {
+    if (projectId) {
+      navigate(`/projects/${projectId}/phases/${phaseId}`);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -266,6 +276,15 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                       <Badge className={getStatusColor(phase.status)}>
                         {getStatusLabel(phase.status)}
                       </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewPhaseDetail(phase.id)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Détails
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
