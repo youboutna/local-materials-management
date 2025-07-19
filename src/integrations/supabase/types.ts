@@ -2315,46 +2315,76 @@ export type Database = {
       tenders: {
         Row: {
           attribution_date: string | null
+          award_criteria: string | null
+          budget_max: number | null
+          budget_min: number | null
+          contract_duration: number | null
           created_at: string
+          deadline_date: string | null
           description: string
+          eligibility_requirements: Json | null
+          evaluation_criteria: Json | null
           financing_source: string | null
           id: string
           launch_date: string | null
           market_type: string | null
           project_id: string | null
           project_reference: string | null
+          publication_date: string | null
           selection_mode: string | null
           status: string
+          tender_category: string | null
+          tender_number: string | null
           title: string
           updated_at: string
         }
         Insert: {
           attribution_date?: string | null
+          award_criteria?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          contract_duration?: number | null
           created_at?: string
+          deadline_date?: string | null
           description: string
+          eligibility_requirements?: Json | null
+          evaluation_criteria?: Json | null
           financing_source?: string | null
           id?: string
           launch_date?: string | null
           market_type?: string | null
           project_id?: string | null
           project_reference?: string | null
+          publication_date?: string | null
           selection_mode?: string | null
           status?: string
+          tender_category?: string | null
+          tender_number?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           attribution_date?: string | null
+          award_criteria?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          contract_duration?: number | null
           created_at?: string
+          deadline_date?: string | null
           description?: string
+          eligibility_requirements?: Json | null
+          evaluation_criteria?: Json | null
           financing_source?: string | null
           id?: string
           launch_date?: string | null
           market_type?: string | null
           project_id?: string | null
           project_reference?: string | null
+          publication_date?: string | null
           selection_mode?: string | null
           status?: string
+          tender_category?: string | null
+          tender_number?: string | null
           title?: string
           updated_at?: string
         }
