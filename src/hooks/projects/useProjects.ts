@@ -55,6 +55,7 @@ export const useProjects = () => {
       if (projectData.selectionMode !== undefined) dbData.selection_mode = projectData.selectionMode;
       if (projectData.launchDate !== undefined) dbData.launch_date = projectData.launchDate;
       if (projectData.attributionDate !== undefined) dbData.attribution_date = projectData.attributionDate;
+      if (projectData.projectReference !== undefined) dbData.project_reference = projectData.projectReference;
       // If projectData.coordinates is undefined, we don't update the coordinates
 
       const { data, error } = await supabase
@@ -89,7 +90,8 @@ export const useProjects = () => {
         marketType: (data as any).market_type || undefined,
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
-        attributionDate: (data as any).attribution_date || undefined
+        attributionDate: (data as any).attribution_date || undefined,
+        projectReference: (data as any).project_reference || undefined
       };
 
       toast({

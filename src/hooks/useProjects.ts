@@ -42,7 +42,8 @@ export const useProjects = () => {
         marketType: project.market_type || undefined,
         selectionMode: project.selection_mode || undefined,
         launchDate: project.launch_date || undefined,
-        attributionDate: project.attribution_date || undefined
+        attributionDate: project.attribution_date || undefined,
+        projectReference: project.project_reference || undefined
       }));
 
       setProjects(transformedData);
@@ -80,7 +81,8 @@ export const useProjects = () => {
         market_type: projectData.marketType,
         selection_mode: projectData.selectionMode,
         launch_date: projectData.launchDate,
-        attribution_date: projectData.attributionDate
+        attribution_date: projectData.attributionDate,
+        project_reference: projectData.projectReference
       };
 
       const { data, error } = await supabase
@@ -112,7 +114,8 @@ export const useProjects = () => {
         marketType: (data as any).market_type || undefined,
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
-        attributionDate: (data as any).attribution_date || undefined
+        attributionDate: (data as any).attribution_date || undefined,
+        projectReference: (data as any).project_reference || undefined
       };
 
       // Update the local state
@@ -168,7 +171,8 @@ export const useProjects = () => {
         marketType: (data as any).market_type || undefined,
         selectionMode: (data as any).selection_mode || undefined,
         launchDate: (data as any).launch_date || undefined,
-        attributionDate: (data as any).attribution_date || undefined
+        attributionDate: (data as any).attribution_date || undefined,
+        projectReference: (data as any).project_reference || undefined
       };
     } catch (err) {
       console.error(`Error fetching project with id ${id}:`, err);

@@ -1438,6 +1438,7 @@ export type Database = {
           market_type: string | null
           progress: number
           project_order: number | null
+          project_reference: string | null
           selection_mode: string | null
           start_date: string
           status: string
@@ -1462,6 +1463,7 @@ export type Database = {
           market_type?: string | null
           progress?: number
           project_order?: number | null
+          project_reference?: string | null
           selection_mode?: string | null
           start_date: string
           status: string
@@ -1486,6 +1488,7 @@ export type Database = {
           market_type?: string | null
           progress?: number
           project_order?: number | null
+          project_reference?: string | null
           selection_mode?: string | null
           start_date?: string
           status?: string
