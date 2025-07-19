@@ -13,6 +13,7 @@ import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflo
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import WorkflowStepSelector from './WorkflowStepSelector';
+import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
 import { 
   TenderDocumentCategory, 
@@ -65,6 +66,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
   const [isOfficialWorkflowDialogOpen, setIsOfficialWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const [selectedStepForSuggestions, setSelectedStepForSuggestions] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [stepFormData, setStepFormData] = useState({
     title: '',
@@ -416,6 +418,53 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
     return tenderSteps?.map(step => step.step_number) || [];
   };
 
+  const getExistingDocuments = () => {
+    return stepDocuments?.map(doc => doc.document?.title || doc.document_type).filter(Boolean) || [];
+  };
+
+  const handleAddSuggestedDocument = (documentTemplate: string, category: string) => {
+    if (!selectedStepForSuggestions) return;
+    
+    const stepId = tenderSteps?.find(step => step.step_number === selectedStepForSuggestions)?.id;
+    if (!stepId) return;
+
+    // Pre-fill the document form with suggested values
+    const categoryMap: Record<string, TenderDocumentCategory> = {
+      'planning': 'administrative',
+      'publicity': 'administrative',
+      'analysis': 'technical',
+      'attribution': 'financial',
+      'control': 'administrative'
+    };
+
+    const subcategoryMap: Record<string, TenderDocumentSubcategory> = {
+      'APP Template': 'renseignement_soumissionnaire',
+      'Initiation Request': 'lettre_soumission',
+      'Lettre de soumission': 'lettre_soumission',
+      'Pouvoir de signature': 'pouvoir_signature',
+      'Acte de groupement': 'acte_groupement',
+      'Attestation d\'impôt': 'attestation_impot',
+      'Attestation CNSS': 'attestation_cnss',
+      'Attestation non faillite': 'attestation_non_faillite',
+      'Notification': 'lettre_soumission',
+      'Signed Contract': 'lettre_soumission'
+    };
+
+    const mappedCategory = categoryMap[category] || 'administrative';
+    const mappedSubcategory = subcategoryMap[documentTemplate] || 'lettre_soumission';
+
+    setDocumentFormData({
+      category: mappedCategory,
+      subcategory: mappedSubcategory,
+      title: documentTemplate,
+      description: `Document suggéré pour l'étape ${selectedStepForSuggestions}`,
+      is_required: true
+    });
+
+    setSelectedStepId(stepId);
+    setIsAddDocumentDialogOpen(true);
+  };
+
   if (stepsLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -460,19 +509,24 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="text-xs">
-                            Étape {step.step_number}
-                          </Badge>
-                          <Badge className={getStatusColor(step.status)}>
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(step.status)}
-                              {step.status === 'completed' ? 'Terminée' : 
-                               step.status === 'in_progress' ? 'En cours' : 
-                               step.status === 'approved' ? 'Approuvée' : 'En attente'}
-                            </div>
-                          </Badge>
-                        </div>
+                         <div className="flex items-center gap-2 mb-2">
+                           <Badge variant="outline" className="text-xs">
+                             Étape {step.step_number}
+                           </Badge>
+                           <Badge className={getStatusColor(step.status)}>
+                             <div className="flex items-center gap-1">
+                               {getStatusIcon(step.status)}
+                               {step.status === 'completed' ? 'Terminée' : 
+                                step.status === 'in_progress' ? 'En cours' : 
+                                step.status === 'approved' ? 'Approuvée' : 'En attente'}
+                             </div>
+                           </Badge>
+                           {selectedStepForSuggestions === step.step_number && (
+                             <Badge variant="secondary" className="text-xs">
+                               Suggestions actives
+                             </Badge>
+                           )}
+                         </div>
                         <h3 className="text-lg font-medium text-adrar-800 mb-1">
                           {step.title}
                         </h3>
@@ -487,67 +541,94 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                           </p>
                         )}
                       </div>
-                      {!readonly && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openAddDocumentDialog(step.id)}
-                        >
-                          <Upload className="h-4 w-4 mr-1" />
-                          Ajouter Document
-                        </Button>
-                      )}
+                       {!readonly && (
+                         <div className="flex gap-2">
+                           <Button
+                             size="sm"
+                             variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
+                             onClick={() => setSelectedStepForSuggestions(
+                               selectedStepForSuggestions === step.step_number ? null : step.step_number
+                             )}
+                           >
+                             <FileText className="h-4 w-4 mr-1" />
+                             {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => openAddDocumentDialog(step.id)}
+                           >
+                             <Upload className="h-4 w-4 mr-1" />
+                             Ajouter Document
+                           </Button>
+                         </div>
+                       )}
                     </div>
                   </CardHeader>
                   
-                  {stepDocs.length > 0 && (
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {stepDocs.map((stepDoc: StepDocument) => (
-                          <div key={stepDoc.id} className="border rounded-lg p-3 bg-gray-50">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium text-sm">
-                                {stepDoc.document?.title || stepDoc.document_type}
-                              </h4>
-                              <div className="flex items-center gap-2">
-                                {stepDoc.is_required && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Requis
-                                  </Badge>
-                                )}
-                                <Badge className={getStatusColor(stepDoc.status)}>
-                                  {stepDoc.status === 'approved' ? 'Approuvé' : 
-                                   stepDoc.status === 'submitted' ? 'Soumis' : 
-                                   stepDoc.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                                </Badge>
-                              </div>
-                            </div>
-                            
-                            {stepDoc.document?.file_name && (
-                              <div className="text-xs text-gray-500 mb-2">
-                                Fichier: {stepDoc.document.file_name}
-                              </div>
-                            )}
-                            
-                            {stepDoc.reviewer_notes && (
-                              <div className="text-xs text-gray-600 mb-2 p-2 bg-white rounded">
-                                <strong>Notes:</strong> {stepDoc.reviewer_notes}
-                              </div>
-                            )}
+                   {(stepDocs.length > 0 || selectedStepForSuggestions === step.step_number) && (
+                     <CardContent className="pt-0">
+                       {stepDocs.length > 0 && (
+                         <div className="mb-4">
+                           <h4 className="font-medium text-sm mb-3">Documents existants:</h4>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                             {stepDocs.map((stepDoc: StepDocument) => (
+                               <div key={stepDoc.id} className="border rounded-lg p-3 bg-gray-50">
+                                 <div className="flex items-start justify-between mb-2">
+                                   <h4 className="font-medium text-sm">
+                                     {stepDoc.document?.title || stepDoc.document_type}
+                                   </h4>
+                                   <div className="flex items-center gap-2">
+                                     {stepDoc.is_required && (
+                                       <Badge variant="outline" className="text-xs">
+                                         Requis
+                                       </Badge>
+                                     )}
+                                     <Badge className={getStatusColor(stepDoc.status)}>
+                                       {stepDoc.status === 'approved' ? 'Approuvé' : 
+                                        stepDoc.status === 'submitted' ? 'Soumis' : 
+                                        stepDoc.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                                     </Badge>
+                                   </div>
+                                 </div>
+                                 
+                                 {stepDoc.document?.file_name && (
+                                   <div className="text-xs text-gray-500 mb-2">
+                                     Fichier: {stepDoc.document.file_name}
+                                   </div>
+                                 )}
+                                 
+                                 {stepDoc.reviewer_notes && (
+                                   <div className="text-xs text-gray-600 mb-2 p-2 bg-white rounded">
+                                     <strong>Notes:</strong> {stepDoc.reviewer_notes}
+                                   </div>
+                                 )}
 
-                            <div className="flex justify-end">
-                              {stepDoc.document && (
-                                <Button size="sm" variant="ghost">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  Voir
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  )}
+                                 <div className="flex justify-end">
+                                   {stepDoc.document && (
+                                     <Button size="sm" variant="ghost">
+                                       <Eye className="h-4 w-4 mr-1" />
+                                       Voir
+                                     </Button>
+                                   )}
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
+
+                       {selectedStepForSuggestions === step.step_number && (
+                         <div className="border-t pt-4">
+                           <StandardWorkflowDocumentSuggestions
+                             selectedStepId={step.step_number}
+                             onAddDocument={handleAddSuggestedDocument}
+                             existingDocuments={getExistingDocuments()}
+                           />
+                         </div>
+                       )}
+                     </CardContent>
+                   )}
                 </Card>
               );
             })}
