@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { PhaseService } from '@/services/phaseService';
 
 
 // Add interface for selected materials
@@ -179,7 +180,20 @@ const ProjectEdit = () => {
 
         // Save construction phases if any are defined
         if (data.phases && data.phases.length > 0) {
-          await saveProjectPhases(id, data.phases);
+          try {
+            await PhaseService.saveProjectPhases(id, data.phases);
+            toast({
+              title: "Phases sauvegardées",
+              description: `${data.phases.length} phase(s) de construction mise(s) à jour.`,
+            });
+          } catch (phaseError) {
+            console.error('Error saving phases:', phaseError);
+            toast({
+              title: "Avertissement",
+              description: `Erreur lors de la sauvegarde des phases: ${phaseError instanceof Error ? phaseError.message : 'Erreur inconnue'}`,
+              variant: "destructive",
+            });
+          }
         }
 
         toast({
@@ -203,80 +217,7 @@ const ProjectEdit = () => {
   };
 
 
-  // Save construction phases to the project_phases table
-  const saveProjectPhases = async (projectId: string, phases: any[]) => {
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Skip saving if no phases provided
-      if (!phases || phases.length === 0) {
-        return;
-      }
-      
-      // First delete existing phases for this project
-      const { error: deleteError } = await supabase
-        .from('project_phases')
-        .delete()
-        .eq('project_id', projectId);
-
-      if (deleteError) throw deleteError;
-
-      // Status mapping from PhaseData to database values
-      const statusMapping = {
-        'not_started': 'pending',
-        'in_progress': 'in_progress', 
-        'completed': 'completed',
-        'delayed': 'pending'
-      } as const;
-
-      // Map form phase data to database structure
-      const phasesData = phases.map(phase => ({
-        project_id: projectId,
-        phase_name: phase.title || 'Phase sans nom',
-        phase_type: phase.phase || 'construction',
-        start_date: phase.startDate || null,
-        end_date: phase.endDate || null,
-        status: statusMapping[phase.status as keyof typeof statusMapping] || 'pending',
-        progress: Math.max(0, Math.min(100, phase.progress || 0)), // Ensure progress is between 0-100
-        description: phase.description || null,
-        estimated_cost: phase.budget || null,
-        actual_cost: phase.actualCost || null,
-        dependencies: JSON.stringify(phase.materials || []),
-        milestones: JSON.stringify({
-          materials: phase.materials || [],
-          humanResources: phase.humanResources || [],
-          suppliers: phase.suppliers || [],
-          location: phase.location || '',
-          notes: phase.notes || '',
-          stage: phase.stage || null,
-          customPhase: phase.customPhase || null
-        })
-      }));
-
-      const { error } = await supabase
-        .from('project_phases')
-        .insert(phasesData);
-
-      if (error) {
-        console.error('Database error saving phases:', error);
-        throw error;
-      }
-      
-      toast({
-        title: "Phases sauvegardées",
-        description: `${phases.length} phase(s) de construction mise(s) à jour.`,
-      });
-    } catch (error) {
-      console.error('Error saving project phases:', error);
-      toast({
-        title: "Avertissement",
-        description: `Erreur lors de la sauvegarde des phases: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: "destructive",
-      });
-      // Re-throw to prevent false success indication
-      throw error;
-    }
-  };
+  // This function is now handled by PhaseService
 
   // Update materials in database
   const updateProjectMaterials = async (projectId: string, materials: SelectedMaterial[]) => {

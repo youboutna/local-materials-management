@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PhaseService } from '@/services/phaseService';
 
 interface SelectedMaterial {
   materialId: string;
@@ -79,7 +80,20 @@ const ProjectCreate = () => {
       
       // Save construction phases if any are defined
       if (data.phases && data.phases.length > 0 && projectResult?.id) {
-        await saveProjectPhases(projectResult.id, data.phases);
+        try {
+          await PhaseService.saveProjectPhases(projectResult.id, data.phases);
+          toast({
+            title: "Phases sauvegardées",
+            description: `${data.phases.length} phase(s) de construction sauvegardée(s).`,
+          });
+        } catch (phaseError) {
+          console.error('Error saving phases:', phaseError);
+          toast({
+            title: "Avertissement",
+            description: `Projet créé mais erreur lors de la sauvegarde des phases: ${phaseError instanceof Error ? phaseError.message : 'Erreur inconnue'}`,
+            variant: "destructive",
+          });
+        }
       }
       
       // Add materials to the project if any are selected
@@ -105,71 +119,7 @@ const ProjectCreate = () => {
     }
   };
 
-  // Save construction phases to the project_phases table
-  const saveProjectPhases = async (projectId: string, phases: any[]) => {
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Skip saving if no phases provided
-      if (!phases || phases.length === 0) {
-        return;
-      }
-      
-      // Status mapping from PhaseData to database values
-      const statusMapping = {
-        'not_started': 'pending',
-        'in_progress': 'in_progress', 
-        'completed': 'completed',
-        'delayed': 'pending'
-      } as const;
-      
-      // Map form phase data to database structure
-      const phasesData = phases.map(phase => ({
-        project_id: projectId,
-        phase_name: phase.title || 'Phase sans nom',
-        phase_type: phase.phase || 'construction',
-        start_date: phase.startDate || null,
-        end_date: phase.endDate || null,
-        status: statusMapping[phase.status as keyof typeof statusMapping] || 'pending',
-        progress: Math.max(0, Math.min(100, phase.progress || 0)), // Ensure progress is between 0-100
-        description: phase.description || null,
-        estimated_cost: phase.budget || null,
-        actual_cost: phase.actualCost || null,
-        dependencies: JSON.stringify(phase.materials || []),
-        milestones: JSON.stringify({
-          materials: phase.materials || [],
-          humanResources: phase.humanResources || [],
-          suppliers: phase.suppliers || [],
-          location: phase.location || '',
-          notes: phase.notes || '',
-          stage: phase.stage || null,
-          customPhase: phase.customPhase || null
-        })
-      }));
-
-      const { error } = await supabase
-        .from('project_phases')
-        .insert(phasesData);
-
-      if (error) {
-        console.error('Database error saving phases:', error);
-        throw error;
-      }
-      
-      toast({
-        title: "Phases sauvegardées",
-        description: `${phases.length} phase(s) de construction sauvegardée(s).`,
-      });
-    } catch (error) {
-      console.error('Error saving project phases:', error);
-      toast({
-        title: "Avertissement",
-        description: `Projet créé mais erreur lors de la sauvegarde des phases: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
-        variant: "destructive",
-      });
-      // Don't throw here to allow project creation to complete
-    }
-  };
+  // This function is now handled by PhaseService
 
   // Add materials to project and create automatic quantity takeoffs
   const addMaterialsToProject = async (projectId: string, materials: SelectedMaterial[]) => {

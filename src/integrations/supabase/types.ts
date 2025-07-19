@@ -1570,56 +1570,83 @@ export type Database = {
       project_phases: {
         Row: {
           actual_cost: number | null
+          construction_phase: string | null
+          construction_stage: string | null
           created_at: string
           created_by: string | null
+          custom_phase_data: Json | null
           dependencies: Json | null
           description: string | null
           end_date: string | null
           estimated_cost: number | null
+          estimated_duration: number | null
+          human_resources: Json | null
           id: string
+          location: string | null
+          materials: Json | null
           milestones: Json | null
+          notes: string | null
           phase_name: string
           phase_type: string
           progress: number | null
           project_id: string
           start_date: string | null
           status: string
+          suppliers: Json | null
           updated_at: string
         }
         Insert: {
           actual_cost?: number | null
+          construction_phase?: string | null
+          construction_stage?: string | null
           created_at?: string
           created_by?: string | null
+          custom_phase_data?: Json | null
           dependencies?: Json | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
+          estimated_duration?: number | null
+          human_resources?: Json | null
           id?: string
+          location?: string | null
+          materials?: Json | null
           milestones?: Json | null
+          notes?: string | null
           phase_name: string
           phase_type?: string
           progress?: number | null
           project_id: string
           start_date?: string | null
           status?: string
+          suppliers?: Json | null
           updated_at?: string
         }
         Update: {
           actual_cost?: number | null
+          construction_phase?: string | null
+          construction_stage?: string | null
           created_at?: string
           created_by?: string | null
+          custom_phase_data?: Json | null
           dependencies?: Json | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
+          estimated_duration?: number | null
+          human_resources?: Json | null
           id?: string
+          location?: string | null
+          materials?: Json | null
           milestones?: Json | null
+          notes?: string | null
           phase_name?: string
           phase_type?: string
           progress?: number | null
           project_id?: string
           start_date?: string | null
           status?: string
+          suppliers?: Json | null
           updated_at?: string
         }
         Relationships: [
