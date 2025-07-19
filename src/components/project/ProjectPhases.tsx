@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { PhaseService, PhaseData } from '@/services/phaseService';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
@@ -23,6 +27,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   onPhasesChange
 }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [phases, setPhases] = useState<PhaseData[]>(initialPhases);
   const [loading, setLoading] = useState(!formMode);
 
@@ -117,6 +122,19 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Authentication warning - same as project forms */}
+      {!formMode && !user && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Vous devez être connecté pour gérer les phases du projet. 
+            <Button variant="link" className="p-0 h-auto ml-1" onClick={() => window.location.href = '/auth'}>
+              Se connecter
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <ConstructionPhaseManager
         phases={phases}
         onChange={handlePhasesChange}

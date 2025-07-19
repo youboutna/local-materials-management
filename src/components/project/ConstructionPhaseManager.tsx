@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Plus, 
   Edit, 
@@ -21,9 +22,12 @@ import {
   Package, 
   Building,
   Settings,
-  Eye
+  Eye,
+  AlertCircle
 } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 // Standard construction stages mapping
 const CONSTRUCTION_STAGES: { [key in ConstructionPhase]: { value: ConstructionStage; label: string }[] } = {
@@ -124,72 +128,104 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 }) => {
   const navigate = useNavigate();
   const { id: projectId } = useParams<{ id: string }>();
+  const { user, loading: authLoading } = useAuth();
   const [isAddingPhase, setIsAddingPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
   const [phaseType, setPhaseType] = useState<'standard' | 'custom'>('standard');
 
+  // Authentication check - same as project forms
+  const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
+    if (!user) {
+      toast({
+        title: "Authentification requise",
+        description: `Vous devez être connecté pour ${actionName}. Veuillez vous connecter et réessayer.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    action();
+  };
+
   // Create new phase with standard stages
   const createStandardPhase = (selectedPhase: ConstructionPhase, selectedStage: ConstructionStage) => {
-    const phaseLabel = PHASE_LABELS[selectedPhase];
-    const stageData = CONSTRUCTION_STAGES[selectedPhase].find(s => s.value === selectedStage);
-    
-    const newPhase: PhaseData = {
-      id: Date.now().toString(),
-      phase: selectedPhase,
-      stage: selectedStage,
-      title: `${phaseLabel} - ${stageData?.label}`,
-      description: `Phase ${selectedPhase} - Étape ${stageData?.label}`,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      estimatedDuration: 30,
-      status: 'not_started',
-      budget: Math.floor(projectBudget * 0.1), // Default 10% of project budget
-      actualCost: 0,
-      progress: 0,
-      materials: [],
-      humanResources: [],
-      suppliers: [],
-      location: '',
-      notes: ''
-    };
-    
-    onChange([...phases, newPhase]);
+    checkAuthenticationAndProceed(() => {
+      const phaseLabel = PHASE_LABELS[selectedPhase];
+      const stageData = CONSTRUCTION_STAGES[selectedPhase].find(s => s.value === selectedStage);
+      
+      const newPhase: PhaseData = {
+        id: Date.now().toString(),
+        phase: selectedPhase,
+        stage: selectedStage,
+        title: `${phaseLabel} - ${stageData?.label}`,
+        description: `Phase ${selectedPhase} - Étape ${stageData?.label}`,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        estimatedDuration: 30,
+        status: 'not_started',
+        budget: Math.floor(projectBudget * 0.1), // Default 10% of project budget
+        actualCost: 0,
+        progress: 0,
+        materials: [],
+        humanResources: [],
+        suppliers: [],
+        location: '',
+        notes: ''
+      };
+      
+      onChange([...phases, newPhase]);
+      setIsAddingPhase(false);
+    }, 'ajouter une phase');
   };
 
   // Create new custom phase
   const createCustomPhase = (customPhaseData: CustomPhase) => {
-    const newPhase: PhaseData = {
-      id: Date.now().toString(),
-      customPhase: customPhaseData,
-      title: `Phase ${customPhaseData.number}: ${customPhaseData.name}`,
-      description: customPhaseData.description || `Phase personnalisée ${customPhaseData.name}`,
-      startDate: customPhaseData.startDate || new Date().toISOString().split('T')[0],
-      endDate: customPhaseData.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      estimatedDuration: 30,
-      status: customPhaseData.status,
-      budget: customPhaseData.budget || Math.floor(projectBudget * 0.1),
-      actualCost: 0,
-      progress: customPhaseData.progress,
-      materials: customPhaseData.materials || [],
-      humanResources: customPhaseData.humanResources || [],
-      suppliers: customPhaseData.suppliers || [],
-      location: customPhaseData.location || '',
-      notes: ''
-    };
-    
-    onChange([...phases, newPhase]);
+    checkAuthenticationAndProceed(() => {
+      const newPhase: PhaseData = {
+        id: Date.now().toString(),
+        customPhase: customPhaseData,
+        title: `Phase ${customPhaseData.number}: ${customPhaseData.name}`,
+        description: customPhaseData.description || `Phase personnalisée ${customPhaseData.name}`,
+        startDate: customPhaseData.startDate || new Date().toISOString().split('T')[0],
+        endDate: customPhaseData.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        estimatedDuration: 30,
+        status: customPhaseData.status,
+        budget: customPhaseData.budget || Math.floor(projectBudget * 0.1),
+        actualCost: 0,
+        progress: customPhaseData.progress,
+        materials: customPhaseData.materials || [],
+        humanResources: customPhaseData.humanResources || [],
+        suppliers: customPhaseData.suppliers || [],
+        location: customPhaseData.location || '',
+        notes: ''
+      };
+      
+      onChange([...phases, newPhase]);
+      setIsAddingPhase(false);
+    }, 'ajouter une phase personnalisée');
   };
 
   const updatePhase = (updatedPhase: PhaseData) => {
-    onChange(phases.map(p => p.id === updatedPhase.id ? updatedPhase : p));
-    setEditingPhase(null);
+    checkAuthenticationAndProceed(() => {
+      onChange(phases.map(p => p.id === updatedPhase.id ? updatedPhase : p));
+      setEditingPhase(null);
+    }, 'modifier une phase');
   };
 
   const deletePhase = (phaseId: string) => {
-    onChange(phases.filter(p => p.id !== phaseId));
+    checkAuthenticationAndProceed(() => {
+      onChange(phases.filter(p => p.id !== phaseId));
+    }, 'supprimer une phase');
   };
 
   const handleViewPhaseDetail = (phaseId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentification requise",
+        description: "Vous devez être connecté pour voir les détails d'une phase.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (projectId) {
       navigate(`/projects/${projectId}/phases/${phaseId}`);
     }
@@ -223,7 +259,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           </CardTitle>
           <Dialog open={isAddingPhase} onOpenChange={setIsAddingPhase}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!user}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter une phase
               </Button>
@@ -257,6 +293,19 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       </CardHeader>
       
       <CardContent>
+        {/* Authentication warning - same as project forms */}
+        {!user && (
+          <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Vous devez être connecté pour gérer les phases de construction. 
+              <Button variant="link" className="p-0 h-auto ml-1" onClick={() => window.location.href = '/auth'}>
+                Se connecter
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {phases.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -281,6 +330,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         size="sm"
                         onClick={() => handleViewPhaseDetail(phase.id)}
                         className="flex items-center gap-1"
+                        disabled={!user}
                       >
                         <Eye className="h-4 w-4" />
                         Détails
@@ -289,6 +339,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => setEditingPhase(phase)}
+                        disabled={!user}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -296,6 +347,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => deletePhase(phase.id)}
+                        disabled={!user}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
