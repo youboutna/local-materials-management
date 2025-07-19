@@ -44,6 +44,7 @@ import { supabase } from "@/integrations/supabase/client";
 import QuantityTakeoffs from "@/components/project/QuantityTakeoffs";
 import ProjectMaterials from "@/components/project/ProjectMaterials";
 import ProjectDocuments from "@/components/project/ProjectDocuments";
+import ProjectPhases from "@/components/project/ProjectPhases";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProjectDetail = () => {
@@ -457,12 +458,18 @@ const ProjectDetail = () => {
               className="space-y-6"
             >
               <div className="overflow-x-auto">
-                <TabsList className="grid w-full min-w-fit grid-cols-7 h-auto p-1">
+                <TabsList className="grid w-full min-w-fit grid-cols-8 h-auto p-1">
                   <TabsTrigger
                     value="overview"
                     className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
                   >
                     {t("projects.tab.overview")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="phases"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
+                    Phases
                   </TabsTrigger>
                   <TabsTrigger
                     value="materials"
@@ -607,6 +614,10 @@ const ProjectDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="phases">
+                <ProjectPhases projectId={id!} onUpdate={handleDataUpdate} />
               </TabsContent>
 
               <TabsContent value="materials">
