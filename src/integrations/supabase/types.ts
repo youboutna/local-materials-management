@@ -1690,22 +1690,28 @@ export type Database = {
       }
       projects: {
         Row: {
+          allows_initial_payment: boolean | null
           attribution_date: string | null
           budget: number
           completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
           created_at: string
+          current_phase: string | null
+          current_stage: string | null
           description: string
           end_date: string | null
           financing_source: string | null
           id: string
+          initial_payment_percentage: number | null
           launch_date: string | null
           location: string
+          main_contractor: string | null
           market_type: string | null
           progress: number
           project_order: number | null
           project_reference: string | null
+          project_responsable_id: string | null
           selection_mode: string | null
           start_date: string
           status: string
@@ -1715,22 +1721,28 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget: number
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
+          current_phase?: string | null
+          current_stage?: string | null
           description: string
           end_date?: string | null
           financing_source?: string | null
           id?: string
+          initial_payment_percentage?: number | null
           launch_date?: string | null
           location: string
+          main_contractor?: string | null
           market_type?: string | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
+          project_responsable_id?: string | null
           selection_mode?: string | null
           start_date: string
           status: string
@@ -1740,22 +1752,28 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget?: number
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
+          current_phase?: string | null
+          current_stage?: string | null
           description?: string
           end_date?: string | null
           financing_source?: string | null
           id?: string
+          initial_payment_percentage?: number | null
           launch_date?: string | null
           location?: string
+          main_contractor?: string | null
           market_type?: string | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
+          project_responsable_id?: string | null
           selection_mode?: string | null
           start_date?: string
           status?: string
