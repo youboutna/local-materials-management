@@ -331,15 +331,12 @@ const ProjectDetail = () => {
                   <StatusBadge status={project.status} />
                 </div>
 
+                {/* Project header actions */}
                 <div className="flex flex-col sm:flex-row gap-2 lg:ml-6">
                   <Link to={`/projects/${project.id}/edit`}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full sm:w-auto"
-                    >
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <Edit className="mr-2 h-4 w-4" />
-                      {t("materials.edit")}
+                      {t("projects.edit.title")}
                     </Button>
                   </Link>
                   <Button
@@ -350,9 +347,7 @@ const ProjectDetail = () => {
                     className="w-full sm:w-auto"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    {isDeleting
-                      ? t("materials.deleting")
-                      : t("materials.delete")}
+                    {isDeleting ? t("projects.deleting") : t("projects.delete")}
                   </Button>
                 </div>
               </div>
