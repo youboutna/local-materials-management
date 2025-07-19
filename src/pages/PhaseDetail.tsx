@@ -277,12 +277,23 @@ const PhaseDetail: React.FC = () => {
         <TabsContent value="materials">
           <Card>
             <CardHeader>
-              <CardTitle>Gestion des matériaux</CardTitle>
+              <CardTitle>Matériaux de la phase</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                La gestion des matériaux sera synchronisée avec le projet principal.
-              </p>
+              <div className="space-y-4">
+                {phase.materials.map((material, index) => (
+                  <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                    <div>
+                      <span className="font-medium">{material.name || `Matériau ${material.materialId}`}</span>
+                      <p className="text-sm text-muted-foreground">ID: {material.materialId}</p>
+                    </div>
+                    <Badge variant="outline">{material.quantity} unités</Badge>
+                  </div>
+                ))}
+                {phase.materials.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Aucun matériau assigné à cette phase.</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -338,8 +349,13 @@ const PhaseDetail: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Les documents seront gérés au niveau du projet principal.
+                Documents spécifiques à cette phase seront affichés ici.
               </p>
+              <div className="mt-4">
+                <Button variant="outline" className="w-full">
+                  Gérer les documents de la phase
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -347,10 +363,17 @@ const PhaseDetail: React.FC = () => {
         <TabsContent value="tasks">
           <Card>
             <CardHeader>
-              <CardTitle>Gestion des tâches</CardTitle>
+              <CardTitle>Tâches de la phase</CardTitle>
             </CardHeader>
             <CardContent>
-              <TaskAssignments />
+              <p className="text-sm text-muted-foreground">
+                Tâches assignées spécifiquement à cette phase seront affichées ici.
+              </p>
+              <div className="mt-4">
+                <Button variant="outline" className="w-full">
+                  Gérer les tâches de la phase
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -359,20 +382,27 @@ const PhaseDetail: React.FC = () => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Historique des paiements</CardTitle>
+                <CardTitle>Paiements de la phase</CardTitle>
               </CardHeader>
               <CardContent>
-                <PaymentHistory payments={[]} />
+                <p className="text-sm text-muted-foreground">
+                  Paiements liés à cette phase seront affichés ici.
+                </p>
+                <div className="mt-4">
+                  <Button variant="outline" className="w-full">
+                    Gérer les paiements de la phase
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Inspections</CardTitle>
+                <CardTitle>Inspections de la phase</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Les inspections seront disponibles après la création du projet.
+                  Inspections liées à cette phase seront affichées ici.
                 </p>
               </CardContent>
             </Card>
