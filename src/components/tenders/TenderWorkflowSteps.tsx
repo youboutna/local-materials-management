@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
@@ -482,7 +483,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
               <FileText className="h-5 w-5 text-terracotta-600" />
               Étapes du Processus d'Appel d'Offres
             </CardTitle>
-            {!readonly && (
+            {(!readonly || DEV_MODE) && (
               <div className="flex gap-2">
                 <Button 
                   variant="outline"
@@ -495,6 +496,9 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                   <Plus className="h-4 w-4 mr-2" />
                   Étape Personnalisée
                 </Button>
+                {DEV_MODE && (
+                  <Badge variant="secondary" className="text-xs">DEV MODE</Badge>
+                )}
               </div>
             )}
           </div>
@@ -541,28 +545,28 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
                           </p>
                         )}
                       </div>
-                       {!readonly && (
-                         <div className="flex gap-2">
-                           <Button
-                             size="sm"
-                             variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
-                             onClick={() => setSelectedStepForSuggestions(
-                               selectedStepForSuggestions === step.step_number ? null : step.step_number
-                             )}
-                           >
-                             <FileText className="h-4 w-4 mr-1" />
-                             {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => openAddDocumentDialog(step.id)}
-                           >
-                             <Upload className="h-4 w-4 mr-1" />
-                             Ajouter Document
-                           </Button>
-                         </div>
-                       )}
+                        {(!readonly || DEV_MODE) && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
+                              onClick={() => setSelectedStepForSuggestions(
+                                selectedStepForSuggestions === step.step_number ? null : step.step_number
+                              )}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openAddDocumentDialog(step.id)}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              Ajouter Document
+                            </Button>
+                          </div>
+                        )}
                     </div>
                   </CardHeader>
                   
