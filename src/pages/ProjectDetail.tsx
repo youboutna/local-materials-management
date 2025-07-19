@@ -617,21 +617,11 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="phases">
-                {!project || isLoading ? (
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-adrar-600"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <ProjectPhases 
-                    projectId={id!} 
-                    onUpdate={handleDataUpdate} 
-                    projectBudget={project?.budget || 0}
-                  />
-                )}
+                <ProjectPhases 
+                  projectId={id!} 
+                  onUpdate={handleDataUpdate} 
+                  projectBudget={project?.budget || 0}
+                />
               </TabsContent>
 
               <TabsContent value="materials">
