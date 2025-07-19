@@ -34,7 +34,10 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
 
   // Load phases from database
   const fetchProjectPhases = async () => {
-    if (!projectId || formMode) return;
+    if (!projectId || formMode) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
