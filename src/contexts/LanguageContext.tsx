@@ -357,6 +357,9 @@ export const translations = {
     },
     projects: {
       title: "Projets",
+      all_desc : "tous les projects",
+      new : "nouveau",
+      all : "tous",
       tab: {
         overview: "Vue d'ensemble",
         materials: "Matériaux",
@@ -386,7 +389,13 @@ export const translations = {
         market_type: "Type de marché",
         market_type_placeholder: "Sélectionner le type de marché",
         selection_mode: "Mode de sélection",
-        selection_mode_placeholder: "Sélectionner le mode de sélection"
+        selection_mode_placeholder: "Sélectionner le mode de sélection",
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       },
       loading_error: "Erreur lors du chargement des projets",
       delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
@@ -407,7 +416,11 @@ export const translations = {
       completed: "Terminé",
       expected: "Prévu",
       location: "Localisation",
-      empty: "Aucun projet disponible"
+      empty: "Aucun projet disponible",
+      start_date: "Date de début",
+      started: "Commencé",
+      end_date_expected: "Date de fin prévue",
+      delete: "Supprimer"
     },
     materials: {
       title: "Matériaux",
@@ -507,6 +520,11 @@ export const translations = {
         title: "Créer une inspection",
         description: "Créer une nouvelle inspection pour le projet",
         in_development: "En développement"
+      },
+      dialog: {
+        new_inspection: "Créer une inspection",
+        description: "Créer une nouvelle inspection pour le projet",
+        status: "progess"
       }
     },
     roles: {
@@ -663,7 +681,9 @@ export const translations = {
         status: "Statut",
         budget: "Budget",
         start_date: "Date de début",
-        end_date: "Date de fin",
+        started: "Commencé",
+        end_date_expected: "Date de fin prévue",
+        delete: "Supprimer",
         team_size: "Taille de l'équipe",
         progress: "Progression",
         financing_source: "Source de financement",
@@ -678,7 +698,12 @@ export const translations = {
         current_stage: "Étape actuelle",
         coordinates: "Coordonnées",
         facilities_location: "Localisation des installations",
-      
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       }
     },
     language: {
@@ -1050,6 +1075,8 @@ export const translations = {
     },
     projects: {
       title: "المشاريع",
+      all_desc : "المشاريع",
+       new : "new",
       tab: {
         overview: "نظرة عامة",
         materials: "المواد",
@@ -1079,7 +1106,13 @@ export const translations = {
         market_type: "نوع السوق",
         market_type_placeholder: "اختر نوع السوق",
         selection_mode: "وضع الاختيار",
-        selection_mode_placeholder: "اختر وضع الاختيار"
+        selection_mode_placeholder: "اختر وضع الاختيار",
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       },
       loading_error: "خطأ في تحميل المشاريع",
       delete_confirm: "هل أنت متأكد من حذف هذا المشروع؟",
@@ -1100,7 +1133,11 @@ export const translations = {
       completed: "مكتمل",
       expected: "متوقع",
       location: "الموقع",
-      empty: "لا توجد مشاريع متاحة"
+      empty: "لا توجد مشاريع متاحة",
+      start_date: "تاريخ البداية",
+      started: "بدأ",
+      end_date_expected: "تاريخ النهاية المتوقع",
+      delete: "حذف"
     },
     materials: {
       edit: "تعديل المادة",
@@ -1358,7 +1395,9 @@ export const translations = {
         status: "الحالة",
         budget: "الميزانية",
         start_date: "تاريخ البداية",
-        end_date: "تاريخ النهاية",
+        started: "بدأ",
+        end_date_expected: "تاريخ النهاية المتوقع",
+        delete: "حذف",
         team_size: "حجم الفريق",
         progress: "التقدم",
         financing_source: "مصدر التمويل",
@@ -1373,7 +1412,12 @@ export const translations = {
         current_stage: "الخطوة الحالية",
         coordinates: "الإحداثيات",
         facilities_location: "موقع المرافق",
-
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       }
     },
     language: {
@@ -1745,6 +1789,9 @@ export const translations = {
     },
     projects: {
       title: "Projects",
+      all_desc: "Projects",
+      all: "Projects",
+      new :"add",
       tab: {
         overview: "Overview",
         materials: "Materials",
@@ -1774,7 +1821,13 @@ export const translations = {
         market_type: "Market Type",
         market_type_placeholder: "Select market type",
         selection_mode: "Selection Mode",
-        selection_mode_placeholder: "Select selection mode"
+        selection_mode_placeholder: "Select selection mode",
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       },
       loading_error: "Error loading projects",
       delete_confirm: "Are you sure you want to delete this project?",
@@ -1795,7 +1848,11 @@ export const translations = {
       completed: "Completed",
       expected: "Expected",
       location: "Location",
-      empty: "No projects available"
+      empty: "No projects available",
+      start_date: "Start Date",
+      started: "Started",
+      end_date_expected: "Expected End Date",
+      delete: "Delete"
     },
     materials: {
       edit: "Edit Material",
@@ -1895,6 +1952,11 @@ export const translations = {
       },
       create: {
         title: "Create Inspection",
+        description: "Create new inspection for project",
+        in_development: "In development"
+      },
+      dialog: {
+        new_inspection: "Create Inspection",
         description: "Create new inspection for project",
         in_development: "In development"
       }
@@ -2053,7 +2115,9 @@ export const translations = {
         status: "Status",
         budget: "Budget",
         start_date: "Start Date",
-        end_date: "End Date",
+        started: "Started",
+        end_date_expected: "Expected End Date",
+        delete: "Delete",
         team_size: "Team Size",
         progress: "Progress",
         financing_source: "Financing Source",
@@ -2068,6 +2132,12 @@ export const translations = {
         current_stage: "Current Stage",
         coordinates: "Coordinates",
         facilities_location: "Facilities Location",
+        title_placeholder: "Enter project title",
+        location_placeholder: "Select location",
+        status_placeholder: "Select status",
+        progress_desc: "Specify project progress as a percentage.",
+        progress_current: "Current progress: {value}%",
+        description_placeholder: "Describe the project..."
       }
     },
     language: {
