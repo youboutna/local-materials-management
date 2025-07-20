@@ -1,28 +1,44 @@
-# Welcome to your mauritanian management project for local material.
-ce projet est une solution de gestion de projet pour une entreprise utilise des materiaux.suivi de project de construction,
-base de données postgresql. géolocalisation des batiments et des projets et sources de matériaux .
+# Mauritanian Local Materials Management System
 
-# 1.Purpose: 
-Manages construction projects that use local Mauritanian materials, 
-with features for tracking projects, materials, and geolocation of buildings and material sources.
-# 2. Tech Stack:
-Frontend: React + TypeScript + Vite
-UI: Tailwind CSS + shadcn-ui
-State Management: React Query
-Animation: Framer Motion
-Database: PostgreSQL (via Supabase)
-# 3.Core Features:
-Project management (creation, tracking, status updates)
-Material tracking
-User management
-Geolocation capabilities
-Progress tracking with visual indicators
-Multi-language support (French visible in UI)
-# 4.Architecture:
-Uses TypeORM for database operations with Supabase as a fallback
-Implements a modern component-based architecture
-Features responsive design with mobile support
-Includes authentication via Supabase
+A comprehensive solution for managing construction projects using local Mauritanian materials, with project tracking, geolocation capabilities, and material sourcing management.
+
+## 🎯 Purpose
+Manages construction projects that use local Mauritanian materials, with features for:
+- Project lifecycle management (creation, tracking, status updates)
+- Material sourcing and inventory tracking
+- User role management (Admin, Manager, Supplier, etc.)
+- Geolocation of buildings and material sources
+- Financial tracking and payment management
+- Document management and tender workflows
+
+## 🛠 Tech Stack
+- **Frontend**: React + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn-ui components
+- **State Management**: React Query + Context API
+- **Animation**: Framer Motion
+- **Database**: PostgreSQL (Supabase or self-hosted)
+- **ORM**: TypeORM with Supabase integration
+- **Maps**: Google Maps API + Leaflet
+- **Authentication**: Supabase Auth or Keycloak
+- **File Storage**: Supabase Storage
+
+## ✨ Core Features
+- **Project Management**: Full lifecycle tracking with phases, milestones, and progress
+- **Material Management**: Inventory, sourcing, and availability tracking
+- **User Management**: Role-based access control (Admin, Director, Manager, Supplier)
+- **Geolocation**: Interactive maps for projects and material sources
+- **Financial Tracking**: Payments, budgets, and cost management
+- **Document Management**: File uploads, categorization, and workflow management
+- **Tender Management**: Public procurement workflows and document handling
+- **Multi-language Support**: French and Arabic interface
+- **Real-time Updates**: Live data synchronization
+
+## 📋 Prerequisites
+
+Before installing, ensure you have:
+- **Node.js** 18+ and npm (install with [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+- **PostgreSQL** 14+ (for self-hosted database)
+- **Git** for version control
 
  # 5 **Use your preferred IDE**
 
