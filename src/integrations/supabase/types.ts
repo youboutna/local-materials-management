@@ -14,6 +14,299 @@ export type Database = {
   }
   public: {
     Tables: {
+      authorization_documents: {
+        Row: {
+          authorization_id: string
+          created_at: string
+          document_category: Database["public"]["Enums"]["document_category"]
+          document_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_required: boolean
+          is_validated: boolean
+          mime_type: string | null
+          updated_at: string
+          uploaded_by: string | null
+          validated_at: string | null
+          validated_by: string | null
+          validation_notes: string | null
+        }
+        Insert: {
+          authorization_id: string
+          created_at?: string
+          document_category: Database["public"]["Enums"]["document_category"]
+          document_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_required?: boolean
+          is_validated?: boolean
+          mime_type?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+        }
+        Update: {
+          authorization_id?: string
+          created_at?: string
+          document_category?: Database["public"]["Enums"]["document_category"]
+          document_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_required?: boolean
+          is_validated?: boolean
+          mime_type?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorization_documents_authorization_id_fkey"
+            columns: ["authorization_id"]
+            isOneToOne: false
+            referencedRelation: "authorization_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authorization_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "authorization_documents_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
+      authorization_requests: {
+        Row: {
+          address: string | null
+          applicant_type: Database["public"]["Enums"]["applicant_type"]
+          approval_date: string | null
+          approved_by: string | null
+          business_experience_years: number | null
+          children_count: number | null
+          company_name: string | null
+          company_nif: string | null
+          created_at: string
+          description: string | null
+          email: string
+          family_members_count: number | null
+          has_other_service_stations: boolean | null
+          id: string
+          individual_first_name: string | null
+          individual_last_name: string | null
+          latitude: number | null
+          longitude: number | null
+          map_layers: Json | null
+          national_id: string
+          other_service_stations_details: string | null
+          parcel_address: string
+          parcel_area: number | null
+          parcel_length: number | null
+          parcel_reference: string | null
+          parcel_shape_geom: Json | null
+          parcel_width: number | null
+          phone_number: string
+          polygon_coordinates: Json | null
+          previous_fuel_business: boolean | null
+          previous_fuel_business_details: string | null
+          rejection_date: string | null
+          rejection_reason: string | null
+          report_generated_at: string | null
+          report_pdf_url: string | null
+          request_number: string
+          request_type: string
+          review_start_date: string | null
+          reviewed_by: string | null
+          signature_data: string | null
+          signature_date: string | null
+          spouse_name: string | null
+          status: Database["public"]["Enums"]["authorization_status"]
+          submission_date: string | null
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          applicant_type: Database["public"]["Enums"]["applicant_type"]
+          approval_date?: string | null
+          approved_by?: string | null
+          business_experience_years?: number | null
+          children_count?: number | null
+          company_name?: string | null
+          company_nif?: string | null
+          created_at?: string
+          description?: string | null
+          email: string
+          family_members_count?: number | null
+          has_other_service_stations?: boolean | null
+          id?: string
+          individual_first_name?: string | null
+          individual_last_name?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          map_layers?: Json | null
+          national_id: string
+          other_service_stations_details?: string | null
+          parcel_address: string
+          parcel_area?: number | null
+          parcel_length?: number | null
+          parcel_reference?: string | null
+          parcel_shape_geom?: Json | null
+          parcel_width?: number | null
+          phone_number: string
+          polygon_coordinates?: Json | null
+          previous_fuel_business?: boolean | null
+          previous_fuel_business_details?: string | null
+          rejection_date?: string | null
+          rejection_reason?: string | null
+          report_generated_at?: string | null
+          report_pdf_url?: string | null
+          request_number: string
+          request_type: string
+          review_start_date?: string | null
+          reviewed_by?: string | null
+          signature_data?: string | null
+          signature_date?: string | null
+          spouse_name?: string | null
+          status?: Database["public"]["Enums"]["authorization_status"]
+          submission_date?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          applicant_type?: Database["public"]["Enums"]["applicant_type"]
+          approval_date?: string | null
+          approved_by?: string | null
+          business_experience_years?: number | null
+          children_count?: number | null
+          company_name?: string | null
+          company_nif?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          family_members_count?: number | null
+          has_other_service_stations?: boolean | null
+          id?: string
+          individual_first_name?: string | null
+          individual_last_name?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          map_layers?: Json | null
+          national_id?: string
+          other_service_stations_details?: string | null
+          parcel_address?: string
+          parcel_area?: number | null
+          parcel_length?: number | null
+          parcel_reference?: string | null
+          parcel_shape_geom?: Json | null
+          parcel_width?: number | null
+          phone_number?: string
+          polygon_coordinates?: Json | null
+          previous_fuel_business?: boolean | null
+          previous_fuel_business_details?: string | null
+          rejection_date?: string | null
+          rejection_reason?: string | null
+          report_generated_at?: string | null
+          report_pdf_url?: string | null
+          request_number?: string
+          request_type?: string
+          review_start_date?: string | null
+          reviewed_by?: string | null
+          signature_data?: string | null
+          signature_date?: string | null
+          spouse_name?: string | null
+          status?: Database["public"]["Enums"]["authorization_status"]
+          submission_date?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorization_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "authorization_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "authorization_requests_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
+      authorization_reviews: {
+        Row: {
+          authorization_id: string
+          comments: string | null
+          created_at: string
+          id: string
+          recommendations: string | null
+          review_type: string
+          reviewer_id: string
+          status: string
+        }
+        Insert: {
+          authorization_id: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          recommendations?: string | null
+          review_type: string
+          reviewer_id: string
+          status: string
+        }
+        Update: {
+          authorization_id?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          recommendations?: string | null
+          review_type?: string
+          reviewer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorization_reviews_authorization_id_fkey"
+            columns: ["authorization_id"]
+            isOneToOne: false
+            referencedRelation: "authorization_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authorization_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       catch_records: {
         Row: {
           actual_sale_value: number | null
@@ -2102,6 +2395,48 @@ export type Database = {
           },
         ]
       }
+      supplier_inspections: {
+        Row: {
+          comments: string | null
+          created_at: string
+          id: string
+          inspection_date: string
+          inspector_name: string
+          next_inspection_date: string | null
+          recommendations: string | null
+          score: number | null
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          inspection_date: string
+          inspector_name: string
+          next_inspection_date?: string | null
+          recommendations?: string | null
+          score?: number | null
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          inspection_date?: string
+          inspector_name?: string
+          next_inspection_date?: string | null
+          recommendations?: string | null
+          score?: number | null
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supplier_notifications: {
         Row: {
           created_by: string | null
@@ -2158,6 +2493,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supplier_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          due_date: string
+          id: string
+          payment_date: string | null
+          reference_number: string | null
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          due_date: string
+          id?: string
+          payment_date?: string | null
+          reference_number?: string | null
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          payment_date?: string | null
+          reference_number?: string | null
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       suppliers: {
         Row: {
@@ -3108,6 +3482,10 @@ export type Database = {
         Args: { target_user_id: string; role_name: string }
         Returns: undefined
       }
+      generate_request_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_supplier_reset_token: {
         Args: { supplier_email: string }
         Returns: string
@@ -3132,6 +3510,21 @@ export type Database = {
       }
     }
     Enums: {
+      applicant_type: "company" | "individual"
+      authorization_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "returned"
+      document_category:
+        | "construction_permit"
+        | "property_cadastre"
+        | "distribution_license"
+        | "environmental_study"
+        | "safety_assessment"
+        | "other"
       document_status:
         | "draft"
         | "pending_review"
@@ -3345,6 +3738,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      applicant_type: ["company", "individual"],
+      authorization_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "returned",
+      ],
+      document_category: [
+        "construction_permit",
+        "property_cadastre",
+        "distribution_license",
+        "environmental_study",
+        "safety_assessment",
+        "other",
+      ],
       document_status: [
         "draft",
         "pending_review",

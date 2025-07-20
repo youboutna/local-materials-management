@@ -40,93 +40,364 @@ Before installing, ensure you have:
 - **PostgreSQL** 14+ (for self-hosted database)
 - **Git** for version control
 
- # 5 **Use your preferred IDE**
+## 🚀 Installation & Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Option 1: Using Supabase (Recommended)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Clone the repository**
+   ```bash
+   git clone <YOUR_GIT_URL>
+   cd <YOUR_PROJECT_NAME>
+   ```
 
-Follow these steps:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. **Set up Supabase**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Copy your project URL and anon key
+   - Update `.env` with your Supabase credentials:
+   ```bash
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. **Run database migrations**
+   ```bash
+   # The migration files are in supabase/migrations/
+   # Apply them via Supabase Dashboard SQL Editor
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Option 2: Self-Hosted Supabase
+
+1. **Install Docker & Docker Compose**
+   - Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+2. **Initialize Supabase locally**
+   ```bash
+   # Install Supabase CLI
+   npm install -g supabase
+   
+   # Initialize project
+   supabase init
+   
+   # Start local Supabase
+   supabase start
+   ```
+
+3. **Configure local environment**
+   ```bash
+   # Update .env with local Supabase URLs
+   SUPABASE_URL=http://localhost:54321
+   SUPABASE_PUBLISHABLE_KEY=<anon_key_from_supabase_start_output>
+   ```
+
+4. **Apply migrations**
+   ```bash
+   supabase db reset
+   ```
+
+5. **Start the application**
+   ```bash
+   npm run dev
+   ```
+
+### Option 3: Direct PostgreSQL Setup
+
+1. **Install PostgreSQL**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib
+
+   # macOS with Homebrew
+   brew install postgresql
+   brew services start postgresql
+
+   # Windows - Download from postgresql.org
+   ```
+
+2. **Create database and user**
+   ```sql
+   CREATE DATABASE mauritanian_materials;
+   CREATE USER app_user WITH PASSWORD 'your_password';
+   GRANT ALL PRIVILEGES ON DATABASE mauritanian_materials TO app_user;
+   ```
+
+3. **Update TypeORM configuration**
+   ```typescript
+   // src/lib/typeorm/data-source.ts
+   export const AppDataSource = new DataSource({
+     type: "postgres",
+     host: "localhost",
+     port: 5432,
+     username: "app_user",
+     password: "your_password",
+     database: "mauritanian_materials",
+     synchronize: true, // Only for development
+     logging: false,
+     entities: [/* your entities */],
+   });
+   ```
+
+4. **Run SQL migrations manually**
+   ```bash
+   # Execute all .sql files in supabase/migrations/ in chronological order
+   psql -U app_user -d mauritanian_materials -f supabase/migrations/[timestamp].sql
+   ```
+
+## 📦 Dependencies
+
+### Core Dependencies
+```json
+{
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1",
+  "typescript": "^5.0.0",
+  "vite": "^5.0.0"
+}
 ```
 
-**Edit a file directly in GitHub**
+### UI & Styling
+```json
+{
+  "@radix-ui/react-*": "Latest", // Complete Radix UI suite
+  "tailwindcss": "^3.4.0",
+  "class-variance-authority": "^0.7.0",
+  "clsx": "^2.1.1",
+  "tailwind-merge": "^2.6.0",
+  "framer-motion": "^12.6.2",
+  "lucide-react": "^0.462.0"
+}
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### State Management & Data
+```json
+{
+  "@tanstack/react-query": "^5.56.2",
+  "react-hook-form": "^7.53.0",
+  "@hookform/resolvers": "^3.9.0",
+  "zod": "^3.23.8"
+}
+```
 
-**Use GitHub Codespaces**
+### Database & Backend
+```json
+{
+  "@supabase/supabase-js": "^2.49.4",
+  "reflect-metadata": "^0.1.13",
+  "pg": "^8.11.3"
+}
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Maps & Geolocation
+```json
+{
+  "@react-google-maps/api": "^2.19.2",
+  "leaflet": "^1.9.4",
+  "react-leaflet": "^4.2.1",
+  "@types/leaflet": "^1.9.18"
+}
+```
 
-## Are you interested by this project?
--contact hadratech for more information
+### Authentication
+```json
+{
+  "keycloak-js": "^26.2.0"
+}
+```
 
-#  how to deply project 
+### Utilities
+```json
+{
+  "date-fns": "^3.6.0",
+  "xlsx": "^0.18.5",
+  "sonner": "^1.5.0"
+}
+```
 
-ll help you deploy this React project on your server. Here's a step-by-step guide to deploy the local-materials-management Portal:
+## 🛠 Build & Deployment
 
-    Build the Project First, you need to build the production version of your React app:
+### Development Build
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
 
+### Production Deployment
+
+#### Static Hosting (Recommended)
+```bash
+# Build the application
 npm run build
 
-This will create a dist folder containing the optimized production build.
+# Deploy the dist/ folder to your hosting provider:
+# - Vercel, Netlify, GitHub Pages
+# - AWS S3 + CloudFront
+# - Traditional web servers (Apache, Nginx)
+```
 
-    Server Requirements Your server needs:
+#### Server Configuration
 
-    A web server (Apache, Nginx, etc.)
-    Node.js (for building)
-    Optional: PostgreSQL if you're using a local database
-
-    Deployment Options
-
-A. Static File Server (Simplest)
-
-    Upload the contents of the dist folder to your server's web root directory
-    Configure your web server to serve index.html for all routes
-
-Example Nginx configuration:
-
+**Nginx Example:**
+```nginx
 server {
     listen 80;
     server_name yourdomain.com;
-    root /var/www/local-materials-management/dist;
+    root /var/www/mauritanian-materials/dist;
+    index index.html;
     
+    # Handle client-side routing
     location / {
         try_files $uri $uri/ /index.html;
     }
+    
+    # Gzip compression
+    gzip on;
+    gzip_types text/css application/javascript application/json;
 }
+```
 
-B. Node.js Server
+**Apache Example:**
+```apache
+<VirtualHost *:80>
+    ServerName yourdomain.com
+    DocumentRoot /var/www/mauritanian-materials/dist
+    
+    # Handle client-side routing
+    <Directory "/var/www/mauritanian-materials/dist">
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^index\.html$ - [L]
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule . /index.html [L]
+    </Directory>
+</VirtualHost>
+```
 
-    Install PM2 or similar process manager
-    Create a simple Express server to serve the static files
+#### Docker Deployment
+```dockerfile
+# Dockerfile
+FROM node:18-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-    Database Configuration
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
 
-    If using PostgreSQL, make sure it's installed and running on your server
-    Update the database configuration in the app to point to your local PostgreSQL instance
-    Make sure your database is accessible from your application
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+  
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: mauritanian_materials
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: your_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
 
-    Environment Setup Since you're not using Supabase, ensure your PostgreSQL connection details are properly configured in the DatabaseSettings component.
+volumes:
+  postgres_data:
+```
 
+## 🔧 Configuration
 
+### Environment Variables
+```bash
+# .env
+SUPABASE_URL=your_supabase_url
+SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 
-539e8f41-564f-4a0a-bf12-5745f07e400b) and click on Share -> Publish.
+# Optional: Google Maps API key for enhanced mapping
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_key
+
+# Optional: Keycloak configuration
+VITE_KEYCLOAK_URL=your_keycloak_url
+VITE_KEYCLOAK_REALM=your_realm
+VITE_KEYCLOAK_CLIENT_ID=your_client_id
+```
+
+### Database Configuration
+- Update `src/config/database.ts` for database provider selection
+- Modify `src/lib/typeorm/data-source.ts` for TypeORM configuration
+- Configure Supabase connection in `src/integrations/supabase/client.ts`
+
+## 🗃 Database Schema
+
+The application uses the following main tables:
+- `profiles` - User profiles and roles
+- `projects` - Construction projects
+- `materials` - Material inventory
+- `suppliers` - Supplier management
+- `tenders` - Tender/procurement workflows
+- `payments` - Financial transactions
+- `documents` - File management
+- `inspections` - Quality control
+
+Migration files are located in `supabase/migrations/`
+
+## 🔐 Authentication Setup
+
+### Using Supabase Auth
+1. Enable authentication in Supabase Dashboard
+2. Configure authentication providers (email, Google, etc.)
+3. Set up Row Level Security policies
+
+### Using Keycloak
+1. Install and configure Keycloak server
+2. Update Keycloak configuration in `src/integrations/keycloak/`
+3. Configure realm and client settings
+
+## 🌍 Features Configuration
+
+### Google Maps Integration
+1. Get API key from Google Cloud Console
+2. Enable Maps JavaScript API and Places API
+3. Add key to environment variables
+
+### File Storage
+- **Supabase Storage**: Automatically configured with Supabase
+- **Local Storage**: Configure path in `src/config/storage.ts`
+- **FTP Storage**: Update FTP settings for external storage
+
+## 📞 Support & Contact
+
+For technical support or project inquiries:
+- **Contact**: HadraTech
+- **Email**: [Contact information]
+- **Documentation**: This README and inline code comments
+
+## 📄 License
+
+This project is proprietary software developed for Mauritanian construction material management.
+
+---
+
+*Built with ❤️ for the Mauritanian construction industry*
