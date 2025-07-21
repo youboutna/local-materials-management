@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, Grid, Filter } from "lucide-react";
-import ProjectsGrid from "@/components/projects/ProjectsGrid";
+import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
 import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
 import InteractiveMap from "@/components/map/InteractiveMap";
 import { useProjects } from "@/hooks/useProjects";
+import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from "@/types/project";
 import { MapLocation } from "@/components/ProjectMap";
 import Navbar from "@/components/Navbar";
@@ -21,6 +22,18 @@ const Projects: React.FC = () => {
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+
+  // Pagination for projects
+  const {
+    currentData: paginatedProjects,
+    currentPage,
+    totalPages,
+    totalItems,
+    goToPage
+  } = usePagination({
+    data: filteredProjects,
+    itemsPerPage: 20
+  });
 
   // Initialize locations when projects load
   useEffect(() => {
@@ -169,7 +182,14 @@ const Projects: React.FC = () => {
               </CardContent>
             </Card>
 
-            <ProjectsGrid projects={filteredProjects} />
+            <ProjectsGridPaginated 
+              projects={paginatedProjects}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              onPageChange={goToPage}
+              isLoading={isLoading}
+            />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-6">

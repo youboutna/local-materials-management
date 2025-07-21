@@ -2,22 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Filter, Package, Map, MapPin, Grid } from "lucide-react";
+import { Plus, Map, MapPin, Grid } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import InteractiveMap from "@/components/map/InteractiveMap";
 import ProjectMap from "@/components/ProjectMap";
 import { MapLocation } from "@/components/ProjectMap";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import MaterialFilters from "@/components/materials/MaterialFilters";
+import MaterialGrid from "@/components/materials/MaterialGrid";
+import { usePagination } from "@/hooks/usePagination";
 
 interface Material {
   id: string;
@@ -222,6 +216,24 @@ const Materials: React.FC = () => {
     new Set(materials.map((m) => m.local_type).filter(Boolean))
   ) as string[];
 
+  // Pagination for materials
+  const {
+    currentData: paginatedMaterials,
+    currentPage,
+    totalPages,
+    totalItems,
+    goToPage
+  } = usePagination({
+    data: filteredMaterials,
+    itemsPerPage: 20
+  });
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("");
+    setSelectedLocalType("");
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -270,158 +282,26 @@ const Materials: React.FC = () => {
           </TabsList>
 
           <TabsContent value="grid" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filtres
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Rechercher des matériaux..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+            <MaterialFilters
+              searchTerm={searchTerm}
+              selectedCategory={selectedCategory}
+              selectedLocalType={selectedLocalType}
+              categories={categories}
+              localTypes={localTypes}
+              onSearchChange={setSearchTerm}
+              onCategoryChange={setSelectedCategory}
+              onLocalTypeChange={setSelectedLocalType}
+              onReset={handleResetFilters}
+            />
 
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les catégories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={selectedLocalType}
-                    onValueChange={setSelectedLocalType}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Type local" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      {localTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedCategory("");
-                      setSelectedLocalType("");
-                    }}
-                  >
-                    Réinitialiser
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Materials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredMaterials.map((material) => (
-                <Card
-                  key={material.id}
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
-                >
-                  <CardContent
-                    className="p-4"
-                    onClick={() => navigate(`/materials/${material.id}`)}
-                  >
-                    <div className="space-y-3">
-                      {material.image && (
-                        <img
-                          src={material.image}
-                          alt={material.name}
-                          className="w-full h-32 object-cover rounded-md"
-                        />
-                      )}
-
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {material.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {material.description}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary">{material.category}</Badge>
-                        {material.local_type && (
-                          <Badge variant="outline">{material.local_type}</Badge>
-                        )}
-                      </div>
-
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Prix:</span>
-                          <span className="font-medium">
-                            {material.price_per_unit} MRO/{material.unit}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Stock:</span>
-                          <span className="font-medium">
-                            {material.available_quantity} {material.unit}
-                          </span>
-                        </div>
-                        {material.origin_location && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Origine:</span>
-                            <span className="font-medium text-xs">
-                              {material.origin_location}
-                            </span>
-                          </div>
-                        )}
-                        {material.coordinates_latitude &&
-                          material.coordinates_longitude && (
-                            <div className="flex items-center gap-1 text-xs text-blue-600">
-                              <MapPin className="h-3 w-3" />
-                              <span>Géolocalisé</span>
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredMaterials.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Aucun matériau trouvé
-                  </h3>
-                  <p className="text-gray-600">
-                    Aucun matériau ne correspond à vos critères de recherche.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            <MaterialGrid
+              materials={paginatedMaterials}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              onPageChange={goToPage}
+              onMaterialClick={(material) => navigate(`/materials/${material.id}`)}
+            />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-6">
