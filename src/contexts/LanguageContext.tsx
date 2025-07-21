@@ -658,7 +658,12 @@ export const translations = {
         title: "Fonctionnalités",
         description: "Découvrez nos outils de gestion",
         discover: "Découvrir",
-        login_to_access: "Se connecter pour accéder"
+        login_to_access: "Se connecter pour accéder",
+        register: "Créer un compte",
+        management: "GESTION DE MATÉRIAUX, SUIVI DES PROJETS",
+        system: "Système Mauritanien de suivi des projets et Gestion des Matériaux",
+        message :"Valoriser le patrimoine avec les matériaux locaux",
+        details : "Suivez vos projets de construction utilisant la pierre d'Atar/aioun, coquillage/nouakchott et l'argile mauritanienne. Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles."
       },
       cta: {
         title: "Commencez dès maintenant",
@@ -1446,7 +1451,13 @@ export const translations = {
         title: "الميزات",
         description: "اكتشف أدوات الإدارة لدينا",
         discover: "اكتشف",
-        login_to_access: "تسجيل الدخول للوصول"
+        login_to_access: "تسجيل الدخول للوصول",
+        register: "إنشاء حساب",
+        management: "  إدارة مشاريع, إدارة المواد",
+        system:  " إدارة مشاريع, النظام الموريتاني لإدارة المواد",
+        message: "تثمين التراث باستخدام المواد المحلية",
+        details: "تابعوا مشاريعكم الإنشائية باستخدام حجر أطار/العيون، الصدف/نواكشوط والطين الموريتاني. حلّنا يُحسِّن إدارة مشاريع البناء، خصوصًا باستخدام المواد المحلية، ويحافظ على التقنيات التقليدية."
+
       },
       cta: {
         title: "ابدأ الآن",
@@ -2239,7 +2250,13 @@ export const translations = {
         title: "Features",
         description: "Discover our management tools",
         discover: "Discover",
-        login_to_access: "Login to access"
+        login_to_access: "Login to access",
+        register: "Create an account",
+        management: "MATERIALS MANAGEMENT AND MONITORING OF PROJECTS",
+        system: "Mauritanian Materials Management System and Monitoring of Project",
+        message: "Promoting heritage with local materials",
+        details: "Track your construction projects using Atar/Aioun stone, Nouakchott seashells, and Mauritanian clay. Our solution optimizes the management of construction projects, particularly with local materials, and preserves traditional techniques."
+
       },
       cta: {
         title: "Get Started Now",
