@@ -649,6 +649,54 @@ export const translations = {
       text: "Pour toute question concernant cette politique, contactez-nous à contact@example.com"
     }
   },
+  terms:{
+   title: "Conditions d'utilisation",
+  last_update: "Dernière mise à jour : 21 juillet 2025",
+  section1: {
+    title: "1. Acceptation des conditions",
+    text: "En accédant ou en utilisant notre logiciel, que ce soit en mode SaaS ou sur site, vous acceptez d'être lié par ces conditions d'utilisation."
+  },
+  section2: {
+    title: "2. Utilisation du service SaaS",
+    text: "Notre plateforme SaaS est hébergée dans le cloud et accessible via internet. Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités sous votre compte."
+  },
+  section3: {
+    title: "3. Déploiement sur site",
+    text: "Si vous déployez notre logiciel sur votre propre infrastructure (sur site), vous acceptez de respecter toutes les consignes d'installation, de maintenance et de sécurité fournies par HadraTech. HadraTech n'est pas responsable des problèmes liés à votre environnement ou mauvaise utilisation."
+  },
+  section4: {
+    title: "4. Hébergement cloud",
+    text: "Pour les utilisateurs SaaS, notre logiciel est hébergé sur une infrastructure cloud sécurisée. Nous utilisons des pratiques de sécurité conformes aux standards industriels, mais aucun système n'est totalement sécurisé."
+  },
+  section5: {
+    title: "5. Octroi de licence",
+    text: "HadraTech vous accorde une licence non exclusive et non transférable pour utiliser le logiciel conformément aux termes de votre abonnement ou contrat de licence. Vous ne pouvez pas sous-licencier, louer ou prêter le logiciel."
+  },
+  section6: {
+    title: "6. Restrictions",
+    text: "Vous ne pouvez pas : décompiler, désassembler, modifier ou créer des œuvres dérivées du logiciel sauf si la loi l'autorise expressément ou avec le consentement écrit de HadraTech."
+  },
+  section7: {
+    title: "7. Paiement et frais",
+    text: "L'utilisation du service SaaS est soumise au paiement des frais d'abonnement applicables. Les licences sur site peuvent nécessiter un paiement unique ou récurrent selon votre contrat de licence."
+  },
+  section8: {
+    title: "8. Résiliation",
+    text: "HadraTech peut suspendre ou résilier votre accès en cas de violation de ces conditions. Après résiliation, votre licence prend fin et vous devez cesser toute utilisation."
+  },
+  section9: {
+    title: "9. Limitation de responsabilité",
+    text: "HadraTech ne peut être tenu responsable des dommages indirects ou consécutifs résultant de l'utilisation ou de l'incapacité à utiliser le logiciel."
+  },
+  section10: {
+    title: "10. Droit applicable",
+    text: "Ces conditions sont régies par les lois de la juridiction où HadraTech est enregistrée."
+  },
+  rights: "Tous droits réservés",
+  by_hadratech: "Développé par HadraTech",
+  about_desc: "Notre système ERP de gestion de construction est conçu pour simplifier et optimiser tous les aspects de vos projets de construction."
+
+  },
   contact: {
     title: "Contactez-nous",
     alert: {
@@ -1492,6 +1540,53 @@ export const translations = {
         text: "لأي أسئلة حول هذه السياسة، اتصل بنا على contact@example.com"
       }
     },
+    terms:{
+     title: "شروط الخدمة",
+  last_update: "آخر تحديث: 21 يوليو 2025",
+  section1: {
+    title: "1. قبول الشروط",
+    text: "باستخدامك لبرنامجنا، سواء كخدمة SaaS أو على البنية التحتية الخاصة بك، فإنك توافق على الالتزام بهذه الشروط."
+  },
+  section2: {
+    title: "2. استخدام خدمة SaaS",
+    text: "نظام SaaS لدينا مستضاف في السحابة ويتم الوصول إليه عبر الإنترنت. أنت مسؤول عن الحفاظ على سرية بيانات حسابك وجميع الأنشطة التي تتم تحت حسابك."
+  },
+  section3: {
+    title: "3. النشر على الموقع",
+    text: "إذا قمت بنشر البرنامج على بنيتك التحتية الخاصة (على الموقع)، فإنك توافق على الالتزام بجميع تعليمات التثبيت والصيانة والأمان المقدمة من HadraTech. شركة HadraTech غير مسؤولة عن المشكلات الناتجة عن بيئتك أو سوء الاستخدام."
+  },
+  section4: {
+    title: "4. الاستضافة السحابية",
+    text: "بالنسبة لمستخدمي SaaS، يتم استضافة برنامجنا على بنية تحتية سحابية آمنة. نحن نستخدم ممارسات أمنية معيارية لحماية بياناتك، لكن لا يوجد نظام آمن بنسبة 100%."
+  },
+  section5: {
+    title: "5. منح الترخيص",
+    text: "تمنحك HadraTech ترخيصًا غير حصري وغير قابل للنقل لاستخدام البرنامج وفقًا لشروط اشتراكك أو اتفاقية الترخيص الخاصة بك. لا يجوز لك ترخيص البرنامج من الباطن أو تأجيره أو تأجيره."
+  },
+  section6: {
+    title: "6. القيود",
+    text: "لا يجوز لك: إعادة هندسة البرنامج عكسيًا، فك التشفير، التعديل، أو إنشاء أعمال مشتقة منه إلا إذا سمح القانون بذلك صراحة أو بموافقة كتابية من HadraTech."
+  },
+  section7: {
+    title: "7. الدفع والرسوم",
+    text: "يخضع استخدام خدمة SaaS لدفع رسوم الاشتراك المطبقة. قد تتطلب تراخيص النشر على الموقع دفع رسوم مرة واحدة أو متكررة كما هو موضح في اتفاقية الترخيص الخاصة بك."
+  },
+  section8: {
+    title: "8. الإنهاء",
+    text: "يجوز لـ HadraTech تعليق أو إنهاء وصولك إذا انتهكت هذه الشروط. عند الإنهاء، ينتهي ترخيصك لاستخدام البرنامج ويجب عليك التوقف عن الاستخدام."
+  },
+  section9: {
+    title: "9. تحديد المسؤولية",
+    text: "لا تتحمل HadraTech المسؤولية عن الأضرار غير المباشرة أو التبعية الناشئة عن استخدام أو عدم القدرة على استخدام البرنامج."
+  },
+  section10: {
+    title: "10. القانون الواجب التطبيق",
+    text: "تخضع هذه الشروط وتفسر وفقًا لقوانين الولاية القضائية التي تم تأسيس HadraTech فيها."
+  },
+  rights: "جميع الحقوق محفوظة",
+  by_hadratech: "تم التطوير بواسطة HadraTech",
+  about_desc: "تم تصميم نظام ERP لإدارة البناء الخاص بنا لتبسيط وتحسين جميع جوانب مشاريع البناء الخاصة بك."
+    },
     contact: {
       title: "اتصل بنا",
       alert: {
@@ -2319,6 +2414,56 @@ export const translations = {
         text: "For any questions about this policy, contact us at contact@example.com"
       }
     },
+    terms : {
+      title: "Terms of Service",
+  last_update: "Last updated: July 21, 2025",
+  section1: {
+    title: "1. Acceptance of Terms",
+    text: "By accessing or using our software, whether as a SaaS or on-premise solution, you agree to be bound by these Terms of Service."
+  },
+  section2: {
+    title: "2. SaaS Service Use",
+    text: "Our SaaS platform is hosted in the cloud and accessed over the internet. You are responsible for maintaining the confidentiality of your account credentials and all activities under your account."
+  },
+  section3: {
+    title: "3. On-Premise Deployment",
+    text: "If you deploy our software on your own infrastructure (on-premise), you agree to comply with all installation, maintenance, and security guidelines provided by HadraTech. HadraTech is not responsible for issues arising from your environment or misuse."
+  },
+  section4: {
+    title: "4. Cloud Hosting",
+    text: "For SaaS users, our software is hosted on secure cloud infrastructure. We use industry-standard security practices to protect your data, but you acknowledge that no system is completely secure."
+  },
+  section5: {
+    title: "5. License Grant",
+    text: "HadraTech grants you a non-exclusive, non-transferable license to use the software according to the terms of your subscription or license agreement. You may not sublicense, rent, or lease the software."
+  },
+  section6: {
+    title: "6. Restrictions",
+    text: "You may not: reverse engineer, decompile, modify, or create derivative works from the software except as expressly permitted by law or with HadraTech’s written consent."
+  },
+  section7: {
+    title: "7. Payment and Fees",
+    text: "Use of the SaaS service is subject to payment of applicable subscription fees. On-premise licenses may require a one-time or recurring fee as outlined in your license agreement."
+  },
+  section8: {
+    title: "8. Termination",
+    text: "HadraTech may suspend or terminate your access if you breach these terms. Upon termination, your license to use the software ends and you must cease all use."
+  },
+  section9: {
+    title: "9. Liability Limitation",
+    text: "HadraTech is not liable for indirect or consequential damages arising from use or inability to use the software."
+  },
+  section10: {
+    title: "10. Governing Law",
+    text: "These Terms are governed by the laws of the jurisdiction where HadraTech is incorporated."
+  },
+  rights: "All rights reserved",
+  by_hadratech: "Developed by HadraTech",
+  about_desc: "Our construction management ERP system is designed to simplify and optimize all aspects of your construction projects."
+
+
+    },
+
     contact: {
       title: "Contact Us",
       alert: {

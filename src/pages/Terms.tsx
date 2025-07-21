@@ -65,8 +65,6 @@ const Terms = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };
