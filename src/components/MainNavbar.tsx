@@ -222,15 +222,7 @@ const MainNavbar = () => {
           {/* Show different buttons based on authentication status and dev mode */}
           {isUserAuthenticated ? (
             <div className="flex items-center gap-2">
-              <Button 
-                variant="secondary"
-                size="sm"
-                asChild
-              >
-                <Link to="/dashboard">
-                  {t('dashboard.title') || 'Dashboard'}
-                </Link>
-              </Button>
+    
               {/* Only show logout if not in dev mode or actually authenticated */}
               {!DEV_MODE && (authUser || isAuthenticated) && (
                 <Button 

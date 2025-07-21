@@ -37,6 +37,7 @@ const Hero = () => {
         </div>
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6 animate-slide-down">
+          <span className="block">Mauritanian Materials Management System </span>
           <span className="block">Valoriser le patrimoine</span>
           <span className="block mt-2">avec les matériaux locaux</span>
         </h1>
