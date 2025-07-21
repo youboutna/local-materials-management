@@ -198,23 +198,23 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
-              {t('materials.tabs.takeoffs')}
+              {t('projects.tab.takeoffs')}
             </CardTitle>
             <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  {t('materials.tabs.takeoffs') + ' ' + t('project.add')}
+                  {t('projects.tab.takeoffs') + ' ' + t('projects.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{t('materials.tabs.takeoffs') + ' ' + t('project.add')}</DialogTitle>
+                  <DialogTitle>{t('projects.tab.takeoffs') + ' ' + t('projects.add')}</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="manual" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="manual">{t('materials.takeoffs.form.basic_info')}</TabsTrigger>
-                    <TabsTrigger value="advanced">{t('materials.takeoffs.form.advanced')}</TabsTrigger>
+                    <TabsTrigger value="manual">{t('projects.takeoffs.form.basic_info')}</TabsTrigger>
+                    <TabsTrigger value="advanced">{t('projects.takeoffs.form.advanced')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="manual" className="space-y-4">
@@ -245,19 +245,19 @@ const QuantityTakeoffs = ({ projectId }: QuantityTakeoffsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-adrar-600">{takeoffs.length}</p>
-              <p className="text-sm text-gray-600">{t('elements.measured')}</p>
+              <p className="text-sm text-gray-600">{t('projects.takeoffs.elements.measured')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-terracotta-600">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
-              <p className="text-sm text-gray-600">{t('total.value')}</p>
+              <p className="text-sm text-gray-600">{t('projects.takeoffs.total.value')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600">
                 {takeoffs.reduce((total, takeoff) => total + takeoff.quantity, 0).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-600">{t('total.quantity')}</p>
+              <p className="text-sm text-gray-600">{t('projects.takeoffs.total.quantity')}</p>
             </div>
           </div>
         </CardContent>

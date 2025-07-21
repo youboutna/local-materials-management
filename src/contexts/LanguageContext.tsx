@@ -20,6 +20,9 @@ export const useLanguage = () => {
 
 export const translations = {
   fr: {
+    currency: {
+      mru: "MRU"
+    },
     nav: {
       home: "Accueil",
       projects: "Projets",
@@ -29,7 +32,7 @@ export const translations = {
       profile: "Profil",
       settings: "Paramètres",
       tender_management: "Gestion des appels d'offres",
-          login: "Login",
+      login: "Login",
       register: "Register",
       logout: "Logout",
       terms: "Terms of Service",
@@ -358,7 +361,8 @@ export const translations = {
     projects: {
       title: "Projets",
       all_desc: "tous les projects",
-      new: "nouveau",
+      new: "nouveau ",
+      add: "Ajouter",
       new_desc: "Créer un nouveau projet",
       all: "tous",
       tab: {
@@ -368,459 +372,507 @@ export const translations = {
         inspections: "Inspections",
         workflow: "Flux de travail",
         documents: "Documents",
-        takeoffs: "Quantitatifs"
+        takeoffs: "Métrés"
       },
-      edit: {
-        title: "Modifier le projet",
-        subtitle: "Modifier les détails du projet",
-        location_desc: "Détails de l'emplacement du projet",
-        status_desc: "Détails du statut du projet",
-        sync_with_inspection: "Synchroniser avec l'inspection",
-        saved: "Projet enregistré",
-        saved_desc: "Projet enregistré avec succès",
-        error: "Erreur",
-        save_error: "Erreur lors de l'enregistrement du projet",
-        progress_synced: "Progression synchronisée",
-        progress_synced_desc: "Progression du projet synchronisée avec l'inspection",
-        info: "Info",
-        no_inspection: "Aucune donnée d'inspection",
-        not_found: "Projet non trouvé",
-        load_error: "Erreur lors du chargement du projet",
-        back_to_detail: "Retour aux détails du projet",
-        market_type: "Type de marché",
-        market_type_placeholder: "Sélectionner le type de marché",
-        selection_mode: "Mode de sélection",
-        selection_mode_placeholder: "Sélectionner le mode de sélection",
-        title_placeholder: "Enter project title",
-        location_placeholder: "Select location",
-        status_placeholder: "Select status",
-        progress_desc: "Specify project progress as a percentage.",
-        progress_current: "Current progress: {value}%",
-        description_placeholder: "Describe the project..."
-      },
-      loading_error: "Erreur lors du chargement des projets",
-      delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
-      deleted: "Projet supprimé",
-      deleted_desc: "Projet supprimé avec succès",
-      delete_error: "Erreur lors de la suppression du projet",
-      delete_error_desc: "Une erreur est survenue lors de la suppression du projet.",
-      loading_detail: "Chargement des détails du projet...",
-      not_found: "Projet non trouvé",
-      not_found_desc: "Le projet demandé est introuvable.",
-      payments_management: "Gestion des paiements",
-      quick_payment_actions: "Actions de paiement rapides",
-      progress_done: "Progression réalisée",
-      overview: {
-        description: "Vue d'ensemble du projet"
-      },
-      timeline: "Chronologie",
-      completed: "Terminé",
-      expected: "Prévu",
-      location: "Localisation",
-      empty: "Aucun projet disponible",
-      start_date: "Date de début",
-      started: "Commencé",
-      end_date_expected: "Date de fin prévue",
-      delete: "Supprimer"
-    },
-    materials: {
-      title: "Matériaux",
-      basic_info: "Informations de base",
-      name: "Nom",
-      category: "Catégorie",
-      description: "Description",
-      unit: "Unité",
-      price_per_unit: "Prix par unité",
-      available_quantity: "Quantité disponible",
-      location_info: "Informations de localisation",
-      origin_location: "Lieu d'origine",
-      coordinates: "Coordonnées",
-      image: "Image",
-      workspace: "Espace de travail",
-      form: {
-        name_placeholder: "Nom du matériau",
-        description_placeholder: "Description du matériau",
-        category_placeholder: "Sélectionner une catégorie",
-        unit_placeholder: "ex: m², kg, unité",
-        price_placeholder: "Prix unitaire",
-        quantity_placeholder: "Quantité disponible",
-        location_placeholder: "Lieu d'origine",
-        select_workspace: "Sélectionner un espace de travail"
-      },
-      validation: {
-        name_required: "Le nom est requis",
-        category_required: "La catégorie est requise",
-        description_required: "La description est requise",
-        unit_required: "L'unité est requise",
-        price_required: "Le prix est requis",
-        quantity_required: "La quantité est requise"
-      }
-    },
-    project_import: {
-      title: "Import de projet",
-      desc: "Importer des projets depuis un fichier Excel"
-    },
-    settings: {
-      title: "Paramètres"
-    },
-    auth: {
-      login: "Se connecter",
-      register: "S'inscrire",
-      logout: "Se déconnecter",
-      terms: "Conditions d'utilisation",
-      privacy: "Politique de confidentialité",
-      full_name: "Nom complet",
-      phone: "Téléphone",
-      national_id: "ID National",
-      email: "Email",
-      password: "Mot de passe",
-      password_requirements: "Exigences du mot de passe",
-      button: {
-        loading: "Chargement..."
-      }
-    },
-  
-    footer: {
-      about: "À propos",
-      about_desc: "Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
-      rights: "Tous droits réservés",
-      by_hadratech: "Développé par HadraTech",
-      quick_links: "Liens rapides",
-      legal: "Légal"
-    },
-    common: {
-      yes: "Oui",
-      no: "Non",
-      cancel: "Annuler",
-      save: "Enregistrer",
-      delete: "Supprimer",
-      edit: "Modifier",
-      update: "Mettre à jour",
-      loading: "Chargement...",
-      error: "Erreur",
-      success: "Succès",
-      back: "Retour",
-      search: "Rechercher",
-      filter: "Filtrer",
-      reset: "Réinitialiser",
-      submit: "Soumettre",
-      close: "Fermer",
-      confirm: "Confirmer",
-      optional: "Optionnel",
-      required: "Requis",
-      yes_delete: "Oui, supprimer",
-      no_cancel: "Non, annuler"
-    },
-    notfound: {
-      message: "Page non trouvée",
-      return_home: "Retour à l'accueil"
-    },
-    inspection: {
-      edit: {
-        title: "Modifier l'inspection",
-        description: "Modification de l'inspection pour le projet",
-        in_development: "En développement"
-      },
-      create: {
-        title: "Créer une inspection",
-        description: "Créer une nouvelle inspection pour le projet",
-        in_development: "En développement"
-      },
-      dialog: {
-        new_inspection: "Créer une inspection",
-        description: "Créer une nouvelle inspection pour le projet",
-        status: "progess"
-      }
-    },
-    roles: {
-      user: "Utilisateur",
-      admin: "Administrateur",
-      project_manager: "Gestionnaire de projet",
-      supervisor: "Superviseur",
-      inspector: "Inspecteur",
-      supplier: "Fournisseur",
-      viewer: "Observateur",
-      assigned: "Rôle assigné",
-      assigned_success: "Rôle assigné avec succès",
-      assign_error: "Erreur lors de l'assignation du rôle",
-      removed: "Rôle supprimé",
-      removed_success: "Rôle supprimé avec succès",
-      remove_error: "Erreur lors de la suppression du rôle"
-    },
-    policy: {
-      title: "Politique de confidentialité",
-      last_update: "Dernière mise à jour : 15 décembre 2024",
-      section1: {
-        title: "Collecte des informations",
-        text: "Nous collectons les informations que vous nous fournissez directement lors de votre inscription et utilisation de nos services."
-      },
-      section2: {
-        title: "Utilisation des données",
-        text: "Nous utilisons vos données pour :",
-        item1: "Fournir et améliorer nos services",
-        item2: "Communiquer avec vous",
-        item3: "Assurer la sécurité de nos services",
-        item4: "Respecter nos obligations légales"
-      },
-      section3: {
-        title: "Partage des données",
-        text: "Nous ne partageons vos données personnelles qu'avec :",
-        item1: "Nos partenaires de confiance",
-        item2: "Les autorités compétentes si requis par la loi",
-        item3: "Nos prestataires de services",
-        item4: "Avec votre consentement explicite",
-        item5: "Pour protéger nos droits et notre sécurité"
-      },
-      section4: {
-        title: "Vos droits",
-        text: "Vous avez le droit de :",
-        item1: "Accéder à vos données personnelles",
-        item2: "Corriger vos informations",
-        item3: "Supprimer votre compte"
-      },
-      section5: {
-        title: "Sécurité",
-        text: "Nous mettons en place des mesures de sécurité appropriées pour protéger vos données."
-      },
-      section6: {
-        title: "Cookies",
-        text: "Nous utilisons des cookies pour :",
-        item1: "Améliorer votre expérience utilisateur",
-        item2: "Analyser l'utilisation de notre site",
-        item3: "Personnaliser le contenu",
-        item4: "Assurer la sécurité",
-        item5: "Mémoriser vos préférences"
-      },
-      section7: {
-        title: "Modifications",
-        text: "Nous nous réservons le droit de modifier cette politique. Les modifications seront communiquées sur cette page."
-      },
-      section8: {
-        title: "Contact",
-        text: "Pour toute question concernant cette politique, contactez-nous à contact@example.com"
-      }
-    },
-    contact: {
-      title: "Contactez-nous",
-      alert: {
-        sent: "Message envoyé avec succès !"
-      },
-      form: {
-        title: "Envoyez-nous un message",
-        name: "Nom",
-        name_placeholder: "Votre nom complet",
-        email: "Email",
-        email_placeholder: "votre@email.com",
-        subject: "Sujet",
-        subject_placeholder: "Sujet de votre message",
-        message: "Message",
-        message_placeholder: "Votre message...",
-        send: "Envoyer le message"
-      },
-      info: {
-        title: "Informations de contact",
-        address: "Adresse",
-        address_value: "Nouakchott, Mauritanie",
-        phone: "Téléphone",
-        phone_value: "+222 XX XX XX XX",
-        email: "Email",
-        email_value: "contact@example.com",
-        hours: "Heures d'ouverture",
-        hours_value: "Lun-Ven : 8h00-17h00",
-        social: "Réseaux sociaux"
-      }
-    },
-    index: {
-      loading: "Chargement...",
-      feature: {
-        projects: {
-          title: "Projets",
-          description: "Gérez vos projets de construction"
-        },
-        materials: {
-          title: "Matériaux",
-          description: "Gestion des matériaux"
-        },
-        documents: {
-          title: "Documents",
-          description: "Gestion documentaire"
-        },
-        teams: {
-          title: "Équipes",
-          description: "Gestion des équipes"
-        },
-        dashboard: {
-          title: "Tableau de bord",
-          description: "Vue d'ensemble"
+      takeoffs: {
+        form: {
+          basic_info: "Informations de base",
+          advanced: "Calcul avancé"
         }
-      },
-      features: {
-        title: "Fonctionnalités",
-        description: "Découvrez nos outils de gestion",
-        discover: "Découvrir",
-        login_to_access: "Se connecter pour accéder",
-        register: "Créer un compte",
-        management: "GESTION DE MATÉRIAUX, SUIVI DES PROJETS",
-        system: "Système Mauritanien de suivi des projets et Gestion des Matériaux",
-        message :"Valoriser le patrimoine avec les matériaux locaux",
-        details : "Suivez vos projets de construction utilisant la pierre d'Atar/aioun, coquillage/nouakchott et l'argile mauritanienne. Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles."
-      },
-      cta: {
-        title: "Commencez dès maintenant",
-        authenticated: "Accédez à votre tableau de bord",
-        unauthenticated: "Créez votre compte pour commencer",
-        dashboard: "Tableau de bord",
-        my_projects: "Mes projets",
-        start_free: "Commencer gratuitement",
-        login: "Se connecter"
+      ,
+      elements: {
+      measured: "Éléments mesurés"
+    },
+    total: {
+      value: "Valeur totale",
+      quantity: "Quantité totale"
+    },
       }
     },
-    project_create: {
-      title: "Créer un nouveau projet",
-      back_to_projects: "Retour aux projets",
-      toast: {
-        created: "Projet créé",
-        created_desc: "Le projet a été créé avec succès : ",
-        error: "Erreur",
-        error_desc: "Une erreur est survenue lors de la création du projet."
-      },
-      form: {
-        title: "Titre",
-        description: "Description",
-        location: "Localisation",
-        status: "Statut",
-        budget: "Budget",
-        start_date: "Date de début",
-        started: "Commencé",
-        end_date_expected: "Date de fin prévue",
-        delete: "Supprimer",
-        team_size: "Taille de l'équipe",
-        progress: "Progression",
-        financing_source: "Source de financement",
-        market_type: "Type de marché",
-        selection_mode: "Mode de sélection",
-        project_responsable: "Responsable du projet",
-        main_contractor: "Entrepreneur principal",
-        project_reference: "Référence du projet",
-        allows_initial_payment: "Autoriser le paiement initial",
-        initial_payment_percentage: "Pourcentage de paiement initial",
-        current_phase: "Phase actuelle",
-        current_stage: "Étape actuelle",
-        coordinates: "Coordonnées",
-        facilities_location: "Localisation des installations",
-        title_placeholder: "Enter project title",
-        location_placeholder: "Select location",
-        status_placeholder: "Select status",
-        progress_desc: "Specify project progress as a percentage.",
-        progress_current: "Current progress: {value}%",
-        description_placeholder: "Describe the project..."
-      }
+    project: {
+      cancel: "Annuler"
     },
-    language: {
-      french: "Français",
-      arabic: "العربية",
-      english: "English"
+    edit: {
+      title: "Modifier le projet",
+      subtitle: "Modifier les détails du projet",
+      location_desc: "Détails de l'emplacement du projet",
+      status_desc: "Détails du statut du projet",
+      sync_with_inspection: "Synchroniser avec l'inspection",
+      saved: "Projet enregistré",
+      saved_desc: "Projet enregistré avec succès",
+      error: "Erreur",
+      save_error: "Erreur lors de l'enregistrement du projet",
+      progress_synced: "Progression synchronisée",
+      progress_synced_desc: "Progression du projet synchronisée avec l'inspection",
+      info: "Info",
+      no_inspection: "Aucune donnée d'inspection",
+      not_found: "Projet non trouvé",
+      load_error: "Erreur lors du chargement du projet",
+      back_to_detail: "Retour aux détails du projet",
+      market_type: "Type de marché",
+      market_type_placeholder: "Sélectionner le type de marché",
+      selection_mode: "Mode de sélection",
+      selection_mode_placeholder: "Sélectionner le mode de sélection",
+      title_placeholder: "Enter project title",
+      location_placeholder: "Select location",
+      status_placeholder: "Select status",
+      progress_desc: "Specify project progress as a percentage.",
+      progress_current: "Current progress: {value}%",
+      description_placeholder: "Describe the project..."
     },
-    tender: {
-      input: {
-        title: "Titre",
-        description: "Description",
-        category: "Catégorie",
-        subcategory: "Sous-catégorie"
-      },
-      button: {
-        add: "Ajouter",
-        loading: "Chargement..."
-      },
-      alert: {
-        success: "Document ajouté avec succès",
-        upload_error: "Erreur lors du téléchargement",
-        document_error: "Erreur lors de la création du document",
-        tenderdoc_error: "Erreur lors de la création du document d'appel d'offres"
-      }
+    loading_error: "Erreur lors du chargement des projets",
+    delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
+    deleted: "Projet supprimé",
+    deleted_desc: "Projet supprimé avec succès",
+    delete_error: "Erreur lors de la suppression du projet",
+    delete_error_desc: "Une erreur est survenue lors de la suppression du projet.",
+    loading_detail: "Chargement des détails du projet...",
+    not_found: "Projet non trouvé",
+    not_found_desc: "Le projet demandé est introuvable.",
+    payments_management: "Gestion des paiements",
+    quick_payment_actions: "Actions de paiement rapides",
+    progress_done: "Progression réalisée",
+    overview: {
+      description: "Vue d'ensemble du projet"
     },
-    tender_category: {
-      administrative: "Administratif",
-      technical: "Technique",
-      financial: "Financier"
+    timeline: "Chronologie",
+    completed: "Terminé",
+    expected: "Prévu",
+    location: "Localisation",
+    empty: "Aucun projet disponible",
+    start_date: "Date de début",
+    started: "Commencé",
+    end_date_expected: "Date de fin prévue",
+    delete: "Supprimer",
+  
+  materials: {
+    title: "Matériaux",
+    basic_info: "Informations de base",
+    name: "Nom",
+    category: "Catégorie",
+    description: "Description",
+    unit: "Unité",
+    price_per_unit: "Prix par unité",
+    available_quantity: "Quantité disponible",
+    location_info: "Informations de localisation",
+    origin_location: "Lieu d'origine",
+    coordinates: "Coordonnées",
+    image: "Image",
+    workspace: "Espace de travail",
+    form: {
+      name_placeholder: "Nom du matériau",
+      description_placeholder: "Description du matériau",
+      category_placeholder: "Sélectionner une catégorie",
+      unit_placeholder: "ex: m², kg, unité",
+      price_placeholder: "Prix unitaire",
+      quantity_placeholder: "Quantité disponible",
+      location_placeholder: "Lieu d'origine",
+      select_workspace: "Sélectionner un espace de travail"
     },
-    tender_subcategory: {
-      // Administrative subcategories
-      lettre_soumission: "Lettre de soumission",
-      pouvoir_signature: "Pouvoir de signature",
-      acte_groupement: "Acte de groupement",
-      attestation_impot: "Attestation d'impôt",
-      attestation_cnss: "Attestation CNSS",
-      attestation_non_faillite: "Attestation non faillite",
-      renseignement_soumissionnaire: "Renseignement sur le soumissionnaire",
-      // Planification (PAA) - Administrative
-      plan_annuel_achats: "Plan Annuel d'Achats (PAA)",
-      modele_paa: "Modèle de Plan Annuel des Achats",
-      validation_ordonnateur: "Validation par l'Ordonnateur",
-      publication_armp: "Publication sur le site ARMP",
-      // Initiation - Administrative
-      demande_initiation: "Demande d'Initiation d'une Procédure",
-      procedure_proposee: "Procédure proposée",
-      // Sélection - Administrative
-      consultation_directe: "Consultation Directe (≤ 600 000 MRU)",
-      consultation_concurrentielle: "Consultation Concurrentielle",
-      lettre_consultation: "Lettre de consultation (Pièce N°1)",
-      modele_soumission: "Modèle de soumission (Pièce N°2)",
-      modele_contrat: "Modèle de contrat (Pièce N°4)",
-      registre_reception_plis: "Registre de Réception des Plis",
-      recu_depot_plis: "Reçu de Dépôt de Plis",
-      pv_ouverture_plis: "Procès-Verbal d'Ouverture des Plis",
-      pv_evaluation_attribution: "PV d'Évaluation et Proposition d'Attribution",
-      selection_consultants: "Sélection de Consultants",
-      dossier_smc_sfqc_sci: "Dossier Type pour SMC/SFQC/SCI",
-      lettre_invitation: "Lettre d'invitation (Pièce N°1)",
-      // Attribution - Administrative
-      lettre_notification: "Lettre de Notification d'Attribution",
-      nom_attributaire: "Nom de l'attributaire",
-      delai_execution: "Délai d'exécution",
-      publication_provisoire: "Publication provisoire (2 jours pour recours)",
-      signature_contrat: "Signature du contrat",
-      // Archivage - Administrative
-      original_offres: "Original des offres",
-      pv_archivage: "PV d'ouverture et d'évaluation",
-      contrats_signes: "Contrats signés",
-      preuves_publication: "Preuves de publication",
-      chemises_archivage: "Chemises ou boîtes d'archivage étiquetées",
-      double_numerique: "Double numérique recommandé",
-      // Technical subcategories
-      preuves_capacites_techniques: "Preuves de capacités techniques (projets similaires)",
-      experience_generale_marche: "Expérience générale dans l'objet du marché",
-      methodologie: "Méthodologie",
-      personnel_cle: "Personnel clé",
-      planning_travaux: "Planning travaux",
-      calendrier_livraison: "Calendrier de livraison",
-      conformite_techniques: "Conformité techniques",
-      // Initiation - Technical
-      description_besoin: "Description détaillée du besoin",
-      // Sélection - Technical
-      ddqe: "Devis Descriptif Quantitatif Estimatif - DDQE (Pièce N°3)",
-      termes_reference: "Termes de Référence - TdR (Pièce N°3)",
-      pv_evaluation_technique: "PV d'évaluation technique et financière",
-      // Financial subcategories
-      preuves_capacites_financieres: "Preuves de capacités financières",
-      chiffre_affaires_annuel: "Chiffre d'affaires annuel moyen des activités",
-      devis_quantitatif_estimatif: "Devis quantitatif estimatif",
-      garantie_bancaire: "Garantie bancaire",
-      garantie_soumission: "Garantie de soumission pour la période",
-      // Initiation - Financial
-      source_financement: "Source de financement",
-      montant_alloue: "Montant alloué",
-      // Sélection - Financial
-      devis_comparatifs: "Devis comparatifs (3 minimum)",
-      factures_commandes: "Factures et bons de commande",
-      // Attribution - Financial
-      montant_marche: "Montant du marché"
+    validation: {
+      name_required: "Le nom est requis",
+      category_required: "La catégorie est requise",
+      description_required: "La description est requise",
+      unit_required: "L'unité est requise",
+      price_required: "Le prix est requis",
+      quantity_required: "La quantité est requise"
+    },
+    supplier_info: {
+      title: "Informations sur les fournisseurs",
+      description: "Détails et contacts des fournisseurs locaux de matériaux pour soutenir vos projets de construction.",
+    },
+    warehouse_location: "Warehouse Location and Geo loca"
+  },
+  project_import: {
+    title: "Import de projet",
+    desc: "Importer des projets depuis un fichier Excel"
+  },
+  settings: {
+    title: "Paramètres"
+  },
+  auth: {
+    login: "Se connecter",
+    register: "S'inscrire",
+    logout: "Se déconnecter",
+    terms: "Conditions d'utilisation",
+    privacy: "Politique de confidentialité",
+    full_name: "Nom complet",
+    phone: "Téléphone",
+    national_id: "ID National",
+    email: "Email",
+    password: "Mot de passe",
+    password_requirements: "Exigences du mot de passe",
+    button: {
+      loading: "Chargement..."
     }
   },
 
+  footer: {
+    about: "À propos",
+    about_desc: "Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
+    rights: "Tous droits réservés",
+    by_hadratech: "Développé par HadraTech",
+    quick_links: "Liens rapides",
+    legal: "Légal"
+  },
+  common: {
+    yes: "Oui",
+    no: "Non",
+    cancel: "Annuler",
+    save: "Enregistrer",
+    delete: "Supprimer",
+    edit: "Modifier",
+    update: "Mettre à jour",
+    loading: "Chargement...",
+    error: "Erreur",
+    success: "Succès",
+    back: "Retour",
+    search: "Rechercher",
+    filter: "Filtrer",
+    reset: "Réinitialiser",
+    submit: "Soumettre",
+    close: "Fermer",
+    confirm: "Confirmer",
+    optional: "Optionnel",
+    required: "Requis",
+    yes_delete: "Oui, supprimer",
+    no_cancel: "Non, annuler"
+  },
+  notfound: {
+    message: "Page non trouvée",
+    return_home: "Retour à l'accueil"
+  },
+  inspection: {
+    edit: {
+      title: "Modifier l'inspection",
+      description: "Modification de l'inspection pour le projet",
+      in_development: "En développement"
+    },
+    create: {
+      title: "Créer une inspection",
+      description: "Créer une nouvelle inspection pour le projet",
+      in_development: "En développement"
+    },
+    dialog: {
+      new_inspection: "Créer une inspection",
+      title: "Inspection de chantier",
+      description: "Créer une nouvelle inspection pour le projet",
+      date: "Date de l'inspection",
+      select_date: "Sélectionner une date",
+      inspector: "Inspecteur",
+      inspector_placeholder: "Nom de l'inspecteur",
+      status: "Statut de l'inspection",
+      select_status: "Sélectionner un statut",
+      status_pending: "En attente",
+      status_approved: "Approuvé",
+      status_requires_changes: "Nécessite des modifications",
+      status_rejected: "Rejeté",
+      progress: "Avancement (%)",
+      comments: "Commentaires",
+      comments_placeholder: "Saisir vos remarques",
+      cancel: "Annuler",
+      create: "Créer",
+      creating: "Création...",
+      created: "Inspection enregistrée",
+      created_description: "L'inspection a bien été ajoutée.",
+      error: "Erreur",
+      error_description: "Une erreur est survenue lors de la création de l'inspection.",
+      validation_error: "Champs obligatoires",
+      validation_inspector: "Le nom de l'inspecteur est requis",
+    }
+  },
+  roles: {
+    user: "Utilisateur",
+    admin: "Administrateur",
+    project_manager: "Gestionnaire de projet",
+    supervisor: "Superviseur",
+    inspector: "Inspecteur",
+    supplier: "Fournisseur",
+    viewer: "Observateur",
+    assigned: "Rôle assigné",
+    assigned_success: "Rôle assigné avec succès",
+    assign_error: "Erreur lors de l'assignation du rôle",
+    removed: "Rôle supprimé",
+    removed_success: "Rôle supprimé avec succès",
+    remove_error: "Erreur lors de la suppression du rôle"
+  },
+  policy: {
+    title: "Politique de confidentialité",
+    last_update: "Dernière mise à jour : 15 décembre 2024",
+    section1: {
+      title: "Collecte des informations",
+      text: "Nous collectons les informations que vous nous fournissez directement lors de votre inscription et utilisation de nos services."
+    },
+    section2: {
+      title: "Utilisation des données",
+      text: "Nous utilisons vos données pour :",
+      item1: "Fournir et améliorer nos services",
+      item2: "Communiquer avec vous",
+      item3: "Assurer la sécurité de nos services",
+      item4: "Respecter nos obligations légales"
+    },
+    section3: {
+      title: "Partage des données",
+      text: "Nous ne partageons vos données personnelles qu'avec :",
+      item1: "Nos partenaires de confiance",
+      item2: "Les autorités compétentes si requis par la loi",
+      item3: "Nos prestataires de services",
+      item4: "Avec votre consentement explicite",
+      item5: "Pour protéger nos droits et notre sécurité"
+    },
+    section4: {
+      title: "Vos droits",
+      text: "Vous avez le droit de :",
+      item1: "Accéder à vos données personnelles",
+      item2: "Corriger vos informations",
+      item3: "Supprimer votre compte"
+    },
+    section5: {
+      title: "Sécurité",
+      text: "Nous mettons en place des mesures de sécurité appropriées pour protéger vos données."
+    },
+    section6: {
+      title: "Cookies",
+      text: "Nous utilisons des cookies pour :",
+      item1: "Améliorer votre expérience utilisateur",
+      item2: "Analyser l'utilisation de notre site",
+      item3: "Personnaliser le contenu",
+      item4: "Assurer la sécurité",
+      item5: "Mémoriser vos préférences"
+    },
+    section7: {
+      title: "Modifications",
+      text: "Nous nous réservons le droit de modifier cette politique. Les modifications seront communiquées sur cette page."
+    },
+    section8: {
+      title: "Contact",
+      text: "Pour toute question concernant cette politique, contactez-nous à contact@example.com"
+    }
+  },
+  contact: {
+    title: "Contactez-nous",
+    alert: {
+      sent: "Message envoyé avec succès !"
+    },
+    form: {
+      title: "Envoyez-nous un message",
+      name: "Nom",
+      name_placeholder: "Votre nom complet",
+      email: "Email",
+      email_placeholder: "votre@email.com",
+      subject: "Sujet",
+      subject_placeholder: "Sujet de votre message",
+      message: "Message",
+      message_placeholder: "Votre message...",
+      send: "Envoyer le message"
+    },
+    info: {
+      title: "Informations de contact",
+      address: "Adresse",
+      address_value: "Nouakchott, Mauritanie",
+      phone: "Téléphone",
+      phone_value: "+222 XX XX XX XX",
+      email: "Email",
+      email_value: "contact@example.com",
+      hours: "Heures d'ouverture",
+      hours_value: "Lun-Ven : 8h00-17h00",
+      social: "Réseaux sociaux"
+    }
+  },
+  index: {
+    loading: "Chargement...",
+    feature: {
+      projects: {
+        title: "Projets",
+        description: "Gérez vos projets de construction"
+      },
+      materials: {
+        title: "Matériaux",
+        description: "Gestion des matériaux"
+      },
+      documents: {
+        title: "Documents",
+        description: "Gestion documentaire"
+      },
+      teams: {
+        title: "Équipes",
+        description: "Gestion des équipes"
+      },
+      dashboard: {
+        title: "Tableau de bord",
+        description: "Vue d'ensemble"
+      }
+    },
+    features: {
+      title: "Fonctionnalités",
+      description: "Découvrez nos outils de gestion",
+      discover: "Découvrir",
+      login_to_access: "Se connecter pour accéder",
+      register: "Créer un compte",
+      management: "GESTION DE MATÉRIAUX, SUIVI DES PROJETS",
+      system: "Système Mauritanien de suivi des projets et Gestion des Matériaux",
+      message: "Valoriser le patrimoine avec les matériaux locaux",
+      details: "Suivez vos projets de construction utilisant la pierre d'Atar/aioun, coquillage/nouakchott et l'argile mauritanienne. Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles."
+    },
+    cta: {
+      title: "Commencez dès maintenant",
+      authenticated: "Accédez à votre tableau de bord",
+      unauthenticated: "Créez votre compte pour commencer",
+      dashboard: "Tableau de bord",
+      my_projects: "Mes projets",
+      start_free: "Commencer gratuitement",
+      login: "Se connecter"
+    }
+  },
+  project_create: {
+    title: "Créer un nouveau projet",
+    back_to_projects: "Retour aux projets",
+    toast: {
+      created: "Projet créé",
+      created_desc: "Le projet a été créé avec succès : ",
+      error: "Erreur",
+      error_desc: "Une erreur est survenue lors de la création du projet."
+    },
+    form: {
+      title: "Titre",
+      description: "Description",
+      location: "Localisation",
+      status: "Statut",
+      budget: "Budget",
+      start_date: "Date de début",
+      started: "Commencé",
+      end_date_expected: "Date de fin prévue",
+      delete: "Supprimer",
+      team_size: "Taille de l'équipe",
+      progress: "Progression",
+      financing_source: "Source de financement",
+      market_type: "Type de marché",
+      selection_mode: "Mode de sélection",
+      project_responsable: "Responsable du projet",
+      main_contractor: "Entrepreneur principal",
+      project_reference: "Référence du projet",
+      allows_initial_payment: "Autoriser le paiement initial",
+      initial_payment_percentage: "Pourcentage de paiement initial",
+      current_phase: "Phase actuelle",
+      current_stage: "Étape actuelle",
+      coordinates: "Coordonnées",
+      facilities_location: "Localisation des installations",
+      title_placeholder: "Enter project title",
+      location_placeholder: "Select location",
+      status_placeholder: "Select status",
+      progress_desc: "Specify project progress as a percentage.",
+      progress_current: "Current progress: {value}%",
+      description_placeholder: "Describe the project..."
+    }
+  },
+  language: {
+    french: "Français",
+    arabic: "العربية",
+    english: "English"
+  },
+  tender: {
+    input: {
+      title: "Titre",
+      description: "Description",
+      category: "Catégorie",
+      subcategory: "Sous-catégorie"
+    },
+    button: {
+      add: "Ajouter",
+      loading: "Chargement..."
+    },
+    alert: {
+      success: "Document ajouté avec succès",
+      upload_error: "Erreur lors du téléchargement",
+      document_error: "Erreur lors de la création du document",
+      tenderdoc_error: "Erreur lors de la création du document d'appel d'offres"
+    }
+  },
+  tender_category: {
+    administrative: "Administratif",
+    technical: "Technique",
+    financial: "Financier"
+  },
+  tender_subcategory: {
+    // Administrative subcategories
+    lettre_soumission: "Lettre de soumission",
+    pouvoir_signature: "Pouvoir de signature",
+    acte_groupement: "Acte de groupement",
+    attestation_impot: "Attestation d'impôt",
+    attestation_cnss: "Attestation CNSS",
+    attestation_non_faillite: "Attestation non faillite",
+    renseignement_soumissionnaire: "Renseignement sur le soumissionnaire",
+    // Planification (PAA) - Administrative
+    plan_annuel_achats: "Plan Annuel d'Achats (PAA)",
+    modele_paa: "Modèle de Plan Annuel des Achats",
+    validation_ordonnateur: "Validation par l'Ordonnateur",
+    publication_armp: "Publication sur le site ARMP",
+    // Initiation - Administrative
+    demande_initiation: "Demande d'Initiation d'une Procédure",
+    procedure_proposee: "Procédure proposée",
+    // Sélection - Administrative
+    consultation_directe: "Consultation Directe (≤ 600 000 MRU)",
+    consultation_concurrentielle: "Consultation Concurrentielle",
+    lettre_consultation: "Lettre de consultation (Pièce N°1)",
+    modele_soumission: "Modèle de soumission (Pièce N°2)",
+    modele_contrat: "Modèle de contrat (Pièce N°4)",
+    registre_reception_plis: "Registre de Réception des Plis",
+    recu_depot_plis: "Reçu de Dépôt de Plis",
+    pv_ouverture_plis: "Procès-Verbal d'Ouverture des Plis",
+    pv_evaluation_attribution: "PV d'Évaluation et Proposition d'Attribution",
+    selection_consultants: "Sélection de Consultants",
+    dossier_smc_sfqc_sci: "Dossier Type pour SMC/SFQC/SCI",
+    lettre_invitation: "Lettre d'invitation (Pièce N°1)",
+    // Attribution - Administrative
+    lettre_notification: "Lettre de Notification d'Attribution",
+    nom_attributaire: "Nom de l'attributaire",
+    delai_execution: "Délai d'exécution",
+    publication_provisoire: "Publication provisoire (2 jours pour recours)",
+    signature_contrat: "Signature du contrat",
+    // Archivage - Administrative
+    original_offres: "Original des offres",
+    pv_archivage: "PV d'ouverture et d'évaluation",
+    contrats_signes: "Contrats signés",
+    preuves_publication: "Preuves de publication",
+    chemises_archivage: "Chemises ou boîtes d'archivage étiquetées",
+    double_numerique: "Double numérique recommandé",
+    // Technical subcategories
+    preuves_capacites_techniques: "Preuves de capacités techniques (projets similaires)",
+    experience_generale_marche: "Expérience générale dans l'objet du marché",
+    methodologie: "Méthodologie",
+    personnel_cle: "Personnel clé",
+    planning_travaux: "Planning travaux",
+    calendrier_livraison: "Calendrier de livraison",
+    conformite_techniques: "Conformité techniques",
+    // Initiation - Technical
+    description_besoin: "Description détaillée du besoin",
+    // Sélection - Technical
+    ddqe: "Devis Descriptif Quantitatif Estimatif - DDQE (Pièce N°3)",
+    termes_reference: "Termes de Référence - TdR (Pièce N°3)",
+    pv_evaluation_technique: "PV d'évaluation technique et financière",
+    // Financial subcategories
+    preuves_capacites_financieres: "Preuves de capacités financières",
+    chiffre_affaires_annuel: "Chiffre d'affaires annuel moyen des activités",
+    devis_quantitatif_estimatif: "Devis quantitatif estimatif",
+    garantie_bancaire: "Garantie bancaire",
+    garantie_soumission: "Garantie de soumission pour la période",
+    // Initiation - Financial
+    source_financement: "Source de financement",
+    montant_alloue: "Montant alloué",
+    // Sélection - Financial
+    devis_comparatifs: "Devis comparatifs (3 minimum)",
+    factures_commandes: "Factures et bons de commande",
+    // Attribution - Financial
+    montant_marche: "Montant du marché"
+  }
+  },
+
   ar: {
+    currency: {
+      mru: "أوقية"
+    },
     nav: {
-        login: "تسجيل الدخول",
+      login: "تسجيل الدخول",
       register: "التسجيل",
       logout: "تسجيل الخروج",
       terms: "شروط الاستخدام",
@@ -1155,6 +1207,7 @@ export const translations = {
       title: "المشاريع",
       all_desc: "جميع المشاريع",
       new: "جديد",
+      add: "جديد",
       new_desc: "إنشاء مشروع جديد",
       all: "الكل",
       tab: {
@@ -1166,6 +1219,19 @@ export const translations = {
         documents: "الوثائق",
         takeoffs: "الكميات"
       },
+      takeoffs: {
+        form: {
+          basic_info: "معلومات أساسية",
+          advanced: "حساب متقدم"
+        },
+      elements: {
+      measured: "العناصر المقاسة"
+    },
+    total: {
+      value: "القيمة الإجمالية",
+      quantity: "الكمية الإجمالية"
+    },
+  },
       edit: {
         title: "تعديل المشروع",
         subtitle: "تعديل تفاصيل المشروع",
@@ -1253,7 +1319,13 @@ export const translations = {
         unit_required: "الوحدة مطلوبة",
         price_required: "السعر مطلوب",
         quantity_required: "الكمية مطلوبة"
-      }
+      },
+      supplier_info: {
+        title: "معلومات الموردين",
+        description: "تفاصيل واتصالات موردي المواد المحليين لدعم مشاريع البناء الخاصة بك.",
+
+      },
+      warehouse_location: "موقع المستودع",
     },
     project_import: {
       title: "استيراد المشاريع",
@@ -1282,7 +1354,7 @@ export const translations = {
       about: "حول",
       about_desc: "نظام إدارة البناء ERP مصمم لتبسيط وتحسين جميع جوانب مشاريع البناء الخاصة بك.",
       rights: "جميع الحقوق محفوظة",
-      by_hadratech:"By HADRATECH حضراتك",
+      by_hadratech: "By HADRATECH حضراتك",
       quick_links: "روابط سريعة",
       legal: "قانوني"
     },
@@ -1323,7 +1395,34 @@ export const translations = {
         title: "إنشاء تفتيش",
         description: "إنشاء تفتيش جديد للمشروع",
         in_development: "قيد التطوير"
-      }
+      },
+      dialog: {
+        new_inspection: "فحص جديد",
+        title: "تفتيش الموقع",
+        description: "إنشاء فحص جديد للمشروع",
+        date: "تاريخ الفحص",
+        select_date: "اختر تاريخًا",
+        inspector: "المفتش",
+        inspector_placeholder: "اسم المفتش",
+        status: "حالة الفحص",
+        select_status: "اختر الحالة",
+        status_pending: "قيد الانتظار",
+        status_approved: "مقبول",
+        status_requires_changes: "يتطلب تعديلات",
+        status_rejected: "مرفوض",
+        progress: "التقدم (%)",
+        comments: "تعليقات",
+        comments_placeholder: "أدخل ملاحظاتك",
+        cancel: "إلغاء",
+        create: "إنشاء",
+        creating: "جاري الإنشاء...",
+        created: "تم إنشاء الفحص",
+        created_description: "تمت إضافة الفحص بنجاح.",
+        error: "خطأ",
+        error_description: "حدث خطأ أثناء إنشاء الفحص.",
+        validation_error: "خطأ في التحقق",
+        validation_inspector: "اسم المفتش مطلوب."
+      },
     },
     roles: {
       user: "مستخدم",
@@ -1454,7 +1553,7 @@ export const translations = {
         login_to_access: "تسجيل الدخول للوصول",
         register: "إنشاء حساب",
         management: "  إدارة مشاريع, إدارة المواد",
-        system:  " إدارة مشاريع, النظام الموريتاني لإدارة المواد",
+        system: " إدارة مشاريع, النظام الموريتاني لإدارة المواد",
         message: "تثمين التراث باستخدام المواد المحلية",
         details: "تابعوا مشاريعكم الإنشائية باستخدام حجر أطار/العيون، الصدف/نواكشوط والطين الموريتاني. حلّنا يُحسِّن إدارة مشاريع البناء، خصوصًا باستخدام المواد المحلية، ويحافظ على التقنيات التقليدية."
 
@@ -1622,7 +1721,7 @@ export const translations = {
       profile: "Profile",
       settings: "Settings",
       tender_management: "Tender Management",
-            login: "Login",
+      login: "Login",
       register: "Register",
       logout: "Logout",
       terms: "Terms of Service",
@@ -1949,6 +2048,7 @@ export const translations = {
       title: "Projects",
       all_desc: "All projects",
       new: "New",
+      add: "New",
       new_desc: "Create a new project",
       all: "All",
       tab: {
@@ -2047,7 +2147,12 @@ export const translations = {
         unit_required: "Unit is required",
         price_required: "Price is required",
         quantity_required: "Quantity is required"
-      }
+      },
+      supplier_info: {
+        title: "Supplier Information",
+        description: "Details and contacts of local materials suppliers to support your construction projects.",
+      },
+      warehouse_location: "Warehouse Location and Geolocalistion",
     },
     project_import: {
       title: "Project Import",
@@ -2119,9 +2224,31 @@ export const translations = {
         in_development: "In development"
       },
       dialog: {
-        new_inspection: "Create Inspection",
-        description: "Create new inspection for project",
-        in_development: "In development"
+        new_inspection: "New inspection",
+        title: "Site inspection",
+        description: "Create a new inspection for the project",
+        date: "Inspection date",
+        select_date: "Select a date",
+        inspector: "Inspector",
+        inspector_placeholder: "Inspector's name",
+        status: "Inspection status",
+        select_status: "Select status",
+        status_pending: "Pending",
+        status_approved: "Approved",
+        status_requires_changes: "Requires changes",
+        status_rejected: "Rejected",
+        progress: "Progress (%)",
+        comments: "Comments",
+        comments_placeholder: "Enter your remarks",
+        cancel: "Cancel",
+        create: "Create",
+        creating: "Creating...",
+        created: "Inspection created",
+        created_description: "The inspection has been added successfully.",
+        error: "Error",
+        error_description: "An error occurred while creating the inspection.",
+        validation_error: "Validation error",
+        validation_inspector: "Inspector name is required."
       }
     },
     roles: {
@@ -2410,6 +2537,7 @@ export const translations = {
       montant_marche: "Contract Amount"
     }
   }
+
 };
 
 interface LanguageProviderProps {

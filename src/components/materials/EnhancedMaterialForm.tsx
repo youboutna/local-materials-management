@@ -528,7 +528,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
             <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
               <CardTitle className="flex items-center gap-2 text-adrar-800">
                 <User className="h-5 w-5" />
-                {t('materials.supplier_info') || 'Informations fournisseur'}
+                {t('materials.supplier_info.title') || 'Informations fournisseur'}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
