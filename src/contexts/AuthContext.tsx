@@ -2,44 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
-
-// Get a unique session identifier for this browser session
-const getSessionId = () => {
-  let sessionId = sessionStorage.getItem('lovable-session-id');
-  if (!sessionId) {
-    // Create a truly unique session ID with timestamp and random string
-    sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-' + Math.random().toString(36).substr(2, 9);
-    sessionStorage.setItem('lovable-session-id', sessionId);
-    console.log('🆔 Created new session ID:', sessionId);
-  }
-  return sessionId;
-};
-
-// Check if this session should be bypassed (anonymous)
-const shouldBypassAuth = () => {
-  const currentSessionId = getSessionId();
-  const adminSessionId = localStorage.getItem('admin-session-id');
-  
-  console.log('🔍 Session check - Current:', currentSessionId, 'Admin:', adminSessionId);
-  
-  // If no admin session is set, set this as the admin session
-  if (!adminSessionId) {
-    localStorage.setItem('admin-session-id', currentSessionId);
-    console.log('👑 Set as admin session:', currentSessionId);
-    return false; // This session is admin
-  }
-  
-  // If this session is the admin session, don't bypass
-  if (currentSessionId === adminSessionId) {
-    console.log('✅ Admin session detected');
-    return false;
-  }
-  
-  // All other sessions are anonymous
-  console.log('👻 Anonymous session detected');
-  return true;
-};
 
 type AuthContextType = {
   user: User | null;
@@ -58,107 +20,74 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const activeDevRole = getActiveDevRole();
-  const bypassAuth = shouldBypassAuth();
-  
-  console.log('🔧 AuthProvider - DEV_MODE:', DEV_MODE, 'bypassAuth:', bypassAuth);
-  
-  // Create a mock session for dev mode
-  const createDevSession = (): Session => ({
-    access_token: 'dev-access-token',
-    refresh_token: 'dev-refresh-token',
-    expires_in: 3600,
-    expires_at: Math.floor(Date.now() / 1000) + 3600,
-    token_type: 'bearer',
-    user: {
-      ...DEV_USER,
-      user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}
-    } as unknown as User
-  });
-
-  const [user, setUser] = useState<User | null>((DEV_MODE && !bypassAuth) ? 
-    {...DEV_USER, user_metadata: {...DEV_USER.user_metadata, role: activeDevRole.role}} as unknown as User 
-    : null);
-  const [session, setSession] = useState<Session | null>((DEV_MODE && !bypassAuth) ? createDevSession() : null);
-  const [loading, setLoading] = useState(!(DEV_MODE || bypassAuth));
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (DEV_MODE && bypassAuth) {
-      console.log('🛠️ Development mode: Session bypassed - showing anonymous view');
-      setUser(null);
-      setSession(null);
-      setLoading(false);
-      return;
-    }
+    console.log('🔧 Setting up auth state listener...');
 
-    if (DEV_MODE && !bypassAuth) {
-      console.log('🛠️ Development mode active: Authentication is bypassed');
-      console.log(`🛠️ Using role: ${activeDevRole.role}`);
-      
-      // Set a mock session for Supabase operations
-      const mockSession = createDevSession();
-      setSession(mockSession);
-      setUser(mockSession.user);
-      setLoading(false);
-      
-      return;
-    }
-
-    // Set up auth state listener first
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('❌ Error getting session:', error);
+      } else {
+        console.log('✅ Initial session:', session?.user?.email || 'no session');
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
+      console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, [bypassAuth, activeDevRole]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
-    if (DEV_MODE) {
-      toast({
-        title: "Mode développement",
-        description: "Connexion automatique en mode développement",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log('🔐 Attempting to sign in with:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password 
+      });
       
       if (error) {
+        console.error('❌ Sign in error:', error);
+        let errorMessage = error.message;
+        
+        if (error.message === 'Invalid login credentials') {
+          errorMessage = "Email ou mot de passe incorrect. Vérifiez vos identifiants.";
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = "Veuillez confirmer votre email avant de vous connecter.";
+        }
+        
         toast({
           title: "Erreur de connexion",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         throw error;
       }
       
+      console.log('✅ Sign in successful:', data.user?.email);
       toast({
         title: "Connexion réussie",
-        description: "Bienvenue sur la plateforme Materials Management.",
+        description: "Bienvenue sur la plateforme.",
       });
     } catch (error) {
       console.error('Sign in error:', error);
@@ -169,49 +98,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string, phone: string, nationalId: string) => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
-    if (DEV_MODE) {
-      toast({
-        title: "Mode développement",
-        description: "Inscription automatique en mode développement",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
+      console.log('📝 Attempting to sign up with:', email);
+      
+      const { data, error } = await supabase.auth.signUp({ 
+        email: email.trim(), 
         password,
         options: {
           data: {
             full_name: fullName,
             phone: phone,
             national_id: nationalId
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
       
       if (error) {
+        console.error('❌ Sign up error:', error);
+        let errorMessage = error.message;
+        
+        if (error.message.includes('User already registered')) {
+          errorMessage = "Un compte existe déjà avec cette adresse email.";
+        } else if (error.message.includes('Password should be at least 6 characters')) {
+          errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+        }
+        
         toast({
           title: "Erreur d'inscription",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         throw error;
       }
       
-      toast({
-        title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.",
-      });
+      console.log('✅ Sign up successful:', data.user?.email);
+      
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Inscription réussie",
+          description: "Veuillez vérifier votre email pour confirmer votre compte.",
+        });
+      } else {
+        toast({
+          title: "Inscription réussie",
+          description: "Votre compte a été créé avec succès.",
+        });
+      }
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
@@ -221,61 +155,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
-    if (DEV_MODE) {
-      toast({
-        title: "Mode développement",
-        description: "Déconnexion simulée en mode développement",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
-      await supabase.auth.signOut();
+      console.log('🚪 Signing out...');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Sign out error:', error);
+        toast({
+          title: "Erreur de déconnexion",
+          description: "Une erreur est survenue lors de la déconnexion.",
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
+      console.log('✅ Sign out successful');
       toast({
         title: "Déconnexion réussie",
         description: "Vous avez été déconnecté avec succès.",
       });
     } catch (error) {
       console.error('Sign out error:', error);
-      toast({
-        title: "Erreur de déconnexion",
-        description: "Une erreur est survenue lors de la déconnexion.",
-        variant: "destructive"
-      });
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Sign in with Google
   const signInWithGoogle = async () => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
+      console.log('🔍 Attempting Google sign in...');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/auth/callback'
+          redirectTo: `${window.location.origin}/dashboard`
         }
       });
       
       if (error) {
+        console.error('❌ Google sign in error:', error);
         toast({
           title: "Erreur de connexion Google",
           description: error.message,
@@ -291,23 +213,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign in with phone number
   const signInWithPhone = async (phone: string): Promise<{ success: boolean; error?: string; }> => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return { success: false, error: "Session anonyme" };
-    }
-
     try {
       setLoading(true);
+      console.log('📱 Attempting phone sign in...');
+      
       const { data, error } = await supabase.auth.signInWithOtp({
         phone,
       });
       
       if (error) {
+        console.error('❌ Phone sign in error:', error);
         toast({
           title: "Erreur de connexion",
           description: error.message,
@@ -330,18 +246,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Verify phone OTP
   const verifyPhoneOTP = async (phone: string, token: string) => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
+      console.log('🔢 Verifying phone OTP...');
+      
       const { error } = await supabase.auth.verifyOtp({
         phone,
         token,
@@ -349,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) {
+        console.error('❌ OTP verification error:', error);
         toast({
           title: "Erreur de vérification",
           description: error.message,
@@ -369,38 +279,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign in with National ID (custom implementation)
   const signInWithNationalId = async (nationalId: string, password: string) => {
-    if (DEV_MODE && bypassAuth) {
-      toast({
-        title: "Session anonyme",
-        description: "Cette session est configurée en mode anonyme",
-      });
-      return;
-    }
-
     try {
       setLoading(true);
+      console.log('🆔 Attempting national ID sign in...');
       
-      // First, find the user with this national ID using a Supabase function or query
-      const { data: existingProfile } = await supabase
+      // Query profiles table to find email associated with national ID
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('national_id' as any, nationalId as any)
-        .single();
+        .eq('national_id', nationalId)
+        .maybeSingle();
       
-      if (existingProfile) {
+      if (profileError) {
+        console.error('❌ Profile lookup error:', profileError);
+        throw profileError;
+      }
+      
+      if (!profile) {
         toast({
-          title: "ID National vérifié",
-          description: "Veuillez vous connecter avec votre email et mot de passe.",
+          title: "ID National non trouvé",
+          description: "Aucun compte associé à cet ID national.",
+          variant: "destructive"
         });
         return;
       }
       
-      // Then, get the user's email from auth.users table (this would require a secure server function)
-      // For this example, we'll assume the user has already signed up with email+password
-      // and we're just matching their national ID to their account
-      
+      // Get user email from auth.users table would require a function
+      // For now, suggest user to use email login
       toast({
         title: "ID National vérifié",
         description: "Veuillez vous connecter avec votre email et mot de passe.",
@@ -420,149 +326,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
-    signInWithGoogle: async () => {
-      if (DEV_MODE && bypassAuth) {
-        toast({
-          title: "Session anonyme",
-          description: "Cette session est configurée en mode anonyme",
-        });
-        return;
-      }
-      try {
-        setLoading(true);
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin + '/auth/callback'
-          }
-        });
-        
-        if (error) {
-          toast({
-            title: "Erreur de connexion Google",
-            description: error.message,
-            variant: "destructive"
-          });
-          throw error;
-        }
-      } catch (error) {
-        console.error('Google sign in error:', error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    signInWithPhone: async (phone: string) => {
-      if (DEV_MODE && bypassAuth) {
-        toast({
-          title: "Session anonyme",
-          description: "Cette session est configurée en mode anonyme",
-        });
-        return { success: false, error: "Session anonyme" };
-      }
-      try {
-        setLoading(true);
-        const { data, error } = await supabase.auth.signInWithOtp({
-          phone,
-        });
-        
-        if (error) {
-          toast({
-            title: "Erreur de connexion",
-            description: error.message,
-            variant: "destructive"
-          });
-          return { success: false, error: error.message };
-        }
-        
-        toast({
-          title: "Code envoyé",
-          description: "Un code de vérification a été envoyé à votre numéro de téléphone.",
-        });
-        
-        return { success: true };
-      } catch (error: any) {
-        console.error('Phone sign in error:', error);
-        return { success: false, error: error.message };
-      } finally {
-        setLoading(false);
-      }
-    },
-    verifyPhoneOTP: async (phone: string, token: string) => {
-      if (DEV_MODE && bypassAuth) {
-        toast({
-          title: "Session anonyme",
-          description: "Cette session est configurée en mode anonyme",
-        });
-        return;
-      }
-      try {
-        setLoading(true);
-        const { error } = await supabase.auth.verifyOtp({
-          phone,
-          token,
-          type: 'sms',
-        });
-        
-        if (error) {
-          toast({
-            title: "Erreur de vérification",
-            description: error.message,
-            variant: "destructive"
-          });
-          throw error;
-        }
-        
-        toast({
-          title: "Vérification réussie",
-          description: "Vous êtes maintenant connecté.",
-        });
-      } catch (error) {
-        console.error('OTP verification error:', error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    signInWithNationalId: async (nationalId: string, password: string) => {
-      if (DEV_MODE && bypassAuth) {
-        toast({
-          title: "Session anonyme",
-          description: "Cette session est configurée en mode anonyme",
-        });
-        return;
-      }
-      try {
-        setLoading(true);
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('national_id' as any, nationalId as any)
-          .single();
-        
-        if (profileData) {
-          toast({
-            title: "ID National vérifié",
-            description: "Veuillez vous connecter avec votre email et mot de passe.",
-          });
-          return;
-        }
-        
-        toast({
-          title: "ID National vérifié",
-          description: "Veuillez vous connecter avec votre email et mot de passe.",
-        });
-      } catch (error) {
-        console.error('National ID sign in error:', error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    isDevelopmentMode: DEV_MODE
+    signInWithGoogle,
+    signInWithPhone,
+    verifyPhoneOTP,
+    signInWithNationalId,
+    isDevelopmentMode: false
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
