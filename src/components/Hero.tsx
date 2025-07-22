@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);
-  const { t, locale } = useLanguage();  // assuming locale is provided by context
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,7 +34,7 @@ const Hero = () => {
   };
 
   // Detect if current language is RTL (Arabic)
-  const isRTL = locale === 'ar';
+  const isRTL = language === 'ar';
 
   return (
     <div
