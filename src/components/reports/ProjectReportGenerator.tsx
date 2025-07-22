@@ -111,11 +111,11 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </div>
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #92400e; margin: 0; font-size: 14px;">Coût Estimé</h3>
-              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${project.estimatedCost ? `${project.estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${(project as any).estimatedCost ? `${(project as any).estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
             <div style="background: #fce7f3; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #be185d; margin: 0; font-size: 14px;">Coût Réel</h3>
-              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${project.actualCost ? `${project.actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${(project as any).actualCost ? `${(project as any).actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
           </div>
         </section>

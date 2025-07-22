@@ -546,6 +546,39 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          content_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          recipient: string
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           certifications: Json | null
@@ -2326,6 +2359,59 @@ export type Database = {
           },
         ]
       }
+      service_stations: {
+        Row: {
+          address: string
+          closing_hours: string | null
+          created_at: string
+          essence_price: string
+          gasoil_price: string
+          id: string
+          latitude: number
+          longitude: number
+          opening_hours: string | null
+          sp98_price: string | null
+          territory_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          closing_hours?: string | null
+          created_at?: string
+          essence_price: string
+          gasoil_price: string
+          id?: string
+          latitude: number
+          longitude: number
+          opening_hours?: string | null
+          sp98_price?: string | null
+          territory_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          closing_hours?: string | null
+          created_at?: string
+          essence_price?: string
+          gasoil_price?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          opening_hours?: string | null
+          sp98_price?: string | null
+          territory_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_stations_territory_id_fkey"
+            columns: ["territory_id"]
+            isOneToOne: false
+            referencedRelation: "territories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           act_codes: Json | null
@@ -3190,6 +3276,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      territories: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

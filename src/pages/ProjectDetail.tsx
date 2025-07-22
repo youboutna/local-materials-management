@@ -10,6 +10,7 @@ import {
   Edit,
   Trash2,
   CreditCard,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ import QuantityTakeoffs from "@/components/project/QuantityTakeoffs";
 import ProjectMaterials from "@/components/project/ProjectMaterials";
 import ProjectDocuments from "@/components/project/ProjectDocuments";
 import ProjectPhases from "@/components/project/ProjectPhases";
+import { ReportManager } from "@/components/reports/ReportManager";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProjectDetail = () => {
@@ -334,6 +336,10 @@ const ProjectDetail = () => {
 
                 {/* Project header actions */}
                 <div className="flex flex-col sm:flex-row gap-2 lg:ml-6">
+                  <ReportManager 
+                    data={{ project }}
+                    reportType="project"
+                  />
                   <Link to={`/projects/${project.id}/edit`}>
                     <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <Edit className="mr-2 h-4 w-4" />
