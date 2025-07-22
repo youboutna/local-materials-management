@@ -1,0 +1,422 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Mail, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { ProjectData } from '@/types/project';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ProjectReportGeneratorProps {
+  project: ProjectData;
+  onClose?: () => void;
+}
+
+interface ReportConfig {
+  title: string;
+  includeSections: {
+    overview: boolean;
+    financial: boolean;
+    timeline: boolean;
+    materials: boolean;
+    phases: boolean;
+    inspections: boolean;
+    risks: boolean;
+  };
+  reportType: 'summary' | 'detailed' | 'financial';
+  recipientEmail?: string;
+  notes?: string;
+}
+
+export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [reportConfig, setReportConfig] = useState<ReportConfig>({
+    title: `Rapport de projet - ${project.title}`,
+    includeSections: {
+      overview: true,
+      financial: true,
+      timeline: true,
+      materials: true,
+      phases: true,
+      inspections: true,
+      risks: false,
+    },
+    reportType: 'summary',
+    recipientEmail: '',
+    notes: '',
+  });
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      'en cours': 'bg-blue-100 text-blue-800',
+      'terminé': 'bg-green-100 text-green-800',
+      'en attente': 'bg-yellow-100 text-yellow-800',
+      'en inspection': 'bg-orange-100 text-orange-800',
+      'suspendu': 'bg-red-100 text-red-800',
+      'annulé': 'bg-gray-100 text-gray-800',
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const generateReportContent = () => {
+    const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
+    
+    return `
+      <div id="report-content" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
+        <!-- Header -->
+        <div style="border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px;">
+          <h1 style="color: #1e40af; font-size: 28px; margin: 0 0 10px 0;">${reportConfig.title}</h1>
+          <p style="color: #6b7280; margin: 0; font-size: 14px;">Généré le ${currentDate}</p>
+        </div>
+
+        ${reportConfig.includeSections.overview ? `
+        <!-- Project Overview -->
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Aperçu du Projet</h2>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <p style="margin: 5px 0;"><strong>Titre:</strong> ${project.title}</p>
+                <p style="margin: 5px 0;"><strong>Localisation:</strong> ${project.location || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getStatusColor(project.status)}">${project.status}</span></p>
+              </div>
+              <div>
+                <p style="margin: 5px 0;"><strong>Progression:</strong> ${project.progress}%</p>
+                <p style="margin: 5px 0;"><strong>Date de début:</strong> ${project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong>Date de fin prévue:</strong> ${project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+              </div>
+            </div>
+            ${project.description ? `<p style="margin: 15px 0 5px 0;"><strong>Description:</strong></p><p style="margin: 5px 0; line-height: 1.5;">${project.description}</p>` : ''}
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.includeSections.financial ? `
+        <!-- Financial Summary -->
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Résumé Financier</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; text-align: center;">
+              <h3 style="color: #065f46; margin: 0; font-size: 14px;">Budget Total</h3>
+              <p style="color: #047857; font-size: 24px; font-weight: bold; margin: 5px 0;">${project.budget ? `${project.budget.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+            </div>
+            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
+              <h3 style="color: #92400e; margin: 0; font-size: 14px;">Coût Estimé</h3>
+              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${project.estimatedCost ? `${project.estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+            </div>
+            <div style="background: #fce7f3; padding: 15px; border-radius: 8px; text-align: center;">
+              <h3 style="color: #be185d; margin: 0; font-size: 14px;">Coût Réel</h3>
+              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${project.actualCost ? `${project.actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+            </div>
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.includeSections.timeline ? `
+        <!-- Timeline -->
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Calendrier</h2>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <div style="text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">DÉBUT</p>
+                <p style="margin: 5px 0; font-weight: bold;">${project.startDate ? format(new Date(project.startDate), 'dd MMM yyyy', { locale: fr }) : 'Non défini'}</p>
+              </div>
+              <div style="flex-grow: 1; height: 4px; background: #e5e7eb; margin: 0 20px; border-radius: 2px; position: relative;">
+                <div style="height: 100%; background: #3b82f6; width: ${project.progress}%; border-radius: 2px;"></div>
+              </div>
+              <div style="text-align: center;">
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">FIN PRÉVUE</p>
+                <p style="margin: 5px 0; font-weight: bold;">${project.endDate ? format(new Date(project.endDate), 'dd MMM yyyy', { locale: fr }) : 'Non défini'}</p>
+              </div>
+            </div>
+            <div style="text-align: center;">
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1e40af;">${project.progress}% Terminé</p>
+            </div>
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.notes ? `
+        <!-- Additional Notes -->
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Notes</h2>
+          <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fbbf24;">
+            <p style="margin: 0; line-height: 1.6;">${reportConfig.notes}</p>
+          </div>
+        </section>
+        ` : ''}
+
+        <!-- Footer -->
+        <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
+          <p style="margin: 0;">Ce rapport a été généré automatiquement le ${currentDate}</p>
+        </div>
+      </div>
+    `;
+  };
+
+  const generatePDF = async () => {
+    setLoading(true);
+    try {
+      const reportHTML = generateReportContent();
+      
+      // Create a temporary div
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = reportHTML;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-10000px';
+      document.body.appendChild(tempDiv);
+
+      // Generate canvas from HTML
+      const canvas = await html2canvas(tempDiv.querySelector('#report-content') as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      // Clean up
+      document.body.removeChild(tempDiv);
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `rapport-projet-${project.title.replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      return { pdf, fileName };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const { pdf, fileName } = await generatePDF();
+      pdf.save(fileName);
+      
+      toast({
+        title: "Rapport téléchargé",
+        description: "Le rapport PDF a été téléchargé avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la génération du rapport.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!reportConfig.recipientEmail) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer une adresse email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { pdf, fileName } = await generatePDF();
+      const pdfBlob = pdf.output('blob');
+
+      // Call edge function to send email with PDF attachment
+      const { error } = await supabase.functions.invoke('send-project-report', {
+        body: {
+          to: reportConfig.recipientEmail,
+          projectTitle: project.title,
+          reportTitle: reportConfig.title,
+          pdfBlob: Array.from(new Uint8Array(await pdfBlob.arrayBuffer())),
+          fileName,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Rapport envoyé",
+        description: `Le rapport a été envoyé par email à ${reportConfig.recipientEmail}.`,
+      });
+
+      setReportConfig(prev => ({ ...prev, recipientEmail: '' }));
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi du rapport par email.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Génération de Rapport - {project.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Report Configuration */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="reportTitle">Titre du rapport</Label>
+              <Input
+                id="reportTitle"
+                value={reportConfig.title}
+                onChange={(e) => setReportConfig(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="reportType">Type de rapport</Label>
+              <Select
+                value={reportConfig.reportType}
+                onValueChange={(value: 'summary' | 'detailed' | 'financial') => 
+                  setReportConfig(prev => ({ ...prev, reportType: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="summary">Résumé</SelectItem>
+                  <SelectItem value="detailed">Détaillé</SelectItem>
+                  <SelectItem value="financial">Financier</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="recipientEmail">Email destinataire (optionnel)</Label>
+              <Input
+                id="recipientEmail"
+                type="email"
+                value={reportConfig.recipientEmail}
+                onChange={(e) => setReportConfig(prev => ({ ...prev, recipientEmail: e.target.value }))}
+                placeholder="email@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label>Sections à inclure</Label>
+            <div className="space-y-2">
+              {Object.entries(reportConfig.includeSections).map(([key, value]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={key}
+                    checked={value}
+                    onChange={(e) => setReportConfig(prev => ({
+                      ...prev,
+                      includeSections: {
+                        ...prev.includeSections,
+                        [key]: e.target.checked
+                      }
+                    }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor={key} className="text-sm">
+                    {key === 'overview' && 'Aperçu général'}
+                    {key === 'financial' && 'Résumé financier'}
+                    {key === 'timeline' && 'Calendrier'}
+                    {key === 'materials' && 'Matériaux'}
+                    {key === 'phases' && 'Phases'}
+                    {key === 'inspections' && 'Inspections'}
+                    {key === 'risks' && 'Analyse des risques'}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="notes">Notes additionnelles</Label>
+          <Textarea
+            id="notes"
+            value={reportConfig.notes}
+            onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
+            placeholder="Ajoutez des notes ou commentaires pour ce rapport..."
+            rows={3}
+          />
+        </div>
+
+        {/* Project Status Badge */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Statut actuel:</span>
+          <Badge variant="secondary" className={getStatusColor(project.status)}>
+            {project.status}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            Progression: {project.progress}%
+          </span>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4 border-t">
+          <Button onClick={handleDownload} disabled={loading} className="flex-1">
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Télécharger PDF
+          </Button>
+          
+          <Button 
+            onClick={handleSendEmail} 
+            disabled={loading || !reportConfig.recipientEmail}
+            variant="outline"
+            className="flex-1"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4 mr-2" />
+            )}
+            Envoyer par Email
+          </Button>
+          
+          {onClose && (
+            <Button onClick={onClose} variant="ghost">
+              Fermer
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
