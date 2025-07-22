@@ -30,7 +30,7 @@ Manages construction projects that use local Mauritanian materials, with feature
 - **Financial Tracking**: Payments, budgets, and cost management
 - **Document Management**: File uploads, categorization, and workflow management
 - **Tender Management**: Public procurement workflows and document handling
-- **Multi-language Support**: French and Arabic interface
+- **Multi-language Support**: English, French and Arabic interface
 - **Real-time Updates**: Live data synchronization
 
 ## 📋 Prerequisites
