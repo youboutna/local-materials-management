@@ -25,12 +25,8 @@ const Contact = () => {
     national_id: '',
     company_name: '',
     company_nif: '',
-    business_experience_years: '',
-    children_count: '',
-    spouse_name: '',
-    mother_name: '',
-    request_type: 'fuel_station',
-    parcel_address: '',
+    request_type: 'service',
+    company_address: '',
     description: ''
   });
 
@@ -43,7 +39,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      if (!formData.applicant_type || !formData.email || !formData.national_id || !formData.phone_number || !formData.request_type || !formData.parcel_address) {
+      if (!formData.applicant_type || !formData.email || !formData.phone_number || !formData.request_type ) {
         toast({
           title: "Erreur",
           description: "Veuillez remplir les champs obligatoires.",
@@ -59,7 +55,7 @@ const Contact = () => {
         national_id: formData.national_id,
         phone_number: formData.phone_number,
         request_type: formData.request_type,
-        parcel_address: formData.parcel_address,
+        company_address :formData.company_address,
         status: 'draft'
       };
 
@@ -72,17 +68,8 @@ const Contact = () => {
       if (formData.applicant_type === 'company') {
         if (formData.company_name) insertData.company_name = formData.company_name;
         if (formData.company_nif) insertData.company_nif = formData.company_nif;
-        if (formData.business_experience_years) {
-          insertData.business_experience_years = parseInt(formData.business_experience_years);
-        }
       }
       
-      if (formData.applicant_type === 'individual') {
-        if (formData.children_count) insertData.children_count = parseInt(formData.children_count);
-        if (formData.spouse_name) insertData.spouse_name = formData.spouse_name;
-        if (formData.mother_name) insertData.mother_name = formData.mother_name;
-      }
-
       const { data, error } = await supabase
         .from('authorization_requests')
         .insert(insertData);
@@ -111,12 +98,8 @@ const Contact = () => {
           national_id: '',
           company_name: '',
           company_nif: '',
-          business_experience_years: '',
-          children_count: '',
-          spouse_name: '',
-          mother_name: '',
-          request_type: 'fuel_station',
-          parcel_address: '',
+          request_type: 'service',
+          company_address: '',
           description: ''
         });
       }
@@ -215,15 +198,6 @@ const Contact = () => {
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Adresse du terrain *</label>
-                      <Input 
-                        value={formData.parcel_address}
-                        onChange={(e) => handleInputChange('parcel_address', e.target.value)}
-                        placeholder="Adresse du terrain demandé"
-                        required
-                      />
-                    </div>
                   </div>
 
                   <div>
@@ -256,53 +230,20 @@ const Contact = () => {
                             placeholder="Numéro d'identification fiscale"
                           />
                         </div>
-                      </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Années d'expérience commerciale</label>
-                        <Input 
-                          type="number"
-                          value={formData.business_experience_years}
-                          onChange={(e) => handleInputChange('business_experience_years', e.target.value)}
-                          placeholder="Nombre d'années"
-                          min="0"
-                        />
+                      <label className="block text-sm font-medium mb-1">Adresse de entreprise *</label>
+                      <Input 
+                        value={formData.company_address}
+                        onChange={(e) => handleInputChange('parcel_address', e.target.value)}
+                        placeholder="Adresse entreprise demandé"
+                        required
+                      />
+                    </div>
                       </div>
                     </>
                   )}
 
                   {/* Individual-specific fields */}
-                  {formData.applicant_type === 'individual' && (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Nom de l'époux(se)</label>
-                          <Input 
-                            value={formData.spouse_name}
-                            onChange={(e) => handleInputChange('spouse_name', e.target.value)}
-                            placeholder="Nom de l'époux(se)"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Nom de la mère</label>
-                          <Input 
-                            value={formData.mother_name}
-                            onChange={(e) => handleInputChange('mother_name', e.target.value)}
-                            placeholder="Nom de la mère"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Nombre d'enfants</label>
-                        <Input 
-                          type="number"
-                          value={formData.children_count}
-                          onChange={(e) => handleInputChange('children_count', e.target.value)}
-                          placeholder="Nombre d'enfants"
-                          min="0"
-                        />
-                      </div>
-                    </>
-                  )}
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Description du projet</label>
