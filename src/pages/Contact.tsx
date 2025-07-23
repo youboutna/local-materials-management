@@ -17,9 +17,10 @@ const Contact = () => {
   
   const [formData, setFormData] = useState({
     applicant_type: '',
-    full_name: '',
+    individual_first_name: '',
+    individual_last_name: '',
     email: '',
-    phone: '',
+    phone_number: '',
     address: '',
     national_id: '',
     company_name: '',
@@ -28,7 +29,9 @@ const Contact = () => {
     children_count: '',
     spouse_name: '',
     mother_name: '',
-    message: ''
+    request_type: 'fuel_station',
+    parcel_address: '',
+    description: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -40,7 +43,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      if (!formData.applicant_type || !formData.email) {
+      if (!formData.applicant_type || !formData.email || !formData.national_id || !formData.phone_number || !formData.request_type || !formData.parcel_address) {
         toast({
           title: "Erreur",
           description: "Veuillez remplir les champs obligatoires.",
@@ -53,15 +56,18 @@ const Contact = () => {
       const insertData: any = {
         applicant_type: formData.applicant_type,
         email: formData.email,
+        national_id: formData.national_id,
+        phone_number: formData.phone_number,
+        request_type: formData.request_type,
+        parcel_address: formData.parcel_address,
         status: 'draft'
       };
 
       // Add optional fields only if they have values
-      if (formData.full_name) insertData.full_name = formData.full_name;
-      if (formData.phone) insertData.phone = formData.phone;
+      if (formData.individual_first_name) insertData.individual_first_name = formData.individual_first_name;
+      if (formData.individual_last_name) insertData.individual_last_name = formData.individual_last_name;
       if (formData.address) insertData.address = formData.address;
-      if (formData.national_id) insertData.national_id = formData.national_id;
-      if (formData.message) insertData.purpose_description = formData.message;
+      if (formData.description) insertData.description = formData.description;
       
       if (formData.applicant_type === 'company') {
         if (formData.company_name) insertData.company_name = formData.company_name;
@@ -97,9 +103,10 @@ const Contact = () => {
         // Reset form
         setFormData({
           applicant_type: '',
-          full_name: '',
+          individual_first_name: '',
+          individual_last_name: '',
           email: '',
-          phone: '',
+          phone_number: '',
           address: '',
           national_id: '',
           company_name: '',
@@ -108,7 +115,9 @@ const Contact = () => {
           children_count: '',
           spouse_name: '',
           mother_name: '',
-          message: ''
+          request_type: 'fuel_station',
+          parcel_address: '',
+          description: ''
         });
       }
     } catch (error) {
@@ -155,14 +164,26 @@ const Contact = () => {
                   {/* Basic Info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Nom complet *</label>
+                      <label className="block text-sm font-medium mb-1">Prénom *</label>
                       <Input 
-                        value={formData.full_name}
-                        onChange={(e) => handleInputChange('full_name', e.target.value)}
-                        placeholder="Votre nom complet" 
+                        value={formData.individual_first_name}
+                        onChange={(e) => handleInputChange('individual_first_name', e.target.value)}
+                        placeholder="Votre prénom" 
                         required 
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nom *</label>
+                      <Input 
+                        value={formData.individual_last_name}
+                        onChange={(e) => handleInputChange('individual_last_name', e.target.value)}
+                        placeholder="Votre nom" 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Email *</label>
                       <Input 
@@ -173,33 +194,44 @@ const Contact = () => {
                         required 
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Téléphone *</label>
+                      <Input 
+                        value={formData.phone_number}
+                        onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                        placeholder="Votre numéro de téléphone"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Téléphone</label>
-                      <Input 
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        placeholder="Votre numéro de téléphone"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Numéro d'identité nationale</label>
+                      <label className="block text-sm font-medium mb-1">Numéro d'identité nationale *</label>
                       <Input 
                         value={formData.national_id}
                         onChange={(e) => handleInputChange('national_id', e.target.value)}
                         placeholder="Numéro d'identité"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Adresse du terrain *</label>
+                      <Input 
+                        value={formData.parcel_address}
+                        onChange={(e) => handleInputChange('parcel_address', e.target.value)}
+                        placeholder="Adresse du terrain demandé"
+                        required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Adresse</label>
+                    <label className="block text-sm font-medium mb-1">Adresse personnelle</label>
                     <Input 
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="Votre adresse complète"
+                      placeholder="Votre adresse personnelle"
                     />
                   </div>
 
@@ -273,11 +305,11 @@ const Contact = () => {
                   )}
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">Description du motif</label>
+                    <label className="block text-sm font-medium mb-1">Description du projet</label>
                     <Textarea 
-                      value={formData.message}
-                      onChange={(e) => handleInputChange('message', e.target.value)}
-                      placeholder="Décrivez le motif de votre demande d'autorisation"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Décrivez votre projet de station-service"
                       rows={4} 
                       className="resize-none" 
                     />
