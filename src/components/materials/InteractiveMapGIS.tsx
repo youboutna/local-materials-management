@@ -274,6 +274,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
 
             <div className="flex justify-center">
               <Button
+                type="button"
                 variant="outline"
                 onClick={getCurrentLocation}
                 disabled={isGettingLocation}
@@ -288,6 +289,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
           <TabsContent value="shape" className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={createRectangle}
@@ -297,6 +299,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 Rectangle
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={createCircle}
@@ -306,6 +309,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 Cercle
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={startFreeDrawing}
@@ -315,6 +319,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 Forme libre
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={clearShape}
@@ -373,6 +378,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
                 Cliquez sur la carte pour ajouter des points à votre forme.
                 <Button
+                  type="button"
                   variant="link"
                   className="h-auto p-0 ml-2"
                   onClick={finishDrawing}
