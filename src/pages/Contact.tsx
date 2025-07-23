@@ -1,19 +1,126 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Contact = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    applicant_type: '',
+    full_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    national_id: '',
+    company_name: '',
+    company_nif: '',
+    business_experience_years: '',
+    children_count: '',
+    spouse_name: '',
+    mother_name: '',
+    message: ''
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission logic
-    alert(t("contact.alert.sent"));
+    setIsSubmitting(true);
+
+    try {
+      if (!formData.applicant_type || !formData.email) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez remplir les champs obligatoires.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const insertData: any = {
+        applicant_type: formData.applicant_type,
+        email: formData.email,
+        status: 'draft'
+      };
+
+      // Add optional fields only if they have values
+      if (formData.full_name) insertData.full_name = formData.full_name;
+      if (formData.phone) insertData.phone = formData.phone;
+      if (formData.address) insertData.address = formData.address;
+      if (formData.national_id) insertData.national_id = formData.national_id;
+      if (formData.message) insertData.purpose_description = formData.message;
+      
+      if (formData.applicant_type === 'company') {
+        if (formData.company_name) insertData.company_name = formData.company_name;
+        if (formData.company_nif) insertData.company_nif = formData.company_nif;
+        if (formData.business_experience_years) {
+          insertData.business_experience_years = parseInt(formData.business_experience_years);
+        }
+      }
+      
+      if (formData.applicant_type === 'individual') {
+        if (formData.children_count) insertData.children_count = parseInt(formData.children_count);
+        if (formData.spouse_name) insertData.spouse_name = formData.spouse_name;
+        if (formData.mother_name) insertData.mother_name = formData.mother_name;
+      }
+
+      const { data, error } = await supabase
+        .from('authorization_requests')
+        .insert(insertData);
+
+      if (error) {
+        console.error('Error submitting authorization request:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de l'envoi de votre demande.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Demande envoyée",
+          description: "Votre demande d'autorisation a été envoyée avec succès.",
+        });
+        
+        // Reset form
+        setFormData({
+          applicant_type: '',
+          full_name: '',
+          email: '',
+          phone: '',
+          address: '',
+          national_id: '',
+          company_name: '',
+          company_nif: '',
+          business_experience_years: '',
+          children_count: '',
+          spouse_name: '',
+          mother_name: '',
+          message: ''
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -31,28 +138,154 @@ const Contact = () => {
                 <h2 className="text-xl font-semibold mb-6">{t("contact.form.title")}</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Applicant Type */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type de demandeur *</label>
+                    <Select onValueChange={(value) => handleInputChange('applicant_type', value)} value={formData.applicant_type}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le type" />  
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="individual">Particulier</SelectItem>
+                        <SelectItem value="company">Entreprise</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Basic Info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-1">{t("contact.form.name")}</label>
-                      <Input id="name" placeholder={t("contact.form.name_placeholder")} required />
+                      <label className="block text-sm font-medium mb-1">Nom complet *</label>
+                      <Input 
+                        value={formData.full_name}
+                        onChange={(e) => handleInputChange('full_name', e.target.value)}
+                        placeholder="Votre nom complet" 
+                        required 
+                      />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-1">{t("contact.form.email")}</label>
-                      <Input id="email" type="email" placeholder={t("contact.form.email_placeholder")} required />
+                      <label className="block text-sm font-medium mb-1">Email *</label>
+                      <Input 
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        placeholder="votre@email.com" 
+                        required 
+                      />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Téléphone</label>
+                      <Input 
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        placeholder="Votre numéro de téléphone"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Numéro d'identité nationale</label>
+                      <Input 
+                        value={formData.national_id}
+                        onChange={(e) => handleInputChange('national_id', e.target.value)}
+                        placeholder="Numéro d'identité"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Adresse</label>
+                    <Input 
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="Votre adresse complète"
+                    />
+                  </div>
+
+                  {/* Company-specific fields */}
+                  {formData.applicant_type === 'company' && (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Nom de l'entreprise *</label>
+                          <Input 
+                            value={formData.company_name}
+                            onChange={(e) => handleInputChange('company_name', e.target.value)}
+                            placeholder="Nom de votre entreprise"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">NIF de l'entreprise</label>
+                          <Input 
+                            value={formData.company_nif}
+                            onChange={(e) => handleInputChange('company_nif', e.target.value)}
+                            placeholder="Numéro d'identification fiscale"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Années d'expérience commerciale</label>
+                        <Input 
+                          type="number"
+                          value={formData.business_experience_years}
+                          onChange={(e) => handleInputChange('business_experience_years', e.target.value)}
+                          placeholder="Nombre d'années"
+                          min="0"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Individual-specific fields */}
+                  {formData.applicant_type === 'individual' && (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Nom de l'époux(se)</label>
+                          <Input 
+                            value={formData.spouse_name}
+                            onChange={(e) => handleInputChange('spouse_name', e.target.value)}
+                            placeholder="Nom de l'époux(se)"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Nom de la mère</label>
+                          <Input 
+                            value={formData.mother_name}
+                            onChange={(e) => handleInputChange('mother_name', e.target.value)}
+                            placeholder="Nom de la mère"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Nombre d'enfants</label>
+                        <Input 
+                          type="number"
+                          value={formData.children_count}
+                          onChange={(e) => handleInputChange('children_count', e.target.value)}
+                          placeholder="Nombre d'enfants"
+                          min="0"
+                        />
+                      </div>
+                    </>
+                  )}
                   
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium mb-1">{t("contact.form.subject")}</label>
-                    <Input id="subject" placeholder={t("contact.form.subject_placeholder")} required />
+                    <label className="block text-sm font-medium mb-1">Description du motif</label>
+                    <Textarea 
+                      value={formData.message}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
+                      placeholder="Décrivez le motif de votre demande d'autorisation"
+                      rows={4} 
+                      className="resize-none" 
+                    />
                   </div>
                   
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium mb-1">{t("contact.form.message")}</label>
-                    <Textarea id="message" placeholder={t("contact.form.message_placeholder")} rows={6} className="resize-none" required />
-                  </div>
-                  
-                  <Button type="submit" className="w-full">{t("contact.form.send")}</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Envoi en cours..." : "Envoyer la demande"}
+                  </Button>
                 </form>
               </div>
               
