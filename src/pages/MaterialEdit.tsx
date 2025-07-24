@@ -105,7 +105,9 @@ const MaterialEdit = () => {
         workspace_id: updatedData.workspaceId,
         origin_location: updatedData.supplier?.name,
         adresse: updatedData.adresse,
-        forme: updatedData.forme,
+        forme: updatedData.localisation && updatedData.localisation.length > 0 
+          ? JSON.stringify(updatedData.localisation) 
+          : updatedData.forme || null,
         localisation: updatedData.localisation,
         coordinates_latitude: updatedData.coordinatesLatitude,
         coordinates_longitude: updatedData.coordinatesLongitude,

@@ -464,7 +464,7 @@ const ProjectDetail = () => {
               className="space-y-6"
             >
               <div className="overflow-x-auto">
-                <TabsList className="grid w-full min-w-fit grid-cols-8 h-auto p-1">
+                <TabsList className="grid w-full min-w-fit grid-cols-9 h-auto p-1">
                   <TabsTrigger
                     value="overview"
                     className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
@@ -476,6 +476,12 @@ const ProjectDetail = () => {
                     className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
                   >
                     Phases
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="shapes"
+                    className="text-xs sm:text-sm whitespace-nowrap px-2 py-2"
+                  >
+                    Formes
                   </TabsTrigger>
                   <TabsTrigger
                     value="materials"
@@ -628,6 +634,33 @@ const ProjectDetail = () => {
                   onUpdate={handleDataUpdate} 
                   projectBudget={project?.budget || 0}
                 />
+              </TabsContent>
+
+              <TabsContent value="shapes">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Formes du Projet
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">
+                      Visualisation des formes et délimitations associées au projet.
+                    </p>
+                    {mapLocation && (
+                      <div className="h-96 rounded-lg overflow-hidden border">
+                        <ProjectMap
+                          locations={[mapLocation]}
+                          height="100%"
+                          interactive={true}
+                          defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
+                          defaultZoom={15}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="materials">
