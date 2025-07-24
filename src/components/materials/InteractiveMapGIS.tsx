@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Navigation, Square, Circle, Pentagon, Trash2, Save } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Navigation, Square, Circle, Pentagon, Trash2, Save, Layers, Target, Info } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -199,77 +200,115 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   const mapZoom = mapData.coordinates ? 12 : 6;
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Carte Interactive GIS
+    <Card className={`${className} border-0 shadow-elegant bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm`}>
+      <CardHeader className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-border/50">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-lg">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Système GIS Interactif</h3>
+              <p className="text-sm text-muted-foreground">Géolocalisation et tracé de formes</p>
+            </div>
+          </div>
+          <Badge variant="secondary" className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent-foreground border-accent/20">
+            <Target className="h-3 w-3 mr-1" />
+            Précision GPS
+          </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="location">Localisation</TabsTrigger>
-            <TabsTrigger value="shape">Forme</TabsTrigger>
-            <TabsTrigger value="summary">Résumé</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-xl border border-border/50">
+            <TabsTrigger 
+              value="location" 
+              className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+            >
+              <MapPin className="h-4 w-4" />
+              Localisation
+            </TabsTrigger>
+            <TabsTrigger 
+              value="shape"
+              className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+            >
+              <Pentagon className="h-4 w-4" />
+              Forme
+            </TabsTrigger>
+            <TabsTrigger 
+              value="summary"
+              className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+            >
+              <Info className="h-4 w-4" />
+              Résumé
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="location" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
+          <TabsContent value="location" className="space-y-6 mt-6">
+            <div className="space-y-3">
+              <Label htmlFor="address" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Adresse de localisation
+              </Label>
               <Input
                 id="address"
-                placeholder="Saisissez l'adresse"
+                placeholder="Saisissez l'adresse complète..."
                 value={address}
                 onChange={(e) => handleAddressChange(e.target.value)}
+                className="border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
               />
             </div>
 
             {mapData.coordinates && (
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 font-medium">Coordonnées GPS:</p>
-                <p className="text-sm font-mono">
-                  {mapData.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
-                </p>
+              <div className="bg-gradient-to-r from-muted/50 to-accent/10 border border-accent/20 p-4 rounded-xl backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Coordonnées GPS précises</span>
+                </div>
+                <div className="font-mono text-sm text-muted-foreground bg-background/60 px-3 py-2 rounded-lg border">
+                  Lat: {mapData.coordinates.lat.toFixed(6)} | Lng: {mapData.coordinates.lng.toFixed(6)}
+                </div>
               </div>
             )}
 
-            <div className="h-80 w-full border-2 border-gray-300 rounded-lg overflow-hidden">
-              <MapContainer
-                center={mapCenter}
-                zoom={mapZoom}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution="© OpenStreetMap contributors"
-                />
+            <div className="relative">
+              <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
+                <MapContainer
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="© OpenStreetMap contributors"
+                  />
 
-                <MapClickHandler
-                  onMapClick={handleMapClick}
-                  onShapeClick={handleShapeClick}
-                  isDrawingShape={isDrawingShape}
-                />
+                  <MapClickHandler
+                    onMapClick={handleMapClick}
+                    onShapeClick={handleShapeClick}
+                    isDrawingShape={isDrawingShape}
+                  />
 
-                {mauritaniaCities.map((city, index) => (
-                  <Marker key={index} position={[city.lat, city.lng]}>
-                    <Popup>
-                      <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
-                        {city.name}
-                      </strong>
-                      {city.isCapital && <div className="text-xs text-red-500">Capitale</div>}
-                    </Popup>
-                  </Marker>
-                ))}
+                  {mauritaniaCities.map((city, index) => (
+                    <Marker key={index} position={[city.lat, city.lng]}>
+                      <Popup>
+                        <strong className={city.isCapital ? "text-red-600" : "text-blue-600"}>
+                          {city.name}
+                        </strong>
+                        {city.isCapital && <div className="text-xs text-red-500">Capitale</div>}
+                      </Popup>
+                    </Marker>
+                  ))}
 
-                {mapData.coordinates && (
-                  <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
-                    <Popup>
-                      <strong className="text-green-600">Position sélectionnée</strong>
-                    </Popup>
-                  </Marker>
-                )}
-              </MapContainer>
+                  {mapData.coordinates && (
+                    <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
+                      <Popup>
+                        <strong className="text-green-600">Position sélectionnée</strong>
+                      </Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+              </div>
             </div>
 
             <div className="flex justify-center">
@@ -278,158 +317,223 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 variant="outline"
                 onClick={getCurrentLocation}
                 disabled={isGettingLocation}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-gradient-to-r from-background to-muted/50 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-md"
               >
-                <Navigation className={`h-4 w-4 ${isGettingLocation ? "animate-spin" : ""}`} />
-                {isGettingLocation ? "Localisation..." : "Ma position"}
+                <Navigation className={`h-4 w-4 ${isGettingLocation ? "animate-spin text-primary" : "text-accent"}`} />
+                {isGettingLocation ? "Localisation en cours..." : "Utiliser ma position GPS"}
               </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="shape" className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={createRectangle}
-                className="flex items-center gap-1"
-              >
-                <Square className="h-4 w-4" />
-                Rectangle
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={createCircle}
-                className="flex items-center gap-1"
-              >
-                <Circle className="h-4 w-4" />
-                Cercle
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={startFreeDrawing}
-                className="flex items-center gap-1"
-              >
-                <Pentagon className="h-4 w-4" />
-                Forme libre
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearShape}
-                className="flex items-center gap-1"
-              >
-                <Trash2 className="h-4 w-4" />
-                Effacer
-              </Button>
+          <TabsContent value="shape" className="space-y-6 mt-6">
+            <div className="bg-gradient-to-r from-muted/30 to-accent/10 border border-border/50 p-4 rounded-xl">
+              <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                <Pentagon className="h-4 w-4 text-primary" />
+                Outils de tracé géométrique
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={createRectangle}
+                  className="flex items-center gap-2 bg-background/50 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+                >
+                  <Square className="h-4 w-4" />
+                  Rectangle
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={createCircle}
+                  className="flex items-center gap-2 bg-background/50 border-accent/20 hover:border-accent hover:bg-accent/5 transition-all shadow-sm"
+                >
+                  <Circle className="h-4 w-4" />
+                  Cercle
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={startFreeDrawing}
+                  className="flex items-center gap-2 bg-background/50 border-success/20 hover:border-success hover:bg-success/5 transition-all shadow-sm"
+                >
+                  <Pentagon className="h-4 w-4" />
+                  Forme libre
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearShape}
+                  className="flex items-center gap-2 bg-background/50 border-destructive/20 hover:border-destructive hover:bg-destructive/5 transition-all shadow-sm"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Effacer
+                </Button>
+              </div>
             </div>
 
-            <div className="h-80 w-full border-2 border-gray-300 rounded-lg overflow-hidden">
-              <MapContainer
-                center={mapCenter}
-                zoom={mapZoom}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution="© OpenStreetMap contributors"
-                />
+            <div className="relative">
+              <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
+                <MapContainer
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="© OpenStreetMap contributors"
+                  />
 
-                <MapClickHandler
-                  onMapClick={handleMapClick}
-                  onShapeClick={handleShapeClick}
-                  isDrawingShape={isDrawingShape}
-                />
+                  <MapClickHandler
+                    onMapClick={handleMapClick}
+                    onShapeClick={handleShapeClick}
+                    isDrawingShape={isDrawingShape}
+                  />
 
-                {mapData.coordinates && (
-                  <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
-                    <Popup>Position de référence</Popup>
-                  </Marker>
-                )}
+                  {mapData.coordinates && (
+                    <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
+                      <Popup>Position de référence</Popup>
+                    </Marker>
+                  )}
 
-                {mapData.shape && mapData.shape.length > 2 && (
-                  <Polygon
-                    positions={mapData.shape.map(point => [point.lat, point.lng])}
-                    pathOptions={{
-                      color: "#3b82f6",
-                      fillColor: "#3b82f6",
-                      fillOpacity: 0.2,
-                      weight: 2,
-                    }}
-                  >
-                    <Popup>
-                      <strong>Forme tracée</strong>
-                      <div className="text-xs text-gray-600">
-                        Type: {mapData.shapeType || 'polygon'}
-                      </div>
-                    </Popup>
-                  </Polygon>
-                )}
-              </MapContainer>
+                  {mapData.shape && mapData.shape.length > 2 && (
+                    <Polygon
+                      positions={mapData.shape.map(point => [point.lat, point.lng])}
+                      pathOptions={{
+                        color: "#3b82f6",
+                        fillColor: "#3b82f6",
+                        fillOpacity: 0.2,
+                        weight: 2,
+                      }}
+                    >
+                      <Popup>
+                        <strong>Forme tracée</strong>
+                        <div className="text-xs text-gray-600">
+                          Type: {mapData.shapeType || 'polygon'}
+                        </div>
+                      </Popup>
+                    </Polygon>
+                  )}
+                </MapContainer>
+              </div>
             </div>
 
             {isDrawingShape && (
-              <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-md">
-                Cliquez sur la carte pour ajouter des points à votre forme.
-                <Button
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0 ml-2"
-                  onClick={finishDrawing}
-                >
-                  Terminer
-                </Button>
+              <div className="bg-gradient-to-r from-info/10 to-primary/10 border border-info/20 p-4 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-info animate-pulse" />
+                    <span className="text-sm font-medium text-foreground">Mode tracé actif</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={finishDrawing}
+                    className="bg-gradient-to-r from-success/10 to-success/5 border-success/20 hover:border-success text-success-foreground"
+                  >
+                    <Save className="h-3 w-3 mr-1" />
+                    Terminer
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Cliquez sur la carte pour ajouter des points à votre forme géométrique.
+                </p>
               </div>
             )}
 
             {mapData.shape && mapData.shape.length > 0 && (
-              <div className="text-sm text-gray-600">
-                {mapData.shape.length} points définis
+              <div className="bg-gradient-to-r from-success/10 to-success/5 border border-success/20 p-3 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <Pentagon className="h-4 w-4 text-success" />
+                  <span className="text-sm font-medium text-foreground">
+                    {mapData.shape.length} points définis pour la forme
+                  </span>
+                </div>
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="summary" className="space-y-4">
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">Localisation</h4>
-                {mapData.coordinates ? (
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-600">
-                      <strong>GPS:</strong> {mapData.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
-                    </p>
-                    {address && (
-                      <p className="text-sm text-gray-600">
-                        <strong>Adresse:</strong> {address}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Aucune position sélectionnée</p>
-                )}
-              </div>
+          <TabsContent value="summary" className="space-y-6 mt-6">
+            <div className="grid gap-4">
+              <Card className="border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-primary/10">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    Informations de localisation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {mapData.coordinates ? (
+                    <div className="space-y-3">
+                      <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Target className="h-3 w-3 text-primary" />
+                          <span className="text-xs font-medium text-muted-foreground">Coordonnées GPS</span>
+                        </div>
+                        <p className="font-mono text-sm text-foreground">
+                          {mapData.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
+                        </p>
+                      </div>
+                      {address && (
+                        <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="h-3 w-3 text-accent" />
+                            <span className="text-xs font-medium text-muted-foreground">Adresse</span>
+                          </div>
+                          <p className="text-sm text-foreground">{address}</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Info className="h-4 w-4" />
+                      <span className="text-sm">Aucune position sélectionnée</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">Forme</h4>
-                {mapData.shape && mapData.shape.length > 0 ? (
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-600">
-                      <strong>Type:</strong> {mapData.shapeType || 'polygon'}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <strong>Points:</strong> {mapData.shape.length}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Aucune forme tracée</p>
-                )}
-              </div>
+              <Card className="border-l-4 border-l-accent bg-gradient-to-r from-accent/5 to-accent/10">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Pentagon className="h-4 w-4 text-accent" />
+                    Données géométriques
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {mapData.shape && mapData.shape.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Square className="h-3 w-3 text-accent" />
+                            <span className="text-xs font-medium text-muted-foreground">Type de forme</span>
+                          </div>
+                          <Badge variant="secondary" className="capitalize">
+                            {mapData.shapeType || 'polygon'}
+                          </Badge>
+                        </div>
+                        <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Target className="h-3 w-3 text-accent" />
+                            <span className="text-xs font-medium text-muted-foreground">Nombre de points</span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">{mapData.shape.length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Info className="h-4 w-4" />
+                      <span className="text-sm">Aucune forme géométrique tracée</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

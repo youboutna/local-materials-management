@@ -3,17 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
   Navigation,
-  ZoomIn,
-  ZoomOut,
-  Plus,
-  Square,
-  Circle,
-  Diamond,
-  Pentagon,
-  Trash2,
+  Globe,
+  Target,
+  Info,
+  Compass,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import L from "leaflet";
@@ -139,39 +136,57 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const mapZoom = mapData.center ? 10 : 6;
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          {title}
+    <Card className={`${className} border-0 shadow-elegant bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm`}>
+      <CardHeader className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-border/50">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-lg">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+              {description && <p className="text-sm text-muted-foreground">{description}</p>}
+            </div>
+          </div>
+          <Badge variant="secondary" className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent-foreground border-accent/20">
+            <Compass className="h-3 w-3 mr-1" />
+            Mauritanie
+          </Badge>
         </CardTitle>
-        {description && <p className="text-sm text-gray-600">{description}</p>}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="map-address">Adresse</Label>
+      <CardContent className="space-y-6 p-6">
+        <div className="space-y-3">
+          <Label htmlFor="map-address" className="text-sm font-medium text-foreground flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            Adresse de localisation
+          </Label>
           <Input
             id="map-address"
-            placeholder="Saisissez l'adresse"
+            placeholder="Saisissez l'adresse complète..."
             value={address}
             onChange={(e) => handleAddressChange(e.target.value)}
+            className="border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
           />
         </div>
 
         {mapData.center && (
-          <div className="bg-gray-50 p-3 rounded-md">
-            <p className="text-sm text-gray-600">
-              <strong>Coordonnées GPS:</strong>
-            </p>
-            <p className="text-sm font-mono">
-              {mapData.center.lat.toFixed(6)}, {mapData.center.lng.toFixed(6)}
-            </p>
+          <div className="bg-gradient-to-r from-muted/50 to-accent/10 border border-accent/20 p-4 rounded-xl backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Coordonnées GPS précises</span>
+            </div>
+            <div className="font-mono text-sm text-muted-foreground bg-background/60 px-3 py-2 rounded-lg border">
+              Lat: {mapData.center.lat.toFixed(6)} | Lng: {mapData.center.lng.toFixed(6)}
+            </div>
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label>Carte de la Mauritanie (OpenStreetMap)</Label>
-          <div className="relative z-0 w-full h-96 border-2 border-gray-300 rounded-lg overflow-hidden">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Globe className="h-4 w-4 text-primary" />
+            Carte interactive de la Mauritanie
+          </Label>
+          <div className="relative z-0 w-full h-96 border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
             <MapContainer
               center={mapCenter}
               zoom={mapZoom}
@@ -246,14 +261,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </MapContainer>
 
             {!mapData.center && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001] bg-black/20">
-                <div className="bg-white/95 px-6 py-4 rounded-lg shadow-lg text-center">
-                  <MapPin className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-700 font-medium">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[1001] bg-black/10 backdrop-blur-sm">
+                <div className="bg-gradient-to-br from-background/95 to-muted/95 border border-border/50 px-6 py-4 rounded-xl shadow-lg text-center backdrop-blur-sm">
+                  <Target className="h-10 w-10 mx-auto text-primary mb-3" />
+                  <p className="text-sm text-foreground font-medium mb-1">
                     Cliquez sur la carte pour sélectionner une position
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Utilisez les contrôles de zoom pour naviguer
+                  <p className="text-xs text-muted-foreground">
+                    Explorez les villes de Mauritanie avec les contrôles de navigation
                   </p>
                 </div>
               </div>
@@ -267,14 +282,14 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             variant="outline"
             onClick={getCurrentLocation}
             disabled={isGettingLocation}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-gradient-to-r from-background to-muted/50 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-md"
           >
             <Navigation
-              className={`h-4 w-4 ${isGettingLocation ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${isGettingLocation ? "animate-spin text-primary" : "text-accent"}`}
             />
             {isGettingLocation
-              ? "Localisation..."
-              : "Utiliser ma position actuelle"}
+              ? "Localisation en cours..."
+              : "Utiliser ma position GPS actuelle"}
           </Button>
         </div>
       </CardContent>

@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, MapPin, Package, User, Warehouse } from 'lucide-react';
+import { Clock, MapPin, Package, User, Warehouse, Target, Pentagon } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -367,27 +368,47 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
           <InteractiveMapGIS
             value={getMapData()}
             onChange={handleMapChange}
-            className="border-l-4 border-l-blue-500"
+            className="border-l-4 border-l-primary shadow-lg"
           />
 
-          {/* Debug Information */}
+          {/* Location Data Display */}
           {(formData.localisation && formData.localisation.length > 0) && (
-            <Card className="border-l-4 border-l-green-500">
-              <CardHeader>
-                <CardTitle className="text-sm text-gray-700">Données de localisation</CardTitle>
+            <Card className="border-l-4 border-l-success bg-gradient-to-r from-success/5 to-success/10 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2 text-success-foreground">
+                  <Target className="h-4 w-4 text-success" />
+                  Données de géolocalisation
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <strong>Forme:</strong> {formData.forme || 'Non définie'}
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Pentagon className="h-3 w-3 text-success" />
+                      <span className="text-xs font-medium text-muted-foreground">Type de forme</span>
+                    </div>
+                    <Badge variant="secondary" className="capitalize">
+                      {formData.forme || 'Non définie'}
+                    </Badge>
                   </div>
-                  <div>
-                    <strong>Points de localisation:</strong> {formData.localisation.length}
-                  </div>
-                  <div className="max-h-32 overflow-y-auto bg-gray-50 p-2 rounded">
-                    <pre className="text-xs">{JSON.stringify(formData.localisation, null, 2)}</pre>
+                  <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-3 w-3 text-success" />
+                      <span className="text-xs font-medium text-muted-foreground">Points de coordonnées</span>
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">{formData.localisation.length}</span>
                   </div>
                 </div>
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    Voir les coordonnées détaillées
+                  </summary>
+                  <div className="mt-2 max-h-32 overflow-y-auto bg-muted/30 border border-border/50 p-3 rounded-lg">
+                    <pre className="text-xs text-muted-foreground font-mono">
+                      {JSON.stringify(formData.localisation, null, 2)}
+                    </pre>
+                  </div>
+                </details>
               </CardContent>
             </Card>
           )}
