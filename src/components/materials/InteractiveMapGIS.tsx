@@ -84,6 +84,12 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
     { name: "Kaédi", lat: 16.15, lng: -13.5 },
     { name: "Zouérat", lat: 22.75, lng: -12.4667 },
     { name: "Kiffa", lat: 16.6167, lng: -11.4 },
+    { name: "Atar", lat: 20.5167, lng: -13.05 },
+    { name: "Aleg", lat: 17.05, lng: -13.9167 },
+    { name: "Boutilimit", lat: 17.55, lng: -14.7 },
+    { name: "Tidjikja", lat: 18.55, lng: -11.4333 },
+    { name: "Aioun", lat: 16.661879 , lng: -9.615950 },
+     { name: "Nema", lat: 16.612300 , lng: -7.260246 },
   ];
 
   useEffect(() => {
