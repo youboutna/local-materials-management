@@ -69,6 +69,68 @@ const ProjectDetail = () => {
         throw new Error("Project not found");
       }
 
+      // Fetch project phases to calculate real progress
+      const { data: phasesData, error: phasesError } = await supabase
+        .from("project_phases")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (phasesError) {
+        console.error("Error fetching phases:", phasesError);
+      }
+
+      // Calculate real progress from phases
+      let realProgress = 0;
+      if (phasesData && phasesData.length > 0) {
+        const totalProgress = phasesData.reduce((sum, phase) => sum + (phase.progress || 0), 0);
+        realProgress = Math.round(totalProgress / phasesData.length);
+      }
+
+      // Fetch project milestones
+      const { data: milestonesData, error: milestonesError } = await supabase
+        .from("project_milestones")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (milestonesError) {
+        console.error("Error fetching milestones:", milestonesError);
+      }
+
+      // Fetch materials for the project
+      const { data: materialsData, error: materialsError } = await supabase
+        .from("quantity_takeoffs")
+        .select(`
+          *,
+          materials (
+            id,
+            name,
+            category,
+            unit,
+            price_per_unit
+          )
+        `)
+        .eq("project_id", projectId);
+
+      if (materialsError) {
+        console.error("Error fetching materials:", materialsError);
+      }
+
+      // Fetch team members (phase employees)
+      const { data: teamData, error: teamError } = await supabase
+        .from("phase_employees")
+        .select(`
+          *,
+          project_phases!inner(project_id)
+        `)
+        .eq("project_phases.project_id", projectId);
+
+      if (teamError) {
+        console.error("Error fetching team:", teamError);
+      }
+
+      // Calculate real team size
+      const realTeamSize = teamData ? teamData.length : projectData.teamSize;
+
       // Fetch payments with all new fields
       const { data: paymentsData, error: paymentsError } = await supabase
         .from("payments")
@@ -145,11 +207,17 @@ const ProjectDetail = () => {
             : undefined,
         })) || [];
 
-      // Combine data
+      // Combine data with real calculated values
       const projectWithDetails: ProjectWithPayments = {
         ...projectData,
+        progress: realProgress, // Use calculated progress from phases
+        teamSize: realTeamSize, // Use calculated team size
         payments: payments,
         inspections: inspections,
+        phases: phasesData || [],
+        milestones: milestonesData || [],
+        materials: materialsData || [],
+        team: teamData || [],
       };
 
       console.log("Project with details loaded:", projectWithDetails);
@@ -668,7 +736,7 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="payments">
-                <PaymentHistory payments={project.payments} />
+                <PaymentHistory payments={project.payments || []} />
               </TabsContent>
 
               <TabsContent value="inspections">

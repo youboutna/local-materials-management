@@ -76,11 +76,6 @@ export interface ProjectData {
   }[];
 }
 
-export interface ProjectWithPayments extends ProjectData {
-  payments: Payment[];
-  inspections?: Inspection[];
-}
-
 export interface Payment {
   id: string;
   amount: number;
@@ -181,6 +176,15 @@ export interface ProjectMaterial {
   quantity: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ProjectWithPayments extends ProjectData {
+  payments?: Payment[];
+  inspections?: Inspection[];
+  phases?: any[];
+  milestones?: any[];
+  materials?: any[];
+  team?: any[];
 }
 
 export interface TaskAssignment {

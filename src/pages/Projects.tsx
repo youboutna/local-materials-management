@@ -15,14 +15,32 @@ import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from "@/types/project";
 import { MapLocation } from "@/components/ProjectMap";
 import Navbar from "@/components/Navbar";
+import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 
 const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
-  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
   const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  
+  // Use the projects filter hook
+  const {
+    searchQuery,
+    setSearchQuery,
+    statusFilter,
+    setStatusFilter,
+    regionFilter,
+    setRegionFilter,
+    sortOption,
+    setSortOption,
+    filteredProjects,
+    searchResults,
+    showSearchResults,
+    handleSelectSearchResult,
+    clearSearch,
+    availableStatuses,
+    availableRegions,
+    performSearch
+  } = useProjectsFilter(projects || []);
 
   // Pagination for projects
   const {
@@ -39,8 +57,6 @@ const Projects: React.FC = () => {
   // Initialize locations when projects load
   useEffect(() => {
     if (projects) {
-      setFilteredProjects(projects);
-
       // Convert projects to map locations
       const locations: MapLocation[] = projects
         .filter(
@@ -65,53 +81,35 @@ const Projects: React.FC = () => {
     }
   }, [projects]);
 
-  const handleFilterChange = (filters: any) => {
-    if (!projects) return;
+  // Update map locations when filtered projects change
+  useEffect(() => {
+    if (filteredProjects) {
+      const filteredLocations: MapLocation[] = filteredProjects
+        .filter(
+          (project) =>
+            project.coordinates?.latitude && project.coordinates?.longitude
+        )
+        .map((project) => ({
+          id: project.id,
+          name: project.title,
+          type: "project" as const,
+          latitude: project.coordinates!.latitude,
+          longitude: project.coordinates!.longitude,
+          status: project.status,
+          region: project.location,
+          startDate: project.startDate,
+          endDate: project.endDate,
+        }));
 
-    console.log('Grid filters applied:', filters);
-    let filtered = [...projects];
-
-    // Apply filters
-    if (filters.status && filters.status !== "all") {
-      filtered = filtered.filter(
-        (project) => project.status === filters.status
-      );
+      setFilteredMapLocations(filteredLocations);
     }
+  }, [filteredProjects]);
 
-    if (filters.location) {
-      filtered = filtered.filter((project) =>
-        project.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    if (filters.dateRange) {
-      // Apply date range filter if needed
-    }
-
-    setFilteredProjects(filtered);
-    setSelectedRegion(filters.location || "");
-    setSelectedStatus(filters.status || "");
-
-    // Update map locations based on filtered projects
-    const filteredLocations: MapLocation[] = filtered
-      .filter(
-        (project) =>
-          project.coordinates?.latitude && project.coordinates?.longitude
-      )
-      .map((project) => ({
-        id: project.id,
-        name: project.title,
-        type: "project" as const,
-        latitude: project.coordinates!.latitude,
-        longitude: project.coordinates!.longitude,
-        status: project.status,
-        region: project.location,
-        startDate: project.startDate,
-        endDate: project.endDate,
-      }));
-
-    console.log('Grid filter - Updated map locations:', filteredLocations.length);
-    setFilteredMapLocations(filteredLocations);
+  const handleReset = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setRegionFilter('all');
+    setSortOption('newest');
   };
 
   const handleMapFilterChange = (filteredLocations: MapLocation[]) => {
@@ -123,7 +121,7 @@ const Projects: React.FC = () => {
       const filteredProjectIds = new Set(filteredLocations.map(loc => loc.id));
       const matchingProjects = projects.filter(project => filteredProjectIds.has(project.id));
       console.log('Map filter - Updated grid projects:', matchingProjects.length);
-      setFilteredProjects(matchingProjects);
+      // Note: filteredProjects is handled by the hook
     }
   };
 
@@ -179,7 +177,19 @@ const Projects: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ProjectFilters onFilterChange={handleFilterChange} />
+                <ProjectFilters 
+                  searchQuery={searchQuery}
+                  onSearchChange={performSearch}
+                  statusFilter={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  regionFilter={regionFilter}
+                  onRegionChange={setRegionFilter}
+                  sortOption={sortOption}
+                  onSortChange={setSortOption}
+                  availableStatuses={availableStatuses}
+                  availableRegions={availableRegions}
+                  onReset={handleReset}
+                />
               </CardContent>
             </Card>
 
@@ -204,7 +214,7 @@ const Projects: React.FC = () => {
                 <ProjectMap
                   locations={filteredMapLocations}
                   height="600px"
-                  focusRegion={selectedRegion}
+                  focusRegion={regionFilter !== 'all' ? regionFilter : undefined}
                   className="rounded-lg"
                 />
               </CardContent>
