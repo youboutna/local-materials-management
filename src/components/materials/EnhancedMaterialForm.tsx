@@ -114,10 +114,24 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
 
   // Update form data when initialData changes
   useEffect(() => {
-    if (initialData) {
+    if (initialData && Object.keys(initialData).length > 0) {
+      console.log('Setting initial data:', initialData);
       setFormData(prev => ({ ...prev, ...initialData }));
       setSelectedCategory(initialData.category || '');
       setSelectedSubcategory(initialData.subcategory || '');
+      
+      // Update map data if coordinates or location data exists
+      if (initialData.coordinatesLatitude && initialData.coordinatesLongitude) {
+        setMapData({
+          coordinates: {
+            lat: initialData.coordinatesLatitude,
+            lng: initialData.coordinatesLongitude
+          },
+          address: initialData.adresse,
+          shape: Array.isArray(initialData.localisation) ? initialData.localisation : [],
+          shapeType: initialData.forme as 'polygon' | 'rectangle' | 'circle' | undefined
+        });
+      }
     }
   }, [initialData]);
 

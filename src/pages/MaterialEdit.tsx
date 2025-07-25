@@ -177,7 +177,10 @@ const MaterialEdit = () => {
   }, [material]);
 
   const handleSubmit = (updatedData: Partial<MaterialFormData>) => {
-    updateMaterial.mutate(updatedData);
+    // Get the current form data from the form component
+    const currentFormData = formData;
+    const mergedData = { ...currentFormData, ...updatedData };
+    updateMaterial.mutate(mergedData);
   };
 
   // Transform workspaces to match the expected interface
@@ -253,6 +256,11 @@ const MaterialEdit = () => {
             </CardHeader>
             <CardContent>
               <EnhancedMaterialForm
+                ref={(formRef) => {
+                  if (formRef) {
+                    (window as any).materialFormRef = formRef;
+                  }
+                }}
                 onSubmit={handleSubmit}
                 initialData={formData}
                 workspaces={transformedWorkspaces}
@@ -268,7 +276,16 @@ const MaterialEdit = () => {
                   {t("materials.cancel")}
                 </Button>
                 <Button 
-                  onClick={() => handleSubmit(formData)}
+                  onClick={() => {
+                    // Get the latest form data from the form component
+                    const formRef = (window as any).materialFormRef;
+                    if (formRef && formRef.getFormData) {
+                      const latestFormData = formRef.getFormData();
+                      handleSubmit(latestFormData);
+                    } else {
+                      handleSubmit(formData);
+                    }
+                  }}
                   disabled={updateMaterial.isPending}
                   className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700"
                 >

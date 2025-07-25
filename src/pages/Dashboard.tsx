@@ -16,6 +16,7 @@ import ProjectProgressChart from '@/components/ProjectProgressChart';
 import ProjectDistributionChart from '@/components/ProjectDistributionChart';
 import ProjectMap from '@/components/ProjectMap';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -36,62 +37,127 @@ const Dashboard = () => {
     }
   }, [user, navigate, toast, isDevelopmentMode]);
 
-  // Calculate statistics from projects data
+  // State for real data
+  const [realStats, setRealStats] = useState<{
+    activeProjects: number;
+    totalBudget: number;
+    teamMembers: number;
+    materials: number;
+    phases: number;
+    milestones: number;
+    completedMilestones: number;
+    statusDistribution: { name: string; value: number; color: string }[];
+    locationDistribution: { name: string; count: number }[];
+  }>({
+    activeProjects: 0,
+    totalBudget: 0,
+    teamMembers: 0,
+    materials: 0,
+    phases: 0,
+    milestones: 0,
+    completedMilestones: 0,
+    statusDistribution: [],
+    locationDistribution: []
+  });
+
+  // Fetch real data from database
+  useEffect(() => {
+    const fetchRealStats = async () => {
+      try {
+        // Fetch projects data
+        const { data: projectsData } = await supabase
+          .from('projects')
+          .select('*');
+
+        // Fetch phases data
+        const { data: phasesData } = await supabase
+          .from('project_phases')
+          .select('*');
+
+        // Fetch milestones data
+        const { data: milestonesData } = await supabase
+          .from('project_milestones')
+          .select('*');
+
+        // Fetch materials data
+        const { data: materialsData } = await supabase
+          .from('materials')
+          .select('*');
+
+        const activeProjects = projectsData?.filter(p => p.status === 'en cours').length || 0;
+        const totalBudget = projectsData?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
+        const teamMembers = projectsData?.reduce((sum, p) => sum + (p.team_size || 0), 0) || 0;
+        const materials = materialsData?.length || 0;
+        const phases = phasesData?.length || 0;
+        const milestones = milestonesData?.length || 0;
+        const completedMilestones = milestonesData?.filter(m => m.completion_date).length || 0;
+
+        // Status distribution for pie chart
+        const statusCounts = projectsData?.reduce((acc, project) => {
+          acc[project.status] = (acc[project.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+
+        const statusColors = {
+          'en cours': '#3b82f6',
+          'terminé': '#10b981',
+          'en attente': '#f59e0b',
+          'en inspection': '#eab308',
+          'suspendu': '#8b5cf6',
+          'annulé': '#ef4444'
+        };
+
+        const statusDistribution = Object.entries(statusCounts).map(([status, count]) => ({
+          name: status,
+          value: count,
+          color: statusColors[status as keyof typeof statusColors] || '#6b7280'
+        }));
+
+        // Location distribution for bar chart
+        const locationCounts = projectsData?.reduce((acc, project) => {
+          acc[project.location] = (acc[project.location] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+
+        const locationDistribution = Object.entries(locationCounts).map(([location, count]) => ({
+          name: location,
+          count
+        }));
+
+        setRealStats({
+          activeProjects,
+          totalBudget,
+          teamMembers,
+          materials,
+          phases,
+          milestones,
+          completedMilestones,
+          statusDistribution,
+          locationDistribution
+        });
+      } catch (error) {
+        console.error('Error fetching real stats:', error);
+      }
+    };
+
+    fetchRealStats();
+  }, []);
+
+  // Calculate statistics from projects data (fallback)
   const calculateStats = () => {
     if (!projects || projects.length === 0) {
-      return {
-        activeProjects: 0,
-        totalBudget: 0,
-        teamMembers: 0,
-        materials: 0,
-        statusDistribution: [],
-        locationDistribution: []
-      };
+      return realStats;
     }
 
     const activeProjects = projects.filter(p => p.status === 'en cours').length;
     const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
     const teamMembers = projects.reduce((sum, p) => sum + p.teamSize, 0);
 
-    // Status distribution for pie chart
-    const statusCounts = projects.reduce((acc, project) => {
-      acc[project.status] = (acc[project.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const statusColors = {
-      'en cours': '#3b82f6',
-      'terminé': '#10b981',
-      'en attente': '#f59e0b',
-      'en inspection': '#eab308',
-      'suspendu': '#8b5cf6',
-      'annulé': '#ef4444'
-    };
-
-    const statusDistribution = Object.entries(statusCounts).map(([status, count]) => ({
-      name: status,
-      value: count,
-      color: statusColors[status as keyof typeof statusColors] || '#6b7280'
-    }));
-
-    // Location distribution for bar chart
-    const locationCounts = projects.reduce((acc, project) => {
-      acc[project.location] = (acc[project.location] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const locationDistribution = Object.entries(locationCounts).map(([location, count]) => ({
-      name: location,
-      count
-    }));
-
     return {
-      activeProjects,
-      totalBudget,
-      teamMembers,
-      materials: 12, // Static for now
-      statusDistribution,
-      locationDistribution
+      ...realStats,
+      activeProjects: realStats.activeProjects || activeProjects,
+      totalBudget: realStats.totalBudget || totalBudget,
+      teamMembers: realStats.teamMembers || teamMembers
     };
   };
 
@@ -189,6 +255,53 @@ const Dashboard = () => {
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-adrar-800">{stats.materials}</span>
                   <span className="ml-2 text-sm text-gray-500">{t('dashboard.types')}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Additional Stats Row */}
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Phases de projet</CardTitle>
+                <CardDescription>Phases actives en cours</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">{stats.phases}</span>
+                  <span className="ml-2 text-sm text-gray-500">phases</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Jalons</CardTitle>
+                <CardDescription>Objectifs à atteindre</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">{stats.milestones}</span>
+                  <span className="ml-2 text-sm text-gray-500">jalons</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-emerald-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Jalons terminés</CardTitle>
+                <CardDescription>Objectifs atteints</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">{stats.completedMilestones}</span>
+                  <span className="ml-2 text-sm text-gray-500">terminés</span>
                 </div>
               </CardContent>
             </Card>
