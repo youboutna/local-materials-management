@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus, Map, MapPin, Grid } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import InteractiveMap from "@/components/map/InteractiveMap";
+import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import ProjectMap from "@/components/ProjectMap";
 import { MapLocation } from "@/components/ProjectMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -357,7 +357,7 @@ const Materials: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <InteractiveMap
+            <InteractiveMapGIS
               title="Carte Interactive des Matériaux"
               description="Explorez tous les matériaux géolocalisés sur une carte interactive de la Mauritanie"
               allowPolygon={false}

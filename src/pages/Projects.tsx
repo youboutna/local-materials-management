@@ -9,6 +9,7 @@ import ProjectFilters from "@/components/projects/ProjectFilters";
 import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
 import InteractiveMap from "@/components/map/InteractiveMap";
+import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import { useProjects } from "@/hooks/useProjects";
 import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from "@/types/project";
@@ -272,7 +273,7 @@ const Projects: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <InteractiveMap
+            <InteractiveMapGIS
               title="Carte Interactive des Projets"
               description="Explorez tous les projets sur une carte interactive de la Mauritanie"
               allowPolygon={false}

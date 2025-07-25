@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard, Settings, Save, CheckCircle } from 'lucide-react';
-import InteractiveMap from '@/components/map/InteractiveMap';
+import InteractiveMapGIS from '../materials/InteractiveMapGIS';
 import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { supabase } from '@/integrations/supabase/client';
@@ -584,7 +584,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
         {/* Location Tab - Fixed to prevent render2 error */}
         <TabsContent value="location" className="space-y-6">
           <div className="w-full">
-            <InteractiveMap
+            <InteractiveMapGIS
               title="Localisation et zone d'entrepôt du projet"
               description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
               value={facilitiesMapData}

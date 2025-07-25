@@ -33,10 +33,13 @@ interface MapData {
   coordinates?: Coordinate;
   address?: string;
   shape?: Coordinate[];
-  shapeType?: 'polygon' | 'rectangle' | 'circle';
+  shapeType?: 'polygon' | 'rectangle' | 'circle' |'diamond';
 }
 
 interface InteractiveMapGISProps {
+  title?: string;
+  description?: string;
+  allowPolygon?: boolean;
   value?: MapData;
   onChange?: (data: MapData) => void;
   className?: string;
@@ -65,6 +68,9 @@ const MapClickHandler = ({
 };
 
 const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
+  title = "Système GIS Interactif",
+  description = "Sélectionnez une Géolocalisation et tracé de formes",
+  allowPolygon = false,
   value = {},
   onChange,
   className = ""
@@ -214,8 +220,8 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               <Layers className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Système GIS Interactif</h3>
-              <p className="text-sm text-muted-foreground">Géolocalisation et tracé de formes</p>
+              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+              <p className="text-sm text-muted-foreground">{description}</p>
             </div>
           </div>
           <Badge variant="secondary" className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent-foreground border-accent/20">
