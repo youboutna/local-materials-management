@@ -231,11 +231,14 @@ const MaterialDetail = () => {
 
               {material.localisation && material.localisation.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600">Zones de stockage</p>
+                  <p className="text-sm text-gray-600">Coordonnées de localisation</p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {material.localisation.map((zone, index) => (
-                      <Badge key={index} variant="outline">
-                        {zone}
+                      <Badge key={index} variant="outline" className="font-mono text-xs">
+                        {typeof zone === 'object' && zone.lat && zone.lng 
+                          ? `${zone.lat.toFixed(4)}, ${zone.lng.toFixed(4)}`
+                          : String(zone)
+                        }
                       </Badge>
                     ))}
                   </div>
