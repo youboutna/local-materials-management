@@ -283,15 +283,34 @@ const Projects: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <ProjectMap
-              projects={filteredProjects}
-              locations={filteredMapLocations}
-              defaultCenter={[20.0, -12.0]}
-              defaultZoom={6}
-              height="600px"
-              className="w-full rounded-lg shadow-lg"
-              interactive={true}
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Map className="h-5 w-5" />
+                  Localisation et zone d'entrepôt du projet
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Définissez la position GPS du projet et tracez la zone des installations/entrepôts
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <InteractiveMapGIS
+                  title="Carte Interactive des Projets"
+                  description="Explorez tous les projets sur une carte interactive de la Mauritanie"
+                  allowPolygon={true}
+                  value={{
+                    coordinates: { lat: 20.0, lng: -12.0 },
+                    address: "Mauritanie",
+                    shape: [],
+                    shapeType: "polygon"
+                  }}
+                  onChange={(mapData) => {
+                    console.log("Map data changed:", mapData);
+                  }}
+                  className="min-h-[600px]"
+                />
+              </CardContent>
+            </Card>
 
             {originalMapLocations.length > 0 && (
               <Card>
