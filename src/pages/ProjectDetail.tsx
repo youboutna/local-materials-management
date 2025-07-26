@@ -29,8 +29,7 @@ import { useProjects } from "@/hooks/projects/useProjects";
 import { ProjectData } from "@/components/ProjectCard";
 import StatusBadge from "@/components/StatusBadge";
 import ProgressIndicator from "@/components/ProgressIndicator";
-import ProjectMap from "@/components/ProjectMap";
-import { MapLocation } from "@/components/ProjectMap";
+import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import { WorkflowInspection } from "@/components/workflow/WorkflowInspection";
 import { PaymentHistory } from "@/components/project/PaymentHistory";
 import { PaymentDialog } from "@/components/project/PaymentDialog";
@@ -57,6 +56,8 @@ const ProjectDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mapData, setMapData] = useState<any>(null);
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
   const { getProject, deleteProject } = useProjects();
 
   const fetchProjectWithDetails = async (projectId: string) => {
@@ -79,11 +80,34 @@ const ProjectDetail = () => {
         console.error("Error fetching phases:", phasesError);
       }
 
-      // Calculate real progress from phases
+      // Fetch inspections first to calculate progress based on inspection results
+      const { data: inspectionsData, error: inspectionsError } = await supabase
+        .from("inspections")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("date", { ascending: false });
+
+      if (inspectionsError) {
+        console.error("Error fetching inspections:", inspectionsError);
+      }
+
+      // Calculate real progress from phases and inspections
       let realProgress = 0;
       if (phasesData && phasesData.length > 0) {
         const totalProgress = phasesData.reduce((sum, phase) => sum + (phase.progress || 0), 0);
         realProgress = Math.round(totalProgress / phasesData.length);
+      }
+
+      // Adjust progress based on latest approved inspections
+      if (inspectionsData && inspectionsData.length > 0) {
+        const approvedInspections = inspectionsData.filter(
+          (inspection) => inspection.status === "approved"
+        );
+        if (approvedInspections.length > 0) {
+          const latestApprovedInspection = approvedInspections[0];
+          // Use the higher value between calculated phase progress and inspection progress
+          realProgress = Math.max(realProgress, latestApprovedInspection.progress_at_inspection || 0);
+        }
       }
 
       // Fetch project milestones
@@ -180,16 +204,7 @@ const ProjectDetail = () => {
           receiver_name: payment.receiver_name || undefined,
         })) || [];
 
-      // Fetch inspections
-      const { data: inspectionsData, error: inspectionsError } = await supabase
-        .from("inspections")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("date", { ascending: false });
-
-      if (inspectionsError) {
-        console.error("Error fetching inspections:", inspectionsError);
-      }
+      // Inspections already fetched above for progress calculation
 
       // Transform inspections data to match the Inspection interface with proper type casting
       const inspections: Inspection[] =
@@ -222,6 +237,17 @@ const ProjectDetail = () => {
 
       console.log("Project with details loaded:", projectWithDetails);
       setProject(projectWithDetails);
+
+      // Initialize map data if project has coordinates
+      if (projectWithDetails.coordinates?.latitude && projectWithDetails.coordinates?.longitude) {
+        setMapData({
+          coordinates: {
+            lat: projectWithDetails.coordinates.latitude,
+            lng: projectWithDetails.coordinates.longitude,
+          },
+          address: projectWithDetails.location || "",
+        });
+      }
     } catch (error) {
       console.error("Error fetching project details:", error);
       throw error;
@@ -298,6 +324,41 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleMapDataChange = async (newMapData: any) => {
+    setMapData(newMapData);
+    
+    // Update project coordinates in the database if editing is enabled
+    if (isEditingLocation && project && newMapData.coordinates) {
+      try {
+        const { error } = await supabase
+          .from("projects")
+          .update({
+            coordinates_latitude: newMapData.coordinates.lat,
+            coordinates_longitude: newMapData.coordinates.lng,
+            location: newMapData.address || project.location,
+          })
+          .eq("id", project.id);
+
+        if (error) {
+          console.error("Error updating project location:", error);
+          toast({
+            title: t("error"),
+            description: "Erreur lors de la mise à jour de la localisation",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: t("success"),
+            description: "Localisation mise à jour avec succès",
+          });
+          await handleDataUpdate();
+        }
+      } catch (error) {
+        console.error("Error updating location:", error);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -344,19 +405,6 @@ const ProjectDetail = () => {
     );
   }
 
-  // Create map location if coordinates exist
-  const mapLocation: MapLocation | null = project.coordinates
-    ? {
-        id: project.id,
-        name: project.title,
-        type: "project",
-        latitude: project.coordinates.latitude,
-        longitude: project.coordinates.longitude,
-        status: project.status as any,
-        region: project.location,
-        startDate: project.startDate,
-      }
-    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -663,34 +711,42 @@ const ProjectDetail = () => {
                         </div>
                       </div>
 
-                      {/* Map section */}
-                      {mapLocation && (
-                        <div>
-                          <h3 className="text-lg font-medium mb-4">
+                      {/* Enhanced Map section with InteractiveMapGIS */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-medium">
                             {t("projects.location")}
                           </h3>
-                          <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
-                            <ProjectMap
-                              locations={[mapLocation]}
-                              height="100%"
-                              interactive={true}
-                              defaultCenter={[
-                                mapLocation.latitude,
-                                mapLocation.longitude,
-                              ]}
-                              defaultZoom={12}
-                            />
-                          </div>
-                          <div className="mt-4 text-sm text-gray-600">
-                            <p>
-                              {t("map.latitude")}:{" "}
-                              {mapLocation.latitude.toFixed(6)},{" "}
-                              {t("map.longitude")}:{" "}
-                              {mapLocation.longitude.toFixed(6)}
-                            </p>
-                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEditingLocation(!isEditingLocation)}
+                          >
+                            {isEditingLocation ? "Sauvegarder" : "Modifier position"}
+                          </Button>
                         </div>
-                      )}
+                        <InteractiveMapGIS
+                          title="Localisation du projet"
+                          description={isEditingLocation ? "Modifiez la position du projet" : "Position actuelle du projet"}
+                          value={mapData}
+                          onChange={handleMapDataChange}
+                          allowPolygon={true}
+                          className="mb-4"
+                        />
+                        {mapData?.coordinates && (
+                          <div className="mt-4 text-sm text-gray-600 bg-muted/50 p-3 rounded-lg">
+                            <p>
+                              <strong>Coordonnées GPS:</strong>{" "}
+                              Lat: {mapData.coordinates.lat.toFixed(6)}, Lng: {mapData.coordinates.lng.toFixed(6)}
+                            </p>
+                            {mapData.address && (
+                              <p className="mt-1">
+                                <strong>Adresse:</strong> {mapData.address}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -709,22 +765,32 @@ const ProjectDetail = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
-                      Formes du Projet
+                      Formes et Délimitations du Projet
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600 mb-4">
-                      Visualisation des formes et délimitations associées au projet.
+                      Définissez et visualisez les formes géométriques et délimitations associées au projet.
                     </p>
-                    {mapLocation && (
-                      <div className="h-96 rounded-lg overflow-hidden border">
-                        <ProjectMap
-                          locations={[mapLocation]}
-                          height="100%"
-                          interactive={true}
-                          defaultCenter={[mapLocation.latitude, mapLocation.longitude]}
-                          defaultZoom={15}
-                        />
+                    <InteractiveMapGIS
+                      title="Formes du projet"
+                      description="Dessinez des formes pour délimiter les zones du projet"
+                      value={mapData}
+                      onChange={setMapData}
+                      allowPolygon={true}
+                      className="mb-4"
+                    />
+                    {mapData?.shape && mapData.shape.length > 0 && (
+                      <div className="mt-4 bg-muted/50 p-4 rounded-lg">
+                        <h4 className="text-sm font-medium mb-2">Informations sur la forme:</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Type:</span> {mapData.shapeType || "polygon"}
+                          </div>
+                          <div>
+                            <span className="font-medium">Points:</span> {mapData.shape.length}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </CardContent>
