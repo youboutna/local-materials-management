@@ -283,11 +283,14 @@ const Projects: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <InteractiveMapGIS
-              title="Carte Interactive des Projets"
-              description="Explorez tous les projets sur une carte interactive de la Mauritanie"
-              allowPolygon={false}
-              className="min-h-[600px]"
+            <ProjectMap
+              projects={filteredProjects}
+              locations={filteredMapLocations}
+              defaultCenter={[20.0, -12.0]}
+              defaultZoom={6}
+              height="600px"
+              className="w-full rounded-lg shadow-lg"
+              interactive={true}
             />
 
             {originalMapLocations.length > 0 && (
