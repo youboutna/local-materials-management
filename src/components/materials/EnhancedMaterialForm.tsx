@@ -49,7 +49,7 @@ interface MapData {
   coordinates?: { lat: number; lng: number };
   address?: string;
   shape?: { lat: number; lng: number }[];
-  shapeType?: 'polygon' | 'rectangle' | 'circle';
+  shapeType?: 'polygon' | 'rectangle' | 'circle' | 'diamond';
 }
 
 interface SimpleWorkspace {
