@@ -785,10 +785,10 @@ const ProjectDetail = () => {
                         <h4 className="text-sm font-medium mb-2">Informations sur la forme:</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="font-medium">Type:</span> {mapData.shapeType || "polygon"}
+                            <span className="font-medium">Type:</span> {mapData?.shapeType || "polygon"}
                           </div>
                           <div>
-                            <span className="font-medium">Points:</span> {mapData.shape.length}
+                            <span className="font-medium">Points:</span> {mapData?.shape?.length || 0}
                           </div>
                         </div>
                       </div>
