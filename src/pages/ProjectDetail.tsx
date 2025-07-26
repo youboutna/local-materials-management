@@ -780,7 +780,7 @@ const ProjectDetail = () => {
                       allowPolygon={true}
                       className="mb-4"
                     />
-                    {mapData?.shape && mapData.shape.length > 0 && (
+                    {mapData?.shape && mapData?.shape?.length > 0 && (
                       <div className="mt-4 bg-muted/50 p-4 rounded-lg">
                         <h4 className="text-sm font-medium mb-2">Informations sur la forme:</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">

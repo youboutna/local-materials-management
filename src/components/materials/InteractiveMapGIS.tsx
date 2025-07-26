@@ -126,7 +126,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
       shape: [...currentShape, newPoint],
       shapeType: currentShapeType 
     });
-  }, [mapData.shape, currentShapeType, updateMapData]);
+  }, [mapData?.shape, currentShapeType, updateMapData]);
 
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
@@ -163,7 +163,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   };
 
   const createRectangle = () => {
-    const center = mapData.coordinates || { lat: 18.0735, lng: -15.9582 };
+    const center = mapData?.coordinates || { lat: 18.0735, lng: -15.9582 };
     const offset = 0.01;
     const rectangle = [
       { lat: center.lat - offset, lng: center.lng - offset },
@@ -176,7 +176,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   };
 
   const createCircle = () => {
-    const center = mapData.coordinates || { lat: 18.0735, lng: -15.9582 };
+    const center = mapData?.coordinates || { lat: 18.0735, lng: -15.9582 };
     const radius = 0.01;
     const points: Coordinate[] = [];
     
@@ -206,10 +206,10 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
     setIsDrawingShape(false);
   };
 
-  const mapCenter: [number, number] = mapData.coordinates
+  const mapCenter: [number, number] = mapData?.coordinates
     ? [mapData.coordinates.lat, mapData.coordinates.lng]
     : [20.0, -12.0];
-  const mapZoom = mapData.coordinates ? 12 : 6;
+  const mapZoom = mapData?.coordinates ? 12 : 6;
 
   return (
     <Card className={`${className} border-0 shadow-elegant bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm`}>
@@ -271,7 +271,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               />
             </div>
 
-            {mapData.coordinates && (
+            {mapData?.coordinates && (
               <div className="bg-gradient-to-r from-muted/50 to-accent/10 border border-accent/20 p-4 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-primary" />
@@ -312,7 +312,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     </Marker>
                   ))}
 
-                  {mapData.coordinates && (
+                  {mapData?.coordinates && (
                     <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
                       <Popup>
                         <strong className="text-green-600">Position sélectionnée</strong>
@@ -405,13 +405,13 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     isDrawingShape={isDrawingShape}
                   />
 
-                  {mapData.coordinates && (
+                  {mapData?.coordinates && (
                     <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
                       <Popup>Position de référence</Popup>
                     </Marker>
                   )}
 
-                  {mapData.shape && mapData.shape.length > 2 && (
+                  {mapData?.shape && mapData?.shape?.length > 2 && (
                     <Polygon
                       positions={mapData.shape.map(point => [point.lat, point.lng])}
                       pathOptions={{
@@ -424,7 +424,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                       <Popup>
                         <strong>Forme tracée</strong>
                         <div className="text-xs text-gray-600">
-                          Type: {mapData.shapeType || 'polygon'}
+                          Type: {mapData?.shapeType || 'polygon'}
                         </div>
                       </Popup>
                     </Polygon>
@@ -457,12 +457,12 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               </div>
             )}
 
-            {mapData.shape && mapData.shape.length > 0 && (
+            {mapData?.shape && mapData?.shape?.length > 0 && (
               <div className="bg-gradient-to-r from-success/10 to-success/5 border border-success/20 p-3 rounded-xl">
                 <div className="flex items-center gap-2">
                   <Pentagon className="h-4 w-4 text-success" />
                   <span className="text-sm font-medium text-foreground">
-                    {mapData.shape.length} points définis pour la forme
+                    {mapData?.shape?.length || 0} points définis pour la forme
                   </span>
                 </div>
               </div>
@@ -479,7 +479,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {mapData.coordinates ? (
+                  {mapData?.coordinates && mapData?.coordinates?.lat > 0 ? (
                     <div className="space-y-3">
                       <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
@@ -487,7 +487,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                           <span className="text-xs font-medium text-muted-foreground">Coordonnées GPS</span>
                         </div>
                         <p className="font-mono text-sm text-foreground">
-                          {mapData.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
+                          {mapData?.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
                         </p>
                       </div>
                       {address && (
@@ -517,7 +517,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {mapData.shape && mapData.shape.length > 0 ? (
+                  {mapData?.shape && mapData?.shape?.length > 0 ? (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
@@ -526,7 +526,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                             <span className="text-xs font-medium text-muted-foreground">Type de forme</span>
                           </div>
                           <Badge variant="secondary" className="capitalize">
-                            {mapData.shapeType || 'polygon'}
+                            {mapData?.shapeType || 'polygon'}
                           </Badge>
                         </div>
                         <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
@@ -534,7 +534,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                             <Target className="h-3 w-3 text-accent" />
                             <span className="text-xs font-medium text-muted-foreground">Nombre de points</span>
                           </div>
-                          <span className="text-sm font-semibold text-foreground">{mapData.shape.length}</span>
+                          <span className="text-sm font-semibold text-foreground">{mapData?.shape?.length || 0}</span>
                         </div>
                       </div>
                     </div>

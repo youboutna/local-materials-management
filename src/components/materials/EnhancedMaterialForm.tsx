@@ -187,7 +187,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     // Convert map coordinates to localisation format
     let localisation: any[] = [];
     
-    if (mapData.shape && mapData.shape.length > 0) {
+    if (mapData.shape && mapData?.shape?.length > 0) {
       // If there's a shape, use it as localisation
       localisation = mapData.shape.map(point => ({
         lat: point.lat,
@@ -207,10 +207,10 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
       coordinatesLatitude: mapData.coordinates?.lat,
       coordinatesLongitude: mapData.coordinates?.lng,
       localisation: localisation,
-      forme: mapData.shapeType || (mapData.coordinates ? 'point' : undefined)
+      forme: mapData?.shapeType || (mapData.coordinates ? 'point' : undefined)
     }));
 
-    console.log('Updated form data with localisation:', localisation, 'and forme:', mapData.shapeType);
+    console.log('Updated form data with localisation:', localisation, 'and forme:', mapData?.shapeType);
   };
 
   const handleWorkspaceLocationChange = (workspace: any) => {
@@ -270,7 +270,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
         : mapData.coordinates,
       address: formData.adresse || mapData.address,
       shape: Array.isArray(formData.localisation) ? formData.localisation : mapData.shape || [],
-      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined || mapData.shapeType
+      shapeType: formData.forme as 'polygon' | 'rectangle' | 'circle' | undefined || mapData?.shapeType
     };
   };
 

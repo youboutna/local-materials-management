@@ -252,7 +252,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                         Forme de l'entrepôt
                       </strong>
                       <div className="text-xs text-gray-600">
-                        Type: {mapData.shapeType || "polygon"}
+                        Type: {mapData?.shapeType || "polygon"}
                       </div>
                     </div>
                   </Popup>
