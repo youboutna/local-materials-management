@@ -64,7 +64,7 @@ export const usePasswordManagement = () => {
         });
         
         // Sign out and redirect to login
-        await supabase.auth.signOut();
+        //await supabase.auth.signOut();
         navigate('/auth');
         
         return { success: true };

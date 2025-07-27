@@ -39,7 +39,7 @@ export class SupabasePasswordService implements IPasswordService {
 
       console.log('Updating password...');
       
-      const { error } = await supabase.auth.updateUser({
+      const { data,error } = await supabase.auth.updateUser({
         password: request.newPassword
       });
 
@@ -48,7 +48,7 @@ export class SupabasePasswordService implements IPasswordService {
         return { success: false, error: error.message };
       }
 
-      console.log('Password updated successfully');
+      console.log('Password updated successfully',data);
       return { success: true };
     } catch (error: any) {
       console.error('Password update exception:', error);
