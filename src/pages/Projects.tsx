@@ -10,6 +10,9 @@ import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
 import InteractiveMap from "@/components/map/InteractiveMap";
 import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+import InteractiveMapFilters from "@/components/projects/InteractiveMapFilters";
+import InteractiveProjectsList from "@/components/projects/InteractiveProjectsList";
+import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap";
 import { useProjects } from "@/hooks/useProjects";
 import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from "@/types/project";
@@ -21,6 +24,7 @@ const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
   const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
+  const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
   
   // Use the projects filter hook
   const {
@@ -283,63 +287,29 @@ const Projects: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Map className="h-5 w-5" />
-                  Localisation et zone d'entrepôt du projet
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Définissez la position GPS du projet et tracez la zone des installations/entrepôts
-                </p>
-              </CardHeader>
-              <CardContent className="p-0">
-                <InteractiveMapGIS
-                  title="Carte Interactive des Projets"
-                  description="Explorez tous les projets sur une carte interactive de la Mauritanie"
-                  allowPolygon={true}
-                  value={{
-                    coordinates: { lat: 20.0, lng: -12.0 },
-                    address: "Mauritanie",
-                    shape: [],
-                    shapeType: "polygon"
-                  }}
-                  onChange={(mapData) => {
-                    console.log("Map data changed:", mapData);
-                  }}
-                  className="min-h-[600px]"
-                />
-              </CardContent>
-            </Card>
+            {/* Interactive Map Filters */}
+            <InteractiveMapFilters
+              projects={projects || []}
+              onFiltersChange={setInteractiveFilteredProjects}
+            />
 
-            {originalMapLocations.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Projets avec Coordonnées GPS</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {originalMapLocations.map((location) => (
-                      <div key={location.id} className="p-3 border rounded-lg">
-                        <h4 className="font-medium">{location.name}</h4>
-                        <p className="text-sm text-gray-600 truncate">
-                          {location.region}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {location.latitude.toFixed(6)},{" "}
-                          {location.longitude.toFixed(6)}
-                        </p>
-                        {location.status && (
-                          <span className="inline-block mt-1 px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
-                            {location.status}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Enhanced Interactive Map */}
+            <EnhancedInteractiveMap
+              projects={interactiveFilteredProjects.length > 0 ? interactiveFilteredProjects : (projects || [])}
+              onProjectSelect={(project) => {
+                console.log("Selected project:", project);
+                // Navigate to project detail or show modal
+              }}
+            />
+
+            {/* Projects List with Pagination */}
+            <InteractiveProjectsList
+              projects={interactiveFilteredProjects.length > 0 ? interactiveFilteredProjects : (projects || [])}
+              onProjectSelect={(project) => {
+                console.log("Selected project from list:", project);
+                // Navigate to project detail or show modal
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
