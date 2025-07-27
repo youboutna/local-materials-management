@@ -1697,7 +1697,7 @@ export const translations = {
                 login_to_access: "تسجيل الدخول للوصول",
                 register: "إنشاء حساب",
                 management: "  إدارة مشاريع, إدارة المواد",
-                system: " إدارة مشاريع, النظام الموريتاني لإدارة المواد",
+                system: " إدارة مشاريع, لإدارة المواد",
                 message: "تثمين التراث باستخدام المواد المحلية",
                 details: "تابعوا مشاريعكم الإنشائية باستخدام حجر أطار/العيون، الصدف/نواكشوط والطين الموريتاني. حلّنا يُحسِّن إدارة مشاريع البناء، خصوصًا باستخدام المواد المحلية، ويحافظ على التقنيات التقليدية."
 
@@ -2588,7 +2588,7 @@ export const translations = {
                 login_to_access: "Login to access",
                 register: "Create an account",
                 management: "MATERIALS MANAGEMENT AND MONITORING OF PROJECTS",
-                system: "Mauritanian Materials Management System and Monitoring of Project",
+                system: "Materials Management System and Monitoring of Project",
                 message: "Promoting heritage with local materials",
                 details: "Track your construction projects using Atar/Aioun stone, Nouakchott seashells, and Mauritanian clay. Our solution optimizes the management of construction projects, particularly with local materials, and preserves traditional techniques."
 
