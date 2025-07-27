@@ -3,19 +3,19 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export type Language = 'fr' | 'ar' | 'en';
 
 interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+    language: Language;
+    setLanguage: (lang: Language) => void;
+    t: (key: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
+    const context = useContext(LanguageContext);
+    if (!context) {
+        throw new Error('useLanguage must be used within a LanguageProvider');
+    }
+    return context;
 };
 export const translations = {
     fr: {
@@ -196,7 +196,7 @@ export const translations = {
             no_geolocated_projects: "Aucun projet géolocalisé",
             dev_mode: "Mode développement"
         },
-        
+
         task: {
             edit: "Modifier la tâche",
             title: "Tâches",
@@ -410,54 +410,54 @@ export const translations = {
                     quantity: "Quantité totale"
                 },
             }
-        ,
-        project: {
-            cancel: "Annuler"
-        },
-        edit: {
-            title: "Modifier le projet",
-            subtitle: "Modifier les détails du projet",
-            location_desc: "Détails de l'emplacement du projet",
-            status_desc: "Détails du statut du projet",
-            sync_with_inspection: "Synchroniser avec l'inspection",
-            saved: "Projet enregistré",
-            saved_desc: "Projet enregistré avec succès",
-            error: "Erreur",
-            save_error: "Erreur lors de l'enregistrement du projet",
-            progress_synced: "Progression synchronisée",
-            progress_synced_desc: "Progression du projet synchronisée avec l'inspection",
-            info: "Info",
-            no_inspection: "Aucune donnée d'inspection",
+            ,
+            project: {
+                cancel: "Annuler"
+            },
+            edit: {
+                title: "Modifier le projet",
+                subtitle: "Modifier les détails du projet",
+                location_desc: "Détails de l'emplacement du projet",
+                status_desc: "Détails du statut du projet",
+                sync_with_inspection: "Synchroniser avec l'inspection",
+                saved: "Projet enregistré",
+                saved_desc: "Projet enregistré avec succès",
+                error: "Erreur",
+                save_error: "Erreur lors de l'enregistrement du projet",
+                progress_synced: "Progression synchronisée",
+                progress_synced_desc: "Progression du projet synchronisée avec l'inspection",
+                info: "Info",
+                no_inspection: "Aucune donnée d'inspection",
+                not_found: "Projet non trouvé",
+                load_error: "Erreur lors du chargement du projet",
+                back_to_detail: "Retour aux détails du projet",
+                market_type: "Type de marché",
+                market_type_placeholder: "Sélectionner le type de marché",
+                selection_mode: "Mode de sélection",
+                selection_mode_placeholder: "Sélectionner le mode de sélection",
+                title_placeholder: "Enter project title",
+                location_placeholder: "Select location",
+                status_placeholder: "Select status",
+                progress_desc: "Specify project progress as a percentage.",
+                progress_current: "Current progress: {value}%",
+                description_placeholder: "Describe the project..."
+            },
+            loading_error: "Erreur lors du chargement des projets",
+            delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
+            deleted: "Projet supprimé",
+            deleted_desc: "Projet supprimé avec succès",
+            delete_error: "Erreur lors de la suppression du projet",
+            delete_error_desc: "Une erreur est survenue lors de la suppression du projet.",
+            loading_detail: "Chargement des détails du projet...",
             not_found: "Projet non trouvé",
-            load_error: "Erreur lors du chargement du projet",
-            back_to_detail: "Retour aux détails du projet",
-            market_type: "Type de marché",
-            market_type_placeholder: "Sélectionner le type de marché",
-            selection_mode: "Mode de sélection",
-            selection_mode_placeholder: "Sélectionner le mode de sélection",
-            title_placeholder: "Enter project title",
-            location_placeholder: "Select location",
-            status_placeholder: "Select status",
-            progress_desc: "Specify project progress as a percentage.",
-            progress_current: "Current progress: {value}%",
-            description_placeholder: "Describe the project..."
+            not_found_desc: "Le projet demandé est introuvable.",
+
+            completed: "Terminé",
+            location: "Localisation",
+            empty: "Aucun projet disponible",
+
         },
-        loading_error: "Erreur lors du chargement des projets",
-        delete_confirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
-        deleted: "Projet supprimé",
-        deleted_desc: "Projet supprimé avec succès",
-        delete_error: "Erreur lors de la suppression du projet",
-        delete_error_desc: "Une erreur est survenue lors de la suppression du projet.",
-        loading_detail: "Chargement des détails du projet...",
-        not_found: "Projet non trouvé",
-        not_found_desc: "Le projet demandé est introuvable.",
-    
-        completed: "Terminé",
-        location: "Localisation",
-        empty: "Aucun projet disponible",
-  
-    },
-    materials: {
+        materials: {
             estimated_duration: "Durée estimée",
             back_to_list: "Retour à la liste",
             edit: "Modifier,",
@@ -1116,7 +1116,7 @@ export const translations = {
             dev_mode: "وضع التطوير"
         },
         task: {
-             edit: "تعديل المهمة",
+            edit: "تعديل المهمة",
             title: "المهام",
             subtitle: "قم بتعيين ومتابعة مهام فريقك",
             assignments_title: "تعيينات المهام",
@@ -1283,18 +1283,18 @@ export const translations = {
             }
         },
         projects: {
-                delete: "حذف",
-                payments_management: "إدارة المدفوعات",
-                quick_payment_actions: "إجراءات الدفع السريعة",
-                progress_done: "التقدم المنجز",
-                overview: {
-                    description: "وصف المشروع"
-                },
-                timeline: "الجدول الزمني",
-                start_date: "تاريخ البدء",
-                started: "بدأ",
-                end_date_expected: "تاريخ الانتهاء المتوقع",
-                expected: "متوقع"
+            delete: "حذف",
+            payments_management: "إدارة المدفوعات",
+            quick_payment_actions: "إجراءات الدفع السريعة",
+            progress_done: "التقدم المنجز",
+            overview: {
+                description: "وصف المشروع"
+            },
+            timeline: "الجدول الزمني",
+            start_date: "تاريخ البدء",
+            started: "بدأ",
+            end_date_expected: "تاريخ الانتهاء المتوقع",
+            expected: "متوقع"
             ,
             progress: {
                 percentage: "النسبة المئوية"
@@ -2191,20 +2191,20 @@ export const translations = {
         },
         projects: {
             loading_detail: "Loading details...",
-                title: "Projects",
-                    all_desc: "All projects",
-                        new: "New",
-                            add: "New",
-                                new_desc: "Create a new project",
-                                    all: "All",
-                                        tab: {
+            title: "Projects",
+            all_desc: "All projects",
+            new: "New",
+            add: "New",
+            new_desc: "Create a new project",
+            all: "All",
+            tab: {
                 overview: "Overview",
-                    materials: "Materials",
-                        payments: "Payments",
-                            inspections: "Inspections",
-                                workflow: "Workflow",
-                                    documents: "Documents",
-                                        takeoffs: "Takeoffs"
+                materials: "Materials",
+                payments: "Payments",
+                inspections: "Inspections",
+                workflow: "Workflow",
+                documents: "Documents",
+                takeoffs: "Takeoffs"
             },
             edit: {
                 title: "Edit Project",
@@ -2256,7 +2256,16 @@ export const translations = {
             start_date: "Start Date",
             started: "Started",
             end_date_expected: "Expected End Date",
-            delete: "Delete"
+            delete: "Delete",
+            takeoffs: {
+                elements: {
+                    measured: "Measured elements"
+                },
+                total: {
+                    value: "Total value",
+                    quantity: "Total quantity"
+                }
+            }
         },
         materials: {
             estimated_duration: "Estimated Duration",
@@ -2748,43 +2757,43 @@ export const translations = {
 
 };
 interface LanguageProviderProps {
-  children: ReactNode;
+    children: ReactNode;
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('fr');
+    const [language, setLanguage] = useState<Language>('fr');
 
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && ['fr', 'ar', 'en'].includes(savedLanguage)) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
+    useEffect(() => {
+        const savedLanguage = localStorage.getItem('language') as Language;
+        if (savedLanguage && ['fr', 'ar', 'en'].includes(savedLanguage)) {
+            setLanguage(savedLanguage);
+        }
+    }, []);
 
-  const handleSetLanguage = (lang: Language) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
-  };
+    const handleSetLanguage = (lang: Language) => {
+        setLanguage(lang);
+        localStorage.setItem('language', lang);
+    };
 
-  const t = (key: string): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
+    const t = (key: string): string => {
+        const keys = key.split('.');
+        let value: any = translations[language];
 
-    for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k];
-      } else {
-        console.warn(`Translation key "${key}" not found for language "${language}"`);
-        return key;
-      }
-    }
+        for (const k of keys) {
+            if (value && typeof value === 'object' && k in value) {
+                value = value[k];
+            } else {
+                console.warn(`Translation key "${key}" not found for language "${language}"`);
+                return key;
+            }
+        }
 
-    return typeof value === 'string' ? value : key;
-  };
+        return typeof value === 'string' ? value : key;
+    };
 
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+    return (
+        <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+            {children}
+        </LanguageContext.Provider>
+    );
 };
