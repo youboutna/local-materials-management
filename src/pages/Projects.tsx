@@ -253,7 +253,7 @@ const Projects: React.FC = () => {
                             </p>
                             {project && (
                               <>
-                                <p><strong>Budget:</strong> {project.budget.toLocaleString()} MRO</p>
+                                <p><strong>Budget:</strong> {project.budget.toLocaleString()} MRU</p>
                                 <p><strong>Équipe:</strong> {project.teamSize} membres</p>
                                 <p><strong>Progrès:</strong> {project.progress}%</p>
                               </>

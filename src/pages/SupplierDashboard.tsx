@@ -87,7 +87,7 @@ const SupplierDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {totalPayments.toLocaleString()} MRO
+                  {totalPayments.toLocaleString()} MRU
                 </div>
                 <p className="text-xs text-gray-600">
                   {payments.length} {t("supplier_dashboard.stats.transactions")}
@@ -204,7 +204,7 @@ const SupplierDashboard = () => {
                                 {t("supplier_dashboard.payments.payment")} #{payment.transaction_id}
                               </h3>
                               <p className="text-sm text-gray-600">
-                                {t("supplier_dashboard.payments.amount")}: {payment.amount?.toLocaleString()} MRO
+                                {t("supplier_dashboard.payments.amount")}: {payment.amount?.toLocaleString()} MRU
                               </p>
                               <p className="text-xs text-gray-500">
                                 {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : t("supplier_dashboard.payments.unknown_date")}

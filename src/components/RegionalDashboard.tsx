@@ -133,7 +133,7 @@ const RegionalDashboard = ({ projects, materials = [], workspaces = [] }: Region
                     <TrendingUp className="h-4 w-4 text-terracotta-500" />
                     <div>
                       <div className="font-semibold text-adrar-800">
-                        {stat.totalBudget.toLocaleString('fr-FR')} MRO
+                        {stat.totalBudget.toLocaleString('fr-FR')} MRU
                       </div>
                       <div className="text-xs text-adrar-600">Budget total</div>
                     </div>

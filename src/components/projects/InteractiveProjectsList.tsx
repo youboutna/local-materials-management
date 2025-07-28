@@ -56,11 +56,11 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
 
   const formatBudget = (budget: number) => {
     if (budget >= 1000000) {
-      return `${(budget / 1000000).toFixed(1)}M MRO`;
+      return `${(budget / 1000000).toFixed(1)}M MRU`;
     } else if (budget >= 1000) {
-      return `${(budget / 1000).toFixed(0)}K MRO`;
+      return `${(budget / 1000).toFixed(0)}K MRU`;
     }
-    return `${budget.toLocaleString()} MRO`;
+    return `${budget.toLocaleString()} MRU`;
   };
 
   const formatDate = (dateString: string) => {

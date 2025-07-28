@@ -89,9 +89,9 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
 
   const formatBudget = (min?: number, max?: number) => {
     if (!min && !max) return 'Non spécifié';
-    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} MRO`;
-    if (min) return `À partir de ${min.toLocaleString()} MRO`;
-    if (max) return `Jusqu'à ${max.toLocaleString()} MRO`;
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} MRU`;
+    if (min) return `À partir de ${min.toLocaleString()} MRU`;
+    if (max) return `Jusqu'à ${max.toLocaleString()} MRU`;
     return 'Non spécifié';
   };
 
