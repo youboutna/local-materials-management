@@ -45,11 +45,11 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
 
   const getStockColor = (level: string) => {
     switch (level) {
-      case 'high': return 'bg-green-500';
-      case 'medium': return 'bg-yellow-500';
+      case 'high': return 'bg-success';
+      case 'medium': return 'bg-warning';
       case 'low': return 'bg-orange-500';
-      case 'out': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'out': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 
@@ -97,7 +97,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
     <Card className="border-2 shadow-lg">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950 dark:to-green-950">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Package className="h-5 w-5 text-blue-600" />
+          <Package className="h-5 w-5 text-primary" />
           Matériaux avec Coordonnées GPS
         </CardTitle>
         <p className="text-sm text-muted-foreground">
@@ -114,7 +114,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
             return (
               <Card 
                 key={material.id} 
-                className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500"
+                className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary"
                 onClick={() => onMaterialSelect?.(material)}
               >
                 <CardContent className="p-4">
@@ -136,7 +136,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                   <div className="space-y-2 text-sm">
                     {/* Location */}
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-blue-500" />
+                      <MapPin className="h-4 w-4 text-primary" />
                       <span className="text-muted-foreground">
                         {material.origin_location || 'Région non spécifiée'}
                       </span>
@@ -145,7 +145,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                     {/* GPS Coordinates */}
                     {material.coordinates_latitude && material.coordinates_longitude && (
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-green-500" />
+                        <MapPin className="h-4 w-4 text-success" />
                         <span className="text-xs text-muted-foreground font-mono">
                           GPS: {material.coordinates_latitude.toFixed(4)}, {material.coordinates_longitude.toFixed(4)}
                         </span>
@@ -157,7 +157,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                       <div className="flex items-center gap-2">
                         <Truck className="h-4 w-4 text-purple-500" />
                         <span className="text-xs text-muted-foreground">
-                          {material.adresse}
+                          {typeof material.adresse === 'string' ? material.adresse : JSON.stringify(material.adresse)}
                         </span>
                       </div>
                     )}
@@ -165,13 +165,13 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                     {/* Price and Stock */}
                     <div className="flex justify-between items-center pt-2 border-t">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-600">
+                        <DollarSign className="h-4 w-4 text-success" />
+                        <span className="font-medium text-success">
                           {formatPrice(material.price_per_unit)}/{material.unit}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-blue-600" />
+                        <Package className="h-4 w-4 text-primary" />
                         <span className="font-medium">
                           {material.available_quantity} {material.unit}
                         </span>
@@ -189,7 +189,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="w-full mt-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      className="w-full mt-3 text-primary hover:text-primary/80 hover:bg-primary/10"
                       onClick={(e) => {
                         e.stopPropagation();
                         onMaterialSelect(material);
