@@ -58,7 +58,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Prix:</span>
               <span className="font-semibold text-sm">
-                {material.price_per_unit.toLocaleString()} MRO/{material.unit}
+                {material.price_per_unit.toLocaleString()} MRU/{material.unit}
               </span>
             </div>
             

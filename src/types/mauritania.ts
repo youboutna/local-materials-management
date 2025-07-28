@@ -98,9 +98,9 @@ export enum ProjectStatus {
 }
 
 export interface ProjectBudget {
-  total: number; // In MRO (auto-convert if USD entered)
+  total: number; // In MRU (auto-convert if USD entered)
   spent: number;
-  currency: "MRO" | "USD"; // Defaults to MRO
+  currency: "MRU" | "USD"; // Defaults to MRU
   exchangeRate?: number; // For USD conversions
   lastUpdated: Date;
 }

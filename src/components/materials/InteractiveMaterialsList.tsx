@@ -65,11 +65,11 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
 
   const formatPrice = (price: number): string => {
     if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M MRO`;
+      return `${(price / 1000000).toFixed(1)}M MRU`;
     } else if (price >= 1000) {
-      return `${(price / 1000).toFixed(1)}K MRO`;
+      return `${(price / 1000).toFixed(1)}K MRU`;
     }
-    return `${price.toLocaleString()} MRO`;
+    return `${price.toLocaleString()} MRU`;
   };
 
   const pageNumbers: number[] = [];

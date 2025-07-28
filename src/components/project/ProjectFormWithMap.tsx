@@ -337,7 +337,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 </div>
                 
                 <div>
-                  <Label htmlFor="budget">Budget (MRO)</Label>
+                  <Label htmlFor="budget">Budget (MRU)</Label>
                   <Input
                     id="budget"
                     type="number"
