@@ -12,6 +12,9 @@ import Navbar from "@/components/Navbar";
 import MaterialFilters from "@/components/materials/MaterialFilters";
 import MaterialGrid from "@/components/materials/MaterialGrid";
 import { usePagination } from "@/hooks/usePagination";
+import InteractiveMaterialFilters from "@/components/materials/InteractiveMaterialFilters";
+import InteractiveMaterialsList from "@/components/materials/InteractiveMaterialsList";
+import EnhancedInteractiveMaterialMap from "@/components/materials/EnhancedInteractiveMaterialMap";
 
 interface Material {
   id: string;
@@ -42,6 +45,12 @@ const Materials: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocalType, setSelectedLocalType] = useState("");
+  
+  // Interactive map filters
+  const [interactiveSearchTerm, setInteractiveSearchTerm] = useState("");
+  const [selectedInteractiveCategory, setSelectedInteractiveCategory] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedStockLevel, setSelectedStockLevel] = useState("all");
 
   // Helper function to safely extract address string - always returns a string
   const getAddressString = (adresse: any): string => {
@@ -216,6 +225,11 @@ const Materials: React.FC = () => {
     new Set(materials.map((m) => m.local_type).filter(Boolean))
   ) as string[];
 
+  // Get regions for interactive filters
+  const regions = Array.from(
+    new Set(materials.map((m) => m.origin_location).filter(Boolean))
+  ) as string[];
+
   // Pagination for materials
   const {
     currentData: paginatedMaterials,
@@ -232,6 +246,90 @@ const Materials: React.FC = () => {
     setSearchTerm("");
     setSelectedCategory("");
     setSelectedLocalType("");
+  };
+
+  const handleResetInteractiveFilters = () => {
+    setInteractiveSearchTerm("");
+    setSelectedInteractiveCategory("all");
+    setSelectedRegion("all");
+    setSelectedStockLevel("all");
+  };
+
+  // Filter materials for interactive map
+  const getStockLevel = (available: number) => {
+    if (available === 0) return 'out';
+    if (available < 10) return 'low';
+    if (available < 50) return 'medium';
+    return 'high';
+  };
+
+  const filteredInteractiveMaterials = materials.filter(material => {
+    // Only show materials with GPS coordinates
+    if (!material.coordinates_latitude || !material.coordinates_longitude) return false;
+
+    // Search filter
+    if (interactiveSearchTerm && !material.name.toLowerCase().includes(interactiveSearchTerm.toLowerCase()) && 
+        !material.description.toLowerCase().includes(interactiveSearchTerm.toLowerCase())) {
+      return false;
+    }
+
+    // Category filter
+    if (selectedInteractiveCategory !== "all" && material.category !== selectedInteractiveCategory) {
+      return false;
+    }
+
+    // Region filter
+    if (selectedRegion !== "all" && material.origin_location !== selectedRegion) {
+      return false;
+    }
+
+    // Stock level filter
+    if (selectedStockLevel !== "all") {
+      const stockLevel = getStockLevel(material.available_quantity);
+      if (stockLevel !== selectedStockLevel) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Interactive materials map view component
+  const InteractiveMaterialsMapView: React.FC<{ materials: Material[] }> = ({ materials }) => {
+    const handleMaterialSelect = (material: Material) => {
+      navigate(`/materials/${material.id}`);
+    };
+
+    return (
+      <div className="space-y-6">
+        <InteractiveMaterialFilters
+          searchTerm={interactiveSearchTerm}
+          selectedCategory={selectedInteractiveCategory}
+          selectedRegion={selectedRegion}
+          selectedStockLevel={selectedStockLevel}
+          categories={categories}
+          regions={regions}
+          onSearchChange={setInteractiveSearchTerm}
+          onCategoryChange={setSelectedInteractiveCategory}
+          onRegionChange={setSelectedRegion}
+          onStockLevelChange={setSelectedStockLevel}
+          onReset={handleResetInteractiveFilters}
+          materialCount={materials.length}
+          gpsCount={filteredInteractiveMaterials.length}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <InteractiveMaterialsList
+            materials={filteredInteractiveMaterials}
+            onMaterialSelect={handleMaterialSelect}
+          />
+          <EnhancedInteractiveMaterialMap
+            materials={filteredInteractiveMaterials}
+            onMaterialSelect={handleMaterialSelect}
+          />
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -357,12 +455,7 @@ const Materials: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
-            <InteractiveMapGIS
-              title="Carte Interactive des Matériaux"
-              description="Explorez tous les matériaux géolocalisés sur une carte interactive de la Mauritanie"
-              allowPolygon={false}
-              className="min-h-[600px]"
-            />
+            <InteractiveMaterialsMapView materials={filteredMaterials} />
           </TabsContent>
         </Tabs>
       </div>
