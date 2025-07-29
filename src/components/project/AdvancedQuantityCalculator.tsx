@@ -1,18 +1,32 @@
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Calculator, Plus, Upload, X } from 'lucide-react';
-import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calculator,
+  Upload,
+  X,
+  Trash2,
+  Download,
+  SkipForward,
+} from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
-import Tesseract from 'tesseract.js';
+import Tesseract from "tesseract.js";
+import Papa from "papaparse";
+import { toast } from "@/hooks/use-toast";
+import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
 
-// Set worker path for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + '/pdf.worker.min.js';
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
 
 interface Opening {
   id: string;
@@ -32,405 +46,380 @@ interface CalculationResult {
   results: { [key: string]: number | string };
 }
 
-interface AdvancedQuantityCalculatorProps {
-  onResultsChange?: (results: CalculationResult[]) => void;
+const elementTypes = [
+  {
+    value: "concrete_slab",
+    label: "Dalle béton",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.05,
+    heightStep: 0.01,
+    heightPlaceholder: "0.15 (ex: 15cm)",
+  },
+  {
+    value: "hollow_core_slab",
+    label: "Plancher corps creux",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.04,
+    heightStep: 0.01,
+  },
+  {
+    value: "rebar",
+    label: "Ferraillage",
+    requires: ["length", "width"],
+    defaultUnit: "m²",
+  },
+  {
+    value: "masonry_wall",
+    label: "Mur maçonnerie",
+    requires: ["length", "height"],
+    defaultUnit: "m²",
+    minHeight: 0.1,
+  },
+  {
+    value: "plaster",
+    label: "Enduit",
+    requires: ["length", "width"],
+    defaultUnit: "m²",
+  },
+  {
+    value: "beam",
+    label: "Poutre",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.2,
+  },
+  {
+    value: "column",
+    label: "Poteau",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.2,
+  },
+  {
+    value: "foundation",
+    label: "Fondation",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.3,
+  },
+  {
+    value: "staircase",
+    label: "Escalier",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³",
+    minHeight: 0.15,
+  },
+];
+
+// Helper to get element type object by value
+const getElementTypeObj = (value: string) =>
+  elementTypes.find((el) => el.value === value) || elementTypes[0];
+
+// Format cement output for summary
+function formatCementOutput(cementKg: number) {
+  if (cementKg >= 50000) {
+    return {
+      label: "Ciment (tonnes)",
+      value: (cementKg / 1000).toFixed(2),
+      hint: "Commande en vrac recommandée",
+    };
+  } else {
+    return {
+      label: "Sacs de ciment (50kg)",
+      value: Math.ceil(cementKg / 50),
+      hint: "",
+    };
+  }
 }
 
-const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalculatorProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [elementType, setElementType] = useState('concrete_slab');
+const AdvancedQuantityCalculator: React.FC = () => {
+  // State form inputs
+  const [elementType, setElementType] = useState<string>("concrete_slab");
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
-  const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [currentOpening, setCurrentOpening] = useState<Opening>({
-    id: '',
+    id: "",
     length: 0,
     width: 0,
-    height: 0
+    height: 0,
   });
   const [showOpeningForm, setShowOpeningForm] = useState(false);
 
-  const elementTypes = [
-    { value: 'concrete_slab', label: 'Dalle béton', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.05, heightStep: 0.01, heightPlaceholder: '0.15 (ex: 15cm)' },
-    { value: 'hollow_core_slab', label: 'Plancher corps creux', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.04, heightStep: 0.01 },
-    { value: 'rebar', label: 'Ferraillage', requires: ['length', 'width'], defaultUnit: 'm²' },
-    { value: 'masonry_wall', label: 'Mur maçonnerie', requires: ['length', 'height'], defaultUnit: 'm²', minHeight: 0.10 },
-    { value: 'plaster', label: 'Enduit', requires: ['length', 'width'], defaultUnit: 'm²' },
-    { value: 'beam', label: 'Poutre', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.20 },
-    { value: 'column', label: 'Poteau', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.20 },
-    { value: 'foundation', label: 'Fondation', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.30 },
-    { value: 'staircase', label: 'Escalier', requires: ['length', 'width', 'height'], defaultUnit: 'm³', minHeight: 0.15 }
-  ];
+  // Calculations & parsing
+  const [calculations, setCalculations] = useState<CalculationResult[]>([]);
+  const [parsedLines, setParsedLines] = useState<CalculationResult[]>([]);
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
 
-  const getCurrentElementType = () => elementTypes.find(type => type.value === elementType) || elementTypes[0];
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Validation helpers
+  const currentElement = getElementTypeObj(elementType);
 
   const hasRequiredDimensions = () => {
-    const currentType = getCurrentElementType();
-    if (!currentType) return false;
-
-    if (currentType.requires.includes('length') && (isNaN(length) || length <= 0)) return false;
-    if (currentType.requires.includes('width') && (isNaN(width) || width <= 0)) return false;
-    if (currentType.requires.includes('height')) {
+    if (currentElement.requires.includes("length") && (isNaN(length) || length <= 0))
+      return false;
+    if (currentElement.requires.includes("width") && (isNaN(width) || width <= 0)) return false;
+    if (currentElement.requires.includes("height")) {
       if (isNaN(height) || height <= 0) return false;
-      if (currentType.minHeight && height < currentType.minHeight) {
-        toast({ title: "Attention", description: `La hauteur minimale pour ${currentType.label} est ${currentType.minHeight}m`, variant: "default" });
+      if (currentElement.minHeight && height < currentElement.minHeight) {
+        toast({
+          title: "Attention",
+          description: `La hauteur minimale pour ${currentElement.label} est ${currentElement.minHeight}m`,
+          variant: "default",
+        });
         return false;
       }
     }
     return true;
   };
 
+  // Add opening to openings list
   const addOpening = () => {
     if (currentOpening.length <= 0 || currentOpening.width <= 0) {
-      toast({ title: "Erreur", description: "Veuillez entrer des dimensions valides pour l'ouverture", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer des dimensions valides pour l'ouverture",
+        variant: "destructive",
+      });
       return;
     }
-    setOpenings([...openings, {
-      ...currentOpening,
-      id: Math.random().toString(36).substring(7),
-      height: elementType === 'concrete_slab' ? currentOpening.height || height : undefined
-    }]);
-    setCurrentOpening({ id: '', length: 0, width: 0, height: 0 });
+    setOpenings((o) => [
+      ...o,
+      {
+        ...currentOpening,
+        id: Math.random().toString(36).substring(7),
+        height: elementType === "concrete_slab" ? currentOpening.height || height : undefined,
+      },
+    ]);
+    setCurrentOpening({ id: "", length: 0, width: 0, height: 0 });
     setShowOpeningForm(false);
   };
 
+  // Calculate quantities and add to calculations list
   const handleCalculate = () => {
     if (!hasRequiredDimensions()) return;
-    const currentType = getCurrentElementType();
-    const elementLabel = currentType.label;
 
     const results = calculateAdvancedQuantities(
-      elementLabel,
+      currentElement.label,
       length,
       width,
       height,
-      { openings: ['concrete_slab', 'masonry_wall'].includes(elementType) ? openings : undefined }
+      {
+        openings: ["concrete_slab", "masonry_wall"].includes(elementType)
+          ? openings
+          : undefined,
+      }
     );
 
-    const newCalculation: CalculationResult = {
-      elementType: elementLabel,
+    const newCalc: CalculationResult = {
+      elementType: currentElement.label,
       dimensions: { length, width, height },
       openings: openings.length > 0 ? [...openings] : undefined,
-      results
+      results,
     };
 
-    const updatedCalculations = [...calculations, newCalculation];
-    setCalculations(updatedCalculations);
-    onResultsChange?.(updatedCalculations);
+    setCalculations((prev) => [...prev, newCalc]);
+    resetForm();
+  };
 
+  const resetForm = () => {
     setLength(0);
     setWidth(0);
     setHeight(0);
     setOpenings([]);
+    setShowOpeningForm(false);
+    setCurrentOpening({ id: "", length: 0, width: 0, height: 0 });
   };
 
+  // Remove calculation by index
   const removeCalculation = (index: number) => {
-    const updatedCalculations = calculations.filter((_, i) => i !== index);
-    setCalculations(updatedCalculations);
-    onResultsChange?.(updatedCalculations);
+    setCalculations((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Totals by material
   const getTotalsByMaterial = () => {
     const totals: { [key: string]: number } = {};
-    calculations.forEach(calc => {
-      Object.entries(calc.results).forEach(([key, value]) => {
-        const materialKey = key.replace(/\([^)]*\)/g, '').trim();
-        if (typeof value === 'number') {
-          if (totals[materialKey]) totals[materialKey] += value; else totals[materialKey] = value;
+    calculations.forEach((calc) => {
+      Object.entries(calc.results).forEach(([key, val]) => {
+        const materialKey = key.replace(/\([^)]*\)/g, "").trim();
+        if (typeof val === "number") {
+          totals[materialKey] = (totals[materialKey] || 0) + val;
         }
       });
     });
     return totals;
   };
 
-  const formatCementOutput = (cementKg: number) => {
-    if (cementKg >= 50000) {
-      return { label: "Ciment (tonnes)", value: (cementKg / 1000).toFixed(2), hint: "Commande en vrac recommandée" };
-    } else {
-      return { label: "Sacs de ciment (50kg)", value: Math.ceil(cementKg / 50), hint: "" };
+  // PDF parsing + OCR fallback + extraction of lines (same as your original logic)
+  const parsePdf = async (file: File): Promise<CalculationResult[]> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        fullText += content.items.map((item: any) => item.str).join(" ") + "\n";
+      }
+
+      if (fullText.trim().length < 20) {
+        // OCR fallback
+        fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 2 });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d")!;
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: context, viewport, canvas }).promise;
+
+          const {
+            data: { text: ocrText },
+          } = await Tesseract.recognize(canvas, "fra", { logger: (m) => {} });
+          fullText += ocrText + "\n";
+        }
+      }
+
+      // Extraction logic of lines from text:
+      const extractedLines = extractConstructionData(fullText);
+      toast({ title: "Import réussi", description: `${extractedLines.length} lignes extraites.` });
+      return extractedLines;
+    } catch (error) {
+      toast({ title: "Erreur", description: "Erreur lors de la lecture du PDF", variant: "destructive" });
+      console.error(error);
+      return [];
     }
   };
 
-  // Enhanced extraction of construction data with automatic field mapping
+  // Extraction of construction lines from raw text
+  // You can keep your previous implementation or slightly adapted here:
   const extractConstructionData = (text: string): CalculationResult[] => {
-    const results: CalculationResult[] = [];
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/(?=\d{1,2}\.[\d\.]?)/g)
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-    // Enhanced patterns for better detection
-    const patterns = [
-      // DDQE pattern: number + description + unit + quantities + prices
-      /^(\d+)\s+([\w\s\/éàçèêîôûÉÀÇÈÊÎÔÛ]+?)\s+([m²³linéaireunitéUnité]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)/i,
-      // Dimension pattern: description + dimensions
-      /(dalle|mur|poutre|poteau|fondation)\s*(?:béton|maçonnerie)?\s*([\d,\.]+)\s*[x×*]\s*([\d,\.]+)(?:\s*[x×*]\s*([\d,\.]+))?/i,
-      // Quantity pattern: quantity + unit + description
-      /([\d,\.]+)\s*(m²|m³|ml|unité)\s+([\w\s]+)/i
-    ];
+    const results: CalculationResult[] = [];
+    const pattern = /^(\d{1,2}\.?\d*)\s+(.+?)\s+(ff|m2|m3|ml|pce|pcs|m²|m³)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)$/i;
 
     for (const line of lines) {
-      // Try DDQE pattern first
-      const ddqeMatch = line.match(patterns[0]);
-      if (ddqeMatch) {
-        const [, num, designation, unitRaw, qtyStr, puStr, ptStr] = ddqeMatch;
+      const match = line.match(pattern);
+      if (match) {
+        const [, , designation, unitRaw, qtyStr, puStr, ptStr] = match;
         const elementType = mapToElementType(designation.trim());
-        const quantity = parseFloat(qtyStr.replace(/\s/g, '').replace(',', '.'));
-        
+        const quantity = parseFloat(qtyStr.replace(/\s/g, "").replace(",", "."));
         results.push({
           elementType,
-          dimensions: extractDimensionsFromDescription(designation, quantity),
+          dimensions: generateDimensionsFromQuantity(quantity, unitRaw),
           results: {
             Unité: unitRaw.trim(),
             Quantité: quantity,
-            "Prix unitaire": parseFloat(puStr.replace(/\s/g, '').replace(',', '.')),
-            "Prix total": parseFloat(ptStr.replace(/\s/g, '').replace(',', '.')),
+            "Prix unitaire": parseFloat(puStr.replace(/\s/g, "").replace(",", ".")),
+            "Prix total": parseFloat(ptStr.replace(/\s/g, "").replace(",", ".")),
           },
-        });
-        continue;
-      }
-
-      // Try dimension pattern
-      const dimMatch = line.match(patterns[1]);
-      if (dimMatch) {
-        const [, type, length, width, height] = dimMatch;
-        const elementType = mapToElementType(type);
-        
-        results.push({
-          elementType,
-          dimensions: {
-            length: parseFloat(length.replace(',', '.')),
-            width: parseFloat(width.replace(',', '.')),
-            height: height ? parseFloat(height.replace(',', '.')) : undefined
-          },
-          results: calculateAdvancedQuantities(
-            elementType,
-            parseFloat(length.replace(',', '.')),
-            parseFloat(width.replace(',', '.')),
-            height ? parseFloat(height.replace(',', '.')) : undefined
-          )
-        });
-        continue;
-      }
-
-      // Try quantity pattern
-      const qtyMatch = line.match(patterns[2]);
-      if (qtyMatch) {
-        const [, qty, unit, desc] = qtyMatch;
-        const elementType = mapToElementType(desc.trim());
-        const quantity = parseFloat(qty.replace(',', '.'));
-        
-        results.push({
-          elementType,
-          dimensions: generateDimensionsFromQuantity(quantity, unit),
-          results: {
-            Unité: unit,
-            Quantité: quantity,
-            Description: desc.trim()
-          }
         });
       }
     }
-
     return results;
   };
 
   // Map description to element type
-  const mapToElementType = (description: string): string => {
-    const desc = description.toLowerCase();
-    if (desc.includes('dalle') || desc.includes('béton')) return 'Dalle béton';
-    if (desc.includes('mur') || desc.includes('maçonnerie')) return 'Mur maçonnerie';
-    if (desc.includes('plancher') || desc.includes('corps creux')) return 'Plancher corps creux';
-    if (desc.includes('ferraillage') || desc.includes('acier')) return 'Ferraillage';
-    if (desc.includes('enduit') || desc.includes('plâtre')) return 'Enduit';
-    if (desc.includes('poutre')) return 'Poutre';
-    if (desc.includes('poteau') || desc.includes('colonne')) return 'Poteau';
-    if (desc.includes('fondation')) return 'Fondation';
-    if (desc.includes('escalier')) return 'Escalier';
-    return description;
-  };
-
-  // Extract dimensions from description and quantity
-  const extractDimensionsFromDescription = (description: string, quantity: number) => {
-    const desc = description.toLowerCase();
-    if (desc.includes('dalle') || desc.includes('plancher')) {
-      const area = quantity;
-      const estimatedLength = Math.sqrt(area);
-      return { length: estimatedLength, width: estimatedLength, height: 0.15 };
-    }
-    if (desc.includes('mur')) {
-      const area = quantity;
-      return { length: area / 2.5, width: undefined, height: 2.5 };
-    }
-    if (desc.includes('enduit')) {
-      const area = quantity;
-      return { length: Math.sqrt(area), width: Math.sqrt(area) };
-    }
-    return { length: quantity, width: 1, height: 1 };
+  const mapToElementType = (desc: string) => {
+    const d = desc.toLowerCase();
+    if (d.includes("dalle") || d.includes("béton de propreté")) return "Dalle béton";
+    if (d.includes("mur") || d.includes("maçonnerie")) return "Mur maçonnerie";
+    if (d.includes("poutre")) return "Poutre";
+    if (d.includes("poteau") || d.includes("colonne")) return "Poteau";
+    if (d.includes("fondation") || d.includes("fouille")) return "Fondation";
+    if (d.includes("plancher")) return "Plancher corps creux";
+    if (d.includes("ferraillage") || d.includes("armé")) return "Ferraillage";
+    if (d.includes("enduit") || d.includes("crépissage")) return "Enduit";
+    if (d.includes("peinture") || d.includes("latex")) return "Peinture";
+    if (d.includes("vernis") || d.includes("email")) return "Peinture";
+    if (d.includes("carreau")) return "Revêtement sol";
+    if (d.includes("trottoir")) return "Revêtement sol";
+    if (d.includes("toiture") || d.includes("charpente")) return "Toiture";
+    if (d.includes("porte") || d.includes("fenêtre")) return "Huissière";
+    if (d.includes("clôture") || d.includes("grillage")) return "Clôture";
+    if (d.includes("chauffe") || d.includes("eau") || d.includes("douche") || d.includes("wc")) return "Sanitaire";
+    return desc;
   };
 
   // Generate dimensions from quantity and unit
   const generateDimensionsFromQuantity = (quantity: number, unit: string) => {
     switch (unit.toLowerCase()) {
-      case 'm²':
+      case "m²":
+      case "m2": {
         const side = Math.sqrt(quantity);
         return { length: side, width: side };
-      case 'm³':
+      }
+      case "m³":
+      case "m3": {
         const cube = Math.cbrt(quantity);
         return { length: cube, width: cube, height: cube };
-      case 'ml':
+      }
+      case "ml":
         return { length: quantity, width: undefined, height: undefined };
       default:
         return { length: quantity, width: 1, height: 1 };
     }
   };
 
+  // Autofill next line from parsedLines
+  const fillFormWithLine = (index: number) => {
+    if (index >= parsedLines.length) return;
+    const line = parsedLines[index];
 
-  // Extraction architecture : fenêtres, portes, entrevous
-  const extractArchitectureData = (text: string): CalculationResult[] => {
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    const results: CalculationResult[] = [];
+    // Try to map elementType from label to value used in select:
+    const foundType = elementTypes.find(
+      (e) => e.label.toLowerCase() === line.elementType.toLowerCase()
+    );
+    if (foundType) setElementType(foundType.value);
+    else setElementType("concrete_slab");
 
-    const singleOpeningRegex = /(Fenêtre|Porte|Entrevous)\s+([\d.,]+)m?\s*[x×*]\s*([\d.,]+)m?(?:\s*[x×*]\s*([\d.,]+)m?)?/i;
-    const openingsLineRegex = /Ouvertures?:\s*((?:\d+[,.]\d*\s*[x×]\s*\d+[,.]\d*(?:\s*[x×]\s*\d+[,.]\d*)?(?:\s*,\s*)?)+)/i;
+    setLength(line.dimensions.length || 0);
+    setWidth(line.dimensions.width || 0);
+    setHeight(line.dimensions.height || 0);
+    setOpenings(line.openings || []);
 
-    for (const line of lines) {
-      const matchSingle = line.match(singleOpeningRegex);
-      if (matchSingle) {
-        const type = matchSingle[1];
-        const length = parseFloat(matchSingle[2].replace(',', '.'));
-        const width = parseFloat(matchSingle[3].replace(',', '.'));
-        const height = matchSingle[4] ? parseFloat(matchSingle[4].replace(',', '.')) : undefined;
-
-        results.push({
-          elementType: type,
-          dimensions: { length, width, height },
-          results: {
-            "Surface (m²)": length * width,
-            ...(height && { "Hauteur (m)": height })
-          }
-        });
-        continue;
-      }
-
-      const matchOpeningsLine = line.match(openingsLineRegex);
-      if (matchOpeningsLine && matchOpeningsLine[1]) {
-        const openingsStr = matchOpeningsLine[1];
-        const openingsArr = openingsStr.split(',').map(o => o.trim());
-
-        openingsArr.forEach(op => {
-          const dims = op.split(/[x×]/).map(d => parseFloat(d.trim().replace(',', '.')));
-          const [length = 0, width = 0, height] = dims;
-
-          results.push({
-            elementType: 'Ouverture',
-            dimensions: { length, width, height },
-            results: {
-              "Surface (m²)": length * width,
-              ...(height && { "Hauteur (m)": height })
-            }
-          });
-        });
-      }
-    }
-
-    return results;
+    setCurrentLineIndex(index + 1);
   };
 
-  // Parse PDF and extract data, with OCR fallback
-  const parsePdf = async (file: File): Promise<CalculationResult[]> => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-      let fullText = '';
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map((item: any) => item.str).join(' ');
-        fullText += pageText + '\n';
-      }
-      console.log("📄 Texte brut du PDF (texte natif) :", fullText);
-
-      // OCR fallback si texte natif trop court (PDF scanné)
-      if (fullText.trim().length < 20) {
-        console.log("Texte natif trop court, lancement OCR sur images PDF...");
-
-        fullText = '';
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2 });
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d')!;
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-
-          await page.render({ canvasContext: context, viewport, canvas }).promise;
-
-          const { data: { text: ocrText } } = await Tesseract.recognize(
-            canvas,
-            'fra',
-            { logger: m => console.log(m) }
-          );
-          fullText += ocrText + '\n';
-        }
-        console.log("📄 Texte OCR extrait :", fullText);
-      }
-
-      const ddqeData = extractConstructionData(fullText);
-      console.log("🧱 Données DDQE :", ddqeData);
-
-      const architectureData = extractArchitectureData(fullText);
-      console.log("🏗️ Données Plan Archi :", architectureData);
-
-      return [...ddqeData, ...architectureData];
-    } catch (error) {
-      console.error('PDF parsing error:', error);
-      throw new Error('Failed to parse PDF');
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
-
-    try {
-      const fileType = file.name.split('.').pop()?.toLowerCase();
-      let extractedData: CalculationResult[] = [];
-
-      switch (fileType) {
-        case 'pdf':
-          extractedData = await parsePdf(file);
-          break;
-        case 'docx':
-        case 'xlsx':
-        case 'xls':
-          toast({
-            title: "Info",
-            description: `Le support pour ${fileType} n'est pas encore implémenté.`,
-            variant: "default",
-          });
-          break;
-        default:
-          toast({
-            title: "Erreur",
-            description: "Type de fichier non supporté",
-            variant: "destructive",
-          });
-          return;
-      }
-
-      if (extractedData.length > 0) {
-        setCalculations(prev => [...prev, ...extractedData]);
-        onResultsChange?.([...calculations, ...extractedData]);
-      }
-    } catch (error) {
-      console.error('File processing error:', error);
+  // Add current form values to calculations (used for "Remplir la ligne suivante")
+  const addCurrentFormToCalculations = () => {
+    if (!hasRequiredDimensions()) {
       toast({
         title: "Erreur",
-        description: "Impossible de traiter le fichier",
+        description: "Veuillez remplir correctement les dimensions requises.",
         variant: "destructive",
       });
+      return;
     }
+    const results = calculateAdvancedQuantities(
+      getElementTypeObj(elementType).label,
+      length,
+      width,
+      height,
+      {
+        openings: ["concrete_slab", "masonry_wall"].includes(elementType)
+          ? openings
+          : undefined,
+      }
+    );
+    const newCalc: CalculationResult = {
+      elementType: getElementTypeObj(elementType).label,
+      dimensions: { length, width, height },
+      openings: openings.length > 0 ? [...openings] : undefined,
+      results,
+    };
+    setCalculations((prev) => [...prev, newCalc]);
+    resetForm();
   };
 
   return (
@@ -438,11 +427,10 @@ const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalcula
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Calculateur de Métrés Avancé
+            <Calculator className="h-5 w-5" /> Calculateur de Métrés Avancé
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label>Type d'élément</Label>
@@ -451,8 +439,10 @@ const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalcula
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {elementTypes.map(type => (
-                    <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                  {elementTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -460,142 +450,309 @@ const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalcula
 
             <div>
               <Label>Longueur (m)</Label>
-              <Input type="number" step="0.01" min="0.01" value={length || ''} onChange={e => setLength(parseFloat(e.target.value) || 0)} placeholder="0.00" />
+              <Input
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={length || ""}
+                onChange={(e) => setLength(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+              />
             </div>
 
-            {getCurrentElementType().requires.includes('width') && (
+            {currentElement.requires.includes("width") && (
               <div>
                 <Label>Largeur (m)</Label>
-                <Input type="number" step="0.01" min="0.01" value={width || ''} onChange={e => setWidth(parseFloat(e.target.value) || 0)} placeholder="0.00" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={width || ""}
+                  onChange={(e) => setWidth(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                />
               </div>
             )}
 
-            {getCurrentElementType().requires.includes('height') && (
+            {currentElement.requires.includes("height") && (
               <div>
                 <Label>Hauteur (m)</Label>
-                <Input type="number" step={getCurrentElementType().heightStep || "0.01"} min={getCurrentElementType().minHeight || "0.01"} value={height || ''} onChange={e => setHeight(parseFloat(e.target.value) || 0)} placeholder={getCurrentElementType().heightPlaceholder || "0.00"} />
-                {getCurrentElementType().minHeight && (
-                  <p className="text-xs text-muted-foreground mt-1">Minimum: {getCurrentElementType().minHeight}m</p>
+                <Input
+                  type="number"
+                  step={currentElement.heightStep || "0.01"}
+                  min={currentElement.minHeight || "0.01"}
+                  value={height || ""}
+                  onChange={(e) => setHeight(parseFloat(e.target.value) || 0)}
+                  placeholder={currentElement.heightPlaceholder || "0.00"}
+                />
+                {currentElement.minHeight && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Minimum: {currentElement.minHeight}m
+                  </p>
                 )}
               </div>
             )}
           </div>
 
-          {(elementType === 'concrete_slab' || elementType === 'masonry_wall') && (
+          {(elementType === "concrete_slab" || elementType === "masonry_wall") && (
             <div className="mt-4">
               <Label>Ouvertures à déduire</Label>
               <div className="space-y-2">
                 {openings.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {openings.map(opening => (
-                      <Badge key={opening.id} variant="outline" className="flex items-center gap-1">
-                        {opening.length}m × {opening.width}m
-                        {opening.height && ` × ${opening.height}m`}
-                        <button onClick={() => setOpenings(openings.filter(o => o.id !== opening.id))} className="text-muted-foreground hover:text-foreground">
-                          <X className="h-3 w-3" />
-                        </button>
+                    {openings.map((o) => (
+                      <Badge key={o.id} variant="outline" className="flex items-center gap-1">
+                        {o.length}m x {o.width}m {o.height ? `x ${o.height}m` : ""}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Supprimer ouverture"
+                          onClick={() =>
+                            setOpenings((prev) => prev.filter((oo) => oo.id !== o.id))
+                          }
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
                       </Badge>
                     ))}
                   </div>
                 )}
-
-                {showOpeningForm ? (
-                  <div className="grid grid-cols-3 gap-2 items-end">
-                    <div>
-                      <Label className="text-xs">Longueur</Label>
-                      <Input placeholder="Longueur" type="number" step="0.01" min="0.01" value={currentOpening.length || ''} onChange={e => setCurrentOpening({ ...currentOpening, length: parseFloat(e.target.value) || 0 })} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Largeur</Label>
-                      <Input placeholder="Largeur" type="number" step="0.01" min="0.01" value={currentOpening.width || ''} onChange={e => setCurrentOpening({ ...currentOpening, width: parseFloat(e.target.value) || 0 })} />
-                    </div>
-                    {elementType === 'concrete_slab' && (
-                      <div>
-                        <Label className="text-xs">Hauteur</Label>
-                        <Input placeholder="Hauteur" type="number" step="0.01" min="0.01" value={currentOpening.height || ''} onChange={e => setCurrentOpening({ ...currentOpening, height: parseFloat(e.target.value) || 0 })} />
-                      </div>
+                {!showOpeningForm && (
+                  <Button onClick={() => setShowOpeningForm(true)}>Ajouter une ouverture</Button>
+                )}
+                {showOpeningForm && (
+                  <div className="grid grid-cols-3 gap-2 items-end mt-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Longueur (m)"
+                      value={currentOpening.length || ""}
+                      onChange={(e) =>
+                        setCurrentOpening((prev) => ({
+                          ...prev,
+                          length: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Largeur (m)"
+                      value={currentOpening.width || ""}
+                      onChange={(e) =>
+                        setCurrentOpening((prev) => ({
+                          ...prev,
+                          width: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                    {elementType === "concrete_slab" && (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Hauteur (m)"
+                        value={currentOpening.height || ""}
+                        onChange={(e) =>
+                          setCurrentOpening((prev) => ({
+                            ...prev,
+                            height: parseFloat(e.target.value) || 0,
+                          }))
+                        }
+                      />
                     )}
-                    <div className="col-span-3 flex gap-2 mt-2">
-                      <Button size="sm" onClick={addOpening}>Ajouter</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setShowOpeningForm(false)}>Annuler</Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={addOpening}
+                      className="col-span-1"
+                    >
+                      Ajouter
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowOpeningForm(false)}
+                      className="col-span-1"
+                    >
+                      Annuler
+                    </Button>
                   </div>
-                ) : (
-                  <Button size="sm" onClick={() => setShowOpeningForm(true)}>Ajouter une ouverture</Button>
                 )}
               </div>
             </div>
           )}
 
-          <div className="mt-4 flex gap-4">
-            <Button onClick={handleCalculate} disabled={!hasRequiredDimensions()}>Calculer</Button>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" /> Importer PDF
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              variant="default"
+              onClick={handleCalculate}
+              disabled={!hasRequiredDimensions()}
+              leftIcon={<Calculator className="w-4 h-4" />}
+            >
+              Calculer et ajouter
             </Button>
+
+            <Button
+              variant="secondary"
+              onClick={resetForm}
+              leftIcon={<Trash2 className="w-4 h-4" />}
+            >
+              Réinitialiser
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              leftIcon={<Upload className="w-4 h-4" />}
+            >
+              Importer PDF
+            </Button>
+
             <input
               type="file"
-              accept=".pdf"
+              accept="application/pdf"
+              className="hidden"
               ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={e => {
-                if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
-                e.target.value = '';
+              onChange={async (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  const results = await parsePdf(e.target.files[0]);
+                  setParsedLines(results);
+                  if (results.length > 0) fillFormWithLine(0);
+                }
               }}
             />
+
+            <Button
+              variant="outline"
+              disabled={parsedLines.length === 0 || currentLineIndex >= parsedLines.length}
+              onClick={() => fillFormWithLine(currentLineIndex)}
+              leftIcon={<SkipForward className="w-4 h-4" />}
+            >
+              Remplir ligne suivante
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={() => setCalculations([])}
+              leftIcon={<Trash2 className="w-4 h-4" />}
+            >
+              Tout effacer
+            </Button>
+
+            <Button
+              variant="default"
+              onClick={() => {
+                if (calculations.length === 0) {
+                  toast({ title: "Aucun calcul à exporter", variant: "destructive" });
+                  return;
+                }
+                const csvData = calculations.map((calc, i) => ({
+                  Ligne: i + 1,
+                  Élément: calc.elementType,
+                  Longueur: calc.dimensions.length.toFixed(2),
+                  Largeur: calc.dimensions.width?.toFixed(2) || "",
+                  Hauteur: calc.dimensions.height?.toFixed(2) || "",
+                  Résultats: JSON.stringify(calc.results),
+                }));
+                const csv = Papa.unparse(csvData);
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "calculs_quantite.csv";
+                link.click();
+                URL.revokeObjectURL(link.href);
+              }}
+              leftIcon={<Download className="w-4 h-4" />}
+            >
+              Exporter CSV
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      {/* Résultats */}
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Résultats des calculs</CardTitle>
+            <CardTitle>Résultats des calculs ({calculations.length} éléments)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {calculations.map((calc, idx) => (
-                <div key={idx} className="border rounded p-2 relative">
-                  <button onClick={() => removeCalculation(idx)} className="absolute right-2 top-2 text-red-500 hover:text-red-700">
-                    <X />
-                  </button>
-                  <h3 className="font-semibold">{calc.elementType}</h3>
-                  <p>Dimensions: L {calc.dimensions.length}m × W {calc.dimensions.width || '-'}m × H {calc.dimensions.height || '-' }m</p>
-                  {calc.openings && calc.openings.length > 0 && (
-                    <div>
-                      <strong>Ouvertures:</strong>
-                      <ul>
-                        {calc.openings.map(o => (
-                          <li key={o.id}>{o.length}m × {o.width}m {o.height ? `× ${o.height}m` : ''}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  <div>
-                    <strong>Quantités:</strong>
-                    <ul>
-                      {Object.entries(calc.results).map(([mat, val]) => (
-                        <li key={mat}>{mat}: {val}</li>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full table-auto border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-2 py-1">#</th>
+                  <th className="border border-gray-300 px-2 py-1">Élément</th>
+                  <th className="border border-gray-300 px-2 py-1">Dimensions (LxWxH m)</th>
+                  <th className="border border-gray-300 px-2 py-1">Ouvertures</th>
+                  <th className="border border-gray-300 px-2 py-1">Calculs</th>
+                  <th className="border border-gray-300 px-2 py-1">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {calculations.map((calc, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-gray-50">
+                    <td className="border border-gray-300 px-2 py-1 text-center">{i + 1}</td>
+                    <td className="border border-gray-300 px-2 py-1">{calc.elementType}</td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {calc.dimensions.length.toFixed(2)} x{" "}
+                      {(calc.dimensions.width ?? 0).toFixed(2)} x{" "}
+                      {(calc.dimensions.height ?? 0).toFixed(2)}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {calc.openings && calc.openings.length > 0
+                        ? calc.openings
+                            .map(
+                              (o) =>
+                                `${o.length.toFixed(2)}x${o.width.toFixed(2)}${o.height ? `x${o.height.toFixed(2)}` : ""
+                                }`
+                            )
+                            .join(", ")
+                        : "—"}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {Object.entries(calc.results).map(([k, v]) => (
+                        <div key={k}>
+                          <b>{k}:</b> {typeof v === "number" ? v.toFixed(3) : v}
+                        </div>
                       ))}
-                    </ul>
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 text-center">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeCalculation(i)}
+                        aria-label="Supprimer ce calcul"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+          <CardContent>
+            <h3 className="text-lg font-semibold mb-2">Total matériaux estimés</h3>
+            <div className="space-y-1">
+              {Object.entries(getTotalsByMaterial()).map(([mat, val]) => {
+                if (mat.toLowerCase().includes("ciment")) {
+                  const cement = formatCementOutput(val);
+                  return (
+                    <div key={mat} className="flex justify-between">
+                      <span>{cement.label}</span>
+                      <span>{cement.value}</span>
+                      <small className="text-muted-foreground">{cement.hint}</small>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={mat} className="flex justify-between">
+                    <span>{mat}</span>
+                    <span>{val.toFixed(2)}</span>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <h3 className="font-bold">Totaux des matériaux</h3>
-              <ul>
-                {Object.entries(getTotalsByMaterial()).map(([mat, val]) => {
-                  if (mat.toLowerCase().includes("ciment")) {
-                    const cementOutput = formatCementOutput(val);
-                    return (
-                      <li key={mat}>
-                        {cementOutput.label}: {cementOutput.value} {cementOutput.hint && <em>({cementOutput.hint})</em>}
-                      </li>
-                    );
-                  }
-                  return <li key={mat}>{mat}: {val.toFixed(2)}</li>;
-                })}
-              </ul>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
