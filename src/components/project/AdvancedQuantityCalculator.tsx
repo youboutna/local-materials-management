@@ -153,39 +153,135 @@ const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalcula
     }
   };
 
-  // Extraction DDQE (ex : peinture, chaises) depuis texte PDF
+  // Enhanced extraction of construction data with automatic field mapping
   const extractConstructionData = (text: string): CalculationResult[] => {
     const results: CalculationResult[] = [];
-
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-    const regex = /^(\d+)\s+([\w\s\/éàçèêîôûÉÀÇÈÊÎÔÛ]+)\s+[^\d]*\s([m²unitéUnité]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)/i;
+    // Enhanced patterns for better detection
+    const patterns = [
+      // DDQE pattern: number + description + unit + quantities + prices
+      /^(\d+)\s+([\w\s\/éàçèêîôûÉÀÇÈÊÎÔÛ]+?)\s+([m²³linéaireunitéUnité]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)\s+([\d\s,\.]+)/i,
+      // Dimension pattern: description + dimensions
+      /(dalle|mur|poutre|poteau|fondation)\s*(?:béton|maçonnerie)?\s*([\d,\.]+)\s*[x×*]\s*([\d,\.]+)(?:\s*[x×*]\s*([\d,\.]+))?/i,
+      // Quantity pattern: quantity + unit + description
+      /([\d,\.]+)\s*(m²|m³|ml|unité)\s+([\w\s]+)/i
+    ];
 
     for (const line of lines) {
-      const match = line.match(regex);
-      if (match) {
-        const [, num, designation, unitRaw, qtyStr, puStr, ptStr] = match;
-
-        const unit = unitRaw.trim();
+      // Try DDQE pattern first
+      const ddqeMatch = line.match(patterns[0]);
+      if (ddqeMatch) {
+        const [, num, designation, unitRaw, qtyStr, puStr, ptStr] = ddqeMatch;
+        const elementType = mapToElementType(designation.trim());
         const quantity = parseFloat(qtyStr.replace(/\s/g, '').replace(',', '.'));
-        const priceUnit = parseFloat(puStr.replace(/\s/g, '').replace(',', '.'));
-        const priceTotal = parseFloat(ptStr.replace(/\s/g, '').replace(',', '.'));
-
+        
         results.push({
-          elementType: designation.trim(),
-          dimensions: { length: quantity, width: 1, height: 1 },
+          elementType,
+          dimensions: extractDimensionsFromDescription(designation, quantity),
+          results: {
+            Unité: unitRaw.trim(),
+            Quantité: quantity,
+            "Prix unitaire": parseFloat(puStr.replace(/\s/g, '').replace(',', '.')),
+            "Prix total": parseFloat(ptStr.replace(/\s/g, '').replace(',', '.')),
+          },
+        });
+        continue;
+      }
+
+      // Try dimension pattern
+      const dimMatch = line.match(patterns[1]);
+      if (dimMatch) {
+        const [, type, length, width, height] = dimMatch;
+        const elementType = mapToElementType(type);
+        
+        results.push({
+          elementType,
+          dimensions: {
+            length: parseFloat(length.replace(',', '.')),
+            width: parseFloat(width.replace(',', '.')),
+            height: height ? parseFloat(height.replace(',', '.')) : undefined
+          },
+          results: calculateAdvancedQuantities(
+            elementType,
+            parseFloat(length.replace(',', '.')),
+            parseFloat(width.replace(',', '.')),
+            height ? parseFloat(height.replace(',', '.')) : undefined
+          )
+        });
+        continue;
+      }
+
+      // Try quantity pattern
+      const qtyMatch = line.match(patterns[2]);
+      if (qtyMatch) {
+        const [, qty, unit, desc] = qtyMatch;
+        const elementType = mapToElementType(desc.trim());
+        const quantity = parseFloat(qty.replace(',', '.'));
+        
+        results.push({
+          elementType,
+          dimensions: generateDimensionsFromQuantity(quantity, unit),
           results: {
             Unité: unit,
             Quantité: quantity,
-            "Prix unitaire": priceUnit,
-            "Prix total": priceTotal,
-          },
+            Description: desc.trim()
+          }
         });
-        console.log("📄 results :", results);
       }
     }
 
     return results;
+  };
+
+  // Map description to element type
+  const mapToElementType = (description: string): string => {
+    const desc = description.toLowerCase();
+    if (desc.includes('dalle') || desc.includes('béton')) return 'Dalle béton';
+    if (desc.includes('mur') || desc.includes('maçonnerie')) return 'Mur maçonnerie';
+    if (desc.includes('plancher') || desc.includes('corps creux')) return 'Plancher corps creux';
+    if (desc.includes('ferraillage') || desc.includes('acier')) return 'Ferraillage';
+    if (desc.includes('enduit') || desc.includes('plâtre')) return 'Enduit';
+    if (desc.includes('poutre')) return 'Poutre';
+    if (desc.includes('poteau') || desc.includes('colonne')) return 'Poteau';
+    if (desc.includes('fondation')) return 'Fondation';
+    if (desc.includes('escalier')) return 'Escalier';
+    return description;
+  };
+
+  // Extract dimensions from description and quantity
+  const extractDimensionsFromDescription = (description: string, quantity: number) => {
+    const desc = description.toLowerCase();
+    if (desc.includes('dalle') || desc.includes('plancher')) {
+      const area = quantity;
+      const estimatedLength = Math.sqrt(area);
+      return { length: estimatedLength, width: estimatedLength, height: 0.15 };
+    }
+    if (desc.includes('mur')) {
+      const area = quantity;
+      return { length: area / 2.5, width: undefined, height: 2.5 };
+    }
+    if (desc.includes('enduit')) {
+      const area = quantity;
+      return { length: Math.sqrt(area), width: Math.sqrt(area) };
+    }
+    return { length: quantity, width: 1, height: 1 };
+  };
+
+  // Generate dimensions from quantity and unit
+  const generateDimensionsFromQuantity = (quantity: number, unit: string) => {
+    switch (unit.toLowerCase()) {
+      case 'm²':
+        const side = Math.sqrt(quantity);
+        return { length: side, width: side };
+      case 'm³':
+        const cube = Math.cbrt(quantity);
+        return { length: cube, width: cube, height: cube };
+      case 'ml':
+        return { length: quantity, width: undefined, height: undefined };
+      default:
+        return { length: quantity, width: 1, height: 1 };
+    }
   };
 
 
@@ -269,7 +365,7 @@ const AdvancedQuantityCalculator = ({ onResultsChange }: AdvancedQuantityCalcula
           canvas.width = viewport.width;
           canvas.height = viewport.height;
 
-          await page.render({ canvasContext: context, viewport }).promise;
+          await page.render({ canvasContext: context, viewport, canvas }).promise;
 
           const { data: { text: ocrText } } = await Tesseract.recognize(
             canvas,
