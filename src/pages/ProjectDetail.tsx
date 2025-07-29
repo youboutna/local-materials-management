@@ -733,19 +733,71 @@ const ProjectDetail = () => {
                           allowPolygon={true}
                           className="mb-4"
                         />
-                        {mapData?.coordinates && (
-                          <div className="mt-4 text-sm text-gray-600 bg-muted/50 p-3 rounded-lg">
-                            <p>
-                              <strong>Coordonnées GPS:</strong>{" "}
-                              Lat: {mapData.coordinates.lat.toFixed(6)}, Lng: {mapData.coordinates.lng.toFixed(6)}
-                            </p>
-                            {mapData.address && (
-                              <p className="mt-1">
-                                <strong>Adresse:</strong> {mapData.address}
-                              </p>
-                            )}
+                        
+                        {/* Project Location Information */}
+                        <div className="mt-4 space-y-3">
+                          <div className="p-4 bg-gradient-to-br from-card via-card/90 to-muted/20 rounded-lg border border-border/50">
+                            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              Position actuelle du projet
+                            </h4>
+                            
+                            <div className="space-y-2 text-sm">
+                              {/* GPS Coordinates */}
+                              {mapData?.coordinates ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-muted-foreground">Coordonnées GPS:</span>
+                                  <span className="text-foreground font-mono">
+                                    {mapData.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
+                                  </span>
+                                </div>
+                              ) : project.coordinates?.latitude && project.coordinates?.longitude ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-muted-foreground">Coordonnées GPS:</span>
+                                  <span className="text-foreground font-mono">
+                                    {project.coordinates.latitude.toFixed(6)}, {project.coordinates.longitude.toFixed(6)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <span className="font-medium">Coordonnées GPS:</span>
+                                  <span className="italic">Non définies</span>
+                                </div>
+                              )}
+                              
+                              {/* Address */}
+                              {mapData?.address ? (
+                                <div className="flex items-start gap-2">
+                                  <span className="font-medium text-muted-foreground">Adresse:</span>
+                                  <span className="text-foreground">{mapData.address}</span>
+                                </div>
+                              ) : project.location ? (
+                                <div className="flex items-start gap-2">
+                                  <span className="font-medium text-muted-foreground">Localisation:</span>
+                                  <span className="text-foreground">{project.location}</span>
+                                </div>
+                              ) : null}
+                              
+                              {/* Shapes Information */}
+                              {mapData?.shapes && mapData.shapes.length > 0 && (
+                                <div className="flex items-start gap-2">
+                                  <span className="font-medium text-muted-foreground">Formes définies:</span>
+                                  <span className="text-foreground">
+                                    {mapData.shapes.length} forme{mapData.shapes.length > 1 ? 's' : ''} géométrique{mapData.shapes.length > 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Project Reference */}
+                              {project.projectReference && (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-muted-foreground">Référence:</span>
+                                  <span className="text-foreground font-mono">{project.projectReference}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
