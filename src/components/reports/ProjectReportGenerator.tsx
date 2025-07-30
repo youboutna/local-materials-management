@@ -103,6 +103,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           }, 0);
         }
 
+        console.log('ActualCost calculation:', { materialTotal, hrActualTotal, total: materialTotal + hrActualTotal });
         setActualCost(materialTotal + hrActualTotal);
 
         // Calculate estimatedCost from Quantity Takeoffs and Human Resources
@@ -144,6 +145,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           }, 0);
         }
 
+        console.log('EstimatedCost calculation:', { takeoffTotal, hrEstimatedTotal, total: takeoffTotal + hrEstimatedTotal, quantityTakeoffs, phaseData });
         setEstimatedCost(takeoffTotal + hrEstimatedTotal);
 
       } catch (error) {
