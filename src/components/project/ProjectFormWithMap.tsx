@@ -11,6 +11,7 @@ import { Calendar, MapPin, Building, User, HardHat, Clock, FileText, CreditCard,
 import InteractiveMapGIS from '../materials/InteractiveMapGIS';
 import ProjectPhases from '@/components/project/ProjectPhases';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import TenderProjectFields from '@/components/projects/TenderProjectFields';
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
@@ -75,6 +76,8 @@ interface ProjectFormData {
   financing_source?: string;
   market_type?: string;
   selection_mode?: string;
+  launch_date?: string;
+  attribution_date?: string;
   project_responsable_id?: string;
   main_contractor?: string;
   project_reference?: string;
@@ -115,6 +118,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     financing_source: '',
     market_type: '',
     selection_mode: '',
+    launch_date: '',
+    attribution_date: '',
     project_responsable_id: '',
     main_contractor: '',
     project_reference: '',
@@ -228,11 +233,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-8 gap-1 h-auto p-1 bg-muted/50 rounded-lg">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Informations</span>
             <span className="sm:hidden font-medium">Info</span>
+          </TabsTrigger>
+          <TabsTrigger value="tender" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline font-medium">Appel d'offres</span>
+            <span className="sm:hidden font-medium">Tender</span>
           </TabsTrigger>
           <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Settings className="h-4 w-4" />
@@ -362,6 +372,32 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Tender Information Tab */}
+        <TabsContent value="tender" className="space-y-6">
+          <TenderProjectFields
+            formData={{
+              launchDate: formData.launch_date,
+              attributionDate: formData.attribution_date,
+              marketType: formData.market_type,
+              selectionMode: formData.selection_mode,
+              financingSource: formData.financing_source,
+              projectReference: formData.project_reference
+            }}
+            onChange={(field, value) => {
+              const fieldMap: Record<string, string> = {
+                'launchDate': 'launch_date',
+                'attributionDate': 'attribution_date',
+                'marketType': 'market_type',
+                'selectionMode': 'selection_mode',
+                'financingSource': 'financing_source',
+                'projectReference': 'project_reference'
+              };
+              handleChange(fieldMap[field] || field, value);
+            }}
+            readOnly={false}
+          />
         </TabsContent>
 
         {/* Construction Phase Tab */}
