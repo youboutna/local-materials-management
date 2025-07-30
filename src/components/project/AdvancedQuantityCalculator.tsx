@@ -588,24 +588,24 @@ const AdvancedQuantityCalculator: React.FC = () => {
               variant="default"
               onClick={handleCalculate}
               disabled={!hasRequiredDimensions()}
-              leftIcon={<Calculator className="w-4 h-4" />}
             >
+              <Calculator className="w-4 h-4 mr-2" />
               Calculer et ajouter
             </Button>
 
             <Button
               variant="secondary"
               onClick={resetForm}
-              leftIcon={<Trash2 className="w-4 h-4" />}
             >
+              <Trash2 className="w-4 h-4 mr-2" />
               Réinitialiser
             </Button>
 
             <Button
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
-              leftIcon={<Upload className="w-4 h-4" />}
             >
+              <Upload className="w-4 h-4 mr-2" />
               Importer PDF
             </Button>
 
@@ -627,16 +627,16 @@ const AdvancedQuantityCalculator: React.FC = () => {
               variant="outline"
               disabled={parsedLines.length === 0 || currentLineIndex >= parsedLines.length}
               onClick={() => fillFormWithLine(currentLineIndex)}
-              leftIcon={<SkipForward className="w-4 h-4" />}
             >
+              <SkipForward className="w-4 h-4 mr-2" />
               Remplir ligne suivante
             </Button>
 
             <Button
               variant="destructive"
               onClick={() => setCalculations([])}
-              leftIcon={<Trash2 className="w-4 h-4" />}
             >
+              <Trash2 className="w-4 h-4 mr-2" />
               Tout effacer
             </Button>
 
@@ -663,8 +663,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
                 link.click();
                 URL.revokeObjectURL(link.href);
               }}
-              leftIcon={<Download className="w-4 h-4" />}
             >
+              <Download className="w-4 h-4 mr-2" />
               Exporter CSV
             </Button>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,8 @@ interface ReportConfig {
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [actualCost, setActualCost] = useState<number>(0);
+  const [estimatedCost, setEstimatedCost] = useState<number>(0);
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
     includeSections: {
@@ -54,6 +56,103 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     recipientEmail: '',
     notes: '',
   });
+
+  // Calculate costs based on project data
+  useEffect(() => {
+    const calculateCosts = async () => {
+      try {
+        // Calculate actualCost from Materials and Human Resources
+        const { data: materialCosts } = await supabase
+          .from('project_materials')
+          .select(`
+            quantity,
+            materials (
+              price_per_unit
+            )
+          `)
+          .eq('project_id', project.id);
+
+        const { data: humanResourceCosts } = await supabase
+          .from('phase_employees')
+          .select(`
+            daily_rate,
+            start_date,
+            end_date,
+            project_phases!inner (
+              project_id
+            )
+          `)
+          .eq('project_phases.project_id', project.id);
+
+        let materialTotal = 0;
+        if (materialCosts) {
+          materialTotal = materialCosts.reduce((sum, item) => {
+            const price = item.materials?.price_per_unit || 0;
+            return sum + (item.quantity * price);
+          }, 0);
+        }
+
+        let hrActualTotal = 0;
+        if (humanResourceCosts) {
+          hrActualTotal = humanResourceCosts.reduce((sum, employee) => {
+            if (!employee.daily_rate || !employee.start_date || !employee.end_date) return sum;
+            const startDate = new Date(employee.start_date);
+            const endDate = new Date(employee.end_date);
+            const workingDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+            return sum + (employee.daily_rate * workingDays);
+          }, 0);
+        }
+
+        setActualCost(materialTotal + hrActualTotal);
+
+        // Calculate estimatedCost from Quantity Takeoffs and Human Resources
+        const { data: quantityTakeoffs } = await supabase
+          .from('quantity_takeoffs')
+          .select(`
+            quantity,
+            materials (
+              price_per_unit
+            )
+          `)
+          .eq('project_id', project.id);
+
+        const { data: phaseData } = await supabase
+          .from('project_phases')
+          .select('estimated_cost, human_resources')
+          .eq('project_id', project.id);
+
+        let takeoffTotal = 0;
+        if (quantityTakeoffs) {
+          takeoffTotal = quantityTakeoffs.reduce((sum, item) => {
+            const price = item.materials?.price_per_unit || 0;
+            return sum + (item.quantity * price);
+          }, 0);
+        }
+
+        let hrEstimatedTotal = 0;
+        if (phaseData) {
+          hrEstimatedTotal = phaseData.reduce((sum, phase) => {
+            if (phase.human_resources && Array.isArray(phase.human_resources)) {
+              const phaseHrCost = phase.human_resources.reduce((hrSum: number, hr: any) => {
+                const dailyRate = hr.daily_rate || 0;
+                const estimatedDays = hr.estimated_days || 30;
+                return hrSum + (dailyRate * estimatedDays);
+              }, 0);
+              return sum + phaseHrCost;
+            }
+            return sum + (phase.estimated_cost || 0);
+          }, 0);
+        }
+
+        setEstimatedCost(takeoffTotal + hrEstimatedTotal);
+
+      } catch (error) {
+        console.error('Error calculating costs:', error);
+      }
+    };
+
+    calculateCosts();
+  }, [project.id]);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -111,11 +210,11 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </div>
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #92400e; margin: 0; font-size: 14px;">Coût Estimé</h3>
-              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${(project as any).estimatedCost ? `${(project as any).estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${estimatedCost ? `${estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
             <div style="background: #fce7f3; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #be185d; margin: 0; font-size: 14px;">Coût Réel</h3>
-              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${(project as any).actualCost ? `${(project as any).actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${actualCost ? `${actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
           </div>
         </section>
