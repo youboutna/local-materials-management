@@ -109,7 +109,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{getTotalValue().toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{getTotalValue().toFixed(2)} MRU</div>
             <p className="text-xs text-muted-foreground">Valeur Totale</p>
           </CardContent>
         </Card>
