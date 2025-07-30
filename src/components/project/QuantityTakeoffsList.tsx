@@ -154,7 +154,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
 
                       {qt.material?.price_per_unit && (
                         <div className="text-sm text-gray-600">
-                          Valeur: {(qt.quantity * qt.material.price_per_unit).toFixed(2)} €
+                          Valeur: {(qt.quantity * qt.material.price_per_unit).toFixed(2)} MRU
                         </div>
                       )}
 
