@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PhaseService, PhaseData } from '@/services/phaseService';
+import { supabase } from '@/integrations/supabase/client';
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
@@ -34,6 +35,57 @@ const PhaseDetail: React.FC = () => {
   const { t } = useLanguage();
   const [phase, setPhase] = useState<PhaseData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actualCost, setActualCost] = useState<number>(0);
+  const [materialsCount, setMaterialsCount] = useState<number>(0);
+  const [employeesCount, setEmployeesCount] = useState<number>(0);
+
+  // Function to calculate actual costs and counts from database
+  const calculatePhaseMetrics = async (phaseId: string) => {
+    try {
+      // Calculate actual cost from materials
+      const { data: materialData, error: materialError } = await supabase
+        .from('project_materials')
+        .select(`
+          quantity,
+          material:materials(price_per_unit)
+        `)
+        .eq('phase_id', phaseId);
+
+      if (materialError) throw materialError;
+
+      const materialCost = materialData?.reduce((sum, pm) => 
+        sum + (pm.quantity * (pm.material?.price_per_unit || 0)), 0
+      ) || 0;
+
+      // Calculate cost from employees
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('phase_employees')
+        .select('*')
+        .eq('phase_id', phaseId);
+
+      if (employeeError) throw employeeError;
+
+      const employeeCost = employeeData?.reduce((sum, emp) => {
+        const dailyRate = emp.daily_rate || 0;
+        const startDate = emp.start_date ? new Date(emp.start_date) : null;
+        const endDate = emp.end_date ? new Date(emp.end_date) : null;
+        
+        if (startDate && endDate) {
+          const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return sum + (dailyRate * diffDays);
+        }
+        return sum;
+      }, 0) || 0;
+
+      setActualCost(materialCost + employeeCost);
+      setMaterialsCount(materialData?.length || 0);
+      setEmployeesCount(employeeData?.length || 0);
+
+    } catch (error) {
+      console.error('Error calculating phase metrics:', error);
+    }
+  };
 
   useEffect(() => {
     const loadPhase = async () => {
@@ -46,6 +98,8 @@ const PhaseDetail: React.FC = () => {
         
         if (foundPhase) {
           setPhase(foundPhase);
+          // Calculate actual metrics from database
+          await calculatePhaseMetrics(phaseId);
         } else {
           toast({
             title: "Erreur",
@@ -158,7 +212,7 @@ const PhaseDetail: React.FC = () => {
               {phase.budget.toLocaleString()} MRU
             </div>
             <p className="text-xs text-muted-foreground">
-              Coût réel: {phase.actualCost.toLocaleString()} MRU
+              Coût réel: {actualCost.toLocaleString()} MRU
             </p>
           </CardContent>
         </Card>
@@ -208,7 +262,7 @@ const PhaseDetail: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="h-5 w-5" />
-                  Matériaux requis ({phase.materials.length})
+                  Matériaux requis ({materialsCount})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -233,7 +287,7 @@ const PhaseDetail: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Ressources humaines ({phase.humanResources.length})
+                  Ressources humaines ({employeesCount})
                 </CardTitle>
               </CardHeader>
               <CardContent>
