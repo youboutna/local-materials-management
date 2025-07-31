@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, MapPin, Package, User, Warehouse, Target, Pentagon } from 'lucide-react';
+import { Clock, MapPin, Package, User, Warehouse, Target, Pentagon, Upload, X, Image } from 'lucide-react';
 import { useLanguage } from "@/contexts/LanguageContext";
 import MaterialCategorySelector from './MaterialCategorySelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -16,6 +16,8 @@ import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
 import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
 import InteractiveMapGIS from './InteractiveMapGIS';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { toast } from 'sonner';
 
 interface MaterialFormData {
   name: string;
@@ -28,6 +30,7 @@ interface MaterialFormData {
   pricePerUnit: number;
   availableQuantity: number;
   workspaceId: string;
+  image?: string;
   adresse?: string;
   forme?: string;
   localisation?: any[];
@@ -76,6 +79,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
 }, ref) => {
   const { t } = useLanguage();
   const { workspaces: dbWorkspaces, createWorkspace } = useWorkspaces();
+  const { uploadFile, uploading } = useDocumentStorage();
 
   const [formData, setFormData] = useState<Partial<MaterialFormData>>({
     name: '',
@@ -108,6 +112,8 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   const [selectedSubcategory, setSelectedSubcategory] = useState(initialData?.subcategory || '');
   const [activeTab, setActiveTab] = useState('basic');
   const [mapData, setMapData] = useState<MapData>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
 
   // Use database workspaces if available, otherwise fall back to prop workspaces
   const availableWorkspaces = dbWorkspaces.length > 0 ? dbWorkspaces : workspaces;
@@ -287,6 +293,52 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     handleChange('workspaceId', workspaceId);
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image valide');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La taille du fichier ne peut pas dépasser 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setImagePreview(result);
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      const result = await uploadFile(file, `materials/${Date.now()}_${file.name}`);
+      if (result.success && result.url) {
+        handleChange('image', result.url);
+        toast.success('Image téléchargée avec succès');
+      } else {
+        toast.error('Erreur lors du téléchargement de l\'image');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erreur lors du téléchargement de l\'image');
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    handleChange('image', '');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -344,6 +396,65 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                   rows={3}
                   className="border-gray-300 focus:border-terracotta-500"
                 />
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  {t('materials.image') || 'Image du matériau'}
+                </Label>
+                <div className="space-y-4">
+                  {imagePreview ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="Aperçu du matériau"
+                        className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-terracotta-500 transition-colors">
+                      <Image className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-600">
+                        Cliquez pour ajouter une image
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                      disabled={uploading}
+                    />
+                    <Label
+                      htmlFor="image-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta-50 border border-terracotta-200 rounded-md text-sm font-medium text-terracotta-700 hover:bg-terracotta-100 cursor-pointer transition-colors"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploading ? 'Téléchargement...' : 'Sélectionner une image'}
+                    </Label>
+                    {imagePreview && !imageFile && (
+                      <span className="text-xs text-green-600">✓ Image sauvegardée</span>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-gray-500">
+                    Formats acceptés: JPG, PNG, GIF. Taille max: 5MB
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
