@@ -27,6 +27,7 @@ interface MaterialFormData {
   pricePerUnit: number;
   availableQuantity: number;
   workspaceId: string;
+  image?: string;
   adresse?: string;
   forme?: string;
   localisation?: any[];
@@ -104,6 +105,7 @@ const MaterialEdit = () => {
         available_quantity: updatedData.availableQuantity,
         workspace_id: updatedData.workspaceId,
         origin_location: updatedData.supplier?.name,
+        image: updatedData.image,
         adresse: updatedData.adresse,
         forme: updatedData.localisation && updatedData.localisation.length > 0 
           ? JSON.stringify(updatedData.localisation) 
@@ -156,6 +158,7 @@ const MaterialEdit = () => {
         pricePerUnit: Number(material.price_per_unit),
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
+        image: material.image || '',
         adresse: (material.adresse as string) || '',
         forme: material.forme as string | undefined,
         localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
