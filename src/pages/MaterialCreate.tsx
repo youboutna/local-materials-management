@@ -40,6 +40,7 @@ const MaterialCreate = () => {
           available_quantity: materialData.availableQuantity || 0,
           origin_location: materialData.adresse || null,
           workspace_id: materialData.workspaceId || null,
+          image: materialData.image || null,
           adresse: materialData.adresse || null,
           forme: materialData.localisation && materialData.localisation.length > 0 
             ? JSON.stringify(materialData.localisation) 
