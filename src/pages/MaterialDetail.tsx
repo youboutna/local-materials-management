@@ -273,23 +273,29 @@ const MaterialDetail = () => {
           <MaterialLocationMap material={material} height="400px" />
 
           {/* Material Image */}
-          {material.image && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Image du matériau</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Image du matériau</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {material?.image && material.image.length > 0 ? (
                 <img
                   src={material.image}
                   alt={material.name}
                   className="w-full h-64 object-cover rounded-lg"
                   onError={(e) => {
-                    e.currentTarget.src = '/img/material-placeholder.jpg';
+                    e.currentTarget.src = window.location.origin + '/img/material-placeholder.jpg';
                   }}
                 />
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <img
+                  src={window.location.origin + '/img/material-placeholder.jpg'}
+                  alt={material.name}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

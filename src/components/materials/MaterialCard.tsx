@@ -28,15 +28,26 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick }) => {
     <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-1">
       <CardContent className="p-4" onClick={onClick}>
         <div className="space-y-3">
-          {material.image && (
-            <div className="relative overflow-hidden rounded-md">
-              <img
-                src={material.image}
-                alt={material.name}
-                className="w-full h-32 object-cover transition-transform duration-200 hover:scale-105"
-              />
-            </div>
-          )}
+          <div className="relative overflow-hidden rounded-md">
+
+            
+              {material?.image && material.image.length > 0 ? (
+                <img
+                  src={material.image}
+                  alt={material.name}
+                  className="w-full h-32 object-cover transition-transform duration-200 hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.src = window.location.origin + '/img/material-placeholder.jpg';
+                  }}
+                />
+              ) : (
+                <img
+                  src={window.location.origin + '/img/material-placeholder.jpg'}
+                  alt={material.name}
+                  className="w-full h-32 object-cover transition-transform duration-200 hover:scale-105"
+                />
+              )}
+          </div>
 
           <div>
             <h3 className="font-semibold text-lg text-foreground line-clamp-1">

@@ -1,4 +1,3 @@
-
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -297,6 +296,7 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('image type', file.type);
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner un fichier image valide');
@@ -421,14 +421,18 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-terracotta-500 transition-colors">
-                      <Image className="mx-auto h-12 w-12 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600">
-                        Cliquez pour ajouter une image
-                      </p>
-                    </div>
-                  )}
+                  ) : null}
+
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-terracotta-500 transition-colors">
+                    {imagePreview ? null : (
+                      <>
+                        <Image className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">
+                          Cliquez pour ajouter une image
+                        </p>
+                      </>
+                    )}
+                  </div>
                   
                   <div className="flex items-center gap-2">
                     <Input
