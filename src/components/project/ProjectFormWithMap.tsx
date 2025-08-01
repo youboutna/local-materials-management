@@ -239,11 +239,6 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <span className="hidden sm:inline font-medium">Informations</span>
             <span className="sm:hidden font-medium">Info</span>
           </TabsTrigger>
-          <TabsTrigger value="tender" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Appel d'offres</span>
-            <span className="sm:hidden font-medium">Tender</span>
-          </TabsTrigger>
           <TabsTrigger value="construction" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Construction</span>
@@ -259,11 +254,6 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <span className="hidden sm:inline font-medium">Chronologie</span>
             <span className="sm:hidden font-medium">Dates</span>
           </TabsTrigger>
-          <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline font-medium">Détails</span>
-            <span className="sm:hidden font-medium">Plus</span>
-          </TabsTrigger>
           <TabsTrigger value="payment" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Paiement</span>
@@ -273,6 +263,11 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <MapPin className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Localisation</span>
             <span className="sm:hidden font-medium">Map</span>
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline font-medium">Détails</span>
+            <span className="sm:hidden font-medium">Plus</span>
           </TabsTrigger>
         </TabsList>
 
@@ -372,32 +367,6 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Tender Information Tab */}
-        <TabsContent value="tender" className="space-y-6">
-          <TenderProjectFields
-            formData={{
-              launchDate: formData.launch_date,
-              attributionDate: formData.attribution_date,
-              marketType: formData.market_type,
-              selectionMode: formData.selection_mode,
-              financingSource: formData.financing_source,
-              projectReference: formData.project_reference
-            }}
-            onChange={(field, value) => {
-              const fieldMap: Record<string, string> = {
-                'launchDate': 'launch_date',
-                'attributionDate': 'attribution_date',
-                'marketType': 'market_type',
-                'selectionMode': 'selection_mode',
-                'financingSource': 'financing_source',
-                'projectReference': 'project_reference'
-              };
-              handleChange(fieldMap[field] || field, value);
-            }}
-            readOnly={false}
-          />
         </TabsContent>
 
         {/* Construction Phase Tab */}
@@ -521,48 +490,28 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 Détails du projet
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="financing_source">Source de financement</Label>
-                  <Input
-                    id="financing_source"
-                    value={formData.financing_source}
-                    onChange={(e) => handleChange('financing_source', e.target.value)}
-                    placeholder="Gouvernement, Privé, etc."
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="market_type">Type de marché</Label>
-                  <Select value={formData.market_type} onValueChange={(value) => handleChange('market_type', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public">Marché public</SelectItem>
-                      <SelectItem value="private">Marché privé</SelectItem>
-                      <SelectItem value="mixed">Marché mixte</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="selection_mode">Mode de sélection</Label>
-                  <Select value={formData.selection_mode} onValueChange={(value) => handleChange('selection_mode', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner le mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="appel_offres">Appel d'offres</SelectItem>
-                      <SelectItem value="consultation">Consultation</SelectItem>
-                      <SelectItem value="gre_gre">Gré à gré</SelectItem>
-                      <SelectItem value="concours">Concours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
+            <TenderProjectFields
+              formData={{
+                launchDate: formData.launch_date,
+                attributionDate: formData.attribution_date,
+                marketType: formData.market_type,
+                selectionMode: formData.selection_mode,
+                financingSource: formData.financing_source,
+                projectReference: formData.project_reference
+              }}
+              onChange={(field, value) => {
+                const fieldMap: Record<string, string> = {
+                  'launchDate': 'launch_date',
+                  'attributionDate': 'attribution_date',
+                  'marketType': 'market_type',
+                  'selectionMode': 'selection_mode',
+                  'financingSource': 'financing_source',
+                  'projectReference': 'project_reference'
+                };
+                handleChange(fieldMap[field] || field, value);
+              }}
+              readOnly={false}
+            />
           </Card>
         </TabsContent>
 

@@ -115,6 +115,10 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                   <SelectItem value="ppp">Partenariat Public-Privé (PPP)</SelectItem>
                   <SelectItem value="framework">Marché cadre</SelectItem>
                   <SelectItem value="emergency">Marché d'urgence</SelectItem>
+                  <SelectItem value="Supply">Fournitures</SelectItem>
+                  <SelectItem value="construction">Travaux</SelectItem>
+                  
+
                 </SelectContent>
               </Select>
             )}
@@ -137,9 +141,13 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 <SelectContent>
                   <SelectItem value="open_tender">Appel d'offres ouvert</SelectItem>
                   <SelectItem value="restricted_tender">Appel d'offres restreint</SelectItem>
+                  <SelectItem value="restricted_tender_national">Appel d'offres restreint national</SelectItem>
                   <SelectItem value="negotiated">Procédure négociée</SelectItem>
                   <SelectItem value="competitive_dialogue">Dialogue compétitif</SelectItem>
                   <SelectItem value="direct_award">Attribution directe</SelectItem>
+                   <SelectItem value="direct_award_supply"> Consultation Simplifiée</SelectItem>
+
+                 
                 </SelectContent>
               </Select>
             )}
