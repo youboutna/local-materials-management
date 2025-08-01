@@ -41,11 +41,16 @@ const ProjectCreate = () => {
     setIsSubmitting(true);
     
     try {
-      // Prepare coordinates for the API
+      // Prepare coordinates and localization data for the API
       const projectCoordinates = data.facilitiesLocation?.center ? {
         latitude: data.facilitiesLocation.center.lat,
         longitude: data.facilitiesLocation.center.lng
       } : undefined;
+      
+      // Prepare localization data
+      const localizationData = data.facilitiesLocation?.polygon || data.facilitiesLocation?.warehouseShape || [];
+      const shapeType = data.facilitiesLocation?.shapeType || (data.facilitiesLocation?.polygon?.length > 0 ? 'polygon' : undefined);
+      const addressData = data.facilitiesLocation?.address;
       
       // Map the status from form to database value
       const mappedStatus = statusMapping[data.status as keyof typeof statusMapping] || 'en attente';
@@ -73,7 +78,11 @@ const ProjectCreate = () => {
         initialPaymentPercentage: data.initial_payment_percentage,
         // Construction workflow fields - ensuring proper type casting
         currentPhase: data.current_phase,
-        currentStage: data.current_stage
+        currentStage: data.current_stage,
+        // Localization fields
+        localisation: localizationData,
+        forme: shapeType,
+        adresse: addressData
       };
 
       const projectResult = await createProject(projectData);

@@ -72,8 +72,17 @@ const ProjectEdit = () => {
               center: {
                 lat: projectData.coordinates.latitude,
                 lng: projectData.coordinates.longitude
-              }
-            } : undefined
+              },
+              polygon: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
+              warehouseShape: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
+              address: typeof (projectData as any).adresse === 'string' ? (projectData as any).adresse : ((projectData as any).adresse?.address || ''),
+              shapeType: (projectData as any).forme || undefined
+            } : {
+              polygon: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
+              warehouseShape: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
+              address: typeof (projectData as any).adresse === 'string' ? (projectData as any).adresse : ((projectData as any).adresse?.address || ''),
+              shapeType: (projectData as any).forme || undefined
+            }
           };
 
           setInitialData(formInitialData);
@@ -141,11 +150,16 @@ const ProjectEdit = () => {
         'Cancelled': 'annulé'
       } as const;
 
-      // Prepare coordinates for the API
+      // Prepare coordinates and localization data for the API
       const projectCoordinates = data.facilitiesLocation?.center ? {
         latitude: data.facilitiesLocation.center.lat,
         longitude: data.facilitiesLocation.center.lng
       } : undefined;
+      
+      // Prepare localization data
+      const localizationData = data.facilitiesLocation?.polygon || data.facilitiesLocation?.warehouseShape || [];
+      const shapeType = data.facilitiesLocation?.shapeType || (data.facilitiesLocation?.polygon?.length > 0 ? 'polygon' : undefined);
+      const addressData = data.facilitiesLocation?.address;
       
       // Map the status from form to database value
       const mappedStatus = statusMapping[data.status as keyof typeof statusMapping] || 'en attente';
@@ -170,7 +184,11 @@ const ProjectEdit = () => {
         allowsInitialPayment: data.allows_initial_payment,
         initialPaymentPercentage: data.initial_payment_percentage,
         currentPhase: data.current_phase,
-        currentStage: data.current_stage
+        currentStage: data.current_stage,
+        // Localization fields
+        localisation: localizationData,
+        forme: shapeType,
+        adresse: addressData
       };
 
       const updatedProject = await updateProject(id, projectDataToUpdate);

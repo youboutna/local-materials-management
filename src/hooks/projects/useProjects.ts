@@ -64,6 +64,11 @@ export const useProjects = () => {
       if (projectData.initialPaymentPercentage !== undefined) dbData.initial_payment_percentage = projectData.initialPaymentPercentage;
       if (projectData.currentPhase !== undefined) dbData.current_phase = projectData.currentPhase;
       if (projectData.currentStage !== undefined) dbData.current_stage = projectData.currentStage;
+      
+      // Handle localization fields
+      if ((projectData as any).localisation !== undefined) dbData.localisation = (projectData as any).localisation;
+      if ((projectData as any).forme !== undefined) dbData.forme = (projectData as any).forme;
+      if ((projectData as any).adresse !== undefined) dbData.adresse = (projectData as any).adresse;
       // If projectData.coordinates is undefined, we don't update the coordinates
 
       const { data, error } = await supabase

@@ -238,16 +238,40 @@ const ProjectDetail = () => {
       console.log("Project with details loaded:", projectWithDetails);
       setProject(projectWithDetails);
 
-      // Initialize map data if project has coordinates
+      // Initialize map data if project has coordinates or localization data
+      let initialMapData: any = {
+        coordinates: undefined,
+        address: projectWithDetails.location || "",
+        shape: [],
+        shapeType: undefined
+      };
+
       if (projectWithDetails.coordinates?.latitude && projectWithDetails.coordinates?.longitude) {
-        setMapData({
-          coordinates: {
-            lat: projectWithDetails.coordinates.latitude,
-            lng: projectWithDetails.coordinates.longitude,
-          },
-          address: projectWithDetails.location || "",
-        });
+        initialMapData.coordinates = {
+          lat: projectWithDetails.coordinates.latitude,
+          lng: projectWithDetails.coordinates.longitude,
+        };
       }
+
+      // Add localization data if available
+      const projectExtended = projectWithDetails as any;
+      if (Array.isArray(projectExtended.localisation) && projectExtended.localisation.length > 0) {
+        initialMapData.shape = projectExtended.localisation;
+        initialMapData.polygon = projectExtended.localisation;
+        initialMapData.warehouseShape = projectExtended.localisation;
+      }
+      
+      if (projectExtended.forme) {
+        initialMapData.shapeType = projectExtended.forme;
+      }
+      
+      if (projectExtended.adresse) {
+        initialMapData.address = typeof projectExtended.adresse === 'string' 
+          ? projectExtended.adresse 
+          : projectExtended.adresse.address || projectWithDetails.location || "";
+      }
+
+      setMapData(initialMapData);
     } catch (error) {
       console.error("Error fetching project details:", error);
       throw error;
@@ -327,16 +351,38 @@ const ProjectDetail = () => {
   const handleMapDataChange = async (newMapData: any) => {
     setMapData(newMapData);
     
-    // Update project coordinates in the database if editing is enabled
-    if (isEditingLocation && project && newMapData.coordinates) {
+    // Update project coordinates and localization data in the database if editing is enabled
+    if (isEditingLocation && project) {
       try {
+        const updateData: any = {};
+        
+        // Update coordinates if provided
+        if (newMapData.coordinates) {
+          updateData.coordinates_latitude = newMapData.coordinates.lat;
+          updateData.coordinates_longitude = newMapData.coordinates.lng;
+        }
+        
+        // Update address
+        if (newMapData.address) {
+          updateData.location = newMapData.address;
+          updateData.adresse = newMapData.address;
+        }
+        
+        // Update shape data
+        if (newMapData.shape && newMapData.shape.length > 0) {
+          updateData.localisation = newMapData.shape;
+          updateData.forme = newMapData.shapeType || 'polygon';
+        } else if (newMapData.polygon && newMapData.polygon.length > 0) {
+          updateData.localisation = newMapData.polygon;
+          updateData.forme = 'polygon';
+        } else if (newMapData.warehouseShape && newMapData.warehouseShape.length > 0) {
+          updateData.localisation = newMapData.warehouseShape;
+          updateData.forme = newMapData.shapeType || 'polygon';
+        }
+
         const { error } = await supabase
           .from("projects")
-          .update({
-            coordinates_latitude: newMapData.coordinates.lat,
-            coordinates_longitude: newMapData.coordinates.lng,
-            location: newMapData.address || project.location,
-          })
+          .update(updateData)
           .eq("id", project.id);
 
         if (error) {
