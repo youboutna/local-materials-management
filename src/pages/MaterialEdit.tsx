@@ -107,9 +107,7 @@ const MaterialEdit = () => {
         origin_location: updatedData.supplier?.name,
         image: updatedData.image,
         adresse: updatedData.adresse,
-        forme: updatedData.localisation && updatedData.localisation.length > 0 
-          ? JSON.stringify(updatedData.localisation) 
-          : updatedData.forme || null,
+        forme: updatedData.forme || null,
         localisation: updatedData.localisation,
         coordinates_latitude: updatedData.coordinatesLatitude,
         coordinates_longitude: updatedData.coordinatesLongitude,
@@ -159,7 +157,7 @@ const MaterialEdit = () => {
         availableQuantity: Number(material.available_quantity),
         workspaceId: material.workspace_id || '',
         image: material.image || '',
-        adresse: (material.adresse as string) || '',
+        adresse: typeof material.adresse === 'string' ? material.adresse : (material.adresse as any)?.address || '',
         forme: material.forme as string | undefined,
         localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
         coordinatesLatitude: material.coordinates_latitude ? Number(material.coordinates_latitude) : undefined,

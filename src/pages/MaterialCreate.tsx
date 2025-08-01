@@ -42,9 +42,7 @@ const MaterialCreate = () => {
           workspace_id: materialData.workspaceId || null,
           image: materialData.image || null,
           adresse: materialData.adresse || null,
-          forme: materialData.localisation && materialData.localisation.length > 0 
-            ? JSON.stringify(materialData.localisation) 
-            : null,
+          forme: materialData.forme || null,
           coordinates_latitude: materialData.coordinatesLatitude || null,
           coordinates_longitude: materialData.coordinatesLongitude || null,
           localisation: materialData.localisation || null,
