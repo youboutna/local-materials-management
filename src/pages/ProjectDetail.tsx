@@ -348,60 +348,74 @@ const ProjectDetail = () => {
     }
   };
 
-  const handleMapDataChange = async (newMapData: any) => {
+  const handleMapDataChange = (newMapData: any) => {
+    console.log('Map data changed:', newMapData);
     setMapData(newMapData);
+  };
+
+  const handleSaveLocation = async () => {
+    if (!project || !mapData) return;
     
-    // Update project coordinates and localization data in the database if editing is enabled
-    if (isEditingLocation && project) {
-      try {
-        const updateData: any = {};
-        
-        // Update coordinates if provided
-        if (newMapData.coordinates) {
-          updateData.coordinates_latitude = newMapData.coordinates.lat;
-          updateData.coordinates_longitude = newMapData.coordinates.lng;
-        }
-        
-        // Update address
-        if (newMapData.address) {
-          updateData.location = newMapData.address;
-          updateData.adresse = newMapData.address;
-        }
-        
-        // Update shape data
-        if (newMapData.shape && newMapData.shape.length > 0) {
-          updateData.localisation = newMapData.shape;
-          updateData.forme = newMapData.shapeType || 'polygon';
-        } else if (newMapData.polygon && newMapData.polygon.length > 0) {
-          updateData.localisation = newMapData.polygon;
-          updateData.forme = 'polygon';
-        } else if (newMapData.warehouseShape && newMapData.warehouseShape.length > 0) {
-          updateData.localisation = newMapData.warehouseShape;
-          updateData.forme = newMapData.shapeType || 'polygon';
-        }
-
-        const { error } = await supabase
-          .from("projects")
-          .update(updateData)
-          .eq("id", project.id);
-
-        if (error) {
-          console.error("Error updating project location:", error);
-          toast({
-            title: t("error"),
-            description: "Erreur lors de la mise à jour de la localisation",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: t("success"),
-            description: "Localisation mise à jour avec succès",
-          });
-          await handleDataUpdate();
-        }
-      } catch (error) {
-        console.error("Error updating location:", error);
+    try {
+      const updateData: any = {};
+      
+      // Update coordinates if provided
+      if (mapData.coordinates) {
+        updateData.coordinates_latitude = mapData.coordinates.lat;
+        updateData.coordinates_longitude = mapData.coordinates.lng;
       }
+      
+      // Update address
+      if (mapData.address) {
+        updateData.location = mapData.address;
+        updateData.adresse = mapData.address;
+      }
+      
+      // Update shape data - properly handle the shape format
+      if (mapData.shape && mapData.shape.length > 0) {
+        updateData.localisation = mapData.shape;
+        updateData.forme = mapData.shapeType || 'polygon';
+      }
+
+      console.log('Updating project with data:', updateData);
+
+      const { error } = await supabase
+        .from("projects")
+        .update(updateData)
+        .eq("id", project.id);
+
+      if (error) {
+        console.error("Error updating project location:", error);
+        toast({
+          title: t("error"),
+          description: "Erreur lors de la mise à jour de la localisation",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("success"),
+          description: "Localisation mise à jour avec succès",
+        });
+        setIsEditingLocation(false);
+        await handleDataUpdate();
+      }
+    } catch (error) {
+      console.error("Error updating location:", error);
+      toast({
+        title: t("error"),
+        description: "Erreur lors de la mise à jour de la localisation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleEditLocation = () => {
+    if (isEditingLocation) {
+      // Save when toggling from edit mode to view mode
+      handleSaveLocation();
+    } else {
+      // Enter edit mode
+      setIsEditingLocation(true);
     }
   };
 
@@ -766,7 +780,7 @@ const ProjectDetail = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setIsEditingLocation(!isEditingLocation)}
+                            onClick={handleToggleEditLocation}
                           >
                             {isEditingLocation ? "Sauvegarder" : "Modifier position"}
                           </Button>
