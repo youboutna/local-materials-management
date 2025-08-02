@@ -130,12 +130,26 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     ...initialData
   });
 
-  const [facilitiesMapData, setFacilitiesMapData] = useState<MapData>({
-    center: undefined,
-    polygon: [],
-    warehouseShape: [],
-    address: '',
-    shapeType: undefined
+  const [facilitiesMapData, setFacilitiesMapData] = useState<MapData>(() => {
+    // Initialize with facilitiesLocation data if available in initialData
+    const facilitiesLocation = (initialData as any)?.facilitiesLocation;
+    if (facilitiesLocation) {
+      return {
+        center: facilitiesLocation.center,
+        polygon: facilitiesLocation.polygon || [],
+        warehouseShape: facilitiesLocation.warehouseShape || facilitiesLocation.polygon || [],
+        address: facilitiesLocation.address || '',
+        shapeType: facilitiesLocation.shapeType
+      };
+    }
+    
+    return {
+      center: undefined,
+      polygon: [],
+      warehouseShape: [],
+      address: '',
+      shapeType: undefined
+    };
   });
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -191,9 +205,19 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     handleChange('current_stage', stage);
   };
 
-  const handleMapDataChange = (data: MapData) => {
+  const handleMapDataChange = (data: any) => {
     console.log('Map data changed:', data);
-    setFacilitiesMapData(data);
+    
+    // Map from InteractiveMapGIS format to ProjectFormWithMap format
+    const mappedData: MapData = {
+      center: data.coordinates ? data.coordinates : data.center,
+      polygon: data.shape || data.polygon || [],
+      warehouseShape: data.shape || data.warehouseShape || [],
+      address: data.address || '',
+      shapeType: data.shapeType
+    };
+    
+    setFacilitiesMapData(mappedData);
   };
 
   const handleContractorChange = (supplier: {
@@ -572,7 +596,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <InteractiveMapGIS
               title="Localisation et zone d'entrepôt du projet"
               description="Définissez la position GPS du projet et tracez la zone des installations/entrepôts"
-              value={facilitiesMapData}
+              value={{
+                coordinates: facilitiesMapData.center,
+                shape: facilitiesMapData.warehouseShape || facilitiesMapData.polygon || [],
+                address: facilitiesMapData.address,
+                shapeType: facilitiesMapData.shapeType
+              }}
               onChange={handleMapDataChange}
               allowPolygon={true}
               className="min-h-[600px]"
