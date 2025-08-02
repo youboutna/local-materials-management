@@ -825,28 +825,54 @@ const ProjectDetail = () => {
                                 </div>
                               )}
                               
-                              {/* Address */}
-                              {mapData?.address ? (
-                                <div className="flex items-start gap-2">
-                                  <span className="font-medium text-muted-foreground">Adresse:</span>
-                                  <span className="text-foreground">{mapData.address}</span>
-                                </div>
-                              ) : project.location ? (
-                                <div className="flex items-start gap-2">
-                                  <span className="font-medium text-muted-foreground">Localisation:</span>
-                                  <span className="text-foreground">{project.location}</span>
-                                </div>
-                              ) : null}
+              {/* Address */}
+              <div className="space-y-1">
+                <h5 className="font-medium text-muted-foreground">Adresse de localisation</h5>
+                {mapData?.address ? (
+                  <div className="flex items-start gap-2">
+                    <span className="text-foreground">{mapData.address}</span>
+                  </div>
+                ) : (project as any).adresse ? (
+                  <div className="flex items-start gap-2">
+                    <span className="text-foreground">
+                      {typeof (project as any).adresse === 'string' ? (project as any).adresse : (project as any).adresse?.address || project.location}
+                    </span>
+                  </div>
+                ) : project.location ? (
+                  <div className="flex items-start gap-2">
+                    <span className="text-foreground">{project.location}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <span className="italic">Aucune adresse définie</span>
+                  </div>
+                )}
+              </div>
                               
-                              {/* Shapes Information */}
-                              {mapData?.shapes && mapData.shapes.length > 0 && (
-                                <div className="flex items-start gap-2">
-                                  <span className="font-medium text-muted-foreground">Formes définies:</span>
-                                  <span className="text-foreground">
-                                    {mapData.shapes.length} forme{mapData.shapes.length > 1 ? 's' : ''} géométrique{mapData.shapes.length > 1 ? 's' : ''}
-                                  </span>
-                                </div>
-                              )}
+              {/* Shapes Information */}
+              <div className="space-y-2">
+                <h5 className="font-medium text-muted-foreground">Données géométriques</h5>
+                {mapData?.shape && mapData.shape.length > 0 ? (
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-muted-foreground">Forme tracée:</span>
+                    <span className="text-foreground">
+                      {mapData.shapeType || 'polygon'} ({mapData.shape.length} points)
+                    </span>
+                  </div>
+                ) : (project as any).localisation && Array.isArray((project as any).localisation) && (project as any).localisation.length > 0 ? (
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-muted-foreground">Forme tracée:</span>
+                    <span className="text-foreground">
+                      {(project as any).forme || 'polygon'} ({(project as any).localisation.length} points)
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <span className="font-medium">Forme géométrique:</span>
+                    <span className="italic">Aucune forme géométrique tracée</span>
+                  </div>
+                )}
+              </div>
                               
                               {/* Project Reference */}
                               {project.projectReference && (
