@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2 } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -197,6 +197,21 @@ const MainNavbar = () => {
                 </Button>
               </NavigationMenuItem>
               
+              {/* Supplier Management link */}
+              <NavigationMenuItem>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/suppliers">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    {t('nav.suppliers') || 'Fournisseurs'}
+                  </Link>
+                </Button>
+              </NavigationMenuItem>
+
               {/* Tender Management link */}
               <NavigationMenuItem>
                 <Button 
