@@ -43,8 +43,8 @@ const Materials: React.FC = () => {
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedLocalType, setSelectedLocalType] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLocalType, setSelectedLocalType] = useState("all");
   
   // Interactive map filters
   const [interactiveSearchTerm, setInteractiveSearchTerm] = useState("");
@@ -244,8 +244,8 @@ const Materials: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchTerm("");
-    setSelectedCategory("");
-    setSelectedLocalType("");
+    setSelectedCategory("all");
+    setSelectedLocalType("all");
   };
 
   const handleResetInteractiveFilters = () => {
