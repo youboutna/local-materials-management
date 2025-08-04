@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key } from 'lucide-react';
+import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key, CheckCircle, MessageCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
@@ -25,6 +25,9 @@ const SupplierPortal = () => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
+  const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
+  const [taskComment, setTaskComment] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
@@ -53,6 +56,7 @@ const SupplierPortal = () => {
       fetchSupplierProfile();
       fetchSharedDocuments();
       fetchUploadedDocuments();
+      fetchAssignedTasks();
     }
   }, [user]);
 
@@ -105,6 +109,87 @@ const SupplierPortal = () => {
       console.error('Error fetching uploaded documents:', error);
     } else {
       setUploadedDocuments(data || []);
+    }
+  };
+
+  const fetchAssignedTasks = async () => {
+    if (!user || !supplierProfile) return;
+
+    const { data, error } = await supabase
+      .from('supplier_notifications')
+      .select('*')
+      .eq('supplier_id', supplierProfile.id)
+      .in('notification_type', ['task_assignment', 'task_notification'])
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching assigned tasks:', error);
+    } else {
+      setAssignedTasks(data || []);
+    }
+  };
+
+  const handleTaskComment = async (taskId: string) => {
+    if (!taskComment.trim() || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('supplier_notifications')
+        .insert({
+          supplier_id: supplierProfile?.id,
+          task_id: taskId,
+          notification_type: 'task_comment',
+          email: user.email || '',
+          metadata: { comment: taskComment, from_supplier: true }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Commentaire ajouté",
+        description: "Votre commentaire a été envoyé",
+      });
+
+      setTaskComment('');
+      setSelectedTaskId(null);
+      fetchAssignedTasks();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTaskCompletion = async (taskId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('supplier_notifications')
+        .insert({
+          supplier_id: supplierProfile?.id,
+          task_id: taskId,
+          notification_type: 'task_completed',
+          email: user.email || '',
+          metadata: { status: 'completed', from_supplier: true }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Tâche marquée comme terminée",
+        description: "Le chef de projet a été notifié",
+      });
+
+      fetchAssignedTasks();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -387,8 +472,9 @@ const SupplierPortal = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
+            <TabsTrigger value="tasks">Mes Tâches</TabsTrigger>
             <TabsTrigger value="upload">Mes Documents</TabsTrigger>
           </TabsList>
 
@@ -449,6 +535,96 @@ const SupplierPortal = () => {
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
                       Aucun document partagé pour le moment
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Tâches Assignées
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {assignedTasks.length > 0 ? (
+                    assignedTasks.map((task) => (
+                      <div key={task.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-8 w-8 text-primary" />
+                            <div>
+                              <h3 className="font-medium">
+                                {task.metadata?.title || `Tâche ${task.task_id || task.id}`}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {task.metadata?.description || 'Tâche assignée par le chef de projet'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(task.created_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedTaskId(selectedTaskId === task.id ? null : task.id)}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              Commenter
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleTaskCompletion(task.task_id || task.id)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Marquer terminé
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {selectedTaskId === task.id && (
+                          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="space-y-3">
+                              <div>
+                                <Label htmlFor="task-comment">Votre commentaire</Label>
+                                <Input
+                                  id="task-comment"
+                                  value={taskComment}
+                                  onChange={(e) => setTaskComment(e.target.value)}
+                                  placeholder="Ajouter un commentaire..."
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleTaskComment(task.task_id || task.id)}
+                                  disabled={!taskComment.trim()}
+                                >
+                                  Envoyer commentaire
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setSelectedTaskId(null)}
+                                >
+                                  Annuler
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucune tâche assignée pour le moment
                     </p>
                   )}
                 </div>
