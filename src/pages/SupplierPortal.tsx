@@ -1,279 +1,562 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, FileText, User, Mail, Phone, MapPin } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 const SupplierPortal = () => {
-  const { t } = useLanguage();
-  const { user } = useAuth();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [supplierProfile, setSupplierProfile] = useState<any>(null);
+  const [sharedDocuments, setSharedDocuments] = useState<any[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const { toast } = useToast();
+  const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
-  // Fetch supplier profile
-  const { data: supplierProfile } = useQuery({
-    queryKey: ['supplier-profile', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id
-  });
+  // Authentication state management
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
 
-  // Fetch assigned tasks
-  const { data: assignedTasks = [] } = useQuery({
-    queryKey: ['supplier-tasks', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select(`
-          *,
-          projects (title, location)
-        `)
-        .eq('assigned_to', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id
-  });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  // Fetch notifications
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['supplier-notifications', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id
-  });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const handleCompleteTask = async (taskId: string) => {
-    const { error } = await supabase
-      .from('task_assignments')
-      .update({ 
-        status: 'completed',
-        completion_date: new Date().toISOString()
-      })
-      .eq('id', taskId);
+  // Fetch supplier profile when user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchSupplierProfile();
+      fetchSharedDocuments();
+      fetchUploadedDocuments();
+    }
+  }, [user]);
 
-    if (!error) {
-      // Refresh tasks
-      window.location.reload();
+  const fetchSupplierProfile = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching supplier profile:', error);
+    } else {
+      setSupplierProfile(data);
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
-      <Navbar />
+  const fetchSharedDocuments = async () => {
+    if (!user || !supplierProfile) return;
+
+    const { data, error } = await supabase
+      .from('documents')
+      .select(`
+        *,
+        projects (title, status),
+        payments (amount, payment_date)
+      `)
+      .or(`assigned_to.eq.${user.id},tags.cs.{${supplierProfile.name}}`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching shared documents:', error);
+    } else {
+      setSharedDocuments(data || []);
+    }
+  };
+
+  const fetchUploadedDocuments = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('uploaded_by', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching uploaded documents:', error);
+    } else {
+      setUploadedDocuments(data || []);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
+
+      if (error) {
+        let errorMessage = 'Erreur de connexion';
+        if (error.message === 'Invalid login credentials') {
+          errorMessage = 'Email ou mot de passe incorrect';
+        }
+        toast({
+          title: "Erreur",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur le portail fournisseur",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/supplier-portal`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur d'inscription",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Inscription réussie",
+          description: "Vérifiez votre email pour confirmer votre compte",
+        });
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSupplierProfile(null);
+      setSharedDocuments([]);
+      setUploadedDocuments([]);
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!uploadFile || !uploadTitle.trim() || !user) return;
+
+    try {
+      // Upload file to storage
+      const uploadResult = await storageUpload(uploadFile, `supplier-uploads/${user.id}`);
       
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-adrar-800 mb-2">
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      // Save document record
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          title: uploadTitle,
+          description: uploadDescription,
+          file_url: uploadResult.url,
+          file_name: uploadFile.name,
+          mime_type: uploadFile.type,
+          file_size: uploadFile.size,
+          document_type: 'supplier_info' as const,
+          uploaded_by: user.id,
+          status: 'draft'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Document téléchargé",
+        description: "Votre document a été téléchargé avec succès",
+      });
+
+      // Reset form
+      setUploadFile(null);
+      setUploadTitle('');
+      setUploadDescription('');
+      
+      // Refresh documents
+      fetchUploadedDocuments();
+    } catch (error: any) {
+      toast({
+        title: "Erreur de téléchargement",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const downloadDocument = (document: any) => {
+    if (document.file_url) {
+      window.open(document.file_url, '_blank');
+    }
+  };
+
+  const getDocumentTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      'inspection': 'Rapport d\'inspection',
+      'payment': 'Document de paiement',
+      'invoice': 'Facture',
+      'delivery_note': 'Bon de livraison',
+      'payment_receipt': 'Reçu de paiement',
+      'technical': 'Document technique',
+      'administrative': 'Document administratif',
+      'supplier_upload': 'Document fournisseur'
+    };
+    return types[type] || type;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Anonymous/Login view
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-primary">
+              Portail Fournisseur
+            </CardTitle>
+            <p className="text-muted-foreground">
+              Accédez à vos documents et gérez vos livraisons
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Tabs value={isLoginMode ? "login" : "signup"} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger 
+                  value="login" 
+                  onClick={() => setIsLoginMode(true)}
+                >
+                  Connexion
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup" 
+                  onClick={() => setIsLoginMode(false)}
+                >
+                  Inscription
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+                <Button 
+                  onClick={handleLogin} 
+                  disabled={loading}
+                  className="w-full"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Se connecter
+                </Button>
+              </TabsContent>
+              
+              <TabsContent value="signup" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Mot de passe</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSignUp} 
+                  disabled={loading}
+                  className="w-full"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  S'inscrire
+                </Button>
+              </TabsContent>
+            </Tabs>
+
+            <div className="text-center pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Accès anonyme disponible pour consulter les documents publics
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Authenticated supplier view
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-primary mb-2">
               Portail Fournisseur
             </h1>
-            <p className="text-gray-600">
-              Gérez vos tâches et consultez vos notifications
+            <p className="text-muted-foreground">
+              Bienvenue {supplierProfile?.name || user.email}
             </p>
           </div>
+          <Button onClick={handleLogout} variant="outline">
+            <LogOut className="h-4 w-4 mr-2" />
+            Déconnexion
+          </Button>
+        </div>
 
-          {/* Supplier Profile Card */}
-          {supplierProfile && (
-            <Card className="mb-8">
+        {/* Main Content */}
+        <Tabs defaultValue="shared" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
+            <TabsTrigger value="upload">Mes Documents</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="shared">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Profil Fournisseur
+                  <FileText className="h-5 w-5" />
+                  Documents Partagés par le Chef de Projet
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-semibold text-lg">{supplierProfile.name}</h3>
-                    <div className="space-y-2 mt-2">
-                      {supplierProfile.contact_person && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="h-4 w-4" />
-                          {supplierProfile.contact_person}
+                <div className="grid gap-4">
+                  {sharedDocuments.length > 0 ? (
+                    sharedDocuments.map((document) => (
+                      <div key={document.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-8 w-8 text-primary" />
+                            <div>
+                              <h3 className="font-medium">{document.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {document.description}
+                              </p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge variant="outline">
+                                  {getDocumentTypeLabel(document.document_type)}
+                                </Badge>
+                                {document.projects && (
+                                  <Badge variant="secondary">
+                                    {document.projects.title}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadDocument(document)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadDocument(document)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Télécharger
+                            </Button>
+                          </div>
                         </div>
-                      )}
-                      {supplierProfile.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4" />
-                          {supplierProfile.email}
-                        </div>
-                      )}
-                      {supplierProfile.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4" />
-                          {supplierProfile.phone}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    {supplierProfile.category && (
-                      <Badge variant="outline" className="mb-2">
-                        {supplierProfile.category}
-                      </Badge>
-                    )}
-                    {supplierProfile.address && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <MapPin className="h-4 w-4 mt-1" />
-                        <span>{supplierProfile.address}</span>
                       </div>
-                    )}
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucun document partagé pour le moment
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          )}
+          </TabsContent>
 
-          <Tabs defaultValue="tasks" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="tasks">Tâches Assignées</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="tasks">
+          <TabsContent value="upload">
+            <div className="space-y-6">
+              {/* Upload Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Mes Tâches
+                    <Upload className="h-5 w-5" />
+                    Télécharger un Document
                   </CardTitle>
                 </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="upload-title">Titre du document</Label>
+                    <Input
+                      id="upload-title"
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                      placeholder="Titre du document"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="upload-description">Description</Label>
+                    <Input
+                      id="upload-description"
+                      value={uploadDescription}
+                      onChange={(e) => setUploadDescription(e.target.value)}
+                      placeholder="Description du document (optionnel)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="upload-file">Fichier</Label>
+                    <Input
+                      id="upload-file"
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleFileUpload}
+                    disabled={!uploadFile || !uploadTitle.trim() || uploading}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploading ? 'Téléchargement...' : 'Télécharger le Document'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Uploaded Documents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Mes Documents Téléchargés</CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {assignedTasks.length > 0 ? (
-                      assignedTasks.map((task) => (
-                        <div key={task.id} className="p-4 rounded-lg border bg-white">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-medium text-gray-900">{task.title}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                              {task.projects && (
-                                <p className="text-xs text-gray-500 mt-2">
-                                  Projet: {task.projects.title} - {task.projects.location}
+                  <div className="grid gap-4">
+                    {uploadedDocuments.length > 0 ? (
+                      uploadedDocuments.map((document) => (
+                        <div key={document.id} className="p-4 border rounded-lg bg-card">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-8 w-8 text-primary" />
+                              <div>
+                                <h3 className="font-medium">{document.title}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {document.description}
                                 </p>
-                              )}
-                              {task.due_date && (
-                                <p className="text-xs text-gray-500">
-                                  Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(document.created_at).toLocaleDateString('fr-FR')}
                                 </p>
-                              )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                variant={task.status === 'completed' ? 'default' : 'secondary'}
-                                className={
-                                  task.status === 'completed' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : task.status === 'in_progress'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-orange-100 text-orange-800'
-                                }
+                            <div className="flex gap-2">
+                              <Badge variant={document.status === 'approved' ? 'default' : 'secondary'}>
+                                {document.status === 'approved' ? 'Approuvé' : 
+                                 document.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadDocument(document)}
                               >
-                                {task.status === 'completed' ? 'Terminé' : 
-                                 task.status === 'in_progress' ? 'En cours' : 'En attente'}
-                              </Badge>
-                              {task.status !== 'completed' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleCompleteTask(task.id)}
-                                >
-                                  Marquer terminé
-                                </Button>
-                              )}
+                                <Download className="h-4 w-4 mr-1" />
+                                Télécharger
+                              </Button>
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        Aucune tâche assignée
+                      <p className="text-center text-muted-foreground py-8">
+                        Aucun document téléchargé
                       </p>
                     )}
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="notifications">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Notifications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
-                        <div 
-                          key={notification.id}
-                          className={`p-4 rounded-lg border ${
-                            notification.read ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-medium text-gray-900">{notification.title}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                              <p className="text-xs text-gray-500 mt-2">
-                                {new Date(notification.created_at).toLocaleDateString('fr-FR')}
-                              </p>
-                            </div>
-                            {!notification.read && (
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                Nouveau
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        Aucune notification
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-      
-      <Footer />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
