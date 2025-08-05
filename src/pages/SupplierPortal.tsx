@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/supplier';
+import { DocumentType } from '@/types/document';
 
 const SupplierPortal = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -19,13 +21,13 @@ const SupplierPortal = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [supplierProfile, setSupplierProfile] = useState<any>(null);
-  const [sharedDocuments, setSharedDocuments] = useState<any[]>([]);
-  const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+  const [supplierProfile, setSupplierProfile] = useState<Supplier | null>(null);
+  const [sharedDocuments, setSharedDocuments] = useState<DocumentWithViewStatus[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<DocumentWithViewStatus[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
-  const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
+  const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
   const [taskComment, setTaskComment] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -84,7 +86,7 @@ const SupplierPortal = () => {
     if (error) {
       console.error('Error fetching supplier profile:', error);
     } else {
-      setSupplierProfile(data);
+      setSupplierProfile(data as Supplier);
     }
   };
 
@@ -104,7 +106,7 @@ const SupplierPortal = () => {
     if (error) {
       console.error('Error fetching shared documents:', error);
     } else {
-      setSharedDocuments(data || []);
+      setSharedDocuments((data || []) as unknown as DocumentWithViewStatus[]);
     }
   };
 
@@ -120,7 +122,7 @@ const SupplierPortal = () => {
     if (error) {
       console.error('Error fetching uploaded documents:', error);
     } else {
-      setUploadedDocuments(data || []);
+      setUploadedDocuments((data || []) as DocumentWithViewStatus[]);
     }
   };
 
@@ -132,12 +134,12 @@ const SupplierPortal = () => {
       .select('*')
       .eq('supplier_id', supplierProfile.id)
       .in('notification_type', ['task_assignment', 'task_notification'])
-      .order('created_at', { ascending: false });
+      .order('sent_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching assigned tasks:', error);
     } else {
-      setAssignedTasks(data || []);
+      setAssignedTasks((data || []) as SupplierNotification[]);
     }
   };
 
@@ -586,9 +588,9 @@ const SupplierPortal = () => {
                               <p className="text-sm text-muted-foreground">
                                 {task.metadata?.description || 'Tâche assignée par le chef de projet'}
                               </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(task.created_at).toLocaleDateString('fr-FR')}
-                              </p>
+                               <p className="text-xs text-muted-foreground">
+                                 {task.sent_at ? new Date(task.sent_at).toLocaleDateString('fr-FR') : 'Date non disponible'}
+                               </p>
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -721,7 +723,7 @@ const SupplierPortal = () => {
                                   {document.description}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {new Date(document.created_at).toLocaleDateString('fr-FR')}
+                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : 'Date non disponible'}
                                 </p>
                               </div>
                             </div>
