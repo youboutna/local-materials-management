@@ -251,6 +251,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
   const [showOpeningForm, setShowOpeningForm] = useState(false);
   const [currentOpening, setCurrentOpening] = useState<Opening>({
     id: "",
+    label: "",
     length: 0,
     width: 0,
     height: 0,
@@ -266,7 +267,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
     height?: number;
     openings: Opening[];
   }>({ length: 0, width: 0, height: 0, openings: [] });
-  const [editOpening, setEditOpening] = useState<Opening>({ id: "", length: 0, width: 0, height: 0 });
+  const [editOpening, setEditOpening] = useState<Opening>({ id: "", label: "", length: 0, width: 0, height: 0 });
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
 
@@ -292,7 +293,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
 
   const hasRequiredDimensions = useCallback(() => {
     return currentElement.requires.every((req) => {
-      return form[req as keyof typeof form] > 0;
+      const value = form[req as keyof typeof form];
+      return typeof value === 'number' && value > 0;
     });
   }, [currentElement, form]);
 
@@ -351,7 +353,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
         },
       ],
     }));
-    setCurrentOpening({ id: "", length: 0, width: 0, height: 0 });
+    setCurrentOpening({ id: "", label: "", length: 0, width: 0, height: 0 });
     setShowOpeningForm(false);
   };
 
@@ -945,7 +947,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
                                         },
                                       ],
                                     }));
-                                    setEditOpening({ id: "", length: 0, width: 0, height: 0 });
+                                    setEditOpening({ id: "", label: "", length: 0, width: 0, height: 0 });
                                     setShowEditOpeningForm(false);
                                   }}
                                 >

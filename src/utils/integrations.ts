@@ -22,12 +22,12 @@ export async function parseDevisFromPdf(file: File): Promise<InvoiceLine[]> {
     const parts = line.split(/\s+/).filter(part => part.trim());
     return {
       id: Math.random().toString(36).substring(7),
-      numero: parts[0] || "",
+      number: parts[0] || "",
       designation: parts.slice(1, -4).join(" "),
-      unite: parts[parts.length - 4] || "",
-      quantite: parseFloat(parts[parts.length - 3]?.replace(",", ".")) || 0,
-      prixUnitaire: parseFloat(parts[parts.length - 2]?.replace(",", ".")) || 0,
-      prixTotal: parseFloat(parts[parts.length - 1]?.replace(",", ".")) || 0,
+      unit: parts[parts.length - 4] || "",
+      quantity: parseFloat(parts[parts.length - 3]?.replace(",", ".")) || 0,
+      unitPrice: parseFloat(parts[parts.length - 2]?.replace(",", ".")) || 0,
+      totalPrice: parseFloat(parts[parts.length - 1]?.replace(",", ".")) || 0,
     };
   });
 }

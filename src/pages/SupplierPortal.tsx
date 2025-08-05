@@ -31,6 +31,18 @@ const SupplierPortal = () => {
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
+  // Function to mark item as viewed (will be enabled when types are updated)
+  const markAsViewed = async (itemId: string, itemType: 'document' | 'notification' | 'task') => {
+    if (!user || !supplierProfile) return;
+
+    try {
+      // TODO: Implement once types are updated
+      console.log(`Marking ${itemType} ${itemId} as viewed by supplier ${supplierProfile.id}`);
+    } catch (error) {
+      console.error('Error marking item as viewed:', error);
+    }
+  };
+
   // Authentication state management
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -133,6 +145,9 @@ const SupplierPortal = () => {
     if (!taskComment.trim() || !user) return;
 
     try {
+      // Mark task as viewed when commenting
+      await markAsViewed(taskId, 'task');
+      
       const { error } = await supabase
         .from('supplier_notifications')
         .insert({
@@ -166,6 +181,9 @@ const SupplierPortal = () => {
     if (!user) return;
 
     try {
+      // Mark task as viewed when completing
+      await markAsViewed(taskId, 'task');
+      
       const { error } = await supabase
         .from('supplier_notifications')
         .insert({
@@ -318,9 +336,12 @@ const SupplierPortal = () => {
     }
   };
 
-  const downloadDocument = (document: any) => {
+  const downloadDocument = async (document: any) => {
     if (document.file_url) {
+      await markAsViewed(document.id, 'document');
       window.open(document.file_url, '_blank');
+      // Refresh documents to update viewed status
+      fetchSharedDocuments();
     }
   };
 

@@ -311,7 +311,7 @@ export function calculateAdvancedQuantities(
 
       return {
         elementType,
-        dimensions: { count },
+        dimensions: { length: 0, count },
         openings,
         results
       };
@@ -346,7 +346,7 @@ function roundToDecimal(value: number, decimals: number): number {
 
 // Use elementTypes for validation
 export function isValidElementType(type: string): boolean {
-  return elementTypes.includes(type);
+  return elementTypes.some(et => et.value === type);
 }
 
 // Example: Use DevisLine for a line in a bill of quantities
