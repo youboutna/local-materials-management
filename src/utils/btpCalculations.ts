@@ -1,24 +1,37 @@
-import { Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS, elementTypes } from "@/utils/types";
+import * as pdfjsLib from "pdfjs-dist";
+import Tesseract from "tesseract.js";
+import { toast } from "@/hooks/use-toast";
 
+// PDF.js worker config
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
 
-interface CalculationOptions {
-  openings?: Opening[];
-  dosage?: number;
-}
+import {
+  CalculationOptions, Opening, CalculationResult,
+  InvoiceLine, STANDARD_OPENINGS, elementTypes,
+  ElementType, detectElementType, mapToElementType, CalculationParams,RebarColumnCalculation,
+  MasonryMaterials, ConcreteMaterials, RebarMaterials, ConcreteOptions,
+  MasonryCalculation, ConcreteCalculation, RebarCalculation,
+  BrickJointsCalculation,ConcreteMixCalculation,
+  PlasterCalculation
+} from "@/utils/types";
+import { number } from "framer-motion";
 
 // Constants for better maintainability
-const CONCRETE_DOSAGE_DEFAULT = 350; // kg/m³
+const DEFAULT_CONCRETE_DOSAGE = 350; // kg/m³
+const MATERIAL_WASTAGE_FACTOR = 1.1; // 10% wastage
+const CEMENT_BAG_WEIGHT = 50; // kg
+const STANDARD_REBAR_WEIGHT = 0.888; // kg/m for 12mm rebar
+const STANDARD_PLASTER_THICKNESS = 0.02; // 2cm
+const STANDARD_PLASTER_DOSAGE = 5; // kg/m²
 const BRICKS_PER_SQM = 13;
 const MORTAR_THICKNESS = 0.02; // meters
 const MORTAR_CEMENT_RATIO = 400; // kg/m³
 const MORTAR_WASTAGE_FACTOR = 1.3;
 const SAND_VOLUME_RATIO = 0.4;
 const GRAVEL_VOLUME_RATIO = 0.8;
-const MATERIAL_WASTAGE_FACTOR = 1.05;
 const ENTREVOUS_PER_SQM = 7.2;
 const REBAR_DOSAGE_DEFAULT = 80; // kg/m²
-const PLASTER_DOSAGE_DEFAULT = 7; // kg/m²
-const CEMENT_BAG_WEIGHT = 50; // kg
+const DEFAULT_PLASTER_DOSAGE = 7; // kg/m²
 const TONNE_TO_KG = 1000;
 
 export function calculateEquivalentOpening(openings: Opening[] = STANDARD_OPENINGS): { length: number; width: number } {
@@ -33,119 +46,38 @@ export function calculateEquivalentOpening(openings: Opening[] = STANDARD_OPENIN
   };
 }
 
-// Use CalculationResult as return type
-export function calculateConcreteSlab(
-  length: number,
-  width: number,
-  height: number,
-  options?: CalculationOptions
-): CalculationResult {
-  if (!length || !width || !height) {
-    throw new Error('All dimensions (length, width, height) are required');
-  }
-  const dosage = options?.dosage || CONCRETE_DOSAGE_DEFAULT;
-  let volume = length * width * height;
-  let openings = options?.openings || [];
-  if (openings.length) {
-    const equivalentOpening = calculateEquivalentOpening(openings);
-    volume -= equivalentOpening.length * equivalentOpening.width * height;
-  }
-  const cement = volume * dosage;
-  const sand = volume * SAND_VOLUME_RATIO * MATERIAL_WASTAGE_FACTOR;
-  const gravel = volume * GRAVEL_VOLUME_RATIO * MATERIAL_WASTAGE_FACTOR;
-  return {
-    elementType: "concrete_slab",
-    dimensions: { length, width, height },
-    openings,
-    results: {
-      'Volume béton (m³)': roundToDecimal(volume, 3),
-      'Ciment (kg)': roundToDecimal(cement, 2),
-      'Sable (m³)': roundToDecimal(sand, 3),
-      'Gravier (m³)': roundToDecimal(gravel, 3),
-      'Sacs de ciment (50kg)': Math.ceil(cement / CEMENT_BAG_WEIGHT),
-      'Ciment (tonnes)': roundToDecimal(cement / TONNE_TO_KG, 3)
-    }
-  };
-}
-
-// Use CalculationResult as return type
-export function calculateMasonryWall(
-  length: number,
-  height: number,
-  options?: CalculationOptions
-): CalculationResult {
-  if (!length || !height) {
-    throw new Error('Both length and height are required');
-  }
-  let wallArea = length * height;
-  let openings = options?.openings || [];
-  if (openings.length) {
-    const openingsArea = openings.reduce((sum, op) => sum + (op.length * op.width), 0);
-    wallArea -= openingsArea;
-  }
-  const numberOfBricks = wallArea * BRICKS_PER_SQM;
-  const mortarVolume = wallArea * MORTAR_THICKNESS;
-  const cementForMortar = mortarVolume * MORTAR_CEMENT_RATIO * MORTAR_WASTAGE_FACTOR;
-
-  return {
-    elementType: "masonry_wall",
-    dimensions: { length, height, area: wallArea },
-    openings,
-    results: {
-      'Surface mur (m²)': roundToDecimal(wallArea, 2),
-      'Nombre de briques': Math.ceil(numberOfBricks),
-      'Volume mortier (m³)': roundToDecimal(mortarVolume, 3),
-      'Ciment pour mortier (kg)': roundToDecimal(cementForMortar, 2)
-    }
-  };
-}
-
 // Updated interface
-interface CalculationParams {
-  elementType: string;
-  length: number;
-  width?: number;
-  height?: number;
-  options?: CalculationOptions;
-}
-interface DoorCalculationOptions extends CalculationParams {
-  variant?: 'intérieur' | 'extérieur';
-  woodType?: 'umuvura' | 'eucalyptus' | 'acajou' | 'autre';
-  includeHardware?: boolean;
-  includeFrames?: boolean;
-  includeFinish?: boolean;
-}
 interface WoodenDoorOptions extends CalculationParams {
   /**
    * Door variant type
    * @default 'intérieur'
    */
   variant?: 'intérieur' | 'extérieur';
-  
+
   /**
    * Type of wood material
    * @default 'umuvura'
    */
   woodType?: 'umuvura' | 'eucalyptus' | 'acajou' | 'autre';
-  
+
   /**
    * Whether to include hardware calculations
    * @default true
    */
   includeHardware?: boolean;
-  
+
   /**
    * Whether to include door frame calculations
    * @default true
    */
   includeFrames?: boolean;
-  
+
   /**
    * Whether to include finish surface calculations
    * @default true
    */
   includeFinish?: boolean;
-  
+
   /**
    * Custom door dimensions (overrides standard dimensions)
    */
@@ -154,7 +86,7 @@ interface WoodenDoorOptions extends CalculationParams {
     width?: number;
     thickness?: number;
   };
-  
+
   /**
    * Custom frame dimensions (overrides standard frame dimensions)
    */
@@ -164,184 +96,23 @@ interface WoodenDoorOptions extends CalculationParams {
     thickness?: number;
   };
 }
-interface DoorCalculationResult {
-    count: number;
-    volume: number;
-    weight: number;
-    woodType: string;
-    variant: string;
-    frameVolume?: number;
-    frameWeight?: number;
-    totalVolume?: number;
-    hinges?: number;
-    handles?: number;
-    locks?: number;
-    finishArea?: number;
-}
 
-export function calculateAdvancedQuantities(
-  elementType: string,
-  length: number,
-  width?: number,
-  height?: number,
-  options?: CalculationOptions
-): CalculationResult {
-  const dims: any = { length };
-  if (width !== undefined) dims.width = width;
-  if (height !== undefined) dims.height = height;
-  let openings = options?.openings || [];
-
-  switch (elementType.toLowerCase()) {
-    case 'dalle béton':
-    case 'concrete_slab':
-      if (width && height) {
-        return calculateConcreteSlab(length, width, height, options);
-      }
-      throw new Error('Width and height are required for concrete slab calculation');
-
-    case 'mur maçonnerie':
-    case 'masonry_wall':
-      if (height) {
-        return calculateMasonryWall(length, height, options);
-      }
-      throw new Error('Height is required for masonry wall calculation');
-
-    case 'plancher corps creux':
-    case 'hollow_core_slab':
-      if (width && height) {
-        const slab = calculateConcreteSlab(length, width, height, options);
-        return {
-          ...slab,
-          results: {
-            ...slab.results,
-            'Nombre entrevous': Math.ceil((length * width) * ENTREVOUS_PER_SQM * MATERIAL_WASTAGE_FACTOR)
-          }
-        };
-      }
-      throw new Error('Width and height are required for hollow core slab calculation');
-
-    case 'ferraillage':
-    case 'rebar':
-      if (width) {
-        const surface = length * width;
-        const weight = surface * (options?.dosage || REBAR_DOSAGE_DEFAULT);
-        return {
-          elementType,
-          dimensions: { length, width },
-          openings,
-          results: {
-            'Surface (m²)': roundToDecimal(surface, 2),
-            'Poids ferraillage (kg)': roundToDecimal(weight, 2)
-          }
-        };
-      }
-      throw new Error('Width is required for rebar calculation');
-
-    case 'portes en bois':
-    case 'wooden_doors': {
-      const doorOptions = options as WoodenDoorOptions | undefined;
-      const variant = doorOptions?.variant || 'intérieur';
-      const woodType = doorOptions?.woodType || 'umuvura';
-      const count = length; // Using length parameter to pass count
-
-      // Standard specifications
-      const standardSpecs = {
-        'intérieur': {
-          dimensions: { length: 2.1, width: 0.9, thickness: 0.04 },
-          frame: { length: 2.15, width: 0.05, thickness: 0.1 },
-          hardware: { hinges: 3, handles: 1, locks: 0 }
-        },
-        'extérieur': {
-          dimensions: { length: 2.1, width: 1.0, thickness: 0.05 },
-          frame: { length: 2.15, width: 0.07, thickness: 0.12 },
-          hardware: { hinges: 4, handles: 1, locks: 1 }
-        }
-      };
-
-      // Wood density (kg/m³)
-      const woodDensity = {
-        umuvura: 650,
-        eucalyptus: 750,
-        acajou: 850,
-        autre: 700
-      };
-
-      const spec = standardSpecs[variant];
-      const density = woodDensity[woodType];
-
-      // Main calculations
-      const doorVolume = spec.dimensions.length * spec.dimensions.width * spec.dimensions.thickness * count;
-      const doorWeight = doorVolume * density;
-
-      const results: { [key: string]: number | string } = {
-        'Type de porte': variant === 'intérieur' ? 'Intérieure' : 'Extérieure',
-        'Nombre de portes': count,
-        'Essence de bois': woodType.charAt(0).toUpperCase() + woodType.slice(1),
-        'Volume porte (m³)': roundToDecimal(doorVolume, 3),
-        'Poids porte (kg)': Math.round(doorWeight)
-      };
-
-      // Frame calculations
-      if (doorOptions?.includeFrames !== false) {
-        const frameVolume = spec.frame.length * spec.frame.width * spec.frame.thickness * count;
-        const frameWeight = frameVolume * density;
-        results['Volume cadre (m³)'] = roundToDecimal(frameVolume, 3);
-        results['Poids cadre (kg)'] = Math.round(frameWeight);
-        results['Volume total bois (m³)'] = roundToDecimal(doorVolume + frameVolume, 3);
-      }
-
-      // Hardware calculations
-      if (doorOptions?.includeHardware !== false) {
-        results['Paumelles'] = count * spec.hardware.hinges;
-        results['Poignées'] = count * spec.hardware.handles;
-        if (variant === 'extérieur') {
-          results['Serrures'] = count * spec.hardware.locks;
-        }
-      }
-
-      // Finish calculations
-      if (doorOptions?.includeFinish !== false) {
-        const finishArea = (
-          (spec.dimensions.length * spec.dimensions.width) * 2 + // Both sides
-          (spec.dimensions.length * spec.dimensions.thickness) * 2 +
-          (spec.dimensions.width * spec.dimensions.thickness) * 2
-        ) * count;
-        results['Surface à finir (m²)'] = roundToDecimal(finishArea, 2);
-      }
-
-      return {
-        elementType,
-        dimensions: { length: 0, count },
-        openings,
-        results
-      };
-    }
-
-    default:
-      // Generic fallback
-      const results: { [key: string]: number | string } = {};
-      if (width && height) {
-        results['Volume (m³)'] = roundToDecimal(length * width * height, 3);
-      }
-      if (width) {
-        results['Surface (m²)'] = roundToDecimal(length * width, 2);
-      }
-      results['Longueur (m)'] = roundToDecimal(length, 2);
-      if (width) results['Largeur (m)'] = roundToDecimal(width, 2);
-      if (height) results['Hauteur (m)'] = roundToDecimal(height, 2);
-      return {
-        elementType,
-        dimensions: dims,
-        openings,
-        results
-      };
-  }
-}
-
-// Helper function for consistent decimal rounding
-function roundToDecimal(value: number, decimals: number): number {
-  const factor = 10 ** decimals;
-  return Math.round(value * factor) / factor;
+interface WoodenDoorSpecs {
+  dimensions: {
+    length: number;
+    width: number;
+    thickness: number;
+  };
+  frame: {
+    length: number;
+    width: number;
+    thickness: number;
+  };
+  hardware: {
+    hinges: number;
+    handles: number;
+    locks: number;
+  };
 }
 
 // Use elementTypes for validation
@@ -356,13 +127,922 @@ export function createInvoiceLine(
   unit: string,
   unitPrice: number
 ): InvoiceLine {
-  return { 
-  id: "",
-  number: "",
-  designation: "",
-  unit: "",
-  quantity: 0,
-  unitPrice: 0,
-   totalPrice: roundToDecimal(quantity * unitPrice, 2),
-};
+  return {
+    id: "",
+    number: "",
+    designation: designation,
+    unit: unit,
+    quantity: quantity,
+    unitPrice: unitPrice,
+    totalPrice: roundToDecimal(quantity * unitPrice, 2),
+  };
 }
+
+// calculation function
+export function calculateConcreteSlab(
+  length: number,
+  width: number,
+  height: number,
+  options?: CalculationOptions
+): CalculationResult {
+  // Input validation
+  if (isNaN(length) || isNaN(width) || isNaN(height)) {
+    throw new Error('All dimensions must be valid numbers');
+  }
+
+  const dosage = options?.dosage || DEFAULT_CONCRETE_DOSAGE;
+  let volume = length * width * height;
+
+  // Process openings safely
+  const openings = options?.openings || [];
+  if (openings.length > 0) {
+    const openingsArea = openings.reduce((sum, op) => {
+      // Validate each opening
+      if (isNaN(op.length) || isNaN(op.width)) {
+        console.warn('Invalid opening dimensions:', op);
+        return sum;
+      }
+      return sum + (op.length * op.width);
+    }, 0);
+    
+    volume -= openingsArea * height;
+  }
+
+  // Calculate materials
+  const cement = volume * dosage;
+  const cementBags = Math.ceil(cement / CEMENT_BAG_WEIGHT);
+
+  return {
+    elementType: "concrete_slab",
+    dimensions: { length, width, height },
+    openings,
+    results: {
+      'Volume béton (m³)': roundToDecimal(volume, 3),
+      'Ciment (kg)': roundToDecimal(cement, 2),
+      'Sacs ciment (50kg)': cementBags,
+      'Ciment (tonnes)': roundToDecimal(cement / TONNE_TO_KG, 3)
+    }
+  };
+}
+
+// Use CalculationResult as return type
+export function calculateMasonryWall(
+  length: number,
+  height: number,
+  options?: CalculationOptions
+): MasonryCalculation {
+  if (!length || !height) {
+    throw new Error('Both length and height are required');
+  }
+  let wallArea = length * height;
+  const openings = options?.openings || [];
+  if (openings.length) {
+    const openingsArea = openings.reduce((sum, op) => sum + (op.length * op.width), 0);
+    wallArea -= openingsArea;
+  }
+  const numberOfBricks = wallArea * BRICKS_PER_SQM;
+  const mortarVolume = wallArea * MORTAR_THICKNESS;
+  const cementForMortar = mortarVolume * MORTAR_CEMENT_RATIO * MORTAR_WASTAGE_FACTOR;
+
+  return {
+    netSurface: wallArea,
+    bricks: numberOfBricks,
+    mortar: mortarVolume,
+    elementType: "masonry_wall",
+    dimensions: { length, height },
+    openings,
+    results: {
+      'Surface mur (m²)': roundToDecimal(wallArea, 2),
+      'Nombre de briques': Math.ceil(numberOfBricks),
+      'Volume mortier (m³)': roundToDecimal(mortarVolume, 3),
+      'Ciment pour mortier (kg)': roundToDecimal(cementForMortar, 2)
+    }
+  };
+}
+
+// Calculation Functions
+function calculateWoodenDoor(params: WoodenDoorOptions): CalculationResult {
+  const { length: count = 1, variant = 'intérieur', woodType = 'umuvura' } = params;
+  const doorCount = Math.max(1, Math.round(count));
+
+  const standardSpecs: Record<string, WoodenDoorSpecs> = {
+    'intérieur': {
+      dimensions: { length: 2.1, width: 0.9, thickness: 0.04 },
+      frame: { length: 2.15, width: 0.05, thickness: 0.1 },
+      hardware: { hinges: 3, handles: 1, locks: 0 }
+    },
+    'extérieur': {
+      dimensions: { length: 2.1, width: 1.0, thickness: 0.05 },
+      frame: { length: 2.15, width: 0.07, thickness: 0.12 },
+      hardware: { hinges: 4, handles: 1, locks: 1 }
+    }
+  };
+
+  const woodDensity: Record<string, number> = {
+    umuvura: 650,
+    eucalyptus: 750,
+    acajou: 850,
+    autre: 700
+  };
+
+  const spec = standardSpecs[variant];
+  const density = woodDensity[woodType];
+  const doorDims = params.customDimensions || spec.dimensions;
+  const frameDims = params.customFrame || spec.frame;
+
+  // Main calculations
+  const doorVolume = doorDims.length * doorDims.width * doorDims.thickness * doorCount;
+  const doorWeight = doorVolume * density;
+
+  const results: Record<string, number | string> = {
+    'Type de porte': variant === 'intérieur' ? 'Intérieure' : 'Extérieure',
+    'Nombre de portes': doorCount,
+    'Essence de bois': woodType.charAt(0).toUpperCase() + woodType.slice(1),
+    'Volume porte (m³)': roundToDecimal(doorVolume, 3),
+    'Poids porte (kg)': Math.round(doorWeight)
+  };
+
+  // Frame calculations
+  if (params.includeFrames !== false) {
+    const frameVolume = frameDims.length * frameDims.width * frameDims.thickness * doorCount;
+    const frameWeight = frameVolume * density;
+    results['Volume cadre (m³)'] = roundToDecimal(frameVolume, 3);
+    results['Poids cadre (kg)'] = Math.round(frameWeight);
+    results['Volume total bois (m³)'] = roundToDecimal(doorVolume + frameVolume, 3);
+  }
+
+  // Hardware calculations
+  if (params.includeHardware !== false) {
+    results['Paumelles'] = doorCount * spec.hardware.hinges;
+    results['Poignées'] = doorCount * spec.hardware.handles;
+    if (variant === 'extérieur') {
+      results['Serrures'] = doorCount * spec.hardware.locks;
+    }
+  }
+
+  // Finish calculations
+  if (params.includeFinish !== false) {
+    const finishArea = (
+      (doorDims.length * doorDims.width) * 2 + // Both sides
+      (doorDims.length * doorDims.thickness) * 2 +
+      (doorDims.width * doorDims.thickness) * 2
+    ) * doorCount;
+    results['Surface à finir (m²)'] = roundToDecimal(finishArea, 2);
+  }
+
+  return {
+    elementType: 'wooden_doors',
+    dimensions: { count: doorCount },
+    openings: params.openings || [],
+    results,
+    metadata: {
+      description: `Calcul pour portes en bois ${variant} en ${woodType}`
+    }
+  };
+}
+
+// functions
+export function calculateHollowBlockWall(length: number, height: number) {
+  const surface = length * height;
+  const blocks = surface * 10; // assumed 10 blocks/m²
+  return { surface, blocks };
+}
+
+export function calculateConcreteColumn(height: number, sectionArea: number, dosage: number = DEFAULT_CONCRETE_DOSAGE) {
+  const volume = height * sectionArea;
+  const cement = volume * dosage;
+  return { volume, cement };
+}
+
+export function calculateConcreteBeam(length: number, sectionArea: number, dosage: number = DEFAULT_CONCRETE_DOSAGE) {
+  const volume = length * sectionArea;
+  const cement = volume * dosage;
+  return { volume, cement };
+}
+
+export function calculateConcreteFooting(length: number, width: number, height: number, dosage: number = DEFAULT_CONCRETE_DOSAGE) {
+  const volume = length * width * height;
+  const cement = volume * dosage;
+  return { volume, cement };
+}
+
+export function calculateConcreteStripFooting(length: number, width: number, height: number, dosage: number = DEFAULT_CONCRETE_DOSAGE) {
+  return calculateConcreteFooting(length, width, height, dosage);
+}
+
+export function calculateCementForPlaster(length: number, height: number, thickness: number = STANDARD_PLASTER_THICKNESS, dosage: number = 1500) {
+  const surface = length * height;
+  const volume = surface * thickness;
+  const cement = volume * dosage;
+  return { surface, volume, cement };
+}
+
+export function calculateCementForBrickJoints(surface: number, dosage: number = 400) {
+  const volume = surface * MORTAR_THICKNESS;
+  const cement = volume * dosage;
+  return { volume, cement };
+}
+
+export function calculateRebarForColumn(height: number, bars: number, barLength: number, barWeightPerMeter: number) {
+  const totalLength = bars * barLength;
+  const weight = totalLength * barWeightPerMeter;
+  return { totalLength, weight };
+}
+
+export function calculateRebarForSlab(surface: number, kgPerM2: number = 60) {
+  const weight = surface * kgPerM2;
+  return { surface, weight };
+}
+
+export function calculateRebarForFooting(length: number, width: number, kgPerM2: number = 80) {
+  const surface = length * width;
+  const weight = surface * kgPerM2;
+  return { surface, weight };
+}
+
+export function calculateConcreteMix(volume: number, cementRatio: number = 350, gravelRatio: number = 1050, sandRatio: number = 700) {
+  const cement = volume * cementRatio;
+  const gravel = volume * gravelRatio;
+  const sand = volume * sandRatio;
+  return { volume, cement, gravel, sand };
+}
+
+export function calculateConcretePrefabricatedGirder(count: number, volumePerUnit: number, dosage: number = DEFAULT_CONCRETE_DOSAGE) {
+  const volume = count * volumePerUnit;
+  const cement = volume * dosage;
+  return { volume, cement };
+}
+
+export function calculatePrecastSlab(surface: number) {
+  const units = surface * ENTREVOUS_PER_SQM;
+  return { surface, units };
+}
+
+export function calculateVolume(length: number, width: number, height: number) {
+  return length * width * height;
+}
+
+// ======================
+// Core Helper Functions
+// ======================
+function roundToDecimal(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+function validateDimensions(...dimensions: number[]): void {
+  if (dimensions.some(dim => dim <= 0 || isNaN(dim))) {
+    throw new Error('All dimensions must be positive numbers');
+  }
+}
+
+function calculateOpeningsArea(openings: Opening[]): number {
+  return openings.reduce((total, opening) => {
+    validateDimensions(opening.length, opening.width);
+    return total + (opening.length * opening.width);
+  }, 0);
+}
+
+function calculateOpeningsVolume(openings: Opening[], defaultHeight: number): number {
+  return openings.reduce((total, opening) => {
+    validateDimensions(opening.length, opening.width);
+    const height = opening.height ?? defaultHeight;
+    return total + (opening.length * opening.width * height);
+  }, 0);
+}
+
+// ======================
+// Element-Specific Functions
+// ======================
+function masonryWallResult(
+  type: string,
+  length: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: MasonryCalculation
+): MasonryCalculation {
+  validateDimensions(length, height);
+  calculation.elementType = type;
+  calculation.dimensions = { length, height };
+  calculation.openings = openings;
+  calculation.results = {
+      'Surface nette (m²)': roundToDecimal(calculation.netSurface, 2),
+      'Nombre briques': Math.ceil(calculation.bricks * MATERIAL_WASTAGE_FACTOR),
+      'Mortier (m³)': roundToDecimal(calculation.netSurface * MORTAR_THICKNESS, 3),
+      'Ciment mortier (kg)': roundToDecimal((calculation.netSurface * MORTAR_THICKNESS * DEFAULT_CONCRETE_DOSAGE), 1)
+    }
+  return calculation;
+}
+
+function concreteElementResult(
+  type: string,
+  length: number,
+  width: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: ConcreteCalculation
+): ConcreteCalculation {
+  validateDimensions(length, width, height);
+
+  calculation.elementType = type;
+  calculation.dimensions = { length, width, height };
+  calculation.openings = openings;
+
+  const results: Record<string, number> = {
+    'Volume béton (m³)': roundToDecimal(calculation.volume, 3),
+    'Ciment (kg)': roundToDecimal(calculation.cement, 2),
+    'Sacs ciment (50kg)': Math.ceil(calculation.cement / CEMENT_BAG_WEIGHT)
+  };
+
+  if (calculation.sand) results['Sable (m³)'] = roundToDecimal(calculation.sand, 3);
+  if (calculation.gravel) results['Gravier (m³)'] = roundToDecimal(calculation.gravel, 3);
+  calculation.results = results;
+  return  calculation;
+}
+
+function rebarElementResult(
+  type: string,
+  length: number,
+  width: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: RebarCalculation
+): RebarCalculation {
+  validateDimensions(length, width, height);
+  calculation.elementType = type;
+  calculation.dimensions = { length, width, height };
+  calculation.openings = openings;
+  calculation.results = {
+    'Longueur totale acier (m)': roundToDecimal(calculation.totalLength, 2),
+    'Poids total acier (kg)': roundToDecimal(calculation.totalWeight, 2),
+    'Nombre barres': calculation.barCount || 4
+  }
+  return calculation;
+}
+
+function plasterResult(
+  type: string,
+  length: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: PlasterCalculation
+): PlasterCalculation {
+  validateDimensions(length, height);
+  calculation.elementType = type;
+  calculation.dimensions = { length,height };
+  calculation.openings = openings;
+calculation.results =  {
+      'Surface enduit (m²)': roundToDecimal(calculation.surface, 2),
+      'Volume mortier (m³)': roundToDecimal(calculation.volume, 3),
+      'Ciment (kg)': roundToDecimal(calculation.cement, 2)
+    }
+  return calculation ;
+}
+
+// ======================
+// Specialized Element Functions
+// ======================
+function concreteVolumeResult(
+  type: string,
+  length: number,
+  width: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: ConcreteCalculation
+): ConcreteCalculation {
+  return concreteElementResult(type, length, width, height, openings, calculation);
+}
+
+// Rebar elements (using rebarElementResult)
+const rebarSlabResult = (type: string, length: number, width: number, openings: Opening[], slab: RebarCalculation) => 
+  rebarElementResult(type, length, width, 0, openings, slab);
+
+const rebarFootingResult = (type: string, length: number, width: number, openings: Opening[], footing: RebarCalculation) => 
+  rebarElementResult(type, length, width, 0, openings, footing);
+
+// ======================
+// Other Element Functions
+// ======================
+function hollowBlockWallResult(
+  type: string,
+  length: number,
+  height: number,
+  openings: Opening[] = [],
+  calculation: { surface: number; blocks: number }
+): CalculationResult {
+  validateDimensions(length, height);
+
+  return {
+    elementType: type,
+    dimensions: { length, height },
+    openings,
+    results: {
+      'Surface (m²)': roundToDecimal(calculation.surface, 2),
+      'Nombre parpaings': Math.ceil(calculation.blocks * MATERIAL_WASTAGE_FACTOR)
+    }
+  };
+}
+
+function precastSlabResult(
+  type: string,
+  length: number,
+  width: number,
+  openings: Opening[] = [],
+  calculation: { elements: number }
+): CalculationResult {
+  validateDimensions(length, width);
+
+  return {
+    elementType: type,
+    dimensions: { length, width },
+    openings,
+    results: {
+      'Surface dalle (m²)': roundToDecimal(length * width, 2),
+      'Nombre éléments': Math.ceil(calculation.elements)
+    }
+  };
+}
+
+
+
+function rebarColumnResult(
+  type: string,
+  height: number,
+  diameter: number,
+  openings: Opening[] = [],
+  calculation: RebarColumnCalculation,
+  options?: {
+    barCount?: number;
+    barDiameter?: number;
+  }
+): RebarColumnCalculation {
+  validateDimensions(height, diameter);
+
+
+calculation.results = {
+      'Hauteur colonne (m)': roundToDecimal(height, 2),
+      'Diamètre colonne (m)': roundToDecimal(diameter, 2),
+      'Longueur totale acier (m)': roundToDecimal(calculation.totalLength, 2),
+      'Poids total acier (kg)': roundToDecimal(calculation.totalWeight, 2),
+      'Nombre barres': calculation.barCount || options?.barCount || 4,
+      ...(options?.barDiameter && { 'Diamètre barres (mm)': options.barDiameter })
+    };
+  calculation.elementType = type;
+  calculation.dimensions = { length,  height };
+  calculation.openings = openings;
+calculation.barDiameter =diameter;
+calculation.metadata = {
+      type: 'column-rebar',
+      unitWeights: calculation.totalWeight / calculation.totalLength
+    };
+  return calculation;
+}
+
+// ======================
+// Brick Joints Result
+// ======================
+
+function brickJointsResult(
+  type: string,
+  length: number,
+  height: number,
+  openings: Opening[] = [],
+  surface: number,
+  calculation: BrickJointsCalculation
+): BrickJointsCalculation {
+  validateDimensions(length, height);
+
+  calculation.dimensions=  { length, height };
+  calculation.openings = openings;
+  calculation.elementType = type;
+  calculation.metadata =  {
+      type: 'brick-joints',
+      coverageRate: calculation.cementWeight / calculation.jointVolume
+    };
+    calculation.results ={
+      'Surface mur (m²)': roundToDecimal(surface, 2),
+      'Surface joints (m²)': roundToDecimal(calculation.jointArea, 2),
+      'Volume joints (m³)': roundToDecimal(calculation.jointVolume, 4),
+      'Ciment joints (kg)': roundToDecimal(calculation.cementWeight, 2),
+      ...(calculation.jointThickness && { 'Épaisseur joints (m)': roundToDecimal(calculation.jointThickness, 3) })
+    }
+  return calculation;
+}
+
+
+function concreteMixResult(
+  type: string,
+  volume: number,
+  calculation: ConcreteMixCalculation,
+  options?: {
+    mixType?: string;
+    additives?: string[];
+  }
+): ConcreteMixCalculation {
+  validateDimensions(volume);
+
+  return {
+    elementType: type,
+    totalVolume: roundToDecimal(calculation.totalVolume, 3),
+    cementWeight:  roundToDecimal(calculation.cementWeight, 2),
+    sandVolume:  roundToDecimal(calculation.sandVolume, 3),
+    gravelVolume: roundToDecimal(calculation.gravelVolume, 3),
+    dimensions: { volume },
+    results: {
+      'Volume total (m³)': roundToDecimal(calculation.totalVolume, 3),
+      'Ciment (kg)': roundToDecimal(calculation.cementWeight, 2),
+      'Sable (m³)': roundToDecimal(calculation.sandVolume, 3),
+      'Gravier (m³)': roundToDecimal(calculation.gravelVolume, 3),
+      ...(calculation.waterVolume && { 'Eau (L)': roundToDecimal(calculation.waterVolume * 1000, 1) }),
+      ...(calculation.mixRatio && { 'Ratio mélange': calculation.mixRatio })
+    },
+    metadata: {
+      type: 'concrete-mix',
+      ...(options?.mixType && { mixType: options.mixType }),
+      ...(options?.additives && { additives: options.additives })
+    }
+  };
+}
+
+// ======================
+// Utility Functions
+// ======================
+function basicCalculationResult(
+  type: string,
+  length: number,
+  width?: number,
+  height?: number,
+  openings: Opening[] = []
+): CalculationResult {
+  validateDimensions(length, width, height);
+
+  const results: Record<string, number> = {
+    'Longueur (m)': roundToDecimal(length, 2)
+  };
+
+  if (width !== undefined) {
+    results['Largeur (m)'] = roundToDecimal(width, 2);
+    results['Surface (m²)'] = roundToDecimal(length * width, 2);
+  }
+
+  if (height !== undefined && width !== undefined) {
+    results['Volume (m³)'] = roundToDecimal(length * width * height, 3);
+  }
+
+  return {
+    elementType: type,
+    dimensions: { length, width, height },
+    openings,
+    results
+  };
+}
+
+function errorResult(
+  type: string,
+  dimensions: { length?: number; width?: number; height?: number },
+  error: Error,
+  metadata?: Record<string, any>
+): CalculationResult {
+  return {
+    elementType: type,
+    dimensions,
+    results: {
+      'Erreur': error.message,
+      ...(metadata && { 'Détails': metadata })
+    },
+    timestamp: new Date().toISOString()
+  };
+}
+
+// ======================
+// Calculation Functions
+// ======================
+function calculateConcreteVolume(
+  length: number,
+  width: number,
+  height: number,
+  openings: Opening[] = [],
+  dosage: number = DEFAULT_CONCRETE_DOSAGE,
+) {
+  validateDimensions(length, width, height);
+
+  const grossVolume = length * width * height;
+  const openingsVolume = calculateOpeningsVolume(openings, height);
+  const netVolume = grossVolume - openingsVolume;
+
+  return {
+  dimensions : { length, width, height },
+  openings : openings,
+    volume: netVolume,
+    cement: netVolume * dosage,
+    sand: netVolume * 0.5 * MATERIAL_WASTAGE_FACTOR,
+    gravel: netVolume * 0.8 * MATERIAL_WASTAGE_FACTOR
+  };
+}
+
+function calculateTotalOpeningsArea(openings: Opening[]): number {
+  return openings.reduce((total, opening) => {
+    validateDimensions(opening.length, opening.width);
+    return total + (opening.length * opening.width);
+  }, 0);
+}
+
+// Validation helpers
+function validateHeight(height?: number): void {
+  if (height === undefined) throw new Error('Height is required');
+}
+
+function validateWidthHeight(width?: number, height?: number): void {
+  if (width === undefined || height === undefined) throw new Error('Width and height are required');
+}
+
+function validateWidth(width?: number): void {
+  if (width === undefined) throw new Error('Width is required');
+}
+
+/**
+ * Fonction principale de calcul de metré
+ * @param params 
+ * @returns 
+ */
+export function calculateAdvancedQuantities(params: CalculationParams): CalculationResult {
+  const { elementType, length, width = 1, height = 1, options } = params;
+  const openings = options?.openings || [];
+  const detectedType = elementType;
+  console.log(detectedType);
+  try {
+    validateDimensions(length);
+    if (width !== undefined) validateWidth(width);
+    if (height !== undefined) validateHeight(height);
+
+    switch (detectedType) {
+      // Masonry Elements
+      case 'masonry_wall':
+     {
+        validateHeight(height);
+        const wall = calculateMasonryWall(length, height, options);
+
+        return masonryWallResult(detectedType, length, height, openings, wall);
+      }
+
+      case 'hollow_block_wall':
+      {
+        validateHeight(height);
+        const wall = calculateHollowBlockWall(length, height);
+        return hollowBlockWallResult(detectedType, length, height, openings, wall);
+      }
+
+      // Concrete Elements
+      case 'concrete_slab':
+      {
+        validateWidthHeight(width, height);
+        const slab = calculateConcreteVolume(length, width, height, openings, options?.dosage);
+        return concreteVolumeResult(detectedType, length, width, height, openings, slab);
+      }
+
+      case 'concrete_column':
+  {
+        validateWidth(width);
+        const columnHeight = height || length;
+        const column = calculateConcreteVolume(width, width, columnHeight, openings, options?.dosage);
+        return concreteVolumeResult(detectedType, width, width, columnHeight, openings, column);
+      }
+
+      case 'concrete_beam':
+       {
+        validateWidthHeight(width, height);
+        const beam = calculateConcreteVolume(length, width, height, openings, options?.dosage);
+        return concreteVolumeResult(detectedType, length, width, height, openings, beam);
+      }
+
+      case 'concrete_footing':
+     {
+        validateWidthHeight(width, height);
+        const footing = calculateConcreteVolume(length, width, height, openings, options?.dosage);
+        return concreteVolumeResult(detectedType, length, width, height, openings, footing);
+      }
+
+      case 'concrete_strip_footing':
+    {
+        validateWidthHeight(width, height);
+        const footing = calculateConcreteVolume(length, width, height, openings, options?.dosage);
+        return concreteVolumeResult(detectedType, length, width, height, openings, footing);
+      }
+
+      // Reinforcement
+      case 'rebar_column':
+    {
+        const rebar = calculateRebarForColumn(
+          height || length,
+          options?.bars || 4,
+          height || length,
+          options?.barWeight || 0.888
+        );
+        return rebarColumnResult(detectedType, height || length, width || 0.3, openings, rebar, options);
+      }
+
+      case 'rebar_slab':
+     {
+        validateWidth(width);
+        const slab = calculateRebarForSlab(length * width, options?.kgPerM2);
+        return rebarSlabResult(detectedType, length, width, openings, slab);
+      }
+
+      case 'rebar_footing':
+    {
+        validateWidth(width);
+        const footing = calculateRebarForFooting(length, width, options?.kgPerM2);
+        return rebarFootingResult(detectedType, length, width, openings, footing);
+      }
+
+      // Finishes
+      case 'plaster':
+     {
+        validateHeight(height);
+        const plaster = calculateCementForPlaster(length, height, options?.thickness, options?.dosage);
+        return plasterResult(detectedType, length, height, openings, plaster);
+      }
+
+      case 'brick_joints':
+       {
+        validateHeight(height);
+        const surface = length * height;
+        const joints = calculateCementForBrickJoints(surface, options?.dosage);
+        return brickJointsResult(detectedType, length, height, openings, surface, joints);
+      }
+
+      // Prefabricated Elements
+      case 'prefab_girder':
+      {
+        validateWidthHeight(width, height);
+        const girder = calculateConcretePrefabricatedGirder(
+          Math.round(length),
+          width * height,
+          options?.dosage
+        );
+        return concreteVolumeResult(detectedType, length, width, height, openings, girder);
+      }
+
+      case 'precast_slab':
+     {
+        validateWidth(width);
+        const slab = calculatePrecastSlab(length * width);
+        return precastSlabResult(detectedType, length, width, openings, slab);
+      }
+
+      // Special Calculations
+      case 'concrete_mix':
+      {
+        validateWidthHeight(width, height);
+        const volume = length * width * height;
+        const mix = calculateConcreteMix(
+          volume,
+          options?.dosage,
+          options?.thickness,
+          options?.sandRatio
+        );
+        
+        return concreteMixResult(detectedType, volume, mix);
+      }
+
+      case 'wooden_doors':
+       {
+        return calculateWoodenDoor({ length, ...options } as WoodenDoorOptions);
+      }
+
+      // Concrete Volume Calculation
+      case 'concrete_volume':
+      {
+        validateWidthHeight(width, height);
+        const concrete = calculateConcreteVolume(length, width, height, openings);
+        return concreteVolumeResult(detectedType, length, width, height, openings, concrete);
+      }
+
+      // Default case for generic calculations
+      default: {
+        return basicCalculationResult(detectedType, length, width, height, openings);
+      }
+    }
+  } catch (error) {
+    return errorResult(detectedType, { length, width, height }, error as Error);
+  }
+}
+
+export const generateDimensionsFromQuantity = (quantity: number, unit: string) => {
+  switch (unit.toLowerCase()) {
+    case "m²":
+    case "m2": {
+      const side = Math.sqrt(quantity);
+      return { length: side, width: side };
+    }
+    case "m³":
+    case "m3": {
+      const cube = Math.cbrt(quantity);
+      return { length: cube, width: cube, height: cube };
+    }
+    case "ml":
+      return { length: quantity, width: undefined, height: undefined };
+    default:
+      return { length: quantity, width: 1, height: 1 };
+  }
+};
+
+// Extraction of construction lines from raw text
+export const extractConstructionData = (text: string): CalculationResult[] => {
+  const lines = text
+    .split(/(?=\d{1,2}\.[\d\.]?)/g)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const results: CalculationResult[] = [];
+  const pattern = /^(\d{1,2}\.?\d*)\s+(.+?)\s+(ff|m2|m3|ml|pce|pcs|m²|m³)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)$/i;
+
+  for (const line of lines) {
+    const match = line.match(pattern);
+    if (match) {
+      const [, , designation, unitRaw, qtyStr, puStr, ptStr] = match;
+      const elementType = mapToElementType(designation.trim());
+      const quantity = parseFloat(qtyStr.replace(/\s/g, "").replace(",", "."));
+      const unitPrice = parseFloat(puStr.replace(/\s/g, "").replace(",", "."));
+      let prixTotal = parseFloat(ptStr.replace(/\s/g, "").replace(",", "."));
+      if (!prixTotal || prixTotal === 0) {
+        prixTotal = quantity * unitPrice;
+      }
+
+      // Set recommended openings for types that support it
+      let openings: Opening[] | undefined = undefined;
+      if (["concrete_slab", "masonry_wall"].includes(elementType)) {
+        openings = STANDARD_OPENINGS;
+      }
+
+      results.push({
+        elementType,
+        originalLabel: designation.trim(),
+        dimensions: generateDimensionsFromQuantity(quantity, unitRaw),
+        openings,
+        results: {
+          Unité: unitRaw.trim(),
+          Quantité: quantity,
+          "Prix unitaire": unitPrice,
+          "Prix total": prixTotal,
+        },
+      });
+    }
+  }
+  return results;
+};
+
+export const isArchitecturalPlan = (text: string) => {
+  const planWords = [
+    "plan architectural", "plan d'architecte", "floor plan"
+  ];
+  const lower = text.toLowerCase();
+  return planWords.some(word => lower.includes(word));
+};
+
+export const parsePdf = async (file: File): Promise<CalculationResult[]> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    let fullText = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map((item: any) => item.str).join(" ") + "\n";
+    }
+
+    if (fullText.trim().length < 20) {
+      // OCR fallback
+      fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d")!;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
+
+        const {
+          data: { text: ocrText },
+        } = await Tesseract.recognize(canvas, "fra", { logger: () => { } });
+        fullText += ocrText + "\n";
+      }
+    }
+
+    if (isArchitecturalPlan(fullText)) {
+      toast({ title: "Plan architectural détecté", description: " ce document semble être un plan. L'extraction quantitative n'est pas applicable." });
+      return [];
+    }
+
+    // Use the helper to extract lines
+    const extractedLines = extractConstructionData(fullText);
+    toast({ title: "Import réussi", description: `${extractedLines.length} lignes extraites.` });
+    return extractedLines;
+  } catch (error) {
+    toast({ title: "Erreur", description: "Erreur lors de la lecture du PDF", variant: "destructive" });
+    console.error(error);
+    return [];
+  }
+};

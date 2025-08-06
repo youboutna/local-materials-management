@@ -1,12 +1,12 @@
 import * as pdfjsLib from "pdfjs-dist";
-import Papa from "papaparse";
-import type { CalculationResult,InvoiceLine } from "@/utils/types";
-
 // PDF.js worker config
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
 
+import Papa from "papaparse";
+import type { CalculationResult, InvoiceLine } from "@/utils/types";
 
-export async function parseDevisFromPdf(file: File): Promise<InvoiceLine[]> {
+
+export async function parseInvoiceFromPdf(file: File): Promise<InvoiceLine[]> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
   let fullText = "";
