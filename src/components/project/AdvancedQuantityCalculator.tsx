@@ -318,12 +318,10 @@ const AdvancedQuantityCalculator: React.FC = () => {
   // Derived values
   const currentElement = elementTypes.find(
     (el) => el.value === form.elementType
-  ) ;
+  );
 
-console.log("current line : ");
-
-console.log(currentElement);
   const hasRequiredDimensions = useCallback(() => {
+    if (!currentElement) return false;
     return currentElement.requires.every((req) => {
       const value = form[req as keyof typeof form];
       return typeof value === 'number' && value > 0;
@@ -443,7 +441,6 @@ console.log(currentElement);
             : undefined,
           dosage: form.dosage,
           thickness: form.thickness,
-          sandRatio: form.elementType === "concrete_mix" ? 0.5 : undefined,
         }
       };
 
@@ -524,7 +521,7 @@ console.log(currentElement);
       "Longueur (m)": calc.dimensions.length ?? "",
       "Largeur (m)": calc.dimensions.width ?? "",
       "Hauteur (m)": calc.dimensions.height ?? "",
-      "Surface (m²)": calc.dimensions.area ?? "",
+      "Surface (m²)": calc.dimensions.length && calc.dimensions.width ? (calc.dimensions.length * calc.dimensions.width).toFixed(2) : "",
       "Quantité": calc.dimensions.count ?? "",
       ...calc.results,
     }));
@@ -632,7 +629,7 @@ console.log(currentElement);
               />
             </div>
             
-            {currentElement.requires.includes("width") && (
+            {currentElement && currentElement.requires.includes("width") && (
               <div>
                 <Label>Largeur (m)</Label>
                 <Input
@@ -649,25 +646,20 @@ console.log(currentElement);
               </div>
             )}
             
-            {currentElement.requires.includes("height") && (
+            {currentElement && currentElement.requires.includes("height") && (
               <div>
                 <Label>Hauteur (m)</Label>
                 <Input
                   type="number"
-                  step={currentElement.heightStep || "0.01"}
-                  min={currentElement.minHeight || "0.01"}
+                  step="0.01"
+                  min="0.01"
                   value={form.height || ""}
                   onChange={(e) => setForm(f => ({ 
                     ...f, 
                     height: parseFloat(e.target.value) || 0 
                   }))}
-                  placeholder={currentElement.heightPlaceholder || "0.00"}
+                  placeholder="0.00"
                 />
-                {currentElement.minHeight && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Minimum: {currentElement.minHeight}m
-                  </p>
-                )}
               </div>
             )}
             
@@ -862,7 +854,7 @@ console.log(currentElement);
                         {calc?.dimensions.length?.toFixed(2)}m
                         {calc.dimensions.width ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
                         {calc.dimensions.height ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
-                        {calc.openings?.length > 0 && (
+                        {calc.openings && calc.openings.length > 0 && (
                           <div className="text-xs text-gray-400 mt-1">
                             Ouvertures: {calc.openings.map(o => 
                               `${o.length.toFixed(2)}×${o.width.toFixed(2)}${o.height ? `×${o.height.toFixed(2)}` : ''}`
