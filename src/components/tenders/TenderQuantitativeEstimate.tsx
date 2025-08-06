@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
@@ -22,33 +23,35 @@ interface TenderQuantitativeEstimateProps {
 
 interface EstimateItem {
   id?: string;
-  material_id?: string;
+  material_id?: string | null;
   quantity: number;
   unit_price: number;
   total_price: number;
-  description: string;
-  item_type: 'material' | 'labor' | 'equipment' | 'other';
+  description: string | null;
+  item_type: string | null;
 }
 
 interface TenderEstimate {
   id?: string;
   tender_id: string;
-  project_id?: string;
-  estimate_type: 'quantitative' | 'uploaded_document';
-  total_materials_cost: number;
-  total_labor_cost: number;
-  total_equipment_cost: number;
-  subtotal: number;
-  tax_rate: number;
-  tax_amount: number;
-  total_with_tax: number;
-  overhead_percentage: number;
-  overhead_amount: number;
-  profit_margin_percentage: number;
-  profit_margin_amount: number;
-  final_total: number;
-  currency: string;
-  status: 'draft' | 'submitted' | 'approved';
+  project_id?: string | null;
+  estimate_type: string;
+  total_materials_cost: number | null;
+  total_labor_cost: number | null;
+  total_equipment_cost: number | null;
+  subtotal: number | null;
+  tax_rate: number | null;
+  tax_amount: number | null;
+  total_with_tax: number | null;
+  overhead_percentage: number | null;
+  overhead_amount: number | null;
+  profit_margin_percentage: number | null;
+  profit_margin_amount: number | null;
+  final_total: number | null;
+  currency: string | null;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeEstimateProps) => {
@@ -387,15 +390,28 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                     </SelectContent>
                   </Select>
 
-                  {selectedEstimateId && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Articles du devis</h3>
-                        <Button size="sm" onClick={() => setIsAddItemOpen(true)}>
-                          <Plus className="h-4 w-4 mr-1" />
-                          Ajouter Article
-                        </Button>
-                      </div>
+                      {selectedEstimateId && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-medium">Articles du devis</h3>
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => setIsAddItemOpen(true)}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Ajouter Article
+                              </Button>
+                              {estimateItems && estimateItems.length > 0 && (
+                                <QuantitativeEstimateExporter 
+                  estimate={{
+                    ...estimateData,
+                    ...estimates?.find(e => e.id === selectedEstimateId),
+                    status: estimates?.find(e => e.id === selectedEstimateId)?.status || 'draft'
+                  } as TenderEstimate}
+                                  estimateItems={estimateItems}
+                                  tender={{ title: 'Appel d\'Offres', reference: tenderId }}
+                                />
+                              )}
+                            </div>
+                          </div>
 
                       <div className="space-y-2">
                         {estimateItems?.map((item) => (
@@ -577,8 +593,8 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
             <div>
               <Label>Type d'article</Label>
               <Select 
-                value={newItem.item_type} 
-                onValueChange={(value: 'material' | 'labor' | 'equipment' | 'other') => 
+                value={newItem.item_type || 'material'} 
+                onValueChange={(value: string) => 
                   setNewItem(prev => ({ ...prev, item_type: value }))
                 }
               >
@@ -615,7 +631,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
             <div>
               <Label>Description</Label>
               <Input
-                value={newItem.description}
+                value={newItem.description || ''}
                 onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Description de l'article"
               />
