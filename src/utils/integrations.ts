@@ -39,10 +39,10 @@ export function exportCalculationsToCSV(calculations: CalculationResult[]) {
     "Longueur (m)": calc.dimensions.length || "",
     "Largeur (m)": calc.dimensions.width || "",
     "Hauteur (m)": calc.dimensions.height || "",
-    "Surface (m²)": calc.dimensions.area || "",
+    "Surface (m²)": calc.dimensions.length && calc.dimensions.width ? (calc.dimensions.length * calc.dimensions.width).toFixed(2) : "",
     "Quantité": calc.dimensions.count || "",
-    "Capacité": calc.dimensions.capacity || "",
-    "Profondeur (m)": calc.dimensions.depth || "",
+    "Capacité": "",
+    "Profondeur (m)": "",
     ...calc.results,
   }));
 

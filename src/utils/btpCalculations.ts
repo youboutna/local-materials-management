@@ -708,8 +708,7 @@ function errorResult(
     dimensions: { length: dimensions.length || 0, width: dimensions.width, height: dimensions.height },
     results: {
       'Erreur': error.message
-    },
-    timestamp: new Date().toISOString()
+    }
   };
 }
 
@@ -869,7 +868,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
           elementType: detectedType,
           dimensions: { length: height || length, height: height || length },
           results: {}
-        }, options);
+        });
       }
 
       case 'rebar_slab':
@@ -946,6 +945,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
           gravel: girder.volume * 0.8,
           dosage: options?.dosage || DEFAULT_CONCRETE_DOSAGE,
           elementType: detectedType,
+          dimensions: { length, width, height },
           results: {}
         });
       }
@@ -971,14 +971,16 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
           700
         );
         
-        return concreteMixResult(detectedType, volume, {
-          totalVolume: volume,
-          cementWeight: mix.cement,
-          sandVolume: mix.sand / 1600,
-          gravelVolume: mix.gravel / 1800,
-          dimensions: { volume },
-          results: {}
-        });
+        return {
+          elementType: detectedType,
+          dimensions: { length: volume, width: 1, height: 1 },
+          results: {
+            'Volume total (m³)': roundToDecimal(volume, 3),
+            'Ciment (kg)': roundToDecimal(mix.cement, 2),
+            'Sable (m³)': roundToDecimal(mix.sand / 1600, 3),
+            'Gravier (m³)': roundToDecimal(mix.gravel / 1800, 3)
+          }
+        };
       }
 
       case 'wooden_doors':
