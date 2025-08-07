@@ -164,23 +164,132 @@ export interface CalculationOptions {
   dosage?: number;
   thickness?: number;
 }
-// New interface for element types
+/**
+ * Comprehensive construction element types for BTP (Bâtiment et Travaux Publics) calculations
+ * 
+ * This type covers all major construction phases from site preparation to finishing work,
+ * with specific variants for different materials and techniques.
+ */
 export type ElementType =
-  | 'concrete_slab' | 'site_preparation' | 'hollow_core_slab' | 'rebar'
-  | 'masonry_wall' | 'plaster' | 'beam' | 'column' | 'foundation'
-  | 'staircase' | 'excavation' | 'lean_concrete' | 'foundation_masonry'
-  | 'foundation_chape' | 'roof_insulation' | 'cement_block_masonry'
-  | 'reinforced_concrete' | 'wooden_roof_structure' | 'metal_gutter'
-  | 'roof_covering' | 'tiling' | 'wooden_ceiling' | 'metal_doors_windows'
-  | 'wooden_doors' | 'balustrade' | 'electrical_installation'
-  | 'plumbing_installation' | 'septic_tank' | 'painting' | 'fence'
-  | 'gate' | 'landscaping' | 'strip_footing' | 'brick_joints'
-  | 'rebar_slab' | 'rebar_footing' | 'rebar' | 'rebar_column' | 'prefab_girder'
-  | 'precast_slab' | 'concrete_mix' | 'architectural_plan'
-
+  /* ---------------------------- */
+  /*        SITE PREPARATION      */
+  /* ---------------------------- */
+  | 'site_preparation'             // General site prep
+  | 'vegetal_soil_stripping'       // Décapage terre végétale
+  | 'excavation'                   // General excavation
+  | 'mass_excavation'              // Fouille pleine masse
+  | 'trench_excavation'            // Fouille en rigole
+  | 'backfilling'                  // Remblaiement
+  
+  /* ---------------------------- */
+  /*      FOUNDATION & STRUCTURE  */
+  /* ---------------------------- */
+  | 'foundation'                   // General foundation
+  | 'strip_footing'                // Semelle filante
+  | 'isolated_footing'             // Semelle isolée
+  | 'foundation_masonry'           // Maçonnerie de fondation
+  | 'foundation_chape'             // Chape de fondation
+  | 'lean_concrete'                // Béton de propreté
+  | 'concrete_filling'             // Remplissage B.A (ex: rigoles)
+  
+  /* ---------------------------- */
+  /*      VERTICAL STRUCTURES     */
+  /* ---------------------------- */
+  | 'masonry_wall'                 // Mur maçonnerie traditionnelle
+  | 'elevation_wall'               // Mur élévation (vide sanitaire)
+  | 'hollow_block_wall'            // Mur parpaing/agglo
+  | 'brick_wall'                   // Mur brique
+  | 'wood_framing_wall'            // Mur ossature bois
+  | 'concrete_wall'                // Mur béton banché
+  | 'partition_wall'               // Cloison
+  | 'retaining_wall'               // Mur de soutènement
+  
+  /* ---------------------------- */
+  /*      HORIZONTAL STRUCTURES   */
+  /* ---------------------------- */
+  | 'concrete_slab'                // Dalle béton
+  | 'hollow_core_slab'             // Dalle alvéolée
+  | 'precast_slab'                 // Plancher préfabriqué
+  | 'wood_floor'                   // Plancher bois
+  | 'metal_deck'                   // Plancher métallique
+  
+  /* ---------------------------- */
+  /*         ROOFING SYSTEMS      */
+  /* ---------------------------- */
+  | 'roof_structure'               // Charpente générale
+  | 'wooden_roof_structure'        // Charpente bois
+  | 'metal_roof_structure'         // Charpente métallique
+  | 'roof_decking'                 // Sous-toiture + liteaunage
+  | 'roof_insulation'              // Isolation toiture
+  | 'roof_covering'                // Couverture générale
+  | 'tile_roof'                    // Couverture tuile
+  | 'synthetic_slate_roof'         // Couverture ardoise synthétique
+  | 'metal_roof'                   // Couverture métallique
+  | 'zinc_ridge'                   // Faîtage zinc
+  | 'metal_gutter'                 // Gouttière métallique
+  
+  /* ---------------------------- */
+  /*      OPENINGS & JOINERY      */
+  /* ---------------------------- */
+  | 'wooden_doors'                 // Portes bois
+  | 'metal_doors_windows'          // Portes/fenêtres métal
+  | 'window_installation'          // Pose fenêtre
+  | 'skylight'                     // Velux/fenêtre de toit
+  
+  /* ---------------------------- */
+  /*       FINISHING WORK         */
+  /* ---------------------------- */
+  | 'plaster'                      // Enduit
+  | 'brick_joints'                 // Joints maçonnerie
+  | 'tiling'                       // Carrelage
+  | 'painting'                     // Peinture
+  | 'wooden_ceiling'               // Plafond bois
+  | 'suspended_ceiling'            // Plafond suspendu
+  
+  /* ---------------------------- */
+  /*       SPECIALTY WORK         */
+  /* ---------------------------- */
+  | 'balustrade'                   // Garde-corps
+  | 'staircase'                    // Escalier
+  | 'electrical_installation'      // Électricité
+  | 'plumbing_installation'        // Plomberie
+  | 'septic_tank'                  // Fosse septique
+  | 'fence'                        // Clôture
+  | 'gate'                         // Portail
+  | 'landscaping'                  // Aménagement extérieur
+  
+  /* ---------------------------- */
+  /*      REBAR & STRUCTURAL      */
+  /* ---------------------------- */
+  | 'rebar'                        // Ferraillage général
+  | 'rebar_slab'                   // Ferraillage dalle
+  | 'rebar_column'                 // Ferraillage poteau
+  | 'rebar_beam'                   // Ferraillage poutre
+  | 'rebar_footing'                // Ferraillage semelle
+  
+  /* ---------------------------- */
+  /*      PREFAB ELEMENTS         */
+  /* ---------------------------- */
+  | 'prefab_girder'                // Poutre préfabriquée
+  | 'precast_concrete'             // Éléments préfabriqués béton
+  
+  /* ---------------------------- */
+  /*      CALCULATION HELPERS     */
+  /* ---------------------------- */
+  | 'concrete_mix'                 // Dosage béton
+  | 'material_quantity'            // Calcul quantité matériaux
+  | 'basic_calculator'             // Calculs basiques
+  | 'architectural_plan';          // Plan architectural
+  
 // elementTypes with all construction elements
 export const elementTypes = [
   // Concrete elements
+    {
+    value: "basic_calculator",
+    label: "calcul basic",
+    requires: ["length", "width", "height"],
+    defaultUnit: "m³"
+  },
   {
     value: "concrete_slab",
     label: "Dalle béton",
@@ -280,7 +389,93 @@ export const elementTypes = [
     label: "Portes bois",
     requires: ["count"],
     defaultUnit: "unité"
-  }
+  },
+  // Site preparation
+  {
+    value: "site_preparation",
+    label: "Préparation de terrain",
+    requires: ["area"],
+    defaultUnit: "m²",
+    synonyms: ["décapage", "terrassement", "nivellement"]
+  },
+  {
+    value: "vegetal_soil_stripping",
+    label: "Décapage terre végétale",
+    requires: ["area", "depth"],
+    defaultUnit: "m³",
+    synonyms: ["décapage terre", "enlèvement terre végétale"]
+  },
+
+  // Excavations
+  {
+    value: "mass_excavation",
+    label: "Fouille pleine masse",
+    requires: ["area", "depth"],
+    defaultUnit: "m³",
+    synonyms: ["fouille en masse", "excavation complète"]
+  },
+  {
+    value: "trench_excavation",
+    label: "Fouille en rigole",
+    requires: ["length", "width", "depth"],
+    defaultUnit: "m³",
+    synonyms: ["fouille linéaire", "rigole"]
+  },
+
+  // Concrete work
+  {
+    value: "concrete_filling",
+    label: "Remplissage béton",
+    requires: ["volume"],
+    defaultUnit: "m³",
+    synonyms: ["remplissage rigoles béton", "couche de propreté"]
+  },
+  {
+    value: "lean_concrete",
+    label: "Béton maigre",
+    requires: ["volume"],
+    defaultUnit: "m³",
+    synonyms: ["béton de propreté", "béton dosé faible"]
+  },
+
+  // Masonry
+  {
+    value: "elevation_wall",
+    label: "Mur élévation",
+    requires: ["length", "height"],
+    defaultUnit: "m²",
+    synonyms: ["mur de superstructure", "élévation maçonnerie"]
+  },
+  {
+    value: "wood_framing_wall",
+    label: "Mur ossature bois",
+    requires: ["length", "height"],
+    defaultUnit: "m²",
+    synonyms: ["ossature bois", "mur bois", "charpente murale"]
+  },
+
+  // Roofing
+  {
+    value: "roof_decking",
+    label: "Sous-toiture + liteaunage",
+    requires: ["area"],
+    defaultUnit: "m²",
+    synonyms: ["sous-toiture", "voligeage", "support toiture"]
+  },
+  {
+    value: "synthetic_slate_roof",
+    label: "Couverture ardoise synthétique",
+    requires: ["area"],
+    defaultUnit: "m²",
+    synonyms: ["ardoise artificielle", "couverture synthétique"]
+  },
+  {
+    value: "zinc_ridge",
+    label: "Faitage zinc",
+    requires: ["length"],
+    defaultUnit: "ml",
+    synonyms: ["faîtage métallique", "arêtier zinc"]
+  },
 ];
 
 // Comprehensive element type synonyms
@@ -329,13 +524,56 @@ export const elementTypeSynonyms: Record<string, string[]> = {
   ],
   paving: [
     "carrelage", "dallage extérieur", "revêtement sol"
-  ]
+  ],
+  
+  // Site preparation
+  site_preparation: [
+    "préparation terrain", "préparation chantier", "mise en état"
+  ],
+  vegetal_soil_stripping: [
+    "décapage terre végétale", "enlèvement terre", "déblai terre"
+  ],
+
+  // Excavations
+  mass_excavation: [
+    "fouille pleine masse", "excavation complète", "déblai général"
+  ],
+  trench_excavation: [
+    "fouille en rigole", "fouille linéaire", "tranchée"
+  ],
+
+  // Concrete
+  concrete_filling: [
+    "remplissage béton", "couche béton", "remplissage rigoles"
+  ],
+  lean_concrete: [
+    "béton maigre", "béton de propreté", "béton dosé faible"
+  ],
+
+  // Masonry
+  elevation_wall: [
+    "mur élévation", "mur superstructure", "élévation maçonnerie"
+  ],
+  wood_framing_wall: [
+    "mur ossature bois", "ossature bois", "charpente murale"
+  ],
+
+  // Roofing
+  roof_decking: [
+    "sous-toiture", "liteaunage", "voligeage", "support toiture"
+  ],
+  synthetic_slate_roof: [
+    "ardoise synthétique", "couverture synthétique", "toiture ardoise"
+  ],
+  zinc_ridge: [
+    "faitage zinc", "arêtier zinc", "faîtage métallique"
+  ]  
 };
 
 
 // Enhanced Element Type Detection
 export const detectElementType = (designation: string): ElementType => {
-  if (!designation || typeof designation !== "string") return "concrete_slab";
+  if (!designation || typeof designation !== "string") return "basic_calculator";
 
   const d = designation.toLowerCase().trim();
 
@@ -358,29 +596,61 @@ export const detectElementType = (designation: string): ElementType => {
   if (d.includes("enduit") && d.includes("façade")) return "plaster";
   if (d.includes("porte") && d.includes("bois")) return "wooden_doors";
   if (d.includes("porte") && (d.includes("métal") || d.includes("blindée"))) return "metal_doors_windows";
+//Check for depth/height specifications
+  const hasDepthSpec = /\d+(?:[,.]\d+)?\s?m/.test(d);
 
-  return "concrete_slab";
+  // Special cases with depth/height
+  if (d.includes("décapage") && d.includes("terre végétale")) {
+    return hasDepthSpec ? "vegetal_soil_stripping" : "site_preparation";
+  }
+  if (d.includes("fouille pleine masse")) {
+    return hasDepthSpec ? "mass_excavation" : "excavation";
+  }
+  if (d.includes("remplissage") && d.includes("b.a")) {
+    return "concrete_filling";
+  }
+  if (d.includes("mur ossature bois")) {
+    return "wood_framing_wall";
+  }
+  if (d.includes("sous toiture") && d.includes("liteaunage")) {
+    return "roof_decking";
+  }
+  if (d.includes("couverture") && d.includes("ardoise")) {
+    return "synthetic_slate_roof";
+  }
+  if (d.includes("faitage zinc")) {
+    return "zinc_ridge";
+  }
+  return "basic_calculator";
 };
 
 // Enhanced semantic mapping function
 /**
- * 
+ * mapping function with unit detection
  * @param desc 
  * @returns 
  */
 export const mapToElementType = (desc: string) => {
   const d = desc.toLowerCase();
-  // 1. Check synonyms mapping
-  for (const [type, synonyms] of Object.entries(elementTypeSynonyms)) {
-    if (synonyms.some(syn => d.includes(syn))) {
-      return type;
-    }
-  }
-  // 2. Fallback: check elementTypes label/value
+  
+  // Check for unit patterns
+  const unitMatch = d.match(/(\d+(?:[,.]\d+)?\s?(m²|m³|ml|kg|tonne|unite|u)/);
+  const unit = unitMatch ? unitMatch[2] : null;
+
+  // Special cases with units
+  if (d.includes("décapage") && unit === "m³") return "vegetal_soil_stripping";
+  if (d.includes("fouille") && unit === "m³") return "mass_excavation";
+  if (d.includes("remplissage") && unit === "m³") return "concrete_filling";
+  if (d.includes("mur") && unit === "m²") return "elevation_wall";
+  if (d.includes("ardoise") && unit === "m²") return "synthetic_slate_roof";
+  if (d.includes("faitage") && unit === "ml") return "zinc_ridge";
+
+  // Fallback to standard mapping
   const found = elementTypes.find(
     et =>
       d.includes(et.label.toLowerCase()) ||
-      d.includes(et.value.replace(/_/g, " "))
+      (et.synonyms && et.synonyms.some(syn => d.includes(syn)))
   );
-  return found ? found.value : "concrete_slab";
+  
+  return found ? found.value : "basic_calculator";
 };

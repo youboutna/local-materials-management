@@ -273,7 +273,7 @@ const getRecommendations = (elementType: string) => {
 const AdvancedQuantityCalculator: React.FC = () => {
   // State
   const [form, setForm] = useState({
-    elementType: "concrete_slab",
+    elementType: "basic_calculator",
     length: 0,
     width: 0,
     height: 0,
@@ -331,7 +331,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
   // Handlers
   const resetForm = () => {
     setForm({
-      elementType: "concrete_slab",
+      elementType: "basic_calculator",
       length: 0,
       width: 0,
       height: 0,
@@ -350,9 +350,6 @@ const AdvancedQuantityCalculator: React.FC = () => {
     const line = invoiceLines[index];
     resetForm();
     const detectedType = mapToElementType(line.designation || "");
-     console.log("detectedType");
-    console.log(detectedType);
-   
     const updates: Partial<typeof form> = { elementType: detectedType };
     
     // Handle different unit types
@@ -584,6 +581,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
       setForm(f => ({ ...f, openings: STANDARD_OPENINGS }));
     }
   }, [form.elementType]);
+
+   console.log(calculations);
 
   return (
     <div className="space-y-6">
@@ -834,7 +833,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
             <div className="border rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
-                  <tr>
+                  <tr>{/* No whitespace here */}
                     <th className=" border border-gray-200 px-1 py-1 ">#</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Dimensions</th>
@@ -845,10 +844,11 @@ const AdvancedQuantityCalculator: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {calculations.map((calc, i) => (
-                    <tr key={i}>
+                    <tr key={i}>{/* No whitespace here */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getElementLabel(calc.elementType)}
+                        {getElementLabel(calc.elementType)
+                       }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {calc?.dimensions.length?.toFixed(2)}m

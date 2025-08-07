@@ -768,6 +768,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
   const openings = options?.openings || [];
   const detectedType = elementType;
   console.log(detectedType);
+  
   try {
     validateDimensions(length);
     if (width !== undefined) validateWidth(width);
@@ -775,24 +776,20 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
 
     switch (detectedType) {
       // Masonry Elements
-      case 'masonry_wall':
-     {
+      case 'masonry_wall': {
         validateHeight(height);
         const wall = calculateMasonryWall(length, height, options);
-
         return masonryWallResult(detectedType, length, height, openings, wall);
       }
 
-      case 'hollow_block_wall':
-      {
+      case 'hollow_block_wall': {
         validateHeight(height);
         const wall = calculateHollowBlockWall(length, height);
         return hollowBlockWallResult(detectedType, length, height, openings, wall);
       }
 
       // Concrete Elements
-      case 'concrete_slab':
-      {
+      case 'concrete_slab': {
         validateWidthHeight(width, height);
         const slab = calculateConcreteVolume(length, width, height, openings, options?.dosage);
         return concreteElementResult(detectedType, length, width, height, openings, {
@@ -803,8 +800,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'concrete_column':
-  {
+      case 'concrete_column': {
         validateWidth(width);
         const columnHeight = height || length;
         const column = calculateConcreteVolume(width, width, columnHeight, openings, options?.dosage);
@@ -816,8 +812,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'concrete_beam':
-       {
+      case 'concrete_beam': {
         validateWidthHeight(width, height);
         const beam = calculateConcreteVolume(length, width, height, openings, options?.dosage);
         return concreteElementResult(detectedType, length, width, height, openings, {
@@ -828,8 +823,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'concrete_footing':
-     {
+      case 'concrete_footing': {
         validateWidthHeight(width, height);
         const footing = calculateConcreteVolume(length, width, height, openings, options?.dosage);
         return concreteElementResult(detectedType, length, width, height, openings, {
@@ -840,8 +834,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'concrete_strip_footing':
-    {
+      case 'concrete_strip_footing': {
         validateWidthHeight(width, height);
         const footing = calculateConcreteVolume(length, width, height, openings, options?.dosage);
         return concreteElementResult(detectedType, length, width, height, openings, {
@@ -853,8 +846,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
       }
 
       // Reinforcement
-      case 'rebar_column':
-    {
+      case 'rebar_column': {
         const rebar = calculateRebarForColumn(
           height || length,
           4,
@@ -871,8 +863,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'rebar_slab':
-     {
+      case 'rebar_slab': {
         validateWidth(width);
         const slab = calculateRebarForSlab(length * width, 60);
         return rebarSlabResult(detectedType, length, width, openings, {
@@ -885,8 +876,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'rebar_footing':
-    {
+      case 'rebar_footing': {
         validateWidth(width);
         const footing = calculateRebarForFooting(length, width, 80);
         return rebarFootingResult(detectedType, length, width, openings, {
@@ -900,8 +890,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
       }
 
       // Finishes
-      case 'plaster':
-     {
+      case 'plaster': {
         validateHeight(height);
         const plaster = calculateCementForPlaster(length, height, options?.thickness, options?.dosage);
         return plasterResult(detectedType, length, height, openings, {
@@ -914,8 +903,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'brick_joints':
-       {
+      case 'brick_joints': {
         validateHeight(height);
         const surface = length * height;
         const joints = calculateCementForBrickJoints(surface, options?.dosage);
@@ -930,8 +918,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
       }
 
       // Prefabricated Elements
-      case 'prefab_girder':
-      {
+      case 'prefab_girder': {
         validateWidthHeight(width, height);
         const girder = calculateConcretePrefabricatedGirder(
           Math.round(length),
@@ -950,8 +937,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         });
       }
 
-      case 'precast_slab':
-     {
+      case 'precast_slab': {
         validateWidth(width);
         const slab = calculatePrecastSlab(length * width);
         return precastSlabResult(detectedType, length, width, openings, {
@@ -960,16 +946,10 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
       }
 
       // Special Calculations
-      case 'concrete_mix':
-      {
+      case 'concrete_mix': {
         validateWidthHeight(width, height);
         const volume = length * width * height;
-        const mix = calculateConcreteMix(
-          volume,
-          options?.dosage,
-          1050,
-          700
-        );
+        const mix = calculateConcreteMix(volume, options?.dosage, 1050, 700);
         
         return {
           elementType: detectedType,
@@ -983,14 +963,12 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         };
       }
 
-      case 'wooden_doors':
-       {
+      case 'wooden_doors': {
         return calculateWoodenDoor({ elementType: 'wooden_doors', length, width, height });
       }
 
       // Concrete Volume Calculation
-      case 'concrete_volume':
-      {
+      case 'concrete_volume': {
         validateWidthHeight(width, height);
         const concrete = calculateConcreteVolume(length, width, height, openings);
         return concreteElementResult(detectedType, length, width, height, openings, {
@@ -1000,8 +978,151 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
           results: {}
         });
       }
+/* ---------------------------- */
+      /*        SITE PREPARATION      */
+      /* ---------------------------- */
+      case 'vegetal_soil_stripping': {
+        validateWidthHeight(width, height);
+        const volume = length * width * height;
+        return {
+          elementType: detectedType,
+          dimensions: { length, width, height },
+          results: {
+            'Volume terre végétale (m³)': roundToDecimal(volume, 2),
+            'Poids terre végétale (tonnes)': roundToDecimal(volume * 1.5, 2)
+          }
+        };
+      }
 
+      case 'mass_excavation': {
+        validateWidthHeight(width, height);
+        const volume = length * width * height;
+        return {
+          elementType: detectedType,
+          dimensions: { length, width, height },
+          results: {
+            'Volume excavation (m³)': roundToDecimal(volume, 2),
+            'Temps engin (h)': roundToDecimal(volume / 15, 1) // 15m³/h productivity
+          }
+        };
+      }
+
+      /* ---------------------------- */
+      /*      FOUNDATION & STRUCTURE  */
+      /* ---------------------------- */
+      case 'concrete_filling': {
+        validateWidthHeight(width, height);
+        const volume = length * width * height;
+        const mix = calculateConcreteMix(volume, options?.dosage || 350);
+        return {
+          elementType: detectedType,
+          dimensions: { length, width, height },
+          results: {
+            'Volume béton (m³)': roundToDecimal(volume, 2),
+            'Ciment (kg)': roundToDecimal(mix.cement, 0),
+            ...formatCementOutput(mix.cement),
+            'Sable (m³)': roundToDecimal(mix.sand / 1600, 2),
+            'Gravier (m³)': roundToDecimal(mix.gravel / 1800, 2)
+          }
+        };
+      }
+
+      /* ---------------------------- */
+      /*      VERTICAL STRUCTURES     */
+      /* ---------------------------- */
+      case 'elevation_wall': {
+        validateHeight(height);
+        const surface = length * height;
+        const blocks = Math.ceil(surface / 0.2); // 0.2m² per block
+        const mortar = surface * 0.02; // 2cm mortar
+        
+        return {
+          elementType: detectedType,
+          dimensions: { length, height },
+          results: {
+            'Surface mur (m²)': roundToDecimal(surface, 2),
+            'Blocs nécessaires': blocks,
+            'Mortier (m³)': roundToDecimal(mortar, 3),
+            'Ciment mortier (kg)': roundToDecimal(mortar * 350, 0)
+          }
+        };
+      }
+
+      case 'wood_framing_wall': {
+        validateHeight(height);
+        const surface = length * height;
+        const studs = Math.ceil(length / 0.6) * Math.ceil(height / 2.4); // 60cm spacing, 2.4m height
+        const panels = Math.ceil(surface / 2.88); // OSB panels 1.2x2.4m
+        
+        return {
+          elementType: detectedType,
+          dimensions: { length, height },
+          results: {
+            'Surface mur (m²)': roundToDecimal(surface, 2),
+            'Montants bois (45x145mm)': studs,
+            'Panneaux OSB (9mm)': panels,
+            'Isolation (m²)': roundToDecimal(surface, 2)
+          }
+        };
+      }
+
+      /* ---------------------------- */
+      /*         ROOFING SYSTEMS      */
+      /* ---------------------------- */
+      case 'roof_decking': {
+        validateWidth(width);
+        const surface = length * width;
+        const laths = Math.ceil(surface * 3); // 3 laths per m²
+        const underlayment = Math.ceil(surface / 50); // Rolls of 50m²
+        
+        return {
+          elementType: detectedType,
+          dimensions: { length, width },
+          results: {
+            'Surface toiture (m²)': roundToDecimal(surface, 2),
+            'Liteaux (ml)': laths,
+            'Écran sous-toiture (rouleaux)': underlayment
+          }
+        };
+      }
+
+      case 'synthetic_slate_roof': {
+        validateWidth(width);
+        const surface = length * width;
+        const slates = Math.ceil(surface / 0.25); // 0.25m² per slate
+        const hooks = Math.ceil(surface * 4); // 4 hooks per m²
+        
+        return {
+          elementType: detectedType,
+          dimensions: { length, width },
+          results: {
+            'Surface toiture (m²)': roundToDecimal(surface, 2),
+            'Ardoises synthétiques': slates,
+            'Crochets de fixation': hooks
+          }
+        };
+      }
+
+      case 'zinc_ridge': {
+        const length = params.length;
+        const zincSheets = Math.ceil(length / 2); // 2m sheets
+        const screws = Math.ceil(length * 3); // 3 screws per meter
+        
+        return {
+          elementType: detectedType,
+          dimensions: { length },
+          results: {
+            'Longueur faîtage (ml)': roundToDecimal(length, 2),
+            'Feuilles zinc': zincSheets,
+            'Vis de fixation': screws
+          }
+        };
+      }
       // Default case for generic calculations
+      case 'basic_calculator': {
+        return basicCalculationResult(detectedType, length, width, height, openings);
+      }
+        
       default: {
         return basicCalculationResult(detectedType, length, width, height, openings);
       }
