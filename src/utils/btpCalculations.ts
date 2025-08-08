@@ -488,6 +488,16 @@ function roundToDecimal(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
+// Helper to format cement quantities into bag counts
+function formatCementOutput(totalKg: number): Record<string, number> {
+  const bags50 = Math.ceil(totalKg / 50);
+  const bags35 = Math.ceil(totalKg / 35);
+  return {
+    'Sacs de ciment 50kg': bags50,
+    'Sacs de ciment 35kg': bags35
+  };
+}
+
 function validateDimensions(...dimensions: (number | undefined)[]): void {
   if (dimensions.some(dim => dim !== undefined && (dim <= 0 || isNaN(dim)))) {
     throw new Error('All dimensions must be positive numbers');
