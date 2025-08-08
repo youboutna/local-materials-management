@@ -9,17 +9,37 @@ export const useProjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+const fetchProjects = async () => {
+  setLoading(true);
+  try {
+    // Get current user and roles
+    const { data: userRes } = await supabase.auth.getUser();
+    const userId = userRes?.user?.id;
+    let roles: string[] = [];
+    if (userId) {
+      const { data: rolesData } = await (supabase as any)
+        .from('user_roles')
+        .select('role_name')
+        .eq('user_id', userId);
+      roles = (rolesData || []).map((r: any) => r.role_name);
+    }
+    const isAdminOrDirector = roles.includes('admin') || roles.includes('director');
+    const isProjectManager = roles.includes('project_manager');
 
-      if (error) {
-        throw error;
-      }
+    let query = supabase
+      .from('projects')
+      .select('*');
+
+    // If project manager (not admin/director), restrict to assigned projects
+    if (userId && isProjectManager && !isAdminOrDirector) {
+      query = query.eq('project_responsable_id' as any, userId as any);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
 
       // Transform database data to match ProjectData interface
       const transformedData = (data || []).map((project: any) => ({

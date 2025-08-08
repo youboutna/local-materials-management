@@ -19,15 +19,10 @@ export interface Dimensions {
 }
 
 export interface CalculationResult {
-
+ 
   originalLabel?: string;
   elementType: string;
-  dimensions: {
-    length: number;
-    width?: number;
-    height?: number;
-    count?: number;
-  };
+  dimensions: Dimensions;
   openings?: Opening[];
   results: Record<string, number | string>;
   metadata?: {
@@ -634,7 +629,7 @@ export const mapToElementType = (desc: string) => {
   const d = desc.toLowerCase();
   
   // Check for unit patterns
-  const unitMatch = d.match(/(\d+(?:[,.]\d+)?\s?(m²|m³|ml|kg|tonne|unite|u)/);
+  const unitMatch = d.match(/(\d+(?:[,.]\d+)?\s?(m²|m³|ml|kg|tonne|unite|u))/);
   const unit = unitMatch ? unitMatch[2] : null;
 
   // Special cases with units

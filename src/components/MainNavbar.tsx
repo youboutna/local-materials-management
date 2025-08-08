@@ -31,7 +31,7 @@ const MainNavbar = () => {
 
   // Check if user can manage users (admin or director)
   const canManageUsers = DEV_MODE || hasAnyRole(['admin', 'director']);
-
+  const isSupplier = hasAnyRole(['supplier']);
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
       setLanguage(newLanguage);
@@ -183,19 +183,21 @@ const MainNavbar = () => {
                 </NavigationMenuItem>
               )}
               
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/settings">
-                    <Cog className="h-4 w-4 mr-2" />
-                    {t('settings.title') || 'Settings'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
+{canManageUsers && (
+  <NavigationMenuItem>
+    <Button 
+      variant="ghost" 
+      className="text-white hover:text-gray-200 hover:bg-adrar-600"
+      size="sm"
+      asChild
+    >
+      <Link to="/settings">
+        <Cog className="h-4 w-4 mr-2" />
+        {t('settings.title') || 'Settings'}
+      </Link>
+    </Button>
+  </NavigationMenuItem>
+)}
               
               {/* Supplier Management link */}
               <NavigationMenuItem>

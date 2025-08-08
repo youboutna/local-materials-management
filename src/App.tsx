@@ -73,126 +73,126 @@ function App() {
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
                       
                       {/* Protected routes - require authentication unless in dev mode */}
-                      <Route path="/home" element={
-                        <RoleBasedRoute>
-                          <Home />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/dashboard" element={
-                        <RoleBasedRoute>
-                          <Dashboard />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects" element={
-                        <RoleBasedRoute>
-                          <Projects />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects/create" element={
-                        <RoleBasedRoute>
-                          <ProjectCreate />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects/:id" element={
-                        <RoleBasedRoute>
-                          <ProjectDetail />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects/:id/edit" element={
-                        <RoleBasedRoute>
-                          <ProjectEdit />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects/:projectId/phases/:phaseId" element={
-                        <RoleBasedRoute>
-                          <PhaseDetail />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/projects/import" element={
-                        <RoleBasedRoute>
-                          <ProjectImport />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/materials" element={
-                        <RoleBasedRoute>
-                          <Materials />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/materials/create" element={
-                        <RoleBasedRoute>
-                          <MaterialCreate />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/materials/:id" element={
-                        <RoleBasedRoute>
-                          <MaterialDetail />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/materials/:id/edit" element={
-                        <RoleBasedRoute>
-                          <MaterialEdit />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/documents" element={
-                        <RoleBasedRoute>
-                          <Documents />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/tasks" element={
-                        <RoleBasedRoute>
-                          <Tasks />
-                        </RoleBasedRoute>
-                      } />
+<Route path="/home" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Home />
+  </RoleBasedRoute>
+} />
+<Route path="/dashboard" element={
+  <RoleBasedRoute allowedRoles={['admin','director']}>
+    <Dashboard />
+  </RoleBasedRoute>
+} />
+<Route path="/projects" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Projects />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/create" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <ProjectCreate />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/:id" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <ProjectDetail />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/:id/edit" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <ProjectEdit />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/:projectId/phases/:phaseId" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <PhaseDetail />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/import" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <ProjectImport />
+  </RoleBasedRoute>
+} />
+<Route path="/materials" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Materials />
+  </RoleBasedRoute>
+} />
+<Route path="/materials/create" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <MaterialCreate />
+  </RoleBasedRoute>
+} />
+<Route path="/materials/:id" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <MaterialDetail />
+  </RoleBasedRoute>
+} />
+<Route path="/materials/:id/edit" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <MaterialEdit />
+  </RoleBasedRoute>
+} />
+<Route path="/documents" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Documents />
+  </RoleBasedRoute>
+} />
+<Route path="/tasks" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Tasks />
+  </RoleBasedRoute>
+} />
                       <Route path="/users" element={
                         <RoleBasedRoute allowedRoles={['admin', 'director']}>
                           <Users />
                         </RoleBasedRoute>
                       } />
-                      <Route path="/settings" element={
-                        <RoleBasedRoute>
-                          <Settings />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/profile" element={
-                        <RoleBasedRoute>
-                          <Profile />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/user-profile" element={
-                        <RoleBasedRoute>
-                          <UserProfile />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/inspections/create" element={
-                        <RoleBasedRoute>
-                          <InspectionCreate />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/inspections/:id/edit" element={
-                        <RoleBasedRoute>
-                          <InspectionEdit />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/supplier-dashboard" element={
-                        <RoleBasedRoute>
-                          <SupplierDashboard />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/tender-management" element={
-                        <RoleBasedRoute>
-                          <TenderManagement />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/tender-import" element={
-                        <RoleBasedRoute>
-                          <TenderImport />
-                        </RoleBasedRoute>
-                      } />
-                      <Route path="/suppliers" element={
-                        <RoleBasedRoute>
-                          <Suppliers />
-                        </RoleBasedRoute>
-                      } />
+<Route path="/settings" element={
+  <RoleBasedRoute allowedRoles={['admin','director']}>
+    <Settings />
+  </RoleBasedRoute>
+} />
+<Route path="/profile" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Profile />
+  </RoleBasedRoute>
+} />
+<Route path="/user-profile" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <UserProfile />
+  </RoleBasedRoute>
+} />
+<Route path="/inspections/create" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <InspectionCreate />
+  </RoleBasedRoute>
+} />
+<Route path="/inspections/:id/edit" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <InspectionEdit />
+  </RoleBasedRoute>
+} />
+<Route path="/supplier-dashboard" element={
+  <RoleBasedRoute allowedRoles={['supplier']}>
+    <SupplierDashboard />
+  </RoleBasedRoute>
+} />
+<Route path="/tender-management" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <TenderManagement />
+  </RoleBasedRoute>
+} />
+<Route path="/tender-import" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <TenderImport />
+  </RoleBasedRoute>
+} />
+<Route path="/suppliers" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <Suppliers />
+  </RoleBasedRoute>
+} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
