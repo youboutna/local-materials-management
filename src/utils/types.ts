@@ -16,6 +16,9 @@ export interface Dimensions {
   count?: number;
   capacity?: number;
   depth?: number;
+  metadata?: {originalUnit?: string },
+  volume?: number,
+  weight?:number
 }
 
 export interface CalculationResult {
@@ -31,11 +34,20 @@ export interface CalculationResult {
   openings?: Opening[];
   results: Record<string, number | string>;
   metadata?: {
+    sourceUnit?:string;
+    workType?:string;
+    parsedAt?:string;
     type?:string;
     unitWeights?:number;
     unit?: string;
     description?: string;
     coverageRate?:number;
+    currency?: string | null;
+    status?: string;
+    created_at?: string;
+    updated_at?: string;
+    tax_rate?: number | null;
+    tax_amount?: number | null;
   };
 }
 export interface MasonryMaterials extends CalculationResult {
@@ -133,13 +145,19 @@ export interface ConcreteMixCalculation {
 
 //ligne de devis
 export interface InvoiceLine {
-  id: string;
-  number: string;         // numero
+  id?: string;
+  number?: string;         // numero
   designation: string;
-  unit: string;           // unite
+  unit?: string;           // unite
   quantity: number;       // quantite
   unitPrice: number;      // prixUnitaire
   totalPrice: number;     // prixTotal
+  currency?: string | null;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+  tax_rate?: number | null;
+  tax_amount?: number | null;
 }
 
 export const STANDARD_OPENINGS = [
@@ -280,7 +298,7 @@ export type ElementType =
   | 'material_quantity'            // Calcul quantité matériaux
   | 'basic_calculator'             // Calculs basiques
   | 'architectural_plan';          // Plan architectural
-  
+
 // elementTypes with all construction elements
 export const elementTypes = [
   // Concrete elements
@@ -526,7 +544,6 @@ export const elementTypeSynonyms: Record<string, string[]> = {
     "carrelage", "dallage extérieur", "revêtement sol"
   ],
   
-  // Site preparation
   site_preparation: [
     "préparation terrain", "préparation chantier", "mise en état"
   ],
@@ -634,10 +651,11 @@ export const mapToElementType = (desc: string) => {
   const d = desc.toLowerCase();
   
   // Check for unit patterns
-  const unitMatch = d.match(/(\d+(?:[,.]\d+)?\s?(m²|m³|ml|kg|tonne|unite|u)/);
+  const unitMatch = d.match('/(\d+(?:[,.]\d+)?\s?(m²|m³|ml|kg|tonne|unite|u)/)');
   const unit = unitMatch ? unitMatch[2] : null;
 
-  // Special cases with units
+  //Special cases with units
+
   if (d.includes("décapage") && unit === "m³") return "vegetal_soil_stripping";
   if (d.includes("fouille") && unit === "m³") return "mass_excavation";
   if (d.includes("remplissage") && unit === "m³") return "concrete_filling";

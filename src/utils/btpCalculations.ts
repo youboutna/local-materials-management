@@ -1,5 +1,6 @@
 import * as pdfjsLib from "pdfjs-dist";
-import Tesseract from "tesseract.js";
+import * as  tesseract from "tesseract.js";
+import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
 
 // PDF.js worker config
@@ -8,13 +9,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.m
 import {
   CalculationOptions, Opening, CalculationResult,
   InvoiceLine, STANDARD_OPENINGS, elementTypes,
-  ElementType, detectElementType, mapToElementType, CalculationParams,RebarColumnCalculation,
+  ElementType, detectElementType, mapToElementType, CalculationParams, RebarColumnCalculation,
   MasonryMaterials, ConcreteMaterials, RebarMaterials, ConcreteOptions,
   MasonryCalculation, ConcreteCalculation, RebarCalculation,
-  BrickJointsCalculation,ConcreteMixCalculation,
-  PlasterCalculation
+  BrickJointsCalculation, ConcreteMixCalculation,
+  PlasterCalculation, Dimensions
 } from "@/utils/types";
 import { number } from "framer-motion";
+import { extend } from "leaflet";
 
 // Constants for better maintainability
 const DEFAULT_CONCRETE_DOSAGE = 350; // kg/m³
@@ -121,22 +123,118 @@ export function isValidElementType(type: string): boolean {
 }
 
 // Example: Use DevisLine for a line in a bill of quantities
+/**
+ * Creates a standardized invoice line for construction bills of quantities
+ * with automatic element type detection and validation.
+ */
 export function createInvoiceLine(
   designation: string,
   quantity: number,
   unit: string,
-  unitPrice: number
+  unitPrice: number,
+  options?: {
+    id?: string;
+    lineNumber?: string;
+    metadata?: Record<string, any>;
+  }
 ): InvoiceLine {
+  // Validate inputs
+  if (typeof quantity !== 'number' || quantity <= 0) {
+    throw new Error('Quantity must be a positive number');
+  }
+  if (typeof unitPrice !== 'number' || unitPrice < 0) {
+    throw new Error('Unit price must be a non-negative number');
+  }
+
+  // Normalize unit
+  const normalizedUnit = normalizeUnit(unit);
+
+  // Detect element type and dimensions
+  const elementType = mapToElementType(designation);
+  const dimensions = generateDimensionsFromQuantity(quantity, normalizedUnit);
+
+  // Calculate total price with rounding
+  const totalPrice = roundToDecimal(quantity * unitPrice, 2);
+
   return {
-    id: "",
-    number: "",
-    designation: designation,
-    unit: unit,
-    quantity: quantity,
-    unitPrice: unitPrice,
-    totalPrice: roundToDecimal(quantity * unitPrice, 2),
+    id: options?.id || generateId(),
+    number: options?.lineNumber || '',
+    designation: designation.trim(),
+    unit: normalizedUnit,
+    quantity,
+    unitPrice,
+    totalPrice,
+    metadata: {
+      elementType,
+      dimensions,
+      ...options?.metadata,
+    }
   };
 }
+
+const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 9);
+};
+// Helper functions
+// Normalize units for consistency
+const normalizeUnit = (unit: string): string => {
+  const unitMap: Record<string, string> = {
+    'm2': 'm²',
+    'm²': 'm²',
+    'm3': 'm³',
+    'm³': 'm³',
+    'ff': 'forfait',
+    'forfait': 'forfait',
+    'u': 'unité',
+    'unité': 'unité',
+    'pce': 'unité',
+    'pcs': 'unité',
+    'pc': 'unité',
+    'kg': 'kg',
+    'tonne': 'tonne',
+    'ml': 'ml',
+    'l': 'l'
+  };
+
+  const cleaned = unit.toLowerCase().trim();
+  return unitMap[cleaned] || cleaned;
+};
+
+// Map article code to work type
+const getWorkTypeFromCode = (code: string): string => {
+  const workTypes: Record<string, string> = {
+    'A': 'Gros œuvre',
+    'B': 'Installation chantier',
+    'C': 'Préparation',
+    'D': 'Terrassement',
+    'E': 'Fondation',
+    'F': 'Maçonnerie',
+    'G': 'Béton armé',
+    'H': 'Second œuvre',
+    'I': 'Menuiserie',
+    'J': 'Revêtement',
+    'K': 'Électricité',
+    'L': 'Plomberie',
+    'M': 'Peinture',
+    'N': 'VRD',
+    'O': 'Toiture',
+    'P': 'Étanchéité',
+    'Q': 'Équipement',
+    'R': 'Sécurité incendie',
+    'S': 'Climatisation',
+    'T': 'Ascenseurs',
+    'U': 'Mobilier',
+    'V': 'Nettoyage',
+    'W': 'Voirie',
+    'X': 'Signalisation',
+    'Y': 'Énergie renouvelable',
+    'Z': 'Divers'
+  };
+
+  const cleaned = code.trim().toUpperCase();
+  return workTypes[cleaned] || 'Autre';
+};
+
 
 // calculation function
 export function calculateConcreteSlab(
@@ -164,7 +262,7 @@ export function calculateConcreteSlab(
       }
       return sum + (op.length * op.width);
     }, 0);
-    
+
     volume -= openingsArea * height;
   }
 
@@ -386,8 +484,8 @@ export function calculateVolume(length: number, width: number, height: number) {
 // Core Helper Functions
 // ======================
 function roundToDecimal(value: number, decimals: number): number {
-  const factor = 10 ** decimals;
-  return Math.round((value + Number.EPSILON) * factor) / factor;
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
 }
 
 function validateDimensions(...dimensions: (number | undefined)[]): void {
@@ -426,11 +524,11 @@ function masonryWallResult(
   calculation.dimensions = { length, height };
   calculation.openings = openings;
   calculation.results = {
-      'Surface nette (m²)': roundToDecimal(calculation.netSurface, 2),
-      'Nombre briques': Math.ceil(calculation.bricks * MATERIAL_WASTAGE_FACTOR),
-      'Mortier (m³)': roundToDecimal(calculation.netSurface * MORTAR_THICKNESS, 3),
-      'Ciment mortier (kg)': roundToDecimal((calculation.netSurface * MORTAR_THICKNESS * DEFAULT_CONCRETE_DOSAGE), 1)
-    }
+    'Surface nette (m²)': roundToDecimal(calculation.netSurface, 2),
+    'Nombre briques': Math.ceil(calculation.bricks * MATERIAL_WASTAGE_FACTOR),
+    'Mortier (m³)': roundToDecimal(calculation.netSurface * MORTAR_THICKNESS, 3),
+    'Ciment mortier (kg)': roundToDecimal((calculation.netSurface * MORTAR_THICKNESS * DEFAULT_CONCRETE_DOSAGE), 1)
+  }
   return calculation;
 }
 
@@ -457,7 +555,7 @@ function concreteElementResult(
   if (calculation.sand) results['Sable (m³)'] = roundToDecimal(calculation.sand, 3);
   if (calculation.gravel) results['Gravier (m³)'] = roundToDecimal(calculation.gravel, 3);
   calculation.results = results;
-  return  calculation;
+  return calculation;
 }
 
 function rebarElementResult(
@@ -489,14 +587,14 @@ function plasterResult(
 ): PlasterCalculation {
   validateDimensions(length, height);
   calculation.elementType = type;
-  calculation.dimensions = { length,height };
+  calculation.dimensions = { length, height };
   calculation.openings = openings;
-calculation.results =  {
-      'Surface enduit (m²)': roundToDecimal(calculation.surface, 2),
-      'Volume mortier (m³)': roundToDecimal(calculation.volume, 3),
-      'Ciment (kg)': roundToDecimal(calculation.cement, 2)
-    }
-  return calculation ;
+  calculation.results = {
+    'Surface enduit (m²)': roundToDecimal(calculation.surface, 2),
+    'Volume mortier (m³)': roundToDecimal(calculation.volume, 3),
+    'Ciment (kg)': roundToDecimal(calculation.cement, 2)
+  }
+  return calculation;
 }
 
 // ======================
@@ -514,10 +612,10 @@ function concreteVolumeResult(
 }
 
 // Rebar elements (using rebarElementResult)
-const rebarSlabResult = (type: string, length: number, width: number, openings: Opening[], slab: RebarCalculation) => 
+const rebarSlabResult = (type: string, length: number, width: number, openings: Opening[], slab: RebarCalculation) =>
   rebarElementResult(type, length, width, 0, openings, slab);
 
-const rebarFootingResult = (type: string, length: number, width: number, openings: Opening[], footing: RebarCalculation) => 
+const rebarFootingResult = (type: string, length: number, width: number, openings: Opening[], footing: RebarCalculation) =>
   rebarElementResult(type, length, width, 0, openings, footing);
 
 // ======================
@@ -579,22 +677,22 @@ function rebarColumnResult(
   validateDimensions(height, diameter);
 
 
-calculation.results = {
-      'Hauteur colonne (m)': roundToDecimal(height, 2),
-      'Diamètre colonne (m)': roundToDecimal(diameter, 2),
-      'Longueur totale acier (m)': roundToDecimal(calculation.totalLength, 2),
-      'Poids total acier (kg)': roundToDecimal(calculation.totalWeight, 2),
-      'Nombre barres': calculation.barCount || options?.barCount || 4,
-      ...(options?.barDiameter && { 'Diamètre barres (mm)': options.barDiameter })
-    };
+  calculation.results = {
+    'Hauteur colonne (m)': roundToDecimal(height, 2),
+    'Diamètre colonne (m)': roundToDecimal(diameter, 2),
+    'Longueur totale acier (m)': roundToDecimal(calculation.totalLength, 2),
+    'Poids total acier (kg)': roundToDecimal(calculation.totalWeight, 2),
+    'Nombre barres': calculation.barCount || options?.barCount || 4,
+    ...(options?.barDiameter && { 'Diamètre barres (mm)': options.barDiameter })
+  };
   calculation.elementType = type;
-  calculation.dimensions = { length,  height };
+  calculation.dimensions = { length, height };
   calculation.openings = openings;
-calculation.barDiameter =diameter;
-calculation.metadata = {
-      type: 'column-rebar',
-      unitWeights: calculation.totalWeight / calculation.totalLength
-    };
+  calculation.barDiameter = diameter;
+  calculation.metadata = {
+    type: 'column-rebar',
+    unitWeights: calculation.totalWeight / calculation.totalLength
+  };
   return calculation;
 }
 
@@ -612,20 +710,20 @@ function brickJointsResult(
 ): BrickJointsCalculation {
   validateDimensions(length, height);
 
-  calculation.dimensions=  { length, height };
+  calculation.dimensions = { length, height };
   calculation.openings = openings;
   calculation.elementType = type;
-  calculation.metadata =  {
-      type: 'brick-joints',
-      coverageRate: calculation.cementWeight / calculation.jointVolume
-    };
-    calculation.results ={
-      'Surface mur (m²)': roundToDecimal(surface, 2),
-      'Surface joints (m²)': roundToDecimal(calculation.jointArea, 2),
-      'Volume joints (m³)': roundToDecimal(calculation.jointVolume, 4),
-      'Ciment joints (kg)': roundToDecimal(calculation.cementWeight, 2),
-      ...(calculation.jointThickness && { 'Épaisseur joints (m)': roundToDecimal(calculation.jointThickness, 3) })
-    }
+  calculation.metadata = {
+    type: 'brick-joints',
+    coverageRate: calculation.cementWeight / calculation.jointVolume
+  };
+  calculation.results = {
+    'Surface mur (m²)': roundToDecimal(surface, 2),
+    'Surface joints (m²)': roundToDecimal(calculation.jointArea, 2),
+    'Volume joints (m³)': roundToDecimal(calculation.jointVolume, 4),
+    'Ciment joints (kg)': roundToDecimal(calculation.cementWeight, 2),
+    ...(calculation.jointThickness && { 'Épaisseur joints (m)': roundToDecimal(calculation.jointThickness, 3) })
+  }
   return calculation;
 }
 
@@ -644,8 +742,8 @@ function concreteMixResult(
   return {
     elementType: type,
     totalVolume: roundToDecimal(calculation.totalVolume, 3),
-    cementWeight:  roundToDecimal(calculation.cementWeight, 2),
-    sandVolume:  roundToDecimal(calculation.sandVolume, 3),
+    cementWeight: roundToDecimal(calculation.cementWeight, 2),
+    sandVolume: roundToDecimal(calculation.sandVolume, 3),
     gravelVolume: roundToDecimal(calculation.gravelVolume, 3),
     dimensions: { volume },
     results: {
@@ -729,8 +827,8 @@ function calculateConcreteVolume(
   const netVolume = grossVolume - openingsVolume;
 
   return {
-  dimensions : { length, width, height },
-  openings : openings,
+    dimensions: { length, width, height },
+    openings: openings,
     volume: netVolume,
     cement: netVolume * dosage,
     sand: netVolume * 0.5 * MATERIAL_WASTAGE_FACTOR,
@@ -768,7 +866,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
   const openings = options?.openings || [];
   const detectedType = elementType;
   console.log(detectedType);
-  
+
   try {
     validateDimensions(length);
     if (width !== undefined) validateWidth(width);
@@ -950,7 +1048,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         validateWidthHeight(width, height);
         const volume = length * width * height;
         const mix = calculateConcreteMix(volume, options?.dosage, 1050, 700);
-        
+
         return {
           elementType: detectedType,
           dimensions: { length: volume, width: 1, height: 1 },
@@ -978,7 +1076,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
           results: {}
         });
       }
-/* ---------------------------- */
+      /* ---------------------------- */
       /*        SITE PREPARATION      */
       /* ---------------------------- */
       case 'vegetal_soil_stripping': {
@@ -1035,7 +1133,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         const surface = length * height;
         const blocks = Math.ceil(surface / 0.2); // 0.2m² per block
         const mortar = surface * 0.02; // 2cm mortar
-        
+
         return {
           elementType: detectedType,
           dimensions: { length, height },
@@ -1053,7 +1151,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         const surface = length * height;
         const studs = Math.ceil(length / 0.6) * Math.ceil(height / 2.4); // 60cm spacing, 2.4m height
         const panels = Math.ceil(surface / 2.88); // OSB panels 1.2x2.4m
-        
+
         return {
           elementType: detectedType,
           dimensions: { length, height },
@@ -1074,7 +1172,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         const surface = length * width;
         const laths = Math.ceil(surface * 3); // 3 laths per m²
         const underlayment = Math.ceil(surface / 50); // Rolls of 50m²
-        
+
         return {
           elementType: detectedType,
           dimensions: { length, width },
@@ -1091,7 +1189,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         const surface = length * width;
         const slates = Math.ceil(surface / 0.25); // 0.25m² per slate
         const hooks = Math.ceil(surface * 4); // 4 hooks per m²
-        
+
         return {
           elementType: detectedType,
           dimensions: { length, width },
@@ -1107,7 +1205,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
         const length = params.length;
         const zincSheets = Math.ceil(length / 2); // 2m sheets
         const screws = Math.ceil(length * 3); // 3 screws per meter
-        
+
         return {
           elementType: detectedType,
           dimensions: { length },
@@ -1122,7 +1220,7 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
       case 'basic_calculator': {
         return basicCalculationResult(detectedType, length, width, height, openings);
       }
-        
+
       default: {
         return basicCalculationResult(detectedType, length, width, height, openings);
       }
@@ -1131,70 +1229,362 @@ export function calculateAdvancedQuantities(params: CalculationParams): Calculat
     return errorResult(detectedType, { length, width, height }, error as Error);
   }
 }
+/**
+ * Generates dimensional data from quantity and unit for construction calculations
+ * 
+ * @param quantity - The quantity value from the invoice line
+ * @param unit - The unit of measurement (m², m³, ml, etc.)
+ * @returns Dimensions object with appropriate length/width/height/count values
+ */
 
-export const generateDimensionsFromQuantity = (quantity: number, unit: string) => {
-  switch (unit.toLowerCase()) {
+
+export const generateDimensionsFromQuantity = (
+  quantity: number,
+  unit: string
+): Dimensions => {
+  // Validate inputs
+  if (typeof quantity !== 'number' || quantity <= 0) {
+    throw new Error('Quantity must be a positive number');
+  }
+
+  const normalizedUnit = unit.toLowerCase().trim();
+
+  switch (normalizedUnit) {
+    // Area units (m²)
     case "m²":
     case "m2": {
       const side = Math.sqrt(quantity);
-      return { length: side, width: side };
+      return {
+        length: roundToDecimal(side, 2),
+        width: roundToDecimal(side, 2),
+        area: roundToDecimal(quantity, 2)
+      };
     }
+
+    // Volume units (m³)
     case "m³":
     case "m3": {
       const cube = Math.cbrt(quantity);
-      return { length: cube, width: cube, height: cube };
+      return {
+        length: roundToDecimal(cube, 2),
+        width: roundToDecimal(cube, 2),
+        height: roundToDecimal(cube, 2),
+        volume: roundToDecimal(quantity, 2)
+      };
     }
+
+    // Linear units (ml)
     case "ml":
-      return { length: quantity, width: undefined, height: undefined };
+      return {
+        length: roundToDecimal(quantity, 2),
+        width: undefined,
+        height: undefined
+      };
+
+    // Countable units
+    case "unité":
+    case "u":
+    case "pce":
+    case "pcs":
+      return { count: Math.round(quantity), length: roundToDecimal(quantity, 2), };
+
+    // Weight units (convert to volume estimates)
+    case "kg":
+    case "tonne":
+      return {
+        length: roundToDecimal(quantity, 2),
+        weight: quantity,
+        volume: roundToDecimal(quantity / 2400, 3) // Assuming 2400 kg/m³ density
+      };
+
+    // Default case for unknown units
     default:
-      return { length: quantity, width: 1, height: 1 };
+      return {
+        length: roundToDecimal(quantity, 2),
+        width: 1,
+        height: 1,
+        metadata: { originalUnit: unit }
+      };
   }
 };
 
-// Extraction of construction lines from raw text
-export const extractConstructionData = (text: string): CalculationResult[] => {
-  const lines = text
-    .split(/(?=\d{1,2}\.[\d\.]?)/g)
-    .map((l) => l.trim())
-    .filter(Boolean);
 
-  const results: CalculationResult[] = [];
-  const pattern = /^(\d{1,2}\.?\d*)\s+(.+?)\s+(ff|m2|m3|ml|pce|pcs|m²|m³)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)\s+(\d+[\d\s,]*)$/i;
+// Example usage:
+// const slabDims = generateDimensionsFromQuantity(25, "m²"); 
+// Returns { length: 5, width: 5, area: 25 }
+//
+// const concreteDims = generateDimensionsFromQuantity(8, "m³");
+// Returns { length: 2, width: 2, height: 2, volume: 8 }
+//
+// const linearDims = generateDimensionsFromQuantity(10, "ml");
+// Returns { length: 10, width: undefined, height: undefined }
 
-  for (const line of lines) {
-    const match = line.match(pattern);
-    if (match) {
-      const [, , designation, unitRaw, qtyStr, puStr, ptStr] = match;
-      const elementType = mapToElementType(designation.trim());
-      const quantity = parseFloat(qtyStr.replace(/\s/g, "").replace(",", "."));
-      const unitPrice = parseFloat(puStr.replace(/\s/g, "").replace(",", "."));
-      let prixTotal = parseFloat(ptStr.replace(/\s/g, "").replace(",", "."));
-      if (!prixTotal || prixTotal === 0) {
-        prixTotal = quantity * unitPrice;
-      }
+interface ConstructionLine extends InvoiceLine {
+  lot?: string;
+  article?: string;
+  code?: string;
+  unit: string;
+}
+/**
+ * Extracts structured construction data from a raw text document.
+ * Matches lines containing construction item codes, descriptions, units, quantities, and prices.
+ *
+ * @param text Raw text (possibly from OCR or PDF) containing quantity survey lines
+ * @returns Parsed structured data array
+ */
 
-      // Set recommended openings for types that support it
-      let openings: Opening[] | undefined = undefined;
-      if (["concrete_slab", "masonry_wall"].includes(elementType)) {
-        openings = STANDARD_OPENINGS;
-      }
+const UNIT_CANDIDATES = ['m²', 'm2', 'm³', 'm3', 'ml', 'u', 'ens', 'kg', 'tonne', 'pm'];
 
-      results.push({
-        elementType,
-        originalLabel: designation.trim(),
-        dimensions: generateDimensionsFromQuantity(quantity, unitRaw),
-        openings,
-        results: {
-          Unité: unitRaw.trim(),
-          Quantité: quantity,
-          "Prix unitaire": unitPrice,
-          "Prix total": prixTotal,
-        },
-      });
-    }
+export function splitRoughLines(text: string): string[] {
+  // Normalize spaces
+  const cleanedText = text
+    .replace(/[|•]/g, '')          // remove table bars and bullets
+    .replace(/\s+/g, ' ')          // collapse multiple spaces
+    .trim();
+
+  // Check if text contains multiple line breaks (likely PDF structured)
+  if ((cleanedText.match(/\n/g) || []).length > 5) {
+    // Split on newlines and trim
+    return cleanedText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 3);
   }
+
+  // Otherwise, probably OCR or run-on text
+  // Split by article number or lot keywords or typical unit+qty patterns
+
+  // Regex explanation:
+  //  - article start: e.g. "1.01", "A", "Lot 1"
+  //  - unit+qty: e.g. "m² 25,816", "ml 12", "kg 350"
+  //  - dimension patterns like "0,30 x 0,50 m"
+  // We split before these patterns to isolate lines
+
+  const splitRegex = new RegExp(
+    [
+      // Article numbers (1.01, 2.03)
+      '(?=\\b\\d{1,2}\\.\\d{2}\\b)',
+      // Lettered article (A, B, I, II, III, IV)
+      '(?=\\b[A-Z]{1,3}\\b)',
+      // Lot keywords
+      '(?=\\blot\\b)',
+      // Units followed by quantity, e.g. m² 25,816
+      '(?=\\b(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+[\\d,.]+)',
+      // Dimensions like 0,30 x 0,50 m or 45x145 mm (x is letter x or times sign)
+      '(?=\\b\\d{1,3}[,.]?\\d*\\s*[x×]\\s*\\d{1,3}[,.]?\\d*\\b)'
+    ].join('|'),
+    'gi'
+  );
+
+  const roughLines: string[] = [];
+
+  let lastIndex = 0;
+  let match;
+
+  while ((match = splitRegex.exec(cleanedText)) !== null) {
+    const index = match.index;
+    if (index > lastIndex) {
+      const segment = cleanedText.slice(lastIndex, index).trim();
+      if (segment) roughLines.push(segment);
+    }
+    lastIndex = index;
+  }
+  // push trailing part
+  if (lastIndex < cleanedText.length) {
+    const tail = cleanedText.slice(lastIndex).trim();
+    if (tail) roughLines.push(tail);
+  }
+
+  // Final cleanup: remove very short or noise lines
+  return roughLines.filter(line => line.length > 5);
+}
+
+
+export function extractFields(line: string): ConstructionLine | null {
+  // Regex explanation:
+  // - Optional article number at start: 1.01, A, I, II, etc.  //# optional article number (group 1)
+  // - Designation: anything up to unit  // # designation (group 2)
+  // - Unit: m², m3, ml, u, ens, kg, tonne, pm  //# unit (group 3)
+  // - Quantity, unit price, total price: numbers with optional decimal commas/dots  //# quantity (group 4)
+  // Example line:
+  // "1.01 Décapage terre végétale m3 25,816 16,75 432,42"  //# optional unit price (group 5)
+  // or "A Fouilles en puits m³ 83,52"  //# optional total price (group 6)
+  const regex = '/^\\s*(?:(\\d{1,2}\\.\\d{2}|[A-Z]{1,3})\\s+)?(.+?)\\s+(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+([\\d.,]+)(?:\\s+([\\d.,]+))?(?:\\s+([\\d.,]+))?\s*$/ix';
+
+  const match = line.match(regex);
+  if (!match) return null;
+
+  const [
+    ,
+    number,
+    rawDesignation,
+    unit,
+    rawQty,
+    rawUnitPrice,
+    rawTotalPrice,
+  ] = match;
+
+  // parse numbers: support ',' as decimal, ignore thousand separators (spaces)
+  const parseNumber = (str?: string): number => {
+    if (!str) return 0;
+    return parseFloat(str.replace(/\s/g, '').replace(',', '.')) || 0;
+  };
+
+  return {
+    number: number?.trim(),
+    designation: rawDesignation.trim(),
+    unit: unit.trim(),
+    quantity: parseNumber(rawQty),
+    unitPrice: parseNumber(rawUnitPrice),
+    totalPrice: parseNumber(rawTotalPrice),
+  };
+}
+
+
+
+
+export const extractConstructionData = (text: string): CalculationResult[] => {
+  // Normalize spacing and replace common OCR artifacts
+  const normalizedText = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\|/g, ' ')             // Remove table-like bars
+    .replace(/[^\S\r\n]+/g, ' ')     // Collapse all whitespace
+    .replace(/,(\d+)/g, '.$1')       // Convert commas to dots in decimals
+    .replace(/(\d)\s(?=\d{3})/g, '$1'); // Remove thousand spaces
+
+  const lines = splitRoughLines(normalizedText);
+
+  console.log("splitRoughLines : " );
+  console.log(lines);
+  const results: CalculationResult[] = [];
+  for (const line of lines) {
+  console.log("extractFields : " );
+    const fields = extractFields(line);
+     console.log(fields);
+     if(fields){
+      const result = convertConstructionLineToCalculationResult(fields);
+      if(result) results.push(result);
+  }
+  }
+  console.log(results);
+
   return results;
 };
+
+/**
+ * 
+ * @param line  ConstructionLine
+ * @returns 
+ */
+export const convertConstructionLineToCalculationResult = (
+  line: ConstructionLine
+): CalculationResult | null => {
+
+  if (!line?.designation || !line?.quantity || !line?.unit) return null;
+
+  try {
+    console.log("start convert to lines")
+    console.log(line)
+    const computed = generateDimensionsFromQuantity(line.quantity, line.unit);
+    const elementType = detectElementType(line.designation);
+
+    const dimensions: CalculationResult["dimensions"] = {
+      length: computed.length,
+      width: computed.width,
+      height: computed.height,
+      count: computed.count,
+    };
+
+    const results: Record<string, number | string> = {
+      ...(computed.area ? { area: computed.area } : {}),
+      ...(computed.volume ? { volume: computed.volume } : {}),
+      ...(computed.weight ? { weight: computed.weight } : {}),
+      ...(computed.count ? { count: computed.count } : {}),
+    };
+
+    const metadata: CalculationResult["metadata"] = {
+      unit: line.unit,
+      sourceUnit: line.unit,
+      description: line.designation,
+      parsedAt: new Date().toISOString(),
+      ...(computed.metadata || {}),
+    };
+
+    return {
+      originalLabel: line.designation,
+      elementType,
+      dimensions,
+      results,
+      metadata,
+    };
+  } catch (error) {
+    console.warn("Conversion failed for line:", line, error);
+    return null;
+  }
+};
+
+
+/**
+ * Converts raw construction data lines to standardized invoice lines
+ * with automatic element type detection and validation.
+ */
+/**
+ * Processes raw construction lines into standardized invoice lines.
+ * 
+ * Uses element type mapping and detection heuristics,
+ * generates dimensions from quantities and units,
+ * and enriches lines with metadata for traceability.
+ * 
+ * @param rawLines Array of raw construction lines to process
+ * @returns Array of normalized and enriched invoice lines
+ */
+export const processConstructionLines = (
+  rawLines: ConstructionLine[]
+): InvoiceLine[] => {
+  return rawLines.map((line, index) => {
+    try {
+      const mappedType = mapToElementType(line.designation);
+      const detectedType = detectElementType(line.designation);
+      const elementType =
+        mappedType !== 'basic_calculator' ? mappedType : detectedType;
+
+      const dimensions = generateDimensionsFromQuantity(
+        line.quantity,
+        line.unit
+      );
+
+      return createInvoiceLine(
+        line.designation,
+        line.quantity ?? 0,
+        line.unit,
+        line.unitPrice ?? 0,
+        {
+          id: `line-${index + 1}`,
+          lineNumber: line.code,
+          metadata: {
+            elementType,
+            dimensions,
+            workType: getWorkTypeFromCode(line?.code),
+            detectedType,
+            mappedType,
+            originalUnit: line.unit,
+          },
+        }
+      );
+    } catch (error: any) {
+      console.error(`Error processing line ${index + 1}:`, error);
+      return createInvoiceLine(`INVALID: ${line.designation}`, 0, 'unité', 0, {
+        id: `error-${index + 1}`,
+        metadata: { error: error.message || String(error) },
+      });
+    }
+  });
+};
+
+
+// Usage example:
+// const rawLines = extractConstructionData(pdfText);
+// const invoiceLines = processConstructionLines(rawLines);
 
 export const isArchitecturalPlan = (text: string) => {
   const planWords = [
@@ -1207,46 +1597,235 @@ export const isArchitecturalPlan = (text: string) => {
 export const parsePdf = async (file: File): Promise<CalculationResult[]> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-    let fullText = "";
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let fullText = '';
+
+    // Attempt 1: Native text extraction
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items.map((item: any) => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+
+    if (!isTextReadable(fullText)) {
+      console.warn("PDF extraction failed, switching to OCR.");
+      //fullText = await renderPdfPagesForOcr(pdf);
+    }
+
+    console.log(fullText);
+    return extractConstructionData(fullText);
+  } catch (error) {
+    console.error("PDF parsing failed:", error);
+    throw new Error("Impossible de lire le fichier PDF.");
+  }
+};
+
+
+// Helper function to enhance image contrast for OCR
+const enhanceContrast = (imageData: ImageData) => {
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    // Simple contrast enhancement
+    data[i] = data[i + 1] = data[i + 2] = r * 0.3 + g * 0.59 + b * 0.11 > 128 ? 255 : 0;
+  }
+};
+
+// Utility functions
+const extractNumber = (line: string): number => {
+  const match = line.match(/(\d+[\.,]?\d*)/);
+  return match ? parseFloat(match[1].replace(',', '.')) : 0;
+};
+
+const extractUnit = (line: string): string => {
+  const units = ['m³', 'm²', 'U', 'FF'];
+  return units.find(u => line.includes(u)) || '';
+};
+// Helper function for cement output formatting
+function formatCementOutput(cementKg: number) {
+  if (cementKg >= 50000) {
+    return {
+      'Ciment (tonnes)': roundToDecimal(cementKg / 1000, 2),
+      'Note': 'Commande en vrac recommandée'
+    };
+  } else {
+    return {
+      'Sacs de ciment (50kg)': Math.ceil(cementKg / 50),
+      'Note': ''
+    };
+  }
+}
+
+export const parseDocument = async (file: File): Promise<CalculationResult[]> => {
+  try {
+    let content = '';
+
+    // --- PDF Handling ---
+    console.log(  "// --- PDF Handling ---");
+    if (file.type === "application/pdf") {
+      content = await parsePdfWithOcrFallback(file);
+    }
+
+    // --- Image Handling (JPG, PNG) ---
+    else if (file.type.startsWith("image/")) {
+      content = await processImageWithOcr(file);
+    }
+    // --- Excel Handling ---
+    else if (file.name.endsWith(".xlsx") || file.type.includes("spreadsheet")) {
+      content = await parseExcelFile(file);
+    }
+
+    // --- CSV Handling ---
+    else if (file.name.endsWith(".csv")) {
+      content = await file.text();
+    }
+
+      console.log(  "before // cleanText---");
+       console.log(content);
+
+    // Clean up OCR noise and align for parser
+    const cleanText = cleanOcrText(content);
+     console.log(cleanText);
+
+    // Parse into structured results using enhanced construction data extractor
+    return extractConstructionData(cleanText);
+
+  } catch (error: any) {
+    console.error("Document parsing failed:", error);
+    toast({
+      title: "Erreur d'Analyse",
+      description: error.message,
+      variant: "destructive",
+    });
+    return [];
+  }
+};
+
+// All existing methods remain exactly the same below this point
+
+const parsePdfWithOcrFallback = async (file: File): Promise<string> => {
+  try {
+    const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+    let textContent = '';
 
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      fullText += content.items.map((item: any) => item.str).join(" ") + "\n";
+      textContent += content.items.map((item: any) => item.str).join(' ') + '\n';
+    }
+    if (textContent.trim().replace(/\s/g, '').length > 50) {
+      return textContent;
     }
 
-    if (fullText.trim().length < 20) {
-      // OCR fallback
-      fullText = "";
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d")!;
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await page.render({ canvasContext: context, viewport, canvas }).promise;
-
-        const {
-          data: { text: ocrText },
-        } = await Tesseract.recognize(canvas, "fra", { logger: () => { } });
-        fullText += ocrText + "\n";
-      }
-    }
-
-    if (isArchitecturalPlan(fullText)) {
-      toast({ title: "Plan architectural détecté", description: " ce document semble être un plan. L'extraction quantitative n'est pas applicable." });
-      return [];
-    }
-
-    // Use the helper to extract lines
-    const extractedLines = extractConstructionData(fullText);
-    toast({ title: "Import réussi", description: `${extractedLines.length} lignes extraites.` });
-    return extractedLines;
+    return await renderPdfPagesForOcr(pdf);
   } catch (error) {
-    toast({ title: "Erreur", description: "Erreur lors de la lecture du PDF", variant: "destructive" });
-    console.error(error);
-    return [];
+    console.error("PDF processing failed, trying direct OCR:", error);
+    return await processImageWithOcr(file);
+  }
+};
+const cleanOcrText = (ocrText: string): string => {
+  return ocrText
+    .replace(/\r\n/g, '\n')
+    .replace(/[^\S\r\n]{2,}/g, ' ')
+    .replace(/(\d)\s+([a-zA-Z])/g, '$1 $2')
+    .replace(/([a-zA-Z])\s+(\d)/g, '$1 $2')
+    .replace(/([.,])\s+(\d)/g, '$1$2')
+    .replace(/(\d)\s+([.,])/g, '$1$2');
+};
+
+// Validate if native text is usable
+const isTextReadable = (text: string): boolean => {
+  const meaningfulLines = text.split('\n').filter(line => line.trim().length > 10);
+  return meaningfulLines.length >= 2;
+};
+
+// OCR fallback
+const renderPdfPagesForOcr = async (pdf: any): Promise<string> => {
+  const worker = await tesseract.createWorker('fra', 1, {
+    logger: m => console.log(m)
+  });
+
+  let ocrText = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2.0 });
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true })!;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({
+      canvasContext: context,
+      viewport
+    }).promise;
+
+    const imageDataUrl = canvas.toDataURL('image/png');
+
+    try {
+      const { data } = await worker.recognize(imageDataUrl);
+      ocrText += postProcessOcrText(data.text) + '\n';
+    } catch (ocrError) {
+      console.error(`OCR failed on page ${i}:`, ocrError);
+    }
+  }
+
+  await worker.terminate();
+
+  if (!ocrText.trim()) {
+    throw new Error("OCR n'a pas pu extraire de texte.");
+  }
+
+  return ocrText;
+};
+
+
+// Clean up OCR output
+export const postProcessOcrText = (raw: string): string => {
+  if (!raw) return '';
+
+  return raw
+    .replace(/[^\S\r\n]+/g, ' ')                                 // collapse multiple spaces
+    .replace(/([a-z])([A-Z])/g, '$1 $2')                         // break camelCase words
+    .replace(/([a-zA-Z])(\d)/g, '$1 $2')                         // space between letters and digits
+    .replace(/(\d)([a-zA-Z])/g, '$1 $2')                         // space between digits and letters
+    .replace(/[•·•¤“”"‘’´`]+/g, '')                              // remove stray punctuation
+    .replace(/[_\-–—=+]{2,}/g, '')                               // remove dashed lines
+    .replace(/\[+[^\]]*\]+/g, '')                                // remove bracketed noise like [55], [==]
+    .replace(/\b[A-Z]{2,}\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase()) // normalize uppercase words
+    .replace(/\b(O|0)([j])\b/g, 'Objet')                         // correct common mis-OCRed "Objet"
+    .replace(/\s{2,}/g, ' ')                                     // extra spacing
+    .replace(/([^\n])\n(?!\n)/g, '$1 ')                          // join soft line breaks
+    .replace(/(\n|\r\n){2,}/g, '\n\n')                           // separate true paragraphs
+    .replace(/(TOTAL GROS ŒUVR|TOTAL SECOND OEUVRE)/gi, '\n\n$1\n\n') // section delimiter
+    .replace(/LOT\s+\d+|ARTICLE\s+\d+/gi, '\n\n$&\n\n')          // force newline on LOT/ARTICLE
+    .replace(/ +/g, ' ')                                         // final space normalization
+    .trim();
+};
+
+
+const processImageWithOcr = async (file: File): Promise<string> => {
+  try {
+    const { data } = await tesseract.recognize(file);
+    return data.text;
+  } catch (error: any) {
+    throw new Error("Échec de la reconnaissance d'image: " + error.message);
+  }
+};
+
+const parseExcelFile = async (file: File): Promise<string> => {
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer);
+    return workbook.SheetNames
+      .map(name => XLSX.utils.sheet_to_csv(workbook.Sheets[name]))
+      .join('\n');
+  } catch (error: any) {
+    throw new Error("Impossible de lire le fichier Excel: " + error.message);
   }
 };

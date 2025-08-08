@@ -23,7 +23,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
-import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
+import { calculateAdvancedQuantities, parsePdf, parseDocument } from "@/utils/btpCalculations";
 import { detectElementType, CalculationParams,mapToElementType } from "@/utils/types";
 import {
   Opening,
@@ -36,22 +36,6 @@ import {
 // PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   window.location.origin + "/pdf.worker.min.js";
-
-const formatCementOutput = (cementKg: number) => {
-  if (cementKg >= 50000) {
-    return {
-      label: "Ciment (tonnes)",
-      value: (cementKg / 1000).toFixed(2),
-      hint: "Commande en vrac recommandée",
-    };
-  } else {
-    return {
-      label: "Sacs de ciment (50kg)",
-      value: Math.ceil(cementKg / 50),
-      hint: "",
-    };
-  }
-};
 
 const getElementLabel = (value: string) => {
   const found = elementTypes.find(e => e.value === value);
@@ -466,25 +450,13 @@ const AdvancedQuantityCalculator: React.FC = () => {
     setCalculations((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const getTotalsByMaterial = () => {
-    const totals: Record<string, number> = {};
-    calculations.forEach((calc) => {
-      Object.entries(calc.results).forEach(([key, val]) => {
-        const materialKey = key.replace(/\([^)]*\)/g, "").trim();
-        if (typeof val === "number") {
-          totals[materialKey] = (totals[materialKey] || 0) + val;
-        }
-      });
-    });
-    return totals;
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
     
     setIsProcessing(true);
     try {
-      const parsedLines = await parsePdf(e.target.files[0]);
+      const parsedLines = await parseDocument(e.target.files[0]);
       if (parsedLines.length > 0) {
         setCalculations(parsedLines);
         toast({
@@ -582,7 +554,6 @@ const AdvancedQuantityCalculator: React.FC = () => {
     }
   }, [form.elementType]);
 
-   console.log(calculations);
 
   return (
     <div className="space-y-6">
