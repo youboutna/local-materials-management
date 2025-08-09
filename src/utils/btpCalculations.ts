@@ -1574,7 +1574,7 @@ export const processConstructionLines = (
           metadata: {
             elementType,
             dimensions,
-            workType: getWorkTypeFromCode(line?.code),
+            workType: getWorkTypeFromCode(line?.code || ""),
             detectedType,
             mappedType,
             originalUnit: line.unit,
@@ -1656,19 +1656,7 @@ const extractUnit = (line: string): string => {
   return units.find(u => line.includes(u)) || '';
 };
 // Helper function for cement output formatting
-function formatCementOutput(cementKg: number) {
-  if (cementKg >= 50000) {
-    return {
-      'Ciment (tonnes)': roundToDecimal(cementKg / 1000, 2),
-      'Note': 'Commande en vrac recommandée'
-    };
-  } else {
-    return {
-      'Sacs de ciment (50kg)': Math.ceil(cementKg / 50),
-      'Note': ''
-    };
-  }
-}
+// Using the core helper formatCementOutput defined earlier
 
 export const parseDocument = async (file: File): Promise<CalculationResult[]> => {
   try {

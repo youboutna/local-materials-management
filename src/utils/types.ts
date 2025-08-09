@@ -153,6 +153,7 @@ export interface InvoiceLine {
   updated_at?: string;
   tax_rate?: number | null;
   tax_amount?: number | null;
+  metadata?: Record<string, any>;
 }
 
 export const STANDARD_OPENINGS = [
