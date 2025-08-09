@@ -47,6 +47,11 @@ const RoleBasedRoute = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
+  // Admin/Director override - always allow access
+  if (isAuthenticated && hasAnyRole(['admin','director'])) {
+    return <>{children}</>;
+  }
+
   // Check roles if specified
   if (disallowedRoles.length > 0 && isAuthenticated) {
     const isBlocked = hasAnyRole(disallowedRoles);

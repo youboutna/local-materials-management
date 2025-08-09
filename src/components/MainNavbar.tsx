@@ -32,6 +32,7 @@ const MainNavbar = () => {
   // Check if user can manage users (admin or director)
   const canManageUsers = DEV_MODE || hasAnyRole(['admin', 'director']);
   const isSupplier = hasAnyRole(['supplier']);
+  const isSupplierOnly = isSupplier && !hasAnyRole(['admin','director','manager','agent']);
   const handleLanguageChange = (newLanguage: Language) => {
     if (setLanguage) {
       setLanguage(newLanguage);
@@ -64,110 +65,11 @@ const MainNavbar = () => {
           )}
         </Link>
         
-        {/* Show full navigation only for authenticated users or in dev mode */}
+        {/* Show navigation only for authenticated users or in dev mode */}
         {isUserAuthenticated && (
-          <NavigationMenu className="hidden md:flex z-50">
-            <NavigationMenuList className="gap-2">
-               <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/dashboard">
-                    {t('dashboard.title') || 'Dashboard'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-white hover:text-gray-200 bg-transparent hover:bg-adrar-600">
-                  {t('nav.projects') || 'Projets'}
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="z-50 bg-white border shadow-lg">
-                  <div className="grid gap-3 p-6 w-[400px] bg-white">
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to="/projects"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
-                      >
-                        <div className="text-sm font-medium leading-none">{t('projects.all') || 'Tous les projets'}</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          {t('projects.all_desc') || 'Gérer et visualiser tous les projets'}
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to="/projects/create"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
-                      >
-                        <div className="text-sm font-medium leading-none">{t('projects.new') || 'Nouveau projet'}</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          {t('projects.new_desc') || 'Créer un nouveau projet'}
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to="/projects/import"
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
-                      >
-                        <div className="text-sm font-medium leading-none flex items-center">
-                          <Upload className="h-4 w-4 mr-2" />
-                          {t('project_import.title') || 'Import projets'}
-                        </div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          {t('project_import.desc') || 'Importer les projets 2025'}
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/materials">
-                    {t('nav.materials') || 'Matériaux'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/documents">
-                    {t('documents.title') || 'Documents'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/tasks">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    {t('task.title') || 'Tâches'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
-
-              {/* Users link - only for admin and director or in dev mode */}
-              {canManageUsers && (
+          isSupplierOnly ? (
+            <NavigationMenu className="hidden md:flex z-50">
+              <NavigationMenuList className="gap-2">
                 <NavigationMenuItem>
                   <Button 
                     variant="ghost" 
@@ -175,62 +77,193 @@ const MainNavbar = () => {
                     size="sm"
                     asChild
                   >
-                    <Link to="/users">
-                      <Users className="h-4 w-4 mr-2" />
-                      {t('nav.users') || 'Utilisateurs'}
+                    <Link to="/supplier-portal">
+                      {t('nav.supplier_portal') || 'Supplier Portal'}
                     </Link>
                   </Button>
                 </NavigationMenuItem>
-              )}
-              
-{canManageUsers && (
-  <NavigationMenuItem>
-    <Button 
-      variant="ghost" 
-      className="text-white hover:text-gray-200 hover:bg-adrar-600"
-      size="sm"
-      asChild
-    >
-      <Link to="/settings">
-        <Cog className="h-4 w-4 mr-2" />
-        {t('settings.title') || 'Settings'}
-      </Link>
-    </Button>
-  </NavigationMenuItem>
-)}
-              
-              {/* Supplier Management link */}
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/suppliers">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    {t('nav.suppliers') || 'Fournisseurs'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/supplier-dashboard">
+                      {t('nav.supplier_dashboard') || 'Supplier Dashboard'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          ) : (
+            <NavigationMenu className="hidden md:flex z-50">
+              <NavigationMenuList className="gap-2">
+                 <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/dashboard">
+                      {t('dashboard.title') || 'Dashboard'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-white hover:text-gray-200 bg-transparent hover:bg-adrar-600">
+                    {t('nav.projects') || 'Projets'}
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="z-50 bg-white border shadow-lg">
+                    <div className="grid gap-3 p-6 w-[400px] bg-white">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/projects"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">{t('projects.all') || 'Tous les projets'}</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            {t('projects.all_desc') || 'Gérer et visualiser tous les projets'}
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/projects/create"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">{t('projects.new') || 'Nouveau projet'}</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            {t('projects.new_desc') || 'Créer un nouveau projet'}
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/projects/import"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none flex items-center">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {t('project_import.title') || 'Import projets'}
+                          </div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            {t('project_import.desc') || 'Importer les projets 2025'}
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/materials">
+                      {t('nav.materials') || 'Matériaux'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/documents">
+                      {t('documents.title') || 'Documents'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/tasks">
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      {t('task.title') || 'Tâches'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
 
-              {/* Tender Management link */}
-              <NavigationMenuItem>
-                <Button 
-                  variant="ghost" 
-                  className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                  size="sm"
-                  asChild
-                >
-                  <Link to="/tender-management">
-                    <FileText className="h-4 w-4 mr-2" />
-                    {t('nav.tender_management') || 'Appels d\'Offres'}
-                  </Link>
-                </Button>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+                {/* Users link - only for admin and director or in dev mode */}
+                {canManageUsers && (
+                  <NavigationMenuItem>
+                    <Button 
+                      variant="ghost" 
+                      className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to="/users">
+                        <Users className="h-4 w-4 mr-2" />
+                        {t('nav.users') || 'Utilisateurs'}
+                      </Link>
+                    </Button>
+                  </NavigationMenuItem>
+                )}
+                
+                {canManageUsers && (
+                  <NavigationMenuItem>
+                    <Button 
+                      variant="ghost" 
+                      className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to="/settings">
+                        <Cog className="h-4 w-4 mr-2" />
+                        {t('settings.title') || 'Settings'}
+                      </Link>
+                    </Button>
+                  </NavigationMenuItem>
+                )}
+                
+                {/* Supplier Management link */}
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/suppliers">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      {t('nav.suppliers') || 'Fournisseurs'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+
+                {/* Tender Management link */}
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/tender-management">
+                      <FileText className="h-4 w-4 mr-2" />
+                      {t('nav.tender_management') || "Appels d'Offres"}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          )
         )}
+
         
         <div className="flex items-center gap-4">
           {/* Language Switcher - Always visible */}
