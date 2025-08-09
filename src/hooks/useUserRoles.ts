@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 
 export interface UserRole {
   id: string;
@@ -66,6 +67,7 @@ export const useUserRoles = (userId?: string) => {
 
 export const useCurrentUserRoles = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const { profile, isAuthenticated } = useKeycloakAuth();
 
   useEffect(() => {
     const getUser = async () => {
@@ -76,9 +78,12 @@ export const useCurrentUserRoles = () => {
   }, []);
 
   const { data: userRoles, isLoading, error } = useQuery({
-    queryKey: ['currentUserRoles', currentUser?.id],
+    queryKey: ['currentUserRoles', currentUser?.id, profile?.role],
     queryFn: async () => {
-      if (!currentUser?.id) return [];
+      // Start with profile role if present
+      const fallbackRoles = profile?.role ? [String(profile.role).toLowerCase()] : [];
+
+      if (!currentUser?.id) return fallbackRoles;
       
       console.log('Fetching current user roles for:', currentUser.id);
       
@@ -89,31 +94,36 @@ export const useCurrentUserRoles = () => {
       
       if (error) {
         console.error('Error fetching current user roles:', error);
-        // Don't throw error to prevent infinite loading
-        return [];
+        // Return at least the fallback role (from profile) if available
+        return fallbackRoles;
       }
-      return data?.map((r: any) => r.role_name) || [];
+
+      const dbRoles = (data?.map((r: any) => String(r.role_name).toLowerCase()) || []);
+      const merged = Array.from(new Set([...dbRoles, ...fallbackRoles]));
+      return merged;
     },
-    enabled: !!currentUser?.id,
+    enabled: !!currentUser?.id || !!profile?.role || !!isAuthenticated,
     retry: 2,
     retryDelay: 500,
     // Add stale time to prevent excessive refetching
     staleTime: 5 * 60 * 1000, // 5 minutes
     // Set default data to prevent loading states
-    placeholderData: []
+    placeholderData: () => (profile?.role ? [String(profile.role).toLowerCase()] : [])
   });
 
   const hasRole = (roleName: string) => {
-    return userRoles?.includes(roleName) || false;
+    return (userRoles as string[])?.includes(String(roleName).toLowerCase()) || false;
   };
 
   const hasAnyRole = (roleNames: string[]) => {
-    if (!userRoles || userRoles.length === 0) return false;
-    return roleNames.some(role => hasRole(role));
+    const roles = (userRoles as string[]) || [];
+    if (roles.length === 0) return false;
+    const wanted = roleNames.map((r) => String(r).toLowerCase());
+    return wanted.some((role) => roles.includes(role));
   };
 
   return {
-    userRoles: userRoles || [],
+    userRoles: (userRoles as string[]) || [],
     hasRole,
     hasAnyRole,
     isLoading,
