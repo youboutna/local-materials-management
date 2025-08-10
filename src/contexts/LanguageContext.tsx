@@ -45,8 +45,64 @@ export const translations = {
             password_requirements: "Password requirements",
             button: {
                 loading: "Loading..."
-            }
+            },
+            supplier_portal: "Portail Fournisseur",
+            supplier_dashboard: "Tableau Fournisseur",
+            suppliers: "Fournisseurs"
 
+        },
+        role_based_route: {
+            loading: "Chargement...",
+            denied_title: "Accès refusé",
+            denied_desc: "Vous n’avez pas les permissions nécessaires pour accéder à cette page.",
+            required_roles: "Rôles requis",
+            back: "Retour"
+        },
+        supplier_dashboard: {
+            title: "Tableau de bord fournisseur",
+            subtitle: "Suivez vos notifications, paiements et documents.",
+            stats: {
+                total_payments: "Paiements totaux",
+                transactions: "transactions",
+                pending_payments: "Paiements en attente",
+                processing: "En traitement",
+                notifications: "Notifications",
+                unread: "non lues",
+                documents: "Documents",
+                available: "disponibles"
+            },
+            tabs: {
+                notifications: "Notifications",
+                payments: "Paiements",
+                documents: "Documents"
+            },
+            notifications: {
+                title: "Notifications",
+                unknown_date: "Date inconnue",
+                new: "Nouveau",
+                empty: "Aucune notification.",
+                types: {
+                    task_assignment: "Affectation de tâche",
+                    task_notification: "Notification de tâche",
+                    task_comment: "Commentaire de tâche",
+                    task_completed: "Tâche terminée",
+                    password_reset: "Réinitialisation du mot de passe"
+                }
+            },
+            payments: {
+                title: "Paiements",
+                payment: "Paiement",
+                amount: "Montant",
+                unknown_date: "Date inconnue",
+                paid: "Payé",
+                pending: "En attente",
+                empty: "Aucun paiement."
+            },
+            documents: {
+                title: "Documents",
+                unknown_date: "Date inconnue",
+                empty: "Aucun document."
+            }
         },
         user: {
 
@@ -968,7 +1024,63 @@ export const translations = {
             users: "المستخدمون",
             profile: "الملف الشخصي",
             settings: "الإعدادات",
-            tender_management: "إدارة العطاءات"
+            tender_management: "إدارة العطاءات",
+            supplier_portal: "بوابة المورد",
+            supplier_dashboard: "لوحة المورد",
+            suppliers: "الموردون"
+        },
+        role_based_route: {
+            loading: "جاري التحميل...",
+            denied_title: "تم رفض الوصول",
+            denied_desc: "ليست لديك الصلاحيات اللازمة للوصول إلى هذه الصفحة.",
+            required_roles: "الأدوار المطلوبة",
+            back: "رجوع"
+        },
+        supplier_dashboard: {
+            title: "لوحة تحكم المورد",
+            subtitle: "تابع إشعاراتك ومدفوعاتك ووثائقك.",
+            stats: {
+                total_payments: "إجمالي المدفوعات",
+                transactions: "معاملة",
+                pending_payments: "مدفوعات معلّقة",
+                processing: "قيد المعالجة",
+                notifications: "الإشعارات",
+                unread: "غير مقروءة",
+                documents: "الوثائق",
+                available: "متاحة"
+            },
+            tabs: {
+                notifications: "الإشعارات",
+                payments: "المدفوعات",
+                documents: "الوثائق"
+            },
+            notifications: {
+                title: "الإشعارات",
+                unknown_date: "تاريخ غير معروف",
+                new: "جديد",
+                empty: "لا توجد إشعارات.",
+                types: {
+                    task_assignment: "إسناد مهمة",
+                    task_notification: "إشعار مهمة",
+                    task_comment: "تعليق على المهمة",
+                    task_completed: "تم إكمال المهمة",
+                    password_reset: "إعادة تعيين كلمة المرور"
+                }
+            },
+            payments: {
+                title: "المدفوعات",
+                payment: "دفعة",
+                amount: "المبلغ",
+                unknown_date: "تاريخ غير معروف",
+                paid: "مدفوع",
+                pending: "معلّق",
+                empty: "لا توجد مدفوعات."
+            },
+            documents: {
+                title: "الوثائق",
+                unknown_date: "تاريخ غير معروف",
+                empty: "لا توجد وثائق."
+            }
         },
         user: {
             profile: "ملف المستخدم",
@@ -1878,6 +1990,62 @@ export const translations = {
             password_requirements: "Password requirements",
             button: {
                 loading: "Loading..."
+            },
+            supplier_portal: "Supplier Portal",
+            supplier_dashboard: "Supplier Dashboard",
+            suppliers: "Suppliers"
+        },
+        role_based_route: {
+            loading: "Loading...",
+            denied_title: "Access Denied",
+            denied_desc: "You don’t have permission to access this page.",
+            required_roles: "Required roles",
+            back: "Go back"
+        },
+        supplier_dashboard: {
+            title: "Supplier Dashboard",
+            subtitle: "Track your notifications, payments, and documents.",
+            stats: {
+                total_payments: "Total payments",
+                transactions: "transactions",
+                pending_payments: "Pending payments",
+                processing: "Processing",
+                notifications: "Notifications",
+                unread: "unread",
+                documents: "Documents",
+                available: "available"
+            },
+            tabs: {
+                notifications: "Notifications",
+                payments: "Payments",
+                documents: "Documents"
+            },
+            notifications: {
+                title: "Notifications",
+                unknown_date: "Unknown date",
+                new: "New",
+                empty: "No notifications.",
+                types: {
+                    task_assignment: "Task assignment",
+                    task_notification: "Task notification",
+                    task_comment: "Task comment",
+                    task_completed: "Task completed",
+                    password_reset: "Password reset"
+                }
+            },
+            payments: {
+                title: "Payments",
+                payment: "Payment",
+                amount: "Amount",
+                unknown_date: "Unknown date",
+                paid: "Paid",
+                pending: "Pending",
+                empty: "No payments."
+            },
+            documents: {
+                title: "Documents",
+                unknown_date: "Unknown date",
+                empty: "No documents."
             }
         },
         user: {
