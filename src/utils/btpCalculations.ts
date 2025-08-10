@@ -1346,50 +1346,43 @@ interface ConstructionLine extends InvoiceLine {
 const UNIT_CANDIDATES = ['m²', 'm2', 'm³', 'm3', 'ml', 'u', 'ens', 'kg', 'tonne', 'pm'];
 
 export function splitRoughLines(text: string): string[] {
-  // Normalize spaces
+  // Normalize spaces and remove common noise characters
   const cleanedText = text
-    .replace(/[|•]/g, '')          // remove table bars and bullets
-    .replace(/\s+/g, ' ')          // collapse multiple spaces
+    .replace(/[|•]/g, '')             // remove table bars and bullets
+    .replace(/\r\n/g, '\n')           // normalize newlines
+    .replace(/\s+/g, ' ')             // collapse multiple spaces
     .trim();
 
-  // Check if text contains multiple line breaks (likely PDF structured)
+  // If text already has many line breaks (likely structured table from PDF)
   if ((cleanedText.match(/\n/g) || []).length > 5) {
-    // Split on newlines and trim
     return cleanedText
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 3);
   }
 
-  // Otherwise, probably OCR or run-on text
-  // Split by article number or lot keywords or typical unit+qty patterns
-
-  // Regex explanation:
-  //  - article start: e.g. "1.01", "A", "Lot 1"
-  //  - unit+qty: e.g. "m² 25,816", "ml 12", "kg 350"
-  //  - dimension patterns like "0,30 x 0,50 m"
-  // We split before these patterns to isolate lines
-
+  // Otherwise, probably OCR or continuous text → split intelligently
   const splitRegex = new RegExp(
     [
-      // Article numbers (1.01, 2.03)
-      '(?=\\b\\d{1,2}\\.\\d{2}\\b)',
-      // Lettered article (A, B, I, II, III, IV)
-      '(?=\\b[A-Z]{1,3}\\b)',
+      // Article numbers like 1.01 or 2.3
+      '(?=\\b\\d{1,2}\\.\\d{1,2}\\b)',
+      // Lettered or roman numeral articles
+      '(?=\\b(?:[A-Z]{1,3}|[IVXLCDM]{1,5})\\b)',
       // Lot keywords
-      '(?=\\blot\\b)',
-      // Units followed by quantity, e.g. m² 25,816
-      '(?=\\b(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+[\\d,.]+)',
-      // Dimensions like 0,30 x 0,50 m or 45x145 mm (x is letter x or times sign)
-      '(?=\\b\\d{1,3}[,.]?\\d*\\s*[x×]\\s*\\d{1,3}[,.]?\\d*\\b)'
+      '(?=\\blot\\s+\\d+\\b)',
+      // Units followed by quantity
+      '(?=\\b(?:m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+[\\d.,]+\\b)',
+      // Dimensions like "0,30x0,50" or "45x145"
+      '(?=\\b\\d{1,3}[,.]?\\d*\\s*[x×]\\s*\\d{1,3}[,.]?\\d*(?:\\s*(?:mm|cm|m))?\\b)',
+      // Dosage patterns like "350kg/m3"
+      '(?=\\b\\d{2,4}\\s*kg\\/m\\d\\b)'
     ].join('|'),
     'gi'
   );
 
   const roughLines: string[] = [];
-
   let lastIndex = 0;
-  let match;
+  let match: RegExpExecArray | null;
 
   while ((match = splitRegex.exec(cleanedText)) !== null) {
     const index = match.index;
@@ -1399,27 +1392,17 @@ export function splitRoughLines(text: string): string[] {
     }
     lastIndex = index;
   }
-  // push trailing part
   if (lastIndex < cleanedText.length) {
     const tail = cleanedText.slice(lastIndex).trim();
     if (tail) roughLines.push(tail);
   }
 
-  // Final cleanup: remove very short or noise lines
   return roughLines.filter(line => line.length > 5);
 }
 
-
 export function extractFields(line: string): ConstructionLine | null {
-  // Regex explanation:
-  // - Optional article number at start: 1.01, A, I, II, etc.  //# optional article number (group 1)
-  // - Designation: anything up to unit  // # designation (group 2)
-  // - Unit: m², m3, ml, u, ens, kg, tonne, pm  //# unit (group 3)
-  // - Quantity, unit price, total price: numbers with optional decimal commas/dots  //# quantity (group 4)
-  // Example line:
-  // "1.01 Décapage terre végétale m3 25,816 16,75 432,42"  //# optional unit price (group 5)
-  // or "A Fouilles en puits m³ 83,52"  //# optional total price (group 6)
-  const regex = '/^\\s*(?:(\\d{1,2}\\.\\d{2}|[A-Z]{1,3})\\s+)?(.+?)\\s+(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+([\\d.,]+)(?:\\s+([\\d.,]+))?(?:\\s+([\\d.,]+))?\s*$/ix';
+  // Regex for: [optional number] designation unit qty [unit price] [total price]
+  const regex = /^\s*(?:(\d{1,2}\.\d{1,2}|[A-Z]{1,3}|[IVXLCDM]{1,5})\s+)?(.+?)\s+(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\s+([\d.,]+)(?:\s+([\d.,]+))?(?:\s+([\d.,]+))?\s*$/i;
 
   const match = line.match(regex);
   if (!match) return null;
@@ -1434,10 +1417,14 @@ export function extractFields(line: string): ConstructionLine | null {
     rawTotalPrice,
   ] = match;
 
-  // parse numbers: support ',' as decimal, ignore thousand separators (spaces)
   const parseNumber = (str?: string): number => {
     if (!str) return 0;
-    return parseFloat(str.replace(/\s/g, '').replace(',', '.')) || 0;
+    return parseFloat(
+      str
+        .replace(/\s/g, '')     // remove spaces
+        .replace(/(?<=\d),(?=\d{1,3}$)/, '.') // decimal comma to dot
+        .replace(',', '.')      // fallback decimal
+    ) || 0;
   };
 
   return {
@@ -1452,7 +1439,6 @@ export function extractFields(line: string): ConstructionLine | null {
 
 
 
-
 export const extractConstructionData = (text: string): CalculationResult[] => {
   // Normalize spacing and replace common OCR artifacts
   const normalizedText = text
@@ -1464,17 +1450,17 @@ export const extractConstructionData = (text: string): CalculationResult[] => {
 
   const lines = splitRoughLines(normalizedText);
 
-  console.log("splitRoughLines : " );
+  console.log("splitRoughLines : ");
   console.log(lines);
   const results: CalculationResult[] = [];
   for (const line of lines) {
-  console.log("extractFields : " );
+    console.log("extractFields : ");
     const fields = extractFields(line);
-     console.log(fields);
-     if(fields){
+    console.log(fields);
+    if (fields) {
       const result = convertConstructionLineToCalculationResult(fields);
-      if(result) results.push(result);
-  }
+      if (result) results.push(result);
+    }
   }
   console.log(results);
 
@@ -1604,27 +1590,44 @@ export const isArchitecturalPlan = (text: string) => {
   return planWords.some(word => lower.includes(word));
 };
 
+// Validate if native text is usable
+const isTextReadable = (text: string): boolean => {
+  const meaningfulLines = text.split('\n').filter(line => line.trim().length > 10);
+  return meaningfulLines.length >= 2;
+};
+
 export const parsePdf = async (file: File): Promise<CalculationResult[]> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-    let fullText = '';
+    // Process pages in parallel for speed
+    const pageTexts = await Promise.all(
+      Array.from({ length: pdf.numPages }, async (_, idx) => {
+        const page = await pdf.getPage(idx + 1);
+        const content = await page.getTextContent();
 
-    // Attempt 1: Native text extraction
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const pageText = content.items.map((item: any) => item.str).join(' ');
-      fullText += pageText + '\n';
-    }
+        // Group items by line (y position) for better structure
+        const lines: Record<number, string[]> = {};
+        content.items.forEach((item: any) => {
+          const y = Math.floor(item.transform[5]);
+          if (!lines[y]) lines[y] = [];
+          lines[y].push(item.str);
+        });
+
+        return Object.values(lines)
+          .map(lineItems => lineItems.join(' '))
+          .join('\n');
+      })
+    );
+
+    let fullText = pageTexts.join('\n\n');
 
     if (!isTextReadable(fullText)) {
       console.warn("PDF extraction failed, switching to OCR.");
-      //fullText = await renderPdfPagesForOcr(pdf);
+      fullText = await renderPdfPagesForOcr(pdf); // run OCR
     }
 
-    console.log(fullText);
     return extractConstructionData(fullText);
   } catch (error) {
     console.error("PDF parsing failed:", error);
@@ -1663,7 +1666,7 @@ export const parseDocument = async (file: File): Promise<CalculationResult[]> =>
     let content = '';
 
     // --- PDF Handling ---
-    console.log(  "// --- PDF Handling ---");
+    console.log("// --- PDF Handling ---");
     if (file.type === "application/pdf") {
       content = await parsePdfWithOcrFallback(file);
     }
@@ -1682,12 +1685,12 @@ export const parseDocument = async (file: File): Promise<CalculationResult[]> =>
       content = await file.text();
     }
 
-      console.log(  "before // cleanText---");
-       console.log(content);
+    console.log("before // cleanText---");
+    console.log(content);
 
     // Clean up OCR noise and align for parser
     const cleanText = cleanOcrText(content);
-     console.log(cleanText);
+    console.log(cleanText);
 
     // Parse into structured results using enhanced construction data extractor
     return extractConstructionData(cleanText);
@@ -1735,12 +1738,6 @@ const cleanOcrText = (ocrText: string): string => {
     .replace(/(\d)\s+([.,])/g, '$1$2');
 };
 
-// Validate if native text is usable
-const isTextReadable = (text: string): boolean => {
-  const meaningfulLines = text.split('\n').filter(line => line.trim().length > 10);
-  return meaningfulLines.length >= 2;
-};
-
 // OCR fallback
 const renderPdfPagesForOcr = async (pdf: any): Promise<string> => {
   const worker = await tesseract.createWorker('fra', 1, {
@@ -1767,7 +1764,9 @@ const renderPdfPagesForOcr = async (pdf: any): Promise<string> => {
 
     try {
       const { data } = await worker.recognize(imageDataUrl);
-      ocrText += postProcessOcrText(data.text) + '\n';
+      if (data && data.text) {
+        ocrText += postProcessOcrText(data.text) + '\n';
+      }
     } catch (ocrError) {
       console.error(`OCR failed on page ${i}:`, ocrError);
     }
@@ -1783,28 +1782,59 @@ const renderPdfPagesForOcr = async (pdf: any): Promise<string> => {
 };
 
 
+
 // Clean up OCR output
 export const postProcessOcrText = (raw: string): string => {
   if (!raw) return '';
 
   return raw
-    .replace(/[^\S\r\n]+/g, ' ')                                 // collapse multiple spaces
-    .replace(/([a-z])([A-Z])/g, '$1 $2')                         // break camelCase words
-    .replace(/([a-zA-Z])(\d)/g, '$1 $2')                         // space between letters and digits
-    .replace(/(\d)([a-zA-Z])/g, '$1 $2')                         // space between digits and letters
-    .replace(/[•·•¤“”"‘’´`]+/g, '')                              // remove stray punctuation
-    .replace(/[_\-–—=+]{2,}/g, '')                               // remove dashed lines
-    .replace(/\[+[^\]]*\]+/g, '')                                // remove bracketed noise like [55], [==]
-    .replace(/\b[A-Z]{2,}\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase()) // normalize uppercase words
-    .replace(/\b(O|0)([j])\b/g, 'Objet')                         // correct common mis-OCRed "Objet"
-    .replace(/\s{2,}/g, ' ')                                     // extra spacing
-    .replace(/([^\n])\n(?!\n)/g, '$1 ')                          // join soft line breaks
-    .replace(/(\n|\r\n){2,}/g, '\n\n')                           // separate true paragraphs
-    .replace(/(TOTAL GROS ŒUVR|TOTAL SECOND OEUVRE)/gi, '\n\n$1\n\n') // section delimiter
-    .replace(/LOT\s+\d+|ARTICLE\s+\d+/gi, '\n\n$&\n\n')          // force newline on LOT/ARTICLE
-    .replace(/ +/g, ' ')                                         // final space normalization
+    // Remove common headers/footers
+    .replace(/\bPage\s+\d+\s*\/\s*\d+\b/gi, '')
+    .replace(/\bDEVIS\s+QUANTITATIF\s+ESTIMATIF\b/gi, '')
+    .replace(/Article\s+Désignation\s+Unité\s+Quantité\s+Px\s+Unit\s+Px\s+Total/gi, '')
+
+    // Normalize spaces
+    .replace(/[^\S\r\n]+/g, ' ')
+
+    // Protect dimensions & dosage
+    .replace(/(\d+,\d+)\s*[x×]\s*(\d+,\d+)\s*(m|cm|mm)?/gi, '$1x$2$3')
+    .replace(/(\d+)\s*kg\s*\/\s*m[³3]/gi, '$1kg/m3')
+
+    // Units normalization
+    .replace(/\bm2\b/gi, 'm²')
+    .replace(/\bm3\b/gi, 'm³')
+    .replace(/\bm1\b/gi, 'ml')
+    .replace(/\bu\b/gi, 'u')
+
+    // Space between numbers and units if missing
+    .replace(/(\d)(m²|m³|ml|u|ens|kg|tonne|pm)/gi, '$1 $2')
+
+    // Decimal separator fix: 1 247,80 → 1247.80
+    .replace(/(\d)\s+(\d{3})([.,]\d+)/g, '$1$2$3')
+
+    // O vs 0 in numbers
+    .replace(/(\d)\.O(\d)/g, '$1.0$2')
+
+    // CamelCase & letter-digit separation
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([a-zA-Z])(\d)(?![.,x×]\d)/g, '$1 $2')
+    .replace(/(\d)([a-zA-Z])(?![²³m])/g, '$1 $2')
+
+    // Remove stray punctuation & lines
+    .replace(/[•·¤“”"‘’´`]+/g, '')
+    .replace(/[_\-–—=+]{2,}/g, '')
+
+    // Join broken lines unless they start with LOT/ARTICLE
+    .replace(/([^\n])\n(?!\n|LOT|ARTICLE)/g, '$1 ')
+
+    // Force newlines before key markers
+    .replace(/(LOT\s+\d+|ARTICLE\s+\d+)/gi, '\n\n$1\n\n')
+
+    // Final cleanup
+    .replace(/ +/g, ' ')
     .trim();
 };
+
 
 
 const processImageWithOcr = async (file: File): Promise<string> => {

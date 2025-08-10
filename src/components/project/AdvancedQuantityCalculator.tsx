@@ -456,7 +456,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
     
     setIsProcessing(true);
     try {
-      const parsedLines = await parseDocument(e.target.files[0]);
+      const parsedLines = await parsePdf(e.target.files[0]);
       if (parsedLines.length > 0) {
         setCalculations(parsedLines);
         toast({
