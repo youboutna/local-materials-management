@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,34 +11,42 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const SupplierDashboard = () => {
   const { t } = useLanguage();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [supplier, setSupplier] = useState<any>(null);
 
-  // Fetch notifications for supplier
-  const { data: notifications = [] } = useQuery({
-    queryKey: ['supplier-notifications'],
-    queryFn: async () => {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const loadSupplier = async () => {
+      if (!userId) { setSupplier(null); return; }
       const { data, error } = await supabase
-        .from('notifications')
+        .from('suppliers')
         .select('*')
-        .eq('type', 'supplier')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (!error) setSupplier(data);
+    };
+    loadSupplier();
+  }, [userId]);
 
-  // Fetch payment progress
-  const { data: payments = [] } = useQuery({
-    queryKey: ['supplier-payments'],
+// Fetch notifications for supplier
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['supplier-notifications', supplier?.id],
+    enabled: !!supplier?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('payments')
-        .select(`
-          *,
-          projects (title, status)
-        `)
-        .order('payment_date', { ascending: false })
+        .from('supplier_notifications')
+        .select('*')
+        .eq('supplier_id', supplier.id)
+        .order('sent_at', { ascending: false })
         .limit(20);
       
       if (error) throw error;
@@ -46,25 +54,51 @@ const SupplierDashboard = () => {
     }
   });
 
-  // Fetch documents - using 'contract' type instead of 'supplier'
-  const { data: documents = [] } = useQuery({
-    queryKey: ['supplier-documents'],
+// Fetch payment progress
+  const { data: payments = [] } = useQuery({
+    queryKey: ['supplier-payments', supplier?.id],
+    enabled: !!supplier?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('documents')
+        .from('supplier_payments')
         .select('*')
-        .eq('document_type', 'contract')
-        .order('created_at', { ascending: false })
-        .limit(15);
+        .eq('supplier_id', supplier.id)
+        .order('due_date', { ascending: false })
+        .limit(50);
       
       if (error) throw error;
       return data || [];
     }
   });
 
-  const totalPayments = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-  const pendingPayments = payments.filter(p => p.payment_method === 'pending').length;
-  const unreadNotifications = notifications.filter(n => !n.read).length;
+  // Fetch documents assigned to this supplier user
+  const { data: documents = [] } = useQuery({
+    queryKey: ['supplier-documents', userId, supplier?.name],
+    enabled: !!userId || !!supplier?.name,
+    queryFn: async () => {
+      // If no identifiers, return empty
+      if (!userId && !supplier?.name) return [] as any[];
+      const orFilter =
+        userId && supplier?.name
+          ? `assigned_to.eq.${userId},tags.cs.{${supplier.name}}`
+          : userId
+          ? `assigned_to.eq.${userId}`
+          : `tags.cs.{${supplier!.name}}`;
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .or(orFilter)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const totalPayments = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const pendingPayments = payments.filter(p => p.status === 'pending').length;
+  const unreadNotifications = notifications.length;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
@@ -153,31 +187,33 @@ const SupplierDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
-                        <div 
-                          key={notification.id}
-                          className={`p-4 rounded-lg border ${
-                            notification.read ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-medium text-gray-900">{notification.title}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                              <p className="text-xs text-gray-500 mt-2">
-                                {notification.created_at ? new Date(notification.created_at).toLocaleDateString('fr-FR') : t("supplier_dashboard.notifications.unknown_date")}
-                              </p>
-                            </div>
-                            {!notification.read && (
+                      {notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                          <div 
+                            key={notification.id}
+                            className="p-4 rounded-lg border bg-blue-50 border-blue-200"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-medium text-gray-900">
+                                  {t(`supplier_dashboard.notifications.types.${(notification as any).notification_type}`) || (notification as any).notification_type}
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {typeof (notification as any).metadata?.comment === 'string'
+                                    ? (notification as any).metadata.comment
+                                    : ''}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                  {(notification as any).sent_at ? new Date((notification as any).sent_at).toLocaleDateString('fr-FR') : t("supplier_dashboard.notifications.unknown_date")}
+                                </p>
+                              </div>
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                 {t("supplier_dashboard.notifications.new")}
                               </Badge>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    ) : (
+                        ))
+                      ) : (
                       <p className="text-gray-500 text-center py-8">{t("supplier_dashboard.notifications.empty")}</p>
                     )}
                   </div>
@@ -201,24 +237,24 @@ const SupplierDashboard = () => {
                           <div className="flex items-center justify-between">
                             <div>
                               <h3 className="font-medium text-gray-900">
-                                {t("supplier_dashboard.payments.payment")} #{payment.transaction_id}
+                                {t("supplier_dashboard.payments.payment")} #{payment.reference_number || '—'}
                               </h3>
                               <p className="text-sm text-gray-600">
                                 {t("supplier_dashboard.payments.amount")}: {payment.amount?.toLocaleString()} MRU
                               </p>
                               <p className="text-xs text-gray-500">
-                                {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('fr-FR') : t("supplier_dashboard.payments.unknown_date")}
+                                {(payment.payment_date || payment.due_date) ? new Date((payment.payment_date || payment.due_date) as any).toLocaleDateString('fr-FR') : t("supplier_dashboard.payments.unknown_date")}
                               </p>
                             </div>
                             <Badge 
-                              variant={payment.payment_method === 'completed' ? 'default' : 'secondary'}
+                              variant={payment.status === 'paid' ? 'default' : 'secondary'}
                               className={
-                                payment.payment_method === 'completed' 
+                                payment.status === 'paid' 
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-orange-100 text-orange-800'
                               }
                             >
-                              {payment.payment_method === 'completed' ? t("supplier_dashboard.payments.paid") : t("supplier_dashboard.payments.pending")}
+                              {payment.status === 'paid' ? t("supplier_dashboard.payments.paid") : t("supplier_dashboard.payments.pending")}
                             </Badge>
                           </div>
                         </div>
