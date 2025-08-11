@@ -850,11 +850,9 @@ function validateWidth(width?: number): void {
  * @returns 
  */
 export function calculateAdvancedQuantities(params: CalculationParams): CalculationResult {
-  const { elementType, length, width = 1, height = 1, options } = params;
+  const { elementType, length, width = 1, height = 1, options, quantity=1 } = params;
   const openings = options?.openings || [];
   const detectedType = elementType;
-  console.log(detectedType);
-
   try {
     validateDimensions(length);
     if (width !== undefined) validateWidth(width);

@@ -172,6 +172,8 @@ export interface CalculationParams {
   width?: number;
   height?: number;
   options?: CalculationOptions;
+  quantity?:number;
+  count?:number;
 }
 export interface CalculationOptions {
   openings?: Opening[];

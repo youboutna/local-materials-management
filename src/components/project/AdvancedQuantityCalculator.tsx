@@ -33,6 +33,7 @@ const DEFAULT_FORM = {
   openings: [] as Opening[],
   dosage: 350,
   thickness: 0.02,
+  quantity : 1,
 };
 
 const getElementLabel = (value: string) => {
@@ -281,6 +282,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
 
   const currentElement = elementTypes.find(el => el.value === form.elementType);
 
+  console.log(currentElement);
+
   const hasRequiredDimensions = useCallback(() => {
     if (!currentElement) return false;
     return currentElement.requires.every(req => {
@@ -356,6 +359,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
         length: form.length,
         width: form.width || undefined,
         height: form.height || undefined,
+        quantity: form?.quantity || 1,
+        count: form?.count || 0,
         options: {
           openings: ["concrete_slab", "masonry_wall"].includes(form.elementType) ? form.openings : undefined,
           dosage: form.dosage,
@@ -499,6 +504,16 @@ const AdvancedQuantityCalculator: React.FC = () => {
                 <Input type="number" step="0.01" min="0.01" value={form.height || ""} onChange={e => setForm(f => ({ ...f, height: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
               </div>
             )}
+                        {currentElement && currentElement.requires.includes("count") && (
+              <div>
+                <Label>nombre de </Label>
+               <Input type="number" step="0.01" min="0" value={form.count || ""} onChange={e => setForm(f => ({ ...f, count: parseFloat(e.target.value) || 0 }))} placeholder="0" /> </div>
+            )}
+          {currentElement && currentElement.requires.includes("quantity") && (
+            <div>
+              <Label>Quantité de </Label>
+              <Input type="number" step="0.01" min="1" value={form.quantity || ""} onChange={e => setForm(f => ({ ...f, quantity: parseFloat(e.target.value) || 0 }))} placeholder="1" /> </div>
+          )}
           </div>
 
           {/* Openings */}
@@ -555,10 +570,11 @@ const AdvancedQuantityCalculator: React.FC = () => {
                   <tr>{/* No whitespace here */}
                     <th className=" border border-gray-200 px-1 py-1 ">#</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
-                    <th className="border border-gray-200 px-1 py-1 uppercase">Dimensions</th>
-                     <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
+                    <th className="border border-gray- px-1 py-1 uppercase">Dimensions</th>
+        
                     <th className="border border-gray-300 px-2 py-1 uppercase">Calculs</th>
                     <th className="border border-gray-300 px-2 py-1 uppercase">Actions</th>
+                    <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -581,8 +597,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="border border-gray-300 px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="space-y-1">
                           {Object.entries(calc.results).map(([key, value]) => (
                             <div key={key} className="flex justify-between">
@@ -773,6 +788,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
                         </div>
                       )}
                     </td>
+                    <td className="border border-gray-300 px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
+                     
                   </tr>
                 ))}
               </tbody>
