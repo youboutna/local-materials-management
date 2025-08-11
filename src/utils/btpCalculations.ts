@@ -17,6 +17,7 @@ import {
 } from "@/utils/types";
 import { number } from "framer-motion";
 import { extend } from "leaflet";
+import { Fullscreen } from "lucide-react";
 
 // Constants for better maintainability
 const DEFAULT_CONCRETE_DOSAGE = 350; // kg/m³
@@ -175,30 +176,7 @@ export function createInvoiceLine(
 const generateId = (): string => {
   return Math.random().toString(36).substring(2, 9);
 };
-// Helper functions
-// Normalize units for consistency
-const normalizeUnit = (unit: string): string => {
-  const unitMap: Record<string, string> = {
-    'm2': 'm²',
-    'm²': 'm²',
-    'm3': 'm³',
-    'm³': 'm³',
-    'ff': 'forfait',
-    'forfait': 'forfait',
-    'u': 'unité',
-    'unité': 'unité',
-    'pce': 'unité',
-    'pcs': 'unité',
-    'pc': 'unité',
-    'kg': 'kg',
-    'tonne': 'tonne',
-    'ml': 'ml',
-    'l': 'l'
-  };
 
-  const cleaned = unit.toLowerCase().trim();
-  return unitMap[cleaned] || cleaned;
-};
 
 // Map article code to work type
 const getWorkTypeFromCode = (code: string): string => {
@@ -1345,98 +1323,250 @@ interface ConstructionLine extends InvoiceLine {
 
 const UNIT_CANDIDATES = ['m²', 'm2', 'm³', 'm3', 'ml', 'u', 'ens', 'kg', 'tonne', 'pm'];
 
-export function splitRoughLines(text: string): string[] {
-  // Normalize spaces and remove common noise characters
-  const cleanedText = text
-    .replace(/[|•]/g, '')             // remove table bars and bullets
-    .replace(/\r\n/g, '\n')           // normalize newlines
-    .replace(/\s+/g, ' ')             // collapse multiple spaces
-    .trim();
+/**
+ * Helper function for advanced text splitting
+ */
+function splitTextWithPatterns(text: string, patterns: RegExp[]): string[] {
+  const roughLines: string[] = [];
+  let lastIndex = 0;
+  let buffer = '';
 
-  // If text already has many line breaks (likely structured table from PDF)
-  if ((cleanedText.match(/\n/g) || []).length > 5) {
+  // Create a combined pattern that matches any of our split patterns
+  const combinedPattern = new RegExp(
+    patterns.map(p => p.source).join('|'), 
+    'gi'
+  );
+
+  let match;
+  while ((match = combinedPattern.exec(text)) !== null) {
+    const { index } = match;
+
+    // Add the text since last match to our buffer
+    buffer += text.slice(lastIndex, index);
+
+    // If we have content in buffer, push it as a line
+    if (buffer.trim().length > 0) {
+      roughLines.push(buffer.trim());
+      buffer = '';
+    }
+
+    // Start new buffer with the matched text
+    buffer += match[0];
+    lastIndex = index + match[0].length;
+  }
+
+  // Add any remaining text after last match
+  if (lastIndex < text.length) {
+    buffer += text.slice(lastIndex);
+  }
+  if (buffer.trim().length > 0) {
+    roughLines.push(buffer.trim());
+  }
+
+  return roughLines.filter(line => {
+    // Filter out lines that are just numbers or very short
+    const trimmed = line.trim();
+    return trimmed.length > 3 && !/^\d+$/.test(trimmed);
+  });
+}
+
+// And update the splitRoughLines function to ensure we only pass RegExp objects:
+export function splitRoughLines(text: string): string[] {
+  const cleanedText = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\|/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .replace(/,(\d+)/g, '.$1')
+    .replace(/(\d)\s(?=\d{3})/g, '$1');
+
+  // Fast path for well-formatted documents
+  const newlineCount = (cleanedText.match(/\n/g) || []).length;
+  console.log(newlineCount);
+  if (newlineCount > 5) {
     return cleanedText
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 3);
   }
+  // Ensure all patterns are RegExp objects
+  const splitPatterns: RegExp[] = [
+    new RegExp('(?=LOT\\s+\\d+)', 'i'),  // LOT numbers
+    new RegExp('(?=[A-Z]{1,3}\\d*)'),    // Article codes
+    new RegExp('(?=\\b(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+[\\d,.]+)', 'i'), // Quantities with units
+    new RegExp('(?=\\b\\d+[.,]?\\d*\\s*[x×]\\s*\\d+[.,]?\\d*\\b)'), // Dimensions
+    new RegExp('(?=\\b\\d+[.,]\\d{2}\\b)'), // Prices
+    new RegExp('(?=^\\s*[IVXLCDM]+\\s*[.)-])', 'im') // Section headers
+  ];
 
-  // Otherwise, probably OCR or continuous text → split intelligently
-  const splitRegex = new RegExp(
-    [
-      // Article numbers like 1.01 or 2.3
-      '(?=\\b\\d{1,2}\\.\\d{1,2}\\b)',
-      // Lettered or roman numeral articles
-      '(?=\\b(?:[A-Z]{1,3}|[IVXLCDM]{1,5})\\b)',
-      // Lot keywords
-      '(?=\\blot\\s+\\d+\\b)',
-      // Units followed by quantity
-      '(?=\\b(?:m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\\s+[\\d.,]+\\b)',
-      // Dimensions like "0,30x0,50" or "45x145"
-      '(?=\\b\\d{1,3}[,.]?\\d*\\s*[x×]\\s*\\d{1,3}[,.]?\\d*(?:\\s*(?:mm|cm|m))?\\b)',
-      // Dosage patterns like "350kg/m3"
-      '(?=\\b\\d{2,4}\\s*kg\\/m\\d\\b)'
-    ].join('|'),
-    'gi'
-  );
-
-  const roughLines: string[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = splitRegex.exec(cleanedText)) !== null) {
-    const index = match.index;
-    if (index > lastIndex) {
-      const segment = cleanedText.slice(lastIndex, index).trim();
-      if (segment) roughLines.push(segment);
-    }
-    lastIndex = index;
-  }
-  if (lastIndex < cleanedText.length) {
-    const tail = cleanedText.slice(lastIndex).trim();
-    if (tail) roughLines.push(tail);
-  }
-
-  return roughLines.filter(line => line.length > 5);
+  return splitTextWithPatterns(cleanedText, splitPatterns);
 }
+// Enhanced field extraction with format-specific patterns
 
-export function extractFields(line: string): ConstructionLine | null {
-  // Regex for: [optional number] designation unit qty [unit price] [total price]
-  const regex = /^\s*(?:(\d{1,2}\.\d{1,2}|[A-Z]{1,3}|[IVXLCDM]{1,5})\s+)?(.+?)\s+(m²|m2|m³|m3|ml|u|ens|kg|tonne|pm)\s+([\d.,]+)(?:\s+([\d.,]+))?(?:\s+([\d.,]+))?\s*$/i;
 
-  const match = line.match(regex);
-  if (!match) return null;
-
-  const [
-    ,
-    number,
-    rawDesignation,
-    unit,
-    rawQty,
-    rawUnitPrice,
-    rawTotalPrice,
-  ] = match;
-
-  const parseNumber = (str?: string): number => {
-    if (!str) return 0;
-    return parseFloat(
-      str
-        .replace(/\s/g, '')     // remove spaces
-        .replace(/(?<=\d),(?=\d{1,3}$)/, '.') // decimal comma to dot
-        .replace(',', '.')      // fallback decimal
-    ) || 0;
+// Helper function to normalize units from the construction document
+function normalizeUnit(unit: string): string {
+  const unitMap: Record<string, string> = {
+    'pce': 'u', // Convert "pce" to "u" for consistency
+    'ff': 'ff', // Forfait (fixed price)
+    'm²': 'm2',
+    'm³': 'm3',
+    'ml': 'ml'
   };
+  return unitMap[unit.toLowerCase()] || unit.toLowerCase();
+}
+export function extractFields(line: string, isSomElecFormat: boolean = false): ConstructionLine | null {
+  // First normalize the line by handling all variations
+  const normalizedLine = line
+    .trim()
+    // Remove common designation labels and colons
+    .replace(/(désignation|designation|label|libellé|description|item|article)\s*[:.]?\s*/gi, '')
+    // Handle special quantity markers
+    .replace(/\(Qté\)|Quantité|Quantity|Qty|Qté/gi, '')
+    // Normalize unit representations
+    .replace(/\b(pce|pee|unite?|unités?)\b/gi, 'u')
+    .replace(/\b(forfait|ff)\b/gi, 'ff')
+    .replace(/\bm(²|2|3|³)\b/gi, (_, p) => `m${p === '²' || p === '2' ? '2' : '3'}`)
+    // Handle European number formats
+    .replace(/(\d)\s+(?=\d{3}\b)/g, '$1')  // Remove thousand separators
+    .replace(/,(\d+)$/, '.$1')             // Convert decimal comma to point
+    // Normalize remaining whitespace
+    .replace(/\s+/g, ' ');
+
+  // Enhanced pattern to match all document formats
+  const pattern = /^(?:([A-Z]?\d+(?:\.\d+)?)\s+)?(.+?)\s+(m[2²]|m[3³]|ml|u|pce|ff|kg|tonne|ens)\s+([\d.]+)(?:\s+([\d.]+))?(?:\s+([\d.]+))?$/i;
+  const match = normalizedLine.match(pattern);
+  if (!match) {
+    console.debug('No match for line:', line);
+    return null;
+  }
+
+  const [, id, designation, unit, rawQty, rawUnitPrice, rawTotalPrice] = match;
+
+  // Special handling for fixed-price items (ff)
+  if (unit.toLowerCase() === 'ff') {
+    const quantity = 1;
+    const unitPrice = parseNumber(rawQty);
+    const totalPrice = rawUnitPrice ? parseNumber(rawUnitPrice) : unitPrice;
+
+    return {
+      id: id?.trim() || '',
+      designation: cleanDesignation(designation),
+      unit: 'ff',
+      quantity,
+      unitPrice,
+      totalPrice,
+      dimensions: { count: quantity },
+      metadata: {
+        unit :unit,
+        isSomElecFormat,
+        elementType: 'fixed_price',
+        isFixedPrice: true,
+        originalLine: line,
+        section: getSection(id)
+      }
+    };
+  }
+
+  // Handle countable items (u)
+  if (unit.toLowerCase() === 'u') {
+    const quantity = parseNumber(rawQty) || 0;
+    const unitPrice = rawUnitPrice ? parseNumber(rawUnitPrice) : undefined;
+    const totalPrice = rawTotalPrice ? parseNumber(rawTotalPrice) : undefined;
+
+    // Validate reasonable counts
+    if (quantity > 100000) {
+      console.warn('Unrealistic count for', designation, ':', quantity);
+      return null;
+    }
+
+    return {
+      id: id?.trim() || '',
+      designation: cleanDesignation(designation),
+      unit: 'u',
+      quantity,
+      unitPrice,
+      totalPrice,
+      dimensions: { count: quantity },
+      metadata: {
+        unit:unit,
+        isSomElecFormat,
+        elementType: 'countable',
+        isFixedPrice: false,
+        originalLine: line,
+        section: getSection(id)
+      }
+    };
+  }
+
+  // Handle dimensional items (m2, m3, ml)
+  const quantity = parseNumber(rawQty);
+  if (quantity === undefined || isNaN(quantity)) {
+    console.error('Invalid quantity in line:', line);
+    return null;
+  }
+
+  const unitPrice = rawUnitPrice ? parseNumber(rawUnitPrice) : undefined;
+  const totalPrice = rawTotalPrice ? parseNumber(rawTotalPrice) : undefined;
 
   return {
-    number: number?.trim(),
-    designation: rawDesignation.trim(),
-    unit: unit.trim(),
-    quantity: parseNumber(rawQty),
-    unitPrice: parseNumber(rawUnitPrice),
-    totalPrice: parseNumber(rawTotalPrice),
+    id: id?.trim() || '',
+    designation: cleanDesignation(designation),
+    unit,
+    quantity,
+    unitPrice,
+    totalPrice,
+    dimensions: generateDimensionsFromQuantity(quantity, unit),
+    metadata: {
+      unit:unit,
+      isSomElecFormat,
+      elementType: detectElementType(designation),
+      isFixedPrice: false,
+      originalLine: line,
+      section: getSection(id)
+    }
   };
 }
 
+// Helper functions
+function parseNumber(str: string): number | undefined {
+  if (!str) return undefined;
+  
+  // First remove any remaining whitespace
+  const cleanStr = str.replace(/\s/g, '');
+  
+  // Parse as float (handles both . and , decimals)
+  const num = parseFloat(cleanStr.replace(',', '.'));
+  
+  return isNaN(num) ? undefined : num;
+}
+
+function cleanDesignation(designation: string): string {
+  return designation
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/^\d+\.\d+\s*/, '')
+    .replace(/[^\w\sÀ-ÿ-]/g, ''); // Keep letters, numbers, spaces, and French chars
+}
+
+function getSection(id?: string): string {
+  if (!id) return 'Autre';
+  const sectionNum = parseInt(id.split('.')[0]);
+  const sections = [
+    'TRAVAUX PRELIMINAIRES',
+    'FONDATION',
+    'ELEVATION',
+    'TOITURE',
+    'REVETEMENT DES MURS',
+    'REVETEMENT DES SOLS',
+    'PLAFOND',
+    'HUISSERIE',
+    'ELECTRICITE',
+    'SANITAIRE',
+    'PEINTURE',
+    'AMENAGEMENT EXTERIEUR'
+  ];
+  return sections[sectionNum - 1] || 'Autre';
+}
 
 
 export const extractConstructionData = (text: string): CalculationResult[] => {
@@ -1448,15 +1578,13 @@ export const extractConstructionData = (text: string): CalculationResult[] => {
     .replace(/,(\d+)/g, '.$1')       // Convert commas to dots in decimals
     .replace(/(\d)\s(?=\d{3})/g, '$1'); // Remove thousand spaces
 
+  console.log("call splitRoughLines : ");
   const lines = splitRoughLines(normalizedText);
-
-  console.log("splitRoughLines : ");
   console.log(lines);
   const results: CalculationResult[] = [];
   for (const line of lines) {
     console.log("extractFields : ");
-    const fields = extractFields(line);
-    console.log(fields);
+    const fields = extractFields(line,false);
     if (fields) {
       const result = convertConstructionLineToCalculationResult(fields);
       if (result) results.push(result);
@@ -1475,27 +1603,26 @@ export const extractConstructionData = (text: string): CalculationResult[] => {
 export const convertConstructionLineToCalculationResult = (
   line: ConstructionLine
 ): CalculationResult | null => {
-
-  if (!line?.designation || !line?.quantity || !line?.unit) return null;
+  if (!line?.designation || line.quantity == null || !line?.unit) return null;
 
   try {
-    console.log("start convert to lines")
-    console.log(line)
     const computed = generateDimensionsFromQuantity(line.quantity, line.unit);
     const elementType = detectElementType(line.designation);
 
     const dimensions: CalculationResult["dimensions"] = {
-      length: computed.length,
-      width: computed.width,
-      height: computed.height,
-      count: computed.count,
+      length: line.dimensions?.length ?? computed.length,
+      width: line.dimensions?.width ?? computed.width,
+      height: line.dimensions?.height ?? computed.height,
+      count: computed.count ?? line.dimensions?.count,
     };
 
     const results: Record<string, number | string> = {
-      ...(computed.area ? { area: computed.area } : {}),
-      ...(computed.volume ? { volume: computed.volume } : {}),
-      ...(computed.weight ? { weight: computed.weight } : {}),
-      ...(computed.count ? { count: computed.count } : {}),
+      ...(computed.area != null ? { area: computed.area } : {}),
+      ...(computed.volume != null ? { volume: computed.volume } : {}),
+      ...(computed.weight != null ? { weight: computed.weight } : {}),
+      ...(computed.count != null ? { count: computed.count } : {}),
+      ...(line.unitPrice != null ? { unitPrice: line.unitPrice } : {}),
+      ...(line.totalPrice != null ? { totalPrice: line.totalPrice } : {}),
     };
 
     const metadata: CalculationResult["metadata"] = {
@@ -1503,6 +1630,8 @@ export const convertConstructionLineToCalculationResult = (
       sourceUnit: line.unit,
       description: line.designation,
       parsedAt: new Date().toISOString(),
+      isFixedPrice: line.unit === 'ff',
+      ...(line.metadata || {}),
       ...(computed.metadata || {}),
     };
 
@@ -1535,14 +1664,14 @@ export const convertConstructionLineToCalculationResult = (
  * @returns Array of normalized and enriched invoice lines
  */
 export const processConstructionLines = (
-  rawLines: ConstructionLine[]
-): InvoiceLine[] => {
+  rawLines: ConstructionLine[],
+  isSomElecFormat: boolean
+): CalculationResult[] => {
   return rawLines.map((line, index) => {
     try {
-      const mappedType = mapToElementType(line.designation);
+      const mappedType = mapToElementType(line.designation, isSomElecFormat);
       const detectedType = detectElementType(line.designation);
-      const elementType =
-        mappedType !== 'basic_calculator' ? mappedType : detectedType;
+      const elementType = mappedType !== 'basic_calculator' ? mappedType : detectedType;
 
       const dimensions = generateDimensionsFromQuantity(
         line.quantity,
@@ -1556,14 +1685,16 @@ export const processConstructionLines = (
         line.unitPrice ?? 0,
         {
           id: `line-${index + 1}`,
-          lineNumber: line.code,
+          lineNumber: line.number,
           metadata: {
             elementType,
             dimensions,
-            workType: getWorkTypeFromCode(line?.code || ""),
+            workType: getWorkTypeFromCode(line.number || ""),
             detectedType,
             mappedType,
             originalUnit: line.unit,
+            section: line.metadata?.section,
+            isSomElecFormat
           },
         }
       );
@@ -1596,45 +1727,159 @@ const isTextReadable = (text: string): boolean => {
   return meaningfulLines.length >= 2;
 };
 
+// Enhanced PDF parser with format detection
 export const parsePdf = async (file: File): Promise<CalculationResult[]> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pageTexts = await extractPdfText(pdf);
+    let fullText = pageTexts.join('\n\n');
+    
+    console.log("fulltext brute before proceessing :")
+    fullText = preprocessPdfText(fullText);
+      
+    if (!isTextReadable(fullText)) {
+      console.warn("Native text extraction insufficient, falling back to OCR");
+      fullText = await performOcrFallback(pdf);
+    }
+    
 
-    // Process pages in parallel for speed
-    const pageTexts = await Promise.all(
-      Array.from({ length: pdf.numPages }, async (_, idx) => {
-        const page = await pdf.getPage(idx + 1);
-        const content = await page.getTextContent();
+    // Detect format and parse accordingly
+    const isSomElecFormat = fullText.includes("SOMELEC") || fullText.includes("CONSULTATION RELATIVE");
+    console.log("splitRoughLines(fullText) :")
+    const lines = splitRoughLines(fullText);
+    //console.log(lines);
 
-        // Group items by line (y position) for better structure
+    const constructionLines = extractConstructionLines(lines, isSomElecFormat);
+    console.log(constructionLines);
+    
+    return constructionLines;
+    
+  } catch (error) {
+    console.error("PDF parsing failed:", error);
+    toast({ 
+      title: "Erreur d'Analyse", 
+      description: "Impossible de lire le fichier PDF",
+      variant: "destructive" 
+    });
+    return [];
+  }
+};
+/**
+ * Extracts text from PDF pages in parallel batches
+ */
+async function extractPdfText(pdf: any): Promise<string[]> {
+  const pageTexts: string[] = [];
+  const batchSize = 5;
+  
+  for (let i = 0; i < pdf.numPages; i += batchSize) {
+    const batchPromises = Array.from(
+      { length: Math.min(batchSize, pdf.numPages - i) },
+      async (_, idx) => {
+        const page = await pdf.getPage(i + idx + 1);
+        const content = await page.getTextContent({ disableCombineTextItems: false });
+        
+        // Group text items by vertical position
         const lines: Record<number, string[]> = {};
         content.items.forEach((item: any) => {
           const y = Math.floor(item.transform[5]);
-          if (!lines[y]) lines[y] = [];
-          lines[y].push(item.str);
+          (lines[y] ||= []).push(item.str);
         });
-
-        return Object.values(lines)
-          .map(lineItems => lineItems.join(' '))
-          .join('\n');
-      })
+        
+        return Object.values(lines).map(items => items.join(' ')).join('\n');
+      }
     );
+    
+    pageTexts.push(...await Promise.all(batchPromises));
+  }
+  
+  return pageTexts;
+}
 
-    let fullText = pageTexts.join('\n\n');
+/**
+ * OCR fallback implementation
+ */
+async function performOcrFallback(pdf: any): Promise<string> {
+  const worker = await tesseract.createWorker('fra+eng', 1, {
+    logger: m => console.debug(m),
+    preserve_interword_spaces: 1,
+    tessedit_pageseg_mode: 6,  // Assume single uniform block of text
+  });
 
-    if (!isTextReadable(fullText)) {
-      console.warn("PDF extraction failed, switching to OCR.");
-      fullText = await renderPdfPagesForOcr(pdf); // run OCR
+  let ocrText = '';
+  
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { willReadFrequently: true })!;
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+      
+      const { data } = await worker.recognize(canvas);
+      if (data?.text) {
+        ocrText += postProcessOcrText(data.text) + '\n';
+      }
+    }
+  } finally {
+    await worker.terminate();
+  }
+
+  return ocrText;
+}
+/**
+ * Preprocesses extracted PDF text for better parsing
+ */
+function preprocessPdfText(text: string): string {
+  return text
+    .replace(/Article\s+Désignation\s+Unité\s+Quantité\s+Px\s+Unit\s+Px\s+Total/gi, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\|/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .replace(/,(\d+)/g, '.$1')
+    .replace(/(\d)\s(?=\d{3})/g, '$1');
+}
+
+// Enhanced line extraction with format awareness
+function extractConstructionLines(lines: string[], isSomElecFormat: boolean): CalculationResult[] {
+  const results: CalculationResult[] = [];
+  let currentSection = "Autre";
+
+  for (const line of lines) {
+    // Handle section headers for both formats
+    if (isSomElecFormat) {
+      const sectionMatch = line.match(/^([A-Z]+)\s/);
+      if (sectionMatch) {
+        currentSection = line.trim();
+        continue;
+      }
+    } else {
+      const lotMatch = line.match(/^##\s*LOT\s*\d+\s*:\s*(.*)/i);
+      if (lotMatch) {
+        currentSection = `LOT ${lotMatch[1].trim()}`;
+        continue;
+      }
     }
 
-    return extractConstructionData(fullText);
-  } catch (error) {
-    console.error("PDF parsing failed:", error);
-    throw new Error("Impossible de lire le fichier PDF.");
+    const fields = extractFields(line, isSomElecFormat);
+    if (fields) {
+      const result = convertConstructionLineToCalculationResult(fields);
+      results.push({
+        ...result,
+        metadata: {
+          ...fields.metadata,
+          section: currentSection
+        }
+      });
+    }
   }
-};
 
+  return results;
+}
 
 // Helper function to enhance image contrast for OCR
 const enhanceContrast = (imageData: ImageData) => {

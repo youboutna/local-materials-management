@@ -11,37 +11,34 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Calculator,
-  Upload,
-  X,
-  Trash2,
-  Download,
-  SkipForward,
-} from "lucide-react";
+import { Calculator, Upload, X, Trash2, Download, SkipForward, SkipBack } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
-import Tesseract from "tesseract.js";
 import Papa from "papaparse";
 import { toast } from "@/hooks/use-toast";
-import { calculateAdvancedQuantities, parsePdf, parseDocument } from "@/utils/btpCalculations";
-import { detectElementType, CalculationParams,mapToElementType } from "@/utils/types";
-import {
-  Opening,
-  CalculationResult,
-  InvoiceLine,
-  STANDARD_OPENINGS,
-  elementTypes,
-} from "@/utils/types";
+import { calculateAdvancedQuantities, parsePdf } from "@/utils/btpCalculations";
+import { CalculationParams, mapToElementType, elementTypes, Opening, CalculationResult, InvoiceLine, STANDARD_OPENINGS } from "@/utils/types";
 
 // PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  window.location.origin + "/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc = window.location.origin + "/pdf.worker.min.js";
+
+const DEFAULT_FORM = {
+  elementType: "basic_calculator",
+  length: 0,
+  width: 0,
+  height: 0,
+  area: 0,
+  count: 0,
+  capacity: 0,
+  depth: 0,
+  openings: [] as Opening[],
+  dosage: 350,
+  thickness: 0.02,
+};
 
 const getElementLabel = (value: string) => {
   const found = elementTypes.find(e => e.value === value);
   return found ? found.label : value;
 };
-
 const getRecommendations = (elementType: string) => {
   switch (elementType) {
     case "concrete_slab":
@@ -254,32 +251,14 @@ const getRecommendations = (elementType: string) => {
   }
 };
 
+
 const AdvancedQuantityCalculator: React.FC = () => {
-  // State
-  const [form, setForm] = useState({
-    elementType: "basic_calculator",
-    length: 0,
-    width: 0,
-    height: 0,
-    area: 0,
-    count: 0,
-    capacity: 0,
-    depth: 0,
-    openings: [] as Opening[],
-    dosage: 350, // Default concrete dosage
-    thickness: 0.02, // Default thickness for plaster/mortar
-  });
+  const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [currentOpening, setCurrentOpening] = useState<Opening>({ id: "", label: "", length: 0, width: 0, height: 0 });
   const [showOpeningForm, setShowOpeningForm] = useState(false);
-  const [currentOpening, setCurrentOpening] = useState<Opening>({
-    id: "",
-    label: "",
-    length: 0,
-    width: 0,
-    height: 0,
-  });
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -299,35 +278,18 @@ const AdvancedQuantityCalculator: React.FC = () => {
   const [showEditOpeningForm, setShowEditOpeningForm] = useState(false);
   const [planMessage, setPlanMessage] = useState<string | null>(null);
 
-  // Derived values
-  const currentElement = elementTypes.find(
-    (el) => el.value === form.elementType
-  );
+
+  const currentElement = elementTypes.find(el => el.value === form.elementType);
 
   const hasRequiredDimensions = useCallback(() => {
     if (!currentElement) return false;
-    return currentElement.requires.every((req) => {
+    return currentElement.requires.every(req => {
       const value = form[req as keyof typeof form];
-      return typeof value === 'number' && value > 0;
+      return typeof value === "number" && value > 0;
     });
   }, [currentElement, form]);
 
-  // Handlers
-  const resetForm = () => {
-    setForm({
-      elementType: "basic_calculator",
-      length: 0,
-      width: 0,
-      height: 0,
-      area: 0,
-      count: 0,
-      capacity: 0,
-      depth: 0,
-      openings: [],
-      dosage: 350,
-      thickness: 0.02,
-    });
-  };
+  const resetForm = () => setForm(DEFAULT_FORM);
 
   const fillFormWithLine = useCallback((index: number) => {
     if (index >= invoiceLines.length) return;
@@ -335,8 +297,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
     resetForm();
     const detectedType = mapToElementType(line.designation || "");
     const updates: Partial<typeof form> = { elementType: detectedType };
-    
-    // Handle different unit types
+
     switch (line.unit?.toLowerCase()) {
       case "m²":
         updates.area = line.quantity;
@@ -357,31 +318,22 @@ const AdvancedQuantityCalculator: React.FC = () => {
       default:
         updates.length = line.quantity;
     }
-    
-    setForm((prev) => ({ ...prev, ...updates }));
+    setForm(prev => ({ ...prev, ...updates }));
   }, [invoiceLines]);
 
   const addOpening = () => {
     if (currentOpening.length <= 0 || currentOpening.width <= 0) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer des dimensions valides pour l'ouverture",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Dimensions invalides pour l'ouverture", variant: "destructive" });
       return;
     }
-    
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
       openings: [
         ...prev.openings,
         {
           ...currentOpening,
           id: Math.random().toString(36).substring(7),
-          height:
-            form.elementType === "concrete_slab"
-            ? currentOpening.height || form.height 
-            : undefined,
+          height: form.elementType === "concrete_slab" ? currentOpening.height || form.height : undefined,
         },
       ],
     }));
@@ -390,59 +342,31 @@ const AdvancedQuantityCalculator: React.FC = () => {
   };
 
   const removeOpening = (id: string) => {
-    setForm((prev) => ({
-      ...prev,
-      openings: prev.openings.filter((o) => o.id !== id),
-    }));
+    setForm(prev => ({ ...prev, openings: prev.openings.filter(o => o.id !== id) }));
   };
 
   const handleCalculate = () => {
     if (!hasRequiredDimensions()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir toutes les dimensions requises",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Veuillez remplir toutes les dimensions requises", variant: "destructive" });
       return;
     }
-
     try {
-  
-      console.log("handleCalculate: ");
-        console.log(form.elementType);
-
       const params: CalculationParams = {
         elementType: form.elementType,
         length: form.length,
         width: form.width || undefined,
         height: form.height || undefined,
         options: {
-          openings: ["concrete_slab", "masonry_wall"].includes(form.elementType) 
-            ? form.openings 
-            : undefined,
+          openings: ["concrete_slab", "masonry_wall"].includes(form.elementType) ? form.openings : undefined,
           dosage: form.dosage,
           thickness: form.thickness,
-        }
+        },
       };
-
       const result = calculateAdvancedQuantities(params);
-      console.log(result);
-      
-      setCalculations((prev) => [...prev, {
-        ...result,
-        timestamp: new Date().toISOString(),
-        elementLabel:form.elementType
-      }]);
-      
+      setCalculations(prev => [...prev, { ...result, timestamp: new Date().toISOString(), elementLabel: form.elementType }]);
       resetForm();
-      
     } catch (error) {
-      console.error("Calculation error:", error);
-      toast({
-        title: "Erreur de calcul",
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur de calcul", description: error instanceof Error ? error.message : "Erreur inconnue", variant: "destructive" });
     }
   };
 
@@ -450,26 +374,19 @@ const AdvancedQuantityCalculator: React.FC = () => {
     setCalculations((prev) => prev.filter((_, i) => i !== index));
   };
 
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
-    
     setIsProcessing(true);
+    toast({ title: "Import en cours", description: "Analyse du fichier PDF..." });
     try {
       const parsedLines = await parsePdf(e.target.files[0]);
       if (parsedLines.length > 0) {
+       //setInvoiceLines(parsedLines);
         setCalculations(parsedLines);
-        toast({
-          title: "Import réussi",
-          description: `${parsedLines.length} éléments importés depuis le PDF`,
-        });
+        toast({ title: "Import réussi", description: `${parsedLines.length} lignes importées` });
       }
-    } catch (error) {
-      toast({
-        title: "Erreur d'import",
-        description: "Échec de l'analyse du PDF",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Erreur d'import", description: "Impossible d'analyser le PDF", variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -477,34 +394,29 @@ const AdvancedQuantityCalculator: React.FC = () => {
 
   const exportToCSV = () => {
     if (calculations.length === 0) {
-      toast({ 
-        title: "Aucun calcul à exporter", 
-        variant: "destructive" 
-      });
+      toast({ title: "Aucun calcul à exporter", variant: "destructive" });
       return;
     }
-    
     const csvData = calculations.map((calc, i) => ({
-      "Ligne": i + 1,
-      "Élément": getElementLabel(calc.elementType),
+      Ligne: i + 1,
+      Élément: getElementLabel(calc.elementType),
+      Désignation: calc.originalLabel || "",
       "Longueur (m)": calc.dimensions.length ?? "",
       "Largeur (m)": calc.dimensions.width ?? "",
       "Hauteur (m)": calc.dimensions.height ?? "",
       "Surface (m²)": calc.dimensions.length && calc.dimensions.width ? (calc.dimensions.length * calc.dimensions.width).toFixed(2) : "",
-      "Quantité": calc.dimensions.count ?? "",
+      Quantité: calc.dimensions.count ?? "",
       ...calc.results,
     }));
-    
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `calculs_quantitatifs_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `calculs_quantitatifs_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
-
   const handleEdit = (i: number) => {
     const calc = calculations[i];
     setEditIndex(i);
@@ -548,248 +460,84 @@ const AdvancedQuantityCalculator: React.FC = () => {
   }, [invoiceLines, fillFormWithLine]);
 
   useEffect(() => {
-    if (["concrete_slab", "masonry_wall"].includes(form.elementType) && 
-        form.openings.length === 0) {
+    if (["concrete_slab", "masonry_wall"].includes(form.elementType) && form.openings.length === 0) {
       setForm(f => ({ ...f, openings: STANDARD_OPENINGS }));
     }
   }, [form.elementType]);
 
-
   return (
     <div className="space-y-6">
+      {/* Top form card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" /> Calculateur de Métrés Avancé
-          </CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle><Calculator className="h-5 w-5 inline-block mr-2" />Calculateur de Métrés Avancé</CardTitle></CardHeader>
         <CardContent>
+          {/* Type + dimensions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label>Type d'élément</Label>
-              <Select
-                value={form.elementType}
-                onValueChange={(v) => setForm(f => ({ ...f, elementType: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={form.elementType} onValueChange={v => setForm(f => ({ ...f, elementType: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {elementTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
+                  {elementTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            
+            {/* Length */}
             <div>
               <Label>Longueur (m)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={form.length || ""}
-                onChange={(e) => setForm(f => ({ 
-                  ...f, 
-                  length: parseFloat(e.target.value) || 0 
-                }))}
-                placeholder="0.00"
-              />
+              <Input type="number" step="0.01" min="0.01" value={form.length || ""} onChange={e => setForm(f => ({ ...f, length: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
             </div>
-            
             {currentElement && currentElement.requires.includes("width") && (
               <div>
                 <Label>Largeur (m)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={form.width || ""}
-                  onChange={(e) => setForm(f => ({ 
-                    ...f, 
-                    width: parseFloat(e.target.value) || 0 
-                  }))}
-                  placeholder="0.00"
-                />
+                <Input type="number" step="0.01" min="0.01" value={form.width || ""} onChange={e => setForm(f => ({ ...f, width: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
               </div>
             )}
-            
             {currentElement && currentElement.requires.includes("height") && (
               <div>
                 <Label>Hauteur (m)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={form.height || ""}
-                  onChange={(e) => setForm(f => ({ 
-                    ...f, 
-                    height: parseFloat(e.target.value) || 0 
-                  }))}
-                  placeholder="0.00"
-                />
-              </div>
-            )}
-            
-            {["concrete_slab", "concrete_column", "concrete_beam", "concrete_mix"].includes(form.elementType) && (
-              <div>
-                <Label>Dosage ciment (kg/m³)</Label>
-                <Input
-                  type="number"
-                  min="200"
-                  max="500"
-                  step="25"
-                  value={form.dosage}
-                  onChange={(e) => setForm(f => ({ 
-                    ...f, 
-                    dosage: parseFloat(e.target.value) || 350 
-                  }))}
-                />
-              </div>
-            )}
-            
-            {["plaster", "brick_joints"].includes(form.elementType) && (
-              <div>
-                <Label>Épaisseur (m)</Label>
-                <Input
-                  type="number"
-                  step="0.005"
-                  min="0.005"
-                  max="0.1"
-                  value={form.thickness}
-                  onChange={(e) => setForm(f => ({ 
-                    ...f, 
-                    thickness: parseFloat(e.target.value) || 0.02 
-                  }))}
-                />
+                <Input type="number" step="0.01" min="0.01" value={form.height || ""} onChange={e => setForm(f => ({ ...f, height: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
               </div>
             )}
           </div>
 
+          {/* Openings */}
           {(form.elementType === "concrete_slab" || form.elementType === "masonry_wall") && (
             <div className="mt-4">
-              <Label>Ouvertures à déduire</Label>
+              <Label>Ouvertures</Label>
               <div className="space-y-2">
-                {form.openings.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {form.openings.map((o) => (
-                      <Badge key={o.id} variant="outline" className="flex items-center gap-1">
-                        {o.length}m x {o.width}m {o.height ? `x ${o.height}m` : ""}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          aria-label="Supprimer ouverture"
-                          onClick={() => removeOpening(o.id)}
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                
+                {form.openings.map(o => (
+                  <Badge key={o.id} variant="outline">
+                    {o.length}m × {o.width}m {o.height ? `× ${o.height}m` : ""}
+                    <Button size="icon" variant="ghost" onClick={() => removeOpening(o.id)}><X className="w-3 h-3" /></Button>
+                  </Badge>
+                ))}
                 {!showOpeningForm ? (
-                  <Button onClick={() => setShowOpeningForm(true)}>
-                    Ajouter une ouverture
-                  </Button>
+                  <Button onClick={() => setShowOpeningForm(true)}>Ajouter ouverture</Button>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 items-end mt-2">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Longueur (m)"
-                      value={currentOpening.length || ""}
-                      onChange={(e) => setCurrentOpening(prev => ({
-                        ...prev,
-                        length: parseFloat(e.target.value) || 0,
-                      }))}
-                    />
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Largeur (m)"
-                      value={currentOpening.width || ""}
-                      onChange={(e) => setCurrentOpening(prev => ({
-                        ...prev,
-                        width: parseFloat(e.target.value) || 0,
-                      }))}
-                    />
+                  <div className="grid grid-cols-3 gap-2 items-end">
+                    <Input type="number" step="0.01" min="0" placeholder="L" value={currentOpening.length || ""} onChange={e => setCurrentOpening(o => ({ ...o, length: parseFloat(e.target.value) || 0 }))} />
+                    <Input type="number" step="0.01" min="0" placeholder="l" value={currentOpening.width || ""} onChange={e => setCurrentOpening(o => ({ ...o, width: parseFloat(e.target.value) || 0 }))} />
                     {form.elementType === "concrete_slab" && (
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="Hauteur (m)"
-                        value={currentOpening.height || ""}
-                        onChange={(e) => setCurrentOpening(prev => ({
-                          ...prev,
-                          height: parseFloat(e.target.value) || 0,
-                        }))}
-                      />
+                      <Input type="number" step="0.01" min="0" placeholder="h" value={currentOpening.height || ""} onChange={e => setCurrentOpening(o => ({ ...o, height: parseFloat(e.target.value) || 0 }))} />
                     )}
-                    <Button variant="outline" onClick={addOpening} className="col-span-1">
-                      Ajouter
-                    </Button>
-                    <Button variant="ghost" onClick={() => setShowOpeningForm(false)} className="col-span-1">
-                      Annuler
-                    </Button>
+                    <Button variant="outline" onClick={addOpening}>Ajouter</Button>
                   </div>
                 )}
               </div>
             </div>
           )}
 
+          {/* Actions */}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button
-              variant="default"
-              onClick={handleCalculate}
-              disabled={!hasRequiredDimensions()}
-            >
-              <Calculator className="w-4 h-4 mr-2" />
-              Calculer et ajouter
-            </Button>
-            <Button variant="secondary" onClick={resetForm}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Réinitialiser
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {isProcessing ? "Traitement..." : "Importer PDF"}
-            </Button>
-            <input
-              type="file"
-              accept="application/pdf"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-            />
-            <Button
-              variant="outline"
-              disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length}
-              onClick={() => {
-                fillFormWithLine(currentLineIndex + 1);
-                setCurrentLineIndex(i => i + 1);
-              }}
-            >
-              <SkipForward className="w-4 h-4 mr-2" />
-              Remplir ligne suivante
-            </Button>
-            <Button variant="destructive" onClick={() => setCalculations([])}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Tout effacer
-            </Button>
-            <Button variant="default" onClick={exportToCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Exporter CSV
-            </Button>
+            <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
+            <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer PDF"}</Button>
+            <input type="file" accept="application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+            <Button variant="outline" disabled={currentLineIndex <= 0} onClick={() => { fillFormWithLine(currentLineIndex - 1); setCurrentLineIndex(i => i - 1); }}><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
+            <Button variant="outline" disabled={invoiceLines.length === 0 || currentLineIndex >= invoiceLines.length - 1} onClick={() => { fillFormWithLine(currentLineIndex + 1); setCurrentLineIndex(i => i + 1); }}><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
+            <Button variant="destructive" onClick={() => setCalculations([])}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
+            <Button variant="default" onClick={exportToCSV}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
           </div>
         </CardContent>
       </Card>
@@ -802,8 +550,8 @@ const AdvancedQuantityCalculator: React.FC = () => {
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                   <tr>{/* No whitespace here */}
                     <th className=" border border-gray-200 px-1 py-1 ">#</th>
                     <th className="border border-gray-200 px-1 py-1 uppercase">Élément</th>
@@ -811,10 +559,10 @@ const AdvancedQuantityCalculator: React.FC = () => {
                      <th className="border border-gray-200 px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
                     <th className="border border-gray-300 px-2 py-1 uppercase">Calculs</th>
                     <th className="border border-gray-300 px-2 py-1 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {calculations.map((calc, i) => (
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {calculations.map((calc, i) => (
                     <tr key={i}>{/* No whitespace here */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -846,6 +594,13 @@ const AdvancedQuantityCalculator: React.FC = () => {
                               </span>
                             </div>
                           ))}
+                          <div>
+                          {calc?.metadata && Object.entries(calc.metadata).map(([key, value]) => (
+                            <div key={key}>
+                              <strong>{key}:</strong> {String(value)}
+                            </div>
+                          ))}
+                        </div>
                         </div>
                         {getRecommendations(calc.elementType) && (
                           <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
@@ -1018,10 +773,10 @@ const AdvancedQuantityCalculator: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             </div>
           </CardContent>
         </Card>

@@ -643,7 +643,7 @@ export const detectElementType = (designation: string): ElementType => {
  * @param desc 
  * @returns 
  */
-export const mapToElementType = (desc: string) => {
+export const mapToElementType = (desc: string, isSomElecFormat: boolean = false) => {
   const d = desc.toLowerCase();
   
   // Check for unit patterns
@@ -659,6 +659,15 @@ export const mapToElementType = (desc: string) => {
   if (d.includes("ardoise") && unit === "m²") return "synthetic_slate_roof";
   if (d.includes("faitage") && unit === "ml") return "zinc_ridge";
 
+  
+  // Special handling for SomElec format items
+  if (isSomElecFormat) {
+    if (d.includes("fouilles en puits")) return "deep_excavation";
+    if (d.includes("béton de propreté")) return "lean_concrete";
+    if (d.includes("dallage en fer")) return "reinforced_slab";
+    if (d.includes("toiture en bac acier")) return "metal_roof";
+  }
+  
   // Fallback to standard mapping
   const found = elementTypes.find(
     et =>
