@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from './TenderQuantitativeEstimate';
+import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 
 interface TenderDocumentManagerProps {
   tenderId: string;
