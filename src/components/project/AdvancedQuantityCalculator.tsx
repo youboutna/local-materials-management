@@ -404,14 +404,16 @@ const AdvancedQuantityCalculator: React.FC = () => {
     }
     const csvData = calculations.map((calc, i) => ({
       Ligne: i + 1,
-      Élément: getElementLabel(calc.elementType),
+      Élément: getElementLabel(calc.elementType || 'basic_calculator'),
       Désignation: calc.originalLabel || "",
-      "Longueur (m)": calc.dimensions.length ?? "",
-      "Largeur (m)": calc.dimensions.width ?? "",
-      "Hauteur (m)": calc.dimensions.height ?? "",
-      "Surface (m²)": calc.dimensions.length && calc.dimensions.width ? (calc.dimensions.length * calc.dimensions.width).toFixed(2) : "",
-      Quantité: calc.dimensions.count ?? "",
-      ...calc.results,
+      "Longueur (m)": calc.dimensions?.length ?? "",
+      "Largeur (m)": calc.dimensions?.width ?? "",
+      "Hauteur (m)": calc.dimensions?.height ?? "",
+      "Surface (m²)": (calc.dimensions?.length != null && calc.dimensions?.width != null)
+        ? (calc.dimensions.length * calc.dimensions.width).toFixed(2)
+        : "",
+      Quantité: calc.dimensions?.count ?? "",
+      ...calc.results || {},
     }));
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -426,9 +428,9 @@ const AdvancedQuantityCalculator: React.FC = () => {
     const calc = calculations[i];
     setEditIndex(i);
     setEditForm({
-      length: calc.dimensions.length || 0,
-      width: calc.dimensions.width || 0,
-      height: calc.dimensions.height || 0,
+      length: calc.dimensions?.length || 0,
+      width: calc.dimensions?.width || 0,
+      height: calc.dimensions?.height || 0,
       openings: calc.openings ? [...calc.openings] : [],
     });
   };
@@ -438,7 +440,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
     
     const calc = calculations[editIndex];
     const params: CalculationParams = {
-      elementType: calc.elementType,
+      elementType: calc.elementType || form.elementType,
       length: editForm.length,
       width: editForm.width || undefined,
       height: editForm.height || undefined,
@@ -582,13 +584,13 @@ const AdvancedQuantityCalculator: React.FC = () => {
                     <tr key={i}>{/* No whitespace here */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{i + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getElementLabel(calc.elementType)
+                        {getElementLabel(calc.elementType || 'basic_calculator')
                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {calc?.dimensions.length?.toFixed(2)}m
-                        {calc.dimensions.width ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
-                        {calc.dimensions.height ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
+                        {calc.dimensions?.length != null ? `${calc.dimensions.length.toFixed(2)}m` : ''}
+                        {calc.dimensions?.width != null ? ` × ${calc.dimensions.width.toFixed(2)}m` : ''}
+                        {calc.dimensions?.height != null ? ` × ${calc.dimensions.height.toFixed(2)}m` : ''}
                         {calc.openings && calc.openings.length > 0 && (
                           <div className="text-xs text-gray-400 mt-1">
                             Ouvertures: {calc.openings.map(o => 
@@ -599,7 +601,7 @@ const AdvancedQuantityCalculator: React.FC = () => {
                       </td>
                        <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="space-y-1">
-                          {Object.entries(calc.results).map(([key, value]) => (
+                          {Object.entries(calc.results || {}).map(([key, value]) => (
                             <div key={key} className="flex justify-between">
                               <span className="font-medium">{key}</span>
                               <span>
@@ -617,10 +619,10 @@ const AdvancedQuantityCalculator: React.FC = () => {
                           ))}
                         </div>
                         </div>
-                        {getRecommendations(calc.elementType) && (
+                        {getRecommendations(calc.elementType || 'basic_calculator') && (
                           <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
                             <div className="font-medium">Recommandations:</div>
-                            {getRecommendations(calc.elementType)}
+                            {getRecommendations(calc.elementType || 'basic_calculator')}
                           </div>
                         )}
                       </td>

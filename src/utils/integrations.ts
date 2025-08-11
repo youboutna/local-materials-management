@@ -35,15 +35,17 @@ export async function parseInvoiceFromPdf(file: File): Promise<InvoiceLine[]> {
 export function exportCalculationsToCSV(calculations: CalculationResult[]) {
   const csvData = calculations.map((calc, i) => ({
     "N°": i + 1,
-    "Type d'élément": calc.elementType,
-    "Longueur (m)": calc.dimensions.length || "",
-    "Largeur (m)": calc.dimensions.width || "",
-    "Hauteur (m)": calc.dimensions.height || "",
-    "Surface (m²)": calc.dimensions.length && calc.dimensions.width ? (calc.dimensions.length * calc.dimensions.width).toFixed(2) : "",
-    "Quantité": calc.dimensions.count || "",
+    "Type d'élément": calc.elementType || "",
+    "Longueur (m)": calc.dimensions?.length || "",
+    "Largeur (m)": calc.dimensions?.width || "",
+    "Hauteur (m)": calc.dimensions?.height || "",
+    "Surface (m²)": (calc.dimensions?.length && calc.dimensions?.width)
+      ? ((calc.dimensions.length as number) * (calc.dimensions.width as number)).toFixed(2)
+      : "",
+    "Quantité": calc.dimensions?.count || "",
     "Capacité": "",
     "Profondeur (m)": "",
-    ...calc.results,
+    ...calc.results || {},
   }));
 
   const csv = Papa.unparse(csvData);
