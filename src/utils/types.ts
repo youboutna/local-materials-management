@@ -9,7 +9,7 @@ export interface Opening {
 
 //données pour métrés
 export interface Dimensions {
-  length: number;
+  length?: number;
   width?: number;
   height?: number;
   area?: number;
@@ -24,25 +24,29 @@ export interface Dimensions {
 export interface CalculationResult {
  
   originalLabel?: string;
-  elementType: string;
-  dimensions: Dimensions;
+  elementType?: string;
+  dimensions?: Dimensions;
   openings?: Opening[];
-  results: Record<string, number | string>;
+  results?: Record<string, number | string>;
   metadata?: {
-    sourceUnit?:string;
-    workType?:string;
-    parsedAt?:string;
-    type?:string;
-    unitWeights?:number;
+    sourceUnit?: string;
+    workType?: string;
+    parsedAt?: string;
+    type?: string;
+    unitWeights?: number;
     unit?: string;
     description?: string;
-    coverageRate?:number;
+    coverageRate?: number;
     currency?: string | null;
     status?: string;
     created_at?: string;
     updated_at?: string;
     tax_rate?: number | null;
     tax_amount?: number | null;
+    // Extended optional fields used by parsers
+    isFixedPrice?: boolean;
+    section?: string;
+    originalUnit?: string;
   };
 }
 export interface MasonryMaterials extends CalculationResult {
@@ -145,8 +149,8 @@ export interface InvoiceLine {
   designation: string;
   unit?: string;           // unite
   quantity: number;       // quantite
-  unitPrice: number;      // prixUnitaire
-  totalPrice: number;     // prixTotal
+  unitPrice?: number;      // prixUnitaire
+  totalPrice?: number;     // prixTotal
   currency?: string | null;
   status?: string;
   created_at?: string;
@@ -154,6 +158,7 @@ export interface InvoiceLine {
   tax_rate?: number | null;
   tax_amount?: number | null;
   metadata?: Record<string, any>;
+  dimensions?: Dimensions;
 }
 
 export const STANDARD_OPENINGS = [
