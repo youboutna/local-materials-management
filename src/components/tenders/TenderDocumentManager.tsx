@@ -148,10 +148,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       let estimateId: string | null = null;
       let addedCount = 0;
       try {
-        const isDqePdf =
-          documentData.category === 'financial' &&
-          documentData.subcategory === 'devis_quantitatif_estimatif' &&
-          file.type === 'application/pdf';
+         const isDqePdf =
+           documentData.subcategory === 'devis_quantitatif_estimatif' &&
+           file.type === 'application/pdf';
 
         if (isDqePdf) {
           // Find existing estimate or create one
@@ -259,13 +258,14 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       return { document, tenderDoc, estimateId, addedCount };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
-      if (data?.estimateId) {
-        queryClient.invalidateQueries({ queryKey: ['tender-estimates', tenderId] });
-        queryClient.invalidateQueries({ queryKey: ['estimate-items', data.estimateId] });
-      }
-      toast({
+     onSuccess: (data) => {
+       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
+       if (data?.estimateId) {
+         queryClient.invalidateQueries({ queryKey: ['tender-estimates', tenderId] });
+         queryClient.invalidateQueries({ queryKey: ['enhanced-tender-estimates', tenderId] });
+         queryClient.invalidateQueries({ queryKey: ['estimate-items', data.estimateId] });
+       }
+       toast({
         title: 'Document ajouté',
         description: data?.addedCount && data.addedCount > 0
           ? `DQE analysé: ${data.addedCount} articles ajoutés au devis.`
@@ -350,16 +350,20 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     return tenderDocuments?.filter(doc => doc.category === category) || [];
   };
 
-  const handleSubcategoryChange = (value: TenderDocumentSubcategory) => {
-    setUploadFormData(prev => ({ ...prev, subcategory: value }));
-    
-    // Show quantitative estimate component for "devis_quantitatif_estimatif"
-    if (value === 'devis_quantitatif_estimatif') {
-      setShowQuantitativeEstimate(true);
-    } else {
-      setShowQuantitativeEstimate(false);
-    }
-  };
+   const handleSubcategoryChange = (value: TenderDocumentSubcategory) => {
+     setUploadFormData(prev => ({ 
+       ...prev, 
+       subcategory: value,
+       category: value === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
+     }));
+     
+     // Show quantitative estimate component for "devis_quantitatif_estimatif"
+     if (value === 'devis_quantitatif_estimatif') {
+       setShowQuantitativeEstimate(true);
+     } else {
+       setShowQuantitativeEstimate(false);
+     }
+   };
 
   if (isLoading) {
     return (
