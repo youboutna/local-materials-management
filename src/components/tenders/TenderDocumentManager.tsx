@@ -144,13 +144,132 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
       console.log('Tender document created:', tenderDoc);
 
-      return { document, tenderDoc };
+      // Hook: if DQE PDF uploaded under financial category, parse and auto-add items
+      let estimateId: string | null = null;
+      let addedCount = 0;
+      try {
+        const isDqePdf =
+          documentData.category === 'financial' &&
+          documentData.subcategory === 'devis_quantitatif_estimatif' &&
+          file.type === 'application/pdf';
+
+        if (isDqePdf) {
+          // Find existing estimate or create one
+          const { data: existingEstimates, error: findErr } = await supabase
+            .from('tender_estimates')
+            .select('id')
+            .eq('tender_id', tenderId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (findErr) console.warn('Failed to check existing estimates:', findErr);
+
+          if (existingEstimates && existingEstimates.length > 0) {
+            estimateId = existingEstimates[0].id as string;
+          } else {
+            const { data: newEst, error: createEstError } = await supabase
+              .from('tender_estimates')
+              .insert([
+                {
+                  tender_id: tenderId,
+                  project_id: projectId || null,
+                  estimate_type: 'quantitative',
+                  total_materials_cost: 0,
+                  total_labor_cost: 0,
+                  total_equipment_cost: 0,
+                  subtotal: 0,
+                  tax_rate: 14,
+                  tax_amount: 0,
+                  total_with_tax: 0,
+                  overhead_percentage: 15,
+                  overhead_amount: 0,
+                  profit_margin_percentage: 10,
+                  profit_margin_amount: 0,
+                  final_total: 0,
+                  currency: 'MRU',
+                  status: 'draft'
+                }
+              ])
+              .select()
+              .single();
+            if (createEstError) throw createEstError;
+            estimateId = newEst?.id || null;
+          }
+
+          if (estimateId) {
+            const parsedResults = await parsePdf(file);
+
+            // Normalize each line via calculateAdvancedQuantities when possible
+            const normalized = parsedResults.map((r) => {
+              try {
+                return calculateAdvancedQuantities({
+                  elementType: (r as any).elementType,
+                  length: r.dimensions?.length ?? 0,
+                  width: r.dimensions?.width,
+                  height: r.dimensions?.height,
+                  quantity:
+                    (typeof (r.results as any)?.count === 'number' ? (r.results as any).count : undefined) ??
+                    (typeof r.dimensions?.count === 'number' ? (r.dimensions as any).count : undefined) ??
+                    1,
+                  options: {}
+                });
+              } catch (_) {
+                return r;
+              }
+            });
+
+            const items = normalized
+              .map((res) => {
+                const results: any = res.results || {};
+                const qty =
+                  (typeof results.count === 'number' && results.count) ||
+                  (typeof results.area === 'number' && results.area) ||
+                  (typeof results.volume === 'number' && results.volume) ||
+                  (res.dimensions?.count as number) ||
+                  1;
+                const unitPrice = typeof results.unitPrice === 'number' ? results.unitPrice : 0;
+                const totalPrice = typeof results.totalPrice === 'number' ? results.totalPrice : unitPrice * qty;
+                const description = res.originalLabel || res.metadata?.description || 'Ligne DQE';
+                return {
+                  estimate_id: estimateId!,
+                  material_id: null,
+                  quantity: Number.isFinite(qty) ? qty : 1,
+                  unit_price: Number.isFinite(unitPrice) ? unitPrice : 0,
+                  total_price: Number.isFinite(totalPrice) ? totalPrice : 0,
+                  description,
+                  item_type: 'material' as const
+                };
+              })
+              .filter((it) => it.quantity > 0);
+
+            if (items.length > 0) {
+              const { error: addItemsError } = await supabase
+                .from('tender_estimate_items')
+                .insert(items);
+              if (addItemsError) {
+                console.warn('Failed to insert estimate items from DQE:', addItemsError);
+              } else {
+                addedCount = items.length;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('DQE PDF auto-parse failed:', e);
+      }
+
+      return { document, tenderDoc, estimateId, addedCount };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });
+      if (data?.estimateId) {
+        queryClient.invalidateQueries({ queryKey: ['tender-estimates', tenderId] });
+        queryClient.invalidateQueries({ queryKey: ['estimate-items', data.estimateId] });
+      }
       toast({
         title: 'Document ajouté',
-        description: 'Le document a été téléchargé avec succès.',
+        description: data?.addedCount && data.addedCount > 0
+          ? `DQE analysé: ${data.addedCount} articles ajoutés au devis.`
+          : 'Le document a été téléchargé avec succès.',
       });
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
