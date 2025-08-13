@@ -55,6 +55,9 @@ interface TenderEstimate {
 }
 
 const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeEstimateProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { uploadFile, uploading } = useDocumentStorage();
   const [activeTab, setActiveTab] = useState('quantitative');
   const [isCreateEstimateOpen, setIsCreateEstimateOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
@@ -89,10 +92,6 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
     description: '',
     item_type: 'material'
   });
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { uploadFile, uploading } = useDocumentStorage();
 
   // Fetch existing estimates
   const { data: estimates, isLoading } = useQuery({
