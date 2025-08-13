@@ -403,21 +403,13 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               <TabsTrigger value="financial">Financières</TabsTrigger>
             </TabsList>
 
-            {(['administrative', 'technical', 'financial'] as TenderDocumentCategory[]).map((category) => (
+            {(['administrative', 'technical'] as TenderDocumentCategory[]).map((category) => (
               <TabsContent key={category} value={category} className="space-y-4">
                 <div className="mb-4">
                   <h3 className="text-lg font-medium text-adrar-800 mb-2">
                     {TENDER_CATEGORY_LABELS[category]}
                   </h3>
                 </div>
-
-                {/* Show Quantitative Estimate component for financial category */}
-                {category === 'financial' && (
-                  <TenderQuantitativeEstimate 
-                    tenderId={tenderId}
-                    projectId={projectId}
-                  />
-                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filterDocumentsByCategory(category).map((tenderDoc) => (
@@ -485,6 +477,97 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 )}
               </TabsContent>
             ))}
+
+            <TabsContent value="financial" className="space-y-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-medium text-adrar-800 mb-2">
+                  {TENDER_CATEGORY_LABELS['financial']}
+                </h3>
+              </div>
+              
+              <Tabs defaultValue="documents" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                  <TabsTrigger value="dqe">Devis Quantitatif Estimatif</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="documents" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filterDocumentsByCategory('financial').map((tenderDoc) => (
+                      <Card key={tenderDoc.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm mb-1">
+                                {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                              </h4>
+                              {tenderDoc.document?.title && (
+                                <p className="text-xs text-gray-600 mb-2">
+                                  {tenderDoc.document.title}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {tenderDoc.is_required && (
+                                <Badge variant="outline" className="text-xs">
+                                  Requis
+                                </Badge>
+                              )}
+                              <Badge className={getStatusColor(tenderDoc.status)}>
+                                <div className="flex items-center gap-1">
+                                  {getStatusIcon(tenderDoc.status)}
+                                  {tenderDoc.status === 'approved' ? 'Approuvé' : 
+                                   tenderDoc.status === 'rejected' ? 'Rejeté' : 
+                                   tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
+                                </div>
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          {tenderDoc.document?.description && (
+                            <p className="text-xs text-gray-600 mb-3">
+                              {tenderDoc.document.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <FileText className="h-3 w-3" />
+                              {tenderDoc.document?.file_name}
+                            </div>
+                            
+                            {tenderDoc.document?.file_url && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => tenderDoc.document?.file_url && window.open(tenderDoc.document.file_url, '_blank')}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                Voir
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {filterDocumentsByCategory('financial').length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p>Aucun document financier trouvé.</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="dqe" className="space-y-4">
+                  <TenderQuantitativeEstimate 
+                    tenderId={tenderId}
+                    projectId={projectId}
+                  />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

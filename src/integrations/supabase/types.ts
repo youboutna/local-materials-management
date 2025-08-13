@@ -2140,6 +2140,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          adresse: Json | null
           allows_initial_payment: boolean | null
           attribution_date: string | null
           budget: number
@@ -2147,14 +2148,17 @@ export type Database = {
           coordinates_latitude: number | null
           coordinates_longitude: number | null
           created_at: string
+          created_by: string | null
           current_phase: string | null
           current_stage: string | null
           description: string
           end_date: string | null
           financing_source: string | null
+          forme: string | null
           id: string
           initial_payment_percentage: number | null
           launch_date: string | null
+          localisation: Json | null
           location: string
           main_contractor: string | null
           market_type: string | null
@@ -2171,6 +2175,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          adresse?: Json | null
           allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget: number
@@ -2178,14 +2183,17 @@ export type Database = {
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
+          created_by?: string | null
           current_phase?: string | null
           current_stage?: string | null
           description: string
           end_date?: string | null
           financing_source?: string | null
+          forme?: string | null
           id?: string
           initial_payment_percentage?: number | null
           launch_date?: string | null
+          localisation?: Json | null
           location: string
           main_contractor?: string | null
           market_type?: string | null
@@ -2202,6 +2210,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          adresse?: Json | null
           allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget?: number
@@ -2209,14 +2218,17 @@ export type Database = {
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
+          created_by?: string | null
           current_phase?: string | null
           current_stage?: string | null
           description?: string
           end_date?: string | null
           financing_source?: string | null
+          forme?: string | null
           id?: string
           initial_payment_percentage?: number | null
           launch_date?: string | null
+          localisation?: Json | null
           location?: string
           main_contractor?: string | null
           market_type?: string | null
@@ -2232,7 +2244,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
       }
       prospect_subscription_requests: {
         Row: {
@@ -2616,6 +2636,33 @@ export type Database = {
           status?: string
           supplier_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      supplier_viewed_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          supplier_id: string
+          viewed_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          supplier_id: string
+          viewed_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          supplier_id?: string
+          viewed_at?: string
         }
         Relationships: []
       }
