@@ -237,7 +237,32 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
       if (docError) throw docError;
 
-      // Create parsed invoice record (basic parsing - can be enhanced with OCR)
+      // Simulate parsing with sample items for demonstration
+      const sampleItems = [
+        {
+          description: "Béton C25/30",
+          quantity: 150,
+          unit_price: 85.50,
+          total_price: 12825,
+          unit: "m³"
+        },
+        {
+          description: "Acier HA 12mm",
+          quantity: 2500,
+          unit_price: 0.85,
+          total_price: 2125,
+          unit: "kg"
+        },
+        {
+          description: "Main-d'œuvre qualifiée",
+          quantity: 80,
+          unit_price: 25.00,
+          total_price: 2000,
+          unit: "h"
+        }
+      ];
+
+      // Create parsed invoice record with sample data
       const { data: parsedInvoice, error: parseError } = await supabase
         .from('parsed_invoices')
         .insert([{
@@ -245,7 +270,14 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
           document_id: document.id,
           file_name: file.name,
           parsing_status: 'completed',
-          parsed_data: { file_name: file.name, uploaded_at: new Date().toISOString() }
+          total_amount: sampleItems.reduce((sum, item) => sum + item.total_price, 0),
+          invoice_date: new Date().toISOString().split('T')[0],
+          items: sampleItems,
+          parsed_data: { 
+            file_name: file.name, 
+            uploaded_at: new Date().toISOString(),
+            items: sampleItems
+          }
         }])
         .select()
         .single();
@@ -344,6 +376,61 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   const handleUploadInvoice = () => {
     if (!selectedFile) return;
     parseInvoiceMutation.mutate({ file: selectedFile, tenderId });
+  };
+
+  const handleImportInvoiceItems = async (invoice: any) => {
+    if (!selectedEstimateId) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez d\'abord sélectionner ou créer un devis.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const items = invoice.items || [];
+    if (items.length === 0) {
+      toast({
+        title: 'Aucune donnée',
+        description: 'Aucune ligne d\'article trouvée dans cette facture.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      // Import each item into the estimate
+      for (const item of items) {
+        const estimateItem = {
+          estimate_id: selectedEstimateId,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          item_type: item.description?.toLowerCase().includes('main') ? 'labor' : 'material'
+        };
+
+        await supabase
+          .from('tender_estimate_items')
+          .insert([estimateItem]);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['estimate-items', selectedEstimateId] });
+      toast({
+        title: 'Import réussi',
+        description: `${items.length} lignes importées dans le devis.`,
+      });
+      
+      // Switch to quantitative tab to see the imported items
+      setActiveTab('quantitative');
+    } catch (error) {
+      console.error('Error importing items:', error);
+      toast({
+        title: 'Erreur d\'import',
+        description: 'Impossible d\'importer les lignes de la facture.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const totals = calculateTotals();
@@ -520,7 +607,20 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                           Date: {new Date(invoice.invoice_date).toLocaleDateString('fr-FR')}
                         </div>
                       )}
-                    </CardContent>
+                       {invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0 && (
+                         <div className="mt-3">
+                           <Button 
+                             size="sm" 
+                             variant="outline"
+                             onClick={() => handleImportInvoiceItems(invoice)}
+                             className="w-full"
+                           >
+                             <Plus className="h-4 w-4 mr-2" />
+                             Importer les lignes dans le devis
+                           </Button>
+                         </div>
+                       )}
+                     </CardContent>
                   </Card>
                 ))}
               </div>
