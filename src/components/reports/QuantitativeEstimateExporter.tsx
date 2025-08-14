@@ -224,34 +224,34 @@ export function QuantitativeEstimateExporter({
     const totals = calculateTotals();
     
     return `
-      <div id="estimate-content" style="font-family: 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white; color: #333;">
+      <div id="estimate-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
         ${exportConfig.includeCompanyHeader ? `
         <!-- Company Header -->
-        <div style="border-bottom: 3px solid hsl(var(--primary)); padding-bottom: 20px; margin-bottom: 30px;">
+        <section class="page-break-section" style="border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; page-break-inside: avoid;">
           <div style="display: flex; justify-content: space-between; align-items: start;">
             <div>
-              <h1 style="color: hsl(var(--primary)); font-size: 24px; margin: 0 0 10px 0; font-weight: bold;">${company.name}</h1>
+              <h1 style="color: #2563eb; font-size: 24px; margin: 0 0 10px 0; font-weight: bold;">${company.name}</h1>
               <p style="margin: 2px 0; font-size: 14px; color: #666;">${company.address}</p>
               <p style="margin: 2px 0; font-size: 14px; color: #666;">Tél: ${company.phone}</p>
               <p style="margin: 2px 0; font-size: 14px; color: #666;">Email: ${company.email}</p>
             </div>
             ${company.logo ? `<img src="${company.logo}" style="max-height: 80px; max-width: 150px;" alt="Logo" />` : ''}
           </div>
-        </div>
+        </section>
         ` : ''}
 
         <!-- Document Title -->
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h2 style="color: hsl(var(--primary)); font-size: 22px; margin: 0 0 10px 0; font-weight: bold;">${exportConfig.title}</h2>
+        <section class="page-break-section" style="text-align: center; margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #2563eb; font-size: 22px; margin: 0 0 10px 0; font-weight: bold;">${exportConfig.title}</h2>
           <p style="color: #666; margin: 0; font-size: 14px;">N° de référence: ${estimate.id || 'DRAFT'}</p>
           <p style="color: #666; margin: 0; font-size: 14px;">Date d'émission: ${currentDate}</p>
           <p style="color: #666; margin: 0; font-size: 14px;">Valide jusqu'au: ${validUntilDate}</p>
-        </div>
+        </section>
 
         <!-- Tender Information -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Informations Appel d'Offres</h3>
-          <div style="background: hsl(var(--muted)); padding: 15px; border-radius: 8px;">
+        <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Informations Appel d'Offres</h3>
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
             <p style="margin: 5px 0;"><strong>Titre:</strong> ${tender?.title || 'Non défini'}</p>
             <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender?.reference || 'Non défini'}</p>
             ${tender?.description ? `<p style="margin: 5px 0;"><strong>Description:</strong> ${tender.description}</p>` : ''}
@@ -260,42 +260,44 @@ export function QuantitativeEstimateExporter({
 
         ${exportConfig.includeItemDetails && estimateItems.length > 0 ? `
         <!-- Detailed Items -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Détail des Postes</h3>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <thead>
-              <tr style="background: hsl(var(--muted));">
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px;">Description</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px;">Type</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px;">Qté</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px;">P.U. (${estimate.currency})</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px;">Total (${estimate.currency})</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${estimateItems.map(item => `
-                <tr>
-                  <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${item.description || ''}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px;">
-                    <span style="background: ${item.item_type === 'material' ? '#e3f2fd' : item.item_type === 'labor' ? '#f3e5f5' : item.item_type === 'equipment' ? '#e8f5e8' : '#fff3e0'}; 
-                                 color: ${item.item_type === 'material' ? '#1976d2' : item.item_type === 'labor' ? '#7b1fa2' : item.item_type === 'equipment' ? '#388e3c' : '#f57c00'}; 
-                                 padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.item_type || 'autre'}</span>
-                  </td>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px;">${item.quantity || 0}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px;">${(item.unit_price || 0).toLocaleString('fr-FR')}</td>
-                  <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold;">${(item.total_price || 0).toLocaleString('fr-FR')}</td>
+        <section class="page-break-section" style="margin-bottom: 25px;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Détail des Postes</h3>
+          <div style="page-break-inside: avoid;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; font-weight: bold;">Description</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;">Type</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;">Qté</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px; font-weight: bold;">P.U. (${estimate.currency})</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px; font-weight: bold;">Total (${estimate.currency})</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${estimateItems.map((item, index) => `
+                  <tr style="page-break-inside: avoid; ${index % 2 === 0 ? 'background: #fafafa;' : ''}">
+                    <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px; vertical-align: top;">${item.description || ''}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">
+                      <span style="background: ${item.item_type === 'material' ? '#e3f2fd' : item.item_type === 'labor' ? '#f3e5f5' : item.item_type === 'equipment' ? '#e8f5e8' : '#fff3e0'}; 
+                                   color: ${item.item_type === 'material' ? '#1976d2' : item.item_type === 'labor' ? '#7b1fa2' : item.item_type === 'equipment' ? '#388e3c' : '#f57c00'}; 
+                                   padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.item_type || 'autre'}</span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">${item.quantity || 0}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; vertical-align: top;">${(item.unit_price || 0).toLocaleString('fr-FR')}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${(item.total_price || 0).toLocaleString('fr-FR')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
         </section>
         ` : ''}
 
         ${exportConfig.includePriceBreakdown ? `
         <!-- Price Breakdown -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Récapitulatif Financier</h3>
-          <div style="background: hsl(var(--muted)); padding: 20px; border-radius: 8px;">
+        <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Récapitulatif Financier</h3>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Matériaux:</strong></td>
@@ -331,9 +333,9 @@ export function QuantitativeEstimateExporter({
                 <td style="padding: 5px 0; border-bottom: 2px solid #333;">Marge bénéficiaire (${estimate.profit_margin_percentage}%):</td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 2px solid #333;">${totals.profitAmount.toLocaleString('fr-FR')} ${estimate.currency}</td>
               </tr>
-              <tr style="background: hsl(var(--primary) / 0.1);">
-                <td style="padding: 12px 0; font-weight: bold; font-size: 16px; color: hsl(var(--primary));"><strong>TOTAL GÉNÉRAL TTC:</strong></td>
-                <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px; color: hsl(var(--primary));">${totals.finalTotal.toLocaleString('fr-FR')} ${estimate.currency}</td>
+              <tr style="background: #dbeafe;">
+                <td style="padding: 12px 0; font-weight: bold; font-size: 16px; color: #2563eb;"><strong>TOTAL GÉNÉRAL TTC:</strong></td>
+                <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px; color: #2563eb;">${totals.finalTotal.toLocaleString('fr-FR')} ${estimate.currency}</td>
               </tr>
             </table>
           </div>
@@ -342,8 +344,8 @@ export function QuantitativeEstimateExporter({
 
         ${exportConfig.includeTermsConditions ? `
         <!-- Terms and Conditions -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Conditions Générales</h3>
+        <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Conditions Générales</h3>
           <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
             <pre style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-wrap;">${exportConfig.termsConditions}</pre>
           </div>
@@ -352,8 +354,8 @@ export function QuantitativeEstimateExporter({
 
         ${exportConfig.notes ? `
         <!-- Additional Notes -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Notes Complémentaires</h3>
+        <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Notes Complémentaires</h3>
           <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
             <p style="margin: 0; line-height: 1.6; font-size: 12px;">${exportConfig.notes}</p>
           </div>
@@ -362,9 +364,9 @@ export function QuantitativeEstimateExporter({
 
         ${exportConfig.includeSignature ? `
         <!-- Signature Section -->
-        <section style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid hsl(var(--primary)); padding-left: 15px;">Validation</h3>
-          <div style="background: hsl(var(--muted)); padding: 20px; border-radius: 8px;">
+        <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Validation</h3>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
               <div>
                 <p style="margin: 0; font-size: 14px; color: #666;">Établi par:</p>
