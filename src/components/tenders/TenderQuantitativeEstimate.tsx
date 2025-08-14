@@ -212,8 +212,10 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   // Parse invoice mutation
   const parseInvoiceMutation = useMutation({
     mutationFn: async ({ file, tenderId }: { file: File; tenderId: string }) => {
-      // Upload file first
-      const uploadResult = await uploadFile(file, `invoices/${tenderId}`);
+      // Upload file first with proper filename
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `invoices/${tenderId}/${Date.now()}.${fileExtension}`;
+      const uploadResult = await uploadFile(file, fileName);
       
       if (!uploadResult.success) {
         throw new Error('File upload failed');
