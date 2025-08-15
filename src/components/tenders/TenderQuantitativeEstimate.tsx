@@ -15,6 +15,7 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
+import { parseInvoiceFromPdf } from '@/utils/integrations';
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
@@ -237,46 +238,37 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
 
       if (docError) throw docError;
 
-      // Simulate parsing with sample items for demonstration
-      const sampleItems = [
-        {
-          description: "Béton C25/30",
-          quantity: 150,
-          unit_price: 85.50,
-          total_price: 12825,
-          unit: "m³"
-        },
-        {
-          description: "Acier HA 12mm",
-          quantity: 2500,
-          unit_price: 0.85,
-          total_price: 2125,
-          unit: "kg"
-        },
-        {
-          description: "Main-d'œuvre qualifiée",
-          quantity: 80,
-          unit_price: 25.00,
-          total_price: 2000,
-          unit: "h"
-        }
-      ];
+      // Parse PDF to extract actual invoice data
+      let parsedItems;
+      try {
+        parsedItems = await parseInvoiceFromPdf(file);
+        console.log('PDF parsed successfully:', parsedItems);
+      } catch (parseError) {
+        console.warn('PDF parsing failed, using empty array:', parseError);
+        parsedItems = [];
+      }
 
-      // Create parsed invoice record with sample data
+      // Create parsed invoice record with actual parsed data
       const { data: parsedInvoice, error: parseError } = await supabase
         .from('parsed_invoices')
         .insert([{
           tender_id: tenderId,
           document_id: document.id,
           file_name: file.name,
-          parsing_status: 'completed',
-          total_amount: sampleItems.reduce((sum, item) => sum + item.total_price, 0),
+          parsing_status: parsedItems.length > 0 ? 'completed' : 'failed',
+          total_amount: parsedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0),
           invoice_date: new Date().toISOString().split('T')[0],
-          items: sampleItems,
+          items: parsedItems.map(item => ({
+            description: item.designation,
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            total_price: item.totalPrice,
+            unit: item.unit
+          })),
           parsed_data: { 
             file_name: file.name, 
             uploaded_at: new Date().toISOString(),
-            items: sampleItems
+            items: parsedItems
           }
         }])
         .select()
