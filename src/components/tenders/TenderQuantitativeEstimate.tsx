@@ -250,33 +250,41 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   const parsePdfMutation = useMutation({
     mutationFn: async ({ file, invoiceId }: { file: File; invoiceId: string }) => {
       // Parse PDF to extract actual invoice data
-      let parsedItems;
+      let parsedRawData;
       try {
-        parsedItems = await parseInvoiceFromPdf(file);
-        console.log('PDF parsed successfully:', parsedItems);
+        parsedRawData = await parseInvoiceFromPdf(file);
+        console.log('PDF parsed successfully:', parsedRawData);
       } catch (parseError) {
         console.warn('PDF parsing failed, using empty array:', parseError);
-        parsedItems = [];
+        parsedRawData = [];
       }
 
-      // Update existing invoice with parsed data
+      // Transform raw parsed data to invoice model items (no raw data display)
+      const transformedItems = parsedRawData.map((rawItem, index) => ({
+        id: `item_${index + 1}`,
+        description: rawItem.designation || `Article ${index + 1}`,
+        quantity: rawItem.quantity || 1,
+        unit_price: rawItem.unitPrice || 0,
+        total_price: rawItem.totalPrice || (rawItem.quantity * rawItem.unitPrice) || 0,
+        unit: rawItem.unit || 'unité'
+      }));
+
+      // Calculate total from transformed items
+      const totalAmount = transformedItems.reduce((sum, item) => sum + item.total_price, 0);
+
+      // Update existing invoice with transformed invoice model data
       const { data, error } = await supabase
         .from('parsed_invoices')
         .update({
           file_name: file.name,
-          parsing_status: parsedItems.length > 0 ? 'completed' : 'failed',
-          total_amount: parsedItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0),
-          items: parsedItems.map(item => ({
-            description: item.designation,
-            quantity: item.quantity,
-            unit_price: item.unitPrice,
-            total_price: item.totalPrice,
-            unit: item.unit
-          })),
+          parsing_status: transformedItems.length > 0 ? 'completed' : 'failed',
+          total_amount: totalAmount,
+          items: transformedItems, // Store transformed items only
           parsed_data: { 
             file_name: file.name, 
             uploaded_at: new Date().toISOString(),
-            items: parsedItems
+            item_count: transformedItems.length,
+            source: 'pdf_analysis'
           }
         })
         .eq('id', invoiceId)
