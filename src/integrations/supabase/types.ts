@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -991,6 +991,84 @@ export type Database = {
           },
         ]
       }
+      material_documents: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_date: string | null
+          document_number: string | null
+          document_type: string
+          expiry_date: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          material_id: string
+          metadata: Json | null
+          mime_type: string | null
+          supplier_name: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_date?: string | null
+          document_number?: string | null
+          document_type: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          material_id: string
+          metadata?: Json | null
+          mime_type?: string | null
+          supplier_name?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_date?: string | null
+          document_number?: string | null
+          document_type?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          material_id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          supplier_name?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_documents_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       material_suppliers: {
         Row: {
           created_at: string | null
@@ -1045,57 +1123,72 @@ export type Database = {
       materials: {
         Row: {
           adresse: Json | null
+          asin: string | null
           available_quantity: number
           category: string
           coordinates_latitude: number | null
           coordinates_longitude: number | null
           created_at: string
           description: string
+          ean: string | null
           forme: string | null
+          gtin: string | null
           id: string
           image: string | null
           localisation: Json | null
+          multilang_labels: Json | null
           name: string
           origin_location: string | null
           price_per_unit: number
+          sku: string | null
           unit: string
           updated_at: string
           workspace_id: string | null
         }
         Insert: {
           adresse?: Json | null
+          asin?: string | null
           available_quantity?: number
           category: string
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description: string
+          ean?: string | null
           forme?: string | null
+          gtin?: string | null
           id?: string
           image?: string | null
           localisation?: Json | null
+          multilang_labels?: Json | null
           name: string
           origin_location?: string | null
           price_per_unit: number
+          sku?: string | null
           unit: string
           updated_at?: string
           workspace_id?: string | null
         }
         Update: {
           adresse?: Json | null
+          asin?: string | null
           available_quantity?: number
           category?: string
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
           created_at?: string
           description?: string
+          ean?: string | null
           forme?: string | null
+          gtin?: string | null
           id?: string
           image?: string | null
           localisation?: Json | null
+          multilang_labels?: Json | null
           name?: string
           origin_location?: string | null
           price_per_unit?: number
+          sku?: string | null
           unit?: string
           updated_at?: string
           workspace_id?: string | null
@@ -3629,11 +3722,11 @@ export type Database = {
     }
     Functions: {
       admin_update_user_email: {
-        Args: { target_user_id: string; new_email: string }
+        Args: { new_email: string; target_user_id: string }
         Returns: undefined
       }
       assign_user_role: {
-        Args: { target_user_id: string; role_name: string }
+        Args: { role_name: string; target_user_id: string }
         Returns: undefined
       }
       generate_request_number: {
@@ -3655,7 +3748,7 @@ export type Database = {
         }[]
       }
       has_role: {
-        Args: { user_id: string; role_name: string }
+        Args: { role_name: string; user_id: string }
         Returns: boolean
       }
       is_current_user_admin: {

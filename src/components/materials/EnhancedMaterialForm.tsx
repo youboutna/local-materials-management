@@ -14,6 +14,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import WorkspaceSelector from '@/components/workspace/WorkspaceSelector';
 import WorkspaceCreateDialog from '@/components/workspace/WorkspaceCreateDialog';
 import InteractiveMapGIS from './InteractiveMapGIS';
+import MaterialDocuments from './MaterialDocuments';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { toast } from 'sonner';
@@ -35,6 +36,12 @@ interface MaterialFormData {
   localisation?: any[];
   coordinatesLatitude?: number;
   coordinatesLongitude?: number;
+  // New identifier fields
+  gtin?: string;
+  sku?: string;
+  ean?: string;
+  asin?: string;
+  multilangLabels?: Record<string, string>;
   timeline?: {
     start: Date;
     end: Date;
@@ -67,6 +74,7 @@ interface EnhancedMaterialFormProps {
   workspaces?: SimpleWorkspace[];
   showSubmitButton?: boolean;
   language?: string;
+  materialId?: string; // For document management
 }
 
 const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
@@ -74,7 +82,8 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   initialData,
   workspaces = [],
   showSubmitButton = true,
-  language
+  language,
+  materialId
 }, ref) => {
   const { t } = useLanguage();
   const { workspaces: dbWorkspaces, createWorkspace } = useWorkspaces();
@@ -342,12 +351,14 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="basic">Informations</TabsTrigger>
+          <TabsTrigger value="identifiers">Identifiants</TabsTrigger>
           <TabsTrigger value="location">Localisation</TabsTrigger>
           <TabsTrigger value="quantities">Quantités</TabsTrigger>
           <TabsTrigger value="timeline">Planning</TabsTrigger>
           <TabsTrigger value="supplier">Fournisseur</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="space-y-6">
@@ -458,6 +469,134 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
                   <p className="text-xs text-gray-500">
                     Formats acceptés: JPG, PNG, GIF. Taille max: 5MB
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="identifiers" className="space-y-6">
+          {/* Material Identifiers */}
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Identifiants du matériau
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gtin" className="text-sm font-medium">
+                    GTIN (Global Trade Item Number)
+                  </Label>
+                  <Input
+                    id="gtin"
+                    value={formData.gtin || ''}
+                    onChange={(e) => handleChange('gtin', e.target.value)}
+                    placeholder="ex: 01234567890123"
+                    maxLength={14}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="sku" className="text-sm font-medium">
+                    SKU (Stock Keeping Unit)
+                  </Label>
+                  <Input
+                    id="sku"
+                    value={formData.sku || ''}
+                    onChange={(e) => handleChange('sku', e.target.value)}
+                    placeholder="ex: MAT-CIM-001"
+                    maxLength={100}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="ean" className="text-sm font-medium">
+                    EAN (European Article Number)
+                  </Label>
+                  <Input
+                    id="ean"
+                    value={formData.ean || ''}
+                    onChange={(e) => handleChange('ean', e.target.value)}
+                    placeholder="ex: 1234567890123"
+                    maxLength={13}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="asin" className="text-sm font-medium">
+                    ASIN (Amazon Standard Identification Number)
+                  </Label>
+                  <Input
+                    id="asin"
+                    value={formData.asin || ''}
+                    onChange={(e) => handleChange('asin', e.target.value)}
+                    placeholder="ex: B00X8QSNT2"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+              
+              {/* Multi-language labels */}
+              <div className="space-y-4 mt-6">
+                <Label className="text-sm font-medium">
+                  Libellés multilingues
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="label-fr" className="text-xs">Français</Label>
+                    <Input
+                      id="label-fr"
+                      value={formData.multilangLabels?.fr || ''}
+                      onChange={(e) => handleChange('multilangLabels', { 
+                        ...formData.multilangLabels, 
+                        fr: e.target.value 
+                      })}
+                      placeholder="Nom en français"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="label-ar" className="text-xs">العربية</Label>
+                    <Input
+                      id="label-ar"
+                      value={formData.multilangLabels?.ar || ''}
+                      onChange={(e) => handleChange('multilangLabels', { 
+                        ...formData.multilangLabels, 
+                        ar: e.target.value 
+                      })}
+                      placeholder="الاسم بالعربية"
+                      dir="rtl"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="label-en" className="text-xs">English</Label>
+                    <Input
+                      id="label-en"
+                      value={formData.multilangLabels?.en || ''}
+                      onChange={(e) => handleChange('multilangLabels', { 
+                        ...formData.multilangLabels, 
+                        en: e.target.value 
+                      })}
+                      placeholder="Name in English"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="label-es" className="text-xs">Español</Label>
+                    <Input
+                      id="label-es"
+                      value={formData.multilangLabels?.es || ''}
+                      onChange={(e) => handleChange('multilangLabels', { 
+                        ...formData.multilangLabels, 
+                        es: e.target.value 
+                      })}
+                      placeholder="Nombre en español"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -689,6 +828,22 @@ const EnhancedMaterialForm = forwardRef<any, EnhancedMaterialFormProps>(({
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-6">
+          {/* Material Documents */}
+          {materialId ? (
+            <MaterialDocuments 
+              materialId={materialId} 
+              readonly={false}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center text-muted-foreground">
+                <p>Sauvegardez d'abord le matériau pour pouvoir ajouter des documents.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 

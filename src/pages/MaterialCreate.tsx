@@ -46,6 +46,12 @@ const MaterialCreate = () => {
           coordinates_latitude: materialData.coordinatesLatitude || null,
           coordinates_longitude: materialData.coordinatesLongitude || null,
           localisation: materialData.localisation || null,
+          // New identifier fields
+          gtin: materialData.gtin || null,
+          sku: materialData.sku || null,
+          ean: materialData.ean || null,
+          asin: materialData.asin || null,
+          multilang_labels: materialData.multilangLabels || null,
         }])
         .select()
         .single();

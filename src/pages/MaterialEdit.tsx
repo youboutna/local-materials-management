@@ -33,6 +33,12 @@ interface MaterialFormData {
   localisation?: any[];
   coordinatesLatitude?: number;
   coordinatesLongitude?: number;
+  // New identifier fields
+  gtin?: string;
+  sku?: string;
+  ean?: string;
+  asin?: string;
+  multilangLabels?: Record<string, string>;
   timeline?: {
     start: Date;
     end: Date;
@@ -111,6 +117,12 @@ const MaterialEdit = () => {
         localisation: updatedData.localisation,
         coordinates_latitude: updatedData.coordinatesLatitude,
         coordinates_longitude: updatedData.coordinatesLongitude,
+        // New identifier fields
+        gtin: updatedData.gtin || null,
+        sku: updatedData.sku || null,
+        ean: updatedData.ean || null,
+        asin: updatedData.asin || null,
+        multilang_labels: updatedData.multilangLabels || null,
         updated_at: new Date().toISOString()
       };
 
@@ -162,6 +174,12 @@ const MaterialEdit = () => {
         localisation: Array.isArray(material.localisation) ? material.localisation as any[] : [],
         coordinatesLatitude: material.coordinates_latitude ? Number(material.coordinates_latitude) : undefined,
         coordinatesLongitude: material.coordinates_longitude ? Number(material.coordinates_longitude) : undefined,
+        // New identifier fields
+        gtin: (material as any).gtin || '',
+        sku: (material as any).sku || '',
+        ean: (material as any).ean || '',
+        asin: (material as any).asin || '',
+        multilangLabels: (material as any).multilang_labels || {},
         timeline: {
           start: new Date(),
           end: new Date(),
@@ -266,6 +284,7 @@ const MaterialEdit = () => {
                 initialData={formData}
                 workspaces={transformedWorkspaces}
                 showSubmitButton={false}
+                materialId={id}
               />
               
               <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
