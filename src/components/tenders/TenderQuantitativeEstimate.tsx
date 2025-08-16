@@ -702,36 +702,112 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
                           )}
                         </div>
 
-                        {/* Current Invoice Items */}
+                        {/* Current Invoice Items with Editing */}
                         {(() => {
                           const currentInvoice = parsedInvoices?.find(i => i.id === selectedInvoiceId);
                           return currentInvoice?.items && Array.isArray(currentInvoice.items) && currentInvoice.items.length > 0 ? (
                             <div>
-                              <h5 className="text-sm font-medium mb-2">Articles de la facture:</h5>
-                              <div className="space-y-2">
-                                {currentInvoice.items.map((item: any, index: number) => (
-                                  <div key={index} className="flex justify-between items-center p-3 border rounded">
-                                    <div className="flex-1">
-                                      <div className="font-medium">{item.description}</div>
-                                      <div className="text-sm text-gray-600">
-                                        Qté: {item.quantity} • Prix unitaire: {item.unit_price} MRU
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="font-medium">{item.total_price} MRU</div>
-                                    </div>
-                                  </div>
-                                ))}
+                              <h5 className="text-sm font-medium mb-3">Articles de la facture:</h5>
+                              <div className="border rounded-lg overflow-hidden">
+                                <table className="w-full text-sm">
+                                  <thead className="bg-muted">
+                                    <tr>
+                                      <th className="text-left p-3 font-medium">Article</th>
+                                      <th className="text-left p-3 font-medium">Quantité</th>
+                                      <th className="text-left p-3 font-medium">Prix unitaire</th>
+                                      <th className="text-left p-3 font-medium">Total</th>
+                                      <th className="text-left p-3 font-medium">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {currentInvoice.items.map((item: any, index: number) => (
+                                      <tr key={item.id || index} className="border-t hover:bg-muted/50">
+                                        <td className="p-3">
+                                          <div className="font-medium">{item.description}</div>
+                                          {item.unit && (
+                                            <div className="text-xs text-muted-foreground">
+                                              Unité: {item.unit}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="p-3">{item.quantity?.toLocaleString('fr-FR')}</td>
+                                        <td className="p-3">
+                                          {item.unit_price?.toLocaleString('fr-FR')} {estimateData.currency}
+                                        </td>
+                                        <td className="p-3 font-medium">
+                                          {item.total_price?.toLocaleString('fr-FR')} {estimateData.currency}
+                                        </td>
+                                        <td className="p-3">
+                                          <div className="flex gap-1">
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                setNewItem({
+                                                  description: item.description,
+                                                  quantity: item.quantity,
+                                                  unit_price: item.unit_price,
+                                                  total_price: item.total_price,
+                                                  item_type: 'material'
+                                                });
+                                                setIsAddItemOpen(true);
+                                              }}
+                                            >
+                                              Modifier
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-red-600 hover:text-red-700"
+                                               onClick={async () => {
+                                                 const items = Array.isArray(currentInvoice.items) ? currentInvoice.items : [];
+                                                 const updatedItems = items.filter((_: any, i: number) => i !== index);
+                                                 const newTotal = updatedItems.reduce((sum: number, i: any) => sum + (i.total_price || 0), 0);
+                                                
+                                                await supabase
+                                                  .from('parsed_invoices')
+                                                  .update({
+                                                    items: updatedItems,
+                                                    total_amount: newTotal
+                                                  })
+                                                  .eq('id', selectedInvoiceId);
+                                                
+                                                queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });
+                                                toast({
+                                                  title: 'Article supprimé',
+                                                  description: 'L\'article a été supprimé de la facture.',
+                                                });
+                                              }}
+                                            >
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
                               </div>
-                              <div className="mt-4 p-3 bg-gray-50 rounded">
+                              <div className="mt-4 p-3 bg-muted rounded-lg">
                                 <div className="flex justify-between items-center font-medium">
-                                  <span>Total:</span>
-                                  <span>{currentInvoice.total_amount?.toFixed(2)} MRU</span>
+                                  <span>Total de la facture:</span>
+                                  <span>{currentInvoice.total_amount?.toLocaleString('fr-FR')} {estimateData.currency}</span>
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-600">Aucun article dans cette facture.</p>
+                            <div className="text-center py-6 text-muted-foreground">
+                              <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">Aucun article dans cette facture</p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setIsAddItemOpen(true)}
+                                className="mt-2"
+                              >
+                                Ajouter le premier article
+                              </Button>
+                            </div>
                           );
                         })()}
                       </CardContent>
