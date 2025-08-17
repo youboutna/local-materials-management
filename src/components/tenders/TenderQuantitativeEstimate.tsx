@@ -268,9 +268,103 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         parsedRawData = [];
       }
 
-      // Enhanced parsing to handle various invoice formats
+      // Enhanced parsing with line-by-line detection
       const transformedItems: ParsedInvoiceItem[] = [];
       
+      // Helper function to detect and parse invoice lines
+      const parseInvoiceLines = (rawData: any): ParsedInvoiceItem[] => {
+        const items: ParsedInvoiceItem[] = [];
+        
+        if (typeof rawData === 'string') {
+          // Split text into lines and detect patterns
+          const lines = rawData.split('\n').filter(line => line.trim());
+          let itemIndex = 0;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Skip headers, empty lines, or obviously non-item lines
+            if (!line || 
+                line.toLowerCase().includes('designation') || 
+                line.toLowerCase().includes('description') ||
+                line.toLowerCase().includes('article') ||
+                line.toLowerCase().includes('quantité') ||
+                line.toLowerCase().includes('quantity') ||
+                line.toLowerCase().includes('prix') ||
+                line.toLowerCase().includes('total') ||
+                line.toLowerCase().includes('tva') ||
+                line.toLowerCase().includes('tax') ||
+                line.length < 5) {
+              continue;
+            }
+            
+            // Try to detect invoice line patterns
+            // Pattern 1: Description | Quantity | Unit Price | Total
+            const pattern1 = line.match(/^(.+?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)$/);
+            
+            // Pattern 2: More flexible pattern with possible units
+            const pattern2 = line.match(/^(.+?)\s+(\d+(?:[,.]\d+)?)\s*([a-zA-Z]*)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)$/);
+            
+            // Pattern 3: Tab or multiple space separated
+            const pattern3 = line.split(/\s{2,}|\t/).filter(Boolean);
+            
+            let item: ParsedInvoiceItem | null = null;
+            
+            if (pattern1) {
+              item = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: pattern1[1].trim(),
+                quantity: parseFloat(pattern1[2].replace(',', '.')),
+                unit_price: parseFloat(pattern1[3].replace(',', '.')),
+                total_price: parseFloat(pattern1[4].replace(',', '.')),
+                unit: 'unité'
+              };
+            } else if (pattern2) {
+              item = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: pattern2[1].trim(),
+                quantity: parseFloat(pattern2[2].replace(',', '.')),
+                unit_price: parseFloat(pattern2[4].replace(',', '.')),
+                total_price: parseFloat(pattern2[5].replace(',', '.')),
+                unit: pattern2[3] || 'unité'
+              };
+            } else if (pattern3.length >= 3) {
+              // Try to map columns intelligently
+              const desc = pattern3[0];
+              const numbers = pattern3.slice(1).map(p => parseFloat(p.replace(',', '.')));
+              const validNumbers = numbers.filter(n => !isNaN(n));
+              
+              if (validNumbers.length >= 2) {
+                const quantity = validNumbers[0];
+                const unitPrice = validNumbers[1];
+                const total = validNumbers[2] || (quantity * unitPrice);
+                
+                item = {
+                  id: `item_${Date.now()}_${itemIndex++}`,
+                  description: desc.trim(),
+                  quantity,
+                  unit_price: unitPrice,
+                  total_price: total,
+                  unit: 'unité'
+                };
+              }
+            }
+            
+            // Validate and add item
+            if (item && item.description && item.quantity > 0 && item.unit_price > 0) {
+              // Calculate total if missing or incorrect
+              if (!item.total_price || Math.abs(item.total_price - (item.quantity * item.unit_price)) > 0.01) {
+                item.total_price = item.quantity * item.unit_price;
+              }
+              items.push(item);
+            }
+          }
+        }
+        
+        return items;
+      };
+      
+      // Process different data formats
       if (Array.isArray(parsedRawData)) {
         // If already an array of items
         parsedRawData.forEach((rawItem: any, index: number) => {
@@ -288,27 +382,42 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
             item.total_price = item.quantity * item.unit_price;
           }
           
-          transformedItems.push(item);
+          if (item.description && item.quantity > 0) {
+            transformedItems.push(item);
+          }
         });
       } else if (parsedRawData && typeof parsedRawData === 'object') {
         // If it's an object with items property
         const items = parsedRawData.items || parsedRawData.lignes || parsedRawData.lines || [];
-        items.forEach((rawItem: any, index: number) => {
-          const item: ParsedInvoiceItem = {
-            id: `item_${Date.now()}_${index}`,
-            description: rawItem.designation || rawItem.description || rawItem.article || `Article ${index + 1}`,
-            quantity: parseFloat(rawItem.quantity || rawItem.qty || 1),
-            unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || 0),
-            total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || 0),
-            unit: rawItem.unit || rawItem.unite || 'unité'
-          };
-          
-          if (!item.total_price && item.quantity && item.unit_price) {
-            item.total_price = item.quantity * item.unit_price;
-          }
-          
-          transformedItems.push(item);
-        });
+        if (Array.isArray(items) && items.length > 0) {
+          items.forEach((rawItem: any, index: number) => {
+            const item: ParsedInvoiceItem = {
+              id: `item_${Date.now()}_${index}`,
+              description: rawItem.designation || rawItem.description || rawItem.article || `Article ${index + 1}`,
+              quantity: parseFloat(rawItem.quantity || rawItem.qty || 1),
+              unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || 0),
+              total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || 0),
+              unit: rawItem.unit || rawItem.unite || 'unité'
+            };
+            
+            if (!item.total_price && item.quantity && item.unit_price) {
+              item.total_price = item.quantity * item.unit_price;
+            }
+            
+            if (item.description && item.quantity > 0) {
+              transformedItems.push(item);
+            }
+          });
+        } else {
+          // Try to parse raw text content
+          const textContent = parsedRawData.text || parsedRawData.content || JSON.stringify(parsedRawData);
+          const lineItems = parseInvoiceLines(textContent);
+          transformedItems.push(...lineItems);
+        }
+      } else if (typeof parsedRawData === 'string') {
+        // Direct text parsing
+        const lineItems = parseInvoiceLines(parsedRawData);
+        transformedItems.push(...lineItems);
       }
 
       // Calculate total from transformed items
