@@ -32,6 +32,15 @@ interface EstimateItem {
   item_type: string | null;
 }
 
+interface ParsedInvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  unit: string;
+}
+
 interface TenderEstimate {
   id?: string;
   tender_id: string;
@@ -249,7 +258,7 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
   // Parse PDF mutation
   const parsePdfMutation = useMutation({
     mutationFn: async ({ file, invoiceId }: { file: File; invoiceId: string }) => {
-      // Parse PDF to extract actual invoice data
+      // Parse PDF to extract invoice data
       let parsedRawData;
       try {
         parsedRawData = await parseInvoiceFromPdf(file);
@@ -259,32 +268,77 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         parsedRawData = [];
       }
 
-      // Transform raw parsed data to invoice model items (no raw data display)
-      const transformedItems = parsedRawData.map((rawItem, index) => ({
-        id: `item_${index + 1}`,
-        description: rawItem.designation || `Article ${index + 1}`,
-        quantity: rawItem.quantity || 1,
-        unit_price: rawItem.unitPrice || 0,
-        total_price: rawItem.totalPrice || (rawItem.quantity * rawItem.unitPrice) || 0,
-        unit: rawItem.unit || 'unité'
-      }));
+      // Enhanced parsing to handle various invoice formats
+      const transformedItems: ParsedInvoiceItem[] = [];
+      
+      if (Array.isArray(parsedRawData)) {
+        // If already an array of items
+        parsedRawData.forEach((rawItem: any, index: number) => {
+          const item: ParsedInvoiceItem = {
+            id: `item_${Date.now()}_${index}`,
+            description: rawItem.designation || rawItem.description || rawItem.article || rawItem.item || `Article ${index + 1}`,
+            quantity: parseFloat(rawItem.quantity || rawItem.qty || rawItem.qte || 1),
+            unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || rawItem.price || 0),
+            total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || rawItem.montant || 0),
+            unit: rawItem.unit || rawItem.unite || rawItem.u || 'unité'
+          };
+          
+          // Calculate total if not provided
+          if (!item.total_price && item.quantity && item.unit_price) {
+            item.total_price = item.quantity * item.unit_price;
+          }
+          
+          transformedItems.push(item);
+        });
+      } else if (parsedRawData && typeof parsedRawData === 'object') {
+        // If it's an object with items property
+        const items = parsedRawData.items || parsedRawData.lignes || parsedRawData.lines || [];
+        items.forEach((rawItem: any, index: number) => {
+          const item: ParsedInvoiceItem = {
+            id: `item_${Date.now()}_${index}`,
+            description: rawItem.designation || rawItem.description || rawItem.article || `Article ${index + 1}`,
+            quantity: parseFloat(rawItem.quantity || rawItem.qty || 1),
+            unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || 0),
+            total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || 0),
+            unit: rawItem.unit || rawItem.unite || 'unité'
+          };
+          
+          if (!item.total_price && item.quantity && item.unit_price) {
+            item.total_price = item.quantity * item.unit_price;
+          }
+          
+          transformedItems.push(item);
+        });
+      }
 
       // Calculate total from transformed items
-      const totalAmount = transformedItems.reduce((sum, item) => sum + item.total_price, 0);
+      const totalAmount = transformedItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
 
-      // Update existing invoice with transformed invoice model data
+      // Extract supplier info if available
+      const supplierInfo = {
+        name: parsedRawData?.supplier?.name || parsedRawData?.fournisseur?.nom || 'Fournisseur non spécifié',
+        address: parsedRawData?.supplier?.address || parsedRawData?.fournisseur?.adresse || '',
+        phone: parsedRawData?.supplier?.phone || parsedRawData?.fournisseur?.telephone || '',
+        email: parsedRawData?.supplier?.email || parsedRawData?.fournisseur?.email || ''
+      };
+
+      // Update existing invoice with enhanced data
       const { data, error } = await supabase
         .from('parsed_invoices')
         .update({
           file_name: file.name,
           parsing_status: transformedItems.length > 0 ? 'completed' : 'failed',
           total_amount: totalAmount,
-          items: transformedItems, // Store transformed items only
+          items: transformedItems as any,
+          supplier_info: supplierInfo,
+          invoice_number: parsedRawData?.invoice_number || parsedRawData?.numero_facture || null,
+          invoice_date: parsedRawData?.invoice_date || parsedRawData?.date_facture || new Date().toISOString().split('T')[0],
           parsed_data: { 
             file_name: file.name, 
             uploaded_at: new Date().toISOString(),
             item_count: transformedItems.length,
-            source: 'pdf_analysis'
+            source: 'enhanced_pdf_analysis',
+            raw_data_available: true
           }
         })
         .eq('id', invoiceId)
