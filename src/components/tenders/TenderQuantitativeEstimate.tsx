@@ -271,92 +271,138 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
       // Enhanced parsing with line-by-line detection
       const transformedItems: ParsedInvoiceItem[] = [];
       
-      // Helper function to detect and parse invoice lines
+      // Advanced parsing function to detect and parse invoice lines
       const parseInvoiceLines = (rawData: any): ParsedInvoiceItem[] => {
         const items: ParsedInvoiceItem[] = [];
         
         if (typeof rawData === 'string') {
-          // Split text into lines and detect patterns
-          const lines = rawData.split('\n').filter(line => line.trim());
+          // Clean and normalize the text
+          let cleanText = rawData
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          // Split by common patterns that indicate new line items
+          const lineBreakPatterns = [
+            /(?:\d+\.\d+\s+[A-Za-z])/g, // Pattern: "1.01 Something"
+            /(?:\d+\.\d+\s+\w+)/g,      // Pattern: "2.00 Word"
+            /(?:LOT\s+\d+)/gi,          // Pattern: "LOT 1", "LOT 2"
+            /(?:Article\s+Désignation)/gi // Pattern: "Article Désignation"
+          ];
+
+          // Try to identify line items by numeric codes at the beginning
+          const lineItemPattern = /(\d+\.\d+)\s+([^0-9]+?)\s+([a-zA-Z]+)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)/g;
+          let match;
           let itemIndex = 0;
-          
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+
+          while ((match = lineItemPattern.exec(cleanText)) !== null) {
+            const [fullMatch, code, description, unit, quantity, unitPrice, total] = match;
             
-            // Skip headers, empty lines, or obviously non-item lines
-            if (!line || 
-                line.toLowerCase().includes('designation') || 
-                line.toLowerCase().includes('description') ||
-                line.toLowerCase().includes('article') ||
-                line.toLowerCase().includes('quantité') ||
-                line.toLowerCase().includes('quantity') ||
-                line.toLowerCase().includes('prix') ||
-                line.toLowerCase().includes('total') ||
-                line.toLowerCase().includes('tva') ||
-                line.toLowerCase().includes('tax') ||
-                line.length < 5) {
-              continue;
+            // Clean description of any extra whitespace or unwanted characters
+            const cleanDescription = description.trim().replace(/\s+/g, ' ');
+            
+            if (cleanDescription && cleanDescription.length > 3) {
+              const item: ParsedInvoiceItem = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: `${code} ${cleanDescription}`,
+                quantity: parseFloat(quantity.replace(',', '.')),
+                unit_price: parseFloat(unitPrice.replace(',', '.')),
+                total_price: parseFloat(total.replace(',', '.')),
+                unit: unit || 'unité'
+              };
+
+              // Validate calculated total
+              const calculatedTotal = item.quantity * item.unit_price;
+              if (Math.abs(item.total_price - calculatedTotal) > calculatedTotal * 0.1) {
+                item.total_price = calculatedTotal;
+              }
+
+              if (item.quantity > 0 && item.unit_price > 0) {
+                items.push(item);
+              }
             }
+          }
+
+          // If no structured items found, try simpler patterns
+          if (items.length === 0) {
+            // Split by lines and look for patterns
+            const lines = cleanText.split('\n').filter(line => line.trim().length > 10);
             
-            // Try to detect invoice line patterns
-            // Pattern 1: Description | Quantity | Unit Price | Total
-            const pattern1 = line.match(/^(.+?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)$/);
-            
-            // Pattern 2: More flexible pattern with possible units
-            const pattern2 = line.match(/^(.+?)\s+(\d+(?:[,.]\d+)?)\s*([a-zA-Z]*)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)$/);
-            
-            // Pattern 3: Tab or multiple space separated
-            const pattern3 = line.split(/\s{2,}|\t/).filter(Boolean);
-            
-            let item: ParsedInvoiceItem | null = null;
-            
-            if (pattern1) {
-              item = {
-                id: `item_${Date.now()}_${itemIndex++}`,
-                description: pattern1[1].trim(),
-                quantity: parseFloat(pattern1[2].replace(',', '.')),
-                unit_price: parseFloat(pattern1[3].replace(',', '.')),
-                total_price: parseFloat(pattern1[4].replace(',', '.')),
-                unit: 'unité'
-              };
-            } else if (pattern2) {
-              item = {
-                id: `item_${Date.now()}_${itemIndex++}`,
-                description: pattern2[1].trim(),
-                quantity: parseFloat(pattern2[2].replace(',', '.')),
-                unit_price: parseFloat(pattern2[4].replace(',', '.')),
-                total_price: parseFloat(pattern2[5].replace(',', '.')),
-                unit: pattern2[3] || 'unité'
-              };
-            } else if (pattern3.length >= 3) {
-              // Try to map columns intelligently
-              const desc = pattern3[0];
-              const numbers = pattern3.slice(1).map(p => parseFloat(p.replace(',', '.')));
-              const validNumbers = numbers.filter(n => !isNaN(n));
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
               
-              if (validNumbers.length >= 2) {
-                const quantity = validNumbers[0];
-                const unitPrice = validNumbers[1];
-                const total = validNumbers[2] || (quantity * unitPrice);
+              // Skip headers and metadata
+              if (line.toLowerCase().includes('lot') && line.toLowerCase().includes(':')) continue;
+              if (line.toLowerCase().includes('article') && line.toLowerCase().includes('désignation')) continue;
+              if (line.toLowerCase().includes('unité') && line.toLowerCase().includes('quantité')) continue;
+              if (line.toLowerCase().includes('total') && line.toLowerCase().includes('facture')) continue;
+              
+              // Look for numbered items (1.01, 2.00, etc.)
+              const numberedPattern = /^(\d+\.\d+)\s+(.+)/;
+              const numberedMatch = line.match(numberedPattern);
+              
+              if (numberedMatch) {
+                const [, code, rest] = numberedMatch;
                 
-                item = {
+                // Try to extract numeric values from the rest
+                const numbers = rest.match(/(\d+(?:[,.]\d+)?)/g);
+                if (numbers && numbers.length >= 2) {
+                  const nums = numbers.map(n => parseFloat(n.replace(',', '.')));
+                  
+                  // Extract description (everything before the first number)
+                  const descMatch = rest.match(/^(.+?)\s+\d/);
+                  const description = descMatch ? descMatch[1].trim() : rest.split(/\d/)[0].trim();
+                  
+                  if (description && nums.length >= 2) {
+                    const quantity = nums[0];
+                    const unitPrice = nums[1];
+                    const total = nums[2] || (quantity * unitPrice);
+                    
+                    const item: ParsedInvoiceItem = {
+                      id: `item_${Date.now()}_${itemIndex++}`,
+                      description: `${code} ${description}`,
+                      quantity,
+                      unit_price: unitPrice,
+                      total_price: total,
+                      unit: 'unité'
+                    };
+                    
+                    if (item.quantity > 0 && item.unit_price > 0) {
+                      items.push(item);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Final fallback: look for any line with description and numbers
+          if (items.length === 0) {
+            const fallbackPattern = /([A-Za-z][^0-9]+?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)\s+(\d+(?:[,.]\d+)?)/g;
+            let fallbackMatch;
+            
+            while ((fallbackMatch = fallbackPattern.exec(cleanText)) !== null) {
+              const [, description, num1, num2, num3] = fallbackMatch;
+              
+              if (description.trim().length > 5) {
+                const quantity = parseFloat(num1.replace(',', '.'));
+                const unitPrice = parseFloat(num2.replace(',', '.'));
+                const total = parseFloat(num3.replace(',', '.'));
+                
+                const item: ParsedInvoiceItem = {
                   id: `item_${Date.now()}_${itemIndex++}`,
-                  description: desc.trim(),
+                  description: description.trim(),
                   quantity,
                   unit_price: unitPrice,
                   total_price: total,
                   unit: 'unité'
                 };
+                
+                if (item.quantity > 0 && item.unit_price > 0) {
+                  items.push(item);
+                }
               }
-            }
-            
-            // Validate and add item
-            if (item && item.description && item.quantity > 0 && item.unit_price > 0) {
-              // Calculate total if missing or incorrect
-              if (!item.total_price || Math.abs(item.total_price - (item.quantity * item.unit_price)) > 0.01) {
-                item.total_price = item.quantity * item.unit_price;
-              }
-              items.push(item);
             }
           }
         }
