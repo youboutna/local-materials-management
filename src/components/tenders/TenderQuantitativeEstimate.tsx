@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
 import {parseInvoiceFromPdf } from '@/utils/btpCalculations';
-import {InvoiceLine, isInvoiceLineArray} from '@/utils/types';
+import {InvoiceLine} from '@/utils/types';
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
