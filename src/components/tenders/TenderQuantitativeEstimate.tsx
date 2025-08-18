@@ -15,7 +15,8 @@ import { Calculator, Upload, Plus, Trash2, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { QuantitativeEstimateExporter } from '@/components/reports/QuantitativeEstimateExporter';
-import { parseInvoiceFromPdf } from '@/utils/integrations';
+import {parseInvoiceFromPdf } from '@/utils/btpCalculations';
+import {InvoiceLine, isInvoiceLineArray} from '@/utils/types';
 
 interface TenderQuantitativeEstimateProps {
   tenderId: string;
@@ -39,6 +40,26 @@ interface ParsedInvoiceItem {
   unit_price: number;
   total_price: number;
   unit: string;
+  metadata?: {
+      sourceUnit?: string;
+      workType?: string;
+      parsedAt?: string;
+      type?: string;
+      unitWeights?: number;
+      unit?: string;
+      description?: string;
+      coverageRate?: number;
+      currency?: string | null;
+      status?: string;
+      created_at?: string;
+      updated_at?: string;
+      tax_rate?: number | null;
+      tax_amount?: number | null;
+      // Extended optional fields used by parsers
+      isFixedPrice?: boolean;
+      section?: string;
+      originalUnit?: string;
+    };
 }
 
 interface TenderEstimate {
@@ -367,59 +388,19 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         return items;
       };
 
-      // Helper function to extract data from line
-      const extractItemData = (line: string) => {
-        // Default values
-        let description = line.trim();
-        let quantity = 1;
-        let unitPrice = 0;
-        let totalPrice = 0;
-        let unit = 'unité';
-
-        // Try to find unit pattern
-        const unitPattern = /(.*?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s+(.*)/;
-        const unitMatch = line.match(unitPattern);
-        
-        if (unitMatch) {
-          description = unitMatch[1].trim();
-          unit = unitMatch[2];
-          const afterUnit = unitMatch[3];
-          
-          // Extract numbers from after unit
-          const numbers = afterUnit.match(/([\d,\.]+)/g);
-          if (numbers && numbers.length >= 2) {
-            quantity = parseFloat(numbers[0].replace(',', '.'));
-            unitPrice = parseFloat(numbers[1].replace(',', '.'));
-            totalPrice = numbers[2] ? parseFloat(numbers[2].replace(',', '.')) : quantity * unitPrice;
-          }
-        } else {
-          // Look for any numbers in the line
-          const numbers = line.match(/([\d,\.]+)/g);
-          if (numbers && numbers.length >= 2) {
-            // Remove numbers from description
-            description = line.replace(/([\d,\.]+)/g, '').trim();
-            quantity = parseFloat(numbers[0].replace(',', '.'));
-            unitPrice = parseFloat(numbers[1].replace(',', '.'));
-            totalPrice = numbers[2] ? parseFloat(numbers[2].replace(',', '.')) : quantity * unitPrice;
-          }
-        }
-
-        return { description, quantity, unitPrice, totalPrice, unit };
-      };
+      if (Array.isArray(parsedRawData)){
       
-      // Process different data formats
-      if (Array.isArray(parsedRawData)) {
-        // If already an array of items
-        parsedRawData.forEach((rawItem: any, index: number) => {
+        parsedRawData.forEach((rawItem: InvoiceLine, index: number) => {
           const item: ParsedInvoiceItem = {
-            id: `item_${Date.now()}_${index}`,
-            description: rawItem.designation || rawItem.description || rawItem.article || rawItem.item || `Article ${index + 1}`,
-            quantity: parseFloat(rawItem.quantity || rawItem.qty || rawItem.qte || 1),
-            unit_price: parseFloat(rawItem.unitPrice || rawItem.unit_price || rawItem.prix_unitaire || rawItem.price || 0),
-            total_price: parseFloat(rawItem.totalPrice || rawItem.total_price || rawItem.total || rawItem.montant || 0),
-            unit: rawItem.unit || rawItem.unite || rawItem.u || 'unité'
-          };
+            id: rawItem.number || rawItem.id || `item_${Date.now()}_${index}`,
+            description: rawItem.designation  || `Article ${index + 1}`,
+            quantity: rawItem.quantity  || 0,
+            unit_price: rawItem.unitPrice || 0,
+            total_price: rawItem.totalPrice || 0,
+            unit: rawItem.unit || 'unité',
+            metadata : rawItem?.metadata
           
+          };
           // Calculate total if not provided
           if (!item.total_price && item.quantity && item.unit_price) {
             item.total_price = item.quantity * item.unit_price;
@@ -429,7 +410,9 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
             transformedItems.push(item);
           }
         });
-      } else if (parsedRawData && typeof parsedRawData === 'object') {
+ 
+      }
+       else if (parsedRawData && typeof parsedRawData === 'object') {
         // If it's an object with items property
         const items = parsedRawData.items || parsedRawData.lignes || parsedRawData.lines || [];
         if (Array.isArray(items) && items.length > 0) {

@@ -1662,54 +1662,46 @@ export const convertConstructionLineToCalculationResult = (
  * @returns Array of normalized and enriched invoice lines
  */
 export const processConstructionLines = (
-  rawLines: ConstructionLine[],
+  lines: string[],
   isSomElecFormat: boolean
-): CalculationResult[] => {
-  return rawLines.map((line, index) => {
-    try {
-      const mappedType = mapToElementType(line.designation, isSomElecFormat);
-      const detectedType = detectElementType(line.designation);
-      const elementType = mappedType !== 'basic_calculator' ? mappedType : detectedType;
+): ConstructionLine[] => {
 
-      const dimensions = generateDimensionsFromQuantity(
-        line.quantity,
-        line.unit
-      );
+  const results: ConstructionLine[] = [];
+  let currentSection = "Autre";
 
-      return createInvoiceLine(
-        line.designation,
-        line.quantity ?? 0,
-        line.unit,
-        line.unitPrice ?? 0,
-        {
-          id: `line-${index + 1}`,
-          lineNumber: line.number,
-          metadata: {
-            elementType,
-            dimensions,
-            workType: getWorkTypeFromCode(line.number || ""),
-            detectedType,
-            mappedType,
-            originalUnit: line.unit,
-            section: line.metadata?.section,
-            isSomElecFormat
-          },
+  for (const line of lines) {
+    // Handle section headers for both formats
+    if (isSomElecFormat) {
+      const sectionMatch = line.match(/^([A-Z]+)\s/);
+      if (sectionMatch) {
+        currentSection = line.trim();
+        continue;
+      }
+    } else {
+      const lotMatch = line.match(/^##\s*LOT\s*\d+\s*:\s*(.*)/i);
+      if (lotMatch) {
+        currentSection = `LOT ${lotMatch[1].trim()}`;
+        continue;
+      }
+    }
+
+    const fields = extractFields(line, isSomElecFormat);
+    if (fields !== null && fields.designation !== null) {
+
+      results.push({
+        ...fields,
+        metadata: {
+          ...fields.metadata,
+          section: currentSection
         }
-      );
-    } catch (error: any) {
-      console.error(`Error processing line ${index + 1}:`, error);
-      return createInvoiceLine(`INVALID: ${line.designation}`, 0, 'unité', 0, {
-        id: `error-${index + 1}`,
-        metadata: { error: error.message || String(error) },
       });
     }
-  });
-};
+  }
+
+  return results;
+}
 
 
-// Usage example:
-// const rawLines = extractConstructionData(pdfText);
-// const invoiceLines = processConstructionLines(rawLines);
 
 export const isArchitecturalPlan = (text: string) => {
   const planWords = [
@@ -2098,5 +2090,41 @@ const parseExcelFile = async (file: File): Promise<string> => {
       .join('\n');
   } catch (error: any) {
     throw new Error("Impossible de lire le fichier Excel: " + error.message);
+  }
+};
+
+// Enhanced PDF parser with format detection
+export const parseInvoiceFromPdf = async (file: File): Promise<CalculationResult[]> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pageTexts = await extractPdfText(pdf);
+    let fullText = pageTexts.join('\n\n');
+    
+    console.log("fulltext brute before proceessing :")
+    fullText = preprocessPdfText(fullText);
+      
+    if (!isTextReadable(fullText)) {
+      console.warn("Native text extraction insufficient, falling back to OCR");
+      fullText = await performOcrFallback(pdf);
+    }
+    
+
+    // Detect format and parse accordingly
+    const isSomElecFormat = fullText.includes("SOMELEC") || fullText.includes("CONSULTATION RELATIVE");
+    console.log("splitRoughLines(fullText) :")
+    const lines = splitRoughLines(fullText);
+    //console.log(lines);
+
+    return processConstructionLines(lines, isSomElecFormat);
+    
+  } catch (error) {
+    console.error("PDF parsing failed:", error);
+    toast({ 
+      title: "Erreur d'Analyse", 
+      description: "Impossible de lire le fichier PDF",
+      variant: "destructive" 
+    });
+    return [];
   }
 };
