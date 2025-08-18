@@ -276,134 +276,148 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         const items: ParsedInvoiceItem[] = [];
         
         if (typeof rawData === 'string') {
-          console.log('Parsing raw text:', rawData);
+          console.log('Raw PDF text:', rawData);
           
-          // Normalize the text while preserving line breaks
-          let cleanText = rawData
-            .replace(/\r\n/g, '\n')
-            .replace(/\r/g, '\n')
-            .trim();
-
-          // Split into individual lines
-          const lines = cleanText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-          console.log('Split into lines:', lines);
+          // Split into lines and clean each line
+          const lines = rawData
+            .split(/\n/)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+          
+          console.log('All lines:', lines);
 
           let itemIndex = 0;
           let currentLot = '';
 
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
+            console.log(`Processing line ${i}:`, line);
             
             // Track current LOT
             const lotMatch = line.match(/^LOT\s+(\d+)\s*:\s*(.+)/i);
             if (lotMatch) {
-              currentLot = `LOT ${lotMatch[1]}`;
+              currentLot = lotMatch[1];
               console.log('Found lot:', currentLot);
               continue;
             }
 
-            // Skip header lines
-            if (line.toLowerCase().includes('article') && line.toLowerCase().includes('désignation')) {
-              console.log('Skipping header:', line);
-              continue;
-            }
-            if (line.toLowerCase().includes('unité') && line.toLowerCase().includes('quantité')) {
-              console.log('Skipping header:', line);
-              continue;
-            }
-            if (line.toLowerCase().includes('quantitatif') && line.toLowerCase().includes('estimatif')) {
-              console.log('Skipping title:', line);
-              continue;
-            }
+            // Skip headers and titles
+            if (line.toLowerCase().includes('quantitatif') && line.toLowerCase().includes('estimatif')) continue;
+            if (line.toLowerCase().includes('article') && line.toLowerCase().includes('désignation')) continue;
+            if (line.toLowerCase().includes('unité') && line.toLowerCase().includes('quantité')) continue;
+            if (line.toLowerCase().includes('px') && line.toLowerCase().includes('unit')) continue;
 
-            // Look for numbered line items (e.g., "1.01", "2.00", "3.01")
-            const itemPattern = /^(\d+\.\d+)\s+(.+)/;
-            const itemMatch = line.match(itemPattern);
+            // Look for numbered items with specific patterns
+            // Pattern 1: "1.01 Description pm" or "1.02 Description 0,20m m3 25,816 16,75 432,42"
+            const itemWithNumbersPattern = /^(\d+\.\d+)\s+(.+?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s+([\d,\.]+)\s+([\d,\.]+)\s+([\d,\.]+)$/;
+            const itemWithNumbersMatch = line.match(itemWithNumbersPattern);
             
-            if (itemMatch) {
-              const [, code, restOfLine] = itemMatch;
-              console.log(`Found item ${code}:`, restOfLine);
+            if (itemWithNumbersMatch) {
+              const [, code, description, unit, quantity, unitPrice, total] = itemWithNumbersMatch;
+              console.log(`Parsed numbered item: ${code} - ${description}`);
               
-              // Parse the rest of the line to extract components
-              // Format: "Description Unit Quantity PxUnit PxTotal"
-              // Try different parsing strategies
+              const item: ParsedInvoiceItem = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: `${code} ${description.trim()}`,
+                quantity: parseFloat(quantity.replace(',', '.')),
+                unit_price: parseFloat(unitPrice.replace(',', '.')),
+                total_price: parseFloat(total.replace(',', '.')),
+                unit: unit
+              };
+
+              items.push(item);
+              continue;
+            }
+
+            // Pattern 2: "1.01 Description pm" (without numbers)
+            const itemWithoutNumbersPattern = /^(\d+\.\d+)\s+(.+?)\s+(pm|ens)\s*$/;
+            const itemWithoutNumbersMatch = line.match(itemWithoutNumbersPattern);
+            
+            if (itemWithoutNumbersMatch) {
+              const [, code, description, unit] = itemWithoutNumbersMatch;
+              console.log(`Parsed item without numbers: ${code} - ${description}`);
               
-              // Strategy 1: Look for units (m3, m2, ml, pm, etc.) to separate description from numbers
-              const unitPattern = /(.*?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s+([\d,\.]+)\s+([\d,\.]+)\s+([\d,\.]+)/;
-              const unitMatch = restOfLine.match(unitPattern);
+              const item: ParsedInvoiceItem = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: `${code} ${description.trim()}`,
+                quantity: 1,
+                unit_price: 0,
+                total_price: 0,
+                unit: unit
+              };
+
+              items.push(item);
+              continue;
+            }
+
+            // Pattern 3: Basic numbered item pattern (fallback)
+            const basicItemPattern = /^(\d+\.\d+)\s+(.+)/;
+            const basicItemMatch = line.match(basicItemPattern);
+            
+            if (basicItemMatch) {
+              const [, code, restOfLine] = basicItemMatch;
+              console.log(`Found basic item: ${code}`);
               
-              if (unitMatch) {
-                const [, description, unit, quantity, unitPrice, total] = unitMatch;
-                
-                const item: ParsedInvoiceItem = {
-                  id: `item_${Date.now()}_${itemIndex++}`,
-                  description: `${code} ${description.trim()}`,
-                  quantity: parseFloat(quantity.replace(',', '.')),
-                  unit_price: parseFloat(unitPrice.replace(',', '.')),
-                  total_price: parseFloat(total.replace(',', '.')),
-                  unit: unit
-                };
+              // Try to extract unit and numbers from the rest of the line
+              const extractedData = extractItemData(restOfLine);
+              
+              const item: ParsedInvoiceItem = {
+                id: `item_${Date.now()}_${itemIndex++}`,
+                description: `${code} ${extractedData.description}`,
+                quantity: extractedData.quantity,
+                unit_price: extractedData.unitPrice,
+                total_price: extractedData.totalPrice,
+                unit: extractedData.unit
+              };
 
-                console.log('Parsed item:', item);
-                
-                if (item.quantity > 0 && item.unit_price >= 0) {
-                  items.push(item);
-                }
-              } else {
-                // Strategy 2: Look for 3 consecutive numbers at the end
-                const numberPattern = /(.*?)\s+([\d,\.]+)\s+([\d,\.]+)\s+([\d,\.]+)$/;
-                const numberMatch = restOfLine.match(numberPattern);
-                
-                if (numberMatch) {
-                  const [, description, quantity, unitPrice, total] = numberMatch;
-                  
-                  // Try to extract unit from description
-                  const unitInDescPattern = /(.*?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s*$/;
-                  const unitInDescMatch = description.match(unitInDescPattern);
-                  
-                  let finalDescription = description.trim();
-                  let unit = 'unité';
-                  
-                  if (unitInDescMatch) {
-                    finalDescription = unitInDescMatch[1].trim();
-                    unit = unitInDescMatch[2];
-                  }
-                  
-                  const item: ParsedInvoiceItem = {
-                    id: `item_${Date.now()}_${itemIndex++}`,
-                    description: `${code} ${finalDescription}`,
-                    quantity: parseFloat(quantity.replace(',', '.')),
-                    unit_price: parseFloat(unitPrice.replace(',', '.')),
-                    total_price: parseFloat(total.replace(',', '.')),
-                    unit: unit
-                  };
-
-                  console.log('Parsed item (strategy 2):', item);
-                  
-                  if (item.quantity > 0 && item.unit_price >= 0) {
-                    items.push(item);
-                  }
-                } else {
-                  // Strategy 3: Just description, add as item with default values
-                  const item: ParsedInvoiceItem = {
-                    id: `item_${Date.now()}_${itemIndex++}`,
-                    description: `${code} ${restOfLine.trim()}`,
-                    quantity: 1,
-                    unit_price: 0,
-                    total_price: 0,
-                    unit: 'unité'
-                  };
-
-                  console.log('Parsed item (strategy 3):', item);
-                  items.push(item);
-                }
-              }
+              items.push(item);
             }
           }
         }
         
+        console.log('Final parsed items count:', items.length);
         console.log('Final parsed items:', items);
         return items;
+      };
+
+      // Helper function to extract data from line
+      const extractItemData = (line: string) => {
+        // Default values
+        let description = line.trim();
+        let quantity = 1;
+        let unitPrice = 0;
+        let totalPrice = 0;
+        let unit = 'unité';
+
+        // Try to find unit pattern
+        const unitPattern = /(.*?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s+(.*)/;
+        const unitMatch = line.match(unitPattern);
+        
+        if (unitMatch) {
+          description = unitMatch[1].trim();
+          unit = unitMatch[2];
+          const afterUnit = unitMatch[3];
+          
+          // Extract numbers from after unit
+          const numbers = afterUnit.match(/([\d,\.]+)/g);
+          if (numbers && numbers.length >= 2) {
+            quantity = parseFloat(numbers[0].replace(',', '.'));
+            unitPrice = parseFloat(numbers[1].replace(',', '.'));
+            totalPrice = numbers[2] ? parseFloat(numbers[2].replace(',', '.')) : quantity * unitPrice;
+          }
+        } else {
+          // Look for any numbers in the line
+          const numbers = line.match(/([\d,\.]+)/g);
+          if (numbers && numbers.length >= 2) {
+            // Remove numbers from description
+            description = line.replace(/([\d,\.]+)/g, '').trim();
+            quantity = parseFloat(numbers[0].replace(',', '.'));
+            unitPrice = parseFloat(numbers[1].replace(',', '.'));
+            totalPrice = numbers[2] ? parseFloat(numbers[2].replace(',', '.')) : quantity * unitPrice;
+          }
+        }
+
+        return { description, quantity, unitPrice, totalPrice, unit };
       };
       
       // Process different data formats
