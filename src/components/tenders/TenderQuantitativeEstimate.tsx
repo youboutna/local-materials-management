@@ -268,115 +268,102 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
         parsedRawData = [];
       }
 
-      // Enhanced parsing with line-by-line detection
+      // Simplified and focused parsing for French invoice format
       const transformedItems: ParsedInvoiceItem[] = [];
       
-      // Advanced parsing function to detect and parse invoice lines
       const parseInvoiceLines = (rawData: any): ParsedInvoiceItem[] => {
+        console.log('=== STARTING PARSE ===');
+        console.log('Raw input type:', typeof rawData);
+        console.log('Raw input:', rawData);
+        
         const items: ParsedInvoiceItem[] = [];
         
+        // Convert to string if needed
+        let textData = '';
         if (typeof rawData === 'string') {
-          console.log('Raw PDF text:', rawData);
+          textData = rawData;
+        } else if (rawData && typeof rawData === 'object') {
+          textData = JSON.stringify(rawData);
+        } else {
+          console.log('Invalid data type, returning empty array');
+          return items;
+        }
+        
+        console.log('Text to parse:', textData);
+        
+        // Split by actual line breaks and clean
+        const lines = textData
+          .split(/[\r\n]+/)
+          .map(line => line.trim())
+          .filter(line => line.length > 3);
+        
+        console.log('Total lines found:', lines.length);
+        console.log('All lines:', lines);
+        
+        let itemCounter = 0;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          console.log(`\n--- Processing line ${i}: "${line}"`);
           
-          // Split into lines and clean each line
-          const lines = rawData
-            .split(/\n/)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+          // Skip obvious headers and metadata
+          if (line.includes('QUANTITATIF ESTIMATIF') || 
+              line.includes('Article Désignation') || 
+              line.includes('Unité Quantité') ||
+              line.includes('Px Unit Px Total') ||
+              line.includes('Total de la facture')) {
+            console.log('Skipping header/metadata line');
+            continue;
+          }
           
-          console.log('All lines:', lines);
-
-          let itemIndex = 0;
-          let currentLot = '';
-
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            console.log(`Processing line ${i}:`, line);
+          // Look for numbered items (1.01, 1.02, 2.00, etc.)
+          const itemCodePattern = /^(\d+\.\d+)\s+(.*)$/;
+          const codeMatch = line.match(itemCodePattern);
+          
+          if (codeMatch) {
+            const itemCode = codeMatch[1];
+            const remainder = codeMatch[2];
+            console.log(`Found item code: ${itemCode}, remainder: "${remainder}"`);
             
-            // Track current LOT
-            const lotMatch = line.match(/^LOT\s+(\d+)\s*:\s*(.+)/i);
-            if (lotMatch) {
-              currentLot = lotMatch[1];
-              console.log('Found lot:', currentLot);
-              continue;
-            }
-
-            // Skip headers and titles
-            if (line.toLowerCase().includes('quantitatif') && line.toLowerCase().includes('estimatif')) continue;
-            if (line.toLowerCase().includes('article') && line.toLowerCase().includes('désignation')) continue;
-            if (line.toLowerCase().includes('unité') && line.toLowerCase().includes('quantité')) continue;
-            if (line.toLowerCase().includes('px') && line.toLowerCase().includes('unit')) continue;
-
-            // Look for numbered items with specific patterns
-            // Pattern 1: "1.01 Description pm" or "1.02 Description 0,20m m3 25,816 16,75 432,42"
-            const itemWithNumbersPattern = /^(\d+\.\d+)\s+(.+?)\s+(m[23]|ml|pm|ens|u|kg|t|l)\s+([\d,\.]+)\s+([\d,\.]+)\s+([\d,\.]+)$/;
-            const itemWithNumbersMatch = line.match(itemWithNumbersPattern);
+            // Create basic item structure
+            const newItem: ParsedInvoiceItem = {
+              id: `item_${Date.now()}_${itemCounter++}`,
+              description: `${itemCode} ${remainder}`,
+              quantity: 1,
+              unit_price: 0,
+              total_price: 0,
+              unit: 'unité'
+            };
             
-            if (itemWithNumbersMatch) {
-              const [, code, description, unit, quantity, unitPrice, total] = itemWithNumbersMatch;
-              console.log(`Parsed numbered item: ${code} - ${description}`);
-              
-              const item: ParsedInvoiceItem = {
-                id: `item_${Date.now()}_${itemIndex++}`,
-                description: `${code} ${description.trim()}`,
-                quantity: parseFloat(quantity.replace(',', '.')),
-                unit_price: parseFloat(unitPrice.replace(',', '.')),
-                total_price: parseFloat(total.replace(',', '.')),
-                unit: unit
-              };
-
-              items.push(item);
-              continue;
-            }
-
-            // Pattern 2: "1.01 Description pm" (without numbers)
-            const itemWithoutNumbersPattern = /^(\d+\.\d+)\s+(.+?)\s+(pm|ens)\s*$/;
-            const itemWithoutNumbersMatch = line.match(itemWithoutNumbersPattern);
+            // Try to extract numbers and unit from remainder
+            const numberMatches = remainder.match(/([\d,]+(?:\.[\d,]+)?)/g);
+            const unitMatch = remainder.match(/\b(m[23]|ml|pm|ens|u|kg|t|l)\b/);
             
-            if (itemWithoutNumbersMatch) {
-              const [, code, description, unit] = itemWithoutNumbersMatch;
-              console.log(`Parsed item without numbers: ${code} - ${description}`);
-              
-              const item: ParsedInvoiceItem = {
-                id: `item_${Date.now()}_${itemIndex++}`,
-                description: `${code} ${description.trim()}`,
-                quantity: 1,
-                unit_price: 0,
-                total_price: 0,
-                unit: unit
-              };
-
-              items.push(item);
-              continue;
+            if (numberMatches && numberMatches.length >= 3) {
+              console.log('Found numbers:', numberMatches);
+              newItem.quantity = parseFloat(numberMatches[0].replace(',', '.'));
+              newItem.unit_price = parseFloat(numberMatches[1].replace(',', '.'));
+              newItem.total_price = parseFloat(numberMatches[2].replace(',', '.'));
             }
-
-            // Pattern 3: Basic numbered item pattern (fallback)
-            const basicItemPattern = /^(\d+\.\d+)\s+(.+)/;
-            const basicItemMatch = line.match(basicItemPattern);
             
-            if (basicItemMatch) {
-              const [, code, restOfLine] = basicItemMatch;
-              console.log(`Found basic item: ${code}`);
-              
-              // Try to extract unit and numbers from the rest of the line
-              const extractedData = extractItemData(restOfLine);
-              
-              const item: ParsedInvoiceItem = {
-                id: `item_${Date.now()}_${itemIndex++}`,
-                description: `${code} ${extractedData.description}`,
-                quantity: extractedData.quantity,
-                unit_price: extractedData.unitPrice,
-                total_price: extractedData.totalPrice,
-                unit: extractedData.unit
-              };
-
-              items.push(item);
+            if (unitMatch) {
+              console.log('Found unit:', unitMatch[1]);
+              newItem.unit = unitMatch[1];
+              // Clean description by removing the unit
+              newItem.description = `${itemCode} ${remainder.replace(unitMatch[0], '').replace(/\s+/g, ' ').trim()}`;
             }
+            
+            console.log('Created item:', newItem);
+            items.push(newItem);
+          } else {
+            console.log('No item code pattern found, skipping line');
           }
         }
         
-        console.log('Final parsed items count:', items.length);
-        console.log('Final parsed items:', items);
+        console.log('\n=== PARSING COMPLETE ===');
+        console.log('Total items created:', items.length);
+        console.log('All items:', items);
+        
         return items;
       };
 
