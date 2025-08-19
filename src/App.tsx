@@ -47,6 +47,7 @@ import TenderManagement from './pages/TenderManagement';
 import TenderImport from './pages/TenderImport';
 import PhaseDetail from './pages/PhaseDetail';
 import Suppliers from './pages/Suppliers';
+import EnhancedDashboard from './pages/EnhancedDashboard';
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,11 @@ function App() {
 <Route path="/dashboard" element={
   <RoleBasedRoute allowedRoles={['admin','director']}>
     <Dashboard />
+  </RoleBasedRoute>
+} />
+<Route path="/enhanced-dashboard" element={
+  <RoleBasedRoute allowedRoles={['admin','director']}>
+    <EnhancedDashboard />
   </RoleBasedRoute>
 } />
 <Route path="/projects" element={
