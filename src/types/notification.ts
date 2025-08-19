@@ -5,7 +5,13 @@ export type NotificationType =
   | 'inspection_required' 
   | 'payment_due' 
   | 'document_review' 
-  | 'system';
+  | 'system'
+  | 'delay_warning'
+  | 'bank_guarantee_trigger'
+  | 'inspection_overdue'
+  | 'contractor_penalty'
+  | 'compliance_alert'
+  | 'escalation_required';
 
 export type TaskType = 
   | 'project' 
@@ -26,6 +32,16 @@ export interface NotificationMetadata {
   due_date?: string;
   assignee_name?: string;
   assigner_name?: string;
+  delay_percentage?: number;
+  bank_liaison_email?: string;
+  contract_guarantee_amount?: number;
+  contractor_name?: string;
+  engineering_consultant?: string;
+  inspection_type?: string;
+  violation_count?: number;
+  escalation_level?: number;
+  penalty_amount?: number;
+  compliance_standard?: string;
 }
 
 export interface Notification {
