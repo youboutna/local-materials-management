@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { detectExpiringInsurance } from '@/services/insuranceCertificateService';
+import { detectOverdueInspections } from '@/services/inspectionMonitoringService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,8 +49,10 @@ interface Document {
 interface Alert {
   id: string;
   message: string;
-  type: 'delivery' | 'deadline' | 'quality';
-  severity: 'high' | 'medium' | 'low';
+  type: 'insurance_expiry' | 'bank_guarantee' | 'inspection_overdue' | 'payment_blocked' | 'compliance_violation' | 'delivery' | 'deadline' | 'quality';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  source: 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification';
+  data?: any;
 }
 
 const EnhancedDashboard = () => {
@@ -90,16 +94,181 @@ const EnhancedDashboard = () => {
     }
   ]);
 
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: '1',
-      message: 'Votre livraison de clôtures est liée à un projet en retard (Pôle Halterique)',
-      type: 'delivery',
-      severity: 'high'
-    }
-  ]);
-
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [activeChantiers] = useState(3);
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
+
+  // Load real alerts from all monitoring systems
+  useEffect(() => {
+    const loadAllAlerts = async () => {
+      try {
+        setIsLoadingAlerts(true);
+        const allAlerts: Alert[] = [];
+
+        // 1. Load Insurance Expiry Alerts
+        try {
+          const insuranceAlerts = await detectExpiringInsurance();
+          insuranceAlerts.forEach(alert => {
+            allAlerts.push({
+              id: `insurance-${alert.projectId}-${alert.contractorId}`,
+              message: `Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s) (Police: ${alert.policyNumber})`,
+              type: 'insurance_expiry',
+              severity: alert.alertLevel === 'critical' ? 'critical' : alert.alertLevel === 'warning' ? 'medium' : 'high',
+              source: 'insurance',
+              data: alert
+            });
+          });
+        } catch (error) {
+          console.error('Error loading insurance alerts:', error);
+        }
+
+        // 2. Load Overdue Inspection Alerts
+        try {
+          const overdueInspections = await detectOverdueInspections();
+          overdueInspections.forEach(inspection => {
+            const daysPastDue = Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
+            allAlerts.push({
+              id: `inspection-${inspection.id}`,
+              message: `Inspection en retard de ${daysPastDue} jour(s) sur le projet "${inspection.projects?.title || 'Projet inconnu'}"`,
+              type: 'inspection_overdue',
+              severity: daysPastDue > 7 ? 'critical' : daysPastDue > 3 ? 'high' : 'medium',
+              source: 'inspection',
+              data: inspection
+            });
+          });
+        } catch (error) {
+          console.error('Error loading inspection alerts:', error);
+        }
+
+        // 3. Load Bank Guarantee Alerts (delayed projects that may trigger guarantees)
+        try {
+          const { data: delayedProjects, error } = await supabase
+            .from('projects')
+            .select(`
+              id,
+              title,
+              start_date,
+              end_date,
+              status,
+              bank_guarantees!inner(*)
+            `)
+            .in('status', ['in_progress', 'delayed']);
+
+          if (!error && delayedProjects) {
+            delayedProjects.forEach(project => {
+              if (project.end_date && new Date(project.end_date) < new Date()) {
+                const delayDays = Math.ceil((new Date().getTime() - new Date(project.end_date).getTime()) / (1000 * 60 * 60 * 24));
+                if (delayDays > 10) { // Significant delay threshold
+                  allAlerts.push({
+                    id: `bank-guarantee-${project.id}`,
+                    message: `Projet "${project.title}" en retard de ${delayDays} jours - Risque de déclenchement de garantie bancaire`,
+                    type: 'bank_guarantee',
+                    severity: delayDays > 30 ? 'critical' : 'high',
+                    source: 'bank_guarantee',
+                    data: { project, delayDays }
+                  });
+                }
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error loading bank guarantee alerts:', error);
+        }
+
+        // 4. Load Payment Block Alerts
+        try {
+          const { data: paymentBlocks, error } = await supabase
+            .from('payment_blocks')
+            .select('*')
+            .is('resolved_at', null); // Only unresolved blocks
+
+          if (!error && paymentBlocks) {
+            // Get project titles separately to avoid relation issues
+            for (const block of paymentBlocks) {
+              try {
+                const { data: project } = await supabase
+                  .from('projects')
+                  .select('title')
+                  .eq('id', block.project_id)
+                  .single();
+
+                allAlerts.push({
+                  id: `payment-block-${block.id}`,
+                  message: `Paiement bloqué pour le projet "${project?.title || 'Projet inconnu'}" - Montant: ${block.amount?.toLocaleString()} MRU`,
+                  type: 'payment_blocked',
+                  severity: 'high',
+                  source: 'payment',
+                  data: block
+                });
+              } catch (projectError) {
+                console.error('Error loading project for payment block:', projectError);
+                allAlerts.push({
+                  id: `payment-block-${block.id}`,
+                  message: `Paiement bloqué - Montant: ${block.amount?.toLocaleString()} MRU`,
+                  type: 'payment_blocked',
+                  severity: 'high',
+                  source: 'payment',
+                  data: block
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading payment block alerts:', error);
+        }
+
+        // 5. Load High Priority Notifications
+        if (user?.id) {
+          try {
+            const { data: notifications, error } = await supabase
+              .from('notifications')
+              .select('*')
+              .eq('recipient_id', user.id)
+              .eq('read', false)
+              .contains('metadata', { priority: 'urgent' })
+              .order('created_at', { ascending: false })
+              .limit(10);
+
+            if (!error && notifications) {
+              notifications.forEach(notif => {
+                allAlerts.push({
+                  id: `notification-${notif.id}`,
+                  message: notif.message,
+                  type: notif.type === 'compliance_alert' ? 'compliance_violation' : 'deadline',
+                  severity: 'high',
+                  source: 'notification',
+                  data: notif
+                });
+              });
+            }
+          } catch (error) {
+            console.error('Error loading notification alerts:', error);
+          }
+        }
+
+        // Sort alerts by severity (critical first)
+        allAlerts.sort((a, b) => {
+          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+          return severityOrder[b.severity] - severityOrder[a.severity];
+        });
+
+        setAlerts(allAlerts);
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les alertes",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingAlerts(false);
+      }
+    };
+
+    if (user) {
+      loadAllAlerts();
+    }
+  }, [user, toast]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,23 +408,65 @@ const EnhancedDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className={`p-4 rounded-lg border ${
-                      alert.severity === 'high' ? 'bg-yellow-50 border-yellow-200' :
-                      alert.severity === 'medium' ? 'bg-blue-50 border-blue-200' :
-                      'bg-gray-50 border-gray-200'
-                    }`}>
-                      <div className={`${
-                        alert.severity === 'high' ? 'text-yellow-800' :
-                        alert.severity === 'medium' ? 'text-blue-800' :
-                        'text-gray-800'
+                {isLoadingAlerts ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-primary rounded-full"></div>
+                    <p className="text-sm text-muted-foreground mt-2">Chargement des alertes...</p>
+                  </div>
+                ) : alerts.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Aucune alerte active</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {alerts.map((alert) => (
+                      <div key={alert.id} className={`p-4 rounded-lg border ${
+                        alert.severity === 'critical' ? 'bg-red-50 border-red-200' :
+                        alert.severity === 'high' ? 'bg-yellow-50 border-yellow-200' :
+                        alert.severity === 'medium' ? 'bg-blue-50 border-blue-200' :
+                        'bg-gray-50 border-gray-200'
                       }`}>
-                        "{alert.message}"
+                        <div className="flex items-start justify-between gap-2">
+                          <div className={`flex-1 ${
+                            alert.severity === 'critical' ? 'text-red-800' :
+                            alert.severity === 'high' ? 'text-yellow-800' :
+                            alert.severity === 'medium' ? 'text-blue-800' :
+                            'text-gray-800'
+                          }`}>
+                            <div className="font-medium mb-1">
+                              {alert.type === 'insurance_expiry' && '🛡️ Assurance'} 
+                              {alert.type === 'bank_guarantee' && '🏦 Garantie'} 
+                              {alert.type === 'inspection_overdue' && '🔍 Inspection'} 
+                              {alert.type === 'payment_blocked' && '💰 Paiement'} 
+                              {alert.type === 'compliance_violation' && '⚠️ Conformité'}
+                              {!['insurance_expiry', 'bank_guarantee', 'inspection_overdue', 'payment_blocked', 'compliance_violation'].includes(alert.type) && '📋 Alerte'}
+                            </div>
+                            <div className="text-sm">
+                              {alert.message}
+                            </div>
+                          </div>
+                          <Badge variant={
+                            alert.severity === 'critical' ? 'destructive' :
+                            alert.severity === 'high' ? 'default' :
+                            'secondary'
+                          }>
+                            {alert.severity === 'critical' ? 'Critique' :
+                             alert.severity === 'high' ? 'Élevé' :
+                             alert.severity === 'medium' ? 'Moyen' : 'Faible'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    {alerts.length > 5 && (
+                      <div className="text-center pt-2">
+                        <Button variant="ghost" size="sm">
+                          Voir toutes les alertes ({alerts.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
