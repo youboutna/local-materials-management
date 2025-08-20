@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
+import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { format } from 'date-fns';
 
 interface BankGuarantee {
@@ -299,13 +300,22 @@ const EnhancedBankGuaranteeCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="contractor_name">Nom du Contracteur *</Label>
-                  <Input
-                    id="contractor_name"
-                    value={formData.contractor_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contractor_name: e.target.value }))}
+                  <Label>Contracteur *</Label>
+                  <SupplierSelector
+                    value={{
+                      id: formData.contractor_id,
+                      name: formData.contractor_name,
+                      contact: '',
+                      leadTime: 0
+                    }}
+                    onChange={(supplier) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        contractor_id: supplier.id || '',
+                        contractor_name: supplier.name
+                      }));
+                    }}
                     disabled={isViewMode}
-                    required
                   />
                 </div>
                 

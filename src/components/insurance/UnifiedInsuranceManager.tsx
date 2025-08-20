@@ -494,7 +494,7 @@ const UnifiedInsuranceManager = () => {
                       name="contractorName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Entrepreneur</FormLabel>
+                          <FormLabel>Contracteur</FormLabel>
                           <FormControl>
                             <SupplierSelector
                               value={{ 

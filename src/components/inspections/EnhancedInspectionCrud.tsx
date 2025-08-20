@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
+import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { format } from 'date-fns';
 
 interface Inspection {
@@ -292,13 +293,20 @@ const EnhancedInspectionCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="inspector">Inspecteur *</Label>
-                  <Input
-                    id="inspector"
-                    value={formData.inspector}
-                    onChange={(e) => setFormData(prev => ({ ...prev, inspector: e.target.value }))}
+                  <Label>Inspecteur *</Label>
+                  <SupplierSelector
+                    value={{
+                      name: formData.inspector,
+                      contact: '',
+                      leadTime: 0
+                    }}
+                    onChange={(supplier) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        inspector: supplier.name
+                      }));
+                    }}
                     disabled={isViewMode}
-                    required
                   />
                 </div>
                 
