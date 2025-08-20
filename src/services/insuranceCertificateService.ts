@@ -77,7 +77,7 @@ export const sendInsuranceExpiryAlerts = async (alerts: InsuranceAlert[]) => {
     // Send mock notifications
     for (const alert of alerts) {
       await sendNotification({
-        recipient_id: 'system',
+        recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
         title: `ALERTE ASSURANCE - ${alert.alertLevel.toUpperCase()}`,
         message: `Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s).`,
         type: 'project_update',
@@ -117,7 +117,7 @@ export const createInsuranceCertificate = async (certificate: Omit<InsuranceCert
     
     // Notify relevant stakeholders about new certificate
     await sendNotification({
-      recipient_id: 'system',
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       title: 'Nouvelle attestation d\'assurance enregistrée',
       message: `Attestation ${certificate.coverageType} pour ${certificate.contractorName} ajoutée au projet.`,
       type: 'project_update',

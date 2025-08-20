@@ -1,6 +1,6 @@
 import React from 'react';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
-import BankGuaranteeCrud from '@/components/alerts/BankGuaranteeCrud';
+import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuaranteeCrud';
 
 const BankGuaranteeMonitorPage = () => {
   return (
@@ -16,7 +16,7 @@ const BankGuaranteeMonitorPage = () => {
           
           <BankGuaranteeMonitor />
           <div className="mt-8">
-            <BankGuaranteeCrud />
+            <EnhancedBankGuaranteeCrud />
           </div>
         </div>
       </div>

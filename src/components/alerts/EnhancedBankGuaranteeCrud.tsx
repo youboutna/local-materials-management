@@ -1,0 +1,510 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
+import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload } from 'lucide-react';
+import ProjectSelector from '@/components/selectors/ProjectSelector';
+import DocumentSelector from '@/components/selectors/DocumentSelector';
+import { format } from 'date-fns';
+
+interface BankGuarantee {
+  id: string;
+  project_id: string;
+  contractor_id: string;
+  contractor_name: string;
+  bank_name: string;
+  guarantee_amount: number;
+  guarantee_type: string;
+  issue_date: string;
+  expiry_date: string;
+  status: string;
+  supporting_documents?: string[];
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface BankGuaranteeFormData {
+  project_id: string;
+  contractor_id: string;
+  contractor_name: string;
+  bank_name: string;
+  guarantee_amount: number;
+  guarantee_type: string;
+  issue_date: string;
+  expiry_date: string;
+  status: string;
+  supporting_documents: string[];
+  notes: string;
+}
+
+const EnhancedBankGuaranteeCrud = () => {
+  const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuarantee | null>(null);
+  const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+
+  const [formData, setFormData] = useState<BankGuaranteeFormData>({
+    project_id: '',
+    contractor_id: '',
+    contractor_name: '',
+    bank_name: '',
+    guarantee_amount: 0,
+    guarantee_type: '',
+    issue_date: '',
+    expiry_date: '',
+    status: 'active',
+    supporting_documents: [],
+    notes: ''
+  });
+
+  const guaranteeTypes = [
+    { value: 'performance', label: 'Garantie de Bonne Exécution' },
+    { value: 'advance', label: 'Garantie d\'Avance' },
+    { value: 'retention', label: 'Garantie de Retenue' },
+    { value: 'maintenance', label: 'Garantie de Maintenance' },
+    { value: 'bid', label: 'Garantie de Soumission' }
+  ];
+
+  const statusOptions = [
+    { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
+    { value: 'expired', label: 'Expirée', color: 'bg-red-100 text-red-800' },
+    { value: 'claimed', label: 'Réclamée', color: 'bg-orange-100 text-orange-800' },
+    { value: 'released', label: 'Libérée', color: 'bg-blue-100 text-blue-800' },
+    { value: 'suspended', label: 'Suspendue', color: 'bg-gray-100 text-gray-800' }
+  ];
+
+  useEffect(() => {
+    loadGuarantees();
+  }, []);
+
+  const loadGuarantees = async () => {
+    // Mock data - replace with actual API call
+    const mockGuarantees: BankGuarantee[] = [
+      {
+        id: 'bg-1',
+        project_id: 'proj-axe-idini',
+        contractor_id: 'cont-sahel-btp',
+        contractor_name: 'Sahel BTP',
+        bank_name: 'Banque Mauritanienne pour le Commerce International',
+        guarantee_amount: 50000000,
+        guarantee_type: 'performance',
+        issue_date: '2024-01-15',
+        expiry_date: '2025-01-15',
+        status: 'active',
+        supporting_documents: ['doc-bg-1-cert', 'doc-bg-1-contract'],
+        notes: 'Garantie principale pour la phase 1',
+        created_at: '2024-01-15T10:00:00Z'
+      }
+    ];
+    setGuarantees(mockGuarantees);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      project_id: '',
+      contractor_id: '',
+      contractor_name: '',
+      bank_name: '',
+      guarantee_amount: 0,
+      guarantee_type: '',
+      issue_date: '',
+      expiry_date: '',
+      status: 'active',
+      supporting_documents: [],
+      notes: ''
+    });
+    setUploadedDocuments([]);
+  };
+
+  const openCreateForm = () => {
+    resetForm();
+    setIsEditing(false);
+    setIsViewMode(false);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (guarantee: BankGuarantee) => {
+    setFormData({
+      project_id: guarantee.project_id,
+      contractor_id: guarantee.contractor_id,
+      contractor_name: guarantee.contractor_name,
+      bank_name: guarantee.bank_name,
+      guarantee_amount: guarantee.guarantee_amount,
+      guarantee_type: guarantee.guarantee_type,
+      issue_date: guarantee.issue_date,
+      expiry_date: guarantee.expiry_date,
+      status: guarantee.status,
+      supporting_documents: guarantee.supporting_documents || [],
+      notes: guarantee.notes || ''
+    });
+    setSelectedGuarantee(guarantee);
+    setIsEditing(true);
+    setIsViewMode(false);
+    setIsFormOpen(true);
+  };
+
+  const openViewForm = (guarantee: BankGuarantee) => {
+    setFormData({
+      project_id: guarantee.project_id,
+      contractor_id: guarantee.contractor_id,
+      contractor_name: guarantee.contractor_name,
+      bank_name: guarantee.bank_name,
+      guarantee_amount: guarantee.guarantee_amount,
+      guarantee_type: guarantee.guarantee_type,
+      issue_date: guarantee.issue_date,
+      expiry_date: guarantee.expiry_date,
+      status: guarantee.status,
+      supporting_documents: guarantee.supporting_documents || [],
+      notes: guarantee.notes || ''
+    });
+    setSelectedGuarantee(guarantee);
+    setIsViewMode(true);
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.project_id || !formData.contractor_name || !formData.bank_name || !formData.guarantee_amount) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (isEditing && selectedGuarantee) {
+        const updatedGuarantee: BankGuarantee = {
+          ...selectedGuarantee,
+          ...formData,
+          supporting_documents: uploadedDocuments.map(doc => doc.id),
+          updated_at: new Date().toISOString()
+        };
+        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
+        toast({
+          title: "Succès",
+          description: "Garantie bancaire mise à jour avec succès",
+        });
+      } else {
+        const newGuarantee: BankGuarantee = {
+          id: `bg-${Date.now()}`,
+          ...formData,
+          supporting_documents: uploadedDocuments.map(doc => doc.id),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setGuarantees(prev => [...prev, newGuarantee]);
+        toast({
+          title: "Succès",
+          description: "Garantie bancaire créée avec succès",
+        });
+      }
+      
+      setIsFormOpen(false);
+      resetForm();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (guaranteeId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
+      setGuarantees(prev => prev.filter(g => g.id !== guaranteeId));
+      toast({
+        title: "Succès",
+        description: "Garantie bancaire supprimée avec succès",
+      });
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const isExpiringSoon = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 && diffDays >= 0;
+  };
+
+  const handleProjectChange = (projectId: string | undefined) => {
+    setFormData(prev => ({ ...prev, project_id: projectId || '' }));
+  };
+
+  const handleDocumentSelect = (documents: any[]) => {
+    setUploadedDocuments(documents);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'MRU',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Gestion des Garanties Bancaires
+        </CardTitle>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openCreateForm} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvelle Garantie
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {isViewMode ? 'Détails de la Garantie' : 
+                 isEditing ? 'Modifier la Garantie' : 'Nouvelle Garantie Bancaire'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="project">Projet *</Label>
+                  <ProjectSelector
+                    onChange={(projectId) => handleProjectChange(projectId)}
+                    value={formData.project_id}
+                    disabled={isViewMode}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="contractor_name">Nom du Contracteur *</Label>
+                  <Input
+                    id="contractor_name"
+                    value={formData.contractor_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contractor_name: e.target.value }))}
+                    disabled={isViewMode}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="bank_name">Banque *</Label>
+                  <Input
+                    id="bank_name"
+                    value={formData.bank_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bank_name: e.target.value }))}
+                    disabled={isViewMode}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="guarantee_type">Type de Garantie *</Label>
+                  <Select 
+                    value={formData.guarantee_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, guarantee_type: value }))}
+                    disabled={isViewMode}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner le type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {guaranteeTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="guarantee_amount">Montant (MRU) *</Label>
+                  <Input
+                    id="guarantee_amount"
+                    type="number"
+                    value={formData.guarantee_amount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guarantee_amount: parseFloat(e.target.value) || 0 }))}
+                    disabled={isViewMode}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="status">Statut</Label>
+                  <Select 
+                    value={formData.status} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                    disabled={isViewMode}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="issue_date">Date d'Émission *</Label>
+                  <Input
+                    id="issue_date"
+                    type="date"
+                    value={formData.issue_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, issue_date: e.target.value }))}
+                    disabled={isViewMode}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="expiry_date">Date d'Expiration *</Label>
+                  <Input
+                    id="expiry_date"
+                    type="date"
+                    value={formData.expiry_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expiry_date: e.target.value }))}
+                    disabled={isViewMode}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Documents Justificatifs</Label>
+                <DocumentSelector
+                  onChange={(documentId, document) => {
+                    if (document) {
+                      setUploadedDocuments(prev => [...prev, document]);
+                    }
+                  }}
+                  documentType="contract"
+                  disabled={isViewMode}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  disabled={isViewMode}
+                  rows={3}
+                />
+              </div>
+              
+              {!isViewMode && (
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    {isEditing ? 'Mettre à jour' : 'Créer'}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      
+      <CardContent>
+        {guarantees.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucune garantie bancaire trouvée
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Projet</TableHead>
+                <TableHead>Banque</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead>Expiration</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {guarantees.map((guarantee) => (
+                <TableRow key={guarantee.id}>
+                  <TableCell className="font-medium">{guarantee.project_id}</TableCell>
+                  <TableCell>{guarantee.bank_name}</TableCell>
+                  <TableCell>
+                    {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
+                  </TableCell>
+                  <TableCell>{formatCurrency(guarantee.guarantee_amount)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {format(new Date(guarantee.expiry_date), 'dd/MM/yyyy')}
+                      {isExpiringSoon(guarantee.expiry_date) && (
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(guarantee.status)}>
+                      {statusOptions.find(s => s.value === guarantee.status)?.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openViewForm(guarantee)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditForm(guarantee)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(guarantee.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default EnhancedBankGuaranteeCrud;

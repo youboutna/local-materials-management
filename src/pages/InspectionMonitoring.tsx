@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DigitalInspectionForm from '@/components/inspections/DigitalInspectionForm';
-import InspectionCrud from '@/components/inspections/InspectionCrud';
+import EnhancedInspectionCrud from '@/components/inspections/EnhancedInspectionCrud';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,17 @@ const InspectionMonitoringPage = () => {
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="manage">Gestion</TabsTrigger>
               <TabsTrigger value="create">Nouvelle Inspection</TabsTrigger>
               <TabsTrigger value="scheduled">Programmées</TabsTrigger>
               <TabsTrigger value="overdue">En Retard</TabsTrigger>
               <TabsTrigger value="compliance">Conformité</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="manage" className="space-y-6">
+              <EnhancedInspectionCrud />
+            </TabsContent>
 
             <TabsContent value="create" className="space-y-6">
               <Card>
