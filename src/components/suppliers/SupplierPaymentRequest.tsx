@@ -71,7 +71,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
         .from('notifications')
         .select('*')
         .eq('recipient_id', supplierId)
-        .eq('type', 'payment_request')
+        .eq('type', 'supplier_payment_request')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -212,7 +212,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           recipient_id: supplierId,
           title: 'Demande de paiement créée',
           message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
-          type: 'payment_request',
+           type: 'supplier_payment_request',
           metadata: {
             supplier_id: supplierId,
             project_id: projectId,
@@ -239,7 +239,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           recipient_id: manager.user_id,
           title: 'Nouvelle demande de paiement fournisseur',
           message: `Une demande de paiement de ${parseFloat(amount).toLocaleString()} MRU a été soumise par un fournisseur`,
-          type: 'payment_request',
+          type: 'supplier_payment_request',
           related_id: requestId,
           metadata: {
             supplier_id: supplierId,
