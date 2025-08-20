@@ -166,6 +166,39 @@ const MainNavbar = () => {
                       </NavigationMenuLink>
                       <NavigationMenuLink asChild>
                         <Link
+                          to="/bank-guarantee-monitor"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">🏦 Garanties Bancaires</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Surveillance automatisée et déclenchement des garanties
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/inspection-monitoring"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">🔍 Inspections</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Gestion digitale des inspections et rapports
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/notifications-center"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">📬 Centre Notifications</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Centre de notifications basé sur les rôles
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
                           to="/payment-control"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >

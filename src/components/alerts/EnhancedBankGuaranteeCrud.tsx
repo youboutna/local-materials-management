@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,25 +89,28 @@ const EnhancedBankGuaranteeCrud = () => {
   }, []);
 
   const loadGuarantees = async () => {
-    // Mock data - replace with actual API call
-    const mockGuarantees: BankGuarantee[] = [
-      {
-        id: 'bg-1',
-        project_id: 'proj-axe-idini',
-        contractor_id: 'cont-sahel-btp',
-        contractor_name: 'Sahel BTP',
-        bank_name: 'Banque Mauritanienne pour le Commerce International',
-        guarantee_amount: 50000000,
-        guarantee_type: 'performance',
-        issue_date: '2024-01-15',
-        expiry_date: '2025-01-15',
-        status: 'active',
-        supporting_documents: ['doc-bg-1-cert', 'doc-bg-1-contract'],
-        notes: 'Garantie principale pour la phase 1',
-        created_at: '2024-01-15T10:00:00Z'
-      }
-    ];
-    setGuarantees(mockGuarantees);
+    try {
+      const { data, error } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const transformedGuarantees: BankGuarantee[] = (data || []).map(guarantee => ({
+        ...guarantee,
+        contractor_name: (guarantee as any).contractor_name || 'N/A'
+      }));
+      
+      setGuarantees(transformedGuarantees);
+    } catch (error) {
+      console.error('Error loading bank guarantees:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les garanties bancaires',
+        variant: 'destructive'
+      });
+    }
   };
 
   const resetForm = () => {

@@ -141,57 +141,48 @@ const UnifiedInsuranceManager = () => {
     }
   };
 
-  const loadCertificates = () => {
-    // Mock data with documents array
-    const mockCertificates: LocalInsuranceCertificate[] = [
-      {
-        id: 'cert-1',
-        projectId: 'proj-axe-idini',
-        project_id: 'proj-axe-idini',
-        contractorId: 'cont-sahel-btp',
-        contractor_id: 'cont-sahel-btp',
-        contractorName: 'Sahel BTP',
-        contractor_name: 'Sahel BTP',
-        insuranceCompany: 'Assurances Générales Mauritaniennes',
-        insurance_company: 'Assurances Générales Mauritaniennes',
-        policyNumber: 'RC-2024-001',
-        policy_number: 'RC-2024-001',
-        coverageType: 'responsabilite_civile',
-        coverage_type: 'responsabilite_civile',
-        coverageAmount: 5000000,
-        coverage_amount: 5000000,
-        validFrom: '2024-01-01',
-        valid_from: '2024-01-01',
-        validUntil: '2025-08-25',
-        valid_until: '2025-08-25',
-        status: 'expiring_soon',
-        documents: []
-      },
-      {
-        id: 'cert-2',
-        projectId: 'proj-electrification',
-        project_id: 'proj-electrification',
-        contractorId: 'cont-moderne-sarl',
-        contractor_id: 'cont-moderne-sarl',
-        contractorName: 'Construction Moderne SARL',
-        contractor_name: 'Construction Moderne SARL',
-        insuranceCompany: 'SUNU Assurances',
-        insurance_company: 'SUNU Assurances',
-        policyNumber: 'DEC-2024-015',
-        policy_number: 'DEC-2024-015',
-        coverageType: 'decennale',
-        coverage_type: 'decennale',
-        coverageAmount: 10000000,
-        coverage_amount: 10000000,
-        validFrom: '2024-03-01',
-        valid_from: '2024-03-01',
-        validUntil: '2025-09-10',
-        valid_until: '2025-09-10',
-        status: 'active',
-        documents: []
-      }
-    ];
-    setCertificates(mockCertificates);
+  const loadCertificates = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('insurance_certificates')
+        .select(`
+          *,
+          documents:documents(id, title, file_url, file_name, mime_type)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const transformedCertificates: LocalInsuranceCertificate[] = (data || []).map(cert => ({
+        id: cert.id,
+        projectId: cert.project_id,
+        contractorId: cert.contractor_id,
+        contractorName: cert.contractor_name,
+        insuranceCompany: cert.insurance_company,
+        policyNumber: cert.policy_number,
+        coverageAmount: cert.coverage_amount,
+        coverageType: cert.coverage_type as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
+        validFrom: cert.valid_from,
+        validUntil: cert.valid_until,
+        status: cert.status as 'active' | 'expired' | 'expiring_soon' | 'missing',
+        lastVerified: cert.last_verified || undefined,
+        verifiedBy: cert.verified_by || undefined,
+        notes: cert.notes || undefined,
+        documents: (cert.documents as any) || []
+      }));
+
+      setCertificates(transformedCertificates);
+    } catch (error) {
+      console.error('Error loading certificates:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les certificats',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSendAlerts = async () => {

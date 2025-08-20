@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,25 +93,30 @@ const EnhancedInspectionCrud = () => {
   }, []);
 
   const loadInspections = async () => {
-    // Mock data - replace with actual API call
-    const mockInspections: Inspection[] = [
-      {
-        id: 'insp-1',
-        project_id: 'proj-axe-idini',
-        inspector: 'Ing. Mohamed Ould Abdallahi',
-        inspection_date: '2024-08-25',
-        status: 'completed',
-        progress_at_inspection: 65,
-        comments: 'Inspection satisfaisante avec quelques recommandations mineures',
-        inspection_type: 'quality',
-        defects_found: 2,
-        recommendations: 'Améliorer l\'étanchéité des joints, vérifier l\'alignement des poutres',
-        next_inspection_date: '2024-09-15',
-        supporting_documents: ['doc-insp-1-report', 'doc-insp-1-photos'],
-        created_at: '2024-08-20T10:00:00Z'
-      }
-    ];
-    setInspections(mockInspections);
+    try {
+      const { data, error } = await supabase
+        .from('inspections')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const transformedInspections: Inspection[] = (data || []).map(inspection => ({
+        ...inspection,
+        inspection_date: (inspection as any).date || '',
+        comments: inspection.comments || undefined,
+        phase_id: inspection.phase_id || undefined
+      }));
+      
+      setInspections(transformedInspections);
+    } catch (error) {
+      console.error('Error loading inspections:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les inspections',
+        variant: 'destructive'
+      });
+    }
   };
 
   const resetForm = () => {
