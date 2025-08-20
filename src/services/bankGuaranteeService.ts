@@ -207,7 +207,7 @@ export const sendContractorPenaltyNotification = async (
       .ilike('full_name', `%${projectDelay.contractorName}%`)
       .single();
 
-    if (contractor) {
+    if (contractor?.user_id) {
       await sendNotification({
         recipient_id: contractor.user_id,
         title: 'PÉNALITÉ CONTRACTUELLE - Action requise',

@@ -101,7 +101,7 @@ export const detectOverdueInspections = async (): Promise<any[]> => {
         inspector,
         date,
         status,
-        projects!inner(title, project_manager_id)
+        projects!inner(title)
       `)
       .in('status', ['scheduled', 'in_progress'])
       .lt('date', currentDate);
@@ -195,7 +195,7 @@ export const submitInspectionForApproval = async (
       .from('inspections')
       .select(`
         *,
-        projects!inner(title, project_manager_id)
+        projects!inner(title)
       `)
       .eq('id', inspectionId)
       .single();
@@ -213,7 +213,8 @@ export const submitInspectionForApproval = async (
         related_project_id: inspection.project_id,
         related_inspection_id: inspectionId,
         priority: 'high',
-        inspection_type: inspection.documents?.inspection_type,
+        inspection_type: typeof inspection.documents === 'object' && inspection.documents !== null ? 
+          (inspection.documents as any).inspection_type : undefined,
         requires_director_approval: requiresDirectorApproval
       }
     });
@@ -236,7 +237,8 @@ export const submitInspectionForApproval = async (
             related_project_id: inspection.project_id,
             related_inspection_id: inspectionId,
             priority: 'urgent',
-            inspection_type: inspection.documents?.inspection_type,
+            inspection_type: typeof inspection.documents === 'object' && inspection.documents !== null ? 
+              (inspection.documents as any).inspection_type : undefined,
             escalation_level: 3
           }
         });
@@ -268,28 +270,9 @@ const notifyInspectionScheduled = async (inspectionId: string, inspectionData: I
     }
   });
 
-  // Notify project manager
-  const { data: project } = await supabase
-    .from('projects')
-    .select('project_manager_id')
-    .eq('id', inspectionData.projectId)
-    .single();
-
-  if (project?.project_manager_id) {
-    await sendNotification({
-      recipient_id: project.project_manager_id,
-      title: 'Inspection programmée sur votre projet',
-      message: `Inspection ${inspectionData.inspectionType} programmée par ${inspectionData.inspectorId}.`,
-      type: 'project_update',
-      related_id: inspectionId,
-      metadata: {
-        related_project_id: inspectionData.projectId,
-        related_inspection_id: inspectionId,
-        priority: 'medium',
-        inspection_type: inspectionData.inspectionType
-      }
-    });
-  }
+  // Note: project_manager_id doesn't exist in current schema
+  // This would need to be implemented when project manager relationships are added
+  // For now, we'll skip project manager notification
 };
 
 const sendOverdueInspectionAlert = async (inspection: any) => {
@@ -377,8 +360,9 @@ const checkRecurringViolation = async (projectId: string, violations: any[]): Pr
 
     let recurringCount = 0;
     for (const inspection of pastInspections || []) {
-      if (inspection.documents?.findings?.complianceChecks) {
-        const pastViolations = inspection.documents.findings.complianceChecks
+      const documents = inspection.documents as any;
+      if (documents?.findings?.complianceChecks) {
+        const pastViolations = documents.findings.complianceChecks
           .filter((check: any) => !check.passed && violationTypes.includes(check.standard));
         
         if (pastViolations.length > 0) recurringCount++;
