@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Eye, CreditCard, AlertTriangle, Ban, FileText, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, CreditCard, AlertTriangle, Ban, FileText, Upload, ExternalLink, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import DocumentUpload from '@/components/documents/DocumentUpload';
+import DocumentViewer from '@/components/documents/DocumentViewer';
+import DocumentSection from '@/components/common/DocumentSection';
 
 interface Payment {
   id: string;
@@ -644,6 +646,17 @@ const PaymentCrud: React.FC = () => {
                   placeholder="Notes et commentaires..."
                 />
               </div>
+
+              {/* Document Visualization Section for View Mode */}
+              {isViewMode && selectedPayment && (
+                <div className="mt-6 pt-6 border-t">
+                  <DocumentSection 
+                    relatedId={selectedPayment.id} 
+                    relatedType="payment"
+                    title="Documents du Paiement"
+                  />
+                </div>
+              )}
 
               {!isViewMode && (
                 <div className="flex justify-end gap-2">

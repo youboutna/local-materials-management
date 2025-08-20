@@ -10,11 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText, ExternalLink, Download } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
+import DocumentViewer from '@/components/documents/DocumentViewer';
+import DocumentSection from '@/components/common/DocumentSection';
 import { format } from 'date-fns';
 
 interface Inspection {
@@ -484,6 +486,17 @@ const EnhancedInspectionCrud = () => {
                   rows={3}
                 />
               </div>
+              
+              {/* Document Visualization Section for View Mode */}
+              {isViewMode && selectedInspection && (
+                <div className="mt-6 pt-6 border-t">
+                  <DocumentSection 
+                    relatedId={selectedInspection.id} 
+                    relatedType="inspection"
+                    title="Documents d'Inspection"
+                  />
+                </div>
+              )}
               
               {!isViewMode && (
                 <div className="flex justify-end gap-2">

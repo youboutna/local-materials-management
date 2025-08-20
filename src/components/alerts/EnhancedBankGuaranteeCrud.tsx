@@ -10,11 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload, ExternalLink, Download } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
+import DocumentViewer from '@/components/documents/DocumentViewer';
+import DocumentSection from '@/components/common/DocumentSection';
 import { format } from 'date-fns';
 
 interface BankGuarantee {
@@ -483,6 +485,17 @@ const EnhancedBankGuaranteeCrud = () => {
                   rows={3}
                 />
               </div>
+              
+              {/* Document Visualization Section for View Mode */}
+              {isViewMode && selectedGuarantee && (
+                <div className="mt-6 pt-6 border-t">
+                  <DocumentSection 
+                    relatedId={selectedGuarantee.id} 
+                    relatedType="bank_guarantee"
+                    title="Documents de la Garantie Bancaire"
+                  />
+                </div>
+              )}
               
               {!isViewMode && (
                 <div className="flex justify-end gap-2">

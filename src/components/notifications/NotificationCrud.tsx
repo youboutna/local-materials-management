@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Eye, Bell, AlertTriangle, Info, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Bell, AlertTriangle, Info, CheckCircle, FileText, ExternalLink, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
+import DocumentViewer from '@/components/documents/DocumentViewer';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 
