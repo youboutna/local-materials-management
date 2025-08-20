@@ -307,6 +307,48 @@ export type Database = {
           },
         ]
       }
+      bank_guarantees: {
+        Row: {
+          bank_name: string
+          contractor_id: string
+          created_at: string
+          expiry_date: string
+          guarantee_amount: number
+          guarantee_type: string
+          id: string
+          issue_date: string
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bank_name: string
+          contractor_id: string
+          created_at?: string
+          expiry_date: string
+          guarantee_amount: number
+          guarantee_type: string
+          id?: string
+          issue_date: string
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bank_name?: string
+          contractor_id?: string
+          created_at?: string
+          expiry_date?: string
+          guarantee_amount?: number
+          guarantee_type?: string
+          id?: string
+          issue_date?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       catch_records: {
         Row: {
           actual_sale_value: number | null
@@ -912,6 +954,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      insurance_certificates: {
+        Row: {
+          certificate_url: string | null
+          contractor_id: string
+          contractor_name: string
+          coverage_amount: number
+          coverage_type: string
+          created_at: string
+          id: string
+          insurance_company: string
+          last_verified: string | null
+          notes: string | null
+          policy_number: string
+          project_id: string
+          status: string
+          updated_at: string
+          valid_from: string
+          valid_until: string
+          verified_by: string | null
+        }
+        Insert: {
+          certificate_url?: string | null
+          contractor_id: string
+          contractor_name: string
+          coverage_amount: number
+          coverage_type: string
+          created_at?: string
+          id?: string
+          insurance_company: string
+          last_verified?: string | null
+          notes?: string | null
+          policy_number: string
+          project_id: string
+          status?: string
+          updated_at?: string
+          valid_from: string
+          valid_until: string
+          verified_by?: string | null
+        }
+        Update: {
+          certificate_url?: string | null
+          contractor_id?: string
+          contractor_name?: string
+          coverage_amount?: number
+          coverage_type?: string
+          created_at?: string
+          id?: string
+          insurance_company?: string
+          last_verified?: string | null
+          notes?: string | null
+          policy_number?: string
+          project_id?: string
+          status?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string
+          verified_by?: string | null
+        }
+        Relationships: []
       }
       insurance_companies: {
         Row: {
@@ -1563,6 +1665,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_blocks: {
+        Row: {
+          amount: number
+          blocked_at: string
+          blocked_by: string | null
+          blocking_reasons: Json
+          contractor_id: string
+          id: string
+          notes: string | null
+          project_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          amount: number
+          blocked_at?: string
+          blocked_by?: string | null
+          blocking_reasons: Json
+          contractor_id: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          amount?: number
+          blocked_at?: string
+          blocked_by?: string | null
+          blocking_reasons?: Json
+          contractor_id?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: []
       }
       payments: {
         Row: {

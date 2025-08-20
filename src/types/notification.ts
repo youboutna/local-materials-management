@@ -11,7 +11,11 @@ export type NotificationType =
   | 'inspection_overdue'
   | 'contractor_penalty'
   | 'compliance_alert'
-  | 'escalation_required';
+  | 'escalation_required'
+  | 'insurance_expiry'
+  | 'insurance_update'
+  | 'payment_blocked'
+  | 'payment_warning';
 
 export type TaskType = 
   | 'project' 
