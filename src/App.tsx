@@ -40,8 +40,7 @@ import Index from './pages/Index';
 import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
 import ResetPassword from './pages/ResetPassword';
-import SupplierPortal from './pages/SupplierPortal';
-import SupplierDashboard from './pages/SupplierDashboard';
+import UnifiedSupplierPortal from './pages/UnifiedSupplierPortal';
 import SupplierPasswordReset from './pages/SupplierPasswordReset';
 import TenderManagement from './pages/TenderManagement';
 import TenderImport from './pages/TenderImport';
@@ -75,7 +74,7 @@ function App() {
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/policy" element={<Policy />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
-                      <Route path="/supplier-portal" element={<SupplierPortal />} />
+                      <Route path="/supplier-portal" element={<UnifiedSupplierPortal />} />
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
                       
                       {/* Protected routes - require authentication unless in dev mode */}
@@ -184,11 +183,7 @@ function App() {
     <InspectionEdit />
   </RoleBasedRoute>
 } />
-<Route path="/supplier-dashboard" element={
-  <RoleBasedRoute allowedRoles={['supplier']}>
-    <SupplierDashboard />
-  </RoleBasedRoute>
-} />
+<Route path="/supplier-dashboard" element={<UnifiedSupplierPortal />} />
 <Route path="/tender-management" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <TenderManagement />

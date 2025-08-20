@@ -1,0 +1,1083 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  FileText, Upload, Download, Eye, LogIn, LogOut, User, Key, CheckCircle, 
+  MessageCircle, Clock, Send, Share2, Plus, Bell, DollarSign, Package, 
+  TrendingUp, Calendar, AlertTriangle, ClipboardCheck, Search, Filter,
+  Receipt, FileX, FileCheck, Building, CreditCard
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/supplier';
+import { useQuery } from '@tanstack/react-query';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { useLanguage } from '@/contexts/LanguageContext';
+import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
+
+const UnifiedSupplierPortal = () => {
+  const { t } = useLanguage();
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [supplierProfile, setSupplierProfile] = useState<Supplier | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const [documentType, setDocumentType] = useState<string>('supplier_info');
+  const [taskComment, setTaskComment] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const { toast } = useToast();
+  const { uploadFile: storageUpload, uploading } = useDocumentStorage();
+
+  // Authentication state management
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch supplier profile when user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchSupplierProfile();
+    }
+  }, [user]);
+
+  const fetchSupplierProfile = async () => {
+    if (!user) return;
+    
+    // First try to find by user_id
+    let { data, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    // If no profile found by user_id, try to find by email and link it
+    if (!data && user.email) {
+      const { data: emailData, error: emailError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('email', user.email)
+        .maybeSingle();
+      
+      if (emailData) {
+        // Link the existing supplier to this user
+        const { data: updatedData, error: updateError } = await supabase
+          .from('suppliers')
+          .update({ user_id: user.id })
+          .eq('id', emailData.id)
+          .select()
+          .single();
+        
+        if (!updateError) {
+          setSupplierProfile(updatedData as Supplier);
+          toast({
+            title: 'Profil lié',
+            description: 'Votre profil fournisseur a été lié à votre compte.',
+          });
+          return;
+        }
+      }
+    }
+    
+    if (data) {
+      setSupplierProfile(data as Supplier);
+    } else {
+      await createSupplierProfile();
+    }
+  };
+
+  const createSupplierProfile = async () => {
+    if (!user) return;
+
+    try {
+      const defaultSupplierData = {
+        user_id: user.id,
+        name: user.email?.split('@')[0] || 'Fournisseur',
+        email: user.email,
+        contact_person: user.user_metadata?.full_name || 'Contact',
+        is_active: true,
+      };
+
+      const { data, error } = await supabase
+        .from('suppliers')
+        .insert(defaultSupplierData)
+        .select()
+        .single();
+
+      if (!error) {
+        setSupplierProfile(data as Supplier);
+        toast({
+          title: 'Profil créé',
+          description: 'Votre profil fournisseur a été créé automatiquement.',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating supplier profile:', error);
+    }
+  };
+
+  // Fetch notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['supplier-notifications', supplierProfile?.id],
+    enabled: !!supplierProfile?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('supplier_notifications')
+        .select('*')
+        .eq('supplier_id', supplierProfile!.id)
+        .order('sent_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch payment requests
+  const { data: paymentRequests = [] } = useQuery({
+    queryKey: ['supplier-payment-requests', supplierProfile?.id],
+    enabled: !!supplierProfile?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('supplier_payment_requests')
+        .select('*')
+        .eq('supplier_id', supplierProfile!.id)
+        .order('requested_date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch documents
+  const { data: documents = [] } = useQuery({
+    queryKey: ['supplier-documents', user?.id, supplierProfile?.id],
+    enabled: !!user?.id && !!supplierProfile?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('documents')
+        .select(`
+          *,
+          projects!documents_project_id_fkey (title, status),
+          payments (amount, payment_date)
+        `)
+        .or(`assigned_to.eq.${user!.id},tags.cs.{${supplierProfile!.name}}`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch parsed invoices
+  const { data: parsedInvoices = [] } = useQuery({
+    queryKey: ['parsed-invoices', supplierProfile?.id],
+    enabled: !!supplierProfile?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('parsed_invoices')
+        .select('*')
+        .eq('supplier_info->supplier_id', supplierProfile!.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch inspections
+  const { data: inspections = [] } = useQuery({
+    queryKey: ['supplier-inspections', supplierProfile?.id],
+    enabled: !!supplierProfile?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inspections')
+        .select(`
+          *,
+          projects (title, status)
+        `)
+        .eq('inspector', supplierProfile!.name)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
+
+      if (error) {
+        let errorMessage = 'Erreur de connexion';
+        if (error.message === 'Invalid login credentials') {
+          errorMessage = 'Email ou mot de passe incorrect';
+        }
+        toast({
+          title: "Erreur",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur le portail fournisseur",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/supplier-portal`
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Erreur d'inscription",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Inscription réussie",
+          description: "Vérifiez votre email pour confirmer votre compte",
+        });
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSupplierProfile(null);
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!uploadFile || !uploadTitle.trim() || !user) return;
+
+    try {
+      const uploadResult = await storageUpload(uploadFile, `supplier-uploads/${user.id}`);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          title: uploadTitle,
+          description: uploadDescription,
+          file_url: uploadResult.url,
+          file_name: uploadFile.name,
+          mime_type: uploadFile.type,
+          file_size: uploadFile.size,
+          document_type: documentType as any,
+          uploaded_by: user.id,
+          status: 'draft'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Document téléchargé",
+        description: "Votre document a été téléchargé avec succès",
+      });
+
+      // Reset form
+      setUploadFile(null);
+      setUploadTitle('');
+      setUploadDescription('');
+    } catch (error: any) {
+      toast({
+        title: "Erreur de téléchargement",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTaskComment = async (taskId: string) => {
+    if (!taskComment.trim() || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('supplier_notifications')
+        .insert({
+          supplier_id: supplierProfile?.id,
+          task_id: taskId,
+          notification_type: 'task_comment',
+          email: user.email || '',
+          metadata: { comment: taskComment, from_supplier: true }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Commentaire ajouté",
+        description: "Votre commentaire a été envoyé",
+      });
+
+      setTaskComment('');
+      setSelectedTaskId(null);
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTaskCompletion = async (taskId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('supplier_notifications')
+        .insert({
+          supplier_id: supplierProfile?.id,
+          task_id: taskId,
+          notification_type: 'task_completed',
+          email: user.email || '',
+          metadata: { status: 'completed', from_supplier: true }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Tâche marquée comme terminée",
+        description: "Le chef de projet a été notifié",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
+    const matchesType = typeFilter === 'all' || doc.document_type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const totalPayments = paymentRequests.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const pendingPayments = paymentRequests.filter(p => p.status === 'pending').length;
+  const unreadNotifications = notifications.filter(n => !n.used_at).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center flex items-center justify-center gap-2">
+              <User className="h-6 w-6" />
+              {isLoginMode ? 'Connexion Fournisseur' : 'Inscription Fournisseur'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="votre@email.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <Button 
+              onClick={isLoginMode ? handleLogin : handleSignUp}
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Chargement...' : (isLoginMode ? 'Se connecter' : "S'inscrire")}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsLoginMode(!isLoginMode)}
+              className="w-full"
+            >
+              {isLoginMode ? "Pas de compte ? S'inscrire" : 'Déjà inscrit ? Se connecter'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 to-secondary/5">
+      <Navbar />
+      
+      <main className="flex-grow pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-primary mb-2">
+                Portail Fournisseur
+              </h1>
+              <p className="text-muted-foreground">
+                Bienvenue {supplierProfile?.name || user.email}
+              </p>
+            </div>
+            <Button onClick={handleLogout} variant="outline" className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Paiements Total</CardTitle>
+                <DollarSign className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {totalPayments.toLocaleString()} MRU
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {paymentRequests.length} demandes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Paiements en Attente</CardTitle>
+                <TrendingUp className="h-4 w-4 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">{pendingPayments}</div>
+                <p className="text-xs text-muted-foreground">En traitement</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                <Bell className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{unreadNotifications}</div>
+                <p className="text-xs text-muted-foreground">Non lues</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                <FileText className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">{documents.length}</div>
+                <p className="text-xs text-muted-foreground">Disponibles</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <Tabs defaultValue="documents" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="upload">Télécharger</TabsTrigger>
+              <TabsTrigger value="payments">Paiements</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="tasks">Tâches</TabsTrigger>
+              <TabsTrigger value="inspections">Inspections</TabsTrigger>
+              <TabsTrigger value="invoices">Factures</TabsTrigger>
+            </TabsList>
+            
+            {/* Documents Tab */}
+            <TabsContent value="documents">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Documents Partagés
+                  </CardTitle>
+                  
+                  {/* Filters */}
+                  <div className="flex gap-4 mt-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Rechercher des documents..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Statut" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="draft">Brouillon</SelectItem>
+                        <SelectItem value="pending_review">En révision</SelectItem>
+                        <SelectItem value="approved">Approuvé</SelectItem>
+                        <SelectItem value="rejected">Rejeté</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="inspection">Inspection</SelectItem>
+                        <SelectItem value="plan">Plan</SelectItem>
+                        <SelectItem value="photo">Photo</SelectItem>
+                        <SelectItem value="invoice">Facture</SelectItem>
+                        <SelectItem value="purchase_order">Bon de commande</SelectItem>
+                        <SelectItem value="inquiry">Demande</SelectItem>
+                        <SelectItem value="contract">Contrat</SelectItem>
+                        <SelectItem value="report">Rapport</SelectItem>
+                        <SelectItem value="certificate">Certificat</SelectItem>
+                        <SelectItem value="specification">Spécification</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredDocuments.length > 0 ? (
+                      filteredDocuments.map((document) => (
+                        <div key={document.id} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-8 w-8 text-muted-foreground" />
+                              <div>
+                                <h3 className="font-medium">{document.title}</h3>
+                                <p className="text-sm text-muted-foreground">{document.description}</p>
+                                <div className="flex gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {document.document_type}
+                                  </Badge>
+                                  {document.projects && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {document.projects.title}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={document.status === 'approved' ? 'default' : 'secondary'}
+                                className={
+                                  document.status === 'approved' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : document.status === 'rejected'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-orange-100 text-orange-800'
+                                }
+                              >
+                                {document.status}
+                              </Badge>
+                              {document.file_url && (
+                                <Button size="sm" variant="outline" asChild>
+                                  <a href={document.file_url} target="_blank" rel="noopener noreferrer">
+                                    <Eye className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">Aucun document trouvé</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Upload Tab */}
+            <TabsContent value="upload">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Télécharger un Document
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="upload-title">Titre du document</Label>
+                    <Input
+                      id="upload-title"
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                      placeholder="Entrez le titre..."
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="document-type">Type de document</Label>
+                    <Select value={documentType} onValueChange={setDocumentType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="inspection">Inspection</SelectItem>
+                        <SelectItem value="plan">Plan</SelectItem>
+                        <SelectItem value="photo">Photo</SelectItem>
+                        <SelectItem value="invoice">Facture</SelectItem>
+                        <SelectItem value="purchase_order">Bon de commande</SelectItem>
+                        <SelectItem value="inquiry">Demande</SelectItem>
+                        <SelectItem value="contract">Contrat</SelectItem>
+                        <SelectItem value="report">Rapport</SelectItem>
+                        <SelectItem value="certificate">Certificat</SelectItem>
+                        <SelectItem value="specification">Spécification</SelectItem>
+                        <SelectItem value="supplier_info">Informations fournisseur</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="upload-description">Description</Label>
+                    <Textarea
+                      id="upload-description"
+                      value={uploadDescription}
+                      onChange={(e) => setUploadDescription(e.target.value)}
+                      placeholder="Description optionnelle..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="upload-file">Fichier</Label>
+                    <Input
+                      id="upload-file"
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleFileUpload}
+                    disabled={uploading || !uploadFile || !uploadTitle.trim()}
+                    className="w-full"
+                  >
+                    {uploading ? 'Téléchargement...' : 'Télécharger le document'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payment Requests Tab */}
+            <TabsContent value="payments">
+              <div className="space-y-6">
+                {supplierProfile && (
+                  <SupplierPaymentRequest supplierId={supplierProfile.id} />
+                )}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Historique des Demandes de Paiement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {paymentRequests.length > 0 ? (
+                        paymentRequests.map((request) => (
+                          <div key={request.id} className="p-4 rounded-lg border bg-card">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-medium">
+                                  Demande #{request.id?.slice(0, 8)}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  Montant: {request.amount?.toLocaleString()} MRU
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Raison: {request.payment_reason}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {request.requested_date ? new Date(request.requested_date).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                                </p>
+                              </div>
+                              <Badge 
+                                variant={request.status === 'approved' ? 'default' : 'secondary'}
+                                className={
+                                  request.status === 'approved' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : request.status === 'rejected'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-orange-100 text-orange-800'
+                                }
+                              >
+                                {request.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center py-8">Aucune demande de paiement</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Notifications Tab */}
+            <TabsContent value="notifications">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Notifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div 
+                          key={notification.id}
+                          className={`p-4 rounded-lg border ${
+                            notification.used_at ? 'bg-muted/50' : 'bg-blue-50 border-blue-200'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-medium">
+                                {notification.notification_type}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {typeof notification.metadata === 'object' && notification.metadata && 'comment' in notification.metadata
+                                  ? String(notification.metadata.comment)
+                                  : ''}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {notification.sent_at ? new Date(notification.sent_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                              </p>
+                            </div>
+                            {!notification.used_at && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                Nouveau
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">Aucune notification</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tasks Tab */}
+            <TabsContent value="tasks">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Tâches Assignées
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {notifications.filter(n => n.notification_type.includes('task')).length > 0 ? (
+                      notifications.filter(n => n.notification_type.includes('task')).map((task) => (
+                        <div key={task.id} className="p-4 rounded-lg border bg-card">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium">{task.notification_type}</h3>
+                              <Badge variant="outline">
+                                {typeof task.metadata === 'object' && task.metadata && 'status' in task.metadata 
+                                  ? String(task.metadata.status) 
+                                  : 'En cours'}
+                              </Badge>
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground">
+                              {typeof task.metadata === 'object' && task.metadata && 'comment' in task.metadata 
+                                ? String(task.metadata.comment) 
+                                : 'Aucune description'}
+                            </p>
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedTaskId(selectedTaskId === task.id ? null : task.id)}
+                              >
+                                <MessageCircle className="h-4 w-4 mr-1" />
+                                Commenter
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleTaskCompletion(task.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Marquer terminé
+                              </Button>
+                            </div>
+                            
+                            {selectedTaskId === task.id && (
+                              <div className="mt-3 space-y-2">
+                                <Textarea
+                                  value={taskComment}
+                                  onChange={(e) => setTaskComment(e.target.value)}
+                                  placeholder="Ajouter un commentaire..."
+                                  rows={3}
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleTaskComment(task.id)}
+                                  disabled={!taskComment.trim()}
+                                >
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Envoyer
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">Aucune tâche assignée</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Inspections Tab */}
+            <TabsContent value="inspections">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Résultats d'Inspection
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {inspections.length > 0 ? (
+                      inspections.map((inspection) => (
+                        <div key={inspection.id} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium">
+                                Inspection - {inspection.projects?.title || 'Projet inconnu'}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Inspecteur: {inspection.inspector}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Progrès: {inspection.progress_at_inspection}%
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Commentaires: {inspection.comments || 'Aucun commentaire'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {inspection.date ? new Date(inspection.date).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                              </p>
+                            </div>
+                            <Badge 
+                              variant={inspection.status === 'approved' ? 'default' : 'secondary'}
+                              className={
+                                inspection.status === 'approved' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : inspection.status === 'rejected'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-orange-100 text-orange-800'
+                              }
+                            >
+                              {inspection.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">Aucun résultat d'inspection</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Parsed Invoices Tab */}
+            <TabsContent value="invoices">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Factures Analysées
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {parsedInvoices.length > 0 ? (
+                      parsedInvoices.map((invoice) => (
+                        <div key={invoice.id} className="p-4 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h3 className="font-medium">
+                                Facture #{invoice.invoice_number || 'N/A'}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                Fichier: {invoice.file_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Montant total: {invoice.total_amount?.toLocaleString()} MRU
+                              </p>
+                              {invoice.tax_amount && (
+                                <p className="text-sm text-muted-foreground">
+                                  TVA: {invoice.tax_amount.toLocaleString()} MRU
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground">
+                                {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                              </p>
+                            </div>
+                            <Badge 
+                              variant={invoice.parsing_status === 'completed' ? 'default' : 'secondary'}
+                              className={
+                                invoice.parsing_status === 'completed' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : invoice.parsing_status === 'failed'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-orange-100 text-orange-800'
+                              }
+                            >
+                              {invoice.parsing_status}
+                            </Badge>
+                          </div>
+                          
+                          {invoice.items && (
+                            <div className="mt-3">
+                              <h4 className="font-medium mb-2">Articles:</h4>
+                              <div className="space-y-1">
+                                {Array.isArray(invoice.items) && invoice.items.map((item: any, index: number) => (
+                                  <div key={index} className="text-sm bg-muted p-2 rounded">
+                                    <span className="font-medium">{item.description || item.name}</span>
+                                    {item.quantity && <span> - Qté: {item.quantity}</span>}
+                                    {item.unit_price && <span> - Prix: {item.unit_price} MRU</span>}
+                                    {item.total && <span> - Total: {item.total} MRU</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {invoice.parsing_errors && (
+                            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+                              <p className="text-sm text-red-600">
+                                Erreur d'analyse: {invoice.parsing_errors}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">Aucune facture analysée</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default UnifiedSupplierPortal;
