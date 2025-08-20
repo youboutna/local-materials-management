@@ -1,46 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, FileText, Upload, Download } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Shield, AlertTriangle, CheckCircle, Calendar, FileText, Plus, Edit, Trash2, Eye, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { 
   detectExpiringInsurance, 
   sendInsuranceExpiryAlerts, 
   createInsuranceCertificate,
-  InsuranceAlert,
-  InsuranceCertificate 
+  InsuranceCertificate,
+  InsuranceAlert
 } from '@/services/insuranceCertificateService';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
 const insuranceFormSchema = z.object({
-  projectId: z.string().min(1, 'ID projet requis'),
-  contractorId: z.string().min(1, 'ID entrepreneur requis'),
-  contractorName: z.string().min(1, 'Nom entrepreneur requis'),
+  projectId: z.string().min(1, 'Project ID requis'),
+  contractorId: z.string().min(1, 'Contractor ID requis'),
+  contractorName: z.string().min(1, 'Nom du contractant requis'),
   insuranceCompany: z.string().min(1, 'Compagnie d\'assurance requise'),
   policyNumber: z.string().min(1, 'Numéro de police requis'),
-  coverageAmount: z.number().min(1, 'Montant de couverture requis'),
-  coverageType: z.enum(['responsabilite_civile', 'decennale', 'vehicules', 'materiel', 'tous_risques']),
+  coverageAmount: z.number().min(0, 'Montant de couverture requis'),
+  coverageType: z.string().min(1, 'Type de couverture requis'),
   validFrom: z.string().min(1, 'Date de début requise'),
-  validUntil: z.string().min(1, 'Date de fin requise'),
-  certificateUrl: z.string().optional(),
+  validUntil: z.string().min(1, 'Date d\'expiration requise'),
   notes: z.string().optional()
 });
 
-interface LocalInsuranceCertificate extends Omit<InsuranceCertificate, 'status'> {
-  id: string;
+interface LocalInsuranceCertificate {
+  id?: string;
+  projectId: string;
+  contractorId: string;
+  contractorName: string;
+  insuranceCompany: string;
+  policyNumber: string;
+  coverageAmount: number;
+  coverageType: 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques';
+  validFrom: string;
+  validUntil: string;
+  certificateUrl?: string;
+  status: 'active' | 'expired' | 'expiring_soon' | 'missing';
+  lastVerified?: string;
+  verifiedBy?: string;
+  notes?: string;
   project_id?: string;
   contractor_id?: string;
   contractor_name?: string;
@@ -51,27 +66,41 @@ interface LocalInsuranceCertificate extends Omit<InsuranceCertificate, 'status'>
   valid_from?: string;
   valid_until?: string;
   certificate_url?: string;
-  status?: 'active' | 'expired' | 'expiring_soon' | 'missing';
-  created_at?: string;
-  updated_at?: string;
+  documents?: Array<{
+    id: string;
+    title: string;
+    file_url?: string;
+    file_name?: string;
+    mime_type?: string;
+  }>;
 }
 
 const UnifiedInsuranceManager = () => {
+  const { toast } = useToast();
+  const { uploadFile, downloading, deleteFile } = useDocumentStorage();
   const [alerts, setAlerts] = useState<InsuranceAlert[]>([]);
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
-  const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
   const [activeTab, setActiveTab] = useState('alerts');
-  const { toast } = useToast();
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const form = useForm<z.infer<typeof insuranceFormSchema>>({
     resolver: zodResolver(insuranceFormSchema),
     defaultValues: {
+      projectId: '',
+      contractorId: '',
+      contractorName: '',
+      insuranceCompany: '',
+      policyNumber: '',
+      coverageAmount: 0,
       coverageType: 'responsabilite_civile',
-      coverageAmount: 0
+      validFrom: '',
+      validUntil: '',
+      notes: ''
     }
   });
 
@@ -113,7 +142,7 @@ const UnifiedInsuranceManager = () => {
   };
 
   const loadCertificates = () => {
-    // Mock data for demonstration - will be replaced with actual database calls
+    // Mock data with documents array
     const mockCertificates: LocalInsuranceCertificate[] = [
       {
         id: 'cert-1',
@@ -136,7 +165,7 @@ const UnifiedInsuranceManager = () => {
         validUntil: '2025-08-25',
         valid_until: '2025-08-25',
         status: 'expiring_soon',
-        created_at: '2024-01-01T00:00:00.000Z'
+        documents: []
       },
       {
         id: 'cert-2',
@@ -159,7 +188,7 @@ const UnifiedInsuranceManager = () => {
         validUntil: '2025-09-10',
         valid_until: '2025-09-10',
         status: 'active',
-        created_at: '2024-03-01T00:00:00.000Z'
+        documents: []
       }
     ];
     setCertificates(mockCertificates);
@@ -182,82 +211,114 @@ const UnifiedInsuranceManager = () => {
     }
   };
 
+  const handleFileUpload = async (file: File, certificateId?: string) => {
+    if (!file) return;
+
+    setUploadingFile(true);
+    try {
+      const uploadResult = await uploadFile(file, `insurance-certificates/${Date.now()}-${file.name}`);
+      
+      if (uploadResult.success && uploadResult.url) {
+        // Create document record
+        const { data: document, error } = await supabase
+          .from('documents')
+          .insert({
+            title: `Certificat d'assurance - ${file.name}`,
+            description: `Document pour certificat d'assurance`,
+            file_url: uploadResult.url,
+            file_name: file.name,
+            mime_type: file.type,
+            file_size: file.size,
+            document_type: 'contract',
+            project_id: form.getValues('projectId'),
+            metadata: {
+              certificate_id: certificateId || 'new',
+              contractor_name: form.getValues('contractorName'),
+              policy_number: form.getValues('policyNumber')
+            }
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Succès",
+          description: "Document téléchargé avec succès"
+        });
+
+        return document;
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du téléchargement du fichier",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof insuranceFormSchema>) => {
     try {
+      console.log('Creating/updating insurance certificate:', values);
+      
       if (isEditing && selectedCertificate) {
         // Update existing certificate
         const updatedCertificate: LocalInsuranceCertificate = {
           ...selectedCertificate,
-          projectId: values.projectId,
-          project_id: values.projectId,
-          contractorId: values.contractorId,
-          contractor_id: values.contractorId,
-          contractorName: values.contractorName,
-          contractor_name: values.contractorName,
-          insuranceCompany: values.insuranceCompany,
-          insurance_company: values.insuranceCompany,
-          policyNumber: values.policyNumber,
-          policy_number: values.policyNumber,
-          coverageAmount: values.coverageAmount,
-          coverage_amount: values.coverageAmount,
-          coverageType: values.coverageType,
-          coverage_type: values.coverageType,
-          validFrom: values.validFrom,
-          valid_from: values.validFrom,
-          validUntil: values.validUntil,
-          valid_until: values.validUntil,
-          certificateUrl: values.certificateUrl,
-          certificate_url: values.certificateUrl,
-          notes: values.notes,
-          updated_at: new Date().toISOString()
+          ...values,
+          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
+          lastVerified: new Date().toISOString(),
+          verifiedBy: 'current-user-id'
         };
         
-        setCertificates(prev => prev.map(c => c.id === selectedCertificate.id ? updatedCertificate : c));
+        setCertificates(prev => 
+          prev.map(cert => cert.id === selectedCertificate.id ? updatedCertificate : cert)
+        );
+        
         toast({
           title: "Succès",
           description: "Certificat d'assurance mis à jour avec succès"
         });
       } else {
         // Create new certificate
-        await createInsuranceCertificate({
+        const certificateId = await createInsuranceCertificate({
           ...values,
+          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
           status: 'active'
         });
         
         const newCertificate: LocalInsuranceCertificate = {
-          id: `cert-${Date.now()}`,
+          id: certificateId,
           ...values,
-          project_id: values.projectId,
-          contractor_id: values.contractorId,
-          contractor_name: values.contractorName,
-          insurance_company: values.insuranceCompany,
-          policy_number: values.policyNumber,
-          coverage_amount: values.coverageAmount,
-          coverage_type: values.coverageType,
-          valid_from: values.validFrom,
-          valid_until: values.validUntil,
-          certificate_url: values.certificateUrl,
+          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
           status: 'active',
-          created_at: new Date().toISOString()
+          lastVerified: new Date().toISOString(),
+          verifiedBy: 'current-user-id',
+          documents: []
         };
         
         setCertificates(prev => [...prev, newCertificate]);
+        
         toast({
           title: "Succès",
           description: "Certificat d'assurance créé avec succès"
         });
       }
       
-      form.reset();
       setIsDialogOpen(false);
+      form.reset();
       setIsEditing(false);
       setSelectedCertificate(null);
-      loadInsuranceData();
+      
     } catch (error) {
-      console.error('Error processing certificate:', error);
+      console.error('Error creating insurance certificate:', error);
       toast({
         title: "Erreur",
-        description: "Erreur lors du traitement du certificat",
+        description: "Erreur lors de la création du certificat",
         variant: "destructive"
       });
     }
@@ -282,7 +343,6 @@ const UnifiedInsuranceManager = () => {
       coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
       validFrom: certificate.validFrom || certificate.valid_from || '',
       validUntil: certificate.validUntil || certificate.valid_until || '',
-      certificateUrl: certificate.certificateUrl || certificate.certificate_url || '',
       notes: certificate.notes || ''
     });
     setSelectedCertificate(certificate);
@@ -302,11 +362,36 @@ const UnifiedInsuranceManager = () => {
       coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
       validFrom: certificate.validFrom || certificate.valid_from || '',
       validUntil: certificate.validUntil || certificate.valid_until || '',
-      certificateUrl: certificate.certificateUrl || certificate.certificate_url || '',
       notes: certificate.notes || ''
     });
     setSelectedCertificate(certificate);
     setIsViewMode(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleRenewCertificate = (certificate: LocalInsuranceCertificate) => {
+    const today = new Date();
+    const currentExpiry = new Date(certificate.validUntil || certificate.valid_until || '');
+    const newValidFrom = new Date(currentExpiry);
+    newValidFrom.setDate(newValidFrom.getDate() + 1);
+    const newValidUntil = new Date(newValidFrom);
+    newValidUntil.setFullYear(newValidUntil.getFullYear() + 1);
+
+    form.reset({
+      projectId: certificate.projectId || certificate.project_id || '',
+      contractorId: certificate.contractorId || certificate.contractor_id || '',
+      contractorName: certificate.contractorName || certificate.contractor_name || '',
+      insuranceCompany: certificate.insuranceCompany || certificate.insurance_company || '',
+      policyNumber: `${certificate.policyNumber || certificate.policy_number}-REN${new Date().getFullYear()}`,
+      coverageAmount: certificate.coverageAmount || certificate.coverage_amount || 0,
+      coverageType: (certificate.coverageType || certificate.coverage_type || 'responsabilite_civile') as any,
+      validFrom: newValidFrom.toISOString().split('T')[0],
+      validUntil: newValidUntil.toISOString().split('T')[0],
+      notes: `Renouvellement du certificat ${certificate.policyNumber || certificate.policy_number}`
+    });
+    setSelectedCertificate(null);
+    setIsEditing(false);
+    setIsViewMode(false);
     setIsDialogOpen(true);
   };
 
@@ -545,19 +630,75 @@ const UnifiedInsuranceManager = () => {
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="certificateUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL du Certificat (optionnel)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://..." {...field} disabled={isViewMode} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-4">
+                    <Label>Documents du Certificat</Label>
+                    {!isViewMode && (
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleFileUpload(file, selectedCertificate?.id);
+                            }
+                          }}
+                          className="hidden"
+                          id="certificate-upload"
+                        />
+                        <label 
+                          htmlFor="certificate-upload" 
+                          className="flex flex-col items-center justify-center cursor-pointer"
+                        >
+                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                          <span className="text-sm text-muted-foreground">
+                            {uploadingFile ? 'Téléchargement...' : 'Cliquez pour télécharger un document'}
+                          </span>
+                          <span className="text-xs text-muted-foreground mt-1">
+                            PDF, Images, Documents acceptés
+                          </span>
+                        </label>
+                      </div>
                     )}
-                  />
+                    
+                    {selectedCertificate?.documents && selectedCertificate.documents.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Documents attachés:</Label>
+                        {selectedCertificate.documents.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-2 border rounded">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-sm">{doc.title}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              {doc.file_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => window.open(doc.file_url, '_blank')}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {!isViewMode && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (doc.file_url) {
+                                      deleteFile(doc.file_url);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -648,11 +789,21 @@ const UnifiedInsuranceManager = () => {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => {
+                          const certificate = certificates.find(c => 
+                            (c.policyNumber || c.policy_number) === alert.policyNumber
+                          );
+                          if (certificate) openViewForm(certificate);
+                        }}>
                           <FileText className="h-4 w-4 mr-1" />
                           Voir Certificat
                         </Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => {
+                          const certificate = certificates.find(c => 
+                            (c.policyNumber || c.policy_number) === alert.policyNumber
+                          );
+                          if (certificate) handleRenewCertificate(certificate);
+                        }}>
                           Renouveler
                         </Button>
                       </div>
@@ -712,25 +863,16 @@ const UnifiedInsuranceManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openViewForm(certificate)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openEditForm(certificate)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(certificate.id)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
+                            Renouveler
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -739,12 +881,6 @@ const UnifiedInsuranceManager = () => {
                   ))}
                 </TableBody>
               </Table>
-              {getActiveCertificates().length === 0 && (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Aucun certificat actif</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -786,14 +922,10 @@ const UnifiedInsuranceManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openViewForm(certificate)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm">
+                          <Button size="sm" onClick={() => handleRenewCertificate(certificate)}>
                             Renouveler
                           </Button>
                         </div>
@@ -802,12 +934,6 @@ const UnifiedInsuranceManager = () => {
                   ))}
                 </TableBody>
               </Table>
-              {getExpiredCertificates().length === 0 && (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <p className="text-muted-foreground">Aucun certificat expiré</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -860,25 +986,16 @@ const UnifiedInsuranceManager = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openViewForm(certificate)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openEditForm(certificate)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(certificate.id)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
+                            Renouveler
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -887,12 +1004,6 @@ const UnifiedInsuranceManager = () => {
                   ))}
                 </TableBody>
               </Table>
-              {certificates.length === 0 && (
-                <div className="text-center py-8">
-                  <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Aucun certificat d'assurance</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
