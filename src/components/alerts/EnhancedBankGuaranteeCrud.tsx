@@ -192,26 +192,47 @@ const EnhancedBankGuaranteeCrud = () => {
 
     try {
       if (isEditing && selectedGuarantee) {
-        const updatedGuarantee: BankGuarantee = {
-          ...selectedGuarantee,
-          ...formData,
-          supporting_documents: uploadedDocuments.map(doc => doc.id),
-          updated_at: new Date().toISOString()
-        };
-        setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
+        // Update in Supabase
+        const { error } = await supabase
+          .from('bank_guarantees')
+          .update({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id,
+            bank_name: formData.bank_name,
+            guarantee_amount: formData.guarantee_amount,
+            guarantee_type: formData.guarantee_type,
+            issue_date: formData.issue_date,
+            expiry_date: formData.expiry_date,
+            status: formData.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedGuarantee.id);
+
+        if (error) throw error;
+
+        await loadGuarantees();
         toast({
           title: "Succès",
           description: "Garantie bancaire mise à jour avec succès",
         });
       } else {
-        const newGuarantee: BankGuarantee = {
-          id: `bg-${Date.now()}`,
-          ...formData,
-          supporting_documents: uploadedDocuments.map(doc => doc.id),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setGuarantees(prev => [...prev, newGuarantee]);
+        // Insert in Supabase
+        const { error } = await supabase
+          .from('bank_guarantees')
+          .insert({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id,
+            bank_name: formData.bank_name,
+            guarantee_amount: formData.guarantee_amount,
+            guarantee_type: formData.guarantee_type,
+            issue_date: formData.issue_date,
+            expiry_date: formData.expiry_date,
+            status: formData.status
+          });
+
+        if (error) throw error;
+
+        await loadGuarantees();
         toast({
           title: "Succès",
           description: "Garantie bancaire créée avec succès",
@@ -221,9 +242,10 @@ const EnhancedBankGuaranteeCrud = () => {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
+      console.error('Error saving guarantee:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue",
+        description: "Une erreur est survenue lors de la sauvegarde",
         variant: "destructive",
       });
     }
@@ -231,11 +253,27 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const handleDelete = async (guaranteeId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
-      setGuarantees(prev => prev.filter(g => g.id !== guaranteeId));
-      toast({
-        title: "Succès",
-        description: "Garantie bancaire supprimée avec succès",
-      });
+      try {
+        const { error } = await supabase
+          .from('bank_guarantees')
+          .delete()
+          .eq('id', guaranteeId);
+
+        if (error) throw error;
+
+        await loadGuarantees();
+        toast({
+          title: "Succès",
+          description: "Garantie bancaire supprimée avec succès",
+        });
+      } catch (error) {
+        console.error('Error deleting guarantee:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive",
+        });
+      }
     }
   };
 

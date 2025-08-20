@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, DollarSign, Clock, Send } from 'lucide-react';
 import { detectProjectDelays, triggerBankGuaranteeNotification, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const BankGuaranteeMonitor: React.FC = () => {
   const [delays, setDelays] = useState<any[]>([]);
@@ -41,11 +42,29 @@ const BankGuaranteeMonitor: React.FC = () => {
   const handleTriggerBankNotification = async (delay: any) => {
     setProcessing(delay.projectId);
     try {
+      // Get real bank guarantee data from database
+      const { data: guarantee, error: guaranteeError } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', delay.projectId)
+        .eq('status', 'active')
+        .single();
+
+      if (guaranteeError) {
+        console.error('Error fetching bank guarantee:', guaranteeError);
+        toast({
+          title: 'Erreur',
+          description: 'Aucune garantie bancaire trouvée pour ce projet',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const bankGuaranteeData = {
         projectId: delay.projectId,
-        contractorId: 'contractor-1', // Would be dynamic in real implementation
-        bankLiaisonEmail: 'bank.liaison@example.com',
-        guaranteeAmount: 500000, // 500K MRU example
+        contractorId: guarantee.contractor_id,
+        bankLiaisonEmail: `contact@${guarantee.bank_name.toLowerCase().replace(/\s+/g, '')}.mr`,
+        guaranteeAmount: guarantee.guarantee_amount,
         delayPercentage: delay.delayPercentage,
         contractClause: 'Article 15.3 - Garantie de bonne exécution'
       };

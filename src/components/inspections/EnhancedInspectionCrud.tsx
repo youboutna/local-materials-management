@@ -201,26 +201,45 @@ const EnhancedInspectionCrud = () => {
 
     try {
       if (isEditing && selectedInspection) {
-        const updatedInspection: Inspection = {
-          ...selectedInspection,
-          ...formData,
-          supporting_documents: uploadedDocuments.map(doc => doc.id),
-          updated_at: new Date().toISOString()
-        };
-        setInspections(prev => prev.map(i => i.id === selectedInspection.id ? updatedInspection : i));
+        // Update in Supabase
+        const { error } = await supabase
+          .from('inspections')
+          .update({
+            project_id: formData.project_id,
+            inspector: formData.inspector,
+            date: formData.inspection_date,
+            status: formData.status,
+            progress_at_inspection: formData.progress_at_inspection,
+            comments: formData.comments,
+            phase_id: formData.phase_id || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedInspection.id);
+
+        if (error) throw error;
+
+        await loadInspections();
         toast({
           title: "Succès",
           description: "Inspection mise à jour avec succès",
         });
       } else {
-        const newInspection: Inspection = {
-          id: `insp-${Date.now()}`,
-          ...formData,
-          supporting_documents: uploadedDocuments.map(doc => doc.id),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setInspections(prev => [...prev, newInspection]);
+        // Insert in Supabase
+        const { error } = await supabase
+          .from('inspections')
+          .insert({
+            project_id: formData.project_id,
+            inspector: formData.inspector,
+            date: formData.inspection_date,
+            status: formData.status,
+            progress_at_inspection: formData.progress_at_inspection,
+            comments: formData.comments,
+            phase_id: formData.phase_id || null
+          });
+
+        if (error) throw error;
+
+        await loadInspections();
         toast({
           title: "Succès",
           description: "Inspection créée avec succès",
@@ -230,9 +249,10 @@ const EnhancedInspectionCrud = () => {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
+      console.error('Error saving inspection:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue",
+        description: "Une erreur est survenue lors de la sauvegarde",
         variant: "destructive",
       });
     }
@@ -240,11 +260,27 @@ const EnhancedInspectionCrud = () => {
 
   const handleDelete = async (inspectionId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) {
-      setInspections(prev => prev.filter(i => i.id !== inspectionId));
-      toast({
-        title: "Succès",
-        description: "Inspection supprimée avec succès",
-      });
+      try {
+        const { error } = await supabase
+          .from('inspections')
+          .delete()
+          .eq('id', inspectionId);
+
+        if (error) throw error;
+
+        await loadInspections();
+        toast({
+          title: "Succès",
+          description: "Inspection supprimée avec succès",
+        });
+      } catch (error) {
+        console.error('Error deleting inspection:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive",
+        });
+      }
     }
   };
 

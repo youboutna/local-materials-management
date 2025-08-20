@@ -258,42 +258,58 @@ const UnifiedInsuranceManager = () => {
       console.log('Creating/updating insurance certificate:', values);
       
       if (isEditing && selectedCertificate) {
-        // Update existing certificate
-        const updatedCertificate: LocalInsuranceCertificate = {
-          ...selectedCertificate,
-          ...values,
-          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-          lastVerified: new Date().toISOString(),
-          verifiedBy: 'current-user-id'
-        };
-        
-        setCertificates(prev => 
-          prev.map(cert => cert.id === selectedCertificate.id ? updatedCertificate : cert)
-        );
+        // Update existing certificate in Supabase
+        const { error } = await supabase
+          .from('insurance_certificates')
+          .update({
+            project_id: values.projectId,
+            contractor_id: values.contractorId,
+            contractor_name: values.contractorName,
+            insurance_company: values.insuranceCompany,
+            policy_number: values.policyNumber,
+            coverage_amount: values.coverageAmount,
+            coverage_type: values.coverageType,
+            valid_from: values.validFrom,
+            valid_until: values.validUntil,
+            last_verified: new Date().toISOString(),
+            verified_by: 'current-user-id',
+            notes: values.notes
+          })
+          .eq('id', selectedCertificate.id || '');
+
+        if (error) throw error;
+
+        await loadCertificates();
         
         toast({
           title: "Succès",
           description: "Certificat d'assurance mis à jour avec succès"
         });
       } else {
-        // Create new certificate
-        const certificateId = await createInsuranceCertificate({
-          ...values,
-          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-          status: 'active'
-        });
-        
-        const newCertificate: LocalInsuranceCertificate = {
-          id: certificateId,
-          ...values,
-          coverageType: values.coverageType as 'responsabilite_civile' | 'decennale' | 'vehicules' | 'materiel' | 'tous_risques',
-          status: 'active',
-          lastVerified: new Date().toISOString(),
-          verifiedBy: 'current-user-id',
-          documents: []
-        };
-        
-        setCertificates(prev => [...prev, newCertificate]);
+        // Create new certificate in Supabase
+        const { data, error } = await supabase
+          .from('insurance_certificates')
+          .insert({
+            project_id: values.projectId,
+            contractor_id: values.contractorId,
+            contractor_name: values.contractorName,
+            insurance_company: values.insuranceCompany,
+            policy_number: values.policyNumber,
+            coverage_amount: values.coverageAmount,
+            coverage_type: values.coverageType,
+            valid_from: values.validFrom,
+            valid_until: values.validUntil,
+            status: 'active',
+            last_verified: new Date().toISOString(),
+            verified_by: 'current-user-id',
+            notes: values.notes
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        await loadCertificates();
         
         toast({
           title: "Succès",
@@ -389,11 +405,27 @@ const UnifiedInsuranceManager = () => {
 
   const handleDelete = async (certificateId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce certificat d\'assurance ?')) {
-      setCertificates(prev => prev.filter(c => c.id !== certificateId));
-      toast({
-        title: "Succès",
-        description: "Certificat d'assurance supprimé avec succès"
-      });
+      try {
+        const { error } = await supabase
+          .from('insurance_certificates')
+          .delete()
+          .eq('id', certificateId);
+
+        if (error) throw error;
+
+        await loadCertificates();
+        toast({
+          title: "Succès",
+          description: "Certificat d'assurance supprimé avec succès"
+        });
+      } catch (error) {
+        console.error('Error deleting certificate:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive"
+        });
+      }
     }
   };
 

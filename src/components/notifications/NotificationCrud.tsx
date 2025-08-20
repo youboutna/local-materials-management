@@ -12,6 +12,8 @@ import { Plus, Edit, Trash2, Eye, Bell, AlertTriangle, Info, CheckCircle } from 
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 interface Notification {
   id: string;
@@ -20,7 +22,7 @@ interface Notification {
   message: string;
   type: string;
   read: boolean;
-  related_id?: string;
+  related_id?: string | null;
   metadata?: any;
   created_at?: string;
   updated_at?: string;
@@ -36,11 +38,39 @@ interface NotificationFormData {
 
 const NotificationCrud: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les notifications',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [formData, setFormData] = useState<NotificationFormData>({
     recipient_id: '',
@@ -118,27 +148,42 @@ const NotificationCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedNotification) {
-        // Mock update
-        const updatedNotification = { 
-          ...selectedNotification, 
-          ...formData,
-          updated_at: new Date().toISOString()
-        };
-        setNotifications(prev => prev.map(n => n.id === selectedNotification.id ? updatedNotification : n));
+        // Update in Supabase
+        const { error } = await supabase
+          .from('notifications')
+          .update({
+            recipient_id: formData.recipient_id,
+            title: formData.title,
+            message: formData.message,
+            type: formData.type,
+            related_id: formData.related_id || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedNotification.id);
+
+        if (error) throw error;
+
+        await loadNotifications();
         toast({
           title: "Succès",
           description: "Notification mise à jour avec succès",
         });
       } else {
-        // Mock create
-        const newNotification: Notification = {
-          id: `notif-${Date.now()}`,
-          ...formData,
-          read: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setNotifications(prev => [...prev, newNotification]);
+        // Insert in Supabase
+        const { error } = await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: formData.recipient_id,
+            title: formData.title,
+            message: formData.message,
+            type: formData.type,
+            related_id: formData.related_id || null,
+            read: false
+          });
+
+        if (error) throw error;
+
+        await loadNotifications();
         toast({
           title: "Succès",
           description: "Notification créée avec succès",
@@ -148,9 +193,10 @@ const NotificationCrud: React.FC = () => {
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
+      console.error('Error saving notification:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue",
+        description: "Une erreur est survenue lors de la sauvegarde",
         variant: "destructive",
       });
     }
@@ -158,18 +204,43 @@ const NotificationCrud: React.FC = () => {
 
   const handleDelete = async (notificationId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette notification ?')) {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      toast({
-        title: "Succès",
-        description: "Notification supprimée avec succès",
-      });
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .delete()
+          .eq('id', notificationId);
+
+        if (error) throw error;
+
+        await loadNotifications();
+        toast({
+          title: "Succès",
+          description: "Notification supprimée avec succès",
+        });
+      } catch (error) {
+        console.error('Error deleting notification:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => prev.map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    ));
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+
+      await loadNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   const getTypeConfig = (type: string) => {
@@ -288,18 +359,23 @@ const NotificationCrud: React.FC = () => {
           <CardTitle>Liste des Notifications</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Titre</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Destinataire</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Titre</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Destinataire</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {notifications.map((notification) => {
                 const typeConfig = getTypeConfig(notification.type);
                 const TypeIcon = typeConfig.icon;
@@ -377,8 +453,9 @@ const NotificationCrud: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
