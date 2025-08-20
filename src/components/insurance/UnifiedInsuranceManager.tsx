@@ -22,6 +22,7 @@ import {
   InsuranceCertificate,
   InsuranceAlert
 } from '@/services/insuranceCertificateService';
+import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
@@ -142,6 +143,18 @@ const UnifiedInsuranceManager = () => {
     }
   };
 
+  const handleSendAlerts = async () => {
+    setLoading(true);
+    try {
+      await checkAndSendInsuranceAlerts();
+      await loadInsuranceData(); // Refresh alerts
+    } catch (error) {
+      console.error('Error sending alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadCertificates = async () => {
     setLoading(true);
     try {
@@ -199,22 +212,6 @@ const UnifiedInsuranceManager = () => {
     }
   };
 
-  const handleSendAlerts = async () => {
-    try {
-      const result = await sendInsuranceExpiryAlerts(alerts);
-      toast({
-        title: "Alertes envoyées",
-        description: `${result.notificationsSent} notifications envoyées avec succès`
-      });
-    } catch (error) {
-      console.error('Error sending alerts:', error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de l'envoi des alertes",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleFileUpload = async (file: File, certificateId?: string) => {
     if (!file) return;

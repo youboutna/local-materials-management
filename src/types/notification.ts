@@ -23,6 +23,7 @@ export type TaskType =
   | 'document' 
   | 'payment' 
   | 'material' 
+  | 'insurance'
   | 'general';
 
 export interface NotificationMetadata {

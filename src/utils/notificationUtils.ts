@@ -21,6 +21,8 @@ export const getTaskLink = (metadata: NotificationMetadata): string => {
       return related_project_id ? `/projects/${related_project_id}` : '/projects';
     case 'material':
       return '/materials';
+    case 'insurance':
+      return '/insurance-management';
     default:
       return '/dashboard';
   }
@@ -38,6 +40,8 @@ export const getTaskIcon = (taskType: TaskType): string => {
       return 'CreditCard';
     case 'material':
       return 'Package';
+    case 'insurance':
+      return 'Shield';
     default:
       return 'Bell';
   }

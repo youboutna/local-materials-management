@@ -1,6 +1,6 @@
-// Simplified service for insurance certificate management
-// This will be fully functional once Supabase types are regenerated
+// Service for insurance certificate management and alerts
 
+import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
 
 export interface InsuranceCertificate {
@@ -41,64 +41,118 @@ export const INSURANCE_ALERT_THRESHOLDS = {
 
 // Mock implementation until database types are available
 export const detectExpiringInsurance = async (): Promise<InsuranceAlert[]> => {
-  console.log('Detecting expiring insurance certificates...');
-  
-  // Mock data for demonstration
-  const mockAlerts: InsuranceAlert[] = [
-    {
-      projectId: 'proj-axe-idini',
-      contractorId: 'cont-sahel-btp',
-      contractorName: 'Sahel BTP',
-      insuranceType: 'responsabilite_civile',
-      expiryDate: '2025-08-25',
-      daysRemaining: 5,
-      alertLevel: 'critical',
-      policyNumber: 'RC-2024-001'
-    },
-    {
-      projectId: 'proj-electrification',
-      contractorId: 'cont-moderne-sarl',
-      contractorName: 'Construction Moderne SARL',
-      insuranceType: 'decennale',
-      expiryDate: '2025-09-10',
-      daysRemaining: 21,
-      alertLevel: 'warning',
-      policyNumber: 'DEC-2024-015'
+  try {
+    console.log('Detecting expiring insurance certificates...');
+    
+    // Get actual data from Supabase
+    const { data: certificates, error } = await supabase
+      .from('insurance_certificates')
+      .select('*')
+      .eq('status', 'active');
+
+    if (error) {
+      console.error('Error fetching insurance certificates:', error);
+      return [];
     }
-  ];
-  
-  return mockAlerts;
+
+    const alerts: InsuranceAlert[] = [];
+    const today = new Date();
+
+    certificates?.forEach(cert => {
+      const expiryDate = new Date(cert.valid_until);
+      const daysRemaining = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let alertLevel: 'warning' | 'critical' | 'expired' = 'warning';
+      
+      if (daysRemaining <= 0) {
+        alertLevel = 'expired';
+      } else if (daysRemaining <= INSURANCE_ALERT_THRESHOLDS.URGENT) {
+        alertLevel = 'critical';
+      } else if (daysRemaining <= INSURANCE_ALERT_THRESHOLDS.WARNING) {
+        alertLevel = 'warning';
+      } else {
+        return; // No alert needed
+      }
+
+      alerts.push({
+        projectId: cert.project_id,
+        contractorId: cert.contractor_id,
+        contractorName: cert.contractor_name,
+        insuranceType: cert.coverage_type,
+        expiryDate: cert.valid_until,
+        daysRemaining,
+        alertLevel,
+        policyNumber: cert.policy_number
+      });
+    });
+
+    return alerts;
+  } catch (error) {
+    console.error('Error in detectExpiringInsurance:', error);
+    return [];
+  }
 };
 
 export const sendInsuranceExpiryAlerts = async (alerts: InsuranceAlert[]) => {
   try {
     console.log(`Sending ${alerts.length} insurance expiry alerts...`);
     
-    // Send mock notifications
+    if (alerts.length === 0) {
+      console.log('No insurance alerts to send');
+      return { success: true, notificationsSent: 0, alertsProcessed: 0 };
+    }
+
+    // Get all admin users to notify
+    const { data: adminUsers, error: adminError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role_name', ['admin', 'director', 'manager']);
+
+    if (adminError) {
+      console.error('Error fetching admin users:', adminError);
+      throw adminError;
+    }
+
+    const recipients = adminUsers?.map(u => u.user_id) || [];
+    let notificationsSent = 0;
+
+    // Send notifications to all admins for each alert
     for (const alert of alerts) {
-      await sendNotification({
-        recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
-        title: `ALERTE ASSURANCE - ${alert.alertLevel.toUpperCase()}`,
-        message: `Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s).`,
-        type: 'project_update',
-        related_id: alert.projectId,
-        metadata: {
-          related_project_id: alert.projectId,
-          contractor_id: alert.contractorId,
-          contractor_name: alert.contractorName,
-          insurance_type: alert.insuranceType,
-          policy_number: alert.policyNumber,
-          expiry_date: alert.expiryDate,
-          days_remaining: alert.daysRemaining,
-          alert_level: alert.alertLevel,
-          priority: alert.alertLevel === 'critical' ? 'urgent' : 'high'
-        }
-      });
+      const alertTitle = alert.alertLevel === 'expired' 
+        ? `ASSURANCE EXPIRÉE - ${alert.contractorName}`
+        : `ALERTE ASSURANCE - ${alert.alertLevel.toUpperCase()}`;
+      
+      const alertMessage = alert.alertLevel === 'expired'
+        ? `⚠️ Assurance ${alert.insuranceType} de ${alert.contractorName} a expiré le ${new Date(alert.expiryDate).toLocaleDateString('fr-FR')}.`
+        : `⚠️ Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s).`;
+
+      for (const recipientId of recipients) {
+        await sendNotification({
+          recipient_id: recipientId,
+          title: alertTitle,
+          message: alertMessage,
+          type: 'insurance_expiry',
+          related_id: alert.projectId,
+          metadata: {
+            task_type: 'project',
+            related_project_id: alert.projectId,
+            contractor_id: alert.contractorId,
+            contractor_name: alert.contractorName,
+            insurance_type: alert.insuranceType,
+            policy_number: alert.policyNumber,
+            expiry_date: alert.expiryDate,
+            days_remaining: alert.daysRemaining,
+            alert_level: alert.alertLevel,
+            priority: alert.alertLevel === 'expired' ? 'urgent' : alert.alertLevel === 'critical' ? 'urgent' : 'high'
+          }
+        });
+        notificationsSent++;
+      }
     }
 
     return {
       success: true,
-      notificationsSent: alerts.length,
+      notificationsSent,
       alertsProcessed: alerts.length
     };
 
