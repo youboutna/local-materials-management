@@ -16,6 +16,7 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/supplier';
 import { DocumentType } from '@/types/document';
 import BusinessDocuments from '@/components/documents/BusinessDocuments';
+import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
 
 const SupplierPortal = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -716,11 +717,12 @@ const SupplierPortal = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
             <TabsTrigger value="tasks">Mes Tâches</TabsTrigger>
             <TabsTrigger value="upload">Mes Documents</TabsTrigger>
             <TabsTrigger value="business">Documents Justificatifs</TabsTrigger>
+            <TabsTrigger value="payments">Demandes de Paiement</TabsTrigger>
           </TabsList>
 
           <TabsContent value="shared">
@@ -1066,6 +1068,20 @@ const SupplierPortal = () => {
                 <BusinessDocuments />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="payments">
+            {supplierProfile ? (
+              <SupplierPaymentRequest supplierId={supplierProfile.id} />
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">
+                    Profil fournisseur requis pour accéder aux demandes de paiement
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>

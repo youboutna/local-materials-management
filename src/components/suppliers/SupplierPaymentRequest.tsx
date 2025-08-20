@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 
 interface PaymentRequest {
   id: string;
@@ -27,6 +26,12 @@ interface PaymentRequest {
   approved_by?: string;
   approved_at?: string;
   rejection_reason?: string;
+}
+
+interface ValidationResult {
+  hasValidGuarantee: boolean;
+  hasValidInsurance: boolean;
+  hasRecentInspection: boolean;
 }
 
 interface Project {
@@ -46,7 +51,6 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
   const [loading, setLoading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const { toast } = useToast();
-  const { uploadFile, uploading } = useDocumentStorage();
 
   // Form fields
   const [projectId, setProjectId] = useState('');
@@ -62,14 +66,15 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
   const fetchPaymentRequests = async () => {
     try {
-      const { data, error } = await supabase
+      // Using any type to bypass TypeScript checking for the new table
+      const { data, error } = await (supabase as any)
         .from('supplier_payment_requests')
         .select('*')
         .eq('supplier_id', supplierId)
         .order('requested_date', { ascending: false });
 
       if (error) throw error;
-      setPaymentRequests(data || []);
+      setPaymentRequests((data || []) as PaymentRequest[]);
     } catch (error) {
       console.error('Error fetching payment requests:', error);
       toast({
@@ -99,19 +104,26 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
     if (!file) return;
 
     try {
-      const result = await uploadFile(file, 'payment_requests', {
-        title: `Document justificatif - ${file.name}`,
-        description: 'Document pour demande de paiement',
-        document_type: 'supporting_document',
-      });
+      // Simple file upload to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `payment_requests/${fileName}`;
 
-      if (result?.file_url) {
-        setUploadedDocuments(prev => [...prev, result.file_url]);
-        toast({
-          title: 'Document téléchargé',
-          description: 'Le document a été ajouté à votre demande',
-        });
-      }
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      setUploadedDocuments(prev => [...prev, publicUrl]);
+      toast({
+        title: 'Document téléchargé',
+        description: 'Le document a été ajouté à votre demande',
+      });
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
@@ -122,7 +134,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
     }
   };
 
-  const validatePaymentRequest = async (projectId: string) => {
+  const validatePaymentRequest = async (projectId: string): Promise<ValidationResult> => {
     // Check guarantees, insurance, and inspections
     const [guarantees, insurance, inspections] = await Promise.all([
       supabase
@@ -149,9 +161,9 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
     ]);
 
     return {
-      hasValidGuarantee: guarantees.data && guarantees.data.length > 0,
-      hasValidInsurance: insurance.data && insurance.data.length > 0,
-      hasRecentInspection: inspections.data && inspections.data.length > 0,
+      hasValidGuarantee: guarantees.data ? guarantees.data.length > 0 : false,
+      hasValidInsurance: insurance.data ? insurance.data.length > 0 : false,
+      hasRecentInspection: inspections.data ? inspections.data.length > 0 : false,
     };
   };
 
@@ -167,8 +179,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
     setLoading(true);
     try {
-      // Create payment request
-      const { data: requestData, error: requestError } = await supabase
+      // Create payment request using any type to bypass TypeScript checking
+      const { data: requestData, error: requestError } = await (supabase as any)
         .from('supplier_payment_requests')
         .insert({
           supplier_id: supplierId,
@@ -187,7 +199,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
       if (requestError) throw requestError;
 
       // Validate requirements if project selected
-      let validationResult = null;
+      let validationResult: ValidationResult | null = null;
       if (projectId) {
         validationResult = await validatePaymentRequest(projectId);
       }
@@ -210,8 +222,10 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
             supplier_id: supplierId,
             project_id: projectId,
             amount: parseFloat(amount),
-            validation_status: validationResult,
-            can_auto_approve: validationResult?.hasValidGuarantee && validationResult?.hasValidInsurance && validationResult?.hasRecentInspection
+            has_valid_guarantee: validationResult?.hasValidGuarantee || false,
+            has_valid_insurance: validationResult?.hasValidInsurance || false,
+            has_recent_inspection: validationResult?.hasRecentInspection || false,
+            can_auto_approve: (validationResult?.hasValidGuarantee && validationResult?.hasValidInsurance && validationResult?.hasRecentInspection) || false
           },
         }));
 
@@ -357,7 +371,6 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
                     <Upload className="mr-2 h-4 w-4" />
                     Télécharger un document
                   </label>
-                  {uploading && <span className="ml-2 text-sm text-gray-500">Téléchargement...</span>}
                 </div>
                 {uploadedDocuments.length > 0 && (
                   <div className="mt-2 space-y-1">

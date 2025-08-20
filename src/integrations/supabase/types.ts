@@ -2834,6 +2834,60 @@ export type Database = {
           },
         ]
       }
+      supplier_payment_requests: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          description: string
+          id: string
+          notes: string | null
+          payment_reason: string
+          project_id: string | null
+          rejection_reason: string | null
+          requested_date: string
+          status: string
+          supplier_id: string
+          supporting_documents: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_reason: string
+          project_id?: string | null
+          rejection_reason?: string | null
+          requested_date?: string
+          status?: string
+          supplier_id: string
+          supporting_documents?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_reason?: string
+          project_id?: string | null
+          rejection_reason?: string | null
+          requested_date?: string
+          status?: string
+          supplier_id?: string
+          supporting_documents?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supplier_payments: {
         Row: {
           amount: number
