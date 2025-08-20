@@ -56,7 +56,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 
   const selectedProject = projects?.find(p => p.id === value);
 
-  const getStatusColor = (status: string | null) => {
+  const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
       case 'Completed': return 'bg-green-100 text-green-800';
       case 'InProgress': return 'bg-blue-100 text-blue-800';
@@ -67,7 +67,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     }
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('fr-FR');
   };

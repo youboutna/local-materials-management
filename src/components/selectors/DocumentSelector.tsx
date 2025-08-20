@@ -25,7 +25,8 @@ interface DocumentSelectorProps {
   placeholder?: string;
   label?: string;
   required?: boolean;
-  documentType?: string;
+  documentType?: 'inspection_report' | 'location_photo' | 'project_report' | 'contract' | 'supplier_info' | 'task_assignment' | 'employee_record' | 'tender';
+  disabled?: boolean;
 }
 
 const DocumentSelector: React.FC<DocumentSelectorProps> = ({
@@ -34,7 +35,8 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   placeholder = "Sélectionner un document",
   label = "Document",
   required = false,
-  documentType
+  documentType,
+  disabled = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
