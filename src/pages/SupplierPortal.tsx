@@ -93,8 +93,48 @@ const SupplierPortal = () => {
     
     if (error) {
       console.error('Error fetching supplier profile:', error);
-    } else {
+    } else if (data) {
       setSupplierProfile(data as Supplier);
+    } else {
+      // No supplier profile found - create a default one
+      await createSupplierProfile();
+    }
+  };
+
+  const createSupplierProfile = async () => {
+    if (!user) return;
+
+    try {
+      const defaultSupplierData = {
+        user_id: user.id,
+        name: user.email?.split('@')[0] || 'Fournisseur',
+        email: user.email,
+        contact_person: user.user_metadata?.full_name || 'Contact',
+        is_active: true,
+      };
+
+      const { data, error } = await supabase
+        .from('suppliers')
+        .insert(defaultSupplierData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating supplier profile:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de créer le profil fournisseur automatiquement. Contactez l\'administrateur.',
+          variant: 'destructive',
+        });
+      } else {
+        setSupplierProfile(data as Supplier);
+        toast({
+          title: 'Profil créé',
+          description: 'Votre profil fournisseur a été créé automatiquement.',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating supplier profile:', error);
     }
   };
 
@@ -1076,9 +1116,14 @@ const SupplierPortal = () => {
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">
-                    Profil fournisseur requis pour accéder aux demandes de paiement
-                  </p>
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">
+                      Création du profil fournisseur en cours...
+                    </p>
+                    <Button onClick={createSupplierProfile} variant="outline">
+                      Créer un profil fournisseur
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
