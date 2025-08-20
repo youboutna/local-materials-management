@@ -261,16 +261,17 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Additional Stats Row */}
+          {/* Waterfall KPIs Row */}
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Phases de projet</CardTitle>
-                <CardDescription>Phases actives en cours</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">Phases Waterfall</CardTitle>
+                <CardDescription>Phases séquentielles</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
@@ -282,8 +283,8 @@ const Dashboard = () => {
 
             <Card className="border-l-4 border-l-purple-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Jalons</CardTitle>
-                <CardDescription>Objectifs à atteindre</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">Jalons Gantt</CardTitle>
+                <CardDescription>Jalons planifiés</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
@@ -295,13 +296,39 @@ const Dashboard = () => {
 
             <Card className="border-l-4 border-l-emerald-500">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-medium text-gray-700">Jalons terminés</CardTitle>
-                <CardDescription>Objectifs atteints</CardDescription>
+                <CardTitle className="text-lg font-medium text-gray-700">Marchés Publics</CardTitle>
+                <CardDescription>Étapes workflow</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-adrar-800">{stats.completedMilestones}</span>
-                  <span className="ml-2 text-sm text-gray-500">terminés</span>
+                  <span className="text-3xl font-bold text-adrar-800">5</span>
+                  <span className="ml-2 text-sm text-gray-500">étapes</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">Délais</CardTitle>
+                <CardDescription>Respect planning</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">{Math.round((stats.completedMilestones / Math.max(stats.milestones, 1)) * 100)}</span>
+                  <span className="ml-2 text-sm text-gray-500">%</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-teal-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700">CPI/SPI</CardTitle>
+                <CardDescription>Performance index</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-adrar-800">1.2</span>
+                  <span className="ml-2 text-sm text-gray-500">index</span>
                 </div>
               </CardContent>
             </Card>
