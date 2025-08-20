@@ -48,6 +48,9 @@ import TenderImport from './pages/TenderImport';
 import PhaseDetail from './pages/PhaseDetail';
 import Suppliers from './pages/Suppliers';
 import EnhancedDashboard from './pages/EnhancedDashboard';
+import BankGuaranteeMonitorPage from './pages/BankGuaranteeMonitor';
+import InspectionMonitoringPage from './pages/InspectionMonitoring';
+import NotificationsCenterPage from './pages/NotificationsCenter';
 
 const queryClient = new QueryClient();
 
@@ -197,6 +200,21 @@ function App() {
 <Route path="/suppliers" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <Suppliers />
+  </RoleBasedRoute>
+} />
+<Route path="/bank-guarantee-monitor" element={
+  <RoleBasedRoute allowedRoles={['admin','director','project_manager']}>
+    <BankGuaranteeMonitorPage />
+  </RoleBasedRoute>
+} />
+<Route path="/inspection-monitoring" element={
+  <RoleBasedRoute allowedRoles={['admin','director','engineering_consultant','project_manager']}>
+    <InspectionMonitoringPage />
+  </RoleBasedRoute>
+} />
+<Route path="/notifications-center" element={
+  <RoleBasedRoute allowedRoles={['admin','director','project_manager','engineering_consultant']}>
+    <NotificationsCenterPage />
   </RoleBasedRoute>
 } />
                       <Route path="*" element={<NotFound />} />
