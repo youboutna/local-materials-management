@@ -270,6 +270,10 @@ const UnifiedInsuranceManager = () => {
     try {
       console.log('Creating/updating insurance certificate:', values);
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id;
+      
       if (isEditing && selectedCertificate) {
         // Update existing certificate in Supabase
         const { error } = await supabase
@@ -285,7 +289,7 @@ const UnifiedInsuranceManager = () => {
             valid_from: values.validFrom,
             valid_until: values.validUntil,
             last_verified: new Date().toISOString(),
-            verified_by: 'current-user-id',
+            verified_by: currentUserId,
             notes: values.notes
           })
           .eq('id', selectedCertificate.id || '');
@@ -314,7 +318,7 @@ const UnifiedInsuranceManager = () => {
             valid_until: values.validUntil,
             status: 'active',
             last_verified: new Date().toISOString(),
-            verified_by: 'current-user-id',
+            verified_by: currentUserId,
             notes: values.notes
           })
           .select()
