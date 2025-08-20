@@ -3924,6 +3924,31 @@ export type Database = {
         Args: { role_name: string; target_user_id: string }
         Returns: undefined
       }
+      create_supplier_payment_request: {
+        Args: {
+          amount_param: number
+          description_param: string
+          notes_param?: string
+          payment_reason_param: string
+          project_id_param?: string
+          supplier_id_param: string
+          supporting_documents_param?: string[]
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          notes: string
+          payment_reason: string
+          project_id: string
+          requested_date: string
+          status: string
+          supplier_id: string
+          supporting_documents: string[]
+          updated_at: string
+        }[]
+      }
       generate_request_number: {
         Args: Record<PropertyKey, never>
         Returns: string

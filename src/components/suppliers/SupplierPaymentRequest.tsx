@@ -66,26 +66,31 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
   const fetchPaymentRequests = async () => {
     try {
-      // Using rpc call to bypass TypeScript checking for the new table
-      const { data, error } = await supabase.rpc('get_supplier_payment_requests', {
-        supplier_id_param: supplierId
-      });
+      // Simplified approach - use notifications as temporary storage
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', supplierId)
+        .eq('type', 'payment_request')
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        console.log('RPC not available, using direct query');
-        const { data: directData, error: directError } = await supabase
-          .from('payments' as any)
-          .select('*')
-          .eq('contractor_id', supplierId)
-          .order('created_at', { ascending: false });
-        
-        if (directError) throw directError;
-        setPaymentRequests(directData || []);
-        return;
-      }
+      if (error) throw error;
       
-      setPaymentRequests(data || []);
+      // Transform notifications to payment requests format
+      const transformedRequests = (data || []).map((notification: any) => ({
+        id: notification.id,
+        supplier_id: supplierId,
+        project_id: notification.metadata?.project_id || null,
+        amount: notification.metadata?.amount || 0,
+        description: notification.metadata?.description || '',
+        payment_reason: notification.metadata?.payment_reason || '',
+        supporting_documents: notification.metadata?.supporting_documents || [],
+        status: notification.metadata?.status || 'pending',
+        requested_date: notification.created_at,
+        notes: notification.metadata?.notes || '',
+      }));
+      
+      setPaymentRequests(transformedRequests);
     } catch (error) {
       console.error('Error fetching payment requests:', error);
       toast({
@@ -178,6 +183,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
     };
   };
 
+
   const submitPaymentRequest = async () => {
     if (!amount || !description || !paymentReason) {
       toast({
@@ -190,48 +196,36 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
     setLoading(true);
     try {
-      // Create payment request using rpc call to bypass TypeScript checking
-      const { data: requestData, error: requestError } = await supabase.rpc('create_supplier_payment_request', {
-        supplier_id_param: supplierId,
-        project_id_param: projectId || null,
-        amount_param: parseFloat(amount),
-        description_param: description,
-        payment_reason_param: paymentReason,
-        supporting_documents_param: uploadedDocuments,
-        notes_param: notes,
-      });
-
-      if (requestError) {
-        // Fallback to direct insert if RPC doesn't exist
-        console.log('RPC not available, using direct insert');
-        const requestId = crypto.randomUUID();
-        const { error: insertError } = await supabase
-          .from('notifications' as any)
-          .insert({
-            id: requestId,
-            title: 'Nouvelle demande de paiement',
-            message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU`,
-            type: 'payment_request',
-            recipient_id: supplierId,
-            metadata: {
-              supplier_id: supplierId,
-              project_id: projectId,
-              amount: parseFloat(amount),
-              payment_reason: paymentReason,
-              description,
-              supporting_documents: uploadedDocuments,
-              notes,
-            }
-          });
-        
-        if (insertError) throw insertError;
-      }
-
+      // Create payment request as notification for now
+      const requestId = crypto.randomUUID();
+      
       // Validate requirements if project selected
       let validationResult: ValidationResult | null = null;
       if (projectId) {
         validationResult = await validatePaymentRequest(projectId);
       }
+
+      const { error: requestError } = await supabase
+        .from('notifications')
+        .insert({
+          id: requestId,
+          recipient_id: supplierId,
+          title: 'Demande de paiement créée',
+          message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
+          type: 'payment_request',
+          metadata: {
+            supplier_id: supplierId,
+            project_id: projectId,
+            amount: parseFloat(amount),
+            payment_reason: paymentReason,
+            description,
+            supporting_documents: uploadedDocuments,
+            notes,
+            status: 'pending',
+          }
+        });
+
+      if (requestError) throw requestError;
 
       // Get directors and managers for notifications
       const { data: managersData } = await supabase
@@ -240,13 +234,13 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
         .in('role_name', ['director', 'manager']);
 
       // Send notifications to directors and managers
-      if (managersData) {
+      if (managersData && managersData.length > 0) {
         const notifications = managersData.map(manager => ({
           recipient_id: manager.user_id,
           title: 'Nouvelle demande de paiement fournisseur',
           message: `Une demande de paiement de ${parseFloat(amount).toLocaleString()} MRU a été soumise par un fournisseur`,
           type: 'payment_request',
-          related_id: requestData?.id || crypto.randomUUID(),
+          related_id: requestId,
           metadata: {
             supplier_id: supplierId,
             project_id: projectId,
