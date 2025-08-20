@@ -338,6 +338,147 @@ const SupplierPortal = () => {
     }
   };
 
+  const handleInvoiceSubmission = async () => {
+    if (!uploadFile || !uploadTitle.trim() || !user || !supplierProfile) return;
+
+    try {
+      // First, validate project status (inspection, insurance, banking guarantees)
+      const statusCheck = await validateProjectStatus();
+      if (!statusCheck.valid) {
+        toast({
+          title: "Vérification échouée",
+          description: statusCheck.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Upload file to storage
+      const uploadResult = await storageUpload(uploadFile, `supplier-invoices/${user.id}`);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      // Save document record as payment request
+      const { error } = await supabase
+        .from('documents')
+        .insert({
+          title: uploadTitle,
+          description: uploadDescription,
+          file_url: uploadResult.url,
+          file_name: uploadFile.name,
+          mime_type: uploadFile.type,
+          file_size: uploadFile.size,
+          document_type: 'supplier_info' as const,
+          uploaded_by: user.id,
+          status: 'pending_review',
+          metadata: {
+            supplier_id: supplierProfile.id,
+            payment_request: true,
+            submitted_at: new Date().toISOString()
+          }
+        });
+
+      if (error) throw error;
+
+      // Create notification for project managers
+      await supabase
+        .from('notifications')
+        .insert({
+          title: "Nouvelle demande de paiement",
+          message: `Demande de paiement soumise par ${supplierProfile.name}: ${uploadTitle}`,
+          type: "payment_request",
+          recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
+          metadata: {
+            supplier_id: supplierProfile.id,
+            supplier_name: supplierProfile.name,
+            document_title: uploadTitle
+          }
+        });
+
+      toast({
+        title: "Demande soumise",
+        description: "Votre demande de paiement a été soumise avec succès",
+      });
+
+      // Reset form
+      setUploadFile(null);
+      setUploadTitle('');
+      setUploadDescription('');
+      
+      // Refresh documents
+      fetchUploadedDocuments();
+    } catch (error: any) {
+      toast({
+        title: "Erreur de soumission",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const validateProjectStatus = async () => {
+    if (!supplierProfile) {
+      return { valid: false, message: "Profil fournisseur introuvable" };
+    }
+
+    try {
+      // Check active projects for this supplier
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, title, status')
+        .contains('metadata', { supplier_id: supplierProfile.id })
+        .eq('status', 'en_cours');
+
+      if (!projects || projects.length === 0) {
+        return { valid: false, message: "Aucun projet actif trouvé" };
+      }
+
+      // Check recent inspections
+      const { data: inspections } = await supabase
+        .from('inspections')
+        .select('*')
+        .in('project_id', projects.map(p => p.id))
+        .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+        .eq('status', 'approved');
+
+      if (!inspections || inspections.length === 0) {
+        return { valid: false, message: "Aucune inspection récente approuvée. Une inspection doit être effectuée avant le paiement." };
+      }
+
+      // Check insurance certificates
+      const { data: insurance } = await supabase
+        .from('insurance_certificates')
+        .select('*')
+        .in('project_id', projects.map(p => p.id))
+        .eq('status', 'active')
+        .gte('valid_until', new Date().toISOString());
+
+      if (!insurance || insurance.length === 0) {
+        return { valid: false, message: "Assurance expirée ou manquante. Renouvelez votre assurance avant de demander un paiement." };
+      }
+
+      // Check bank guarantees
+      const { data: guarantees } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .in('project_id', projects.map(p => p.id))
+        .eq('status', 'active')
+        .gte('expiry_date', new Date().toISOString());
+
+      if (!guarantees || guarantees.length === 0) {
+        return { valid: false, message: "Garantie bancaire expirée ou manquante. Renouvelez vos garanties avant de demander un paiement." };
+      }
+
+      return { valid: true, message: "Tous les prérequis sont respectés" };
+
+    } catch (error) {
+      console.error('Status validation error:', error);
+      return { valid: false, message: "Erreur lors de la vérification du statut" };
+    }
+  };
+
   const downloadDocument = async (document: any) => {
     if (document.file_url) {
       await markAsViewed(document.id, 'document');

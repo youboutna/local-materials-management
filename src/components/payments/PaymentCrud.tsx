@@ -10,12 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, CreditCard, AlertTriangle, Ban, FileText, Upload, ExternalLink, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import DocumentSection from '@/components/common/DocumentSection';
+import { parseInvoiceFromPdf } from '@/utils/btpCalculations';
+import { InvoiceLine } from '@/utils/types';
 
 interface Payment {
   id: string;
@@ -581,56 +584,68 @@ const PaymentCrud: React.FC = () => {
                 </div>
               </div>
 
-              {/* Documents Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Documents justificatifs</Label>
-                  <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button type="button" variant="outline" size="sm" disabled={isViewMode}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Ajouter Document
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Ajouter Document Justificatif</DialogTitle>
-                      </DialogHeader>
-                      <div className="p-4">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Télécharger un document justificatif pour ce paiement (PDF, JPG, PNG acceptés, max 10MB)
-                        </p>
-                        {/* Placeholder for document upload functionality */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-600">Glisser-déposer ou cliquer pour sélectionner</p>
-                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+              <div>
+                <Label>Documents Justificatifs et Factures</Label>
+                {!isViewMode && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-sm">Bon de Commande</Label>
+                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
+                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">Ajouter bon de commande</p>
                         </div>
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                      <div>
+                        <Label className="text-sm">Devis</Label>
+                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
+                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">Ajouter devis</p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Facture PDF</Label>
+                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
+                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">Facture avec analyse automatique</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <DocumentSelector
+                      onChange={(documentId, document) => {
+                        if (document && documentId) {
+                          handleDocumentUpload(documentId);
+                        }
+                      }}
+                      documentType="contract"
+                      disabled={isViewMode}
+                    />
+                  </div>
+                )}
                 
                 {uploadedDocuments.length > 0 && (
-                  <div className="border rounded-lg p-3 space-y-2">
-                    {uploadedDocuments.map((docId, index) => (
-                      <div key={docId} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4" />
-                          <span className="text-sm">Document {index + 1}</span>
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground mb-2">Documents téléchargés:</p>
+                    <div className="space-y-1">
+                      {uploadedDocuments.map((docId, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                          <span>Document {index + 1}</span>
+                          <div className="flex gap-1">
+                            {!isViewMode && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeDocument(docId)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        {!isViewMode && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeDocument(docId)}
-                          >
-                            Supprimer
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

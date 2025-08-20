@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload, ExternalLink, Download } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
+import DocumentUpload from '@/components/documents/DocumentUpload';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
@@ -464,15 +465,46 @@ const EnhancedBankGuaranteeCrud = () => {
               
               <div>
                 <Label>Documents Justificatifs</Label>
-                <DocumentSelector
-                  onChange={(documentId, document) => {
-                    if (document) {
-                      setUploadedDocuments(prev => [...prev, document]);
-                    }
-                  }}
-                  documentType="contract"
-                  disabled={isViewMode}
-                />
+                {!isViewMode && (
+                  <div className="space-y-2">
+                    <DocumentSelector
+                      onChange={(documentId, document) => {
+                        if (document) {
+                          setUploadedDocuments(prev => [...prev, document]);
+                        }
+                      }}
+                      documentType="contract"
+                      disabled={isViewMode}
+                    />
+                    <div className="mt-2 p-3 border-2 border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground text-center">
+                        Glisser-déposer un fichier ici ou utiliser le sélecteur ci-dessus
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {uploadedDocuments.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground mb-2">Documents ajoutés:</p>
+                    <div className="space-y-1">
+                      {uploadedDocuments.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                          <span>{doc.title || doc.file_name}</span>
+                          {!isViewMode && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setUploadedDocuments(prev => prev.filter((_, i) => i !== index))}
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div>
