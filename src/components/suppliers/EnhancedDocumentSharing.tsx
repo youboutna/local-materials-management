@@ -111,6 +111,12 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
   // Upload document mutation
   const uploadMutation = useMutation({
     mutationFn: async () => {
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Vous devez être connecté pour uploader un document');
+      }
+
       if (!selectedFile) throw new Error('Aucun fichier sélectionné');
       
       // Upload file
@@ -131,7 +137,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
           file_name: selectedFile.name,
           file_size: selectedFile.size,
           mime_type: selectedFile.type,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+          uploaded_by: session.user.id,
           status: 'draft'
         })
         .select()
@@ -170,6 +176,17 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
   // Share document function
   const handleShareDocument = async (documentId: string, documentTitle: string) => {
+    // Check authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour partager un document.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!supplier.email) {
       toast({
         title: "Erreur",
@@ -183,14 +200,15 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       // Create notification
       await supabase.from('notifications').insert({
         recipient_id: supplier.id,
-        type: 'task_assignment', // Use valid notification type
+        type: 'supplier_payment_request', // Use valid notification type
         title: 'Nouveau document partagé',
         message: `Le document "${documentTitle}" a été partagé avec vous.`,
         related_id: documentId,
         metadata: {
           document_id: documentId,
           document_title: documentTitle,
-          shared_by: (await supabase.auth.getUser()).data.user?.id
+          shared_by: session.user.id,
+          action: 'document_shared'
         }
       });
 

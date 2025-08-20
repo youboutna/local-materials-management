@@ -194,6 +194,17 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
       return;
     }
 
+    // Check authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: 'Erreur',
+        description: 'Vous devez être connecté pour créer une demande de paiement',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Create payment request as notification for now
@@ -212,7 +223,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           recipient_id: supplierId,
           title: 'Demande de paiement créée',
           message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
-           type: 'supplier_payment_request',
+          type: 'supplier_payment_request',
           metadata: {
             supplier_id: supplierId,
             project_id: projectId,
