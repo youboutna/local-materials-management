@@ -188,7 +188,7 @@ const SupplierPortal = () => {
       .from('documents')
       .select(`
         *,
-        projects (title, status),
+        projects!documents_project_id_fkey (title, status),
         payments (amount, payment_date)
       `)
       .or(`assigned_to.eq.${user.id},tags.cs.{${supplierProfile.name}}`)

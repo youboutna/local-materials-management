@@ -15,6 +15,7 @@ interface Project {
   budget?: number | null;
   start_date?: string | null;
   end_date?: string | null;
+  project_reference?: string | null;
 }
 
 interface ProjectSelectorProps {
@@ -24,6 +25,7 @@ interface ProjectSelectorProps {
   label?: string;
   required?: boolean;
   disabled?: boolean;
+  secureMode?: boolean; // For supplier portal - only shows title and reference
 }
 
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
@@ -32,25 +34,35 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   placeholder = "Sélectionner un projet",
   label = "Projet",
   required = false,
-  disabled = false
+  disabled = false,
+  secureMode = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects', searchTerm],
+    queryKey: ['projects', searchTerm, secureMode],
     queryFn: async (): Promise<Project[]> => {
-      let query = supabase
-        .from('projects')
-        .select('id, title, location, status, budget, start_date, end_date')
-        .order('title');
+      if (secureMode) {
+        // Use secure function for supplier portal
+        const { data, error } = await supabase
+          .rpc('search_projects_autocomplete', { search_term: searchTerm || '' });
+        if (error) throw error;
+        return data || [];
+      } else {
+        // Full project data for admin users
+        let query = supabase
+          .from('projects')
+          .select('id, title, location, status, budget, start_date, end_date, project_reference')
+          .order('title');
 
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%`);
+        if (searchTerm) {
+          query = query.or(`title.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,project_reference.ilike.%${searchTerm}%`);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
     },
   });
 
@@ -109,23 +121,28 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                     <Building2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium truncate">{project.title}</div>
-                      {project.location && (
+                      {project.project_reference && (
+                        <div className="text-xs text-gray-500 truncate">Réf: {project.project_reference}</div>
+                      )}
+                      {!secureMode && project.location && (
                         <div className="text-xs text-gray-500 truncate">{project.location}</div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                    {project.status && (
-                      <Badge variant="outline" className={`text-xs ${getStatusColor(project.status)}`}>
-                        {project.status}
-                      </Badge>
-                    )}
-                    {project.budget && (
-                      <span className="text-xs text-gray-500">
-                        {project.budget.toLocaleString()} MRU
-                      </span>
-                    )}
-                  </div>
+                  {!secureMode && (
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {project.status && (
+                        <Badge variant="outline" className={`text-xs ${getStatusColor(project.status)}`}>
+                          {project.status}
+                        </Badge>
+                      )}
+                      {project.budget && (
+                        <span className="text-xs text-gray-500">
+                          {project.budget.toLocaleString()} MRU
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </SelectItem>
             ))}
@@ -137,21 +154,26 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
           <div className="flex justify-between items-center">
             <span className="font-medium">Projet sélectionné:</span>
-            <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
-              {selectedProject.status}
-            </Badge>
+            {!secureMode && selectedProject.status && (
+              <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
+                {selectedProject.status}
+              </Badge>
+            )}
           </div>
           <div>{selectedProject.title}</div>
-          {selectedProject.location && (
+          {selectedProject.project_reference && (
+            <div className="text-gray-600">📋 Réf: {selectedProject.project_reference}</div>
+          )}
+          {!secureMode && selectedProject.location && (
             <div className="text-gray-600">📍 {selectedProject.location}</div>
           )}
-          {(selectedProject.start_date || selectedProject.end_date) && (
+          {!secureMode && (selectedProject.start_date || selectedProject.end_date) && (
             <div className="flex items-center gap-2 text-gray-600">
               <Calendar className="h-3 w-3" />
               {formatDate(selectedProject.start_date)} - {formatDate(selectedProject.end_date)}
             </div>
           )}
-          {selectedProject.budget && (
+          {!secureMode && selectedProject.budget && (
             <div className="font-medium text-primary">
               Budget: {selectedProject.budget.toLocaleString()} MRU
             </div>

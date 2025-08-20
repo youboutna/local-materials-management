@@ -586,6 +586,13 @@ export type Database = {
             referencedRelation: "project_phases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
         ]
       }
       email_logs: {
@@ -3974,6 +3981,14 @@ export type Database = {
       is_current_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      search_projects_autocomplete: {
+        Args: { search_term?: string }
+        Returns: {
+          id: string
+          project_reference: string
+          title: string
+        }[]
       }
     }
     Enums: {
