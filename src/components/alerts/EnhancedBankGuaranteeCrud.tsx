@@ -92,24 +92,38 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const loadGuarantees = async () => {
     try {
+      console.log('Loading bank guarantees...');
+      
       const { data, error } = await supabase
         .from('bank_guarantees')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Raw guarantees data:', data);
       
       const transformedGuarantees: BankGuarantee[] = (data || []).map(guarantee => ({
         ...guarantee,
         contractor_name: (guarantee as any).contractor_name || 'N/A'
       }));
       
+      console.log('Transformed guarantees:', transformedGuarantees);
       setGuarantees(transformedGuarantees);
-    } catch (error) {
+      
+      toast({
+        title: 'Succès',
+        description: `${transformedGuarantees.length} garantie(s) chargée(s)`,
+      });
+      
+    } catch (error: any) {
       console.error('Error loading bank guarantees:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les garanties bancaires',
+        description: `Impossible de charger les garanties bancaires: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     }

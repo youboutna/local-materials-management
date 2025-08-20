@@ -96,26 +96,40 @@ const EnhancedInspectionCrud = () => {
 
   const loadInspections = async () => {
     try {
+      console.log('Loading inspections...');
+      
       const { data, error } = await supabase
         .from('inspections')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Raw inspections data:', data);
       
       const transformedInspections: Inspection[] = (data || []).map(inspection => ({
         ...inspection,
-        inspection_date: (inspection as any).date || '',
+        inspection_date: inspection.date || '',
         comments: inspection.comments || undefined,
         phase_id: inspection.phase_id || undefined
       }));
       
+      console.log('Transformed inspections:', transformedInspections);
       setInspections(transformedInspections);
-    } catch (error) {
+      
+      toast({
+        title: 'Succès',
+        description: `${transformedInspections.length} inspection(s) chargée(s)`,
+      });
+      
+    } catch (error: any) {
       console.error('Error loading inspections:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les inspections',
+        description: `Impossible de charger les inspections: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     }

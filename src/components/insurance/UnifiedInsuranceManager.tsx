@@ -145,15 +145,20 @@ const UnifiedInsuranceManager = () => {
   const loadCertificates = async () => {
     setLoading(true);
     try {
+      console.log('Loading insurance certificates...');
+      
+      // Simple query first without JOIN to avoid complex relation issues
       const { data, error } = await supabase
         .from('insurance_certificates')
-        .select(`
-          *,
-          documents:documents(id, title, file_url, file_name, mime_type)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Raw certificates data:', data);
 
       const transformedCertificates: LocalInsuranceCertificate[] = (data || []).map(cert => ({
         id: cert.id,
@@ -170,15 +175,23 @@ const UnifiedInsuranceManager = () => {
         lastVerified: cert.last_verified || undefined,
         verifiedBy: cert.verified_by || undefined,
         notes: cert.notes || undefined,
-        documents: (cert.documents as any) || []
+        certificateUrl: cert.certificate_url || undefined,
+        documents: [] // We'll load documents separately if needed
       }));
 
+      console.log('Transformed certificates:', transformedCertificates);
       setCertificates(transformedCertificates);
-    } catch (error) {
+      
+      toast({
+        title: 'Succès',
+        description: `${transformedCertificates.length} certificat(s) chargé(s)`,
+      });
+      
+    } catch (error: any) {
       console.error('Error loading certificates:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les certificats',
+        description: `Impossible de charger les certificats: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     } finally {

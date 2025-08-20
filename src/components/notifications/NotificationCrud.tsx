@@ -51,20 +51,39 @@ const NotificationCrud: React.FC = () => {
 
   const loadNotifications = async () => {
     try {
+      console.log('Loading notifications...');
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      setNotifications(data || []);
-    } catch (error) {
+      console.log('Raw notifications data:', data);
+      
+      const transformedNotifications = (data || []).map(notif => ({
+        ...notif,
+        related_id: notif.related_id || undefined
+      }));
+      
+      console.log('Transformed notifications:', transformedNotifications);
+      setNotifications(transformedNotifications);
+      
+      toast({
+        title: 'Succès',
+        description: `${transformedNotifications.length} notification(s) chargée(s)`,
+      });
+      
+    } catch (error: any) {
       console.error('Error loading notifications:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les notifications',
+        description: `Impossible de charger les notifications: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     } finally {
