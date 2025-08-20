@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import UserSelector from '@/components/selectors/UserSelector';
 
 type TaskAssignment = Database["public"]["Tables"]["task_assignments"]["Row"];
 type Project = { id: string; title: string };
@@ -139,6 +140,28 @@ const TaskAssignments = () => {
         .select()
         .single();
       if (error) throw error;
+      
+      // Send notification to assigned user/supplier
+      if (data && taskData.assigned_to) {
+        try {
+          await supabase.from('notifications').insert({
+            recipient_id: taskData.assigned_to,
+            title: 'Nouvelle tâche assignée',
+            message: `Une nouvelle tâche "${taskData.title}" vous a été assignée.`,
+            type: 'task_assignment',
+            related_id: data.id,
+            metadata: {
+              task_id: data.id,
+              project_id: taskData.project_id,
+              priority: taskData.priority,
+              due_date: taskData.due_date
+            }
+          });
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -354,30 +377,13 @@ const TaskAssignments = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="assigned_to">
-                    {t("task.assigned_to") || "Assigné à"}
-                  </Label>
-                  <Select
+                  <UserSelector
                     value={formData.assigned_to}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, assigned_to: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          t("task.select_employee") || "Sélectionner un employé"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees?.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.full_name} - {employee.position}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(userId) => setFormData({ ...formData, assigned_to: userId })}
+                    label={t("task.assigned_to") || "Assigné à"}
+                    placeholder={t("task.select_assignee") || "Sélectionner un assigné (employé ou fournisseur)"}
+                    required={false}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="due_date">

@@ -39,22 +39,69 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   const { data: users, isLoading } = useQuery({
     queryKey: ['users', searchTerm, roleFilter],
     queryFn: async (): Promise<UserProfile[]> => {
-      let query = supabase
+      // Get users from profiles table
+      let profileQuery = supabase
         .from('profiles')
         .select('id, full_name, phone, national_id, role')
         .order('full_name', { ascending: true });
 
       if (searchTerm) {
-        query = query.or(`full_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,national_id.ilike.%${searchTerm}%`);
+        profileQuery = profileQuery.or(`full_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,national_id.ilike.%${searchTerm}%`);
       }
 
       if (roleFilter && roleFilter.length > 0) {
-        query = query.in('role', roleFilter as any);
+        profileQuery = profileQuery.in('role', roleFilter as any);
       }
 
-      const { data, error } = await query.limit(50);
-      if (error) throw error;
-      return data || [];
+      const { data: profileData, error: profileError } = await profileQuery.limit(30);
+      if (profileError) console.error('Error fetching profiles:', profileError);
+
+      // Get suppliers and transform them to match UserProfile interface
+      let supplierQuery = supabase
+        .from('suppliers')
+        .select('id, name, email, user_id')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (searchTerm) {
+        supplierQuery = supplierQuery.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      }
+
+      const { data: supplierData, error: supplierError } = await supplierQuery.limit(20);
+      if (supplierError) console.error('Error fetching suppliers:', supplierError);
+
+      // Combine and deduplicate data
+      const users: UserProfile[] = [];
+      
+      // Add profiles
+      if (profileData) {
+        users.push(...profileData.map(profile => ({
+          id: profile.id,
+          full_name: profile.full_name,
+          phone: profile.phone,
+          national_id: profile.national_id,
+          role: profile.role
+        })));
+      }
+
+      // Add suppliers (only if not already in profiles by user_id)
+      if (supplierData) {
+        supplierData.forEach(supplier => {
+          // Skip if supplier already linked to a user in profiles
+          const alreadyExists = users.some(user => user.id === supplier.user_id);
+          if (!alreadyExists) {
+            users.push({
+              id: supplier.id,
+              full_name: supplier.name || 'Fournisseur',
+              phone: supplier.email || undefined,
+              national_id: undefined,
+              role: 'supplier'
+            });
+          }
+        });
+      }
+
+      return users;
     },
   });
 
