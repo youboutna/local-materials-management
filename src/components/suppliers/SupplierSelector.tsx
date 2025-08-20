@@ -33,12 +33,14 @@ interface SupplierSelectorProps {
     leadTime: number;
   }) => void;
   allowCustom?: boolean;
+  disabled?: boolean;
 }
 
 const SupplierSelector: React.FC<SupplierSelectorProps> = ({
   value,
   onChange,
-  allowCustom = true
+  allowCustom = true,
+  disabled = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCustom, setIsCustom] = useState(!value?.id);

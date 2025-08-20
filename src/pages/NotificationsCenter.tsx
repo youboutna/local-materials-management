@@ -1,5 +1,6 @@
 import React from 'react';
 import RoleBasedNotificationCenter from '@/components/alerts/RoleBasedNotificationCenter';
+import NotificationCrud from '@/components/notifications/NotificationCrud';
 
 const NotificationsCenterPage = () => {
   return (
@@ -14,6 +15,9 @@ const NotificationsCenterPage = () => {
           </div>
           
           <RoleBasedNotificationCenter />
+          <div className="mt-8">
+            <NotificationCrud />
+          </div>
         </div>
       </div>
     </div>

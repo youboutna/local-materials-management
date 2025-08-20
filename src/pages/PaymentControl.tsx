@@ -1,5 +1,6 @@
 import React from 'react';
 import PaymentBlockingInterface from '@/components/payments/PaymentBlockingInterface';
+import PaymentCrud from '@/components/payments/PaymentCrud';
 
 const PaymentControlPage = () => {
   return (
@@ -7,6 +8,9 @@ const PaymentControlPage = () => {
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-6xl mx-auto">
           <PaymentBlockingInterface />
+          <div className="mt-8">
+            <PaymentCrud />
+          </div>
         </div>
       </div>
     </div>
