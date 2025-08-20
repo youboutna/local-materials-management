@@ -66,18 +66,31 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
   const fetchPaymentRequests = async () => {
     try {
-      // Simplified approach - use notifications as temporary storage
-      const { data, error } = await supabase
+      // First try to get from supplier_payment_requests table
+      const { data: directRequests, error: directError } = await supabase
+        .from('supplier_payment_requests')
+        .select('*')
+        .eq('supplier_id', supplierId)
+        .order('requested_date', { ascending: false });
+
+      if (directError) {
+        console.error('Error fetching direct payment requests:', directError);
+      }
+
+      // Also get from notifications table for any legacy requests
+      const { data: notificationData, error: notificationError } = await supabase
         .from('notifications')
         .select('*')
         .eq('recipient_id', supplierId)
         .eq('type', 'supplier_payment_request')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (notificationError) {
+        console.error('Error fetching notification payment requests:', notificationError);
+      }
       
-      // Transform notifications to payment requests format
-      const transformedRequests = (data || []).map((notification: any) => ({
+      // Transform notifications to payment requests format for legacy support
+      const transformedNotifications = (notificationData || []).map((notification: any) => ({
         id: notification.id,
         supplier_id: supplierId,
         project_id: notification.metadata?.project_id || null,
@@ -89,8 +102,17 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
         requested_date: notification.created_at,
         notes: notification.metadata?.notes || '',
       }));
+
+      // Combine both sources, prioritizing direct requests
+      const allRequests = [
+        ...(directRequests || []),
+        ...transformedNotifications.filter(notif => 
+          !(directRequests || []).some(direct => direct.id === notif.id)
+        )
+      ];
       
-      setPaymentRequests(transformedRequests);
+      setPaymentRequests(allRequests);
+      console.log('Fetched payment requests:', allRequests);
     } catch (error) {
       console.error('Error fetching payment requests:', error);
       toast({
@@ -207,23 +229,40 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
     setLoading(true);
     try {
-      // Create payment request as notification for now
-      const requestId = crypto.randomUUID();
-      
       // Validate requirements if project selected
       let validationResult: ValidationResult | null = null;
       if (projectId) {
         validationResult = await validatePaymentRequest(projectId);
       }
 
-      const { error: requestError } = await supabase
+      // Create payment request using the database function
+      const { data: paymentRequestData, error: requestError } = await supabase
+        .rpc('create_supplier_payment_request', {
+          supplier_id_param: supplierId,
+          amount_param: parseFloat(amount),
+          description_param: description,
+          payment_reason_param: paymentReason,
+          project_id_param: projectId || undefined,
+          supporting_documents_param: uploadedDocuments,
+          notes_param: notes || undefined
+        });
+
+      if (requestError) {
+        console.error('Error creating payment request:', requestError);
+        throw requestError;
+      }
+
+      console.log('Payment request created successfully:', paymentRequestData);
+
+      // Also create a notification for the supplier
+      const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
-          id: requestId,
           recipient_id: supplierId,
           title: 'Demande de paiement créée',
           message: `Demande de paiement de ${parseFloat(amount).toLocaleString()} MRU créée`,
           type: 'supplier_payment_request',
+          related_id: paymentRequestData[0]?.id,
           metadata: {
             supplier_id: supplierId,
             project_id: projectId,
@@ -236,7 +275,9 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           }
         });
 
-      if (requestError) throw requestError;
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
 
       // Get directors and managers for notifications
       const { data: managersData } = await supabase
@@ -251,7 +292,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           title: 'Nouvelle demande de paiement fournisseur',
           message: `Une demande de paiement de ${parseFloat(amount).toLocaleString()} MRU a été soumise par un fournisseur`,
           type: 'supplier_payment_request',
-          related_id: requestId,
+          related_id: paymentRequestData[0]?.id,
           metadata: {
             supplier_id: supplierId,
             project_id: projectId,

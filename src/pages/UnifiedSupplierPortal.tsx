@@ -164,11 +164,13 @@ const UnifiedSupplierPortal = () => {
   });
 
   // Fetch payment requests
-  const { data: paymentRequests = [] } = useQuery({
+  const { data: paymentRequests = [], refetch: refetchPaymentRequests } = useQuery({
     queryKey: ['supplier-payment-requests', supplierProfile?.id],
     enabled: !!supplierProfile?.id,
     queryFn: async () => {
       if (!supplierProfile?.id) return [];
+      
+      console.log('Fetching payment requests for supplier:', supplierProfile.id);
       
       // First try to get from supplier_payment_requests table
       const { data: directRequests, error: directError } = await supabase
@@ -177,6 +179,12 @@ const UnifiedSupplierPortal = () => {
         .eq('supplier_id', supplierProfile.id)
         .order('requested_date', { ascending: false });
 
+      if (directError) {
+        console.error('Error fetching direct payment requests:', directError);
+      } else {
+        console.log('Direct payment requests:', directRequests);
+      }
+
       // Also get from notifications table (for historical requests)
       const { data: notificationRequests, error: notificationError } = await supabase
         .from('notifications')
@@ -184,6 +192,12 @@ const UnifiedSupplierPortal = () => {
         .eq('recipient_id', supplierProfile.id)
         .eq('type', 'supplier_payment_request')
         .order('created_at', { ascending: false });
+
+      if (notificationError) {
+        console.error('Error fetching notification payment requests:', notificationError);
+      } else {
+        console.log('Notification payment requests:', notificationRequests);
+      }
 
       // Combine both sources and transform notification data
       const combined = [
@@ -204,6 +218,7 @@ const UnifiedSupplierPortal = () => {
         }))
       ];
 
+      console.log('Combined payment requests:', combined);
       return combined;
     }
   });
