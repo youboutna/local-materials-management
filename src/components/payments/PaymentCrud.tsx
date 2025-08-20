@@ -68,6 +68,9 @@ interface PaymentFormData {
   receiver_name: string;
   supporting_documents: string[];
   notes: string;
+  purchase_order_url?: string;
+  quote_url?: string;
+  invoice_url?: string;
 }
 
 const PaymentCrud: React.FC = () => {
@@ -79,6 +82,8 @@ const PaymentCrud: React.FC = () => {
   const [paymentBlocked, setPaymentBlocked] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [parsedInvoiceData, setParsedInvoiceData] = useState<InvoiceLine[]>([]);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<PaymentFormData>({
@@ -100,7 +105,10 @@ const PaymentCrud: React.FC = () => {
     mobile_operator: '',
     receiver_name: '',
     supporting_documents: [],
-    notes: ''
+    notes: '',
+    purchase_order_url: '',
+    quote_url: '',
+    invoice_url: ''
   });
 
   const paymentMethods = [
@@ -137,10 +145,14 @@ const PaymentCrud: React.FC = () => {
       mobile_operator: '',
       receiver_name: '',
       supporting_documents: [],
-      notes: ''
+      notes: '',
+      purchase_order_url: '',
+      quote_url: '',
+      invoice_url: ''
     });
     setPaymentBlocked(false);
     setUploadedDocuments([]);
+    setParsedInvoiceData([]);
   };
 
   const openCreateForm = () => {
@@ -325,6 +337,127 @@ const PaymentCrud: React.FC = () => {
       ...prev, 
       supporting_documents: prev.supporting_documents.filter(id => id !== documentId)
     }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${type}_${Date.now()}.${fileExt}`;
+      const filePath = `payments/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Update form data with the uploaded file URL
+      setFormData(prev => ({
+        ...prev,
+        [`${type}_url`]: publicUrl
+      }));
+
+      toast({
+        title: "Document téléchargé",
+        description: `${type === 'purchase_order' ? 'Bon de commande' : type === 'quote' ? 'Devis' : 'Facture'} téléchargé avec succès`
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du téléchargement du document",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleInvoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // First upload the file
+      const fileExt = file.name.split('.').pop();
+      const fileName = `invoice_${Date.now()}.${fileExt}`;
+      const filePath = `payments/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Parse invoice if it's a PDF
+      if (file.type === 'application/pdf') {
+        try {
+          const fileUrl = URL.createObjectURL(file);
+          const invoiceData = await parseInvoiceFromPdf(fileUrl);
+          URL.revokeObjectURL(fileUrl);
+          
+          if (invoiceData && invoiceData.length > 0) {
+            setParsedInvoiceData(invoiceData);
+            
+            // Calculate total amount from invoice lines
+            const totalAmount = invoiceData.reduce((sum, line) => {
+              return sum + (line.totalPrice || (line.quantity * (line.unitPrice || 0)));
+            }, 0);
+            
+            if (totalAmount > 0) {
+              setFormData(prev => ({
+                ...prev,
+                amount: totalAmount
+              }));
+            }
+          }
+        } catch (parseError) {
+          console.error('Invoice parsing error:', parseError);
+          toast({
+            title: "Attention",
+            description: "Le document a été téléchargé mais l'analyse automatique a échoué",
+            variant: "destructive"
+          });
+        }
+      }
+
+      // Update form data with the uploaded file URL
+      setFormData(prev => ({
+        ...prev,
+        invoice_url: publicUrl
+      }));
+
+      toast({
+        title: "Facture téléchargée",
+        description: "Facture téléchargée et analysée avec succès"
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du téléchargement de la facture",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const viewDocument = (url: string) => {
+    window.open(url, '_blank');
   };
 
   const renderPaymentMethodFields = () => {
@@ -588,29 +721,152 @@ const PaymentCrud: React.FC = () => {
                 <Label>Documents Justificatifs et Factures</Label>
                 {!isViewMode && (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-sm">Bon de Commande</Label>
-                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
-                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">Ajouter bon de commande</p>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm">Devis</Label>
-                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
-                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">Ajouter devis</p>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm">Facture PDF</Label>
-                        <div className="mt-1 p-3 border-2 border-dashed rounded-lg text-center">
-                          <Upload className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground">Facture avec analyse automatique</p>
-                        </div>
-                      </div>
-                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       {/* Purchase Order Upload */}
+                       <div className="space-y-2">
+                         <Label className="text-sm">Bon de Commande</Label>
+                         <div className="border-2 border-dashed border-muted rounded-lg p-4 text-center">
+                           <input
+                             type="file"
+                             id="purchase-order"
+                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                             className="hidden"
+                             disabled={isViewMode || uploading}
+                             onChange={(e) => handleFileUpload(e, 'purchase_order')}
+                           />
+                           <label 
+                             htmlFor="purchase-order" 
+                             className={`cursor-pointer flex flex-col items-center gap-2 ${isViewMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                           >
+                             <Upload className="h-6 w-6 text-muted-foreground" />
+                             <span className="text-xs text-muted-foreground">
+                               {uploading ? 'Téléchargement...' : 'Cliquer pour ajouter'}
+                             </span>
+                           </label>
+                         </div>
+                         {formData.purchase_order_url && (
+                           <div className="flex items-center gap-2 text-sm text-green-600">
+                             <FileText className="h-4 w-4" />
+                             <span>Bon de commande ajouté</span>
+                             <Button 
+                               type="button" 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => viewDocument(formData.purchase_order_url!)}
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                           </div>
+                         )}
+                       </div>
+
+                       {/* Quote Upload */}
+                       <div className="space-y-2">
+                         <Label className="text-sm">Devis</Label>
+                         <div className="border-2 border-dashed border-muted rounded-lg p-4 text-center">
+                           <input
+                             type="file"
+                             id="quote"
+                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                             className="hidden"
+                             disabled={isViewMode || uploading}
+                             onChange={(e) => handleFileUpload(e, 'quote')}
+                           />
+                           <label 
+                             htmlFor="quote" 
+                             className={`cursor-pointer flex flex-col items-center gap-2 ${isViewMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                           >
+                             <Upload className="h-6 w-6 text-muted-foreground" />
+                             <span className="text-xs text-muted-foreground">
+                               {uploading ? 'Téléchargement...' : 'Cliquer pour ajouter'}
+                             </span>
+                           </label>
+                         </div>
+                         {formData.quote_url && (
+                           <div className="flex items-center gap-2 text-sm text-green-600">
+                             <FileText className="h-4 w-4" />
+                             <span>Devis ajouté</span>
+                             <Button 
+                               type="button" 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => viewDocument(formData.quote_url!)}
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                           </div>
+                         )}
+                       </div>
+
+                       {/* Invoice PDF Upload with Analysis */}
+                       <div className="space-y-2">
+                         <Label className="text-sm">Facture PDF</Label>
+                         <div className="border-2 border-dashed border-muted rounded-lg p-4 text-center">
+                           <input
+                             type="file"
+                             id="invoice"
+                             accept=".pdf"
+                             className="hidden"
+                             disabled={isViewMode || uploading}
+                             onChange={handleInvoiceUpload}
+                           />
+                           <label 
+                             htmlFor="invoice" 
+                             className={`cursor-pointer flex flex-col items-center gap-2 ${isViewMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                           >
+                             <Upload className="h-6 w-6 text-muted-foreground" />
+                             <span className="text-xs text-muted-foreground">
+                               {uploading ? 'Analyse...' : 'PDF avec analyse automatique'}
+                             </span>
+                           </label>
+                         </div>
+                         {formData.invoice_url && (
+                           <div className="flex items-center gap-2 text-sm text-green-600">
+                             <FileText className="h-4 w-4" />
+                             <span>Facture analysée</span>
+                             <Button 
+                               type="button" 
+                               variant="ghost" 
+                               size="sm"
+                               onClick={() => viewDocument(formData.invoice_url!)}
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+
+                     {/* Display parsed invoice data if available */}
+                     {parsedInvoiceData && parsedInvoiceData.length > 0 && (
+                       <div className="p-4 bg-muted rounded-lg space-y-2">
+                         <Label className="text-sm font-medium">Données extraites de la facture :</Label>
+                         <div className="text-sm space-y-2">
+                           <div>
+                             <span className="font-medium">Nombre d'articles : </span>
+                             <span>{parsedInvoiceData.length}</span>
+                           </div>
+                           <div>
+                             <span className="font-medium">Montant total calculé : </span>
+                             <span>
+                               {parsedInvoiceData.reduce((sum, line) => {
+                                 return sum + (line.totalPrice || (line.quantity * (line.unitPrice || 0)));
+                               }, 0).toLocaleString()} MRU
+                             </span>
+                           </div>
+                           {parsedInvoiceData.length <= 3 && (
+                             <div className="space-y-1">
+                               <span className="font-medium">Articles détectés :</span>
+                               {parsedInvoiceData.map((line, index) => (
+                                 <div key={index} className="text-xs bg-background p-2 rounded">
+                                   {line.designation} - {line.quantity} {line.unit} - {(line.totalPrice || (line.quantity * (line.unitPrice || 0))).toLocaleString()} MRU
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     )}
                     
                     <DocumentSelector
                       onChange={(documentId, document) => {
