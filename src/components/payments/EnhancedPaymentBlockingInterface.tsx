@@ -21,6 +21,7 @@ import {
 } from '@/services/paymentBlockingService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import UserSelector from '@/components/selectors/UserSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import DocumentUpload from '@/components/documents/DocumentUpload';
 

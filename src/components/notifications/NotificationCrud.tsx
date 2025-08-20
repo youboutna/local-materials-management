@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, Eye, Bell, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import UserSelector from '@/components/selectors/UserSelector';
 
 interface Notification {
   id: string;
@@ -200,14 +201,13 @@ const NotificationCrud: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="recipient_id">Destinataire (User ID) *</Label>
-                  <Input
-                    id="recipient_id"
+                  <UserSelector
                     value={formData.recipient_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, recipient_id: e.target.value }))}
-                    required
+                    onChange={(userId) => setFormData(prev => ({ ...prev, recipient_id: userId }))}
+                    label="Destinataire"
+                    required={true}
                     disabled={isViewMode}
-                    placeholder="UUID du destinataire"
+                    placeholder="Sélectionner le destinataire"
                   />
                 </div>
                 

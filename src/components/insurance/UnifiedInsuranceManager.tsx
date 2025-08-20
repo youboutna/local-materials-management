@@ -26,6 +26,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import UserSelector from '@/components/selectors/UserSelector';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'Project ID requis'),

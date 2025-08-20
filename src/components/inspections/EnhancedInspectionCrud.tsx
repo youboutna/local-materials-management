@@ -14,6 +14,7 @@ import { Plus, Eye, Edit, Trash2, CheckCircle, AlertCircle, Clock, FileText } fr
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import UserSelector from '@/components/selectors/UserSelector';
 import { format } from 'date-fns';
 
 interface Inspection {
