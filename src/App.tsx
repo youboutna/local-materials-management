@@ -51,6 +51,8 @@ import EnhancedDashboard from './pages/EnhancedDashboard';
 import BankGuaranteeMonitorPage from './pages/BankGuaranteeMonitor';
 import InspectionMonitoringPage from './pages/InspectionMonitoring';
 import NotificationsCenterPage from './pages/NotificationsCenter';
+import InsuranceManagementPage from './pages/InsuranceManagement';
+import PaymentControlPage from './pages/PaymentControl';
 
 const queryClient = new QueryClient();
 
@@ -215,6 +217,16 @@ function App() {
 <Route path="/notifications-center" element={
   <RoleBasedRoute allowedRoles={['admin','director','project_manager','engineering_consultant']}>
     <NotificationsCenterPage />
+  </RoleBasedRoute>
+} />
+<Route path="/insurance-management" element={
+  <RoleBasedRoute allowedRoles={['admin','director','project_manager','legal']}>
+    <InsuranceManagementPage />
+  </RoleBasedRoute>
+} />
+<Route path="/payment-control" element={
+  <RoleBasedRoute allowedRoles={['admin','director','finance_manager','project_manager']}>
+    <PaymentControlPage />
   </RoleBasedRoute>
 } />
                       <Route path="*" element={<NotFound />} />

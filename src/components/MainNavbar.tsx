@@ -153,6 +153,28 @@ const MainNavbar = () => {
                           </p>
                         </Link>
                       </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/insurance-management"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">🛡️ Gestion Assurances</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Suivi des attestations et alertes d'expiration
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/payment-control"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
+                        >
+                          <div className="text-sm font-medium leading-none">💰 Contrôle Paiements</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Blocage automatique si garanties expirées
+                          </p>
+                        </Link>
+                       </NavigationMenuLink>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
