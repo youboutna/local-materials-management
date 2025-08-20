@@ -83,20 +83,63 @@ const SupplierPortal = () => {
   }, [user]);
 
   const fetchSupplierProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot fetch supplier profile');
+      return;
+    }
     
-    const { data, error } = await supabase
+    console.log('Fetching supplier profile for user:', user.id, user.email);
+    
+    // First try to find by user_id
+    let { data, error } = await supabase
       .from('suppliers')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching supplier profile:', error);
-    } else if (data) {
+      console.error('Error fetching supplier profile by user_id:', error);
+    }
+    
+    // If no profile found by user_id, try to find by email and link it
+    if (!data && user.email) {
+      console.log('No profile found by user_id, trying by email:', user.email);
+      const { data: emailData, error: emailError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('email', user.email)
+        .maybeSingle();
+      
+      if (emailError) {
+        console.error('Error fetching supplier profile by email:', emailError);
+      } else if (emailData) {
+        console.log('Found supplier profile by email, linking to user');
+        // Link the existing supplier to this user
+        const { data: updatedData, error: updateError } = await supabase
+          .from('suppliers')
+          .update({ user_id: user.id })
+          .eq('id', emailData.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          console.error('Error linking supplier to user:', updateError);
+        } else {
+          setSupplierProfile(updatedData as Supplier);
+          toast({
+            title: 'Profil lié',
+            description: 'Votre profil fournisseur a été lié à votre compte.',
+          });
+          return;
+        }
+      }
+    }
+    
+    if (data) {
       setSupplierProfile(data as Supplier);
     } else {
       // No supplier profile found - create a default one
+      console.log('No supplier profile found, creating default one');
       await createSupplierProfile();
     }
   };
