@@ -282,7 +282,10 @@ const TenderQuantitativeEstimate = ({ tenderId, projectId }: TenderQuantitativeE
       // Parse PDF to extract invoice data
       let parsedRawData;
       try {
-        parsedRawData = await parseInvoiceFromPdf(file);
+        // Convert File to URL for parsing
+        const fileUrl = URL.createObjectURL(file);
+        parsedRawData = await parseInvoiceFromPdf(fileUrl);
+        URL.revokeObjectURL(fileUrl); // Clean up the URL
         console.log('PDF parsed successfully:', parsedRawData);
       } catch (parseError) {
         console.warn('PDF parsing failed, using empty array:', parseError);
