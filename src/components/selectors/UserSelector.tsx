@@ -124,29 +124,25 @@ const UserSelector: React.FC<UserSelectorProps> = ({
             </SelectTrigger>
             <SelectContent>
               {users?.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <div>
-                        <div className="font-medium">
-                          {user.full_name || user.phone || 'Utilisateur anonyme'}
-                        </div>
-                        {user.phone && user.full_name && (
-                          <div className="text-xs text-muted-foreground">{user.phone}</div>
-                        )}
-                        {user.national_id && (
-                          <div className="text-xs text-muted-foreground">ID: {user.national_id}</div>
-                        )}
+                <SelectItem key={user.id} value={user.id} className="max-w-none">
+                  <div className="flex items-center gap-2 w-full">
+                    <User className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {user.full_name || user.phone || 'Utilisateur anonyme'}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {user.role && (
-                        <Badge className={getRoleBadgeColor(user.role)} variant="outline">
-                          {user.role}
-                        </Badge>
+                      {user.phone && user.full_name && (
+                        <div className="text-xs text-muted-foreground truncate">{user.phone}</div>
+                      )}
+                      {user.national_id && (
+                        <div className="text-xs text-muted-foreground truncate">ID: {user.national_id}</div>
                       )}
                     </div>
+                    {user.role && (
+                      <Badge className={getRoleBadgeColor(user.role)} variant="outline">
+                        {user.role}
+                      </Badge>
+                    )}
                   </div>
                 </SelectItem>
               ))}
