@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Eye, CreditCard, AlertTriangle, Ban } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, CreditCard, AlertTriangle, Ban, FileText, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import DocumentSelector from '@/components/selectors/DocumentSelector';
+import DocumentUpload from '@/components/documents/DocumentUpload';
 
 interface Payment {
   id: string;
@@ -26,6 +28,10 @@ interface Payment {
   payment_method: string;
   inspection_id?: string;
   phase_id?: string;
+  // Payment documents
+  supporting_documents?: string[];
+  receipt_url?: string;
+  invoice_url?: string;
   // Additional payment method fields
   bank_name?: string;
   account_number?: string;
@@ -55,6 +61,8 @@ interface PaymentFormData {
   mobile_number: string;
   mobile_operator: string;
   receiver_name: string;
+  supporting_documents: string[];
+  notes: string;
 }
 
 const PaymentCrud: React.FC = () => {
@@ -64,6 +72,8 @@ const PaymentCrud: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const [paymentBlocked, setPaymentBlocked] = useState(false);
+  const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<PaymentFormData>({
@@ -83,7 +93,9 @@ const PaymentCrud: React.FC = () => {
     check_number: '',
     mobile_number: '',
     mobile_operator: '',
-    receiver_name: ''
+    receiver_name: '',
+    supporting_documents: [],
+    notes: ''
   });
 
   const paymentMethods = [
@@ -118,9 +130,12 @@ const PaymentCrud: React.FC = () => {
       check_number: '',
       mobile_number: '',
       mobile_operator: '',
-      receiver_name: ''
+      receiver_name: '',
+      supporting_documents: [],
+      notes: ''
     });
     setPaymentBlocked(false);
+    setUploadedDocuments([]);
   };
 
   const openCreateForm = () => {
@@ -148,9 +163,12 @@ const PaymentCrud: React.FC = () => {
       check_number: payment.check_number || '',
       mobile_number: payment.mobile_number || '',
       mobile_operator: payment.mobile_operator || '',
-      receiver_name: payment.receiver_name || ''
+      receiver_name: payment.receiver_name || '',
+      supporting_documents: payment.supporting_documents || [],
+      notes: ''
     });
     setSelectedPayment(payment);
+    setUploadedDocuments(payment.supporting_documents || []);
     setIsEditing(true);
     setIsViewMode(false);
     setIsFormOpen(true);
@@ -174,9 +192,12 @@ const PaymentCrud: React.FC = () => {
       check_number: payment.check_number || '',
       mobile_number: payment.mobile_number || '',
       mobile_operator: payment.mobile_operator || '',
-      receiver_name: payment.receiver_name || ''
+      receiver_name: payment.receiver_name || '',
+      supporting_documents: payment.supporting_documents || [],
+      notes: ''
     });
     setSelectedPayment(payment);
+    setUploadedDocuments(payment.supporting_documents || []);
     setIsViewMode(true);
     setIsFormOpen(true);
   };
@@ -221,6 +242,7 @@ const PaymentCrud: React.FC = () => {
           ...selectedPayment, 
           ...formData,
           payment_date: new Date(formData.payment_date).toISOString(),
+          supporting_documents: uploadedDocuments,
           updated_at: new Date().toISOString()
         };
         setPayments(prev => prev.map(p => p.id === selectedPayment.id ? updatedPayment : p));
@@ -234,6 +256,7 @@ const PaymentCrud: React.FC = () => {
           id: `pay-${Date.now()}`,
           ...formData,
           payment_date: new Date(formData.payment_date).toISOString(),
+          supporting_documents: uploadedDocuments,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -275,6 +298,27 @@ const PaymentCrud: React.FC = () => {
       contractor_id: supplier.id || '',
       contractor_name: supplier.name || '',
       contractor_contact: supplier.contact || ''
+    }));
+  };
+
+  const handleDocumentUpload = (documentId: string) => {
+    setUploadedDocuments(prev => [...prev, documentId]);
+    setFormData(prev => ({ 
+      ...prev, 
+      supporting_documents: [...prev.supporting_documents, documentId] 
+    }));
+    setIsUploadDialogOpen(false);
+    toast({
+      title: "Document ajouté",
+      description: "Le document justificatif a été ajouté au paiement"
+    });
+  };
+
+  const removeDocument = (documentId: string) => {
+    setUploadedDocuments(prev => prev.filter(id => id !== documentId));
+    setFormData(prev => ({ 
+      ...prev, 
+      supporting_documents: prev.supporting_documents.filter(id => id !== documentId)
     }));
   };
 
@@ -504,7 +548,7 @@ const PaymentCrud: React.FC = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, transaction_id: e.target.value }))}
                     required
                     disabled={isViewMode}
-                    placeholder="TXN-XXXXXXX"
+                    placeholder="TXN-123456"
                   />
                 </div>
               </div>
@@ -513,26 +557,92 @@ const PaymentCrud: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="inspection_id">ID Inspection (optionnel)</Label>
+                  <Label htmlFor="inspection_id">Inspection liée (optionnel)</Label>
                   <Input
                     id="inspection_id"
                     value={formData.inspection_id}
                     onChange={(e) => setFormData(prev => ({ ...prev, inspection_id: e.target.value }))}
                     disabled={isViewMode}
-                    placeholder="insp-xxxxxxx"
+                    placeholder="INSP-001"
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="phase_id">ID Phase (optionnel)</Label>
+                  <Label htmlFor="phase_id">Phase liée (optionnel)</Label>
                   <Input
                     id="phase_id"
                     value={formData.phase_id}
                     onChange={(e) => setFormData(prev => ({ ...prev, phase_id: e.target.value }))}
                     disabled={isViewMode}
-                    placeholder="phase-xxxxxxx"
+                    placeholder="PHASE-001"
                   />
                 </div>
+              </div>
+
+              {/* Documents Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Documents justificatifs</Label>
+                  <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button type="button" variant="outline" size="sm" disabled={isViewMode}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Ajouter Document
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Ajouter Document Justificatif</DialogTitle>
+                      </DialogHeader>
+                      <div className="p-4">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Télécharger un document justificatif pour ce paiement (PDF, JPG, PNG acceptés, max 10MB)
+                        </p>
+                        {/* Placeholder for document upload functionality */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm text-gray-600">Glisser-déposer ou cliquer pour sélectionner</p>
+                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                
+                {uploadedDocuments.length > 0 && (
+                  <div className="border rounded-lg p-3 space-y-2">
+                    {uploadedDocuments.map((docId, index) => (
+                      <div key={docId} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span className="text-sm">Document {index + 1}</span>
+                        </div>
+                        {!isViewMode && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDocument(docId)}
+                          >
+                            Supprimer
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  disabled={isViewMode}
+                  placeholder="Notes et commentaires..."
+                />
               </div>
 
               {!isViewMode && (
@@ -564,6 +674,7 @@ const PaymentCrud: React.FC = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Méthode</TableHead>
                 <TableHead>Progression</TableHead>
+                <TableHead>Documents</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -581,19 +692,23 @@ const PaymentCrud: React.FC = () => {
                     {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {paymentMethods.find(m => m.value === payment.payment_method)?.label}
-                    </Badge>
+                    {paymentMethods.find(m => m.value === payment.payment_method)?.label}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="w-16 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-primary h-2 rounded-full transition-all" 
+                          className="bg-blue-600 h-2 rounded-full" 
                           style={{ width: `${payment.progress_at_payment}%` }}
-                        />
+                        ></div>
                       </div>
                       <span className="text-sm">{payment.progress_at_payment}%</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <FileText className="h-4 w-4" />
+                      <span className="text-sm">{payment.supporting_documents?.length || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -626,7 +741,7 @@ const PaymentCrud: React.FC = () => {
               ))}
               {payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     Aucun paiement trouvé
                   </TableCell>
                 </TableRow>
