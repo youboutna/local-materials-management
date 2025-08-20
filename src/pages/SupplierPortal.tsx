@@ -6,13 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key, CheckCircle, MessageCircle, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key, CheckCircle, MessageCircle, Clock, Send, Share2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/supplier';
 import { DocumentType } from '@/types/document';
+import BusinessDocuments from '@/components/documents/BusinessDocuments';
 
 const SupplierPortal = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -30,6 +33,10 @@ const SupplierPortal = () => {
   const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
   const [taskComment, setTaskComment] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [shareTargetEmail, setShareTargetEmail] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
+  const [selectedDocumentForShare, setSelectedDocumentForShare] = useState<string | null>(null);
+  const [documentType, setDocumentType] = useState<string>('supplier_info');
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
@@ -310,7 +317,7 @@ const SupplierPortal = () => {
           file_name: uploadFile.name,
           mime_type: uploadFile.type,
           file_size: uploadFile.size,
-          document_type: 'supplier_info' as const,
+          document_type: documentType as any,
           uploaded_by: user.id,
           status: 'draft'
         });
@@ -488,6 +495,79 @@ const SupplierPortal = () => {
     }
   };
 
+  const handleDocumentShare = async (documentId: string) => {
+    if (!shareTargetEmail.trim() || !user || !supplierProfile) return;
+
+    try {
+      // Create notification for document sharing
+      const { error } = await supabase
+        .from('supplier_notifications')
+        .insert({
+          supplier_id: supplierProfile.id,
+          notification_type: 'document_shared',
+          email: shareTargetEmail,
+          metadata: {
+            document_id: documentId,
+            shared_by: user.email,
+            message: shareMessage,
+            shared_at: new Date().toISOString()
+          }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Document partagé",
+        description: `Document partagé avec ${shareTargetEmail}`,
+      });
+
+      setShareTargetEmail('');
+      setShareMessage('');
+      setSelectedDocumentForShare(null);
+    } catch (error: any) {
+      toast({
+        title: "Erreur de partage",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSendDocumentToManager = async (documentId: string, documentTitle: string) => {
+    if (!user || !supplierProfile) return;
+
+    try {
+      // Create notification for project manager
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          title: "Nouveau document reçu du fournisseur",
+          message: `Le fournisseur ${supplierProfile.name} a envoyé le document: ${documentTitle}`,
+          type: "document_received",
+          recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
+          metadata: {
+            supplier_id: supplierProfile.id,
+            supplier_name: supplierProfile.name,
+            document_id: documentId,
+            document_title: documentTitle
+          }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Document envoyé",
+        description: "Document envoyé au chef de projet",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur d'envoi",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const getDocumentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       'inspection': 'Rapport d\'inspection',
@@ -636,10 +716,11 @@ const SupplierPortal = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
             <TabsTrigger value="tasks">Mes Tâches</TabsTrigger>
             <TabsTrigger value="upload">Mes Documents</TabsTrigger>
+            <TabsTrigger value="business">Documents Justificatifs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="shared">
@@ -675,7 +756,7 @@ const SupplierPortal = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                           <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
@@ -692,8 +773,60 @@ const SupplierPortal = () => {
                               <Download className="h-4 w-4 mr-1" />
                               Télécharger
                             </Button>
-                          </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedDocumentForShare(
+                                selectedDocumentForShare === document.id ? null : document.id
+                              )}
+                            >
+                              <Share2 className="h-4 w-4 mr-1" />
+                              Partager
+                            </Button>
+                           </div>
                         </div>
+                        
+                        {selectedDocumentForShare === document.id && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="share-email">Email du destinataire</Label>
+                              <Input
+                                id="share-email"
+                                type="email"
+                                value={shareTargetEmail}
+                                onChange={(e) => setShareTargetEmail(e.target.value)}
+                                placeholder="destinataire@email.com"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="share-message">Message (optionnel)</Label>
+                              <Textarea
+                                id="share-message"
+                                value={shareMessage}
+                                onChange={(e) => setShareMessage(e.target.value)}
+                                placeholder="Ajouter un message..."
+                                rows={2}
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleDocumentShare(document.id)}
+                                disabled={!shareTargetEmail.trim()}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Partager
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedDocumentForShare(null)}
+                              >
+                                Annuler
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -825,6 +958,24 @@ const SupplierPortal = () => {
                       placeholder="Description du document (optionnel)"
                     />
                   </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="document-type">Type de document</Label>
+                    <Select value={documentType} onValueChange={(value) => setDocumentType(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="supplier_info">Document fournisseur</SelectItem>
+                        <SelectItem value="invoice">Facture</SelectItem>
+                        <SelectItem value="delivery_note">Bon de livraison</SelectItem>
+                        <SelectItem value="purchase_order">Bon de commande</SelectItem>
+                        <SelectItem value="quote">Devis</SelectItem>
+                        <SelectItem value="payment_receipt">Reçu de paiement</SelectItem>
+                        <SelectItem value="technical">Document technique</SelectItem>
+                        <SelectItem value="administrative">Document administratif</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="upload-file">Fichier</Label>
                     <Input
@@ -881,6 +1032,13 @@ const SupplierPortal = () => {
                                 <Download className="h-4 w-4 mr-1" />
                                 Télécharger
                               </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleSendDocumentToManager(document.id, document.title)}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Envoyer au chef de projet
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -894,6 +1052,20 @@ const SupplierPortal = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="business">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Documents Justificatifs et Factures
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BusinessDocuments />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
