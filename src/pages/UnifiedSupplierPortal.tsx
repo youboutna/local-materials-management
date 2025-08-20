@@ -168,14 +168,43 @@ const UnifiedSupplierPortal = () => {
     queryKey: ['supplier-payment-requests', supplierProfile?.id],
     enabled: !!supplierProfile?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!supplierProfile?.id) return [];
+      
+      // First try to get from supplier_payment_requests table
+      const { data: directRequests, error: directError } = await supabase
         .from('supplier_payment_requests')
         .select('*')
-        .eq('supplier_id', supplierProfile!.id)
+        .eq('supplier_id', supplierProfile.id)
         .order('requested_date', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+
+      // Also get from notifications table (for historical requests)
+      const { data: notificationRequests, error: notificationError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', supplierProfile.id)
+        .eq('type', 'supplier_payment_request')
+        .order('created_at', { ascending: false });
+
+      // Combine both sources and transform notification data
+      const combined = [
+        ...(directRequests || []),
+        ...(notificationRequests || []).map(notif => ({
+          id: notif.id,
+          supplier_id: supplierProfile.id,
+          amount: (notif.metadata as any)?.amount || 0,
+          description: (notif.metadata as any)?.description || notif.message,
+          payment_reason: (notif.metadata as any)?.payment_reason || 'Non spécifié',
+          status: (notif.metadata as any)?.status || 'pending',
+          requested_date: notif.created_at,
+          supporting_documents: (notif.metadata as any)?.supporting_documents || [],
+          notes: (notif.metadata as any)?.notes,
+          project_id: (notif.metadata as any)?.project_id,
+          created_at: notif.created_at,
+          updated_at: notif.updated_at
+        }))
+      ];
+
+      return combined;
     }
   });
 
@@ -188,12 +217,11 @@ const UnifiedSupplierPortal = () => {
         .from('documents')
         .select(`
           *,
-          projects!documents_project_id_fkey (title, status),
-          payments (amount, payment_date)
+          projects!documents_project_id_fkey (title, status)
         `)
         .or(`assigned_to.eq.${user!.id},tags.cs.{${supplierProfile!.name}}`)
         .order('created_at', { ascending: false });
-
+      
       if (error) throw error;
       return data || [];
     }
