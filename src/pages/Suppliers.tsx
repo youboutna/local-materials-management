@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Edit, Trash2, Star, Send, FileText, Mail, Share } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Star, Send, FileText, Mail, Share2 } from 'lucide-react';
 import { sendSupplierNotification, generateSupplierPasswordReset } from '@/services/supplierNotificationService';
+import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
 import type { Database } from '@/integrations/supabase/types';
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -22,7 +23,7 @@ const Suppliers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [shareDocumentOpen, setShareDocumentOpen] = useState(false);
+  const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -46,35 +47,6 @@ const Suppliers = () => {
       return (data as unknown as Supplier[]) || [];
     },
   });
-
-  const { data: documents } = useQuery({
-    queryKey: ['documents'],
-    queryFn: async (): Promise<Document[]> => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .in('document_type', ['inspection_report', 'project_report', 'contract', 'supplier_info', 'tender'])
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data as unknown as Document[]) || [];
-    },
-  });
-
-  // Group documents by category for enhanced sharing
-  const projectDocuments = documents?.filter(doc => 
-    ['inspection_report', 'project_report', 'contract'].includes(doc.document_type)
-  ) || [];
-  
-  const materialDocuments = documents?.filter(doc => 
-    ['supplier_info', 'tender'].includes(doc.document_type)
-  ) || [];
-
-  const paymentDocuments = documents?.filter(doc => 
-    doc.title?.toLowerCase().includes('payment') || 
-    doc.title?.toLowerCase().includes('paiement') ||
-    doc.title?.toLowerCase().includes('facture') ||
-    doc.title?.toLowerCase().includes('invoice')
-  ) || [];
 
   const createMutation = useMutation({
     mutationFn: async (supplierData: typeof formData) => {
@@ -222,36 +194,9 @@ const Suppliers = () => {
     }
   };
 
-  const handleShareDocument = async (documentId: string, supplier: Supplier) => {
-    if (!supplier.email) {
-      toast({
-        title: "Erreur",
-        description: "Ce fournisseur n'a pas d'adresse email.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const document = documents?.find(doc => doc.id === documentId);
-    if (!document) return;
-
-    try {
-      await sendSupplierNotification({
-        type: 'task_assignment',
-        email: supplier.email,
-        supplier_name: supplier.name,
-        supplier_id: supplier.id,
-        task_title: `Document partagé: ${document.title}`
-      });
-      
-      toast({
-        title: "Succès",
-        description: `Document "${document.title}" partagé avec ${supplier.name}`,
-      });
-      setShareDocumentOpen(false);
-    } catch (error) {
-      console.error('Error sharing document:', error);
-    }
+  const handleOpenEnhancedDocumentSharing = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setEnhancedDocumentSharingOpen(true);
   };
 
   const renderStars = (rating: number) => {
@@ -490,118 +435,27 @@ const Suppliers = () => {
                     </Tabs>
                   </DialogContent>
                 </Dialog>
-                <Dialog open={shareDocumentOpen && selectedSupplier?.id === supplier.id} onOpenChange={setShareDocumentOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedSupplier(supplier);
-                        setShareDocumentOpen(true);
-                      }}
-                    >
-                      <Share className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Partager des documents avec {supplier.name}</DialogTitle>
-                    </DialogHeader>
-                    <Tabs defaultValue="project" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="project">Projet</TabsTrigger>
-                        <TabsTrigger value="material">Matériaux</TabsTrigger>
-                        <TabsTrigger value="payment">Paiements</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="project" className="space-y-4">
-                        <h4 className="text-sm font-medium text-muted-foreground">Documents liés aux projets (inspections, rapports, contrats)</h4>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {projectDocuments.length > 0 ? (
-                            projectDocuments.map((doc) => (
-                              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-2">
-                                  <FileText className="h-4 w-4" />
-                                  <div>
-                                    <span className="text-sm font-medium">{doc.title}</span>
-                                    <Badge variant="outline" className="ml-2">{doc.document_type}</Badge>
-                                  </div>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleShareDocument(doc.id, supplier)}
-                                >
-                                  Partager
-                                </Button>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground">Aucun document de projet disponible</p>
-                          )}
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="material" className="space-y-4">
-                        <h4 className="text-sm font-medium text-muted-foreground">Documents liés aux matériaux (appels d'offres, livraisons)</h4>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {materialDocuments.length > 0 ? (
-                            materialDocuments.map((doc) => (
-                              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-2">
-                                  <FileText className="h-4 w-4" />
-                                  <div>
-                                    <span className="text-sm font-medium">{doc.title}</span>
-                                    <Badge variant="outline" className="ml-2">{doc.document_type}</Badge>
-                                  </div>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleShareDocument(doc.id, supplier)}
-                                >
-                                  Partager
-                                </Button>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground">Aucun document de matériau disponible</p>
-                          )}
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="payment" className="space-y-4">
-                        <h4 className="text-sm font-medium text-muted-foreground">Documents liés aux paiements (factures, reçus)</h4>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {paymentDocuments.length > 0 ? (
-                            paymentDocuments.map((doc) => (
-                              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-2">
-                                  <FileText className="h-4 w-4" />
-                                  <div>
-                                    <span className="text-sm font-medium">{doc.title}</span>
-                                    <Badge variant="outline" className="ml-2">{doc.document_type}</Badge>
-                                  </div>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleShareDocument(doc.id, supplier)}
-                                >
-                                  Partager
-                                </Button>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground">Aucun document de paiement disponible</p>
-                          )}
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenEnhancedDocumentSharing(supplier)}
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Enhanced Document Sharing Dialog */}
+      {selectedSupplier && (
+        <EnhancedDocumentSharing
+          supplier={selectedSupplier}
+          isOpen={enhancedDocumentSharingOpen}
+          onOpenChange={setEnhancedDocumentSharingOpen}
+        />
+      )}
 
       {suppliers?.length === 0 && (
         <Card>
