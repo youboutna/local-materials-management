@@ -183,7 +183,6 @@ function App() {
     <InspectionEdit />
   </RoleBasedRoute>
 } />
-<Route path="/supplier-dashboard" element={<UnifiedSupplierPortal />} />
 <Route path="/tender-management" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <TenderManagement />

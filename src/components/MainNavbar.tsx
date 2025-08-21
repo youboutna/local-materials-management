@@ -82,18 +82,6 @@ const MainNavbar = () => {
                     </Link>
                   </Button>
                 </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Button 
-                    variant="ghost" 
-                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
-                    size="sm"
-                    asChild
-                  >
-                    <Link to="/supplier-dashboard">
-                      {t('nav.supplier_dashboard') || 'Supplier Dashboard'}
-                    </Link>
-                  </Button>
-                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           ) : (
