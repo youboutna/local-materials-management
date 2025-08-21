@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ProjectStatus } from '@/types/project';
 
 interface GanttTask {
   id: string;
@@ -24,6 +25,13 @@ interface WaterfallGanttChartProps {
   tasks: GanttTask[];
   projectStartDate?: Date;
   projectEndDate?: Date;
+  ProjectTitle: string;
+  ProjectDescription: string;
+  ProjectLocation: string;
+  ProjectStatus: ProjectStatus;
+  ProjectProgress: number;
+  projectBudget: number;
+  ProjectTeamSize: number;
 }
 
 const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({

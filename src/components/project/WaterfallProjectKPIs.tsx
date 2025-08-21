@@ -47,6 +47,7 @@ interface WaterfallProjectKPIsProps {
   projectMetrics: ProjectMetrics;
   phases: PhaseMetrics[];
   projectTitle?: string;
+  projectBudget? :number;
 }
 
 const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
