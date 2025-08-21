@@ -6,7 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3 } from 'lucide-react';
+import WaterfallProjectManager from '@/components/project/WaterfallProjectManager';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LoadDataButton from '@/components/LoadDataButton';
@@ -449,10 +451,79 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Waterfall Management Tabs */}
+          <motion.div 
+            className="mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+                <TabsTrigger value="waterfall">Gestion Waterfall</TabsTrigger>
+                <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+                <TabsTrigger value="alerts">Alertes</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Résumé des Projets</CardTitle>
+                    <CardDescription>Vue d'ensemble des statistiques principales</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        Consultez les graphiques ci-dessus pour un aperçu complet de vos projets.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="waterfall" className="mt-6">
+                <WaterfallProjectManager />
+              </TabsContent>
+
+              <TabsContent value="monitoring" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monitoring des Projets</CardTitle>
+                    <CardDescription>Suivi en temps réel des performances</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        Module de monitoring en développement
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="alerts" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Alertes et Notifications</CardTitle>
+                    <CardDescription>Gestion des alertes de projet</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        Système d'alertes en développement
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
         </div>
       </main>
       
-      
+      <Footer />
     </div>
   );
 };

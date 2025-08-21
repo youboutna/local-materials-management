@@ -47,6 +47,8 @@ import ProjectDocuments from "@/components/project/ProjectDocuments";
 import ProjectPhases from "@/components/project/ProjectPhases";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { useLanguage } from "@/contexts/LanguageContext";
+import WaterfallGanttChart from "@/components/project/WaterfallGanttChart";
+import WaterfallProjectKPIs from "@/components/project/WaterfallProjectKPIs";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -891,11 +893,62 @@ const ProjectDetail = () => {
               </TabsContent>
 
               <TabsContent value="phases">
-                <ProjectPhases 
-                  projectId={id!} 
-                  onUpdate={handleDataUpdate} 
-                  projectBudget={project?.budget || 0}
-                />
+                <div className="space-y-6">
+                  {/* Waterfall KPIs */}
+                  <WaterfallProjectKPIs
+                    projectMetrics={{
+                      schedulePerformanceIndex: 1.05,
+                      costPerformanceIndex: 0.95,
+                      earnedValue: project?.budget ? project.budget * (project.progress / 100) : 0,
+                      plannedValue: project?.budget ? project.budget * 0.6 : 0,
+                      actualCost: project?.phases?.reduce((sum, phase) => sum + (phase.actual_cost || 0), 0) || 0,
+                      budgetAtCompletion: project?.budget || 0,
+                      estimateAtCompletion: (project?.budget || 0) * 1.05,
+                      estimateToComplete: (project?.budget || 0) * 0.4,
+                      varianceAtCompletion: (project?.budget || 0) * -0.05
+                    }}
+                    phases={project?.phases?.map(phase => ({
+                      id: phase.id,
+                      name: phase.title,
+                      plannedProgress: 80,
+                      actualProgress: phase.progress || 0,
+                      budget: phase.budget || 0,
+                      actualCost: phase.actual_cost || 0,
+                      startDate: phase.start_date,
+                      endDate: phase.end_date,
+                      status: phase.status as any,
+                      procurementStep: Math.floor(Math.random() * 5) + 1,
+                      risks: 2,
+                      issues: 0
+                    })) || []}
+                    projectTitle={project?.title || "Projet"}
+                  />
+                  
+                  {/* Gantt Chart */}
+                  <WaterfallGanttChart 
+                    tasks={project?.phases?.map(phase => ({
+                      id: phase.id,
+                      name: phase.title,
+                      startDate: new Date(phase.start_date),
+                      endDate: new Date(phase.end_date),
+                      progress: phase.progress || 0,
+                      phase: 'Waterfall',
+                      status: phase.status as any,
+                      procurementStep: Math.floor(Math.random() * 5) + 1,
+                      assignedTo: 'Équipe projet',
+                      budget: phase.budget || 0
+                    })) || []}
+                    projectStartDate={new Date(project?.startDate)}
+                    projectEndDate={project?.endDate ? new Date(project.endDate) : new Date()}
+                  />
+                  
+                  {/* Traditional Project Phases */}
+                  <ProjectPhases 
+                    projectId={id!} 
+                    onUpdate={handleDataUpdate} 
+                    projectBudget={project?.budget || 0}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="shapes">

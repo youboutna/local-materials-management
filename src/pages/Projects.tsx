@@ -19,6 +19,7 @@ import { ProjectData } from "@/types/project";
 import { MapLocation } from "@/components/ProjectMap";
 import Navbar from "@/components/Navbar";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
+import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 
 const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
@@ -154,10 +155,14 @@ const Projects: React.FC = () => {
         <ProjectsHeader />
 
         <Tabs defaultValue="grid" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="grid" className="flex items-center gap-2">
               <Grid className="h-4 w-4" />
               Vue Grille
+            </TabsTrigger>
+            <TabsTrigger value="waterfall" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Gestion Waterfall
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
               <Map className="h-4 w-4" />
@@ -205,6 +210,10 @@ const Projects: React.FC = () => {
               onPageChange={goToPage}
               isLoading={isLoading}
             />
+          </TabsContent>
+
+          <TabsContent value="waterfall" className="space-y-6">
+            <WaterfallProjectManager />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-6">

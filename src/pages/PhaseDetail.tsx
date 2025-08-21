@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   TrendingUp
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const PhaseDetail: React.FC = () => {
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
@@ -246,8 +247,9 @@ const PhaseDetail: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="waterfall">Waterfall</TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -328,6 +330,86 @@ const PhaseDetail: React.FC = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="waterfall">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Méthodologie Waterfall - Marchés Publics Mauritanie
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Waterfall Phase Mapping */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Phase Waterfall</h4>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="font-medium text-blue-800">Démarrage</div>
+                        <div className="text-sm text-blue-600">Charte projet, parties prenantes</div>
+                      </div>
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="font-medium text-green-800">Planification</div>
+                        <div className="text-sm text-green-600">WBS, planning détaillé, communication</div>
+                      </div>
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="font-medium text-yellow-800">Exécution</div>
+                        <div className="text-sm text-yellow-600">Pilotage de la publication & réception</div>
+                      </div>
+                      <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div className="font-medium text-purple-800">Contrôle</div>
+                        <div className="text-sm text-purple-600">Suivi risques, valeur acquise</div>
+                      </div>
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="font-medium text-gray-800">Clôture</div>
+                        <div className="text-sm text-gray-600">PV de recette, documentation</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Procurement Steps */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Étapes Marchés Publics</h4>
+                    <div className="space-y-2">
+                      <div className="p-3 border rounded-lg">
+                        <div className="font-medium">1. Planification des achats</div>
+                        <div className="text-sm text-muted-foreground">PAA & PPM alignés sur Charte projet</div>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <div className="font-medium">2. Publicité et appel d'offres</div>
+                        <div className="text-sm text-muted-foreground">Avis sur Portail National & journaux</div>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <div className="font-medium">3. Réception & analyse des offres</div>
+                        <div className="text-sm text-muted-foreground">CPMP présidée par PRMP</div>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <div className="font-medium">4. Attribution du marché</div>
+                        <div className="text-sm text-muted-foreground">Offre économiquement avantageuse</div>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <div className="font-medium">5. Contrôle & régulation</div>
+                        <div className="text-sm text-muted-foreground">CNCMP & ARMP</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phase Status Integration */}
+                <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-semibold mb-2">Statut Phase Actuelle</h4>
+                  <div className="flex items-center gap-4">
+                    <Badge className={getStatusColor(phase.status)}>{getStatusIcon(phase.status)} {phase.status}</Badge>
+                    <span className="text-sm">Progression: {phase.progress}%</span>
+                    <span className="text-sm">Étape CPMP: 3/5</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="materials">
