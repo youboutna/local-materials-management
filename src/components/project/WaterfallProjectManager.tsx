@@ -294,10 +294,12 @@ const WaterfallProjectManager = () => {
               <Workflow className="h-4 w-4" />
               Workflow Mauritanie
             </TabsTrigger>
-            <TabsTrigger value="phases" className="flex items-center gap-2">
+            {/**             
+             <TabsTrigger value="phases" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Phases Waterfall
-            </TabsTrigger>
+            </TabsTrigger> **/}
+
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               Analytics EVM
@@ -331,9 +333,9 @@ const WaterfallProjectManager = () => {
             />
           </TabsContent>
 
-          <TabsContent value="phases" className="space-y-4">
+        {/*    <TabsContent value="phases" className="space-y-4">
             Module en développement
-              {/*  <WaterfallProjectPhasesManager
+              <WaterfallProjectPhasesManager
               phases={phases.map(p => ({
                 id: p.id,
                 title: p.name,
@@ -353,9 +355,9 @@ const WaterfallProjectManager = () => {
               }))}
               projectBudget={selectedProject.budget}
               projectId={selectedProject.id}
-            />*/}
+            />
            
-          </TabsContent>         
+          </TabsContent>  */}       
 
           <TabsContent value="analytics" className="space-y-4">
             <WaterfallProjectKPIs

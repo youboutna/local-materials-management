@@ -129,6 +129,14 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
     fetchProjectData();
   }, [selectedProject]);
 
+  const handleProjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!onProjectChange) return;
+    
+    const projectId = event.target.value;
+    const newProject = projects.find(p => p.id === projectId) || null;
+    onProjectChange(newProject);
+  };
+
   const handleAddPhase = () => {
     setCurrentPhase({
       name: '',
@@ -261,7 +269,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
           <div>
             <select 
               value={selectedProject.id} 
-              onChange={(e) => onProjectChange && onProjectChange(projects.find(p => p.id === e.target.value) || null)}
+              onChange={handleProjectChange}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {projects.map(project => (
