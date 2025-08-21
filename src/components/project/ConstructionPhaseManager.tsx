@@ -62,6 +62,64 @@ const CONSTRUCTION_STAGES: { [key in ConstructionPhase]: { value: ConstructionSt
   ]
 };
 
+// Mauritanian public procurement workflow stages
+const MAURITANIAN_PROCUREMENT_STAGES = [
+  {
+    id: 'planification',
+    label: 'Planification des achats',
+    description: 'Élaboration du Plan Annuel d\'Achats (PAA) et du Plan de Passation des Marchés (PPM)',
+    steps: [
+      'Estimation des ressources financières nécessaires',
+      'Planification des achats par catégorie (personnel, locations, assurances, etc.)',
+      'Définition des modalités de planification'
+    ]
+  },
+  {
+    id: 'publicite',
+    label: 'Publicité et appel d\'offres',
+    description: 'Publication des avis selon les procédures formalisées ou adaptées',
+    steps: [
+      'Publication via le Portail National des Marchés Publics',
+      'Diffusion dans les journaux d\'annonces légales',
+      'Inscription des candidats potentiels sur le portail',
+      'Notifications d\'opportunités aux candidats'
+    ]
+  },
+  {
+    id: 'reception_analyse',
+    label: 'Réception et analyse des offres',
+    description: 'Analyse des offres par la Commission de Passation des Marchés Publics (CPMP)',
+    steps: [
+      'Soumission des dossiers techniques par les candidats',
+      'Analyse par la CPMP présidée par la PRMP',
+      'Assistance de la sous-commission d\'analyse des offres',
+      'Évaluation de la conformité des offres'
+    ]
+  },
+  {
+    id: 'attribution',
+    label: 'Attribution du marché',
+    description: 'Attribution au soumissionnaire présentant l\'offre économiquement la plus avantageuse',
+    steps: [
+      'Sélection basée sur le critère du prix ou du coût',
+      'Choix de l\'offre économiquement la plus avantageuse',
+      'Publication de l\'avis d\'attribution dans les 30 jours',
+      'Signature du marché avec l\'attributaire'
+    ]
+  },
+  {
+    id: 'controle_regulation',
+    label: 'Contrôle et régulation',
+    description: 'Contrôle par la CNCMP et régulation par l\'ARMP',
+    steps: [
+      'Contrôle a priori et a posteriori par la CNCMP',
+      'Vérification de la régularité des procédures',
+      'Régulation par l\'ARMP (Conseil de Régulation, Commission de Règlement des Différends)',
+      'Commission Disciplinaire pour les sanctions'
+    ]
+  }
+];
+
 // Phase labels for display
 const PHASE_LABELS: { [key in ConstructionPhase]: string } = {
   pre_construction: 'Pré-construction',
@@ -132,7 +190,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   const { user, loading: authLoading } = useAuth();
   const [isAddingPhase, setIsAddingPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
-  const [phaseType, setPhaseType] = useState<'standard' | 'custom'>('standard');
+  const [phaseType, setPhaseType] = useState<'standard' | 'custom' | 'procurement'>('standard');
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
@@ -183,6 +241,32 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       onChange([...phases, newPhase]);
       setIsAddingPhase(false);
     }, 'ajouter une phase');
+  };
+
+  // Create new procurement phase
+  const createProcurementPhase = (procurementStage: any) => {
+    checkAuthenticationAndProceed(() => {
+      const newPhase: PhaseData = {
+        id: Date.now().toString(),
+        title: procurementStage.label,
+        description: procurementStage.description,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        estimatedDuration: 30,
+        status: 'not_started',
+        budget: Math.floor(projectBudget * 0.2), // Default 20% of project budget for procurement phases
+        actualCost: 0,
+        progress: 0,
+        materials: [],
+        humanResources: [],
+        suppliers: [],
+        location: '',
+        notes: procurementStage.steps.join('\n• ')
+      };
+      
+      onChange([...phases, newPhase]);
+      setIsAddingPhase(false);
+    }, 'ajouter une phase de marché public');
   };
 
   // Create new custom phase
@@ -277,14 +361,22 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                 <DialogTitle>Ajouter une nouvelle phase</DialogTitle>
               </DialogHeader>
               
-              <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom')}>
-                <TabsList className="grid w-full grid-cols-2">
+              <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom' | 'procurement')}>
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="standard">Phases standards</TabsTrigger>
+                  <TabsTrigger value="procurement">Marchés publics</TabsTrigger>
                   <TabsTrigger value="custom">Phase personnalisée</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="standard" className="space-y-4">
                   <StandardPhaseCreator onCreatePhase={createStandardPhase} />
+                </TabsContent>
+                
+                <TabsContent value="procurement" className="space-y-4">
+                  <ProcurementPhaseCreator 
+                    onCreatePhase={createProcurementPhase}
+                    projectBudget={projectBudget}
+                  />
                 </TabsContent>
                 
                 <TabsContent value="custom" className="space-y-4">
@@ -775,6 +867,84 @@ const PhaseEditDialog: React.FC<{
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+// Procurement Phase Creator Component
+const ProcurementPhaseCreator: React.FC<{
+  onCreatePhase: (stage: any) => void;
+  projectBudget: number;
+}> = ({ onCreatePhase, projectBudget }) => {
+  const [selectedStage, setSelectedStage] = useState<string>('');
+
+  const handleCreate = () => {
+    const stageData = MAURITANIAN_PROCUREMENT_STAGES.find(s => s.id === selectedStage);
+    if (stageData) {
+      onCreatePhase(stageData);
+      setSelectedStage('');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 p-4 rounded-lg border">
+        <h4 className="font-medium text-blue-800 mb-2">
+          Workflow des Marchés Publics en Mauritanie
+        </h4>
+        <p className="text-sm text-blue-700">
+          Procédure officielle des marchés publics utilisée par les entreprises publiques mauritaniennes.
+        </p>
+      </div>
+
+      <div>
+        <Label>Étape du marché public</Label>
+        <Select value={selectedStage} onValueChange={setSelectedStage}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionner une étape" />
+          </SelectTrigger>
+          <SelectContent>
+            {MAURITANIAN_PROCUREMENT_STAGES.map((stage) => (
+              <SelectItem key={stage.id} value={stage.id}>
+                {stage.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {selectedStage && (
+        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+          {(() => {
+            const stageData = MAURITANIAN_PROCUREMENT_STAGES.find(s => s.id === selectedStage);
+            return stageData ? (
+              <>
+                <h5 className="font-medium">{stageData.label}</h5>
+                <p className="text-sm text-gray-600">{stageData.description}</p>
+                <div>
+                  <h6 className="text-sm font-medium mb-2">Étapes détaillées :</h6>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {stageData.steps.map((step, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            ) : null;
+          })()}
+        </div>
+      )}
+
+      <Button 
+        onClick={handleCreate} 
+        disabled={!selectedStage}
+        className="w-full"
+      >
+        Créer la phase de marché public
+      </Button>
+    </div>
   );
 };
 
