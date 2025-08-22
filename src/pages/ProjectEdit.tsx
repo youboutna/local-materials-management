@@ -48,7 +48,10 @@ const ProjectEdit = () => {
             'annulé': 'Cancelled'
           } as const;
 
-          // Prepare initial data for the form
+          // Load project phases first
+          const phases = await loadProjectPhases(id);
+          
+          // Prepare initial data for the form including phases
           const formInitialData = {
             title: projectData.title,
             description: projectData.description,
@@ -68,6 +71,7 @@ const ProjectEdit = () => {
             initial_payment_percentage: projectData.initialPaymentPercentage || 0,
             current_phase: (projectData as any).currentPhase || '',
             current_stage: (projectData as any).currentStage || '',
+            phases: phases || [], // Include phases from the start
             facilitiesLocation: projectData.coordinates ? {
               center: {
                 lat: projectData.coordinates.latitude,
@@ -89,9 +93,6 @@ const ProjectEdit = () => {
 
           // Load project materials
           await loadProjectMaterials(id);
-          
-          // Load project phases
-          await loadProjectPhases(id);
         } else {
           toast({
             title: t("projects.edit.error"),
@@ -166,10 +167,10 @@ const ProjectEdit = () => {
         notes: phase.notes || ''
       })) || [];
 
-      // Update initial data to include phases
-      setInitialData(prev => prev ? { ...prev, phases } : null);
+      return phases;
     } catch (error) {
       console.error('Error loading project phases:', error);
+      return [];
     }
   };
 
