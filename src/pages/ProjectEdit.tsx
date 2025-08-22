@@ -57,7 +57,7 @@ const ProjectEdit = () => {
             budget: projectData.budget,
             start_date: projectData.startDate,
             end_date: projectData.endDate,
-            team_size: projectData.teamSize,
+            team_size: projectData.teamSize || 0,
             financing_source: projectData.financingSource || '',
             market_type: projectData.marketType || '',
             selection_mode: projectData.selectionMode || '',
