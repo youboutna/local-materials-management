@@ -69,14 +69,14 @@ const WaterfallProjectManager = () => {
           setPhases(phasesData.map(p => ({
             id: p.id,
             name: p.phase_name,
-            plannedProgress: p.planned_progress || 0,
+            plannedProgress: 0, // Fixed: use hardcoded value since field doesn't exist
             actualProgress: p.progress || 0,
             budget: p.estimated_cost || 0,
             actualCost: p.actual_cost || 0,
             startDate: p.start_date,
             endDate: p.end_date,
             status: p.status,
-            procurementStep: p.procurement_step || '',
+            procurementStep: '', // Fixed: use hardcoded value since field doesn't exist
             projectId: p.project_id
           })));
         }
@@ -89,15 +89,15 @@ const WaterfallProjectManager = () => {
             completedDate: m.completion_date,
             status: m.status,
             projectId: m.project_id,
-            phase: m.phase,
-            stage: m.stage
+            phase: '', // Fixed: use hardcoded value since field doesn't exist
+            stage: '' // Fixed: use hardcoded value since field doesn't exist
           })));
         }
 
         // Calcul des métriques EVM à partir des phases
         if (phasesData && phasesData.length > 0) {
           const earnedValue = phasesData.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.estimated_cost || 0), 0);
-          const plannedValue = phasesData.reduce((sum, p) => sum + ((p.planned_progress || 0) / 100) * (p.estimated_cost || 0), 0);
+          const plannedValue = phasesData.reduce((sum, p) => sum + (0 / 100) * (p.estimated_cost || 0), 0); // Fixed: use 0 since planned_progress doesn't exist
           const actualCost = phasesData.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
           const budgetAtCompletion = selectedProject.budget || phasesData.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
 
@@ -316,21 +316,24 @@ const WaterfallProjectManager = () => {
                 progress: p.actualProgress,
                 phase: p.name,
                 status: p.status,
-                procurementStep: p.procurementStep,
+                procurementStep: 1,
                 assignedTo: '',
                 budget: p.budget
               }))}
               projectStartDate={new Date(Math.min(...phases.map(p => new Date(p.startDate).getTime())))}
               projectEndDate={new Date(Math.max(...phases.map(p => new Date(p.endDate).getTime())))}
-              projectTitle={selectedProject.title}
+              ProjectTitle={selectedProject.title}
+              ProjectDescription={selectedProject.description}
+              ProjectLocation={selectedProject.location}
+              ProjectStatus={selectedProject.status}
+              ProjectProgress={selectedProject.progress}
+              projectBudget={selectedProject.budget}
+              ProjectTeamSize={selectedProject.teamSize}
             />
           </TabsContent>
 
           <TabsContent value="workflow" className="space-y-4">
-            <PublicProcurementWorkflow 
-              project={selectedProject}
-              milestones={milestones}
-            />
+            <PublicProcurementWorkflow />
           </TabsContent>
 
         {/*    <TabsContent value="phases" className="space-y-4">

@@ -940,6 +940,13 @@ const ProjectDetail = () => {
                     })) || []}
                     projectStartDate={new Date(project?.startDate)}
                     projectEndDate={project?.endDate ? new Date(project.endDate) : new Date()}
+                    ProjectTitle={project?.title || "Projet"}
+                    ProjectDescription={project?.description || "Description du projet"}
+                    ProjectLocation={project?.location || "Localisation"}
+                    ProjectStatus={project?.status || "En cours"}
+                    ProjectProgress={project?.progress || 0}
+                    projectBudget={project?.budget || 0}
+                    ProjectTeamSize={project?.teamSize || 1}
                   />
                   
                   {/* Traditional Project Phases */}

@@ -89,6 +89,9 @@ const ProjectEdit = () => {
 
           // Load project materials
           await loadProjectMaterials(id);
+          
+          // Load project phases
+          await loadProjectPhases(id);
         } else {
           toast({
             title: t("projects.edit.error"),
@@ -130,6 +133,43 @@ const ProjectEdit = () => {
       setSelectedMaterials(materials);
     } catch (error) {
       console.error('Error loading project materials:', error);
+    }
+  };
+
+  // Load existing phases when project loads
+  const loadProjectPhases = async (projectId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('project_phases')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform phases data for the form
+      const phases = data?.map(phase => ({
+        id: phase.id,
+        title: phase.phase_name,
+        description: phase.description || '',
+        startDate: phase.start_date,
+        endDate: phase.end_date,
+        estimatedDuration: phase.estimated_duration || 30,
+        status: phase.status,
+        budget: phase.estimated_cost || 0,
+        actualCost: phase.actual_cost || 0,
+        progress: phase.progress || 0,
+        materials: Array.isArray(phase.materials) ? phase.materials : [],
+        humanResources: Array.isArray(phase.human_resources) ? phase.human_resources : [],
+        suppliers: Array.isArray(phase.suppliers) ? phase.suppliers : [],
+        location: phase.location || '',
+        notes: phase.notes || ''
+      })) || [];
+
+      // Update initial data to include phases
+      setInitialData(prev => prev ? { ...prev, phases } : null);
+    } catch (error) {
+      console.error('Error loading project phases:', error);
     }
   };
 
@@ -306,10 +346,10 @@ const ProjectEdit = () => {
             <div className="bg-white rounded-xl shadow-elegant p-6">
               <h1 className="text-2xl font-serif text-adrar-800 mb-6">{t("projects.edit.title")}</h1>
               
-              <ProjectFormWithMap 
-                onSubmit={handleFormSubmit}
-                initialData={initialData}
-              />
+            <ProjectFormWithMap 
+              onSubmit={handleFormSubmit}
+              initialData={initialData}
+            />
             </div>
 
             {/* Materials Selection */}
