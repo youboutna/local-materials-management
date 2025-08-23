@@ -140,3 +140,130 @@
 .lang-ar .font-serif {
   font-family: 'Arial', serif;
 }
+
+/* Enhanced responsive utilities */
+.container-responsive {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.grid-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+}
+
+.card-responsive {
+  @apply p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-xl;
+}
+
+.text-responsive {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+.heading-responsive {
+  @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+}
+
+/* Enhanced mobile navigation */
+.mobile-nav {
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border p-2 sm:hidden;
+}
+
+.mobile-nav-item {
+  @apply flex flex-col items-center gap-1 p-2 rounded-md text-xs transition-colors hover:bg-accent;
+}
+
+/* Responsive layouts */
+.layout-main {
+  @apply min-h-screen flex flex-col;
+}
+
+.layout-content {
+  @apply flex-1 pt-16 sm:pt-20 lg:pt-24 pb-16 sm:pb-20;
+}
+
+.layout-sidebar {
+  @apply w-full sm:w-64 lg:w-80 flex-shrink-0;
+}
+
+/* Form responsive styles */
+.form-responsive {
+  @apply space-y-4 sm:space-y-6;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+}
+
+.form-group {
+  @apply space-y-2;
+}
+
+/* Card layouts */
+.card-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8;
+}
+
+.card-stack {
+  @apply space-y-4 sm:space-y-6;
+}
+
+/* Enhanced shadows for better depth perception */
+.shadow-mobile {
+  @apply shadow-sm sm:shadow-md lg:shadow-lg;
+}
+
+/* Responsive text sizes */
+.text-mobile-sm {
+  @apply text-xs sm:text-sm;
+}
+
+.text-mobile-base {
+  @apply text-sm sm:text-base;
+}
+
+.text-mobile-lg {
+  @apply text-base sm:text-lg lg:text-xl;
+}
+
+/* Better spacing for mobile */
+.spacing-responsive {
+  @apply p-3 sm:p-4 lg:p-6;
+}
+
+.margin-responsive {
+  @apply m-3 sm:m-4 lg:m-6;
+}
+
+/* Enhanced button responsiveness */
+.btn-responsive {
+  @apply px-3 py-2 sm:px-4 sm:py-2 lg:px-6 lg:py-3 text-sm sm:text-base;
+}
+
+/* Table responsiveness */
+.table-responsive {
+  @apply overflow-x-auto;
+}
+
+.table-mobile {
+  @apply block sm:table;
+}
+
+.table-mobile thead {
+  @apply hidden sm:table-header-group;
+}
+
+.table-mobile tbody {
+  @apply block sm:table-row-group;
+}
+
+.table-mobile tr {
+  @apply block sm:table-row border-b sm:border-b-0 mb-4 sm:mb-0;
+}
+
+.table-mobile td {
+  @apply block sm:table-cell px-4 py-2 sm:px-6 sm:py-4;
+}
+
+.table-mobile td:before {
+  content: attr(data-label) ": ";
+  @apply font-semibold text-foreground sm:hidden;
+}

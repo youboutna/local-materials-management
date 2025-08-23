@@ -160,10 +160,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     name: string;
     contact: string;
     leadTime: number;
-  }>({
-    name: formData.main_contractor || '',
-    contact: '',
-    leadTime: 7
+  }>(() => {
+    // Initialize with main_contractor data from initialData if available
+    const mainContractor = initialData?.main_contractor || '';
+    return {
+      name: mainContractor,
+      contact: '', // TODO: Load contact from database if supplier exists
+      leadTime: 7
+    };
   });
 
   const [phases, setPhases] = useState<PhaseData[]>(formData.phases || []);
@@ -257,7 +261,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-8 gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1 h-auto p-1 bg-muted/50 rounded-lg overflow-x-auto">
           <TabsTrigger value="basic" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Informations</span>
@@ -305,7 +309,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Titre du projet</Label>
                   <Input
@@ -347,7 +351,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="status">Statut</Label>
                   <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
@@ -413,7 +417,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="project_responsable_id">Responsable du projet</Label>
                   <Select 
@@ -479,7 +483,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="start_date">Date de début</Label>
                   <Input

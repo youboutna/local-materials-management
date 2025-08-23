@@ -60,7 +60,7 @@ const ProjectEdit = () => {
             budget: projectData.budget,
             start_date: projectData.startDate,
             end_date: projectData.endDate,
-            team_size: projectData.teamSize || 0,
+            team_size: projectData.teamSize || 1, // Default to 1 instead of 0
             financing_source: projectData.financingSource || '',
             market_type: projectData.marketType || '',
             selection_mode: projectData.selectionMode || '',
@@ -309,12 +309,12 @@ const ProjectEdit = () => {
 
   if (loading || !initialData) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="layout-main bg-gray-50">
         <Navbar />
-        <main className="flex-grow pt-24 pb-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-center items-center h-96">
-              <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin"></div>
+        <main className="layout-content">
+          <div className="container-responsive">
+            <div className="flex justify-center items-center h-64 sm:h-96">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           </div>
         </main>
@@ -324,11 +324,11 @@ const ProjectEdit = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="layout-main bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
+      <main className="layout-content">
+        <div className="container-responsive">
           {/* Back button */}
           <Link to={`/projects/${id}`}>
             <Button variant="ghost" className="mb-6">
@@ -341,11 +341,11 @@ const ProjectEdit = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-6xl mx-auto space-y-6"
+            className="max-w-7xl mx-auto card-stack"
           >
             {/* Project Form */}
-            <div className="bg-white rounded-xl shadow-elegant p-6">
-              <h1 className="text-2xl font-serif text-adrar-800 mb-6">{t("projects.edit.title")}</h1>
+            <div className="bg-white rounded-xl shadow-mobile card-responsive">
+              <h1 className="heading-responsive font-serif text-adrar-800 mb-4 sm:mb-6">{t("projects.edit.title")}</h1>
               
             <ProjectFormWithMap 
               onSubmit={handleFormSubmit}
@@ -356,10 +356,10 @@ const ProjectEdit = () => {
             {/* Materials Selection */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-serif text-adrar-800">
+                <CardTitle className="text-responsive sm:text-lg lg:text-xl font-serif text-adrar-800">
                   Sélection des matériaux
                 </CardTitle>
-                <p className="text-gray-600">
+                <p className="text-mobile-sm text-gray-600">
                   Modifiez les matériaux nécessaires pour ce projet.
                 </p>
               </CardHeader>
