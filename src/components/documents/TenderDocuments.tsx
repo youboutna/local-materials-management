@@ -116,8 +116,8 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)}>
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)} className="tabs-responsive">
+            <TabsList className="tabs-list-responsive tabs-list-3">
               <TabsTrigger value="administrative">Administratifs</TabsTrigger>
               <TabsTrigger value="technical">Techniques</TabsTrigger>
               <TabsTrigger value="financial">Financières</TabsTrigger>

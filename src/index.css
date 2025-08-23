@@ -211,6 +211,46 @@
   @apply shadow-sm sm:shadow-md lg:shadow-lg;
 }
 
+/* Responsive tabs */
+.tabs-responsive {
+  @apply w-full;
+}
+
+.tabs-list-responsive {
+  @apply grid w-full;
+}
+
+.tabs-list-2 {
+  @apply grid-cols-1 sm:grid-cols-2;
+}
+
+.tabs-list-3 {
+  @apply grid-cols-1 sm:grid-cols-3;
+}
+
+.tabs-list-4 {
+  @apply grid-cols-2 sm:grid-cols-4;
+}
+
+/* Responsive tables */
+.table-container-responsive {
+  @apply overflow-x-auto w-full;
+}
+
+.table-actions-responsive {
+  @apply flex flex-col sm:flex-row gap-1 sm:gap-2;
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Responsive text sizes */
 .text-mobile-sm {
   @apply text-xs sm:text-sm;

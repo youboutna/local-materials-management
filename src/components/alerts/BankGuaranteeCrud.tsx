@@ -356,33 +356,44 @@ const BankGuaranteeCrud: React.FC = () => {
         <CardHeader>
           <CardTitle>Liste des Garanties Bancaires</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Banque</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Expiration</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+        <CardContent className="p-2 sm:p-6">
+          <div className="table-container-responsive">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Projet</TableHead>
+                  <TableHead className="hidden sm:table-cell">Banque</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead className="hidden lg:table-cell">Expiration</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {guarantees.map((guarantee) => (
                 <TableRow key={guarantee.id}>
                   <TableCell className="font-medium">
-                    {guarantee.project_id}
+                    <div className="flex flex-col sm:table-cell">
+                      <span className="font-medium">{guarantee.project_id}</span>
+                      <span className="text-xs text-muted-foreground sm:hidden">
+                        {guarantee.bank_name}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell>{guarantee.bank_name}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">{guarantee.bank_name}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
                   </TableCell>
                   <TableCell>
-                    {guarantee.guarantee_amount.toLocaleString()} MRU
+                    <div className="flex flex-col">
+                      <span className="font-medium">{guarantee.guarantee_amount.toLocaleString()} MRU</span>
+                      <span className="text-xs text-muted-foreground sm:hidden">
+                        {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <div className="flex items-center gap-2">
                       {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
                       {isExpiringSoon(guarantee.expiry_date) && (
@@ -391,12 +402,17 @@ const BankGuaranteeCrud: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(guarantee.status)}>
-                      {statusOptions.find(s => s.value === guarantee.status)?.label}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge className={getStatusColor(guarantee.status)}>
+                        {statusOptions.find(s => s.value === guarantee.status)?.label}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground lg:hidden">
+                        {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="table-actions-responsive">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -431,7 +447,8 @@ const BankGuaranteeCrud: React.FC = () => {
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
