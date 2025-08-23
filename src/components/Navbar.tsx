@@ -178,56 +178,56 @@ const Navbar = () => {
             )}
           </div>
 
-          <div className="lg:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700"
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="lg:hidden"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t shadow-lg max-h-96 overflow-y-auto">
-                {navItems.map((item) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-terracotta-600 hover:bg-gray-50 transition-colors duration-200"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <IconComponent className="h-5 w-5" />
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-
-                <div className="pt-4 pb-2">
-                  <div className="flex items-center justify-between px-3">
-                    <LanguageSwitcher />
-
-                    {user && <NotificationDropdown />}
-
+          {/* Modern Mobile Menu Button */}
+          <div className="md:hidden">
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-700 hover:bg-gray-100"
+                >
+                  {isOpen ? (
+                    <X className="h-6 w-6" />
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-screen max-w-sm mr-4 mt-2 bg-white/95 backdrop-blur-md border shadow-xl"
+                align="end"
+                side="bottom"
+              >
+                <div className="py-2">
+                  {navItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          to={item.href}
+                          className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-gray-700 hover:text-terracotta-600 hover:bg-gray-50 w-full"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                          <span>{item.name}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* User Section in Mobile */}
+                  <div className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <LanguageSwitcher />
+                      {user && <NotificationDropdown />}
+                    </div>
+                    
                     {user ? (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3 p-2 rounded-md bg-gray-50">
                           <Avatar className="h-8 w-8">
                             <AvatarImage
                               src={getUserAvatarUrl()}
@@ -237,33 +237,38 @@ const Navbar = () => {
                               {getInitials(getUserDisplayName())}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium">
-                            {getUserDisplayName()}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {getUserDisplayName()}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {user.email}
+                            </p>
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleLogout}
-                        >
-                          <LogOut className="h-4 w-4" />
-                        </Button>
+                        
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" asChild className="flex-1">
+                            <Link to="/profile" onClick={() => setIsOpen(false)}>
+                              <User className="h-4 w-4 mr-2" />
+                              Profile
+                            </Link>
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={handleLogout} className="flex-1">
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="ghost" asChild>
-                          <Link
-                            to="/auth?mode=login"
-                            onClick={() => setIsOpen(false)}
-                          >
+                        <Button size="sm" variant="outline" asChild className="flex-1">
+                          <Link to="/auth?mode=login" onClick={() => setIsOpen(false)}>
                             {t("auth.login")}
                           </Link>
                         </Button>
-                        <Button size="sm" asChild>
-                          <Link
-                            to="/auth?mode=register"
-                            onClick={() => setIsOpen(false)}
-                          >
+                        <Button size="sm" asChild className="flex-1">
+                          <Link to="/auth?mode=register" onClick={() => setIsOpen(false)}>
                             {t("auth.register")}
                           </Link>
                         </Button>
@@ -271,10 +276,12 @@ const Navbar = () => {
                     )}
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Removed old mobile menu - now using dropdown */}
       </div>
     </motion.nav>
   );

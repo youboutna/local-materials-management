@@ -7,7 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2 } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import LanguageSwitcher from './LanguageSwitcher';
 import {
   NavigationMenu,
@@ -64,6 +71,121 @@ const MainNavbar = () => {
             </span>
           )}
         </Link>
+
+        {/* Mobile Dropdown Menu */}
+        {isUserAuthenticated && (
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-adrar-600"
+                >
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-screen max-w-sm mr-4 mt-2 bg-white border shadow-xl"
+                align="end"
+                side="bottom"
+              >
+                <div className="py-2">
+                  {isSupplierOnly ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-gray-900">
+                        <Building2 className="h-5 w-5 mr-3" />
+                        {t('nav.supplier_portal') || 'Supplier Portal'}
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="flex items-center px-4 py-3 text-gray-900">
+                          <Home className="h-5 w-5 mr-3" />
+                          {t('dashboard.title') || 'Dashboard'}
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/projects" className="flex items-center px-4 py-3 text-gray-900">
+                          <Briefcase className="h-5 w-5 mr-3" />
+                          {t('nav.projects') || 'Projets'}
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/materials" className="flex items-center px-4 py-3 text-gray-900">
+                          <Package className="h-5 w-5 mr-3" />
+                          {t('nav.materials') || 'Matériaux'}
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/documents" className="flex items-center px-4 py-3 text-gray-900">
+                          <FileText className="h-5 w-5 mr-3" />
+                          {t('documents.title') || 'Documents'}
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
+                          <ClipboardList className="h-5 w-5 mr-3" />
+                          {t('task.title') || 'Tâches'}
+                        </Link>
+                      </DropdownMenuItem>
+
+                      {canManageUsers && (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link to="/users" className="flex items-center px-4 py-3 text-gray-900">
+                              <Users className="h-5 w-5 mr-3" />
+                              {t('nav.users') || 'Utilisateurs'}
+                            </Link>
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuItem asChild>
+                            <Link to="/settings" className="flex items-center px-4 py-3 text-gray-900">
+                              <Cog className="h-5 w-5 mr-3" />
+                              {t('settings.title') || 'Settings'}
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/suppliers" className="flex items-center px-4 py-3 text-gray-900">
+                          <Building2 className="h-5 w-5 mr-3" />
+                          {t('nav.suppliers') || 'Fournisseurs'}
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/tender-management" className="flex items-center px-4 py-3 text-gray-900">
+                          <FileText className="h-5 w-5 mr-3" />
+                          {t('nav.tender_management') || "Appels d'Offres"}
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <div className="px-4 py-2">
+                    <LanguageSwitcher />
+                  </div>
+                  
+                  {!DEV_MODE && (authUser || isAuthenticated) && (
+                    <DropdownMenuItem onClick={handleDisconnect}>
+                      <LogOut className="h-4 w-4 mr-3" />
+                      {t('auth.logout') || 'Déconnexion'}
+                    </DropdownMenuItem>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
         
         {/* Show navigation only for authenticated users or in dev mode */}
         {isUserAuthenticated && (
