@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface ActionItem {
   id: string;
@@ -19,47 +21,128 @@ interface ActionItem {
 }
 
 const ManagementActions: React.FC = () => {
-  // Mock data - replace with real data from API
-  const actionItems: ActionItem[] = [
-    {
-      id: '1',
-      title: 'Validation Paiement Urgent',
-      description: 'Paiement de 150,000 MRO en attente de validation pour le projet Route Nouakchott',
-      urgency: 'critical',
-      category: 'approval',
-      projectId: 'proj-001',
-      projectName: 'Route Nouakchott',
-      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '2', 
-      title: 'Inspection Manquée',
-      description: 'Inspection de phase non réalisée depuis 7 jours - risque de retard projet',
-      urgency: 'high',
-      category: 'task',
-      projectId: 'proj-002',
-      projectName: 'Pont Kaédi',
-      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '3',
-      title: 'Révision Budget',
-      description: 'Dépassement budgétaire détecté sur matériaux - révision nécessaire',
-      urgency: 'medium',
-      category: 'review',
-      projectId: 'proj-003',
-      projectName: 'École Rosso',
-      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
-    },
-    {
-      id: '4',
-      title: 'Affectation Équipe',
-      description: 'Nouvelle phase démarrée - affecter équipe d\'ingénieurs',
-      urgency: 'medium',
-      category: 'decision',
-      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActionItems();
+  }, []);
+
+  const fetchActionItems = async () => {
+    try {
+      const actions: ActionItem[] = [];
+
+      // Fetch pending payments that need approval
+      const { data: pendingPayments } = await supabase
+        .from('payments')
+        .select(`
+          id, amount, payment_date, contractor_name,
+          projects (id, title)
+        `)
+        .is('inspection_id', null)
+        .order('payment_date', { ascending: true })
+        .limit(5);
+
+      if (pendingPayments) {
+        pendingPayments.forEach(payment => {
+          actions.push({
+            id: `payment-${payment.id}`,
+            title: 'Validation Paiement',
+            description: `Paiement de ${payment.amount.toLocaleString()} MRO pour ${payment.contractor_name}`,
+            urgency: payment.amount > 100000 ? 'critical' : 'high',
+            category: 'approval',
+            projectId: (payment.projects as any)?.id,
+            projectName: (payment.projects as any)?.title,
+            dueDate: new Date(payment.payment_date)
+          });
+        });
+      }
+
+      // Fetch overdue inspections
+      const { data: overdueInspections } = await supabase
+        .from('inspections')
+        .select(`
+          id, date, inspector, project_id,
+          projects (id, title)
+        `)
+        .lt('date', new Date().toISOString())
+        .eq('status', 'pending')
+        .order('date', { ascending: true })
+        .limit(3);
+
+      if (overdueInspections) {
+        overdueInspections.forEach(inspection => {
+          const daysPast = Math.floor((Date.now() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
+          actions.push({
+            id: `inspection-${inspection.id}`,
+            title: 'Inspection Manquée',
+            description: `Inspection en retard de ${daysPast} jours - Inspecteur: ${inspection.inspector}`,
+            urgency: daysPast > 7 ? 'high' : 'medium',
+            category: 'task',
+            projectId: (inspection.projects as any)?.id,
+            projectName: (inspection.projects as any)?.title,
+            dueDate: new Date(inspection.date)
+          });
+        });
+      }
+
+      // Fetch projects with budget issues (over budget)
+      const { data: projectsWithBudgetIssues } = await supabase
+        .from('projects')
+        .select('id, title, budget, progress')
+        .gt('progress', 80)
+        .limit(2);
+
+      if (projectsWithBudgetIssues) {
+        projectsWithBudgetIssues.forEach(project => {
+          actions.push({
+            id: `budget-${project.id}`,
+            title: 'Révision Budget',
+            description: `Projet à ${project.progress}% - vérification budget nécessaire`,
+            urgency: 'medium',
+            category: 'review',
+            projectId: project.id,
+            projectName: project.title,
+            dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+          });
+        });
+      }
+
+      // Fetch projects needing team assignment (new projects)
+      const { data: newProjects } = await supabase
+        .from('projects')
+        .select('id, title, start_date')
+        .eq('progress', 0)
+        .gte('start_date', new Date().toISOString())
+        .limit(2);
+
+      if (newProjects) {
+        newProjects.forEach(project => {
+          actions.push({
+            id: `team-${project.id}`,
+            title: 'Affectation Équipe',
+            description: `Nouveau projet démarrant - affecter équipe d'ingénieurs`,
+            urgency: 'medium',
+            category: 'decision',
+            projectId: project.id,
+            projectName: project.title,
+            dueDate: new Date(project.start_date)
+          });
+        });
+      }
+
+      setActionItems(actions);
+    } catch (error) {
+      console.error('Error fetching action items:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les actions',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -107,6 +190,14 @@ const ManagementActions: React.FC = () => {
         return '/projects';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

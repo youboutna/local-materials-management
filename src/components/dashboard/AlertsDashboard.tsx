@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Clock, DollarSign, Shield, TrendingDown, Bell } from 'lucide-react';
 import { detectProjectDelays, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AlertData {
   id: string;
@@ -39,6 +40,8 @@ const AlertsDashboard: React.FC = () => {
 
   const loadAlerts = async () => {
     try {
+      const allAlerts: AlertData[] = [];
+
       // Load project delays
       const delays = await detectProjectDelays();
       const delayAlerts: AlertData[] = delays
@@ -54,30 +57,86 @@ const AlertsDashboard: React.FC = () => {
           timestamp: new Date(),
           status: 'active' as const
         }));
+      allAlerts.push(...delayAlerts);
 
-      // Simulate other alerts
-      const mockAlerts: AlertData[] = [
-        {
-          id: 'payment-001',
-          type: 'payment',
-          severity: 'high',
-          title: 'Paiement Bloqué',
-          description: 'Paiement suspendu en attente de validation',
-          timestamp: new Date(Date.now() - 3600000),
-          status: 'active'
-        },
-        {
-          id: 'inspection-001',
-          type: 'inspection',
-          severity: 'medium',
-          title: 'Inspection en Retard',
-          description: 'Inspection programmée non réalisée',
-          timestamp: new Date(Date.now() - 7200000),
-          status: 'active'
-        }
-      ];
+      // Fetch blocked payments
+      const { data: blockedPayments } = await supabase
+        .from('payment_blocks')
+        .select(`
+          id, amount, blocked_at, notes,
+          projects (id, title)
+        `)
+        .is('resolved_at', null);
 
-      const allAlerts = [...delayAlerts, ...mockAlerts];
+      if (blockedPayments) {
+        blockedPayments.forEach(block => {
+          allAlerts.push({
+            id: `payment-block-${block.id}`,
+            type: 'payment',
+            severity: 'high',
+            title: 'Paiement Bloqué',
+            description: `Paiement de ${block.amount.toLocaleString()} MRO bloqué - ${block.notes || 'Validation requise'}`,
+            projectId: (block.projects as any)?.id,
+            projectName: (block.projects as any)?.title,
+            timestamp: new Date(block.blocked_at),
+            status: 'active'
+          });
+        });
+      }
+
+      // Fetch overdue inspections
+      const { data: overdueInspections } = await supabase
+        .from('inspections')
+        .select(`
+          id, date, inspector, status,
+          projects (id, title)
+        `)
+        .lt('date', new Date().toISOString())
+        .neq('status', 'completed');
+
+      if (overdueInspections) {
+        overdueInspections.forEach(inspection => {
+          const daysPast = Math.floor((Date.now() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
+          allAlerts.push({
+            id: `inspection-overdue-${inspection.id}`,
+            type: 'inspection',
+            severity: daysPast > 7 ? 'high' : 'medium',
+            title: 'Inspection en Retard',
+            description: `Inspection non réalisée depuis ${daysPast} jours`,
+            projectId: (inspection.projects as any)?.id,
+            projectName: (inspection.projects as any)?.title,
+            timestamp: new Date(inspection.date),
+            status: 'active'
+          });
+        });
+      }
+
+      // Fetch expiring bank guarantees
+      const { data: expiringGuarantees } = await supabase
+        .from('bank_guarantees')
+        .select(`
+          id, bank_name, expiry_date, guarantee_amount,
+          projects (id, title)
+        `)
+        .gte('expiry_date', new Date().toISOString())
+        .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (expiringGuarantees) {
+        expiringGuarantees.forEach(guarantee => {
+          const daysLeft = Math.ceil((new Date(guarantee.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          allAlerts.push({
+            id: `guarantee-expiring-${guarantee.id}`,
+            type: 'guarantee',
+            severity: daysLeft <= 7 ? 'critical' : daysLeft <= 14 ? 'high' : 'medium',
+            title: 'Garantie Bancaire Expirant',
+            description: `Garantie de ${guarantee.guarantee_amount.toLocaleString()} MRO expire dans ${daysLeft} jours`,
+            projectId: (guarantee.projects as any)?.id,
+            projectName: (guarantee.projects as any)?.title,
+            timestamp: new Date(),
+            status: 'active'
+          });
+        });
+      }
       setAlerts(allAlerts);
 
       // Calculate stats
