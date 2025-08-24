@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectData } from '@/types/project';
+import { useSupabaseHandler } from '@/hooks/useHttpHandler';
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<ProjectData[]>([]);
