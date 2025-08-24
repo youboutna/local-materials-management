@@ -17,6 +17,9 @@ import {
   UserCheck,
   TrendingUp
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { sendNotification } from '@/services/notificationService';
+import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
@@ -345,46 +348,25 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* Scheduling Tab - Project Managers only */}
-        {isProjectManager && (
+        {/* Scheduling Tab - Project Managers, Directors, Admins only */}
+        {(isProjectManager || hasAnyRole(['director', 'admin'])) && (
           <TabsContent value="scheduling" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Programmation d'Inspections</CardTitle>
               </CardHeader>
               <CardContent>
-                <Alert className="mb-4">
+                <Alert className="mb-6">
                   <Calendar className="h-4 w-4" />
                   <AlertDescription>
-                    En tant que chef de projet, vous pouvez programmer des inspections et notifier automatiquement les ingénieurs conseils.
+                    Programmez des inspections avec critères spécifiques et notifiez automatiquement l'entrepreneur principal.
                   </AlertDescription>
                 </Alert>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {projects.slice(0, 6).map((project) => (
-                    <Card key={project.id} className="border-2 border-dashed border-muted">
-                      <CardContent className="p-4">
-                        <h4 className="font-medium mb-2">{project.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Réf: {project.project_reference}
-                        </p>
-                        <Button 
-                          size="sm" 
-                          className="w-full"
-                          onClick={() => {
-                            // This would open a scheduling dialog in a real app
-                            const tomorrow = new Date();
-                            tomorrow.setDate(tomorrow.getDate() + 1);
-                            scheduleInspection(project.id, "Inspecteur Principal", tomorrow.toISOString());
-                          }}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Programmer
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <AdvancedInspectionScheduler 
+                  projects={projects}
+                  onScheduleInspection={scheduleInspection}
+                />
               </CardContent>
             </Card>
           </TabsContent>
