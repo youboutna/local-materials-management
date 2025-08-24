@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3, AlertTriangle, Clock, Shield, TrendingUp } from 'lucide-react';
 import WaterfallProjectManager from '@/components/project/WaterfallProjectManager';
 import MonitoringDashboard from '@/components/dashboard/MonitoringDashboard';
 import AlertsDashboard from '@/components/dashboard/AlertsDashboard';
+import ManagementActions from '@/components/dashboard/ManagementActions';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import LoadDataButton from '@/components/LoadDataButton';
 import { DEV_MODE } from '@/config/constants';
 import { useProjects } from '@/hooks/projects/useProjects';
@@ -20,26 +20,68 @@ import ProjectProgressChart from '@/components/ProjectProgressChart';
 import ProjectDistributionChart from '@/components/ProjectDistributionChart';
 import ProjectMap from '@/components/ProjectMap';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
+import { motion } from 'framer-motion';
 
-const Dashboard = () => {
-  const { t } = useLanguage();
-
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isDevelopmentMode } = useAuth();
-  const { toast } = useToast();
-  const { projects, loading } = useProjects();
+  const [user, setUser] = useState<any>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
+  const { t } = useLanguage();
+  const { projects } = useProjects();
+
+  // Required roles for dashboard access
+  const allowedRoles = ['admin', 'director', 'project_manager'];
 
   useEffect(() => {
-    if (!user && !isDevelopmentMode) {
-      navigate('/auth?mode=login');
-      toast({
-        title: "Accès restreint",
-        description: "Veuillez vous connecter pour accéder au tableau de bord.",
-        variant: "destructive"
-      });
+    checkUserAccess();
+  }, []);
+
+  const checkUserAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      setUser(user);
+
+      // Get user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role_name')
+        .eq('user_id', user.id);
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        setHasAccess(false);
+        return;
+      }
+
+      const userRoleNames = roles?.map(r => r.role_name) || [];
+      setUserRoles(userRoleNames);
+      
+      // Check if user has required role
+      const hasRequiredRole = userRoleNames.some(role => allowedRoles.includes(role));
+      setHasAccess(hasRequiredRole);
+
+      if (!hasRequiredRole) {
+        toast({
+          title: 'Accès refusé',
+          description: 'Vous n\'avez pas les permissions nécessaires pour accéder au tableau de bord de gestion.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking user access:', error);
+      setHasAccess(false);
+    } finally {
+      setLoading(false);
     }
-  }, [user, navigate, toast, isDevelopmentMode]);
+  };
 
   // State for real data
   const [realStats, setRealStats] = useState<{
@@ -169,325 +211,274 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-adrar-600">{t('dashboard.loading')}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Vérification des permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-md w-full mx-auto text-center p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <Shield className="h-12 w-12 text-red-600 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-red-800 mb-2">Accès Refusé</h2>
+            <p className="text-red-600 mb-4">
+              Ce tableau de bord est réservé aux gestionnaires de projets, administrateurs et directeurs.
+            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-red-600">
+                <strong>Vos rôles actuels:</strong> {userRoles.length > 0 ? userRoles.join(', ') : 'Aucun rôle assigné'}
+              </p>
+              <p className="text-sm text-red-600">
+                <strong>Rôles requis:</strong> {allowedRoles.join(', ')}
+              </p>
+            </div>
+            <Button 
+              className="mt-4" 
+              onClick={() => navigate('/projects')}
+              variant="outline"
+            >
+              Retour aux Projets
+            </Button>
           </div>
-        </main>
-        <Footer />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
-      
-      {isDevelopmentMode && (
-        <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ {t('dashboard.dev_mode')}
-        </div>
-      )}
-      
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <motion.h1 
-            className="text-3xl font-bold text-adrar-900 font-serif mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {t('dashboard.title')}
-          </motion.h1>
-          
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  🏢 Tableau de Bord Gestion
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Centre de contrôle pour gestionnaires de projets
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    Rôles: {userRoles.join(', ')}
+                  </Badge>
+                  {userRoles.includes('admin') && (
+                    <Badge className="bg-red-500 text-white text-xs">Administrateur</Badge>
+                  )}
+                  {userRoles.includes('director') && (
+                    <Badge className="bg-blue-500 text-white text-xs">Directeur</Badge>
+                  )}
+                  {userRoles.includes('project_manager') && (
+                    <Badge className="bg-green-500 text-white text-xs">Chef de Projet</Badge>
+                  )}
+                </div>
+              </div>
+              {DEV_MODE && (
+                <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
+                  🛠️ Mode Développement
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Waterfall Management Tabs */}
+          {/* Management Tabs */}
           <motion.div 
             className="mt-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue="actions" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="actions">Actions Management</TabsTrigger>
                 <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="waterfall">Gestion Waterfall</TabsTrigger>
                 <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
                 <TabsTrigger value="alerts">Alertes</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Résumé des Projets</CardTitle>
-                    <CardDescription>Vue d'ensemble des statistiques principales</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <Card className="border-l-4 border-l-terracotta-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.active_projects')}</CardTitle>
-                      <CardDescription>{t('dashboard.status_overview')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{stats.activeProjects}</span>
-                        <span className="ml-2 text-sm text-gray-500">{t('dashboard.active_projects_label')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-l-4 border-l-adrar-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.total_budget')}</CardTitle>
-                      <CardDescription>{t('dashboard.financial_resources')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">
-                          {(stats.totalBudget / 1000000).toFixed(1)}M
-                        </span>
-                        <span className="ml-2 text-sm text-gray-500">MRU</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-l-4 border-l-sandstone-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.team')}</CardTitle>
-                      <CardDescription>{t('dashboard.project_staff')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{stats.teamMembers}</span>
-                        <span className="ml-2 text-sm text-gray-500">{t('dashboard.members')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-l-4 border-l-green-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">{t('dashboard.materials')}</CardTitle>
-                      <CardDescription>{t('dashboard.available_resources')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{stats.materials}</span>
-                        <span className="ml-2 text-sm text-gray-500">{t('dashboard.types')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-                {/* Additional Stats Row */}
-                {/* Waterfall KPIs Row */}
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">Phases Waterfall</CardTitle>
-                      <CardDescription>Phases séquentielles</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{stats.phases}</span>
-                        <span className="ml-2 text-sm text-gray-500">phases</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-purple-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">Jalons Gantt</CardTitle>
-                      <CardDescription>Jalons planifiés</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{stats.milestones}</span>
-                        <span className="ml-2 text-sm text-gray-500">jalons</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-emerald-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">Marchés Publics</CardTitle>
-                      <CardDescription>Étapes workflow</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">5</span>
-                        <span className="ml-2 text-sm text-gray-500">étapes</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-orange-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">Délais</CardTitle>
-                      <CardDescription>Respect planning</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">{Math.round((stats.completedMilestones / Math.max(stats.milestones, 1)) * 100)}</span>
-                        <span className="ml-2 text-sm text-gray-500">%</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-teal-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium text-gray-700">CPI/SPI</CardTitle>
-                      <CardDescription>Performance index</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold text-adrar-800">1.2</span>
-                        <span className="ml-2 text-sm text-gray-500">index</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-                
-                <motion.div 
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl font-serif">
-                        <BarChart3 className="h-5 w-5 mr-2 text-terracotta-600" />
-                        {t('dashboard.project_progress')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-80">
-                      {stats.statusDistribution.length > 0 ? (
-                        <ProjectProgressChart data={stats.statusDistribution} />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-terracotta-100 to-white flex items-center justify-center rounded-lg border border-dashed border-terracotta-300">
-                          <span className="text-terracotta-400 text-sm font-medium">{t('dashboard.no_data')}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-xl font-serif">
-                        <div className="flex items-center">
-                          <CheckSquare className="h-5 w-5 mr-2 text-terracotta-600" />
-                          {t('dashboard.recent_projects')}
-                        </div>
-                        <Link to="/projects">
-                          <Button variant="ghost" size="sm" className="text-terracotta-600 hover:text-terracotta-700 -mr-2">
-                            <span className="text-xs mr-1">{t('dashboard.view_all')}</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Button>
-                        </Link>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {projects && projects.slice(0, 3).map((project, i) => (
-                          <div key={project.id} className="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div className="bg-terracotta-100 p-2 rounded-md mr-3">
-                              <CheckSquare className="h-5 w-5 text-terracotta-600" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-adrar-800">{project.title}</h4>
-                              <div className="flex items-center text-sm text-gray-500 mt-1">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                <span className="mr-3">{project.location}</span>
-                                <Calendar className="h-3 w-3 mr-1" />
-                                <span>{new Date(project.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {(!projects || projects.length === 0) && (
-                          <div className="text-center py-4 text-gray-500">
-                            {t('dashboard.no_projects')}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-                
-                <motion.div 
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl font-serif">
-                        <Users className="h-5 w-5 mr-2 text-adrar-600" />
-                        {t('dashboard.distribution_by_region')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {stats.locationDistribution.length > 0 ? (
-                        <ProjectDistributionChart data={stats.locationDistribution} />
-                      ) : (
-                        <div className="h-64 w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
-                          <span className="text-adrar-400 text-sm font-medium">{t('dashboard.no_data')}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl font-serif">
-                        <MapPin className="h-5 w-5 mr-2 text-adrar-600" />
-                        {t('dashboard.project_distribution')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-80">
-                      {projects && projects.length > 0 ? (
-                        <ProjectMap 
-                          projects={projects}
-                          defaultCenter={[20.5279, -10.0309]}
-                          defaultZoom={6}
-                          height="100%"
-                          className="h-full rounded-lg"
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-adrar-100 to-white flex items-center justify-center rounded-lg border border-dashed border-adrar-300">
-                          <span className="text-adrar-400 text-sm font-medium">{t('dashboard.no_geolocated_projects')}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-
-
-                    </div>
-                  </CardContent>
-                </Card>
+              <TabsContent value="actions" className="mt-6">
+                <ManagementActions />
               </TabsContent>
 
-              <TabsContent value="waterfall" className="mt-6">
-                <WaterfallProjectManager />
+              <TabsContent value="overview" className="mt-6">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6"
+                >
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="border-l-4 border-l-primary">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium">Projets Actifs</CardTitle>
+                        <CardDescription>En cours de réalisation</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-bold">{stats.activeProjects}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">projets</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-l-4 border-l-green-500">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium">Budget Total</CardTitle>
+                        <CardDescription>Ressources financières</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-bold">
+                            {(stats.totalBudget / 1000000).toFixed(1)}M
+                          </span>
+                          <span className="ml-2 text-sm text-muted-foreground">MRU</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-l-4 border-l-blue-500">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium">Équipes</CardTitle>
+                        <CardDescription>Personnel affecté</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-bold">{stats.teamMembers}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">membres</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-l-4 border-l-orange-500">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-medium">Matériaux</CardTitle>
+                        <CardDescription>Ressources disponibles</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-baseline">
+                          <span className="text-3xl font-bold">{stats.materials}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">types</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Charts and Project List */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-xl">
+                          <BarChart3 className="h-5 w-5 mr-2" />
+                          Progression des Projets
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-80">
+                        {stats.statusDistribution.length > 0 ? (
+                          <ProjectProgressChart data={stats.statusDistribution} />
+                        ) : (
+                          <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
+                            <span className="text-muted-foreground text-sm font-medium">Aucune donnée disponible</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between text-xl">
+                          <div className="flex items-center">
+                            <CheckSquare className="h-5 w-5 mr-2" />
+                            Projets Récents
+                          </div>
+                          <Link to="/projects">
+                            <Button variant="ghost" size="sm" className="-mr-2">
+                              <span className="text-xs mr-1">Voir tout</span>
+                              <ArrowRight className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {projects && projects.slice(0, 3).map((project, i) => (
+                            <div key={project.id} className="flex items-start p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                              <div className="bg-primary/10 p-2 rounded-md mr-3">
+                                <CheckSquare className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-medium">{project.title}</h4>
+                                <div className="flex items-center text-sm text-muted-foreground mt-1">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  <span className="mr-3">{project.location}</span>
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  <span>{new Date(project.startDate).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {(!projects || projects.length === 0) && (
+                            <div className="text-center py-4 text-muted-foreground">
+                              Aucun projet trouvé
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Map and Distribution */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-xl">
+                          <Users className="h-5 w-5 mr-2" />
+                          Distribution par Région
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {stats.locationDistribution.length > 0 ? (
+                          <ProjectDistributionChart data={stats.locationDistribution} />
+                        ) : (
+                          <div className="h-64 w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
+                            <span className="text-muted-foreground text-sm font-medium">Aucune donnée disponible</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="lg:col-span-2">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-xl">
+                          <MapPin className="h-5 w-5 mr-2" />
+                          Localisation des Projets
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-80">
+                        {projects && projects.length > 0 ? (
+                          <ProjectMap 
+                            projects={projects}
+                            defaultCenter={[20.5279, -10.0309]}
+                            defaultZoom={6}
+                            height="100%"
+                            className="h-full rounded-lg"
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
+                            <span className="text-muted-foreground text-sm font-medium">Aucun projet géolocalisé</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </motion.div>
               </TabsContent>
 
               <TabsContent value="monitoring" className="mt-6">
@@ -501,8 +492,6 @@ const Dashboard = () => {
           </motion.div>
         </div>
       </main>
-      
-     
     </div>
   );
 };
