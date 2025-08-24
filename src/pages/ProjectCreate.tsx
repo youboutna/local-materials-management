@@ -73,6 +73,7 @@ const ProjectCreate = () => {
         selectionMode: data.selection_mode,
         projectResponsableId: data.project_responsable_id,
         mainContractor: data.main_contractor,
+        engineeringConsultant: data.engineering_consultant,
         projectReference: data.project_reference,
         allowsInitialPayment: data.allows_initial_payment,
         initialPaymentPercentage: data.initial_payment_percentage,

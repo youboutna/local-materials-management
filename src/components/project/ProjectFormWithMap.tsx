@@ -80,6 +80,7 @@ interface ProjectFormData {
   attribution_date?: string;
   project_responsable_id?: string;
   main_contractor?: string;
+  engineering_consultant?: string;
   project_reference?: string;
   allows_initial_payment?: boolean;
   initial_payment_percentage?: number;
@@ -122,6 +123,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     attribution_date: '',
     project_responsable_id: '',
     main_contractor: '',
+    engineering_consultant: '',
     project_reference: '',
     allows_initial_payment: false,
     initial_payment_percentage: 0,
@@ -168,6 +170,17 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
       contact: '', // TODO: Load contact from database if supplier exists
       leadTime: 7
     };
+  });
+
+  const [engineeringConsultant, setEngineeringConsultant] = useState<{
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }>({
+    name: '',
+    contact: '',
+    leadTime: 7
   });
 
   const [phases, setPhases] = useState<PhaseData[]>(formData.phases || []);
@@ -232,6 +245,16 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   }) => {
     setContractorSupplier(supplier);
     handleChange('main_contractor', supplier.name);
+  };
+
+  const handleEngineeringConsultantChange = (supplier: {
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }) => {
+    setEngineeringConsultant(supplier);
+    handleChange('engineering_consultant', supplier.name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -419,17 +442,42 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="project_responsable_id">Responsable du projet</Label>
+                  <Label htmlFor="project_responsable_id">Chef de projet / Manager</Label>
                   <Select 
                     value={formData.project_responsable_id || 'no-selection'} 
                     onValueChange={(value) => handleChange('project_responsable_id', value === 'no-selection' ? '' : value)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Sélectionner un responsable" />
+                      <SelectValue placeholder="Sélectionner un manager" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="no-selection">Aucun responsable assigné</SelectItem>
-                      {employees.map((employee) => (
+                    <SelectContent className="bg-background border z-[100]">
+                      <SelectItem value="no-selection">Aucun manager assigné</SelectItem>
+                      {employees.filter(emp => 
+                        emp.position?.toLowerCase().includes('manager') || 
+                        emp.position?.toLowerCase().includes('chef') ||
+                        emp.position?.toLowerCase().includes('directeur') ||
+                        emp.department?.toLowerCase().includes('management')
+                      ).map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{employee.full_name}</span>
+                            {(employee.position || employee.department) && (
+                              <span className="text-sm text-gray-500">
+                                {employee.position && employee.department 
+                                  ? `${employee.position} - ${employee.department}`
+                                  : employee.position || employee.department
+                                }
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {employees.filter(emp => 
+                        !(emp.position?.toLowerCase().includes('manager') || 
+                          emp.position?.toLowerCase().includes('chef') ||
+                          emp.position?.toLowerCase().includes('directeur') ||
+                          emp.department?.toLowerCase().includes('management'))
+                      ).map((employee) => (
                         <SelectItem key={employee.id} value={employee.id}>
                           <div className="flex flex-col">
                             <span className="font-medium">{employee.full_name}</span>
@@ -460,6 +508,22 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   />
                   <p className="text-sm text-gray-600">
                     Sélectionnez un fournisseur existant ou saisissez un contractant personnalisé
+                  </p>
+                </div>
+              </div>
+
+              {/* Engineering Consultant */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Consultant Ingénierie</h3>
+                <div className="space-y-2">
+                  <Label>Bureau d'études / Consultant</Label>
+                  <SupplierSelector
+                    value={engineeringConsultant}
+                    onChange={handleEngineeringConsultantChange}
+                    allowCustom={true}
+                  />
+                  <p className="text-sm text-gray-600">
+                    Bureau d'études ou consultant technique pour le projet.
                   </p>
                 </div>
               </div>

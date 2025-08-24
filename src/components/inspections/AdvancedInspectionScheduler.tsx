@@ -56,18 +56,28 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Fetch inspectors (users with inspector role)
+  // Fetch inspectors (employees with inspector position or inspection department)
   const { data: inspectors } = useQuery({
     queryKey: ['inspectors'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees')
-        .select('id, full_name, phone, position')
-        .ilike('position', '%inspector%')
+        .select('id, full_name, phone, position, department')
+        .eq('is_active', true)
         .order('full_name');
-      
+
       if (error) throw error;
-      return data || [];
+      
+      // Filter employees who are inspectors or in inspection-related roles
+      const filteredInspectors = (data || []).filter(emp => 
+        emp.position?.toLowerCase().includes('inspector') ||
+        emp.position?.toLowerCase().includes('inspection') ||
+        emp.department?.toLowerCase().includes('inspection') ||
+        emp.position?.toLowerCase().includes('contrôle') ||
+        emp.position?.toLowerCase().includes('qualité')
+      );
+      
+      return filteredInspectors;
     }
   });
 
