@@ -300,7 +300,6 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                     <SelectValue placeholder="Sélectionner un inspecteur..." />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-[100]">
-                    <SelectItem value="">Sélectionner un inspecteur</SelectItem>
                     {inspectors?.map((emp) => {
                       const isEngConsultant = emp.position?.toLowerCase().includes('consultant') ||
                                              emp.position?.toLowerCase().includes('ingénieur');
