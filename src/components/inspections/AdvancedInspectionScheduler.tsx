@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,8 +68,11 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
 
       if (error) throw error;
       
-      // Filter employees who are inspectors or in inspection-related roles
-      const filteredInspectors = (data || []).filter(emp => 
+      // Include all employees but prioritize inspectors and engineering consultants
+      const allEmployees = data || [];
+      
+      // Separate into categories
+      const inspectors = allEmployees.filter(emp => 
         emp.position?.toLowerCase().includes('inspector') ||
         emp.position?.toLowerCase().includes('inspection') ||
         emp.department?.toLowerCase().includes('inspection') ||
@@ -77,9 +80,38 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         emp.position?.toLowerCase().includes('qualité')
       );
       
-      return filteredInspectors;
+      const engineeringConsultants = allEmployees.filter(emp => 
+        emp.position?.toLowerCase().includes('consultant') ||
+        emp.position?.toLowerCase().includes('ingénieur') ||
+        emp.position?.toLowerCase().includes('engineer') ||
+        emp.department?.toLowerCase().includes('ingénierie') ||
+        emp.department?.toLowerCase().includes('engineering') ||
+        emp.position?.toLowerCase().includes('bureau d\'études')
+      );
+      
+      const otherEmployees = allEmployees.filter(emp => 
+        !inspectors.includes(emp) && !engineeringConsultants.includes(emp)
+      );
+      
+      // Return in order: engineering consultants first, then inspectors, then others
+      return [...engineeringConsultants, ...inspectors, ...otherEmployees];
     }
   });
+
+  // Set default inspector to engineering consultant when project is selected
+  useEffect(() => {
+    if (selectedProject && inspectors && inspectors.length > 0) {
+      // Try to find engineering consultant from the project's engineering_consultant field
+      const projectEngConsultant = inspectors.find(emp => 
+        emp.position?.toLowerCase().includes('consultant') ||
+        emp.position?.toLowerCase().includes('ingénieur')
+      );
+      
+      if (projectEngConsultant && !selectedInspector) {
+        setSelectedInspector(projectEngConsultant.id);
+      }
+    }
+  }, [selectedProject, inspectors, selectedInspector]);
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = !projectFilter || 
@@ -268,14 +300,35 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                     <SelectValue placeholder="Sélectionner un inspecteur..." />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-[100]">
-                    {inspectors?.map((inspector) => (
-                      <SelectItem key={inspector.id} value={inspector.id}>
-                        {inspector.full_name}
-                        {inspector.phone && (
-                          <span className="text-muted-foreground"> • {inspector.phone}</span>
-                        )}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="">Sélectionner un inspecteur</SelectItem>
+                    {inspectors?.map((emp) => {
+                      const isEngConsultant = emp.position?.toLowerCase().includes('consultant') ||
+                                             emp.position?.toLowerCase().includes('ingénieur');
+                      const isInspector = emp.position?.toLowerCase().includes('inspector');
+                      
+                      return (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{emp.full_name}</span>
+                              {isEngConsultant && (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  Consultant
+                                </span>
+                              )}
+                              {isInspector && (
+                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  Inspecteur
+                                </span>
+                              )}
+                            </div>
+                            {emp.position && (
+                              <span className="text-sm text-gray-500">{emp.position}</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
