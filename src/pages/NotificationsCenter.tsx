@@ -21,7 +21,15 @@ import {
   CheckCircle,
   Calendar,
   Shield,
-  Wrench
+  Wrench,
+  CreditCard,
+  Share,
+  Download,
+  Upload,
+  PlayCircle,
+  CheckSquare,
+  ExternalLink,
+  Send
 } from 'lucide-react';
 import RoleBasedNotificationCenter from '@/components/alerts/RoleBasedNotificationCenter';
 import NotificationCrud from '@/components/notifications/NotificationCrud';
@@ -47,6 +55,9 @@ const NotificationsCenterPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [inspectionNotifications, setInspectionNotifications] = useState<NotificationData[]>([]);
   const [projectNotifications, setProjectNotifications] = useState<NotificationData[]>([]);
+  const [paymentNotifications, setPaymentNotifications] = useState<NotificationData[]>([]);
+  const [taskNotifications, setTaskNotifications] = useState<NotificationData[]>([]);
+  const [documentNotifications, setDocumentNotifications] = useState<NotificationData[]>([]);
   const [systemAlerts, setSystemAlerts] = useState<NotificationData[]>([]);
   const [loading, setLoading] = useState(true);
   const { notifications, unreadCount } = useNotifications();
@@ -65,7 +76,7 @@ const NotificationsCenterPage = () => {
       const { data: inspectionData, error: inspectionError } = await supabase
         .from('notifications')
         .select('*')
-        .in('type', ['inspection_scheduled', 'inspection_update', 'inspection_alert'])
+        .in('type', ['inspection_required', 'inspection_overdue'])
         .order('created_at', { ascending: false });
 
       if (inspectionError) throw inspectionError;
@@ -74,22 +85,52 @@ const NotificationsCenterPage = () => {
       const { data: projectData, error: projectError } = await supabase
         .from('notifications')
         .select('*')
-        .in('type', ['project_update', 'task_assignment', 'delay_warning'])
+        .in('type', ['project_update', 'project_created', 'project_completed', 'project_milestone', 'delay_warning'])
         .order('created_at', { ascending: false });
 
       if (projectError) throw projectError;
+
+      // Fetch payment-related notifications
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('notifications')
+        .select('*')
+        .in('type', ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'])
+        .order('created_at', { ascending: false });
+
+      if (paymentError) throw paymentError;
+
+      // Fetch task-related notifications
+      const { data: taskData, error: taskError } = await supabase
+        .from('notifications')
+        .select('*')
+        .in('type', ['task_assignment', 'task_completed', 'task_overdue'])
+        .order('created_at', { ascending: false });
+
+      if (taskError) throw taskError;
+
+      // Fetch document-related notifications
+      const { data: documentData, error: documentError } = await supabase
+        .from('notifications')
+        .select('*')
+        .in('type', ['document_review', 'document_shared', 'document_approved', 'document_rejected', 'document_uploaded'])
+        .order('created_at', { ascending: false });
+
+      if (documentError) throw documentError;
 
       // Fetch system alerts
       const { data: systemData, error: systemError } = await supabase
         .from('notifications')
         .select('*')
-        .in('type', ['system_alert', 'security_alert', 'maintenance_alert'])
+        .in('type', ['system', 'bank_guarantee_trigger', 'contractor_penalty', 'compliance_alert', 'escalation_required', 'insurance_expiry', 'insurance_update'])
         .order('created_at', { ascending: false });
 
       if (systemError) throw systemError;
 
       setInspectionNotifications(inspectionData || []);
       setProjectNotifications(projectData || []);
+      setPaymentNotifications(paymentData || []);
+      setTaskNotifications(taskData || []);
+      setDocumentNotifications(documentData || []);
       setSystemAlerts(systemData || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -135,6 +176,9 @@ const NotificationsCenterPage = () => {
     const allNotifications = [
       ...inspectionNotifications,
       ...projectNotifications,
+      ...paymentNotifications,
+      ...taskNotifications,
+      ...documentNotifications,
       ...systemAlerts
     ];
 
@@ -144,6 +188,9 @@ const NotificationsCenterPage = () => {
       urgent: allNotifications.filter(n => n.metadata?.priority === 'urgent').length,
       inspections: inspectionNotifications.length,
       projects: projectNotifications.length,
+      payments: paymentNotifications.length,
+      tasks: taskNotifications.length,
+      documents: documentNotifications.length,
       system: systemAlerts.length
     };
   };
@@ -180,7 +227,7 @@ const NotificationsCenterPage = () => {
           </div>
 
           {/* Statistics Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -245,6 +292,42 @@ const NotificationsCenterPage = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
+                    <p className="text-sm font-medium text-muted-foreground">Paiements</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.payments}</p>
+                  </div>
+                  <CreditCard className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Tâches</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.tasks}</p>
+                  </div>
+                  <CheckSquare className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Documents</p>
+                    <p className="text-2xl font-bold text-indigo-600">{stats.documents}</p>
+                  </div>
+                  <Share className="h-8 w-8 text-indigo-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
                     <p className="text-sm font-medium text-muted-foreground">Système</p>
                     <p className="text-2xl font-bold text-yellow-600">{stats.system}</p>
                   </div>
@@ -277,7 +360,7 @@ const NotificationsCenterPage = () => {
 
           {/* Tabbed Interface */}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
                 Toutes
@@ -293,6 +376,18 @@ const NotificationsCenterPage = () => {
               <TabsTrigger value="projects" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Projets
+              </TabsTrigger>
+              <TabsTrigger value="payments" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Paiements
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" />
+                Tâches
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="flex items-center gap-2">
+                <Share className="h-4 w-4" />
+                Documents
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
@@ -385,6 +480,20 @@ const NotificationsCenterPage = () => {
                     <FileText className="h-5 w-5" />
                     Notifications de Projet
                   </CardTitle>
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="outline" size="sm">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Démarrer Projet
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Voir Projet
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Planifier Étape
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -415,14 +524,336 @@ const NotificationsCenterPage = () => {
                                   {notification.metadata?.priority === 'urgent' && (
                                     <Badge variant="destructive">Urgent</Badge>
                                   )}
+                                  {notification.metadata?.project_phase && (
+                                    <Badge variant="outline">{notification.metadata.project_phase}</Badge>
+                                  )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">
                                   {notification.message}
                                 </p>
+                                {notification.metadata?.completion_percentage && (
+                                  <div className="mb-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span>Progression</span>
+                                      <span>{notification.metadata.completion_percentage}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className="bg-blue-600 h-2 rounded-full" 
+                                        style={{ width: `${notification.metadata.completion_percentage}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
                                   {new Date(notification.created_at).toLocaleString('fr-FR')}
                                 </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payment Notifications */}
+            <TabsContent value="payments" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Notifications de Paiement
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="outline" size="sm">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Traiter Paiement
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approuver
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Voir Détails
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : paymentNotifications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune notification de paiement</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {paymentNotifications
+                        .filter(notification => 
+                          searchTerm === '' || 
+                          notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          notification.message?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((notification) => (
+                        <Card key={notification.id} className={`${!notification.read ? 'border-l-4 border-l-primary' : ''}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-medium">{notification.title}</h4>
+                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {notification.metadata?.priority === 'urgent' && (
+                                    <Badge variant="destructive">Urgent</Badge>
+                                  )}
+                                  {notification.type.includes('completed') && (
+                                    <Badge variant="default" className="bg-green-100 text-green-800">Terminé</Badge>
+                                  )}
+                                  {notification.type.includes('failed') && (
+                                    <Badge variant="destructive">Échec</Badge>
+                                  )}
+                                  {notification.type.includes('blocked') && (
+                                    <Badge variant="destructive">Bloqué</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {notification.message}
+                                </p>
+                                {notification.metadata?.payment_amount && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline" className="text-green-600">
+                                      {notification.metadata.payment_amount.toLocaleString('fr-FR')} €
+                                    </Badge>
+                                    {notification.metadata?.payment_method && (
+                                      <Badge variant="outline">{notification.metadata.payment_method}</Badge>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Task Notifications */}
+            <TabsContent value="tasks" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckSquare className="h-5 w-5" />
+                    Notifications de Tâches
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="outline" size="sm">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Marquer Terminé
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Users className="h-4 w-4 mr-2" />
+                      Assigner
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Échéance
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : taskNotifications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune notification de tâche</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {taskNotifications
+                        .filter(notification => 
+                          searchTerm === '' || 
+                          notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          notification.message?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((notification) => (
+                        <Card key={notification.id} className={`${!notification.read ? 'border-l-4 border-l-primary' : ''}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-medium">{notification.title}</h4>
+                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {notification.metadata?.priority === 'urgent' && (
+                                    <Badge variant="destructive">Urgent</Badge>
+                                  )}
+                                  {notification.type.includes('completed') && (
+                                    <Badge variant="default" className="bg-green-100 text-green-800">Terminé</Badge>
+                                  )}
+                                  {notification.type.includes('overdue') && (
+                                    <Badge variant="destructive">En retard</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {notification.message}
+                                </p>
+                                {notification.metadata?.assignee_name && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline">
+                                      Assigné à: {notification.metadata.assignee_name}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {notification.metadata?.due_date && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline" className="text-orange-600">
+                                      Échéance: {new Date(notification.metadata.due_date).toLocaleDateString('fr-FR')}
+                                    </Badge>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Document Notifications */}
+            <TabsContent value="documents" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share className="h-5 w-5" />
+                    Notifications de Documents
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Télécharger
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Téléverser
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Send className="h-4 w-4 mr-2" />
+                      Partager
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approuver
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : documentNotifications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Share className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucune notification de document</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {documentNotifications
+                        .filter(notification => 
+                          searchTerm === '' || 
+                          notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          notification.message?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((notification) => (
+                        <Card key={notification.id} className={`${!notification.read ? 'border-l-4 border-l-primary' : ''}`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-medium">{notification.title}</h4>
+                                  {!notification.read && <Badge variant="secondary">Nouveau</Badge>}
+                                  {notification.metadata?.priority === 'urgent' && (
+                                    <Badge variant="destructive">Urgent</Badge>
+                                  )}
+                                  {notification.type.includes('approved') && (
+                                    <Badge variant="default" className="bg-green-100 text-green-800">Approuvé</Badge>
+                                  )}
+                                  {notification.type.includes('rejected') && (
+                                    <Badge variant="destructive">Rejeté</Badge>
+                                  )}
+                                  {notification.type.includes('shared') && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-600">Partagé</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {notification.message}
+                                </p>
+                                {notification.metadata?.document_name && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline">
+                                      📄 {notification.metadata.document_name}
+                                    </Badge>
+                                    {notification.metadata?.document_type && (
+                                      <Badge variant="outline">{notification.metadata.document_type}</Badge>
+                                    )}
+                                  </div>
+                                )}
+                                {notification.metadata?.shared_with && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline" className="text-blue-600">
+                                      Partagé avec: {notification.metadata.shared_with.join(', ')}
+                                    </Badge>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm">
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  <Send className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                           </CardContent>
