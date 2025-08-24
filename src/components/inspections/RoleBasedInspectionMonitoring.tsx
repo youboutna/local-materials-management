@@ -94,14 +94,35 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
   const scheduleInspection = async (projectId: string, inspectorId: string, date: string, additionalData?: any) => {
     try {
-      // Get inspector name from employees table
-      const { data: inspector, error: inspectorError } = await supabase
+      // Get inspector name from employees or suppliers table
+      let inspector;
+      let inspectorError;
+
+      // First try employees table
+      const { data: employeeData, error: empError } = await supabase
         .from('employees')
         .select('full_name')
         .eq('id', inspectorId)
         .single();
 
-      if (inspectorError) throw inspectorError;
+      if (empError && empError.code !== 'PGRST116') {
+        // If it's not a "not found" error, throw it
+        throw empError;
+      }
+
+      if (employeeData) {
+        inspector = employeeData;
+      } else {
+        // Try suppliers table
+        const { data: supplierData, error: suppError } = await supabase
+          .from('suppliers')
+          .select('name, contact_person')
+          .eq('id', inspectorId)
+          .single();
+
+        if (suppError) throw suppError;
+        inspector = { full_name: supplierData.contact_person || supplierData.name };
+      }
 
       const { data, error } = await supabase
         .from('inspections')

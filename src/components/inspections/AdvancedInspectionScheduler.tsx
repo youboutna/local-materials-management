@@ -60,41 +60,77 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const { data: inspectors } = useQuery({
     queryKey: ['inspectors'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch employees
+      const { data: employeesData, error: employeesError } = await supabase
         .from('employees')
         .select('id, full_name, phone, position, department')
         .eq('is_active', true)
         .order('full_name');
 
-      if (error) throw error;
+      if (employeesError) throw employeesError;
+
+      // Fetch suppliers
+      const { data: suppliersData, error: suppliersError } = await supabase
+        .from('suppliers')
+        .select('id, name, contact_person, email, phone, category')
+        .eq('is_active', true)
+        .order('name');
+
+      if (suppliersError) throw suppliersError;
       
-      // Include all employees but prioritize inspectors and engineering consultants
-      const allEmployees = data || [];
+      const allEmployees = employeesData || [];
+      const allSuppliers = suppliersData || [];
+      
+      // Convert suppliers to inspector format
+      const supplierInspectors = allSuppliers.map(supplier => ({
+        id: supplier.id,
+        full_name: supplier.contact_person || supplier.name,
+        phone: supplier.phone,
+        position: `Responsable - ${supplier.name}`,
+        department: supplier.category,
+        type: 'supplier' as const
+      }));
+
+      // Convert employees to inspector format  
+      const employeeInspectors = allEmployees.map(emp => ({
+        ...emp,
+        type: 'employee' as const
+      }));
+
+      // Combine all potential inspectors
+      const allInspectors = [...employeeInspectors, ...supplierInspectors];
       
       // Separate into categories
-      const inspectors = allEmployees.filter(emp => 
-        emp.position?.toLowerCase().includes('inspector') ||
-        emp.position?.toLowerCase().includes('inspection') ||
-        emp.department?.toLowerCase().includes('inspection') ||
-        emp.position?.toLowerCase().includes('contrôle') ||
-        emp.position?.toLowerCase().includes('qualité')
+      const inspectors = allInspectors.filter(inspector => 
+        inspector.position?.toLowerCase().includes('inspector') ||
+        inspector.position?.toLowerCase().includes('inspection') ||
+        inspector.department?.toLowerCase().includes('inspection') ||
+        inspector.position?.toLowerCase().includes('contrôle') ||
+        inspector.position?.toLowerCase().includes('qualité')
       );
       
-      const engineeringConsultants = allEmployees.filter(emp => 
-        emp.position?.toLowerCase().includes('consultant') ||
-        emp.position?.toLowerCase().includes('ingénieur') ||
-        emp.position?.toLowerCase().includes('engineer') ||
-        emp.department?.toLowerCase().includes('ingénierie') ||
-        emp.department?.toLowerCase().includes('engineering') ||
-        emp.position?.toLowerCase().includes('bureau d\'études')
+      const engineeringConsultants = allInspectors.filter(inspector => 
+        inspector.position?.toLowerCase().includes('consultant') ||
+        inspector.position?.toLowerCase().includes('ingénieur') ||
+        inspector.position?.toLowerCase().includes('engineer') ||
+        inspector.department?.toLowerCase().includes('ingénierie') ||
+        inspector.department?.toLowerCase().includes('engineering') ||
+        inspector.position?.toLowerCase().includes('bureau d\'études')
+      );
+
+      const responsables = allInspectors.filter(inspector =>
+        inspector.position?.toLowerCase().includes('responsable') ||
+        inspector.type === 'supplier'
       );
       
-      const otherEmployees = allEmployees.filter(emp => 
-        !inspectors.includes(emp) && !engineeringConsultants.includes(emp)
+      const otherInspectors = allInspectors.filter(inspector => 
+        !inspectors.includes(inspector) && 
+        !engineeringConsultants.includes(inspector) &&
+        !responsables.includes(inspector)
       );
       
-      // Return in order: engineering consultants first, then inspectors, then others
-      return [...engineeringConsultants, ...inspectors, ...otherEmployees];
+      // Return in order: engineering consultants first, then inspectors, then responsables, then others
+      return [...engineeringConsultants, ...inspectors, ...responsables, ...otherInspectors];
     }
   });
 
@@ -300,16 +336,18 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                     <SelectValue placeholder="Sélectionner un inspecteur..." />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-[100]">
-                    {inspectors?.map((emp) => {
-                      const isEngConsultant = emp.position?.toLowerCase().includes('consultant') ||
-                                             emp.position?.toLowerCase().includes('ingénieur');
-                      const isInspector = emp.position?.toLowerCase().includes('inspector');
+                    {inspectors?.map((inspector) => {
+                      const isEngConsultant = inspector.position?.toLowerCase().includes('consultant') ||
+                                             inspector.position?.toLowerCase().includes('ingénieur');
+                      const isInspector = inspector.position?.toLowerCase().includes('inspector');
+                      const isSupplier = inspector.type === 'supplier';
+                      const isResponsable = inspector.position?.toLowerCase().includes('responsable');
                       
                       return (
-                        <SelectItem key={emp.id} value={emp.id}>
+                        <SelectItem key={inspector.id} value={inspector.id}>
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{emp.full_name}</span>
+                              <span className="font-medium">{inspector.full_name}</span>
                               {isEngConsultant && (
                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                                   Consultant
@@ -320,9 +358,19 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                   Inspecteur
                                 </span>
                               )}
+                              {isSupplier && (
+                                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                  Fournisseur
+                                </span>
+                              )}
+                              {isResponsable && !isSupplier && (
+                                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                  Responsable
+                                </span>
+                              )}
                             </div>
-                            {emp.position && (
-                              <span className="text-sm text-gray-500">{emp.position}</span>
+                            {inspector.position && (
+                              <span className="text-sm text-gray-500">{inspector.position}</span>
                             )}
                           </div>
                         </SelectItem>
