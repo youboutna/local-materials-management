@@ -74,7 +74,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       // Fetch suppliers
       const { data: suppliersData, error: suppliersError } = await supabase
         .from('suppliers')
-        .select('id, name, contact_person, email, phone, category')
+        .select('id, name, contact_person, email, phone, category, nif')
         .eq('is_active', true)
         .order('name');
 
@@ -90,12 +90,14 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         phone: supplier.phone,
         position: `Responsable - ${supplier.name}`,
         department: supplier.category,
+        nif: supplier.nif,
         type: 'supplier' as const
       }));
 
       // Convert employees to inspector format  
       const employeeInspectors = allEmployees.map(emp => ({
         ...emp,
+        nif: null as string | null, // Add nif field for consistency
         type: 'employee' as const
       }));
 
@@ -170,8 +172,9 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
     const matchesPhone = inspector.phone?.toLowerCase().includes(searchLower);
     const matchesPosition = inspector.position?.toLowerCase().includes(searchLower);
     const matchesDepartment = inspector.department?.toLowerCase().includes(searchLower);
+    const matchesNif = inspector.nif?.toLowerCase()?.includes(searchLower);
     
-    return matchesName || matchesPhone || matchesPosition || matchesDepartment;
+    return matchesName || matchesPhone || matchesPosition || matchesDepartment || matchesNif;
   }) || [];
 
   const handleScheduleInspection = async () => {
@@ -348,7 +351,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                 <Label>Inspecteur *</Label>
                 <div className="space-y-2">
                   <Input
-                    placeholder="Rechercher par nom, téléphone, poste..."
+                    placeholder="Rechercher par nom, téléphone, poste, NIF..."
                     value={inspectorSearch}
                     onChange={(e) => setInspectorSearch(e.target.value)}
                     className="bg-background"
@@ -410,6 +413,9 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                   )}
                                   {inspector.department && (
                                     <div>🏢 {inspector.department}</div>
+                                  )}
+                                  {inspector.nif && (
+                                    <div>🆔 NIF: {inspector.nif}</div>
                                   )}
                                 </div>
                               </div>

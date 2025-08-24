@@ -2972,6 +2972,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          nif: string | null
           phone: string | null
           rating: number | null
           updated_at: string | null
@@ -2987,6 +2988,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          nif?: string | null
           phone?: string | null
           rating?: number | null
           updated_at?: string | null
@@ -3002,6 +3004,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          nif?: string | null
           phone?: string | null
           rating?: number | null
           updated_at?: string | null
