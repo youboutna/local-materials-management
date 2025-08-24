@@ -5,7 +5,7 @@ import { Activity, Shield, AlertTriangle, TrendingUp } from 'lucide-react';
 import HttpMonitor from '@/components/monitoring/HttpMonitor';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
-import InspectionCrud from '@/components/inspections/InspectionCrud';
+import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
 
 const MonitoringDashboard: React.FC = () => {
   return (
@@ -91,14 +91,7 @@ const MonitoringDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="inspections" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monitoring des Inspections</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <InspectionCrud />
-            </CardContent>
-          </Card>
+          <RoleBasedInspectionMonitoring />
         </TabsContent>
       </Tabs>
     </div>
