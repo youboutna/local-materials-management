@@ -318,63 +318,117 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
               <CardTitle>Tableau de Bord des Inspections</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Projet</TableHead>
-                    <TableHead>Inspecteur</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Progression</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inspections.map((inspection) => (
-                    <TableRow key={inspection.id}>
-                      <TableCell className="font-medium">
-                        {getProjectTitle(inspection.project_id)}
-                      </TableCell>
-                      <TableCell>{inspection.inspector}</TableCell>
-                      <TableCell>
-                        {new Date(inspection.date).toLocaleDateString('fr-FR')}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(inspection.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-secondary rounded-full h-2">
-                            <div 
-                              className="bg-primary h-2 rounded-full transition-all" 
-                              style={{ width: `${inspection.progress_at_inspection}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium">
-                            {inspection.progress_at_inspection}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="ghost">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {isProjectManager && inspection.status === 'failed' && (
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => sendAlertToHierarchy(inspection.id, `Inspection échouée pour le projet ${getProjectTitle(inspection.project_id)}`)}
-                            >
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Chargement des inspections...</p>
+                  </div>
+                </div>
+              ) : inspections.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Aucune inspection trouvée</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Les inspections programmées apparaîtront ici
+                  </p>
+                  {isProjectManager && (
+                    <p className="text-sm text-muted-foreground">
+                      Utilisez l'onglet "Programmation" pour planifier une nouvelle inspection
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {inspections.length} inspection(s) trouvée(s)
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={fetchData}
+                      className="gap-2"
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                      Actualiser
+                    </Button>
+                  </div>
+                  
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Projet</TableHead>
+                        <TableHead>Inspecteur</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Progression</TableHead>
+                        <TableHead>Commentaires</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inspections.map((inspection) => (
+                        <TableRow key={inspection.id}>
+                          <TableCell className="font-medium">
+                            {getProjectTitle(inspection.project_id)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <UserCheck className="h-4 w-4 text-muted-foreground" />
+                              {inspection.inspector}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              {new Date(inspection.date).toLocaleDateString('fr-FR')}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(inspection.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-secondary rounded-full h-2">
+                                <div 
+                                  className="bg-primary h-2 rounded-full transition-all" 
+                                  style={{ width: `${inspection.progress_at_inspection}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium">
+                                {inspection.progress_at_inspection}%
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-xs truncate text-sm text-muted-foreground">
+                              {inspection.comments || 'Aucun commentaire'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button size="sm" variant="ghost" title="Voir les détails">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {isProjectManager && inspection.status === 'failed' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  title="Alerter la hiérarchie"
+                                  onClick={() => sendAlertToHierarchy(inspection.id, `Inspection échouée pour le projet ${getProjectTitle(inspection.project_id)}`)}
+                                >
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
