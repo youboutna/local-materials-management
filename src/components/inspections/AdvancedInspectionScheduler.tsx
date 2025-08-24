@@ -55,6 +55,8 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const [notifyContractor, setNotifyContractor] = useState(true);
   const [projectFilter, setProjectFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [inspectorSearch, setInspectorSearch] = useState('');
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   // Fetch inspectors (employees with inspector position or inspection department)
   const { data: inspectors } = useQuery({
@@ -158,6 +160,19 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
     
     return matchesSearch && matchesStatus;
   });
+
+  // Filter inspectors based on search
+  const filteredInspectors = inspectors?.filter(inspector => {
+    if (!inspectorSearch) return true;
+    
+    const searchLower = inspectorSearch.toLowerCase();
+    const matchesName = inspector.full_name?.toLowerCase().includes(searchLower);
+    const matchesPhone = inspector.phone?.toLowerCase().includes(searchLower);
+    const matchesPosition = inspector.position?.toLowerCase().includes(searchLower);
+    const matchesDepartment = inspector.department?.toLowerCase().includes(searchLower);
+    
+    return matchesName || matchesPhone || matchesPosition || matchesDepartment;
+  }) || [];
 
   const handleScheduleInspection = async () => {
     if (!selectedProject || !inspectionType || !selectedInspector || !inspectionDate) {
@@ -331,53 +346,80 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
 
               <div>
                 <Label>Inspecteur *</Label>
-                <Select value={selectedInspector} onValueChange={setSelectedInspector}>
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Sélectionner un inspecteur..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border z-[100]">
-                    {inspectors?.map((inspector) => {
-                      const isEngConsultant = inspector.position?.toLowerCase().includes('consultant') ||
-                                             inspector.position?.toLowerCase().includes('ingénieur');
-                      const isInspector = inspector.position?.toLowerCase().includes('inspector');
-                      const isSupplier = inspector.type === 'supplier';
-                      const isResponsable = inspector.position?.toLowerCase().includes('responsable');
-                      
-                      return (
-                        <SelectItem key={inspector.id} value={inspector.id}>
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{inspector.full_name}</span>
-                              {isEngConsultant && (
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                  Consultant
-                                </span>
-                              )}
-                              {isInspector && (
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                  Inspecteur
-                                </span>
-                              )}
-                              {isSupplier && (
-                                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                                  Fournisseur
-                                </span>
-                              )}
-                              {isResponsable && !isSupplier && (
-                                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                                  Responsable
-                                </span>
-                              )}
-                            </div>
-                            {inspector.position && (
-                              <span className="text-sm text-gray-500">{inspector.position}</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Rechercher par nom, téléphone, poste..."
+                    value={inspectorSearch}
+                    onChange={(e) => setInspectorSearch(e.target.value)}
+                    className="bg-background"
+                  />
+                  <Select 
+                    value={selectedInspector} 
+                    onValueChange={setSelectedInspector}
+                    open={isInspectorOpen}
+                    onOpenChange={setIsInspectorOpen}
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Sélectionner un inspecteur..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-[100] max-h-60">
+                      {filteredInspectors.length === 0 ? (
+                        <div className="p-4 text-center text-muted-foreground">
+                          Aucun inspecteur trouvé
+                        </div>
+                      ) : (
+                        filteredInspectors.map((inspector) => {
+                          const isEngConsultant = inspector.position?.toLowerCase().includes('consultant') ||
+                                                 inspector.position?.toLowerCase().includes('ingénieur');
+                          const isInspector = inspector.position?.toLowerCase().includes('inspector');
+                          const isSupplier = inspector.type === 'supplier';
+                          const isResponsable = inspector.position?.toLowerCase().includes('responsable');
+                          
+                          return (
+                            <SelectItem key={inspector.id} value={inspector.id}>
+                              <div className="flex flex-col w-full">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{inspector.full_name}</span>
+                                  {isEngConsultant && (
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                      Consultant
+                                    </span>
+                                  )}
+                                  {isInspector && (
+                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                      Inspecteur
+                                    </span>
+                                  )}
+                                  {isSupplier && (
+                                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                      Fournisseur
+                                    </span>
+                                  )}
+                                  {isResponsable && !isSupplier && (
+                                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                      Responsable
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500 space-y-1">
+                                  {inspector.position && (
+                                    <div>📋 {inspector.position}</div>
+                                  )}
+                                  {inspector.phone && (
+                                    <div>📞 {inspector.phone}</div>
+                                  )}
+                                  {inspector.department && (
+                                    <div>🏢 {inspector.department}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
