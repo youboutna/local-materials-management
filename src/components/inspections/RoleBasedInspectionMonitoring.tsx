@@ -92,16 +92,26 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
     }
   };
 
-  const scheduleInspection = async (projectId: string, inspectorName: string, date: string) => {
+  const scheduleInspection = async (projectId: string, inspectorId: string, date: string, additionalData?: any) => {
     try {
+      // Get inspector name from employees table
+      const { data: inspector, error: inspectorError } = await supabase
+        .from('employees')
+        .select('full_name')
+        .eq('id', inspectorId)
+        .single();
+
+      if (inspectorError) throw inspectorError;
+
       const { data, error } = await supabase
         .from('inspections')
         .insert({
           project_id: projectId,
-          inspector: inspectorName,
+          inspector: inspector.full_name,
           date: date,
           status: 'scheduled',
-          progress_at_inspection: 0
+          progress_at_inspection: additionalData?.target_progress || 0,
+          comments: additionalData?.requirements || null
         })
         .select()
         .single();
