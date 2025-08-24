@@ -156,10 +156,10 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
             <div>
               <Label>Statut</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border z-[100]">
                   <SelectItem value="">Tous les statuts</SelectItem>
                   <SelectItem value="en cours">En cours</SelectItem>
                   <SelectItem value="en attente">En attente</SelectItem>
@@ -238,10 +238,10 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               <div>
                 <Label>Type d'Inspection *</Label>
                 <Select value={inspectionType} onValueChange={setInspectionType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Choisir le type..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border z-[100]">
                     {INSPECTION_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
@@ -254,10 +254,10 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               <div>
                 <Label>Inspecteur *</Label>
                 <Select value={selectedInspector} onValueChange={setSelectedInspector}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Sélectionner un inspecteur..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border z-[100]">
                     {inspectors?.map((inspector) => (
                       <SelectItem key={inspector.id} value={inspector.id}>
                         {inspector.full_name}
