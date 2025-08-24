@@ -529,59 +529,348 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
         {/* Alerts Tab - All roles */}
         <TabsContent value="alerts" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alertes et Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Overdue inspections */}
-                {inspections
-                  .filter(i => new Date(i.date) < new Date() && i.status === 'scheduled')
-                  .map((inspection) => (
-                  <Alert key={inspection.id} className="border-red-200 bg-red-50">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-800">
-                      <strong>Inspection en retard:</strong> {getProjectTitle(inspection.project_id)} 
-                      - Prévue le {new Date(inspection.date).toLocaleDateString('fr-FR')}
-                      {isProjectManager && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="ml-2"
-                          onClick={() => sendAlertToHierarchy(inspection.id, `Inspection en retard: ${getProjectTitle(inspection.project_id)}`)}
-                        >
-                          Alerter la hiérarchie
-                        </Button>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                ))}
-                
-                {/* Failed inspections */}
-                {inspections
-                  .filter(i => i.status === 'failed')
-                  .map((inspection) => (
-                  <Alert key={inspection.id} className="border-orange-200 bg-orange-50">
-                    <AlertTriangle className="h-4 w-4 text-orange-600" />
-                    <AlertDescription className="text-orange-800">
-                      <strong>Inspection échouée:</strong> {getProjectTitle(inspection.project_id)}
-                      {isProjectManager && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="ml-2"
-                          onClick={() => sendAlertToHierarchy(inspection.id, `Inspection échouée nécessitant une action: ${getProjectTitle(inspection.project_id)}`)}
-                        >
-                          Escalader
-                        </Button>
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Centre de gestion des alertes et notifications pour le suivi des inspections critiques
+              </AlertDescription>
+            </Alert>
+
+            {/* Alert Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Inspections en retard</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {inspections.filter(i => 
+                          new Date(i.date) < new Date() && 
+                          !['completed', 'approved'].includes(i.status)
+                        ).length}
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Inspections échouées</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {inspections.filter(i => i.status === 'failed').length}
+                      </p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Corrections requises</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {inspections.filter(i => i.status === 'requires_changes').length}
+                      </p>
+                    </div>
+                    <Send className="h-8 w-8 text-orange-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">En attente</p>
+                      <p className="text-2xl font-bold text-yellow-600">
+                        {inspections.filter(i => i.status === 'pending').length}
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-yellow-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Critical Alerts Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  Alertes Critiques
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Overdue Inspections */}
+                  {inspections.filter(i => 
+                    new Date(i.date) < new Date() && 
+                    !['completed', 'approved'].includes(i.status)
+                  ).length > 0 ? (
+                    <div className="border-l-4 border-red-500 pl-4">
+                      <h4 className="font-semibold text-red-700 mb-2">🚨 Inspections en retard</h4>
+                      <div className="space-y-2">
+                        {inspections
+                          .filter(i => 
+                            new Date(i.date) < new Date() && 
+                            !['completed', 'approved'].includes(i.status)
+                          )
+                          .map(inspection => (
+                            <div key={inspection.id} className="flex items-center justify-between bg-red-50 p-3 rounded">
+                              <div>
+                                <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Inspecteur: {inspection.inspector} • 
+                                  Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} • 
+                                  Retard: {Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                {getStatusBadge(inspection.status)}
+                                {isProjectManager && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => sendAlertToHierarchy(
+                                      inspection.id, 
+                                      `🚨 URGENT: Inspection en retard de ${Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s) pour le projet "${getProjectTitle(inspection.project_id)}" (Inspecteur: ${inspection.inspector})`
+                                    )}
+                                  >
+                                    <Send className="h-4 w-4" />
+                                    Alerter
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-green-600">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2" />
+                      <p>Aucune inspection en retard ✅</p>
+                    </div>
+                  )}
+
+                  {/* Failed Inspections */}
+                  {inspections.filter(i => i.status === 'failed').length > 0 && (
+                    <div className="border-l-4 border-red-500 pl-4">
+                      <h4 className="font-semibold text-red-700 mb-2">❌ Inspections échouées</h4>
+                      <div className="space-y-2">
+                        {inspections
+                          .filter(i => i.status === 'failed')
+                          .map(inspection => (
+                            <div key={inspection.id} className="flex items-center justify-between bg-red-50 p-3 rounded">
+                              <div>
+                                <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Inspecteur: {inspection.inspector} • 
+                                  Date: {new Date(inspection.date).toLocaleDateString('fr-FR')}
+                                  {inspection.comments && ` • ${inspection.comments}`}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                {getStatusBadge(inspection.status)}
+                                {isProjectManager && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => sendAlertToHierarchy(
+                                      inspection.id, 
+                                      `❌ CRITIQUE: Inspection échouée pour le projet "${getProjectTitle(inspection.project_id)}" (Inspecteur: ${inspection.inspector}). ${inspection.comments ? `Commentaires: ${inspection.comments}` : ''}`
+                                    )}
+                                  >
+                                    <Send className="h-4 w-4" />
+                                    Escalader
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Inspections Requiring Changes */}
+                  {inspections.filter(i => i.status === 'requires_changes').length > 0 && (
+                    <div className="border-l-4 border-orange-500 pl-4">
+                      <h4 className="font-semibold text-orange-700 mb-2">⚠️ Corrections requises</h4>
+                      <div className="space-y-2">
+                        {inspections
+                          .filter(i => i.status === 'requires_changes')
+                          .map(inspection => (
+                            <div key={inspection.id} className="flex items-center justify-between bg-orange-50 p-3 rounded">
+                              <div>
+                                <p className="font-medium">{getProjectTitle(inspection.project_id)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Inspecteur: {inspection.inspector} • 
+                                  Date: {new Date(inspection.date).toLocaleDateString('fr-FR')}
+                                  {inspection.comments && ` • ${inspection.comments}`}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                {getStatusBadge(inspection.status)}
+                                {isProjectManager && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => sendAlertToHierarchy(
+                                      inspection.id, 
+                                      `⚠️ ATTENTION: Corrections requises pour le projet "${getProjectTitle(inspection.project_id)}" suite à l'inspection de ${inspection.inspector}. ${inspection.comments ? `Détails: ${inspection.comments}` : ''}`
+                                    )}
+                                  >
+                                    <Bell className="h-4 w-4" />
+                                    Notifier
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Actions */}
+            {isProjectManager && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Actions de Notification
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start gap-2"
+                      onClick={() => {
+                        const overdueCount = inspections.filter(i => 
+                          new Date(i.date) < new Date() && 
+                          !['completed', 'approved'].includes(i.status)
+                        ).length;
+                        if (overdueCount > 0) {
+                          sendAlertToHierarchy(
+                            'summary', 
+                            `📊 RAPPORT QUOTIDIEN: ${overdueCount} inspection(s) en retard nécessitent une attention immédiate. Consultez le tableau de bord pour plus de détails.`
+                          );
+                        } else {
+                          toast({
+                            title: "Information",
+                            description: "Aucune inspection en retard à signaler",
+                          });
+                        }
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                      Rapport quotidien
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      className="justify-start gap-2"
+                      onClick={() => {
+                        const criticalCount = inspections.filter(i => 
+                          i.status === 'failed' || 
+                          (new Date(i.date) < new Date() && !['completed', 'approved'].includes(i.status))
+                        ).length;
+                        if (criticalCount > 0) {
+                          sendAlertToHierarchy(
+                            'critical', 
+                            `🚨 ALERTE CRITIQUE: ${criticalCount} inspection(s) nécessitent une intervention urgente (échecs ou retards). Action immédiate requise.`
+                          );
+                        } else {
+                          toast({
+                            title: "Information",
+                            description: "Aucune situation critique détectée",
+                          });
+                        }
+                      }}
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      Alerte critique
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      className="justify-start gap-2"
+                      onClick={() => {
+                        const upcomingCount = inspections.filter(i => {
+                          const inspectionDate = new Date(i.date);
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          return inspectionDate.toDateString() === tomorrow.toDateString() && 
+                                 i.status === 'scheduled';
+                        }).length;
+                        if (upcomingCount > 0) {
+                          sendAlertToHierarchy(
+                            'reminder', 
+                            `📅 RAPPEL: ${upcomingCount} inspection(s) programmée(s) pour demain. Vérifiez la disponibilité des inspecteurs.`
+                          );
+                        } else {
+                          toast({
+                            title: "Information",
+                            description: "Aucune inspection programmée pour demain",
+                          });
+                        }
+                      }}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Rappel quotidien
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Quick Stats Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Résumé des Performances
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-green-600">
+                      {inspections.filter(i => ['completed', 'approved'].includes(i.status)).length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Terminées</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {inspections.filter(i => i.status === 'in_progress').length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">En cours</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {inspections.filter(i => i.status === 'scheduled').length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Programmées</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {Math.round((inspections.filter(i => ['completed', 'approved'].includes(i.status)).length / (inspections.length || 1)) * 100)}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">Taux de réussite</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
