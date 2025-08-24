@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Calendar, CheckSquare, ArrowRight, Users, BarChart3 } from 'lucide-react';
 import WaterfallProjectManager from '@/components/project/WaterfallProjectManager';
+import MonitoringDashboard from '@/components/dashboard/MonitoringDashboard';
+import AlertsDashboard from '@/components/dashboard/AlertsDashboard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import LoadDataButton from '@/components/LoadDataButton';
@@ -489,35 +491,11 @@ const Dashboard = () => {
               </TabsContent>
 
               <TabsContent value="monitoring" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Monitoring des Projets</CardTitle>
-                    <CardDescription>Suivi en temps réel des performances</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        Module de monitoring en développement
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <MonitoringDashboard />
               </TabsContent>
 
               <TabsContent value="alerts" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Alertes et Notifications</CardTitle>
-                    <CardDescription>Gestion des alertes de projet</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        Système d'alertes en développement
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <AlertsDashboard />
               </TabsContent>
             </Tabs>
           </motion.div>
