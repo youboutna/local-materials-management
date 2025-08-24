@@ -1,10 +1,6 @@
 
-import React, { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import React from 'react';
+import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
 
@@ -20,6 +16,7 @@ interface ProjectFiltersProps {
   availableStatuses: string[];
   availableRegions: { code: string; name: string; nameAr: string }[];
   onReset: () => void;
+  resultCount?: number;
 }
 
 const ProjectFilters: React.FC<ProjectFiltersProps> = ({ 
@@ -33,86 +30,51 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
   onSortChange,
   availableStatuses,
   availableRegions,
-  onReset
+  onReset,
+  resultCount
 }) => {
+  const filters: FilterField[] = [
+    {
+      key: 'status',
+      label: 'Statuts',
+      placeholder: 'Tous les statuts',
+      value: statusFilter,
+      onChange: onStatusChange,
+      options: availableStatuses.map(status => ({ value: status, label: status }))
+    },
+    {
+      key: 'region',
+      label: 'Régions',
+      placeholder: 'Toutes les régions',
+      value: regionFilter,
+      onChange: onRegionChange,
+      options: availableRegions.map(region => ({ value: region.code, label: region.name }))
+    },
+    {
+      key: 'sort',
+      label: 'Tri',
+      placeholder: 'Trier par...',
+      value: sortOption,
+      onChange: (value) => onSortChange(value as SortOption),
+      options: [
+        { value: 'newest', label: 'Plus récent' },
+        { value: 'oldest', label: 'Plus ancien' },
+        { value: 'budget-high', label: 'Budget élevé' },
+        { value: 'budget-low', label: 'Budget faible' },
+        { value: 'progress', label: 'Progrès' }
+      ]
+    }
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-      {/* Search Input */}
-      <div className="space-y-2">
-        <Label htmlFor="search-filter">Recherche</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            id="search-filter"
-            placeholder="Rechercher projets..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* Status Filter */}
-      <div className="space-y-2">
-        <Label htmlFor="status-filter">Statut</Label>
-        <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Tous les statuts" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les statuts</SelectItem>
-            {availableStatuses.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Region Filter */}
-      <div className="space-y-2">
-        <Label htmlFor="region-filter">Région</Label>
-        <Select value={regionFilter} onValueChange={onRegionChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Toutes les régions" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes les régions</SelectItem>
-            {availableRegions.map((region) => (
-              <SelectItem key={region.code} value={region.code}>
-                {region.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Sort Options */}
-      <div className="space-y-2">
-        <Label htmlFor="sort-filter">Trier par</Label>
-        <Select value={sortOption} onValueChange={(value) => onSortChange(value as SortOption)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Trier par..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Plus récent</SelectItem>
-            <SelectItem value="oldest">Plus ancien</SelectItem>
-            <SelectItem value="budget-high">Budget élevé</SelectItem>
-            <SelectItem value="budget-low">Budget faible</SelectItem>
-            <SelectItem value="progress">Progrès</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Reset Button */}
-      <div className="space-y-2">
-        <Label>&nbsp;</Label>
-        <Button variant="outline" onClick={onReset} className="w-full">
-          Réinitialiser
-        </Button>
-      </div>
-    </div>
+    <ResponsiveFilters
+      searchValue={searchQuery}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Rechercher projets..."
+      filters={filters}
+      onReset={onReset}
+      resultCount={resultCount}
+    />
   );
 };
 

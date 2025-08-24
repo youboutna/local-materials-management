@@ -390,6 +390,7 @@ const Materials: React.FC = () => {
               onCategoryChange={setSelectedCategory}
               onLocalTypeChange={setSelectedLocalType}
               onReset={handleResetFilters}
+              resultCount={filteredMaterials.length}
             />
 
             <MaterialGrid

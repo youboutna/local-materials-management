@@ -1,9 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Search, Filter, RotateCcw } from 'lucide-react';
+import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 
 interface MaterialFiltersProps {
   searchTerm: string;
@@ -15,6 +11,7 @@ interface MaterialFiltersProps {
   onCategoryChange: (value: string) => void;
   onLocalTypeChange: (value: string) => void;
   onReset: () => void;
+  resultCount?: number;
 }
 
 const MaterialFilters: React.FC<MaterialFiltersProps> = ({
@@ -26,63 +23,37 @@ const MaterialFilters: React.FC<MaterialFiltersProps> = ({
   onSearchChange,
   onCategoryChange,
   onLocalTypeChange,
-  onReset
+  onReset,
+  resultCount
 }) => {
+  const filters: FilterField[] = [
+    {
+      key: 'category',
+      label: 'Catégories',
+      placeholder: 'Toutes les catégories',
+      value: selectedCategory,
+      onChange: onCategoryChange,
+      options: categories.map(category => ({ value: category, label: category }))
+    },
+    {
+      key: 'localType',
+      label: 'Types locaux',
+      placeholder: 'Tous les types',
+      value: selectedLocalType,
+      onChange: onLocalTypeChange,
+      options: localTypes.map(type => ({ value: type, label: type }))
+    }
+  ];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-5 w-5" />
-          Filtres
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Rechercher des matériaux..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <Select value={selectedCategory} onValueChange={onCategoryChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les catégories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedLocalType} onValueChange={onLocalTypeChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Type local" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les types</SelectItem>
-              {localTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" onClick={onReset} className="flex items-center gap-2">
-            <RotateCcw className="h-4 w-4" />
-            Réinitialiser
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ResponsiveFilters
+      searchValue={searchTerm}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Rechercher des matériaux..."
+      filters={filters}
+      onReset={onReset}
+      resultCount={resultCount}
+    />
   );
 };
 

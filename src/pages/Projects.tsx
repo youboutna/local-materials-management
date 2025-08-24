@@ -178,29 +178,20 @@ const Projects: React.FC = () => {
           </TabsList>
 
           <TabsContent value="grid" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filtres
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProjectFilters 
-                  searchQuery={searchQuery}
-                  onSearchChange={performSearch}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  regionFilter={regionFilter}
-                  onRegionChange={setRegionFilter}
-                  sortOption={sortOption}
-                  onSortChange={setSortOption}
-                  availableStatuses={availableStatuses}
-                  availableRegions={availableRegions}
-                  onReset={handleReset}
-                />
-              </CardContent>
-            </Card>
+            <ProjectFilters 
+              searchQuery={searchQuery}
+              onSearchChange={performSearch}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              regionFilter={regionFilter}
+              onRegionChange={setRegionFilter}
+              sortOption={sortOption}
+              onSortChange={setSortOption}
+              availableStatuses={availableStatuses}
+              availableRegions={availableRegions}
+              onReset={handleReset}
+              resultCount={filteredProjects.length}
+            />
 
             <ProjectsGridPaginated 
               projects={paginatedProjects}
