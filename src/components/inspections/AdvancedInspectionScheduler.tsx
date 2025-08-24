@@ -54,7 +54,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const [requirements, setRequirements] = useState('');
   const [notifyContractor, setNotifyContractor] = useState(true);
   const [projectFilter, setProjectFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Fetch inspectors (users with inspector role)
   const { data: inspectors } = useQuery({
@@ -76,7 +76,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       project.title.toLowerCase().includes(projectFilter.toLowerCase()) ||
       project.project_reference?.toLowerCase().includes(projectFilter.toLowerCase());
     
-    const matchesStatus = !statusFilter || project.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || !statusFilter || project.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
@@ -160,7 +160,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border z-[100]">
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="en cours">En cours</SelectItem>
                   <SelectItem value="en attente">En attente</SelectItem>
                   <SelectItem value="en inspection">En inspection</SelectItem>
