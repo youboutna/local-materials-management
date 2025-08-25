@@ -255,6 +255,10 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         return;
       }
 
+      // Get current user or use a fallback
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || 'system-user';
+
       let title = '';
       let message = '';
       
@@ -296,7 +300,8 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         title,
         message,
         priority: 'high',
-        recipientIds: ['demo-user-001'],
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
         metadata: { inspectionData: inspection }
       });
 
@@ -308,7 +313,8 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         title,
         message,
         priority: 'high',
-        recipientIds: ['demo-user-001'],
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
         metadata: { inspectionData: inspection }
       });
 

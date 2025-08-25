@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle, Upload, FileText, Bell, Settings, Calendar, Users, MessageSquare, Phone, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
   validatePaymentEligibility, 
@@ -185,6 +186,10 @@ const EnhancedPaymentBlockingInterface = () => {
 
   const handlePaymentAction = async (paymentId: string, actionType: string, contractorName?: string) => {
     try {
+      // Get current user or use a fallback
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || 'system-user';
+
       let title = '';
       let message = '';
       
@@ -223,7 +228,8 @@ const EnhancedPaymentBlockingInterface = () => {
         title,
         message,
         priority: 'high',
-        recipientIds: ['demo-user-001'],
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
         metadata: { contractorName }
       });
 

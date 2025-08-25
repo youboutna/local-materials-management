@@ -467,6 +467,10 @@ const UnifiedInsuranceManager = () => {
       const certificate = certificates.find(c => c.id === certificateId);
       if (!certificate) return;
 
+      // Get current user or use a fallback
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || 'system-user';
+
       let title = '';
       let message = '';
       
@@ -500,12 +504,13 @@ const UnifiedInsuranceManager = () => {
       await createInsuranceAction({
         insuranceId: certificateId,
         projectId: certificate.projectId || certificate.project_id || '',
-        contractorId: certificate.contractorId || certificate.contractor_id || '',
+        contractorId: certificate.contractorId || certificate.contractor_id || currentUserId,
         actionType: actionType as any,
         title,
         message,
         priority: 'high',
-        recipientIds: ['demo-user-001'],
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
         metadata: { certificateData: certificate }
       });
 

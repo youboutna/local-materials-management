@@ -98,6 +98,10 @@ const BankGuaranteeMonitor: React.FC = () => {
       const delay = delays.find(d => d.projectId === projectId);
       if (!delay) return;
 
+      // Get current user or use a fallback
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id || 'system-user';
+
       let title = '';
       let message = '';
       
@@ -136,7 +140,8 @@ const BankGuaranteeMonitor: React.FC = () => {
         title,
         message,
         priority: 'urgent',
-        recipientIds: ['demo-user-001'],
+        assigneeId: currentUserId,
+        recipientIds: [currentUserId],
         metadata: { delayData: delay }
       });
 
@@ -152,7 +157,6 @@ const BankGuaranteeMonitor: React.FC = () => {
         variant: 'destructive'
       });
     }
-
   };
 
   const getSeverityColor = (delayPercentage: number) => {
