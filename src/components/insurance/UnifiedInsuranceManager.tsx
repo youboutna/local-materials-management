@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, FileText, Upload, Download } from 'lucide-react';
+import { Plus, Shield, AlertTriangle, Eye, Edit, Trash2, Bell, CheckCircle, FileText, Upload, Download, Calendar, Users, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { 
   detectExpiringInsurance, 
@@ -22,6 +23,7 @@ import {
   InsuranceCertificate,
   InsuranceAlert
 } from '@/services/insuranceCertificateService';
+import { createInsuranceAction } from '@/services/insuranceActionService';
 import { checkAndSendInsuranceAlerts } from '@/utils/insuranceAlertUtils';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
@@ -458,6 +460,67 @@ const UnifiedInsuranceManager = () => {
 
   const getStatusColor = (status: string) => {
     return statusOptions.find(option => option.value === status)?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleInsuranceAction = async (certificateId: string, actionType: string) => {
+    try {
+      const certificate = certificates.find(c => c.id === certificateId);
+      if (!certificate) return;
+
+      let title = '';
+      let message = '';
+      
+      switch (actionType) {
+        case 'task_assignment':
+          title = 'Renouvellement assurance';
+          message = `Veuillez traiter le renouvellement de l'assurance ${certificate.policyNumber || certificate.policy_number}`;
+          break;
+        case 'hierarchy_notification':
+          title = 'Alerte assurance';
+          message = `L'assurance ${certificate.policyNumber || certificate.policy_number} nécessite une attention particulière`;
+          break;
+        case 'sms':
+          title = 'SMS assurance';
+          message = `SMS: Assurance ${certificate.policyNumber || certificate.policy_number} - Action requise`;
+          break;
+        case 'call':
+          title = 'Appel assurance';
+          message = `Appel concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
+          break;
+        case 'email':
+          title = 'Email assurance';
+          message = `Email concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
+          break;
+        case 'mail':
+          title = 'Courrier assurance';
+          message = `Courrier concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
+          break;
+      }
+
+      await createInsuranceAction({
+        insuranceId: certificateId,
+        projectId: certificate.projectId || certificate.project_id || '',
+        contractorId: certificate.contractorId || certificate.contractor_id || '',
+        actionType: actionType as any,
+        title,
+        message,
+        priority: 'high',
+        recipientIds: ['demo-user-001'],
+        metadata: { certificateData: certificate }
+      });
+
+      toast({
+        title: 'Action créée',
+        description: `${title} créée avec succès`,
+      });
+    } catch (error) {
+      console.error('Error creating insurance action:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer l\'action',
+        variant: 'destructive'
+      });
+    }
   };
 
   const isExpiringSoon = (expiryDate: string) => {
@@ -1022,22 +1085,57 @@ const UnifiedInsuranceManager = () => {
                           {statusOptions.find(s => s.value === certificate.status)?.label || 'Active'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
-                            Renouveler
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                       <TableCell>
+                         <div className="flex items-center gap-2">
+                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
+                             <Eye className="h-4 w-4" />
+                           </Button>
+                           <Button size="sm" variant="outline" onClick={() => openEditForm(certificate)}>
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                           <Button size="sm" variant="outline" onClick={() => handleRenewCertificate(certificate)}>
+                             Renouveler
+                           </Button>
+                           <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <Button size="sm" variant="outline" className="gap-2">
+                                 <Shield className="h-4 w-4" />
+                                 Actions
+                               </Button>
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent align="end" className="w-56">
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
+                                 <Calendar className="h-4 w-4 mr-2" />
+                                 Assigner une tâche
+                               </DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
+                                 <Users className="h-4 w-4 mr-2" />
+                                 Notifier la hiérarchie
+                               </DropdownMenuItem>
+                               <DropdownMenuSeparator />
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
+                                 <MessageSquare className="h-4 w-4 mr-2" />
+                                 Envoyer SMS
+                               </DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
+                                 <Phone className="h-4 w-4 mr-2" />
+                                 Programmer appel
+                               </DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
+                                 <Mail className="h-4 w-4 mr-2" />
+                                 Envoyer email
+                               </DropdownMenuItem>
+                               <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
+                                 <FileText className="h-4 w-4 mr-2" />
+                                 Courrier postal
+                               </DropdownMenuItem>
+                             </DropdownMenuContent>
+                           </DropdownMenu>
+                         </div>
+                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

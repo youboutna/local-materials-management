@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, DollarSign, Clock, Send } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertTriangle, DollarSign, Clock, Send, Settings, Calendar, Users, MessageSquare, Phone, Mail, FileText } from 'lucide-react';
 import { detectProjectDelays, triggerBankGuaranteeNotification, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
+import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -88,6 +90,68 @@ const BankGuaranteeMonitor: React.FC = () => {
     } finally {
       setProcessing(null);
     }
+  };
+
+  const handleBankGuaranteeAction = async (projectId: string, actionType: string) => {
+    try {
+      const delay = delays.find(d => d.projectId === projectId);
+      if (!delay) return;
+
+      let title = '';
+      let message = '';
+      
+      switch (actionType) {
+        case 'task_assignment':
+          title = 'Gestion retard projet';
+          message = `Veuillez traiter le retard de ${delay.delayDays} jours sur le projet ${delay.projectName}`;
+          break;
+        case 'hierarchy_notification':
+          title = 'Alerte retard critique';
+          message = `Le projet ${delay.projectName} accuse un retard de ${delay.delayPercentage}%`;
+          break;
+        case 'sms':
+          title = 'SMS retard projet';
+          message = `SMS: Retard ${delay.delayDays} jours - ${delay.projectName}`;
+          break;
+        case 'call':
+          title = 'Appel retard projet';
+          message = `Appel concernant le retard du projet ${delay.projectName}`;
+          break;
+        case 'email':
+          title = 'Email retard projet';
+          message = `Email concernant le retard du projet ${delay.projectName}`;
+          break;
+        case 'mail':
+          title = 'Courrier retard projet';
+          message = `Courrier concernant le retard du projet ${delay.projectName}`;
+          break;
+      }
+
+      await createBankGuaranteeAction({
+        bankGuaranteeId: `bg-${projectId}`,
+        projectId,
+        contractorId: 'demo-contractor-001',
+        actionType: actionType as any,
+        title,
+        message,
+        priority: 'urgent',
+        recipientIds: ['demo-user-001'],
+        metadata: { delayData: delay }
+      });
+
+      toast({
+        title: 'Action créée',
+        description: `${title} créée avec succès`,
+      });
+    } catch (error) {
+      console.error('Error creating bank guarantee action:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer l\'action',
+        variant: 'destructive'
+      });
+    }
+
   };
 
   const getSeverityColor = (delayPercentage: number) => {
@@ -191,6 +255,42 @@ const BankGuaranteeMonitor: React.FC = () => {
                         <Button variant="outline" size="sm">
                           Voir Projet
                         </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline" className="gap-2">
+                              <Settings className="h-4 w-4" />
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'task_assignment')}>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Assigner une tâche
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'hierarchy_notification')}>
+                              <Users className="h-4 w-4 mr-2" />
+                              Notifier la hiérarchie
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'sms')}>
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Envoyer SMS
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'call')}>
+                              <Phone className="h-4 w-4 mr-2" />
+                              Programmer appel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'email')}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Envoyer email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'mail')}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Courrier postal
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </CardContent>

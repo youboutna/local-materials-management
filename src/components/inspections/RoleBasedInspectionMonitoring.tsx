@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
   Calendar, 
   Bell, 
@@ -15,10 +16,16 @@ import {
   Eye,
   Users,
   UserCheck,
-  TrendingUp
+  TrendingUp,
+  Settings,
+  MessageSquare,
+  Phone,
+  Mail,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendNotification } from '@/services/notificationService';
+import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
@@ -239,6 +246,68 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
     }
   };
 
+  const handleInspectionAction = async (inspectionId: string, actionType: string) => {
+    try {
+      const inspection = inspections.find(i => i.id === inspectionId);
+      if (!inspection) return;
+
+      let title = '';
+      let message = '';
+      
+      switch (actionType) {
+        case 'task_assignment':
+          title = 'Suivi inspection';
+          message = `Veuillez suivre l'inspection ${inspectionId} pour le projet ${getProjectTitle(inspection.project_id)}`;
+          break;
+        case 'hierarchy_notification':
+          title = 'Alerte inspection';
+          message = `L'inspection ${inspectionId} nécessite une attention particulière`;
+          break;
+        case 'sms':
+          title = 'SMS inspection';
+          message = `SMS: Inspection ${inspectionId} - Statut: ${inspection.status}`;
+          break;
+        case 'call':
+          title = 'Appel inspection';
+          message = `Appel concernant l'inspection ${inspectionId}`;
+          break;
+        case 'email':
+          title = 'Email inspection';
+          message = `Email concernant l'inspection ${inspectionId}`;
+          break;
+        case 'mail':
+          title = 'Courrier inspection';
+          message = `Courrier concernant l'inspection ${inspectionId}`;
+          break;
+      }
+
+      await createInspectionAction({
+        inspectionId,
+        projectId: inspection.project_id,
+        inspectorId: inspection.inspector,
+        actionType: actionType as any,
+        title,
+        message,
+        priority: 'high',
+        recipientIds: ['demo-user-001'],
+        metadata: { inspectionData: inspection }
+      });
+
+      toast({
+        title: 'Action créée',
+        description: `${title} créée avec succès`,
+      });
+    } catch (error) {
+      console.error('Error creating inspection action:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer l\'action',
+        variant: 'destructive'
+      });
+    }
+
+  };
+
   const getProjectTitle = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     return project ? project.title : projectId;
@@ -421,6 +490,41 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                                   <Send className="h-4 w-4" />
                                 </Button>
                               )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="sm" variant="outline" className="gap-2">
+                                    <Settings className="h-4 w-4" />
+                                    Actions
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'task_assignment')}>
+                                    <Calendar className="h-4 w-4 mr-2" />
+                                    Assigner une tâche
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'hierarchy_notification')}>
+                                    <Users className="h-4 w-4 mr-2" />
+                                    Notifier la hiérarchie
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'sms')}>
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Envoyer SMS
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'call')}>
+                                    <Phone className="h-4 w-4 mr-2" />
+                                    Programmer appel
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'email')}>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Envoyer email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'mail')}>
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Courrier postal
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
