@@ -2620,6 +2620,51 @@ export type Database = {
           },
         ]
       }
+      scheduled_calls: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          priority: string
+          recipient_id: string
+          recipient_phone: string
+          scheduled_for: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id: string
+          message: string
+          metadata?: Json | null
+          priority: string
+          recipient_id: string
+          recipient_phone: string
+          scheduled_for: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          priority?: string
+          recipient_id?: string
+          recipient_phone?: string
+          scheduled_for?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_stations: {
         Row: {
           address: string

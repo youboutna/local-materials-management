@@ -32,3 +32,16 @@ enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
 redirect_uri = "https://huttgbybeuzeikaqfvam.supabase.co/auth/v1/callback"
+
+# Function configurations for better performance
+[functions.send-email-notification]
+verify_jwt = false
+
+[functions.send-sms-notification]
+verify_jwt = false
+
+[functions.schedule-call]
+verify_jwt = false
+
+[functions.assign-task-to-employee]
+verify_jwt = false

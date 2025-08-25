@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
+import { communicationService } from './communicationService';
 
 export interface InsuranceControlAction {
   id: string;
@@ -67,21 +68,54 @@ export const executeInsuranceAction = async (action: InsuranceControlAction): Pr
 
 const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): Promise<void> => {
   if (action.assigneeId) {
-    await sendNotification({
-      recipient_id: action.assigneeId,
-      title: `Tâche assurance: ${action.title}`,
-      message: action.message,
-      type: 'task_assigned',
-      related_id: action.insuranceId,
-      metadata: {
-        actionId: action.id,
-        insuranceId: action.insuranceId,
-        projectId: action.projectId,
-        dueDate: action.dueDate,
-        priority: action.priority,
-        task_type: 'insurance_renewal'
+    try {
+      // Get assignee details
+      const { data: assignee } = await supabase
+        .from('employees')
+        .select('id, full_name, email')
+        .eq('id', action.assigneeId)
+        .single();
+
+      if (assignee) {
+        // Use the communication service to assign task
+        await communicationService.assignTask({
+          assigneeId: action.assigneeId,
+          assigneeName: assignee.full_name,
+          assigneeEmail: assignee.email || undefined,
+          title: action.title,
+          description: action.message,
+          priority: action.priority,
+          dueDate: action.dueDate,
+          projectId: action.projectId,
+          relatedId: action.insuranceId,
+          actionType: action.actionType,
+          metadata: {
+            actionId: action.id,
+            insuranceId: action.insuranceId,
+            projectId: action.projectId,
+            task_type: 'insurance_renewal'
+          }
+        });
       }
-    });
+    } catch (error) {
+      console.error('Error assigning insurance task:', error);
+      // Fallback to notification only
+      await sendNotification({
+        recipient_id: action.assigneeId,
+        title: `Tâche assurance: ${action.title}`,
+        message: action.message,
+        type: 'task_assigned',
+        related_id: action.insuranceId,
+        metadata: {
+          actionId: action.id,
+          insuranceId: action.insuranceId,
+          projectId: action.projectId,
+          dueDate: action.dueDate,
+          priority: action.priority,
+          task_type: 'insurance_renewal'
+        }
+      });
+    }
   }
 
   for (const recipientId of action.recipientIds) {
@@ -130,27 +164,79 @@ const executeInsuranceHierarchyNotification = async (action: InsuranceControlAct
 };
 
 const executeInsuranceCommunication = async (action: InsuranceControlAction): Promise<void> => {
-  const communicationTitles = {
-    sms: 'SMS - Renouvellement assurance',
-    call: 'Appel programmé - Assurance',
-    email: `Email: ${action.title}`,
-    mail: 'Courrier postal programmé - Assurance'
-  };
+  try {
+    // Get employee details for communication
+    const { data: employees } = await supabase
+      .from('employees')
+      .select('id, full_name, email, phone')
+      .in('id', action.recipientIds);
 
-  for (const recipientId of action.recipientIds) {
-    await sendNotification({
-      recipient_id: recipientId,
-      title: communicationTitles[action.actionType],
-      message: action.message,
-      type: 'insurance_update',
-      related_id: action.insuranceId,
-      metadata: {
-        actionId: action.id,
-        communicationType: action.actionType,
-        originalMessage: action.message,
-        priority: action.priority
+    for (const employee of employees || []) {
+      switch (action.actionType) {
+        case 'email':
+          if (employee.email) {
+            await communicationService.sendEmail({
+              to: employee.email,
+              subject: action.title,
+              message: action.message,
+              priority: action.priority,
+              actionType: action.actionType,
+              metadata: {
+                ...action.metadata,
+                actionId: action.id,
+                insuranceId: action.insuranceId,
+                projectId: action.projectId
+              }
+            });
+          }
+          break;
+
+        case 'sms':
+          if (employee.phone) {
+            await communicationService.sendSMS({
+              to: employee.phone,
+              message: action.message,
+              priority: action.priority,
+              actionType: action.actionType,
+              metadata: action.metadata
+            });
+          }
+          break;
+
+        case 'call':
+          if (employee.phone) {
+            await communicationService.scheduleCall({
+              recipientId: employee.id,
+              recipientPhone: employee.phone,
+              subject: action.title,
+              message: action.message,
+              priority: action.priority,
+              scheduledFor: action.dueDate,
+              actionType: action.actionType,
+              metadata: action.metadata
+            });
+          }
+          break;
       }
-    });
+
+      // Still send notification for tracking
+      await sendNotification({
+        recipient_id: employee.id,
+        title: `📢 ${action.title}`,
+        message: `Communication ${action.actionType}: ${action.message}`,
+        type: 'insurance_update',
+        related_id: action.insuranceId,
+        metadata: {
+          actionId: action.id,
+          communicationType: action.actionType,
+          originalMessage: action.message,
+          priority: action.priority
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error in insurance communication:', error);
+    throw error;
   }
 };
 
