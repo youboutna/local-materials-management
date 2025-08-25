@@ -2,15 +2,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { 
   MapPin, 
   DollarSign, 
   Calendar, 
   Users, 
   BarChart3, 
-  Navigation,
-  ChevronLeft,
-  ChevronRight
+  Navigation
 } from 'lucide-react';
 import { ProjectData } from '@/types/project';
 import { usePagination } from '@/hooks/usePagination';
@@ -29,14 +28,11 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
     currentPage,
     totalPages,
     totalItems,
-    goToPage,
-    nextPage,
-    previousPage,
-    canGoNext,
-    canGoPrevious
+    itemsPerPage,
+    goToPage
   } = usePagination({
     data: projects,
-    itemsPerPage: 12
+    itemsPerPage: 10 // Show pagination only if more than 10 items
   });
 
   const getStatusColor = (status: string) => {
@@ -176,60 +172,16 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4 border-t border-border/50">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={previousPage}
-                  disabled={!canGoPrevious}
-                  className="flex items-center gap-1"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Précédent
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(pageNum)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                  {totalPages > 5 && (
-                    <>
-                      <span className="text-muted-foreground">...</span>
-                      <Button
-                        variant={currentPage === totalPages ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(totalPages)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {totalPages}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={nextPage}
-                  disabled={!canGoNext}
-                  className="flex items-center gap-1"
-                >
-                  Suivant
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+            {projects.length > 10 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={goToPage}
+                showItemsPerPage={false}
+                className="border-t border-border/50 pt-4"
+              />
             )}
           </>
         )}

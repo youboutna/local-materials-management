@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { QuantityTakeoffWithDetails } from '@/types/quantityTakeoff';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { usePagination } from '@/hooks/usePagination';
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -37,6 +39,18 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
       if (error) throw error;
       return (data || []) as QuantityTakeoffWithDetails[];
     },
+  });
+
+  const {
+    currentData: paginatedTakeoffs,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: quantityTakeoffs || [],
+    itemsPerPage: 10
   });
 
   const handleDelete = async (id: string) => {
@@ -126,7 +140,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
         <CardContent>
           {quantityTakeoffs && quantityTakeoffs.length > 0 ? (
             <div className="space-y-4">
-              {quantityTakeoffs.map((qt) => (
+              {paginatedTakeoffs.map((qt) => (
                 <div key={qt.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -175,8 +189,20 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+                
+                {/* Pagination */}
+                {quantityTakeoffs && quantityTakeoffs.length > 10 && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={totalItems}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={goToPage}
+                    showItemsPerPage={false}
+                  />
+                )}
+              </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
               <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />

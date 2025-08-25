@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { 
   Calendar, 
   Bell, 
@@ -28,6 +29,7 @@ import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
 import { useToast, toast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Inspection {
@@ -56,6 +58,18 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedInspections,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: inspections,
+    itemsPerPage: 10
+  });
 
   const isProjectManager = hasAnyRole(['admin', 'director', 'project_manager', 'manager']);
   const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant']);
@@ -463,7 +477,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {inspections.map((inspection) => (
+                      {paginatedInspections.map((inspection) => (
                         <TableRow key={inspection.id}>
                           <TableCell className="font-medium">
                             {getProjectTitle(inspection.project_id)}
@@ -555,9 +569,21 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                            </TableCell>
                         </TableRow>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                     </TableBody>
+                   </Table>
+                   
+                   {/* Pagination */}
+                   {inspections.length > 10 && (
+                     <PaginationControls
+                       currentPage={currentPage}
+                       totalPages={totalPages}
+                       totalItems={totalItems}
+                       itemsPerPage={itemsPerPage}
+                       onPageChange={goToPage}
+                       showItemsPerPage={false}
+                     />
+                   )}
+                 </div>
               )}
             </CardContent>
           </Card>

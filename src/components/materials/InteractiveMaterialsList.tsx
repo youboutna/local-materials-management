@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { MapPin, Package, DollarSign, Truck, Eye } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
 
 interface Material {
   id: string;
@@ -30,11 +31,17 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
   materials,
   onMaterialSelect
 }) => {
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 8;
-  const totalPages = Math.ceil(materials.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedMaterials = materials.slice(startIndex, startIndex + itemsPerPage);
+  const {
+    currentData: paginatedMaterials,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: materials,
+    itemsPerPage: 10 // Show pagination only if more than 10 items
+  });
 
   const getStockLevel = (available: number, unit: string) => {
     if (available === 0) return 'out';
@@ -72,10 +79,6 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
     return `${price.toLocaleString()} MRU`;
   };
 
-  const pageNumbers: number[] = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pageNumbers.push(i);
-  }
 
   if (materials.length === 0) {
     return (
@@ -206,36 +209,15 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-              
-              {pageNumbers.map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+        {materials.length > 10 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={goToPage}
+            showItemsPerPage={false}
+          />
         )}
       </CardContent>
     </Card>

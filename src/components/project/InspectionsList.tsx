@@ -8,6 +8,8 @@ import StatusBadge, { StatusType } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { usePagination } from '@/hooks/usePagination';
 
 interface InspectionData {
   id: string;
@@ -29,6 +31,18 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
   const [selectedInspection, setSelectedInspection] = useState<InspectionData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedInspections,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: inspections,
+    itemsPerPage: 10
+  });
 
   useEffect(() => {
     const fetchInspections = async () => {
@@ -99,9 +113,9 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Aucune inspection n'a encore été effectuée pour ce projet.</p>
             </div>
-          ) : (
+           ) : (
             <div className="space-y-6">
-              {inspections.map((inspection) => (
+              {paginatedInspections.map((inspection) => (
                 <div key={inspection.id} className="border rounded-lg p-4">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
@@ -128,6 +142,18 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination */}
+              {inspections.length > 10 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={goToPage}
+                  showItemsPerPage={false}
+                />
+              )}
             </div>
           )}
         </CardContent>
