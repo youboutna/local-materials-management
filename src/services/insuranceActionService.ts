@@ -23,12 +23,47 @@ export interface InsuranceControlAction {
 
 export const createInsuranceAction = async (actionData: Omit<InsuranceControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<InsuranceControlAction> => {
   try {
+    // Fetch real project and insurance data
+    const [projectData, insuranceData, projectEmployees, insuranceCompanies] = await Promise.all([
+      // Get project details
+      supabase
+        .from('projects')
+        .select('*')
+        .eq('id', actionData.projectId)
+        .single(),
+      
+      // Get insurance certificate details
+      supabase
+        .from('insurance_certificates')
+        .select('*')
+        .eq('id', actionData.insuranceId)
+        .single(),
+      
+      // Get project team members
+      supabase
+        .from('employees')
+        .select('id, full_name, email, phone, position, department')
+        .eq('is_active', true),
+      
+      // Get insurance companies
+      supabase
+        .from('insurance_companies')
+        .select('*')
+    ]);
+
     const action: InsuranceControlAction = {
       ...actionData,
       id: `ins-action-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      metadata: {
+        ...actionData.metadata,
+        project: projectData.data,
+        insurance: insuranceData.data,
+        availableEmployees: projectEmployees.data || [],
+        insuranceCompanies: insuranceCompanies.data || []
+      }
     };
 
     const existingActions = getStoredInsuranceActions();

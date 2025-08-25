@@ -23,12 +23,48 @@ export interface InspectionControlAction {
 
 export const createInspectionAction = async (actionData: Omit<InspectionControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<InspectionControlAction> => {
   try {
+    // Fetch real project and inspection data
+    const [projectData, inspectionData, projectEmployees, inspectionDocuments] = await Promise.all([
+      // Get project details
+      supabase
+        .from('projects')
+        .select('*')
+        .eq('id', actionData.projectId)
+        .single(),
+      
+      // Get inspection details
+      supabase
+        .from('inspections')
+        .select('*')
+        .eq('id', actionData.inspectionId)
+        .single(),
+      
+      // Get project team members
+      supabase
+        .from('employees')
+        .select('id, full_name, email, phone, position, department')
+        .eq('is_active', true),
+      
+      // Get inspection documents
+      supabase
+        .from('documents')
+        .select('*')
+        .eq('inspection_id', actionData.inspectionId)
+    ]);
+
     const action: InspectionControlAction = {
       ...actionData,
       id: `insp-action-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      metadata: {
+        ...actionData.metadata,
+        project: projectData.data,
+        inspection: inspectionData.data,
+        availableEmployees: projectEmployees.data || [],
+        relatedDocuments: inspectionDocuments.data || []
+      }
     };
 
     const existingActions = getStoredInspectionActions();

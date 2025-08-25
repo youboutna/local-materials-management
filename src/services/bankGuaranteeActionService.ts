@@ -23,12 +23,48 @@ export interface BankGuaranteeControlAction {
 
 export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeControlAction, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<BankGuaranteeControlAction> => {
   try {
+    // Fetch real project data and related entities
+    const [projectData, bankGuaranteeData, projectEmployees, projectSuppliers] = await Promise.all([
+      // Get project details
+      supabase
+        .from('projects')
+        .select('*')
+        .eq('id', actionData.projectId)
+        .single(),
+      
+      // Get bank guarantee details
+      supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('id', actionData.bankGuaranteeId)
+        .single(),
+      
+      // Get project employees
+      supabase
+        .from('employees')
+        .select('id, full_name, email, phone, position, department')
+        .eq('is_active', true),
+      
+      // Get project suppliers/contractors
+      supabase
+        .from('suppliers')
+        .select('id, name, email, phone, contact_person')
+        .eq('is_active', true)
+    ]);
+
     const action: BankGuaranteeControlAction = {
       ...actionData,
       id: `bg-action-${Date.now()}`,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      metadata: {
+        ...actionData.metadata,
+        project: projectData.data,
+        bankGuarantee: bankGuaranteeData.data,
+        availableEmployees: projectEmployees.data || [],
+        availableSuppliers: projectSuppliers.data || []
+      }
     };
 
     const existingActions = getStoredBankGuaranteeActions();
@@ -144,7 +180,41 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
     director: 'Escalade direction - Garantie bancaire'
   };
 
-  for (const recipientId of action.recipientIds) {
+  // Get real project team members based on hierarchy
+  const { data: projectTeam } = await supabase
+    .from('employees')
+    .select('id, full_name, email, phone, position, department, manager_id')
+    .eq('is_active', true);
+
+  // Filter recipients based on escalation level and project involvement
+  let targetRecipients: string[] = [];
+  
+  switch (action.escalationLevel) {
+    case 'team':
+      targetRecipients = projectTeam?.filter(emp => 
+        emp.department === 'construction' || emp.department === 'finance'
+      ).map(emp => emp.id) || [];
+      break;
+    case 'supervisor':
+      targetRecipients = projectTeam?.filter(emp => 
+        emp.position?.toLowerCase().includes('supervisor') || emp.position?.toLowerCase().includes('chef')
+      ).map(emp => emp.id) || [];
+      break;
+    case 'manager':
+      targetRecipients = projectTeam?.filter(emp => 
+        emp.position?.toLowerCase().includes('manager') || emp.position?.toLowerCase().includes('responsable')
+      ).map(emp => emp.id) || [];
+      break;
+    case 'director':
+      targetRecipients = projectTeam?.filter(emp => 
+        emp.position?.toLowerCase().includes('director') || emp.position?.toLowerCase().includes('directeur')
+      ).map(emp => emp.id) || [];
+      break;
+    default:
+      targetRecipients = action.recipientIds;
+  }
+
+  for (const recipientId of targetRecipients) {
     await sendNotification({
       recipient_id: recipientId,
       title: escalationTitles[action.escalationLevel || 'team'],
@@ -157,7 +227,9 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
         bankGuaranteeId: action.bankGuaranteeId,
         projectId: action.projectId,
         contractorId: action.contractorId,
-        priority: action.priority
+        priority: action.priority,
+        projectData: action.metadata?.project,
+        bankGuaranteeData: action.metadata?.bankGuarantee
       }
     });
   }
@@ -165,63 +237,134 @@ const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeCo
 
 const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAction): Promise<void> => {
   try {
-    // Get employee details for communication
-    const { data: employees } = await supabase
-      .from('employees')
-      .select('id, full_name, email, phone')
-      .in('id', action.recipientIds);
+    // Get real project stakeholders for communication
+    const [projectEmployees, projectSuppliers, bankGuaranteeDetails] = await Promise.all([
+      // Get project team members
+      supabase
+        .from('employees')
+        .select('id, full_name, email, phone, position, department')
+        .eq('is_active', true),
+      
+      // Get project contractors/suppliers
+      supabase
+        .from('suppliers')
+        .select('id, name, email, phone, contact_person')
+        .eq('is_active', true),
+      
+      // Get bank guarantee details with bank information
+      supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('id', action.bankGuaranteeId)
+        .single()
+    ]);
 
-    for (const employee of employees || []) {
+    // Determine recipients based on action context
+    let communicationTargets: any[] = [];
+    
+    if (action.recipientIds && action.recipientIds.length > 0) {
+      // Use specified recipients
+      const employees = projectEmployees.data?.filter(emp => action.recipientIds.includes(emp.id)) || [];
+      communicationTargets = employees.map(emp => ({
+        id: emp.id,
+        name: emp.full_name,
+        email: emp.email,
+        phone: emp.phone,
+        type: 'employee'
+      }));
+    } else {
+      // Auto-select relevant stakeholders
+      const relevantEmployees = projectEmployees.data?.filter(emp => 
+        emp.department === 'finance' || 
+        emp.department === 'legal' || 
+        emp.position?.toLowerCase().includes('manager')
+      ) || [];
+      
+      communicationTargets = relevantEmployees.map(emp => ({
+        id: emp.id,
+        name: emp.full_name,
+        email: emp.email,
+        phone: emp.phone,
+        type: 'employee'
+      }));
+    }
+
+    // Enhanced message with project context
+    const contextualMessage = `
+${action.message}
+
+DÉTAILS GARANTIE BANCAIRE:
+- Montant: ${bankGuaranteeDetails.data?.guarantee_amount || 'N/A'} 
+- Banque: ${bankGuaranteeDetails.data?.bank_name || 'N/A'}
+- Échéance: ${bankGuaranteeDetails.data?.expiry_date ? new Date(bankGuaranteeDetails.data.expiry_date).toLocaleDateString('fr-FR') : 'N/A'}
+- Statut: ${bankGuaranteeDetails.data?.status || 'N/A'}
+
+PROJET: ${action.metadata?.project?.title || action.projectId}
+    `;
+
+    for (const target of communicationTargets) {
       switch (action.actionType) {
         case 'email':
-          if (employee.email) {
+          if (target.email) {
             await communicationService.sendEmail({
-              to: employee.email,
-              subject: action.title,
-              message: action.message,
+              to: target.email,
+              subject: `[URGENT] ${action.title} - Garantie Bancaire`,
+              message: contextualMessage,
               priority: action.priority,
               actionType: action.actionType,
               metadata: {
                 ...action.metadata,
                 actionId: action.id,
                 bankGuaranteeId: action.bankGuaranteeId,
-                projectId: action.projectId
+                projectId: action.projectId,
+                bankGuaranteeDetails: bankGuaranteeDetails.data,
+                targetType: target.type,
+                targetName: target.name
               }
             });
           }
           break;
 
         case 'sms':
-          if (employee.phone) {
+          if (target.phone) {
+            const smsMessage = `[GARANTIE BANCAIRE] ${action.title}: ${action.message}. Projet: ${action.metadata?.project?.title || action.projectId}`;
             await communicationService.sendSMS({
-              to: employee.phone,
-              message: action.message,
+              to: target.phone,
+              message: smsMessage,
               priority: action.priority,
               actionType: action.actionType,
-              metadata: action.metadata
+              metadata: {
+                ...action.metadata,
+                targetName: target.name,
+                bankGuaranteeAmount: bankGuaranteeDetails.data?.guarantee_amount
+              }
             });
           }
           break;
 
         case 'call':
-          if (employee.phone) {
+          if (target.phone) {
             await communicationService.scheduleCall({
-              recipientId: employee.id,
-              recipientPhone: employee.phone,
-              subject: action.title,
-              message: action.message,
+              recipientId: target.id,
+              recipientPhone: target.phone,
+              subject: `[URGENT] Garantie Bancaire - ${action.title}`,
+              message: contextualMessage,
               priority: action.priority,
               scheduledFor: action.dueDate,
               actionType: action.actionType,
-              metadata: action.metadata
+              metadata: {
+                ...action.metadata,
+                bankGuaranteeDetails: bankGuaranteeDetails.data,
+                projectData: action.metadata?.project
+              }
             });
           }
           break;
       }
 
-      // Still send notification for tracking
+      // Send tracking notification
       await sendNotification({
-        recipient_id: employee.id,
+        recipient_id: target.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'bank_guarantee_trigger',
@@ -230,7 +373,9 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
           actionId: action.id,
           communicationType: action.actionType,
           originalMessage: action.message,
-          priority: action.priority
+          priority: action.priority,
+          bankGuaranteeDetails: bankGuaranteeDetails.data,
+          targetType: target.type
         }
       });
     }
