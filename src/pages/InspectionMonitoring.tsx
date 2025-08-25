@@ -1,5 +1,6 @@
 import React from 'react';
 import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
+import InspectionActions from '@/components/inspections/InspectionActions';
 
 const InspectionMonitoringPage = () => {
   return (
@@ -14,6 +15,13 @@ const InspectionMonitoringPage = () => {
           </div>
           
           <RoleBasedInspectionMonitoring />
+          <div className="mt-8">
+            <InspectionActions 
+              inspectionId="demo-inspection-001"
+              projectId="demo-project-001"
+              inspectorId="demo-inspector-001"
+            />
+          </div>
         </div>
       </div>
     </div>
