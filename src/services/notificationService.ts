@@ -5,7 +5,7 @@ export interface NotificationData {
   recipient_id: string;
   title: string;
   message: string;
-  type: 'task_assigned' | 'task_updated' | 'task_completed' | 'delay_warning' | 'bank_guarantee_trigger' | 'inspection_overdue' | 'contractor_penalty' | 'compliance_alert' | 'escalation_required' | 'inspection_required' | 'project_update' | 'insurance_expiry' | 'insurance_update';
+  type: 'task_assigned' | 'task_updated' | 'task_completed' | 'delay_warning' | 'bank_guarantee_trigger' | 'inspection_overdue' | 'contractor_penalty' | 'compliance_alert' | 'escalation_required' | 'inspection_required' | 'project_update' | 'insurance_expiry' | 'insurance_update' | 'task_assignment' | 'task_overdue' | 'project_created' | 'project_completed' | 'project_milestone' | 'payment_due' | 'payment_completed' | 'payment_failed' | 'payment_pending' | 'document_review' | 'document_shared' | 'document_approved' | 'document_rejected' | 'document_uploaded' | 'system' | 'payment_blocked' | 'payment_warning';
   related_id?: string;
   metadata?: Record<string, any>;
 }
