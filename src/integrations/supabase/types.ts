@@ -1564,6 +1564,124 @@ export type Database = {
         }
         Relationships: []
       }
+      organizational_hierarchy: {
+        Row: {
+          can_approve_payments: boolean | null
+          can_approve_projects: boolean | null
+          can_escalate_to_director: boolean | null
+          created_at: string
+          department: string
+          direct_reports_count: number | null
+          employee_id: string
+          id: string
+          level: number
+          notification_preferences: Json | null
+          organization_id: string
+          parent_id: string | null
+          position_title: string
+          updated_at: string
+        }
+        Insert: {
+          can_approve_payments?: boolean | null
+          can_approve_projects?: boolean | null
+          can_escalate_to_director?: boolean | null
+          created_at?: string
+          department: string
+          direct_reports_count?: number | null
+          employee_id: string
+          id?: string
+          level: number
+          notification_preferences?: Json | null
+          organization_id: string
+          parent_id?: string | null
+          position_title: string
+          updated_at?: string
+        }
+        Update: {
+          can_approve_payments?: boolean | null
+          can_approve_projects?: boolean | null
+          can_escalate_to_director?: boolean | null
+          created_at?: string
+          department?: string
+          direct_reports_count?: number | null
+          employee_id?: string
+          id?: string
+          level?: number
+          notification_preferences?: Json | null
+          organization_id?: string
+          parent_id?: string | null
+          position_title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizational_hierarchy_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizational_hierarchy_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizational_hierarchy_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "organizational_hierarchy"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string | null
+          code: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       parsed_invoices: {
         Row: {
           created_at: string
@@ -2217,6 +2335,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_organizations: {
+        Row: {
+          contract_amount: number | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          organization_id: string
+          project_id: string
+          role: string
+        }
+        Insert: {
+          contract_amount?: number | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          organization_id: string
+          project_id: string
+          role: string
+        }
+        Update: {
+          contract_amount?: number | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          organization_id?: string
+          project_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_organizations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_organizations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
