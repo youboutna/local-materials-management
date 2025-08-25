@@ -579,7 +579,7 @@ const UnifiedInsuranceManager = () => {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="projectId"
@@ -627,7 +627,7 @@ const UnifiedInsuranceManager = () => {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="insuranceCompany"
@@ -656,7 +656,7 @@ const UnifiedInsuranceManager = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="coverageType"
@@ -702,7 +702,7 @@ const UnifiedInsuranceManager = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="validFrom"
@@ -833,7 +833,7 @@ const UnifiedInsuranceManager = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
           <TabsTrigger value="alerts">
             Alertes ({alerts.length})
           </TabsTrigger>
@@ -963,7 +963,7 @@ const UnifiedInsuranceManager = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -1022,7 +1022,7 @@ const UnifiedInsuranceManager = () => {
                         {new Date(certificate.validUntil || certificate.valid_until || '').toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -1086,7 +1086,7 @@ const UnifiedInsuranceManager = () => {
                         </Badge>
                       </TableCell>
                        <TableCell>
-                         <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap gap-2">
                            <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                              <Eye className="h-4 w-4" />
                            </Button>

@@ -7,13 +7,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { AlertTriangle, DollarSign, Clock, Send, Settings, Calendar, Users, MessageSquare, Phone, Mail, FileText } from 'lucide-react';
 import { detectProjectDelays, triggerBankGuaranteeNotification, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
 import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const BankGuaranteeMonitor: React.FC = () => {
   const [delays, setDelays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadDelays();
@@ -208,16 +209,16 @@ const BankGuaranteeMonitor: React.FC = () => {
               {delays.map((delay) => (
                 <Card key={delay.projectId} className="border-l-4 border-l-red-500">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                           <h3 className="font-semibold text-lg">{delay.projectName}</h3>
                           <Badge variant={getSeverityColor(delay.delayPercentage)}>
                             {getSeverityLabel(delay.delayPercentage)}
                           </Badge>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span>Retard: {delay.delayDays} jours ({delay.delayPercentage}%)</span>
@@ -238,7 +239,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="ml-4 flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
                         {delay.delayPercentage >= DELAY_THRESHOLDS.BANK_NOTIFICATION && (
                           <Button
                             variant="destructive"
@@ -307,7 +308,7 @@ const BankGuaranteeMonitor: React.FC = () => {
           <CardTitle className="text-sm">Seuils d'Escalade</CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
               <div className="font-medium">Alerte Retard</div>
               <div className="text-muted-foreground">≥ {DELAY_THRESHOLDS.WARNING}% de retard</div>

@@ -209,7 +209,7 @@ const EnhancedPaymentBlockingInterface = () => {
     switch (paymentMethod) {
       case 'bank_transfer':
         return (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="bankName"
@@ -241,7 +241,7 @@ const EnhancedPaymentBlockingInterface = () => {
       
       case 'check':
         return (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="checkNumber"
@@ -273,7 +273,7 @@ const EnhancedPaymentBlockingInterface = () => {
       
       case 'mobile_money':
         return (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="mobileOperator"
@@ -361,7 +361,7 @@ const EnhancedPaymentBlockingInterface = () => {
             </DialogHeader>
             <Form {...form}>
               <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="projectId"
@@ -408,7 +408,7 @@ const EnhancedPaymentBlockingInterface = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="amount"
@@ -474,7 +474,7 @@ const EnhancedPaymentBlockingInterface = () => {
 
                 {renderPaymentMethodFields()}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="inspectionId"

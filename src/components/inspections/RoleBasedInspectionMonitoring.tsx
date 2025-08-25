@@ -23,11 +23,10 @@ import {
   Mail,
   FileText
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { sendNotification } from '@/services/notificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
-import { useToast } from '@/hooks/use-toast';
+import { useToast, toast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -357,7 +356,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
       </Alert>
 
       <Tabs defaultValue="monitoring" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
           <TabsTrigger value="monitoring" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             Surveillance
@@ -475,58 +474,58 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                               {inspection.comments || 'Aucun commentaire'}
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="ghost" title="Voir les détails">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {isProjectManager && inspection.status === 'failed' && (
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  title="Alerter la hiérarchie"
-                                  onClick={() => sendAlertToHierarchy(inspection.id, `Inspection échouée pour le projet ${getProjectTitle(inspection.project_id)}`)}
-                                >
-                                  <Send className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="outline" className="gap-2">
-                                    <Settings className="h-4 w-4" />
-                                    Actions
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'task_assignment')}>
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    Assigner une tâche
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'hierarchy_notification')}>
-                                    <Users className="h-4 w-4 mr-2" />
-                                    Notifier la hiérarchie
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'sms')}>
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Envoyer SMS
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'call')}>
-                                    <Phone className="h-4 w-4 mr-2" />
-                                    Programmer appel
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'email')}>
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Envoyer email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'mail')}>
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Courrier postal
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
+                           <TableCell>
+                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                               <Button size="sm" variant="ghost" title="Voir les détails">
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                               {isProjectManager && inspection.status === 'failed' && (
+                                 <Button 
+                                   size="sm" 
+                                   variant="destructive"
+                                   title="Alerter la hiérarchie"
+                                   onClick={() => sendAlertToHierarchy(inspection.id, `Inspection échouée pour le projet ${getProjectTitle(inspection.project_id)}`)}
+                                 >
+                                   <Send className="h-4 w-4" />
+                                 </Button>
+                               )}
+                               <DropdownMenu>
+                                 <DropdownMenuTrigger asChild>
+                                   <Button size="sm" variant="outline" className="gap-2">
+                                     <Settings className="h-4 w-4" />
+                                     <span className="hidden sm:inline">Actions</span>
+                                   </Button>
+                                 </DropdownMenuTrigger>
+                                 <DropdownMenuContent align="end" className="w-56">
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'task_assignment')}>
+                                     <Calendar className="h-4 w-4 mr-2" />
+                                     Assigner une tâche
+                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'hierarchy_notification')}>
+                                     <Users className="h-4 w-4 mr-2" />
+                                     Notifier la hiérarchie
+                                   </DropdownMenuItem>
+                                   <DropdownMenuSeparator />
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'sms')}>
+                                     <MessageSquare className="h-4 w-4 mr-2" />
+                                     Envoyer SMS
+                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'call')}>
+                                     <Phone className="h-4 w-4 mr-2" />
+                                     Programmer appel
+                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'email')}>
+                                     <Mail className="h-4 w-4 mr-2" />
+                                     Envoyer email
+                                   </DropdownMenuItem>
+                                   <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'mail')}>
+                                     <FileText className="h-4 w-4 mr-2" />
+                                     Courrier postal
+                                   </DropdownMenuItem>
+                                 </DropdownMenuContent>
+                               </DropdownMenu>
+                             </div>
+                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -854,7 +853,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Button 
                       variant="outline" 
                       className="justify-start gap-2"
@@ -946,7 +945,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div>
                     <p className="text-2xl font-bold text-green-600">
                       {inspections.filter(i => ['completed', 'approved'].includes(i.status)).length}
