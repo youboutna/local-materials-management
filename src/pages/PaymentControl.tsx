@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
 import PaymentCrud from '@/components/payments/PaymentCrud';
+import PaymentControlActions from '@/components/payments/PaymentControlActions';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -232,6 +233,26 @@ const PaymentControlPage = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Payment Control Actions */}
+          <PaymentControlActions 
+            paymentId="pay-example-001"
+            projectId="proj-axe-idini"
+            contractorId="cont-sahel-btp"
+            amount={850000}
+            blockingReasons={[
+              {
+                reason: 'expired_insurance',
+                description: 'Assurance responsabilité civile expirée',
+                severity: 'blocking' as const
+              },
+              {
+                reason: 'project_delay',
+                description: 'Retard de projet de 15%',
+                severity: 'warning' as const
+              }
+            ]}
+          />
 
           {/* Payment Control Interface */}
           <EnhancedPaymentBlockingInterface />
