@@ -23,7 +23,7 @@ import { InvoiceLine } from '@/utils/types';
 interface Payment {
   id: string;
   project_id: string;
-  contractor_id?: string;
+  contractor_id?: string | null;
   contractor_name: string;
   contractor_contact: string;
   amount: number;
@@ -31,21 +31,22 @@ interface Payment {
   progress_at_payment: number;
   transaction_id: string;
   payment_method: string;
-  inspection_id?: string;
-  phase_id?: string;
+  inspection_id?: string | null;
+  phase_id?: string | null;
   // Payment documents
   supporting_documents?: string[];
   receipt_url?: string;
   invoice_url?: string;
   // Additional payment method fields
-  bank_name?: string;
-  account_number?: string;
-  check_number?: string;
-  mobile_number?: string;
-  mobile_operator?: string;
-  receiver_name?: string;
+  bank_name?: string | null;
+  account_number?: string | null;
+  check_number?: string | null;
+  mobile_number?: string | null;
+  mobile_operator?: string | null;
+  receiver_name?: string | null;
   created_at?: string;
   updated_at?: string;
+  // We'll fetch project data separately if needed
 }
 
 interface PaymentFormData {
@@ -75,6 +76,7 @@ interface PaymentFormData {
 
 const PaymentCrud: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -84,6 +86,10 @@ const PaymentCrud: React.FC = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [parsedInvoiceData, setParsedInvoiceData] = useState<InvoiceLine[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<PaymentFormData>({
@@ -124,6 +130,88 @@ const PaymentCrud: React.FC = () => {
     { value: 'mattel', label: 'Mattel' },
     { value: 'chinguitel', label: 'Chinguitel' }
   ];
+
+  // Fetch payments from database
+  React.useEffect(() => {
+    fetchPayments();
+    // Set up real-time listener
+    const channel = supabase
+      .channel('payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments',
+        },
+        () => {
+          fetchPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Filter payments based on search and filters
+  React.useEffect(() => {
+    let filtered = payments;
+
+    if (searchTerm) {
+      filtered = filtered.filter(payment => 
+        payment.contractor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.transaction_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.contractor_contact.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (paymentMethodFilter !== 'all') {
+      filtered = filtered.filter(payment => payment.payment_method === paymentMethodFilter);
+    }
+
+    setFilteredPayments(filtered);
+  }, [payments, searchTerm, paymentMethodFilter]);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          *
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Transform the data to match our interface
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        contractor_id: item.contractor_id || undefined,
+        inspection_id: item.inspection_id || undefined,
+        phase_id: item.phase_id || undefined,
+        bank_name: item.bank_name || undefined,
+        account_number: item.account_number || undefined,
+        check_number: item.check_number || undefined,
+        mobile_number: item.mobile_number || undefined,
+        mobile_operator: item.mobile_operator || undefined,
+        receiver_name: item.receiver_name || undefined,
+      }));
+      
+      setPayments(transformedData as Payment[]);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les paiements",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -254,30 +342,59 @@ const PaymentCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedPayment) {
-        // Mock update
-        const updatedPayment = { 
-          ...selectedPayment, 
-          ...formData,
-          payment_date: new Date(formData.payment_date).toISOString(),
-          supporting_documents: uploadedDocuments,
-          updated_at: new Date().toISOString()
-        };
-        setPayments(prev => prev.map(p => p.id === selectedPayment.id ? updatedPayment : p));
+        // Update payment in database
+        const { error } = await supabase
+          .from('payments')
+          .update({
+            contractor_name: formData.contractor_name,
+            contractor_contact: formData.contractor_contact,
+            amount: formData.amount,
+            payment_date: formData.payment_date,
+            progress_at_payment: formData.progress_at_payment,
+            transaction_id: formData.transaction_id,
+            payment_method: formData.payment_method,
+            bank_name: formData.bank_name,
+            account_number: formData.account_number,
+            check_number: formData.check_number,
+            mobile_number: formData.mobile_number,
+            mobile_operator: formData.mobile_operator,
+            receiver_name: formData.receiver_name,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedPayment.id);
+
+        if (error) throw error;
+
         toast({
           title: "Succès",
           description: "Paiement mis à jour avec succès",
         });
       } else {
-        // Mock create
-        const newPayment: Payment = {
-          id: `pay-${Date.now()}`,
-          ...formData,
-          payment_date: new Date(formData.payment_date).toISOString(),
-          supporting_documents: uploadedDocuments,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setPayments(prev => [...prev, newPayment]);
+        // Create new payment in database
+        const { error } = await supabase
+          .from('payments')
+          .insert({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id || null,
+            contractor_name: formData.contractor_name,
+            contractor_contact: formData.contractor_contact,
+            amount: formData.amount,
+            payment_date: formData.payment_date,
+            progress_at_payment: formData.progress_at_payment,
+            transaction_id: formData.transaction_id,
+            payment_method: formData.payment_method,
+            inspection_id: formData.inspection_id || null,
+            phase_id: formData.phase_id || null,
+            bank_name: formData.bank_name,
+            account_number: formData.account_number,
+            check_number: formData.check_number,
+            mobile_number: formData.mobile_number,
+            mobile_operator: formData.mobile_operator,
+            receiver_name: formData.receiver_name
+          });
+
+        if (error) throw error;
+
         toast({
           title: "Succès",
           description: "Paiement créé avec succès",
@@ -286,10 +403,12 @@ const PaymentCrud: React.FC = () => {
       
       setIsFormOpen(false);
       resetForm();
+      fetchPayments(); // Refresh the list
     } catch (error) {
+      console.error('Database error:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue",
+        description: "Une erreur est survenue lors de l'enregistrement",
         variant: "destructive",
       });
     }
@@ -297,11 +416,27 @@ const PaymentCrud: React.FC = () => {
 
   const handleDelete = async (paymentId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
-      setPayments(prev => prev.filter(p => p.id !== paymentId));
-      toast({
-        title: "Succès",
-        description: "Paiement supprimé avec succès",
-      });
+      try {
+        const { error } = await supabase
+          .from('payments')
+          .delete()
+          .eq('id', paymentId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Succès",
+          description: "Paiement supprimé avec succès",
+        });
+        fetchPayments(); // Refresh the list
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -946,92 +1081,172 @@ const PaymentCrud: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Paiements</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Liste des Paiements</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64"
+                />
+              </div>
+              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filtrer par méthode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les méthodes</SelectItem>
+                  {paymentMethods.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Contractant</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Méthode</TableHead>
-                <TableHead>Progression</TableHead>
-                <TableHead>Documents</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell className="font-medium">
-                    {payment.project_id}
-                  </TableCell>
-                  <TableCell>{payment.contractor_name}</TableCell>
-                  <TableCell>
-                    {payment.amount.toLocaleString()} MRU
-                  </TableCell>
-                  <TableCell>
-                    {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
-                  </TableCell>
-                  <TableCell>
-                    {paymentMethods.find(m => m.value === payment.payment_method)?.label}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${payment.progress_at_payment}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm">{payment.progress_at_payment}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
-                      <span className="text-sm">{payment.supporting_documents?.length || 0}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openViewForm(payment)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openEditForm(payment)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(payment.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {payments.length === 0 && (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                    Aucun paiement trouvé
-                  </TableCell>
+                  <TableHead>Projet</TableHead>
+                  <TableHead>Contractant</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Méthode</TableHead>
+                  <TableHead>Progression</TableHead>
+                  <TableHead>Transaction ID</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div className="text-sm">ID: {payment.project_id.substring(0, 8)}...</div>
+                        <div className="text-xs text-muted-foreground">Projet</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{payment.contractor_name}</div>
+                        <div className="text-xs text-muted-foreground">{payment.contractor_contact}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-green-600 border-green-200">
+                        {payment.amount.toLocaleString()} MRU
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {paymentMethods.find(m => m.value === payment.payment_method)?.label || payment.payment_method}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${payment.progress_at_payment}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm">{payment.progress_at_payment}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-muted px-2 py-1 rounded">
+                        {payment.transaction_id}
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openViewForm(payment)}
+                          title="Voir les détails"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditForm(payment)}
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(payment.id)}
+                          className="text-red-600 hover:text-red-700"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Exporter le reçu"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Voir sur la blockchain"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredPayments.length === 0 && !loading && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <CreditCard className="h-12 w-12 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          {searchTerm || paymentMethodFilter !== 'all' 
+                            ? 'Aucun paiement trouvé avec ces filtres' 
+                            : 'Aucun paiement trouvé'}
+                        </p>
+                        {(searchTerm || paymentMethodFilter !== 'all') && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSearchTerm('');
+                              setPaymentMethodFilter('all');
+                            }}
+                          >
+                            Réinitialiser les filtres
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
