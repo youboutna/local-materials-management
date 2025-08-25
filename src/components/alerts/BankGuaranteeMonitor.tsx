@@ -4,10 +4,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { AlertTriangle, DollarSign, Clock, Send, Settings, Calendar, Users, MessageSquare, Phone, Mail, FileText } from 'lucide-react';
 import { detectProjectDelays, triggerBankGuaranteeNotification, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
 import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 
 const BankGuaranteeMonitor: React.FC = () => {
@@ -15,6 +17,18 @@ const BankGuaranteeMonitor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const {
+    currentData: paginatedDelays,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: delays,
+    itemsPerPage: 10
+  });
 
   useEffect(() => {
     loadDelays();
@@ -210,7 +224,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                 </AlertDescription>
               </Alert>
 
-              {delays.map((delay) => (
+              {paginatedDelays.map((delay) => (
                 <Card key={delay.projectId} className="border-l-4 border-l-red-500">
                   <CardContent className="p-4">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -301,6 +315,18 @@ const BankGuaranteeMonitor: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
+              
+              {/* Pagination */}
+              {delays.length > 10 && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={goToPage}
+                  showItemsPerPage={false}
+                />
+              )}
             </div>
           )}
         </CardContent>

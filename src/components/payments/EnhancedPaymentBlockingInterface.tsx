@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle, Upload, FileText, Bell, Settings, Calendar, Users, MessageSquare, Phone, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
 import { 
   validatePaymentEligibility, 
   attemptPayment, 
@@ -56,6 +58,25 @@ const EnhancedPaymentBlockingInterface = () => {
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Mock blocked payments data for demonstration
+  const payments = [
+    { id: 'pay-001', amount: 2500000, project_id: 'proj-001', project_title: 'Pont Hassan II', recipient_id: 'contractor-001', contractor_name: 'Entreprise Sahel BTP', blocking_reason: 'expired_insurance', status: 'blocked' },
+    { id: 'pay-002', amount: 1800000, project_id: 'proj-002', project_title: 'Hôpital Central', recipient_id: 'contractor-002', contractor_name: 'Construction Moderne SARL', blocking_reason: 'project_delay', status: 'blocked' },
+    { id: 'pay-003', amount: 850000, project_id: 'proj-003', project_title: 'École Primaire', recipient_id: 'contractor-003', contractor_name: 'Atlantic Construction', blocking_reason: 'missing_documents', status: 'blocked' }
+  ];
+
+  const {
+    currentData: paginatedPayments,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage
+  } = usePagination({
+    data: payments,
+    itemsPerPage: 10
+  });
 
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -259,15 +280,16 @@ const EnhancedPaymentBlockingInterface = () => {
   };
 
   const getReasonLabel = (reason: string) => {
-    const labels: Record<string, string> = {
-      'expired_insurance': 'Assurance expirée',
-      'expired_guarantee': 'Garantie expirée',
-      'project_delay': 'Retard projet',
-      'compliance_issue': 'Problème conformité',
-      'missing_documents': 'Documents manquants'
-    };
-    return labels[reason] || reason;
+    switch (reason) {
+      case 'expired_insurance': return 'Assurance expirée';
+      case 'expired_guarantee': return 'Garantie expirée';
+      case 'project_delay': return 'Retard projet';
+      case 'compliance_issue': return 'Non-conformité';
+      case 'missing_documents': return 'Documents manquants';
+      default: return 'Autre';
+    }
   };
+
 
   const renderPaymentMethodFields = () => {
     const paymentMethod = form.watch('paymentMethod');
@@ -763,158 +785,72 @@ const EnhancedPaymentBlockingInterface = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Ban className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="font-medium">Entreprise Sahel BTP</p>
-                  <p className="text-sm text-muted-foreground">Projet Axe Idini - 850,000 MRU</p>
+            {paginatedPayments.map((payment) => (
+              <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Ban className="h-5 w-5 text-red-500" />
+                  <div>
+                    <p className="font-medium">{payment.contractor_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {payment.project_title} - {payment.amount.toLocaleString()} MRU
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <Badge variant="destructive">{getReasonLabel(payment.blocking_reason)}</Badge>
+                    <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-2">
+                        <Settings className="h-4 w-4" />
+                        <span className="hidden sm:inline">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'task_assignment', payment.contractor_name)}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Assigner une tâche
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'hierarchy_notification', payment.contractor_name)}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Notifier la hiérarchie
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'sms', payment.contractor_name)}>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Envoyer SMS
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'call', payment.contractor_name)}>
+                        <Phone className="h-4 w-4 mr-2" />
+                        Programmer appel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'email', payment.contractor_name)}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Envoyer email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'mail', payment.contractor_name)}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Courrier postal
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <Badge variant="destructive">Assurance expirée</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <Settings className="h-4 w-4" />
-                      <span className="hidden sm:inline">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'task_assignment', 'Entreprise Sahel BTP')}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Assigner une tâche
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'hierarchy_notification', 'Entreprise Sahel BTP')}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Notifier la hiérarchie
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'sms', 'Entreprise Sahel BTP')}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Envoyer SMS
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'call', 'Entreprise Sahel BTP')}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Programmer appel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'email', 'Entreprise Sahel BTP')}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Envoyer email
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-001', 'mail', 'Entreprise Sahel BTP')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Courrier postal
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+            ))}
             
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Ban className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="font-medium">Construction Moderne SARL</p>
-                  <p className="text-sm text-muted-foreground">Projet Électrification - 1,200,000 MRU</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <Badge variant="destructive">Documents manquants</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">Il y a 4 heures</p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <Settings className="h-4 w-4" />
-                      <span className="hidden sm:inline">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'task_assignment', 'Construction Moderne SARL')}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Assigner une tâche
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'hierarchy_notification', 'Construction Moderne SARL')}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Notifier la hiérarchie
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'sms', 'Construction Moderne SARL')}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Envoyer SMS
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'call', 'Construction Moderne SARL')}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Programmer appel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'email', 'Construction Moderne SARL')}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Envoyer email
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-002', 'mail', 'Construction Moderne SARL')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Courrier postal
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Ban className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="font-medium">Atlantic Construction</p>
-                  <p className="text-sm text-muted-foreground">Projet Routes - 750,000 MRU</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <Badge variant="destructive">Retard &gt; 20%</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">Il y a 1 jour</p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <Settings className="h-4 w-4" />
-                      <span className="hidden sm:inline">Actions</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'task_assignment', 'Atlantic Construction')}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Assigner une tâche
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'hierarchy_notification', 'Atlantic Construction')}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Notifier la hiérarchie
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'sms', 'Atlantic Construction')}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Envoyer SMS
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'call', 'Atlantic Construction')}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Programmer appel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'email', 'Atlantic Construction')}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Envoyer email
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handlePaymentAction('pay-003', 'mail', 'Atlantic Construction')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Courrier postal
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+            {/* Pagination */}
+            {payments.length > 10 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={goToPage}
+                showItemsPerPage={false}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

@@ -15,7 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
 import { 
   detectExpiringInsurance, 
   sendInsuranceExpiryAlerts, 
@@ -91,6 +93,32 @@ const UnifiedInsuranceManager = () => {
   const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
   const [activeTab, setActiveTab] = useState('alerts');
   const [uploadingFile, setUploadingFile] = useState(false);
+
+  // Pagination for alerts
+  const {
+    currentData: paginatedAlerts,
+    currentPage: alertsPage,
+    totalPages: alertsTotalPages,
+    totalItems: alertsTotalItems,
+    itemsPerPage: alertsItemsPerPage,
+    goToPage: goToAlertsPage
+  } = usePagination({
+    data: alerts,
+    itemsPerPage: 10
+  });
+
+  // Pagination for certificates
+  const {
+    currentData: paginatedCertificates,
+    currentPage: certificatesPage,
+    totalPages: certificatesTotalPages,
+    totalItems: certificatesTotalItems,
+    itemsPerPage: certificatesItemsPerPage,
+    goToPage: goToCertificatesPage
+  } = usePagination({
+    data: certificates,
+    itemsPerPage: 10
+  });
 
   const form = useForm<z.infer<typeof insuranceFormSchema>>({
     resolver: zodResolver(insuranceFormSchema),
@@ -865,7 +893,7 @@ const UnifiedInsuranceManager = () => {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {alerts.map((alert, index) => (
+              {paginatedAlerts.map((alert, index) => (
                 <Card key={index} className={`${alert.alertLevel === 'expired' ? 'border-red-200' : alert.alertLevel === 'critical' ? 'border-orange-200' : 'border-yellow-200'}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -982,6 +1010,18 @@ const UnifiedInsuranceManager = () => {
                   </CardContent>
                 </Card>
               ))}
+              
+              {/* Pagination for Alerts */}
+              {alerts.length > 10 && (
+                <PaginationControls
+                  currentPage={alertsPage}
+                  totalPages={alertsTotalPages}
+                  totalItems={alertsTotalItems}
+                  itemsPerPage={alertsItemsPerPage}
+                  onPageChange={goToAlertsPage}
+                  showItemsPerPage={false}
+                />
+              )}
             </div>
           )}
         </TabsContent>
@@ -1006,7 +1046,7 @@ const UnifiedInsuranceManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {getActiveCertificates().map((certificate) => (
+                  {getActiveCertificates().slice(0, 10).map((certificate) => (
                     <TableRow key={certificate.id}>
                       <TableCell className="font-medium">
                         {certificate.projectId || certificate.project_id}
@@ -1110,7 +1150,7 @@ const UnifiedInsuranceManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {getExpiredCertificates().map((certificate) => (
+                  {getExpiredCertificates().slice(0, 10).map((certificate) => (
                     <TableRow key={certificate.id}>
                       <TableCell className="font-medium">
                         {certificate.projectId || certificate.project_id}
@@ -1199,7 +1239,7 @@ const UnifiedInsuranceManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {certificates.map((certificate) => (
+                  {paginatedCertificates.map((certificate) => (
                     <TableRow key={certificate.id}>
                       <TableCell className="font-medium">
                         {certificate.projectId || certificate.project_id}
@@ -1277,9 +1317,21 @@ const UnifiedInsuranceManager = () => {
                          </div>
                        </TableCell>
                     </TableRow>
-                  ))}
+                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination for Certificates */}
+              {certificates.length > 10 && (
+                <PaginationControls
+                  currentPage={certificatesPage}
+                  totalPages={certificatesTotalPages}
+                  totalItems={certificatesTotalItems}
+                  itemsPerPage={certificatesItemsPerPage}
+                  onPageChange={goToCertificatesPage}
+                  showItemsPerPage={false}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
