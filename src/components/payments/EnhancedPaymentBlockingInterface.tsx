@@ -207,6 +207,16 @@ const EnhancedPaymentBlockingInterface = () => {
 
   const handlePaymentAction = async (paymentId: string, actionType: string, contractorName?: string) => {
     try {
+      const payment = payments.find(p => p.id === paymentId);
+      if (!payment) {
+        toast({
+          title: 'Erreur',
+          description: 'Paiement introuvable',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       // Get current user or use a fallback
       const { data: { user } } = await supabase.auth.getUser();
       const currentUserId = user?.id || 'system-user';
@@ -217,41 +227,48 @@ const EnhancedPaymentBlockingInterface = () => {
       switch (actionType) {
         case 'task_assignment':
           title = 'Résolution blocage paiement';
-          message = `Veuillez traiter le blocage de paiement pour ${contractorName || 'l\'entrepreneur'}`;
+          message = `Veuillez traiter le blocage de paiement pour ${contractorName || payment.contractor_name}`;
           break;
         case 'hierarchy_notification':
           title = 'Alerte paiement bloqué';
-          message = `Le paiement pour ${contractorName || 'l\'entrepreneur'} est bloqué et nécessite une attention particulière`;
+          message = `Le paiement pour ${contractorName || payment.contractor_name} est bloqué et nécessite une attention particulière`;
           break;
         case 'sms':
           title = 'SMS paiement bloqué';
-          message = `SMS: Paiement bloqué - ${contractorName || 'Entrepreneur'} - Action requise`;
+          message = `SMS: Paiement bloqué - ${contractorName || payment.contractor_name} - Action requise`;
           break;
         case 'call':
           title = 'Appel paiement bloqué';
-          message = `Appel concernant le blocage de paiement pour ${contractorName || 'l\'entrepreneur'}`;
+          message = `Appel concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
           break;
         case 'email':
           title = 'Email paiement bloqué';
-          message = `Email concernant le blocage de paiement pour ${contractorName || 'l\'entrepreneur'}`;
+          message = `Email concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
           break;
         case 'mail':
           title = 'Courrier paiement bloqué';
-          message = `Courrier concernant le blocage de paiement pour ${contractorName || 'l\'entrepreneur'}`;
+          message = `Courrier concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
           break;
+        default:
+          toast({
+            title: 'Erreur',
+            description: 'Type d\'action non reconnu',
+            variant: 'destructive'
+          });
+          return;
       }
 
       await createPaymentControlAction({
         paymentId,
-        projectId: 'demo-project-001',
-        contractorId: 'demo-contractor-001',
+        projectId: payment.project_id,
+        contractorId: payment.recipient_id,
         actionType: actionType as any,
         title,
         message,
         priority: 'high',
         assigneeId: currentUserId,
         recipientIds: [currentUserId],
-        metadata: { contractorName }
+        metadata: { contractorName: contractorName || payment.contractor_name }
       });
 
       toast({
@@ -262,7 +279,7 @@ const EnhancedPaymentBlockingInterface = () => {
       console.error('Error creating payment action:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de créer l\'action',
+        description: `Impossible de créer l'action: ${error}`,
         variant: 'destructive'
       });
     }

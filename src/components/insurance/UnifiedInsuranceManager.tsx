@@ -493,7 +493,14 @@ const UnifiedInsuranceManager = () => {
   const handleInsuranceAction = async (certificateId: string, actionType: string) => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
-      if (!certificate) return;
+      if (!certificate) {
+        toast({
+          title: 'Erreur',
+          description: 'Certificat introuvable',
+          variant: 'destructive'
+        });
+        return;
+      }
 
       // Get current user or use a fallback
       const { data: { user } } = await supabase.auth.getUser();
@@ -527,12 +534,19 @@ const UnifiedInsuranceManager = () => {
           title = 'Courrier assurance';
           message = `Courrier concernant l'assurance ${certificate.policyNumber || certificate.policy_number}`;
           break;
+        default:
+          toast({
+            title: 'Erreur',
+            description: 'Type d\'action non reconnu',
+            variant: 'destructive'
+          });
+          return;
       }
 
       await createInsuranceAction({
         insuranceId: certificateId,
         projectId: certificate.projectId || certificate.project_id || '',
-        contractorId: certificate.contractorId || certificate.contractor_id || currentUserId,
+        contractorId: certificate.contractorId || certificate.contractor_id || '',
         actionType: actionType as any,
         title,
         message,
@@ -550,7 +564,7 @@ const UnifiedInsuranceManager = () => {
       console.error('Error creating insurance action:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de créer l\'action',
+        description: `Impossible de créer l'action: ${error}`,
         variant: 'destructive'
       });
     }

@@ -266,6 +266,11 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
       const inspection = inspections.find(i => i.id === inspectionId);
       if (!inspection) {
         console.error('Inspection not found:', inspectionId);
+        toast({
+          title: 'Erreur',
+          description: 'Inspection introuvable',
+          variant: 'destructive'
+        });
         return;
       }
 
@@ -303,6 +308,11 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
           break;
         default:
           console.error('Unknown action type:', actionType);
+          toast({
+            title: 'Erreur',
+            description: 'Type d\'action non reconnu',
+            variant: 'destructive'
+          });
           return;
       }
 

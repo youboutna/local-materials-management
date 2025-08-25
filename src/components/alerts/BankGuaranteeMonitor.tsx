@@ -110,7 +110,14 @@ const BankGuaranteeMonitor: React.FC = () => {
   const handleBankGuaranteeAction = async (projectId: string, actionType: string) => {
     try {
       const delay = delays.find(d => d.projectId === projectId);
-      if (!delay) return;
+      if (!delay) {
+        toast({
+          title: 'Erreur',
+          description: 'Projet introuvable',
+          variant: 'destructive'
+        });
+        return;
+      }
 
       // Get current user or use a fallback
       const { data: { user } } = await supabase.auth.getUser();
@@ -144,12 +151,19 @@ const BankGuaranteeMonitor: React.FC = () => {
           title = 'Courrier retard projet';
           message = `Courrier concernant le retard du projet ${delay.projectName}`;
           break;
+        default:
+          toast({
+            title: 'Erreur',
+            description: 'Type d\'action non reconnu',
+            variant: 'destructive'
+          });
+          return;
       }
 
       await createBankGuaranteeAction({
         bankGuaranteeId: `bg-${projectId}`,
         projectId,
-        contractorId: 'demo-contractor-001',
+        contractorId: delay.contractorId || 'demo-contractor-001',
         actionType: actionType as any,
         title,
         message,
@@ -167,7 +181,7 @@ const BankGuaranteeMonitor: React.FC = () => {
       console.error('Error creating bank guarantee action:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de créer l\'action',
+        description: `Impossible de créer l'action: ${error}`,
         variant: 'destructive'
       });
     }
