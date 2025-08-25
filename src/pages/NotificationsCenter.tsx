@@ -66,6 +66,25 @@ const NotificationsCenterPage = () => {
 
   useEffect(() => {
     fetchAllNotifications();
+    // Set up real-time listener for notifications
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+        },
+        () => {
+          fetchAllNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchAllNotifications = async () => {
