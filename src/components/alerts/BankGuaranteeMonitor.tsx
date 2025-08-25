@@ -177,11 +177,11 @@ const BankGuaranteeMonitor: React.FC = () => {
         title: 'Action créée',
         description: `${title} créée avec succès`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating bank guarantee action:', error);
       toast({
         title: 'Erreur',
-        description: `Impossible de créer l'action: ${error}`,
+        description: `Impossible de créer l'action: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
     }
