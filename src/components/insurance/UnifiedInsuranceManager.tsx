@@ -889,7 +889,7 @@ const UnifiedInsuranceManager = () => {
                           <strong>Jours restants:</strong> {alert.daysRemaining < 0 ? 'Expirée' : alert.daysRemaining}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" onClick={() => {
                           const certificate = certificates.find(c => 
                             (c.policyNumber || c.policy_number) === alert.policyNumber
@@ -907,6 +907,71 @@ const UnifiedInsuranceManager = () => {
                         }}>
                           Renouveler
                         </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline" className="gap-2">
+                              <Settings className="h-4 w-4" />
+                              <span className="hidden sm:inline">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'task_assignment');
+                            }}>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Assigner une tâche
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'hierarchy_notification');
+                            }}>
+                              <Users className="h-4 w-4 mr-2" />
+                              Notifier la hiérarchie
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'sms');
+                            }}>
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Envoyer SMS
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'call');
+                            }}>
+                              <Phone className="h-4 w-4 mr-2" />
+                              Programmer appel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'email');
+                            }}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Envoyer email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const certificate = certificates.find(c => 
+                                (c.policyNumber || c.policy_number) === alert.policyNumber
+                              );
+                              if (certificate?.id) handleInsuranceAction(certificate.id, 'mail');
+                            }}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Courrier postal
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </CardContent>
@@ -963,7 +1028,7 @@ const UnifiedInsuranceManager = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -976,6 +1041,41 @@ const UnifiedInsuranceManager = () => {
                           <Button size="sm" variant="destructive" onClick={() => handleDelete(certificate.id!)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline" className="gap-2">
+                                <Settings className="h-4 w-4" />
+                                <span className="hidden sm:inline">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Assigner une tâche
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
+                                <Users className="h-4 w-4 mr-2" />
+                                Notifier la hiérarchie
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Envoyer SMS
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
+                                <Phone className="h-4 w-4 mr-2" />
+                                Programmer appel
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Envoyer email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                Courrier postal
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1022,13 +1122,48 @@ const UnifiedInsuranceManager = () => {
                         {new Date(certificate.validUntil || certificate.valid_until || '').toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => openViewForm(certificate)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button size="sm" onClick={() => handleRenewCertificate(certificate)}>
                             Renouveler
                           </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline" className="gap-2">
+                                <Settings className="h-4 w-4" />
+                                <span className="hidden sm:inline">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'task_assignment')}>
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Assigner une tâche
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'hierarchy_notification')}>
+                                <Users className="h-4 w-4 mr-2" />
+                                Notifier la hiérarchie
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'sms')}>
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Envoyer SMS
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'call')}>
+                                <Phone className="h-4 w-4 mr-2" />
+                                Programmer appel
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'email')}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Envoyer email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleInsuranceAction(certificate.id!, 'mail')}>
+                                <FileText className="h-4 w-4 mr-2" />
+                                Courrier postal
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>

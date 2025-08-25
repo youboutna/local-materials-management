@@ -247,8 +247,13 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
   const handleInspectionAction = async (inspectionId: string, actionType: string) => {
     try {
+      console.log('Creating inspection action:', { inspectionId, actionType });
+      
       const inspection = inspections.find(i => i.id === inspectionId);
-      if (!inspection) return;
+      if (!inspection) {
+        console.error('Inspection not found:', inspectionId);
+        return;
+      }
 
       let title = '';
       let message = '';
@@ -278,9 +283,24 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
           title = 'Courrier inspection';
           message = `Courrier concernant l'inspection ${inspectionId}`;
           break;
+        default:
+          console.error('Unknown action type:', actionType);
+          return;
       }
 
-      await createInspectionAction({
+      console.log('Calling createInspectionAction with:', {
+        inspectionId,
+        projectId: inspection.project_id,
+        inspectorId: inspection.inspector,
+        actionType,
+        title,
+        message,
+        priority: 'high',
+        recipientIds: ['demo-user-001'],
+        metadata: { inspectionData: inspection }
+      });
+
+      const result = await createInspectionAction({
         inspectionId,
         projectId: inspection.project_id,
         inspectorId: inspection.inspector,
@@ -292,6 +312,8 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         metadata: { inspectionData: inspection }
       });
 
+      console.log('Action created successfully:', result);
+
       toast({
         title: 'Action créée',
         description: `${title} créée avec succès`,
@@ -300,11 +322,10 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
       console.error('Error creating inspection action:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de créer l\'action',
+        description: `Impossible de créer l'action: ${error}`,
         variant: 'destructive'
       });
     }
-
   };
 
   const getProjectTitle = (projectId: string) => {
