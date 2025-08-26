@@ -7,8 +7,8 @@ export interface InspectionControlAction {
   id: string;
   inspectionId: string;
   projectId: string;
-  inspectorId: string;
-  actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
+  inspectorId?: string;
+  actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';

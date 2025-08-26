@@ -8,7 +8,7 @@ export interface BankGuaranteeControlAction {
   bankGuaranteeId: string;
   projectId: string;
   contractorId: string;
-  actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
+  actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
