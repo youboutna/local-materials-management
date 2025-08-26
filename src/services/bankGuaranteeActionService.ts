@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
 import { communicationService } from './communicationService';
+import OrganizationalHierarchyService from './organizationalHierarchyService';
 
 export interface BankGuaranteeControlAction {
   id: string;
@@ -173,65 +174,86 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
 };
 
 const executeBankGuaranteeHierarchyNotification = async (action: BankGuaranteeControlAction): Promise<void> => {
-  const escalationTitles = {
-    team: 'Notification équipe - Garantie bancaire',
-    supervisor: 'Escalade superviseur - Garantie bancaire',
-    manager: 'Escalade manager - Garantie bancaire',
-    director: 'Escalade direction - Garantie bancaire'
-  };
-
-  // Get real project team members based on hierarchy
-  const { data: projectTeam } = await supabase
-    .from('employees')
-    .select('id, full_name, email, phone, position, department, manager_id')
-    .eq('is_active', true);
-
-  // Filter recipients based on escalation level and project involvement
-  let targetRecipients: string[] = [];
-  
-  switch (action.escalationLevel) {
-    case 'team':
-      targetRecipients = projectTeam?.filter(emp => 
-        emp.department === 'construction' || emp.department === 'finance'
-      ).map(emp => emp.id) || [];
-      break;
-    case 'supervisor':
-      targetRecipients = projectTeam?.filter(emp => 
-        emp.position?.toLowerCase().includes('supervisor') || emp.position?.toLowerCase().includes('chef')
-      ).map(emp => emp.id) || [];
-      break;
-    case 'manager':
-      targetRecipients = projectTeam?.filter(emp => 
-        emp.position?.toLowerCase().includes('manager') || emp.position?.toLowerCase().includes('responsable')
-      ).map(emp => emp.id) || [];
-      break;
-    case 'director':
-      targetRecipients = projectTeam?.filter(emp => 
-        emp.position?.toLowerCase().includes('director') || emp.position?.toLowerCase().includes('directeur')
-      ).map(emp => emp.id) || [];
-      break;
-    default:
-      targetRecipients = action.recipientIds;
-  }
-
-  for (const recipientId of targetRecipients) {
-    await sendNotification({
-      recipient_id: recipientId,
-      title: escalationTitles[action.escalationLevel || 'team'],
-      message: action.message,
-      type: 'bank_guarantee_trigger',
-      related_id: action.projectId,
-      metadata: {
-        actionId: action.id,
-        escalationLevel: action.escalationLevel,
-        bankGuaranteeId: action.bankGuaranteeId,
-        projectId: action.projectId,
-        contractorId: action.contractorId,
+  try {
+    // Get real organizational hierarchy for the project
+    const escalationTargets = await OrganizationalHierarchyService.findNotificationRecipients(
+      action.projectId,
+      {
+        type: 'bank_guarantee',
         priority: action.priority,
-        projectData: action.metadata?.project,
-        bankGuaranteeData: action.metadata?.bankGuarantee
+        escalationLevel: action.escalationLevel,
+        requiresApproval: true
       }
-    });
+    );
+
+    const escalationTitles = {
+      team: 'Notification équipe - Garantie bancaire',
+      supervisor: 'Escalade superviseur - Garantie bancaire',
+      manager: 'Escalade manager - Garantie bancaire',
+      director: 'Escalade direction - Garantie bancaire'
+    };
+
+    // Get project organizations for context
+    const projectOrgs = await OrganizationalHierarchyService.getProjectOrganizations(action.projectId);
+    const primaryOrg = projectOrgs.find(org => org.is_primary) || projectOrgs[0];
+
+    for (const target of escalationTargets) {
+      const hierarchyMessage = `
+${action.message}
+
+DÉTAILS HIÉRARCHIQUES:
+- Organisation: ${primaryOrg?.organizations?.name || 'N/A'}
+- Niveau d'escalade: ${action.escalationLevel?.toUpperCase() || 'ÉQUIPE'}
+- Position destinataire: ${target.position_title}
+- Département: ${target.department}
+- Niveau hiérarchique: ${target.hierarchy_level}
+
+CONTEXTE PROJET:
+- ID Projet: ${action.projectId}
+- Garantie bancaire: ${action.bankGuaranteeId}
+- Entrepreneur: ${action.contractorId}
+      `;
+
+      await sendNotification({
+        recipient_id: target.employee_id,
+        title: escalationTitles[action.escalationLevel || 'team'],
+        message: hierarchyMessage,
+        type: 'bank_guarantee_trigger',
+        related_id: action.projectId,
+        metadata: {
+          actionId: action.id,
+          escalationLevel: action.escalationLevel,
+          bankGuaranteeId: action.bankGuaranteeId,
+          projectId: action.projectId,
+          contractorId: action.contractorId,
+          priority: action.priority,
+          hierarchyLevel: target.hierarchy_level,
+          organizationName: primaryOrg?.organizations?.name,
+          targetPosition: target.position_title,
+          targetDepartment: target.department
+        }
+      });
+    }
+
+    console.log(`Bank guarantee hierarchy notification sent to ${escalationTargets.length} recipients at ${action.escalationLevel} level`);
+  } catch (error) {
+    console.error('Error in bank guarantee hierarchy notification:', error);
+    // Fallback to original recipients if hierarchy fails
+    for (const recipientId of action.recipientIds) {
+      await sendNotification({
+        recipient_id: recipientId,
+        title: `Escalade Garantie Bancaire - ${action.title}`,
+        message: action.message,
+        type: 'bank_guarantee_trigger',
+        related_id: action.projectId,
+        metadata: {
+          actionId: action.id,
+          escalationLevel: action.escalationLevel,
+          priority: action.priority,
+          fallbackNotification: true
+        }
+      });
+    }
   }
 };
 

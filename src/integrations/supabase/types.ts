@@ -4181,6 +4181,50 @@ export type Database = {
         Args: { supplier_email: string }
         Returns: string
       }
+      get_escalation_targets: {
+        Args: { escalation_level_param: string; project_id_param: string }
+        Returns: {
+          department: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          employee_phone: string
+          hierarchy_level: number
+          position_title: string
+        }[]
+      }
+      get_hierarchy_chain: {
+        Args: { direction?: string; employee_id_param: string }
+        Returns: {
+          department: string
+          distance: number
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          employee_phone: string
+          hierarchy_id: string
+          level: number
+          position_title: string
+        }[]
+      }
+      get_project_hierarchy: {
+        Args: { project_id_param: string }
+        Returns: {
+          can_approve_payments: boolean
+          can_approve_projects: boolean
+          department: string
+          employee_email: string
+          employee_id: string
+          employee_name: string
+          employee_phone: string
+          hierarchy_id: string
+          level: number
+          notification_preferences: Json
+          organization_name: string
+          parent_id: string
+          position_title: string
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]

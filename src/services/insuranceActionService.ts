@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
 import { communicationService } from './communicationService';
+import OrganizationalHierarchyService from './organizationalHierarchyService';
 
 export interface InsuranceControlAction {
   id: string;
@@ -172,29 +173,46 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
 };
 
 const executeInsuranceHierarchyNotification = async (action: InsuranceControlAction): Promise<void> => {
-  const escalationTitles = {
-    team: 'Notification équipe - Assurance',
-    supervisor: 'Escalade superviseur - Assurance',
-    manager: 'Escalade manager - Assurance',
-    director: 'Escalade direction - Assurance'
-  };
-
-  for (const recipientId of action.recipientIds) {
-    await sendNotification({
-      recipient_id: recipientId,
-      title: escalationTitles[action.escalationLevel || 'team'],
-      message: action.message,
-      type: 'insurance_expiry',
-      related_id: action.insuranceId,
-      metadata: {
-        actionId: action.id,
+  try {
+    // Get organizational hierarchy for insurance-related notifications
+    const escalationTargets = await OrganizationalHierarchyService.findNotificationRecipients(
+      action.projectId,
+      {
+        type: 'insurance',
+        priority: action.priority,
         escalationLevel: action.escalationLevel,
-        insuranceId: action.insuranceId,
-        projectId: action.projectId,
-        contractorId: action.contractorId,
-        priority: action.priority
+        department: 'legal'
       }
-    });
+    );
+
+    const escalationTitles = {
+      team: 'Notification équipe - Assurance',
+      supervisor: 'Escalade superviseur - Assurance',
+      manager: 'Escalade manager - Assurance',
+      director: 'Escalade direction - Assurance'
+    };
+
+    for (const target of escalationTargets) {
+      await sendNotification({
+        recipient_id: target.employee_id,
+        title: escalationTitles[action.escalationLevel || 'team'],
+        message: `${action.message}\n\nAssurance: ${action.insuranceId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
+        type: 'insurance_expiry',
+        related_id: action.insuranceId,
+        metadata: {
+          actionId: action.id,
+          escalationLevel: action.escalationLevel,
+          insuranceId: action.insuranceId,
+          projectId: action.projectId,
+          contractorId: action.contractorId,
+          priority: action.priority,
+          hierarchyLevel: target.hierarchy_level,
+          targetPosition: target.position_title
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error in insurance hierarchy notification:', error);
   }
 };
 

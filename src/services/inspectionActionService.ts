@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
 import { communicationService } from './communicationService';
+import OrganizationalHierarchyService from './organizationalHierarchyService';
 
 export interface InspectionControlAction {
   id: string;
@@ -173,29 +174,46 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
 };
 
 const executeInspectionHierarchyNotification = async (action: InspectionControlAction): Promise<void> => {
-  const escalationTitles = {
-    team: 'Notification équipe - Inspection',
-    supervisor: 'Escalade superviseur - Inspection',
-    manager: 'Escalade manager - Inspection',
-    director: 'Escalade direction - Inspection'
-  };
-
-  for (const recipientId of action.recipientIds) {
-    await sendNotification({
-      recipient_id: recipientId,
-      title: escalationTitles[action.escalationLevel || 'team'],
-      message: action.message,
-      type: 'inspection_overdue',
-      related_id: action.inspectionId,
-      metadata: {
-        actionId: action.id,
+  try {
+    // Get organizational hierarchy for inspection-related notifications
+    const escalationTargets = await OrganizationalHierarchyService.findNotificationRecipients(
+      action.projectId,
+      {
+        type: 'inspection',
+        priority: action.priority,
         escalationLevel: action.escalationLevel,
-        inspectionId: action.inspectionId,
-        projectId: action.projectId,
-        inspectorId: action.inspectorId,
-        priority: action.priority
+        department: 'construction'
       }
-    });
+    );
+
+    const escalationTitles = {
+      team: 'Notification équipe - Inspection',
+      supervisor: 'Escalade superviseur - Inspection',  
+      manager: 'Escalade manager - Inspection',
+      director: 'Escalade direction - Inspection'
+    };
+
+    for (const target of escalationTargets) {
+      await sendNotification({
+        recipient_id: target.employee_id,
+        title: escalationTitles[action.escalationLevel || 'team'],
+        message: `${action.message}\n\nInspection: ${action.inspectionId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
+        type: 'inspection_overdue',
+        related_id: action.inspectionId,
+        metadata: {
+          actionId: action.id,
+          escalationLevel: action.escalationLevel,
+          inspectionId: action.inspectionId,
+          projectId: action.projectId,
+          inspectorId: action.inspectorId,
+          priority: action.priority,
+          hierarchyLevel: target.hierarchy_level,
+          targetPosition: target.position_title
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error in inspection hierarchy notification:', error);
   }
 };
 
