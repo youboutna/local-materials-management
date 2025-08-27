@@ -36,71 +36,71 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   
   // Handle searching and filtering
   useEffect(() => {
-    // If there's a search query, prioritize search
-    if (searchQuery) {
+    let result = [...projects];
+    
+    // Apply search filter first if there's a query
+    if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      let results = projects.filter(project => 
+      result = result.filter(project => 
         project.title?.toLowerCase().includes(query) || 
         project.description?.toLowerCase().includes(query) ||
-        project.location?.toLowerCase().includes(query)
+        project.location?.toLowerCase().includes(query) ||
+        project.projectReference?.toLowerCase().includes(query)
       );
+    }
 
-      // Apply region filter to search results if selected
-      if (regionFilter !== 'all') {
-        const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
-        if (selectedRegion) {
-          results = results.filter(project => 
-            project.location?.toLowerCase().includes(selectedRegion.name.toLowerCase()) ||
-            project.location?.toLowerCase().includes(selectedRegion.nameAr.toLowerCase())
-          );
-        }
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(project => project.status === statusFilter);
+    }
+
+    // Apply region filter
+    if (regionFilter !== 'all') {
+      const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
+      if (selectedRegion) {
+        result = result.filter(project => 
+          project.location?.toLowerCase().includes(selectedRegion.name.toLowerCase()) ||
+          project.location?.toLowerCase().includes(selectedRegion.nameAr.toLowerCase())
+        );
       }
-      
-      setSearchResults(results);
+    }
+    
+    // Apply sorting
+    switch (sortOption) {
+      case 'newest':
+        result.sort((a, b) => {
+          const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+          const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+          return dateB - dateA;
+        });
+        break;
+      case 'oldest':
+        result.sort((a, b) => {
+          const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+          const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+          return dateA - dateB;
+        });
+        break;
+      case 'budget-high':
+        result.sort((a, b) => (b.budget || 0) - (a.budget || 0));
+        break;
+      case 'budget-low':
+        result.sort((a, b) => (a.budget || 0) - (b.budget || 0));
+        break;
+      case 'progress':
+        result.sort((a, b) => (b.progress || 0) - (a.progress || 0));
+        break;
+    }
+    
+    setFilteredProjects(result);
+    
+    // Update search results for potential autocomplete
+    if (searchQuery && searchQuery.trim()) {
+      setSearchResults(result);
       setShowSearchResults(true);
     } else {
-      // Otherwise, apply filters and sorting
       setSearchResults([]);
       setShowSearchResults(false);
-      
-      let result = [...projects];
-      
-      // Apply status filter
-      if (statusFilter !== 'all') {
-        result = result.filter(project => project.status === statusFilter);
-      }
-
-      // Apply region filter
-      if (regionFilter !== 'all') {
-        const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
-        if (selectedRegion) {
-          result = result.filter(project => 
-            project.location?.toLowerCase().includes(selectedRegion.name.toLowerCase()) ||
-            project.location?.toLowerCase().includes(selectedRegion.nameAr.toLowerCase())
-          );
-        }
-      }
-      
-      // Apply sorting
-      switch (sortOption) {
-        case 'newest':
-          result.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-          break;
-        case 'oldest':
-          result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-          break;
-        case 'budget-high':
-          result.sort((a, b) => b.budget - a.budget);
-          break;
-        case 'budget-low':
-          result.sort((a, b) => a.budget - b.budget);
-          break;
-        case 'progress':
-          result.sort((a, b) => b.progress - a.progress);
-          break;
-      }
-      
-      setFilteredProjects(result);
     }
   }, [searchQuery, statusFilter, regionFilter, sortOption, projects]);
   

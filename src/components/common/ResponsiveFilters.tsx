@@ -93,7 +93,9 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                 <SelectValue placeholder={filter.placeholder} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                {!filter.options.find(opt => opt.value === 'all') && (
+                  <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                )}
                 {filter.options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center justify-between w-full">
@@ -218,7 +220,9 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                         <SelectValue placeholder={filter.placeholder} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                        {!filter.options.find(opt => opt.value === 'all') && (
+                          <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                        )}
                         {filter.options.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             <div className="flex items-center justify-between w-full">

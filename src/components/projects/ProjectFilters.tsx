@@ -40,7 +40,13 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
       placeholder: 'Tous les statuts',
       value: statusFilter,
       onChange: onStatusChange,
-      options: availableStatuses.map(status => ({ value: status, label: status }))
+      options: [
+        { value: 'all', label: 'Tous les statuts' },
+        ...availableStatuses.map(status => ({ 
+          value: status, 
+          label: status.charAt(0).toUpperCase() + status.slice(1) 
+        }))
+      ]
     },
     {
       key: 'region',
@@ -48,7 +54,13 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
       placeholder: 'Toutes les régions',
       value: regionFilter,
       onChange: onRegionChange,
-      options: availableRegions.map(region => ({ value: region.code, label: region.name }))
+      options: [
+        { value: 'all', label: 'Toutes les régions' },
+        ...availableRegions.map(region => ({ 
+          value: region.code, 
+          label: region.name 
+        }))
+      ]
     },
     {
       key: 'sort',
