@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,15 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Search, Settings } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
+import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 
 type Employee = Database['public']['Tables']['employees']['Row'];
 
 const EmployeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showHierarchyDialog, setShowHierarchyDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -153,111 +154,141 @@ const EmployeeManagement = () => {
               <Users className="h-5 w-5 mr-2" />
               {t('documents.tabs.employees')}
             </div>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('documents.employee.add')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingEmployee ? t('documents.employee.edit_title') : t('documents.employee.add_title')}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.employee_id')} *</Label>
-                      <Input
-                        value={formData.employee_id}
-                        onChange={(e) => setFormData(prev => ({...prev, employee_id: e.target.value}))}
-                        required
-                        placeholder={t('documents.employee.employee_id_placeholder')}
-                      />
+            <div className="flex gap-2">
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetForm}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('documents.employee.add')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingEmployee ? t('documents.employee.edit_title') : t('documents.employee.add_title')}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.employee_id')} *</Label>
+                        <Input
+                          value={formData.employee_id}
+                          onChange={(e) => setFormData(prev => ({...prev, employee_id: e.target.value}))}
+                          required
+                          placeholder={t('documents.employee.employee_id_placeholder')}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.full_name')} *</Label>
+                        <Input
+                          value={formData.full_name}
+                          onChange={(e) => setFormData(prev => ({...prev, full_name: e.target.value}))}
+                          required
+                          placeholder={t('documents.employee.full_name_placeholder')}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.full_name')} *</Label>
-                      <Input
-                        value={formData.full_name}
-                        onChange={(e) => setFormData(prev => ({...prev, full_name: e.target.value}))}
-                        required
-                        placeholder={t('documents.employee.full_name_placeholder')}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.position')}</Label>
-                      <Input
-                        value={formData.position}
-                        onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
-                        placeholder={t('documents.employee.position_placeholder')}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.position')}</Label>
+                        <Input
+                          value={formData.position}
+                          onChange={(e) => setFormData(prev => ({...prev, position: e.target.value}))}
+                          placeholder={t('documents.employee.position_placeholder')}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.department')}</Label>
+                        <Select
+                          value={formData.department}
+                          onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un département..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Production et Commercialisation">Production et Commercialisation</SelectItem>
+                            <SelectItem value="Études et Travaux">Études et Travaux</SelectItem>
+                            <SelectItem value="Centre de Développement">Centre de Développement</SelectItem>
+                            <SelectItem value="Logistique et Approvisionnement">Logistique et Approvisionnement</SelectItem>
+                            <SelectItem value="Support">Support</SelectItem>
+                            <SelectItem value="Direction Financière">Direction Financière</SelectItem>
+                            <SelectItem value="Conseillers">Conseillers</SelectItem>
+                            <SelectItem value="Direction Générale">Direction Générale</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.department')}</Label>
-                      <Input
-                        value={formData.department}
-                        onChange={(e) => setFormData(prev => ({...prev, department: e.target.value}))}
-                        placeholder={t('documents.employee.department_placeholder')}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.phone')}</Label>
-                      <Input
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
-                        placeholder={t('documents.employee.phone_placeholder')}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.phone')}</Label>
+                        <Input
+                          value={formData.phone}
+                          onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
+                          placeholder={t('documents.employee.phone_placeholder')}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.email')}</Label>
+                        <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                          placeholder={t('documents.employee.email_placeholder')}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.email')}</Label>
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-                        placeholder={t('documents.employee.email_placeholder')}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.hire_date')}</Label>
-                      <Input
-                        type="date"
-                        value={formData.hire_date}
-                        onChange={(e) => setFormData(prev => ({...prev, hire_date: e.target.value}))}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.hire_date')}</Label>
+                        <Input
+                          type="date"
+                          value={formData.hire_date}
+                          onChange={(e) => setFormData(prev => ({...prev, hire_date: e.target.value}))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t('documents.employee.salary')}</Label>
+                        <Input
+                          type="number"
+                          value={formData.salary}
+                          onChange={(e) => setFormData(prev => ({...prev, salary: Number(e.target.value)}))}
+                          placeholder={t('documents.employee.salary_placeholder')}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>{t('documents.employee.salary')}</Label>
-                      <Input
-                        type="number"
-                        value={formData.salary}
-                        onChange={(e) => setFormData(prev => ({...prev, salary: Number(e.target.value)}))}
-                        placeholder={t('documents.employee.salary_placeholder')}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                      {t('common.cancel')}
-                    </Button>
-                    <Button type="submit">
-                      {editingEmployee ? t('common.update') : t('common.save')}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                        {t('common.cancel')}
+                      </Button>
+                      <Button type="submit">
+                        {editingEmployee ? t('common.update') : t('common.save')}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={showHierarchyDialog} onOpenChange={setShowHierarchyDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Hiérarchie
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Gestion de la Hiérarchie Organisationnelle</DialogTitle>
+                  </DialogHeader>
+                  <OrganizationalHierarchyManager />
+                </DialogContent>
+              </Dialog>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>

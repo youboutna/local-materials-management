@@ -13,6 +13,7 @@ import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhaseService } from '@/services/phaseService';
+import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 
 interface SelectedMaterial {
   materialId: string;
@@ -225,6 +226,21 @@ const ProjectCreate = () => {
                   selectedMaterials={selectedMaterials}
                   onChange={setSelectedMaterials}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Organizational Hierarchy */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-serif text-adrar-800">
+                  Hiérarchie Organisationnelle
+                </CardTitle>
+                <p className="text-gray-600">
+                  Définissez la structure hiérarchique pour ce projet et les responsabilités.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <OrganizationalHierarchyManager />
               </CardContent>
             </Card>
           </motion.div>

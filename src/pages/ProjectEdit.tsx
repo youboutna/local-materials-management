@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { PhaseService } from '@/services/phaseService';
+import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 
 
 // Add interface for selected materials
@@ -370,6 +371,21 @@ const ProjectEdit = () => {
                   selectedMaterials={selectedMaterials}
                   onChange={setSelectedMaterials}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Organizational Hierarchy */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-responsive sm:text-lg lg:text-xl font-serif text-adrar-800">
+                  Hiérarchie Organisationnelle
+                </CardTitle>
+                <p className="text-mobile-sm text-gray-600">
+                  Gérez la structure hiérarchique pour ce projet et les responsabilités.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <OrganizationalHierarchyManager />
               </CardContent>
             </Card>
           </motion.div>
