@@ -3,6 +3,7 @@ import { ProjectData } from '@/components/ProjectCard';
 import { SortOption } from '@/components/projects/ProjectFilters';
 import { useNavigate } from 'react-router-dom';
 import { MAURITANIA_REGIONS, Region } from '@/types/mauritania';
+import { useDebounce } from './useDebounce';
 
 export const useProjectsFilter = (projects: ProjectData[]) => {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
   const [searchResults, setSearchResults] = useState<ProjectData[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  // Debounce search query to allow user to finish typing
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
   // Extract all unique statuses from projects for filtering
   const availableStatuses = useMemo(() => {
@@ -34,13 +38,13 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     }));
   }, []);
   
-  // Handle searching and filtering
+  // Handle searching and filtering using debounced search
   useEffect(() => {
     let result = [...projects];
     
     // Apply search filter first if there's a query
-    if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
+    if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase().trim();
       result = result.filter(project => 
         project.title?.toLowerCase().includes(query) || 
         project.description?.toLowerCase().includes(query) ||
@@ -95,14 +99,14 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setFilteredProjects(result);
     
     // Update search results for potential autocomplete
-    if (searchQuery && searchQuery.trim()) {
+    if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
       setSearchResults(result);
       setShowSearchResults(true);
     } else {
       setSearchResults([]);
       setShowSearchResults(false);
     }
-  }, [searchQuery, statusFilter, regionFilter, sortOption, projects]);
+  }, [debouncedSearchQuery, statusFilter, regionFilter, sortOption, projects]);
   
   // Function to handle clicking on a search result
   const handleSelectSearchResult = (projectId: string) => {

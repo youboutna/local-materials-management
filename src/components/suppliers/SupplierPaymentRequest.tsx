@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 
 interface PaymentRequest {
   id: string;
@@ -54,6 +55,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
   // Form fields
   const [projectId, setProjectId] = useState('');
+  const [tenderReference, setTenderReference] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [paymentReason, setPaymentReason] = useState('');
@@ -314,6 +316,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
       // Reset form
       setProjectId('');
+      setTenderReference('');
       setAmount('');
       setDescription('');
       setPaymentReason('');
@@ -364,19 +367,16 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="project">Projet (optionnel)</Label>
-                  <Select value={projectId} onValueChange={setProjectId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un projet" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects.map(project => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <EnhancedProjectSelector
+                    value={projectId}
+                    onChange={(id) => setProjectId(id || '')}
+                    label="Projet (optionnel)"
+                    placeholder="Sélectionner un projet"
+                    secureMode={true}
+                    showTenderReference={true}
+                    tenderReference={tenderReference}
+                    onTenderReferenceChange={setTenderReference}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="amount">Montant (MRU) *</Label>
