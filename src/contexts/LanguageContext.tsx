@@ -24,6 +24,7 @@ export const translations = {
             mru: "MRU"
         },
         nav: {
+            employees : "Employées",
             home: "Accueil",
             projects: "Projets",
             materials: "Matériaux",
@@ -338,6 +339,34 @@ export const translations = {
             created: "Créé",
             none_found: "Aucune tâche trouvée"
         },
+        employee: {
+                add: "Ajouter un employé",
+                add_title: "Ajouter un nouvel employé",
+                edit_title: "Modifier l'employé",
+                employee_id: "ID Employé",
+                employee_id_placeholder: "Entrez l'ID de l'employé",
+                full_name: "Nom complet",
+                full_name_placeholder: "Nom complet de l'employé",
+                position: "Poste",
+                position_placeholder: "Poste de l'employé",
+                department: "Département",
+                department_placeholder: "Département de l'employé",
+                phone: "Téléphone",
+                phone_placeholder: "+222 XX XX XX XX",
+                email: "Email",
+                email_placeholder: "email@exemple.com",
+                hire_date: "Date d'embauche",
+                salary: "Salaire",
+                salary_placeholder: "Salaire mensuel",
+                search_placeholder: "Rechercher par nom, ID ou poste...",
+                id_label: "ID",
+                active: "Actif",
+                inactive: "Inactif",
+                no_employees: "Aucun employé trouvé",
+                created_successfully: "Employé créé avec succès",
+                deleted_successfully: "Employé supprimé avec succès",
+                subtitle :"Gérer les employés et leur hiérarchie organisationnelle",
+            },
         documents: {
             title: "Documents",
             subtitle: "Gérez tous vos documents de projet en un seul endroit",
@@ -417,7 +446,8 @@ export const translations = {
                 inactive: "Inactif",
                 no_employees: "Aucun employé trouvé",
                 created_successfully: "Employé créé avec succès",
-                deleted_successfully: "Employé supprimé avec succès"
+                deleted_successfully: "Employé supprimé avec succès",
+                subtitle :"Liste Employeé"
             }
         },
         projects: {
@@ -998,11 +1028,40 @@ export const translations = {
     },
 
     ar: {
+        employee: {
+                add: "إضافة موظف",
+                add_title: "إضافة موظف جديد",
+                edit_title: "تعديل الموظف",
+                employee_id: "رقم الموظف",
+                employee_id_placeholder: "أدخل رقم الموظف",
+                full_name: "الاسم الكامل",
+                full_name_placeholder: "الاسم الكامل للموظف",
+                position: "المنصب",
+                position_placeholder: "منصب الموظف",
+                department: "القسم",
+                department_placeholder: "قسم الموظف",
+                phone: "الهاتف",
+                phone_placeholder: "+222 XX XX XX XX",
+                email: "البريد الإلكتروني",
+                email_placeholder: "email@example.com",
+                hire_date: "تاريخ التوظيف",
+                salary: "الراتب",
+                salary_placeholder: "الراتب الشهري",
+                search_placeholder: "البحث بالاسم أو الرقم أو المنصب...",
+                id_label: "الرقم",
+                active: "نشط",
+                inactive: "غير نشط",
+                no_employees: "لا يوجد موظفون",
+                created_successfully: "تم إنشاء الموظف بنجاح",
+                deleted_successfully: "تم حذف الموظف بنجاح",
+                subtitle:"موظفون"
+            },
         locale: "اللغة",
         currency: {
             mru: "أوقية"
         },
         nav: {
+            employees:"موظفون",
             login: "تسجيل الدخول",
             register: "التسجيل",
             logout: "تسجيل الخروج",
@@ -1968,7 +2027,36 @@ export const translations = {
     },
 
     en: {
+                    employee: {
+                add: "Ajouter un employé",
+                add_title: "Ajouter un nouvel employé",
+                edit_title: "Modifier l'employé",
+                employee_id: "ID Employé",
+                employee_id_placeholder: "Entrez l'ID de l'employé",
+                full_name: "Nom complet",
+                full_name_placeholder: "Nom complet de l'employé",
+                position: "Poste",
+                position_placeholder: "Poste de l'employé",
+                department: "Département",
+                department_placeholder: "Département de l'employé",
+                phone: "Téléphone",
+                phone_placeholder: "+222 XX XX XX XX",
+                email: "Email",
+                email_placeholder: "email@exemple.com",
+                hire_date: "Date d'embauche",
+                salary: "Salaire",
+                salary_placeholder: "Salaire mensuel",
+                search_placeholder: "Rechercher par nom, ID ou poste...",
+                id_label: "ID",
+                active: "Actif",
+                inactive: "Inactif",
+                no_employees: "Aucun employé trouvé",
+                created_successfully: "Employé créé avec succès",
+                deleted_successfully: "Employé supprimé avec succès",
+                subtitle :"Gérer les employés et leur hiérarchie organisationnelle",
+            },
         nav: {
+            employees : "Employées",
             home: "Home",
             projects: "Projects",
             materials: "Materials",
@@ -2354,7 +2442,8 @@ export const translations = {
                 inactive: "Inactive",
                 no_employees: "No employees found",
                 created_successfully: "Employee created successfully",
-                deleted_successfully: "Employee deleted successfully"
+                deleted_successfully: "Employee deleted successfully",
+                subtitle : "liste employees"
             }
         },
         projects: {

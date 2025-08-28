@@ -23,7 +23,7 @@ const Employees = () => {
               {t('nav.employees') || 'Employés'}
             </h1>
             <p className="text-gray-600">
-              {t('employees.subtitle') || 'Gérer les employés et leur hiérarchie organisationnelle'}
+              {t('employee.subtitle') || 'Gérer les employés et leur hiérarchie organisationnelle'}
             </p>
           </motion.div>
 
@@ -37,7 +37,6 @@ const Employees = () => {
         </div>
       </main>
       
-      <Footer />
     </div>
   );
 };
