@@ -9,9 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Gavel } from 'lucide-react';
 import DocumentsList from '@/components/documents/DocumentsList';
 import DocumentUpload from '@/components/documents/DocumentUpload';
-import SuppliersManagement from '@/components/documents/SuppliersManagement';
-import TaskAssignments from '@/components/documents/TaskAssignments';
-import EmployeeManagement from '@/components/documents/EmployeeManagement';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import TenderDocuments from '@/components/documents/TenderDocuments';
 import TenderDocumentUploadForm from '@/components/documents/TenderDocumentUploadForm';
@@ -97,13 +94,10 @@ const Documents = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
                 <TabsTrigger value="all">{t('documents.tabs.all')}</TabsTrigger>
                 <TabsTrigger value="documents">{t('documents.tabs.documents')}</TabsTrigger>
                 <TabsTrigger value="tender">{t('documents.tabs.tender')}</TabsTrigger>
-                <TabsTrigger value="suppliers">{t('documents.tabs.suppliers')}</TabsTrigger>
-                <TabsTrigger value="tasks">{t('documents.tabs.tasks')}</TabsTrigger>
-                <TabsTrigger value="employees">{t('documents.tabs.employees')}</TabsTrigger>
                 <TabsTrigger value="upload">{t('documents.tabs.upload')}</TabsTrigger>
                 {selectedDocument && <TabsTrigger value="viewer">{t('documents.tabs.viewer')}</TabsTrigger>}
               </TabsList>
@@ -183,17 +177,6 @@ const Documents = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="suppliers">
-                <SuppliersManagement />
-              </TabsContent>
-
-              <TabsContent value="tasks">
-                <TaskAssignments />
-              </TabsContent>
-
-              <TabsContent value="employees">
-                <EmployeeManagement />
-              </TabsContent>
 
               <TabsContent value="upload">
                 <DocumentUpload />

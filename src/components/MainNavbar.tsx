@@ -128,12 +128,19 @@ const MainNavbar = () => {
                         </Link>
                       </DropdownMenuItem>
                       
-                      <DropdownMenuItem asChild>
-                        <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
-                          <ClipboardList className="h-5 w-5 mr-3" />
-                          {t('task.title') || 'Tâches'}
-                        </Link>
-                      </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
+                            <ClipboardList className="h-5 w-5 mr-3" />
+                            {t('task.title') || 'Tâches'}
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                          <Link to="/employees" className="flex items-center px-4 py-3 text-gray-900">
+                            <Users className="h-5 w-5 mr-3" />
+                            {t('nav.employees') || 'Employés'}
+                          </Link>
+                        </DropdownMenuItem>
 
                       {canManageUsers && (
                         <>
@@ -358,6 +365,20 @@ const MainNavbar = () => {
                     <Link to="/tasks">
                       <ClipboardList className="h-4 w-4 mr-2" />
                       {t('task.title') || 'Tâches'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/employees">
+                      <Users className="h-4 w-4 mr-2" />
+                      {t('nav.employees') || 'Employés'}
                     </Link>
                   </Button>
                 </NavigationMenuItem>
