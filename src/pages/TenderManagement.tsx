@@ -11,6 +11,7 @@ import TenderImportManager from '@/components/tenders/TenderImportManager';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
 import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import TenderDocumentEvaluationPanel  from '@/components/tenders/TenderDocumentEvaluationPanel'; 
 
 interface Tender {
   id: string;
@@ -101,16 +102,22 @@ const TenderManagement = () => {
             <Settings className="h-4 w-4" />
             Documents
           </TabsTrigger>
-          <TabsTrigger value="workflow" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Workflow Officiel
-          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="evaluation" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Evaluation
+            </TabsTrigger>
+          )}
           {isAdmin && (
             <TabsTrigger value="import" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               Import
             </TabsTrigger>
           )}
+          <TabsTrigger value="workflow" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Workflow Officiel
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="tenders" className="space-y-6">
@@ -148,6 +155,7 @@ const TenderManagement = () => {
               
               <TenderWorkflowSteps 
                 tenderId={selectedTender.id}
+                projectId={selectedTender?.project_id}
                 readonly={false}
               />
             </>
@@ -213,6 +221,15 @@ const TenderManagement = () => {
             <TenderImportManager onImportComplete={handleImportComplete} />
           </TabsContent>
         )}
+          {isAdmin && (
+          <TabsContent value="evaluation">
+          <TenderDocumentEvaluationPanel 
+              tenderId={selectedTender?.id}
+              projectId={selectedTender?.project_id}
+          />
+          </TabsContent>
+        )}
+
       </Tabs>
     </div>
   );

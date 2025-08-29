@@ -23,6 +23,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
+import SupplierTenderPortal from '@/components/suppliers/SupplierTenderPortal';
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -549,7 +550,10 @@ const UnifiedSupplierPortal = () => {
               Déconnexion
             </Button>
           </div>
-
+          <div>
+            sumission
+            <SupplierTenderPortal/>  {/* Call the tender bider submission */}
+          </div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-l-4 border-l-green-500">
@@ -1117,8 +1121,7 @@ const UnifiedSupplierPortal = () => {
           </Tabs>
         </div>
       </main>
-      
-      <Footer />
+
     </div>
   );
 };

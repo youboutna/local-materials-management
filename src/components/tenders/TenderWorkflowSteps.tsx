@@ -61,9 +61,10 @@ interface StepDocument {
 interface TenderWorkflowStepsProps {
   tenderId: string;
   readonly?: boolean;
+  projectId?: string;
 }
 
-const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowStepsProps) => {
+const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWorkflowStepsProps) => {
   const [isAddStepDialogOpen, setIsAddStepDialogOpen] = useState(false);
   const [isOfficialWorkflowDialogOpen, setIsOfficialWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
@@ -251,7 +252,7 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
           mime_type: file.type,
           file_size: file.size,
           document_type: 'tender',
-          project_id: tenderId,
+          project_id: projectId,
           status: 'draft'
         }])
         .select()
@@ -268,7 +269,8 @@ const TenderWorkflowSteps = ({ tenderId, readonly = false }: TenderWorkflowSteps
       const { data: tenderDoc, error: tenderDocError } = await supabase
         .from('tender_documents')
         .insert([{
-          project_id: tenderId,
+          project_id: projectId,
+          tender_id: tenderId,
           document_id: document.id,
           category: documentData.category,
           subcategory: documentData.subcategory,
