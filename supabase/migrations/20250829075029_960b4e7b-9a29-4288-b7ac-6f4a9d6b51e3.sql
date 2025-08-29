@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS public.tender_estimates (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
-
+-- fix bug
+ALTER TABLE  public.tender_estimates ADD COLUMN IF NOT EXISTS  submitted_by UUID ;
 -- Create tender estimate items table
 CREATE TABLE IF NOT EXISTS public.tender_estimate_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
