@@ -551,7 +551,7 @@ const UnifiedSupplierPortal = () => {
             </Button>
           </div>
           <div>
-            sumission
+            Soumission en dev
             <SupplierTenderPortal/>  {/* Call the tender bider submission */}
           </div>
           {/* Stats Cards */}

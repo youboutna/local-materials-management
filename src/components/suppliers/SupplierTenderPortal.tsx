@@ -31,6 +31,7 @@ import {
   TENDER_DOCUMENT_LABELS, 
   TENDER_CATEGORY_LABELS 
 } from '@/types/tender';
+import { Supplier } from '@/types/supplier';
 
 interface PublicTender {
   id: string;
@@ -89,13 +90,12 @@ const SupplierTenderPortal = () => {
   const [selectedDocument, setSelectedDocument] = useState<TenderDocumentRequirement | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [supplierProfile, setSupplierProfile] = useState<Supplier | null>(null);
   const [uploadFormData, setUploadFormData] = useState({
     title: '',
     description: ''
   });
   const [activeTab, setActiveTab] = useState('browse');
-  const [supplierProfile, setSupplierProfile] = useState<any>(null);
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
