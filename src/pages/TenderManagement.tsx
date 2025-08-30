@@ -11,7 +11,7 @@ import TenderImportManager from '@/components/tenders/TenderImportManager';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
 import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import TenderDocumentEvaluationPanel  from '@/components/tenders/TenderDocumentEvaluationPanel'; 
+// import TenderDocumentEvaluationPanel  from '@/components/tenders/TenderDocumentEvaluationPanel'; 
 
 interface Tender {
   id: string;
@@ -223,10 +223,10 @@ const TenderManagement = () => {
         )}
           {isAdmin && (
           <TabsContent value="evaluation">
-          <TenderDocumentEvaluationPanel 
-              tenderId={selectedTender?.id}
-              projectId={selectedTender?.project_id}
-          />
+            <div className="p-6 text-center">
+              <h3 className="text-lg font-medium">Évaluation des soumissions</h3>
+              <p className="text-muted-foreground">Module d'évaluation en développement</p>
+            </div>
           </TabsContent>
         )}
 

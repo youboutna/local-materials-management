@@ -23,7 +23,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
-import SupplierTenderPortal from '@/components/suppliers/SupplierTenderPortal';
+import EnhancedSupplierTenderPortal from '@/components/suppliers/EnhancedSupplierTenderPortal';
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -552,7 +552,7 @@ const UnifiedSupplierPortal = () => {
           </div>
           <div>
             Soumission en dev
-            <SupplierTenderPortal/>  {/* Call the tender bider submission */}
+            <EnhancedSupplierTenderPortal/>  {/* Call the tender bider submission */}
           </div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
