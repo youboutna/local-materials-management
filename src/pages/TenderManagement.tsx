@@ -10,8 +10,8 @@ import TenderDocumentManager from '@/components/tenders/TenderDocumentManager';
 import TenderImportManager from '@/components/tenders/TenderImportManager';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
 import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
+import TenderEvaluationPanel from '@/components/tenders/TenderEvaluationPanel';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-// import TenderDocumentEvaluationPanel  from '@/components/tenders/TenderDocumentEvaluationPanel'; 
 
 interface Tender {
   id: string;
@@ -221,12 +221,29 @@ const TenderManagement = () => {
             <TenderImportManager onImportComplete={handleImportComplete} />
           </TabsContent>
         )}
-          {isAdmin && (
+        {isAdmin && (
           <TabsContent value="evaluation">
-            <div className="p-6 text-center">
-              <h3 className="text-lg font-medium">Évaluation des soumissions</h3>
-              <p className="text-muted-foreground">Module d'évaluation en développement</p>
-            </div>
+            {selectedTender ? (
+              <TenderEvaluationPanel 
+                tenderId={selectedTender.id}
+                onEvaluationUpdate={() => {
+                  console.log('Evaluation updated');
+                }}
+              />
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
+                  <p className="text-gray-600 mb-4">
+                    Choisissez un appel d'offres pour évaluer les soumissions reçues.
+                  </p>
+                  <Button onClick={() => setActiveTab('tenders')}>
+                    Voir les Appels d'Offres
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         )}
 
