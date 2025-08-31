@@ -28,20 +28,28 @@ interface Submission {
   id: string;
   user_id: string;
   tender_id: string;
-  submitted_at: string;
-  administrative_documents: any[];
-  technical_documents: any[];
-  financial_documents: any[];
+  supplier_name: string;
+  supplier_email: string;
+  submission_date: string;
   status: 'submitted' | 'under_review' | 'approved' | 'rejected';
   administrative_score?: number;
   technical_score?: number;
   financial_score?: number;
   total_score?: number;
   evaluator_notes?: string;
-  profiles?: {
-    full_name: string;
-    email: string;
-  };
+  reviewer_id?: string;
+  reviewed_at?: string;
+  submission_documents?: {
+    id: string;
+    category: 'administrative' | 'technical' | 'financial';
+    subcategory?: string;
+    document: {
+      id: string;
+      title: string;
+      file_url: string;
+      file_name: string;
+    };
+  }[];
 }
 
 const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
@@ -52,21 +60,24 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fetch tender submissions
+  // Fetch tender submissions grouped by bidder
   const { data: submissions, isLoading, refetch } = useQuery({
     queryKey: ['tender-submissions', tenderId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('tender_documents')
+        .from('tender_submissions')
         .select(`
           *,
-          document:documents(*)
+          submission_documents:tender_submission_documents(
+            *,
+            document:documents(*)
+          )
         `)
         .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
+        .order('submission_date', { ascending: false });
 
       if (error) throw error;
-      return data as any[];
+      return data as Submission[];
     },
     enabled: !!tenderId
   });
@@ -77,9 +88,16 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
     value: any
   ) => {
     try {
+      const updateData: any = { [field]: value };
+      
+      if (field === 'status' && value !== 'submitted') {
+        updateData.reviewer_id = (await supabase.auth.getUser()).data.user?.id;
+        updateData.reviewed_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
-        .from('tender_documents')
-        .update({ [field]: value })
+        .from('tender_submissions')
+        .update(updateData)
         .eq('id', submissionId);
 
       if (error) throw error;
@@ -172,10 +190,13 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium">{submission.profiles?.full_name || 'Soumissionnaire'}</h4>
-                    <p className="text-sm text-muted-foreground">{submission.profiles?.email}</p>
+                    <h4 className="font-medium">{submission.supplier_name}</h4>
+                    <p className="text-sm text-muted-foreground">{submission.supplier_email}</p>
                     <p className="text-xs text-muted-foreground">
-                      Soumis le {new Date(submission.submitted_at).toLocaleDateString('fr-FR')}
+                      Soumis le {new Date(submission.submission_date).toLocaleDateString('fr-FR')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Documents: {submission.submission_documents?.length || 0} fichier(s)
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -256,7 +277,7 @@ const AdministrativeEvaluation: React.FC<{
 }> = ({ submission, onUpdate }) => {
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
-  const documents = submission.administrative_documents || [];
+  const adminDocuments = submission.submission_documents?.filter(doc => doc.category === 'administrative') || [];
   const requiredDocs = [
     'Garantie de soumission',
     'Attestation fiscale',
@@ -265,8 +286,8 @@ const AdministrativeEvaluation: React.FC<{
     'Pouvoir du signataire'
   ];
 
-  const completionRate = (documents.length / requiredDocs.length) * 100;
-  const isComplete = completionRate === 100;
+  const completionRate = Math.min((adminDocuments.length / requiredDocs.length) * 100, 100);
+  const isComplete = adminDocuments.length >= requiredDocs.length;
 
   return (
     <div className="space-y-6">
@@ -282,7 +303,7 @@ const AdministrativeEvaluation: React.FC<{
           <h4 className="font-medium mb-3">Documents Requis</h4>
           <div className="space-y-2">
             {requiredDocs.map((doc, index) => {
-              const hasDoc = documents.some((d: any) => d.category === 'administrative');
+              const hasDoc = index < adminDocuments.length;
               return (
                 <div key={index} className="flex items-center justify-between">
                   <span>{doc}</span>
@@ -294,6 +315,25 @@ const AdministrativeEvaluation: React.FC<{
                 </div>
               );
             })}
+            
+            {adminDocuments.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <h5 className="font-medium mb-2">Documents soumis:</h5>
+                {adminDocuments.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between py-1">
+                    <span className="text-sm">{doc.document.title}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(doc.document.file_url, '_blank')}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Voir
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="mt-4 pt-4 border-t">
             <div className="flex items-center justify-between">
@@ -464,10 +504,14 @@ const FinancialEvaluation: React.FC<{
         <div className="p-4 border rounded-lg">
           <h4 className="font-medium mb-3">Documents Financiers</h4>
           <div className="space-y-2">
-            {(submission.financial_documents || []).map((doc: any, index) => (
+            {(submission.submission_documents?.filter(doc => doc.category === 'financial') || []).map((doc, index) => (
               <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                <span>{doc.name || `Document ${index + 1}`}</span>
-                <Button variant="outline" size="sm">
+                <span>{doc.document.title}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open(doc.document.file_url, '_blank')}
+                >
                   <Download className="h-4 w-4 mr-1" />
                   Télécharger
                 </Button>

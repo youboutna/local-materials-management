@@ -507,6 +507,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           created_at: string | null
+          deadline_date: string | null
           description: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           file_name: string | null
@@ -514,10 +515,13 @@ export type Database = {
           file_url: string | null
           id: string
           inspection_id: string | null
+          is_internal_only: boolean | null
+          is_shared_with_suppliers: boolean | null
           metadata: Json | null
           mime_type: string | null
           phase_id: string | null
           project_id: string | null
+          shared_date: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           tags: string[] | null
           title: string
@@ -527,6 +531,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           created_at?: string | null
+          deadline_date?: string | null
           description?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           file_name?: string | null
@@ -534,10 +539,13 @@ export type Database = {
           file_url?: string | null
           id?: string
           inspection_id?: string | null
+          is_internal_only?: boolean | null
+          is_shared_with_suppliers?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
           phase_id?: string | null
           project_id?: string | null
+          shared_date?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           tags?: string[] | null
           title: string
@@ -547,6 +555,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           created_at?: string | null
+          deadline_date?: string | null
           description?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           file_name?: string | null
@@ -554,10 +563,13 @@ export type Database = {
           file_url?: string | null
           id?: string
           inspection_id?: string | null
+          is_internal_only?: boolean | null
+          is_shared_with_suppliers?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
           phase_id?: string | null
           project_id?: string | null
+          shared_date?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           tags?: string[] | null
           title?: string
@@ -3430,6 +3442,63 @@ export type Database = {
           },
         ]
       }
+      tender_document_submissions: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: string
+          submission_date: string
+          submitted_by: string
+          tender_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submission_date?: string
+          submitted_by: string
+          tender_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submission_date?: string
+          submitted_by?: string
+          tender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_document_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "tender_document_submissions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       tender_documents: {
         Row: {
           category: Database["public"]["Enums"]["tender_document_category"]
@@ -3560,6 +3629,7 @@ export type Database = {
           profit_margin_percentage: number | null
           project_id: string | null
           status: string | null
+          submitted_by: string | null
           subtotal: number | null
           tax_amount: number | null
           tax_rate: number | null
@@ -3582,6 +3652,7 @@ export type Database = {
           profit_margin_percentage?: number | null
           project_id?: string | null
           status?: string | null
+          submitted_by?: string | null
           subtotal?: number | null
           tax_amount?: number | null
           tax_rate?: number | null
@@ -3604,6 +3675,7 @@ export type Database = {
           profit_margin_percentage?: number | null
           project_id?: string | null
           status?: string | null
+          submitted_by?: string | null
           subtotal?: number | null
           tax_amount?: number | null
           tax_rate?: number | null
@@ -3714,6 +3786,108 @@ export type Database = {
           },
         ]
       }
+      tender_submission_documents: {
+        Row: {
+          category: string
+          created_at: string
+          document_id: string
+          id: string
+          is_required: boolean | null
+          subcategory: string | null
+          submission_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          document_id: string
+          id?: string
+          is_required?: boolean | null
+          subcategory?: string | null
+          submission_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          is_required?: boolean | null
+          subcategory?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_submission_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_submission_documents_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "tender_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_submissions: {
+        Row: {
+          administrative_score: number | null
+          created_at: string
+          evaluator_notes: string | null
+          financial_score: number | null
+          id: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: string
+          submission_date: string
+          supplier_email: string | null
+          supplier_name: string | null
+          technical_score: number | null
+          tender_id: string
+          total_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          administrative_score?: number | null
+          created_at?: string
+          evaluator_notes?: string | null
+          financial_score?: number | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: string
+          submission_date?: string
+          supplier_email?: string | null
+          supplier_name?: string | null
+          technical_score?: number | null
+          tender_id: string
+          total_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          administrative_score?: number | null
+          created_at?: string
+          evaluator_notes?: string | null
+          financial_score?: number | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: string
+          submission_date?: string
+          supplier_email?: string | null
+          supplier_name?: string | null
+          technical_score?: number | null
+          tender_id?: string
+          total_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tender_suppliers: {
         Row: {
           created_at: string
@@ -3758,6 +3932,7 @@ export type Database = {
           budget_min: number | null
           contract_duration: number | null
           created_at: string
+          current_phase: number | null
           deadline_date: string | null
           description: string
           eligibility_requirements: Json | null
@@ -3783,6 +3958,7 @@ export type Database = {
           budget_min?: number | null
           contract_duration?: number | null
           created_at?: string
+          current_phase?: number | null
           deadline_date?: string | null
           description: string
           eligibility_requirements?: Json | null
@@ -3808,6 +3984,7 @@ export type Database = {
           budget_min?: number | null
           contract_duration?: number | null
           created_at?: string
+          current_phase?: number | null
           deadline_date?: string | null
           description?: string
           eligibility_requirements?: Json | null

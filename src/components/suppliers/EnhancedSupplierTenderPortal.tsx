@@ -154,6 +154,7 @@ const EnhancedSupplierTenderPortal = () => {
         .from('documents')
         .select('*')
         .eq('document_type', 'tender')
+        .eq('is_shared_with_suppliers', true)
         .contains('metadata', { tender_id: selectedTender.id });
 
       if (error) throw error;
@@ -172,15 +173,14 @@ const EnhancedSupplierTenderPortal = () => {
       if (!user.user) return null;
 
       const { data, error } = await supabase
-        .from('documents')
+        .from('tender_submissions')
         .select('*')
-        .eq('document_type', 'tender')
-        .eq('uploaded_by', user.user.id)
-        .contains('metadata', { tender_id: selectedTender.id })
+        .eq('tender_id', selectedTender.id)
+        .eq('user_id', user.user.id)
         .maybeSingle();
 
       if (error) throw error;
-      return data as BidSubmission | null;
+      return data;
     },
     enabled: !!selectedTender?.id
   });
@@ -190,10 +190,54 @@ const EnhancedSupplierTenderPortal = () => {
     mutationFn: async () => {
       if (!selectedTender?.id) throw new Error('Appel d\'offres non sélectionné');
       
+      // Validate deadline
+      if (selectedTender.deadline_date) {
+        const deadline = new Date(selectedTender.deadline_date);
+        const now = new Date();
+        if (now > deadline) {
+          throw new Error('La date limite de soumission est dépassée');
+        }
+      }
+      
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Utilisateur non connecté');
 
-      // Upload all selected files
+      // Get user profile for supplier info
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.user.id)
+        .single();
+
+      // Check if user already has a submission for this tender
+      const { data: existingSubmission } = await supabase
+        .from('tender_submissions')
+        .select('id')
+        .eq('tender_id', selectedTender.id)
+        .eq('user_id', user.user.id)
+        .maybeSingle();
+
+      if (existingSubmission) {
+        throw new Error('Vous avez déjà soumissionné pour cet appel d\'offres');
+      }
+
+      // Create tender submission record first
+      const { data: submission, error: submissionError } = await supabase
+        .from('tender_submissions')
+        .insert({
+          tender_id: selectedTender.id,
+          user_id: user.user.id,
+          supplier_name: profile?.full_name || 'Fournisseur',
+          supplier_email: user.user.email || '',
+          submission_date: new Date().toISOString(),
+          status: 'submitted'
+        })
+        .select()
+        .single();
+
+      if (submissionError) throw submissionError;
+
+      // Upload files and create document records
       const uploadedDocs: {[key: string]: string[]} = {
         administrative: [],
         technical: [],
@@ -223,9 +267,9 @@ const EnhancedSupplierTenderPortal = () => {
             file_size: file.size,
             document_type: 'tender',
             uploaded_by: user.user.id,
-            status: 'draft',
             metadata: {
               tender_id: selectedTender.id,
+              submission_id: submission.id,
               category: category,
               document_key: docKey
             }
@@ -234,31 +278,20 @@ const EnhancedSupplierTenderPortal = () => {
           .single();
 
         if (docError) throw docError;
+
+        // Link document to submission
+        await supabase
+          .from('tender_submission_documents')
+          .insert({
+            submission_id: submission.id,
+            document_id: document.id,
+            category: category as 'administrative' | 'technical' | 'financial',
+            subcategory: docKey.split('-').slice(1).join('-')
+          });
+
         uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
       }
 
-      // Create comprehensive submission record
-      const { data: submission, error: submissionError } = await supabase
-        .from('documents')
-        .insert({
-          title: `Soumission pour ${selectedTender.title}`,
-          description: submissionData.notes || 'Soumission complète pour cet appel d\'offres',
-          document_type: 'tender',
-          uploaded_by: user.user.id,
-          status: 'pending_review',
-          metadata: {
-            tender_id: selectedTender.id,
-            submission_type: 'comprehensive_bid',
-            administrative_docs: uploadedDocs.administrative,
-            technical_docs: uploadedDocs.technical,
-            financial_docs: uploadedDocs.financial,
-            submission_date: new Date().toISOString()
-          }
-        })
-        .select()
-        .single();
-
-      if (submissionError) throw submissionError;
       return submission;
     },
     onSuccess: () => {
@@ -504,11 +537,10 @@ const EnhancedSupplierTenderPortal = () => {
                         <h4 className="font-medium text-green-800">Soumission déjà envoyée</h4>
                         <p className="text-sm text-green-600">
                           Votre dossier de candidature a été soumis le{' '}
-                          {userSubmission.metadata?.submission_date && 
-                            new Date(userSubmission.metadata.submission_date).toLocaleDateString()}
+                          {new Date(userSubmission.submission_date).toLocaleDateString()}
                         </p>
                         <p className="text-xs text-green-600 mt-1">
-                          Statut: {userSubmission.status === 'pending' ? 'En cours d\'évaluation' : userSubmission.status}
+                          Statut: {userSubmission.status === 'submitted' ? 'En cours d\'évaluation' : userSubmission.status}
                         </p>
                       </div>
                     ) : canSubmitBid() && (
