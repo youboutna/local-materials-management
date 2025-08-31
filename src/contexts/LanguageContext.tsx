@@ -48,6 +48,7 @@ export const translations = {
                 loading: "Loading..."
             },
             supplier_portal: "Portail Fournisseur",
+            supplier_tender_portal: "Portail Fournisseur/soumissionaire",
             supplier_dashboard: "Tableau Fournisseur",
             suppliers: "Fournisseurs"
 
@@ -1085,6 +1086,7 @@ export const translations = {
             settings: "الإعدادات",
             tender_management: "إدارة العطاءات",
             supplier_portal: "بوابة المورد",
+            supplier_tender_portal: "/soumissionaire/ بوابة المورد",
             supplier_dashboard: "لوحة المورد",
             suppliers: "الموردون"
         },
@@ -2080,6 +2082,7 @@ export const translations = {
                 loading: "Loading..."
             },
             supplier_portal: "Supplier Portal",
+            supplier_tender_portal: "Supplier Bid Portal",
             supplier_dashboard: "Supplier Dashboard",
             suppliers: "Suppliers"
         },

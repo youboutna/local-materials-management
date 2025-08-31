@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
@@ -475,7 +475,10 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
 
       <Card>
         <CardHeader>
-          <CardTitle>Historique des Demandes</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Historique des Demandes de Paiement
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -497,7 +500,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
                   </TableCell>
                   <TableCell>
                     {request.project_id ? 
-                      projects.find(p => p.id === request.project_id)?.title || 'Projet supprimé'
+                      projects.find(p => String(p.id) === String(request.project_id))?.title || request.project_id 
                       : 'Non spécifié'
                     }
                   </TableCell>

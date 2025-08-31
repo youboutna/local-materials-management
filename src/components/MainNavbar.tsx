@@ -97,7 +97,14 @@ const MainNavbar = () => {
                         <Building2 className="h-5 w-5 mr-3" />
                         {t('nav.supplier_portal') || 'Supplier Portal'}
                       </Link>
+
+                        <Link to="/supplier-tender" className="flex items-center px-4 py-3 text-gray-900">
+                        <Building2 className="h-5 w-5 mr-3" />
+                        {t('nav.supplier_tender_portal') || 'Supplier soummission Portal'}
+                      </Link>
                     </DropdownMenuItem>
+
+                    
                   ) : (
                     <>
                       <DropdownMenuItem asChild>
@@ -208,6 +215,18 @@ const MainNavbar = () => {
                   >
                     <Link to="/supplier-portal">
                       {t('nav.supplier_portal') || 'Supplier Portal'}
+                    </Link>
+                  </Button>
+                </NavigationMenuItem>
+                  <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                  <Link to="/supplier-tender">
+                      {t('nav.supplier_tender_portal') || 'Supplier soumission Portal'}
                     </Link>
                   </Button>
                 </NavigationMenuItem>

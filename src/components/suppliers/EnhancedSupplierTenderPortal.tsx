@@ -248,9 +248,11 @@ const EnhancedSupplierTenderPortal = () => {
         const [category] = docKey.split('-');
         const uploadResult = await uploadFile(
           file, 
-          `tender-submissions/${selectedTender.id}/${user.user.id}/${category}`
+          `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${file.name}`
         );
-        
+         console.log("selectedFiles");
+        console.log(selectedFiles);
+
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Échec du téléchargement');
         }
@@ -305,9 +307,18 @@ const EnhancedSupplierTenderPortal = () => {
     },
     onError: (error) => {
       console.error('Submit bid error:', error);
+      let message = 'Erreur lors de la soumission du dossier.';
+      if (
+        error instanceof Error &&
+        (error.message.includes('already exists') ||
+         error.message.includes('duplicate') ||
+         error.message.includes('unique constraint'))
+      ) {
+        message = 'Vous avez déjà soumis un dossier pour cet appel d\'offres.';
+      }
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de la soumission du dossier.',
+        description: message,
         variant: 'destructive',
       });
     }

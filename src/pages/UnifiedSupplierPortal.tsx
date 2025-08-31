@@ -24,6 +24,7 @@ import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
 import EnhancedSupplierTenderPortal from '@/components/suppliers/EnhancedSupplierTenderPortal';
+import { scheduler } from 'timers/promises';
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -550,10 +551,6 @@ const UnifiedSupplierPortal = () => {
               Déconnexion
             </Button>
           </div>
-          <div>
-            Soumission en dev
-            <EnhancedSupplierTenderPortal/>  {/* Call the tender bider submission */}
-          </div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-l-4 border-l-green-500">
@@ -805,55 +802,6 @@ const UnifiedSupplierPortal = () => {
                 {supplierProfile && (
                   <SupplierPaymentRequest supplierId={supplierProfile.id} />
                 )}
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Historique des Demandes de Paiement
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {paymentRequests.length > 0 ? (
-                        paymentRequests.map((request) => (
-                          <div key={request.id} className="p-4 rounded-lg border bg-card">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="font-medium">
-                                  Demande #{request.id?.slice(0, 8)}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  Montant: {request.amount?.toLocaleString()} MRU
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  Raison: {request.payment_reason}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {request.requested_date ? new Date(request.requested_date).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                                </p>
-                              </div>
-                              <Badge 
-                                variant={request.status === 'approved' ? 'default' : 'secondary'}
-                                className={
-                                  request.status === 'approved' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : request.status === 'rejected'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-orange-100 text-orange-800'
-                                }
-                              >
-                                {request.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-muted-foreground text-center py-8">Aucune demande de paiement</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
 
@@ -1127,3 +1075,5 @@ const UnifiedSupplierPortal = () => {
 };
 
 export default UnifiedSupplierPortal;
+
+

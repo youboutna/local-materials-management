@@ -53,6 +53,7 @@ import InspectionMonitoringPage from './pages/InspectionMonitoring';
 import NotificationsCenterPage from './pages/NotificationsCenter';
 import InsuranceManagementPage from './pages/InsuranceManagement';
 import PaymentControlPage from './pages/PaymentControl';
+import EnhancedSupplierTenderPortal from './components/suppliers/EnhancedSupplierTenderPortal';
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ function App() {
                       <Route path="/policy" element={<Policy />} />
                       <Route path="/reset-password" element={<ResetPassword />} />
                       <Route path="/supplier-portal" element={<UnifiedSupplierPortal />} />
+                      <Route path='/supplier-tender' element={<EnhancedSupplierTenderPortal/>}/>
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
                       
                       {/* Protected routes - require authentication unless in dev mode */}

@@ -277,13 +277,17 @@ const AdministrativeEvaluation: React.FC<{
 }> = ({ submission, onUpdate }) => {
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
-  const adminDocuments = submission.submission_documents?.filter(doc => doc.category === 'administrative') || [];
+  console.log("submission.submission_documents");
+  console.log(submission.submission_documents);
+
+  const adminDocuments = submission.submission_documents?.filter(doc => (doc.category === 'administrative'||doc.category === 'financial' )) || [];
   const requiredDocs = [
     'Garantie de soumission',
     'Attestation fiscale',
     'Attestation de régularité sociale',
     'Copie du registre de commerce',
-    'Pouvoir du signataire'
+    'Pouvoir du signataire',
+    'Devis quantitatif estimatif'
   ];
 
   const completionRate = Math.min((adminDocuments.length / requiredDocs.length) * 100, 100);
