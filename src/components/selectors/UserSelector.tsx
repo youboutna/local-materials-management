@@ -194,7 +194,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
                 </SelectItem>
               ))}
               {(!users || users.length === 0) && (
-                <SelectItem value="" disabled>
+                <SelectItem value="no-users" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
                     <span>Aucun utilisateur trouvé</span>

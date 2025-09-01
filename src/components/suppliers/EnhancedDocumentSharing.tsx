@@ -295,12 +295,12 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   
                   <div>
                     <label className="text-sm font-medium">Type de document</label>
-                    <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+                    <Select value={selectedDocumentType || "all-types"} onValueChange={(value) => setSelectedDocumentType(value === "all-types" ? "" : value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Tous les types" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Tous les types</SelectItem>
+                        <SelectItem value="all-types">Tous les types</SelectItem>
                         {DOCUMENT_TYPES.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}

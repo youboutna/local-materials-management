@@ -542,12 +542,41 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                                    <Send className="h-4 w-4" />
                                  </Button>
                                )}
-                               <ActionsDropdown
-                                 entityType="inspection"
-                                 entityId={inspection.id}
-                                 projectId={inspection.project_id}
-                                 onActionComplete={fetchData}
-                               />
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="sm" variant="outline" className="gap-2">
+                                      <Settings className="h-4 w-4" />
+                                      Actions
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'task_assignment')}>
+                                      <Calendar className="h-4 w-4 mr-2" />
+                                      Assigner une tâche
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'hierarchy_notification')}>
+                                      <Users className="h-4 w-4 mr-2" />
+                                      Notifier la hiérarchie
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'sms')}>
+                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                      Envoyer SMS
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'call')}>
+                                      <Phone className="h-4 w-4 mr-2" />
+                                      Programmer appel
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'email')}>
+                                      <Mail className="h-4 w-4 mr-2" />
+                                      Envoyer email
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'mail')}>
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      Courrier postal
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                              </div>
                            </TableCell>
                         </TableRow>

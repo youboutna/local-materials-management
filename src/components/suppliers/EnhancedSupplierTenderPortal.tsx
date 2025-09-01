@@ -194,6 +194,12 @@ const EnhancedSupplierTenderPortal = () => {
       if (selectedTender.deadline_date) {
         const deadline = new Date(selectedTender.deadline_date);
         const now = new Date();
+        
+        // Check if deadline is a valid date
+        if (isNaN(deadline.getTime())) {
+          throw new Error('Date limite de soumission invalide');
+        }
+        
         if (now > deadline) {
           throw new Error('La date limite de soumission est dépassée');
         }
