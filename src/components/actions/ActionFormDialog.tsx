@@ -291,30 +291,114 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
             </div>
           )}
 
-          {/* Recipients */}
-          {formData.actionType !== 'hierarchy_notification' && (
+          {/* Recipients - Dynamic based on action type */}
+          {formData.actionType !== 'hierarchy_notification' && formData.actionType !== 'task_assignment' && (
             <div className="space-y-2">
-              <Label>Destinataires</Label>
+              <Label>
+                {formData.actionType === 'sms' && 'Destinataires SMS (personnes avec numéro de téléphone)'}
+                {formData.actionType === 'email' && 'Destinataires Email (personnes avec adresse email)'}
+                {formData.actionType === 'call' && 'Personnes à appeler (avec numéro de téléphone)'}
+                {formData.actionType === 'mail' && 'Destinataires courrier postal (avec adresse)'}
+                {!['sms', 'email', 'call', 'mail'].includes(formData.actionType) && 'Destinataires'}
+              </Label>
+              <div className="text-xs text-muted-foreground mb-2">
+                {formData.actionType === 'sms' && 'Sélectionnez les personnes qui recevront le SMS'}
+                {formData.actionType === 'email' && 'Sélectionnez les personnes qui recevront l\'email'}
+                {formData.actionType === 'call' && 'Sélectionnez les personnes à contacter par téléphone'}
+                {formData.actionType === 'mail' && 'Sélectionnez les personnes qui recevront le courrier postal'}
+              </div>
               <div className="border rounded-lg p-3 max-h-32 overflow-y-auto">
                 {availableRecipients.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aucun destinataire disponible</p>
                 ) : (
-                  availableRecipients.map((recipient) => (
-                    <label key={recipient.id} className="flex items-center gap-2 cursor-pointer py-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.recipientIds.includes(recipient.id)}
-                        onChange={(e) => handleRecipientChange(recipient.id, e.target.checked)}
-                        className="rounded"
-                      />
-                      <span className="text-sm">
-                        {recipient.name}
-                        {recipient.email && ` (${recipient.email})`}
-                        {recipient.phone && ` - ${recipient.phone}`}
-                      </span>
-                    </label>
-                  ))
+                  availableRecipients
+                    .filter(recipient => {
+                      // Filter recipients based on action type requirements
+                      if (formData.actionType === 'sms' || formData.actionType === 'call') {
+                        return recipient.phone;
+                      }
+                      if (formData.actionType === 'email') {
+                        return recipient.email;
+                      }
+                      return true; // For other action types, show all
+                    })
+                    .map((recipient) => (
+                      <label key={recipient.id} className="flex items-center gap-2 cursor-pointer py-1">
+                        <input
+                          type="checkbox"
+                          checked={formData.recipientIds.includes(recipient.id)}
+                          onChange={(e) => handleRecipientChange(recipient.id, e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">
+                          {recipient.name}
+                          {recipient.email && formData.actionType === 'email' && ` (${recipient.email})`}
+                          {recipient.phone && (formData.actionType === 'sms' || formData.actionType === 'call') && ` - ${recipient.phone}`}
+                          {!['sms', 'email', 'call'].includes(formData.actionType) && (
+                            <>
+                              {recipient.email && ` (${recipient.email})`}
+                              {recipient.phone && ` - ${recipient.phone}`}
+                            </>
+                          )}
+                        </span>
+                      </label>
+                    ))
                 )}
+                {availableRecipients.filter(recipient => {
+                  if (formData.actionType === 'sms' || formData.actionType === 'call') {
+                    return recipient.phone;
+                  }
+                  if (formData.actionType === 'email') {
+                    return recipient.email;
+                  }
+                  return true;
+                }).length === 0 && (
+                  <p className="text-sm text-orange-600">
+                    {formData.actionType === 'sms' && 'Aucune personne avec numéro de téléphone disponible'}
+                    {formData.actionType === 'email' && 'Aucune personne avec adresse email disponible'}
+                    {formData.actionType === 'call' && 'Aucune personne avec numéro de téléphone disponible'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Hierarchy Notification Recipients Info */}
+          {formData.actionType === 'hierarchy_notification' && (
+            <div className="space-y-2">
+              <Label>Destinataires hiérarchiques</Label>
+              <div className="text-xs text-muted-foreground mb-2">
+                Les notifications seront automatiquement envoyées aux personnes du niveau hiérarchique sélectionné
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-sm">
+                  <strong>Niveau sélectionné :</strong> {
+                    formData.escalationLevel === 'team' && 'Équipe - Collègues de même niveau'
+                  }
+                  {formData.escalationLevel === 'supervisor' && 'Superviseur - Responsable direct'}
+                  {formData.escalationLevel === 'manager' && 'Manager - Responsable de service'}
+                  {formData.escalationLevel === 'director' && 'Directeur - Direction générale'}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Task Assignment Info */}
+          {formData.actionType === 'task_assignment' && formData.assigneeId && (
+            <div className="space-y-2">
+              <Label>Personne assignée</Label>
+              <div className="text-xs text-muted-foreground mb-2">
+                La tâche sera assignée à la personne sélectionnée ci-dessus
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="text-sm">
+                  <strong>Assigné à :</strong> {
+                    availableEmployees.find(emp => emp.id === formData.assigneeId)?.full_name || 'Employé sélectionné'
+                  }
+                  {availableEmployees.find(emp => emp.id === formData.assigneeId)?.position && 
+                    ` (${availableEmployees.find(emp => emp.id === formData.assigneeId)?.position})`
+                  }
+                </div>
               </div>
             </div>
           )}
