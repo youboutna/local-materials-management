@@ -250,14 +250,18 @@ const EnhancedSupplierTenderPortal = () => {
         financial: []
       };
 
+      console.log("All selectedFiles:", selectedFiles);
+      console.log("Files to process:", Object.entries(selectedFiles));
+
       for (const [docKey, file] of Object.entries(selectedFiles)) {
+        console.log("Processing document:", docKey, "File:", file.name);
         const [category] = docKey.split('-');
+        console.log("Extracted category:", category);
+        
         const uploadResult = await uploadFile(
           file, 
           `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${file.name}`
         );
-         console.log("selectedFiles");
-        console.log(selectedFiles);
 
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Échec du téléchargement');
