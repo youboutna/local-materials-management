@@ -257,11 +257,13 @@ const EnhancedSupplierTenderPortal = () => {
         console.log("Processing document:", docKey, "File:", file.name);
         const [category] = docKey.split('-');
         console.log("Extracted category:", category);
-        
+        const [subcategory] = docKey.split('-').slice(1).join('-');
+        console.log("Extracted subCategory:", subcategory);
         const uploadResult = await uploadFile(
           file, 
-          `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${file.name}`
+          `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${subcategory}`
         );
+        console.log("Extracted upload url :",uploadResult.url);
 
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Échec du téléchargement');
