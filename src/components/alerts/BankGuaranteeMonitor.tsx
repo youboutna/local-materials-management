@@ -11,6 +11,7 @@ import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 
 const BankGuaranteeMonitor: React.FC = () => {
   const [delays, setDelays] = useState<any[]>([]);
@@ -289,41 +290,14 @@ const BankGuaranteeMonitor: React.FC = () => {
                           Voir Projet
                         </Button>
                         
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline" className="gap-2">
-                              <Settings className="h-4 w-4" />
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'task_assignment')}>
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Assigner une tâche
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'hierarchy_notification')}>
-                              <Users className="h-4 w-4 mr-2" />
-                              Notifier la hiérarchie
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'sms')}>
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Envoyer SMS
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'call')}>
-                              <Phone className="h-4 w-4 mr-2" />
-                              Programmer appel
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'email')}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Envoyer email
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBankGuaranteeAction(delay.projectId, 'mail')}>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Courrier postal
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ActionsDropdown
+                          entityType="bank_guarantee"
+                          entityId={delay.projectId}
+                          projectId={delay.projectId}
+                          contractorId={delay.contractorId}
+                          onActionComplete={loadDelays}
+                          onAction={(_, actionType) => handleBankGuaranteeAction(delay.projectId, actionType)}
+                        />
                       </div>
                     </div>
                   </CardContent>

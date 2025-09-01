@@ -39,6 +39,7 @@ import DocumentSelector from '@/components/selectors/DocumentSelector';
 import DocumentUpload from '@/components/documents/DocumentUpload';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import DocumentSection from '@/components/common/DocumentSection';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 
 interface Payment {
   id: string;
@@ -1280,50 +1281,13 @@ const PaymentCrud: React.FC = () => {
                               <Button size="sm" variant="ghost" title="Supprimer">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="sm" variant="outline" className="gap-2">
-                                    <Settings className="h-4 w-4" />
-                                    Actions
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'task_assignment')}>
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    Assigner une tâche
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'hierarchy_notification')}>
-                                    <Users className="h-4 w-4 mr-2" />
-                                    Notifier la hiérarchie
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'sms')}>
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Envoyer SMS
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'call')}>
-                                    <Phone className="h-4 w-4 mr-2" />
-                                    Programmer appel
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'email')}>
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Envoyer email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'mail')}>
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Courrier postal
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleExportReceipt(payment.id)}>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Exporter reçu
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleBlockchainVerify(payment.id)}>
-                                    <Shield className="h-4 w-4 mr-2" />
-                                    Vérification blockchain
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                        <ActionsDropdown
+                          entityType="payment"
+                          entityId={payment.id}
+                          projectId={payment.project_id}
+                          contractorId={payment.contractor_id}
+                          onAction={(id, actionType) => handlePaymentAction(id, actionType, payment.contractor_name)}
+                        />
                             </div>
                           </TableCell>
                   </TableRow>

@@ -29,6 +29,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
 import DocumentUpload from '@/components/documents/DocumentUpload';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 
 const paymentFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),
@@ -818,41 +819,13 @@ const EnhancedPaymentBlockingInterface = () => {
                     <Badge variant="destructive">{getReasonLabel(payment.blocking_reason)}</Badge>
                     <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <Settings className="h-4 w-4" />
-                        <span className="hidden sm:inline">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'task_assignment', payment.contractor_name)}>
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Assigner une tâche
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'hierarchy_notification', payment.contractor_name)}>
-                        <Users className="h-4 w-4 mr-2" />
-                        Notifier la hiérarchie
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'sms', payment.contractor_name)}>
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Envoyer SMS
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'call', payment.contractor_name)}>
-                        <Phone className="h-4 w-4 mr-2" />
-                        Programmer appel
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'email', payment.contractor_name)}>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Envoyer email
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePaymentAction(payment.id, 'mail', payment.contractor_name)}>
-                        <FileText className="h-4 w-4 mr-2" />
-                        Courrier postal
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <ActionsDropdown
+                    entityType="payment"
+                    entityId={payment.id}
+                    projectId={payment.project_id}
+                    contractorId={payment.recipient_id}
+                    onAction={(id, actionType) => handlePaymentAction(id, actionType, payment.contractor_name)}
+                  />
                 </div>
               </div>
             ))}

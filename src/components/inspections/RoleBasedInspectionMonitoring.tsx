@@ -389,6 +389,9 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
     return <div className="text-center py-8">Chargement...</div>;
   }
 
+  function refreshInspections(): void {
+    fetchData();
+  }
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -550,31 +553,12 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'task_assignment')}>
-                                      <Calendar className="h-4 w-4 mr-2" />
-                                      Assigner une tâche
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'hierarchy_notification')}>
-                                      <Users className="h-4 w-4 mr-2" />
-                                      Notifier la hiérarchie
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'sms')}>
-                                      <MessageSquare className="h-4 w-4 mr-2" />
-                                      Envoyer SMS
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'call')}>
-                                      <Phone className="h-4 w-4 mr-2" />
-                                      Programmer appel
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'email')}>
-                                      <Mail className="h-4 w-4 mr-2" />
-                                      Envoyer email
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleInspectionAction(inspection.id, 'mail')}>
-                                      <FileText className="h-4 w-4 mr-2" />
-                                      Courrier postal
-                                    </DropdownMenuItem>
+                                    <ActionsDropdown
+                                    entityType="inspection"
+                                    entityId={inspection.id}
+                                    projectId={inspection.project_id}
+                                    onActionComplete={refreshInspections} 
+                                    />
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                              </div>

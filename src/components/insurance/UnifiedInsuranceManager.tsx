@@ -32,6 +32,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import UserSelector from '@/components/selectors/UserSelector';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'Project ID requis'),
@@ -954,71 +955,21 @@ const UnifiedInsuranceManager = () => {
                         }}>
                           Renouveler
                         </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline" className="gap-2">
-                              <Settings className="h-4 w-4" />
-                              <span className="hidden sm:inline">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'task_assignment');
-                            }}>
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Assigner une tâche
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'hierarchy_notification');
-                            }}>
-                              <Users className="h-4 w-4 mr-2" />
-                              Notifier la hiérarchie
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'sms');
-                            }}>
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Envoyer SMS
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'call');
-                            }}>
-                              <Phone className="h-4 w-4 mr-2" />
-                              Programmer appel
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'email');
-                            }}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Envoyer email
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              const certificate = certificates.find(c => 
-                                (c.policyNumber || c.policy_number) === alert.policyNumber
-                              );
-                              if (certificate?.id) handleInsuranceAction(certificate.id, 'mail');
-                            }}>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Courrier postal
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {(() => {
+                          const certificate = certificates.find(c => 
+                            (c.policyNumber || c.policy_number) === alert.policyNumber
+                          );
+                          if (!certificate) return null;
+                          return (
+                            <ActionsDropdown
+                              entityType="insurance"
+                              entityId={certificate.id!}
+                              projectId={certificate.projectId || certificate.project_id}
+                              contractorId={certificate.contractorId || certificate.contractor_id}
+                              onActionComplete={loadCertificates}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                   </CardContent>
