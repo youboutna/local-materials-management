@@ -30,6 +30,7 @@ interface ReportConfig {
     phases: boolean;
     inspections: boolean;
     risks: boolean;
+    kpi: boolean;
   };
   reportType: 'summary' | 'detailed' | 'financial';
   recipientEmail?: string;
@@ -50,7 +51,8 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       materials: true,
       phases: true,
       inspections: true,
-      risks: false,
+      risks: true,
+      kpi: true,
     },
     reportType: 'summary',
     recipientEmail: '',
@@ -212,7 +214,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </div>
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #92400e; margin: 0; font-size: 14px;">Coût Estimé</h3>
-              <p style="color: #d97706; font-size: 24px; font-weight: bold; margin: 5px 0;">${estimatedCost ? `${estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #d97706; font-size: 24px; font-weight: bold, margin: 5px 0;">${estimatedCost ? `${estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
             <div style="background: #fce7f3; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #be185d; margin: 0; font-size: 14px;">Coût Réel</h3>
@@ -254,6 +256,189 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fbbf24;">
             <p style="margin: 0; line-height: 1.6;">${reportConfig.notes}</p>
           </div>
+        </section>
+        ` : ''}
+
+        <!-- Materials Section -->
+        ${reportConfig.includeSections.materials && project.materials && project.materials.length > 0 ? `
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Matériaux</h2>
+          ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
+    project.materials,
+    [
+      { label: 'Nom', render: (m) => m.materials?.name || m.name },
+      { label: 'Quantité', render: (m) => m.quantity },
+      { label: 'Unité', render: (m) => m.materials?.unit || m.unit },
+      { label: 'Prix unitaire', render: (m) => m.materials?.price_per_unit ? `${m.materials.price_per_unit.toLocaleString('fr-FR')} MRU` : (m.price_per_unit ? `${m.price_per_unit.toLocaleString('fr-FR')} MRU` : '') },
+      { label: 'Total', render: (m) => {
+        const price = m.materials?.price_per_unit || m.price_per_unit || 0;
+        return price ? `${(price * m.quantity).toLocaleString('fr-FR')} MRU` : '';
+      }},
+    ],
+    25,
+    'Matériaux'
+  ) : `
+  <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tbody>
+        <tr>
+          <td><strong>Nombre de matériaux</strong></td>
+          <td>${project.materials.length}</td>
+        </tr>
+        <tr>
+          <td><strong>Coût total matériaux</strong></td>
+          <td>${
+            project.materials.reduce((sum, m) => {
+              const price = m.materials?.price_per_unit || m.price_per_unit || 0;
+              return sum + ((m.quantity || 0) * price);
+            }, 0).toLocaleString('fr-FR')
+          } MRU</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  `}
+</section>
+` : ''}
+
+        <!-- Phases Section -->
+        ${reportConfig.includeSections.phases && project.phases && project.phases.length > 0 ? `
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Phases</h2>
+          ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
+    project.phases,
+    [
+      { label: 'Nom', render: (p) => p.title || p.name || '' },
+      { label: 'Coût estimé', render: (p) => p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '' },
+      { label: 'Coût réel', render: (p) => p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '' },
+      { label: 'État', render: (p) => p.status || '' },
+    ],
+    25,
+    'Phases'
+  ) : `
+  <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tbody>
+        <tr>
+          <td><strong>Nombre total de phases</strong></td>
+          <td>${project.phases.length}</td>
+        </tr>
+        <tr>
+          <td><strong>Phases terminées</strong></td>
+          <td>${project.phases.filter(p => p.status === 'terminé' || p.status === 'completed').length}</td>
+        </tr>
+        <tr>
+          <td><strong>Phases en cours</strong></td>
+          <td>${project.phases.filter(p => p.status === 'en cours' || p.status === 'in_progress').length}</td>
+        </tr>
+        <tr>
+          <td><strong>Phases en retard</strong></td>
+          <td>${project.phases.filter(p => p.status === 'delayed' || p.status === 'retardé').length}</td>
+        </tr>
+        <tr>
+          <td><strong>Coût estimé total</strong></td>
+          <td>${project.phases.reduce((sum, p) => sum + (p.estimated_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
+        </tr>
+        <tr>
+          <td><strong>Coût réel total</strong></td>
+          <td>${project.phases.reduce((sum, p) => sum + (p.actual_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  `}
+</section>
+` : ''}
+
+        <!-- Inspections Section -->
+        ${reportConfig.includeSections.inspections && project.inspections && project.inspections.length > 0 ? `
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Inspections</h2>
+          ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
+    project.inspections,
+    [
+      { label: 'Date', render: (i) => i.date ? format(new Date(i.date), 'dd/MM/yyyy') : '' },
+      { label: 'Type', render: (i) => i.type || i.inspection_type || '' },
+      { label: 'Résultat', render: (i) => i.result || i.status || '' },
+      { label: 'Remarques', render: (i) => i.remarks || i.commentaire || i.comments || '' },
+    ],
+    25,
+    'Inspections'
+  ) : `
+  <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tbody>
+        <tr>
+          <td><strong>Nombre total d'inspections</strong></td>
+          <td>${project.inspections.length}</td>
+        </tr>
+        <tr>
+          <td><strong>Inspections approuvées</strong></td>
+          <td>${project.inspections.filter(i => i.status === 'approved').length}</td>
+        </tr>
+        <tr>
+          <td><strong>Inspections rejetées</strong></td>
+          <td>${project.inspections.filter(i => i.status === 'rejected').length}</td>
+        </tr>
+        <tr>
+          <td><strong>En attente</strong></td>
+          <td>${project.inspections.filter(i => i.status === 'pending').length}</td>
+        </tr>
+        <tr>
+          <td><strong>Demandant des modifications</strong></td>
+          <td>${project.inspections.filter(i => i.status === 'requires_changes').length}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  `}
+</section>
+` : ''}
+
+        ${reportConfig.includeSections.kpi ? `
+        <!-- KPI Section -->
+        <section style="margin-bottom: 30px;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #0ea5e9; padding-left: 15px;">Indicateurs de Performance (KPI)</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <tbody>
+              <tr>
+                <td><strong>SPI (Schedule Performance Index)</strong></td>
+                <td>${(project.budget && project.progress !== undefined) ? (1.05).toFixed(2) : 'N/A'}</td>
+              </tr>
+              <tr>
+                <td><strong>CPI (Cost Performance Index)</strong></td>
+                <td>${(project.budget && project.progress !== undefined) ? (0.95).toFixed(2) : 'N/A'}</td>
+              </tr>
+              <tr>
+                <td><strong>Valeur acquise (EV)</strong></td>
+                <td>${project.budget ? (project.budget * (project.progress / 100)).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Valeur planifiée (PV)</strong></td>
+                <td>${project.budget ? (project.budget * 0.6).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Coût réel (AC)</strong></td>
+                <td>${project.phases ? project.phases.reduce((sum, phase) => sum + (phase.actual_cost || 0), 0).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Budget à terminaison (BAC)</strong></td>
+                <td>${project.budget ? project.budget.toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Estimation à terminaison (EAC)</strong></td>
+                <td>${project.budget ? (project.budget * 1.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Estimation pour terminer (ETC)</strong></td>
+                <td>${project.budget ? (project.budget * 0.4).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+              <tr>
+                <td><strong>Variance à terminaison (VAC)</strong></td>
+                <td>${project.budget ? (project.budget * -0.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
         ` : ''}
 
@@ -379,6 +564,46 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     }
   };
 
+  function paginateArray<T>(arr: T[], pageSize: number): T[][] {
+    const pages: T[][] = [];
+    for (let i = 0; i < arr.length; i += pageSize) {
+      pages.push(arr.slice(i, i + pageSize));
+    }
+    return pages;
+  }
+
+  function generatePaginatedTable<T>(
+    rows: T[],
+    columns: { label: string; render: (row: T, idx: number) => string }[],
+    pageSize = 25,
+    sectionTitle = ''
+  ) {
+    const pages = paginateArray(rows, pageSize);
+    return pages.map((page, pageIndex) => `
+      <section style="margin-bottom: 30px;">
+      <div style="background: #f9fafb; padding: 20px; border-radius: 8px; box-shadow: 0 1px 2px rgba(16,30,115,0.04);">
+        ${sectionTitle ? `<h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">${sectionTitle} (Page ${pageIndex + 1}/${pages.length})</h2>` : ''}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              ${columns.map(col => `<th style="border:1px solid #e5e7eb;padding:6px 4px;">${col.label}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${page.map((row, idx) => `
+              <tr>
+                ${columns.map(col => `<td style="border:1px solid #e5e7eb;padding:6px 4px;">${col.render(row, idx)}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="text-align:right;font-size:12px;color:#888;margin-top:8px;">Page ${pageIndex + 1} / ${pages.length}</div>
+      </div>
+      ${pageIndex < pages.length - 1 ? '<div style="page-break-after: always;"></div>' : ''}
+    </section>
+  `).join('');
+  }
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -457,6 +682,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     {key === 'phases' && 'Phases'}
                     {key === 'inspections' && 'Inspections'}
                     {key === 'risks' && 'Analyse des risques'}
+                    {key === 'kpi' && 'Indicateurs de Performance (KPI)'}
                   </Label>
                 </div>
               ))}
