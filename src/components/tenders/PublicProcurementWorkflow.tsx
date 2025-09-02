@@ -11,6 +11,82 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+// Define types for procurement phases and stages
+export type ProcurementPhase =
+  | 'planification'
+  | 'publicite'
+  | 'reception_analyse'
+  | 'attribution'
+  | 'controle_regulation';
+
+export type ProcurementStage =
+  | 'estimation_ressources'
+  | 'planification_achats'
+  | 'modalites_planification'
+  | 'publication_portail'
+  | 'diffusion_journaux'
+  | 'inscription_candidats'
+  | 'notification_opportunites'
+  | 'soumission_dossiers'
+  | 'analyse_cpmp'
+  | 'assistance_sous_commission'
+  | 'evaluation_conformite'
+  | 'selection_prix'
+  | 'choix_economique'
+  | 'publication_attribution'
+  | 'signature_marche'
+  | 'controle_cncmp'
+  | 'verification_regulier'
+  | 'regulation_armp'
+  | 'commission_disciplinaire';
+
+// Mauritanian public procurement workflow stages mapping
+export const PROCUREMENT_STAGES: {
+  [key in ProcurementPhase]: { value: ProcurementStage; label: string }[]
+} = {
+  planification: [
+    { value: 'estimation_ressources', label: 'Estimation des ressources financières nécessaires' },
+    { value: 'planification_achats', label: 'Planification des achats par catégorie (personnel, locations, assurances, etc.)' },
+    { value: 'modalites_planification', label: 'Définition des modalités de planification' }
+  ],
+  publicite: [
+    { value: 'publication_portail', label: 'Publication via le Portail National des Marchés Publics' },
+    { value: 'diffusion_journaux', label: 'Diffusion dans les journaux d\'annonces légales' },
+    { value: 'inscription_candidats', label: 'Inscription des candidats potentiels sur le portail' },
+    { value: 'notification_opportunites', label: 'Notifications d\'opportunités aux candidats' }
+  ],
+  reception_analyse: [
+    { value: 'soumission_dossiers', label: 'Soumission des dossiers techniques par les candidats' },
+    { value: 'analyse_cpmp', label: 'Analyse par la CPMP présidée par la PRMP' },
+    { value: 'assistance_sous_commission', label: 'Assistance de la sous-commission d\'analyse des offres' },
+    { value: 'evaluation_conformite', label: 'Évaluation de la conformité des offres' }
+  ],
+  attribution: [
+    { value: 'selection_prix', label: 'Sélection basée sur le critère du prix ou du coût' },
+    { value: 'choix_economique', label: 'Choix de l\'offre économiquement la plus avantageuse' },
+    { value: 'publication_attribution', label: 'Publication de l\'avis d\'attribution dans les 30 jours' },
+    { value: 'signature_marche', label: 'Signature du marché avec l\'attributaire' }
+  ],
+  controle_regulation: [
+    { value: 'controle_cncmp', label: 'Contrôle a priori et a posteriori par la CNCMP' },
+    { value: 'verification_regulier', label: 'Vérification de la régularité des procédures' },
+    { value: 'regulation_armp', label: 'Régulation par l\'ARMP (Conseil de Régulation, Commission de Règlement des Différends)' },
+    { value: 'commission_disciplinaire', label: 'Commission Disciplinaire pour les sanctions' }
+  ]
+};
+
+
+const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
+  planification: 'Planification',
+  publicite: 'Publicité',
+  reception_analyse: 'Réception & Analyse',
+  attribution: 'Attribution',
+  controle_regulation: 'Contrôle & Régulation'
+};
+
+
+
+
 const PublicProcurementWorkflow = () => {
   const workflowSteps = [
     {
