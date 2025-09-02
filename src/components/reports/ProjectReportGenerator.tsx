@@ -31,6 +31,7 @@ interface ReportConfig {
     inspections: boolean;
     risks: boolean;
     kpi: boolean;
+    milestones: boolean;
   };
   reportType: 'summary' | 'detailed' | 'financial';
   recipientEmail?: string;
@@ -53,6 +54,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       inspections: true,
       risks: true,
       kpi: true,
+      milestones: true,
     },
     reportType: 'summary',
     recipientEmail: '',
@@ -683,6 +685,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     {key === 'inspections' && 'Inspections'}
                     {key === 'risks' && 'Analyse des risques'}
                     {key === 'kpi' && 'Indicateurs de Performance (KPI)'}
+                    {key === 'milestones' && 'Jalons'}
                   </Label>
                 </div>
               ))}

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Users, Edit2, Trash2, Star } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useQuery as useSuppliersQuery } from '@tanstack/react-query'; // Add this import
 
 interface PhaseEmployeesProps {
   phaseId: string;
@@ -37,6 +38,9 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
     end_date: '',
     is_primary_supplier: false,
   });
+  const [memberType, setMemberType] = useState<'employee' | 'supplier'>('employee');
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+  const [employeeSearch, setEmployeeSearch] = useState('');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -50,6 +54,34 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
         .eq('phase_id', phaseId)
         .order('created_at', { ascending: false });
       
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: suppliersList } = useSuppliersQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('id, name, contact_person, email, phone');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch employeesList from your API or context
+  const { data: employeesList, isLoading: isEmployeesLoading } = useQuery({
+    queryKey: ['employees', employeeSearch],
+    queryFn: async () => {
+      let query = supabase
+        .from('employees')
+        .select('id, full_name, position, email, phone')
+        .order('full_name');
+
+      if (employeeSearch) {
+        query = query.or(`full_name.ilike.%${employeeSearch}%,employee_id.ilike.%${employeeSearch}%,position.ilike.%${employeeSearch}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -191,16 +223,103 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                {/* Member type selector */}
+                <div className="flex gap-4 mb-2">
+                  <label>
+                    <input
+                      type="radio"
+                      checked={memberType === 'employee'}
+                      onChange={() => {
+                        setMemberType('employee');
+                        setSelectedSupplierId(null);
+                        setFormData({
+                          ...formData,
+                          employee_name: '',
+                          employee_role: '',
+                          employee_contact: '',
+                        });
+                      }}
+                    />
+                    <span className="ml-2">Employé interne</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={memberType === 'supplier'}
+                      onChange={() => {
+                        setMemberType('supplier');
+                        setFormData({
+                          ...formData,
+                          employee_name: '',
+                          employee_role: '',
+                          employee_contact: '',
+                        });
+                      }}
+                    />
+                    <span className="ml-2">Consultant externe / Fournisseur</span>
+                  </label>
+                </div>
+
+                {/* If supplier, show dropdown */}
+                {memberType === 'supplier' && (
+                  <div>
+                    <Label htmlFor="supplier_select">Sélectionner un fournisseur/consultant *</Label>
+                    <Input
+                      id="supplier_select"
+                      value={formData.employee_name}
+                      onChange={e => {
+                        const supplier = suppliersList?.find(s => s.name === e.target.value);
+                        setSelectedSupplierId(supplier?.id || null);
+                        setFormData({
+                          ...formData,
+                          employee_name: supplier?.name || e.target.value,
+                          employee_role: 'Consultant externe',
+                          employee_contact: supplier?.contact_person || supplier?.email || supplier?.phone || '',
+                        });
+                      }}
+                      required={memberType === 'supplier'}
+                      list="supplier-list"
+                      disabled={memberType !== 'supplier'}
+                    />
+                    <datalist id="supplier-list">
+                      {suppliersList?.map(s => (
+                        <option key={s.id} value={s.name} label={s.contact_person || ''} />
+                      ))}
+                    </datalist>
+                  </div>
+                )}
+
+                {memberType === 'employee' && (
                   <div>
                     <Label htmlFor="employee_name">Nom complet *</Label>
                     <Input
                       id="employee_name"
                       value={formData.employee_name}
-                      onChange={(e) => setFormData({ ...formData, employee_name: e.target.value })}
+                      onChange={e => {
+                        setEmployeeSearch(e.target.value);
+                        // Find the employee by full_name
+                        const emp = employeesList?.find(emp => emp.full_name === e.target.value);
+                        setFormData({
+                          ...formData,
+                          employee_name: e.target.value,
+                          employee_role: emp?.position || '', // Use position for role/fonction
+                          employee_contact: emp?.email || emp?.phone || '',
+                        });
+                      }}
                       required
+                      disabled={memberType === 'supplier'}
+                      list="employee-list"
+                      autoComplete="off"
                     />
+                    <datalist id="employee-list">
+                      {employeesList?.map(emp => (
+                        <option key={emp.id} value={emp.full_name} />
+                      ))}
+                    </datalist>
                   </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="employee_role">Rôle/Fonction *</Label>
                     <Input
@@ -209,6 +328,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       onChange={(e) => setFormData({ ...formData, employee_role: e.target.value })}
                       required
                       placeholder="Ex: Chef de chantier, Maçon, etc."
+                      disabled={memberType === 'supplier'}
                     />
                   </div>
                 </div>
@@ -221,6 +341,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       value={formData.employee_contact}
                       onChange={(e) => setFormData({ ...formData, employee_contact: e.target.value })}
                       placeholder="Téléphone ou email"
+                      disabled={memberType === 'supplier'}
                     />
                   </div>
                   <div>
