@@ -296,7 +296,6 @@ const BankGuaranteeMonitor: React.FC = () => {
                           projectId={delay.projectId}
                           contractorId={delay.contractorId}
                           onActionComplete={loadDelays}
-                          onAction={(_, actionType) => handleBankGuaranteeAction(delay.projectId, actionType)}
                         />
                       </div>
                     </div>

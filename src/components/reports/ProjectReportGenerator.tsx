@@ -262,19 +262,19 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         ` : ''}
 
         <!-- Materials Section -->
-        ${reportConfig.includeSections.materials && project.materials && project.materials.length > 0 ? `
+        ${reportConfig.includeSections.materials && (project as any).materials && (project as any).materials.length > 0 ? `
         <section style="margin-bottom: 30px;">
           <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Matériaux</h2>
           ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
-    project.materials,
+    (project as any).materials,
     [
-      { label: 'Nom', render: (m) => m.materials?.name || m.name },
-      { label: 'Quantité', render: (m) => m.quantity },
-      { label: 'Unité', render: (m) => m.materials?.unit || m.unit },
-      { label: 'Prix unitaire', render: (m) => m.materials?.price_per_unit ? `${m.materials.price_per_unit.toLocaleString('fr-FR')} MRU` : (m.price_per_unit ? `${m.price_per_unit.toLocaleString('fr-FR')} MRU` : '') },
-      { label: 'Total', render: (m) => {
+      { label: 'Nom', render: (m: any) => m.materials?.name || m.name },
+      { label: 'Quantité', render: (m: any) => m.quantity },
+      { label: 'Unité', render: (m: any) => m.materials?.unit || m.unit },
+      { label: 'Prix unitaire', render: (m: any) => m.materials?.price_per_unit ? `${m.materials.price_per_unit.toLocaleString('fr-FR')} MRU` : (m.price_per_unit ? `${m.price_per_unit.toLocaleString('fr-FR')} MRU` : '') },
+      { label: 'Total', render: (m: any) => {
         const price = m.materials?.price_per_unit || m.price_per_unit || 0;
-        return price ? `${(price * m.quantity).toLocaleString('fr-FR')} MRU` : '';
+        return price ? `${(price * (m.quantity || 0)).toLocaleString('fr-FR')} MRU` : '';
       }},
     ],
     25,
@@ -285,12 +285,12 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       <tbody>
         <tr>
           <td><strong>Nombre de matériaux</strong></td>
-          <td>${project.materials.length}</td>
+          <td>${(project as any).materials.length}</td>
         </tr>
         <tr>
           <td><strong>Coût total matériaux</strong></td>
           <td>${
-            project.materials.reduce((sum, m) => {
+            (project as any).materials.reduce((sum: number, m: any) => {
               const price = m.materials?.price_per_unit || m.price_per_unit || 0;
               return sum + ((m.quantity || 0) * price);
             }, 0).toLocaleString('fr-FR')
@@ -304,16 +304,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 ` : ''}
 
         <!-- Phases Section -->
-        ${reportConfig.includeSections.phases && project.phases && project.phases.length > 0 ? `
+        ${reportConfig.includeSections.phases && (project as any).phases && (project as any).phases.length > 0 ? `
         <section style="margin-bottom: 30px;">
           <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Phases</h2>
           ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
-    project.phases,
+    (project as any).phases,
     [
-      { label: 'Nom', render: (p) => p.title || p.name || '' },
-      { label: 'Coût estimé', render: (p) => p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '' },
-      { label: 'Coût réel', render: (p) => p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '' },
-      { label: 'État', render: (p) => p.status || '' },
+      { label: 'Nom', render: (p: any) => p.title || p.name || '' },
+      { label: 'Coût estimé', render: (p: any) => p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '' },
+      { label: 'Coût réel', render: (p: any) => p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '' },
+      { label: 'État', render: (p: any) => p.status || '' },
     ],
     25,
     'Phases'
@@ -323,27 +323,27 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       <tbody>
         <tr>
           <td><strong>Nombre total de phases</strong></td>
-          <td>${project.phases.length}</td>
+          <td>${(project as any).phases.length}</td>
         </tr>
         <tr>
           <td><strong>Phases terminées</strong></td>
-          <td>${project.phases.filter(p => p.status === 'terminé' || p.status === 'completed').length}</td>
+          <td>${(project as any).phases.filter((p: any) => p.status === 'terminé' || p.status === 'completed').length}</td>
         </tr>
         <tr>
           <td><strong>Phases en cours</strong></td>
-          <td>${project.phases.filter(p => p.status === 'en cours' || p.status === 'in_progress').length}</td>
+          <td>${(project as any).phases.filter((p: any) => p.status === 'en cours' || p.status === 'in_progress').length}</td>
         </tr>
         <tr>
           <td><strong>Phases en retard</strong></td>
-          <td>${project.phases.filter(p => p.status === 'delayed' || p.status === 'retardé').length}</td>
+          <td>${(project as any).phases.filter((p: any) => p.status === 'delayed' || p.status === 'retardé').length}</td>
         </tr>
         <tr>
           <td><strong>Coût estimé total</strong></td>
-          <td>${project.phases.reduce((sum, p) => sum + (p.estimated_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
+          <td>${(project as any).phases.reduce((sum: number, p: any) => sum + (p.estimated_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
         </tr>
         <tr>
           <td><strong>Coût réel total</strong></td>
-          <td>${project.phases.reduce((sum, p) => sum + (p.actual_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
+          <td>${(project as any).phases.reduce((sum: number, p: any) => sum + (p.actual_cost || 0), 0).toLocaleString('fr-FR')} MRU</td>
         </tr>
       </tbody>
     </table>
@@ -353,16 +353,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 ` : ''}
 
         <!-- Inspections Section -->
-        ${reportConfig.includeSections.inspections && project.inspections && project.inspections.length > 0 ? `
+        ${reportConfig.includeSections.inspections && (project as any).inspections && (project as any).inspections.length > 0 ? `
         <section style="margin-bottom: 30px;">
           <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Inspections</h2>
           ${reportConfig.reportType === 'detailed' ? generatePaginatedTable(
-    project.inspections,
+    (project as any).inspections,
     [
-      { label: 'Date', render: (i) => i.date ? format(new Date(i.date), 'dd/MM/yyyy') : '' },
-      { label: 'Type', render: (i) => i.type || i.inspection_type || '' },
-      { label: 'Résultat', render: (i) => i.result || i.status || '' },
-      { label: 'Remarques', render: (i) => i.remarks || i.commentaire || i.comments || '' },
+      { label: 'Date', render: (i: any) => i.date ? format(new Date(i.date), 'dd/MM/yyyy') : '' },
+      { label: 'Type', render: (i: any) => i.type || i.inspection_type || '' },
+      { label: 'Résultat', render: (i: any) => i.result || i.status || '' },
+      { label: 'Remarques', render: (i: any) => i.remarks || i.commentaire || i.comments || '' },
     ],
     25,
     'Inspections'
@@ -372,23 +372,23 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       <tbody>
         <tr>
           <td><strong>Nombre total d'inspections</strong></td>
-          <td>${project.inspections.length}</td>
+          <td>${(project as any).inspections.length}</td>
         </tr>
         <tr>
           <td><strong>Inspections approuvées</strong></td>
-          <td>${project.inspections.filter(i => i.status === 'approved').length}</td>
+          <td>${(project as any).inspections.filter((i: any) => i.status === 'approved').length}</td>
         </tr>
         <tr>
           <td><strong>Inspections rejetées</strong></td>
-          <td>${project.inspections.filter(i => i.status === 'rejected').length}</td>
+          <td>${(project as any).inspections.filter((i: any) => i.status === 'rejected').length}</td>
         </tr>
         <tr>
           <td><strong>En attente</strong></td>
-          <td>${project.inspections.filter(i => i.status === 'pending').length}</td>
+          <td>${(project as any).inspections.filter((i: any) => i.status === 'pending').length}</td>
         </tr>
         <tr>
           <td><strong>Demandant des modifications</strong></td>
-          <td>${project.inspections.filter(i => i.status === 'requires_changes').length}</td>
+          <td>${(project as any).inspections.filter((i: any) => i.status === 'requires_changes').length}</td>
         </tr>
       </tbody>
     </table>
@@ -421,7 +421,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
               </tr>
               <tr>
                 <td><strong>Coût réel (AC)</strong></td>
-                <td>${project.phases ? project.phases.reduce((sum, phase) => sum + (phase.actual_cost || 0), 0).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                <td>${(project as any).phases ? (project as any).phases.reduce((sum: number, phase: any) => sum + (phase.actual_cost || 0), 0).toLocaleString('fr-FR') : 'N/A'} MRU</td>
               </tr>
               <tr>
                 <td><strong>Budget à terminaison (BAC)</strong></td>

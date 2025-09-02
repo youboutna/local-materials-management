@@ -1285,8 +1285,7 @@ const PaymentCrud: React.FC = () => {
                           entityType="payment"
                           entityId={payment.id}
                           projectId={payment.project_id}
-                          contractorId={payment.contractor_id}
-                          onAction={(id, actionType) => handlePaymentAction(id, actionType, payment.contractor_name)}
+                          contractorId={payment.contractor_id || undefined}
                         />
                             </div>
                           </TableCell>

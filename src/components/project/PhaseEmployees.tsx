@@ -307,7 +307,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         });
                       }}
                       required
-                      disabled={memberType === 'supplier'}
+                      disabled={memberType !== 'employee'}
                       list="employee-list"
                       autoComplete="off"
                     />

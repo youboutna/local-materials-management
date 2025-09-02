@@ -824,7 +824,6 @@ const EnhancedPaymentBlockingInterface = () => {
                     entityId={payment.id}
                     projectId={payment.project_id}
                     contractorId={payment.recipient_id}
-                    onAction={(id, actionType) => handlePaymentAction(id, actionType, payment.contractor_name)}
                   />
                 </div>
               </div>
