@@ -82,7 +82,7 @@ export const PROCUREMENT_STAGES: {
   ]
 };
 
-const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
+export const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
   planification: 'Planification',
   publicite: 'Publicité',
   reception_analyse: 'Réception & Analyse',
@@ -316,5 +316,19 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
     </>
   );
 };
+
+// Export workflowSteps data for use in other components
+export const PROCUREMENT_PHASES = Object.fromEntries(
+  Object.entries(PROCUREMENT_STAGES).map(([phase, stages], index) => [
+    phase,
+    {
+      id: index + 1,
+      phase: phase as ProcurementPhase,
+      title: PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase],
+      icon: [Calendar, Megaphone, FileText, Award, Shield][index],
+      stages
+    }
+  ])
+) as { [key in ProcurementPhase]: { id: number; phase: ProcurementPhase; title: string; icon: any; stages: { value: ProcurementStage; label: string }[] } };
 
 export default PublicProcurementWorkflow;

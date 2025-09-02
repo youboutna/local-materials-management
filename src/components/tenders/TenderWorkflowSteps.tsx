@@ -17,6 +17,13 @@ import WorkflowStepSelector from './WorkflowStepSelector';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
 import { 
+  PROCUREMENT_PHASES, 
+  PROCUREMENT_STAGES, 
+  PROCUREMENT_PHASE_LABELS,
+  ProcurementPhase,
+  ProcurementStage 
+} from './PublicProcurementWorkflow';
+import { 
   TenderDocumentCategory, 
   TenderDocumentSubcategory, 
   TENDER_DOCUMENT_LABELS, 
@@ -33,6 +40,8 @@ interface TenderStep {
   required_documents: string[];
   status: 'pending' | 'in_progress' | 'completed' | 'approved';
   due_date?: string;
+  procurement_phase?: ProcurementPhase;
+  procurement_stage?: string;
   created_at: string;
   updated_at: string;
 }
@@ -67,6 +76,7 @@ interface TenderWorkflowStepsProps {
 const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWorkflowStepsProps) => {
   const [isAddStepDialogOpen, setIsAddStepDialogOpen] = useState(false);
   const [isOfficialWorkflowDialogOpen, setIsOfficialWorkflowDialogOpen] = useState(false);
+  const [isProcurementWorkflowDialogOpen, setIsProcurementWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const [selectedStepForSuggestions, setSelectedStepForSuggestions] = useState<number | null>(null);
@@ -74,7 +84,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
   const [stepFormData, setStepFormData] = useState({
     title: '',
     description: '',
-    due_date: ''
+    due_date: '',
+    procurement_phase: '' as ProcurementPhase | '',
+    procurement_stage: ''
   });
   const [documentFormData, setDocumentFormData] = useState({
     category: 'administrative' as TenderDocumentCategory,
@@ -175,6 +187,50 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
     },
   });
 
+  // Add procurement workflow step
+  const addProcurementStepMutation = useMutation({
+    mutationFn: async ({ phase, stage }: { phase: ProcurementPhase; stage: { value: ProcurementStage; label: string } }) => {
+      const existingSteps = tenderSteps || [];
+      const nextStepNumber = existingSteps.length > 0 
+        ? Math.max(...existingSteps.map(s => s.step_number)) + 1 
+        : 1;
+      
+      const { data, error } = await supabase
+        .from('tender_steps')
+        .insert([{
+          tender_id: tenderId,
+          title: stage.label,
+          description: `Phase: ${PROCUREMENT_PHASE_LABELS[phase]} - ${stage.label}`,
+          step_number: nextStepNumber,
+          required_documents: [],
+          procurement_phase: phase,
+          procurement_stage: stage.value,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
+      toast({
+        title: 'Étape de marché public ajoutée',
+        description: 'L\'étape du workflow de marché public a été ajoutée avec succès.',
+      });
+      setIsProcurementWorkflowDialogOpen(false);
+    },
+    onError: (error) => {
+      console.error('Add procurement step error:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'ajout de l\'étape de marché public.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Add new step mutation - Fixed to calculate next step number properly
   const addStepMutation = useMutation({
     mutationFn: async (stepData: typeof stepFormData) => {
@@ -195,6 +251,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
           description: stepData.description?.trim() || null,
           step_number: nextStepNumber,
           due_date: stepData.due_date || null,
+          procurement_phase: stepData.procurement_phase || null,
+          procurement_stage: stepData.procurement_stage || null,
           required_documents: [],
           status: 'pending'
         }])
@@ -211,7 +269,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
         description: 'La nouvelle étape a été ajoutée avec succès.',
       });
       setIsAddStepDialogOpen(false);
-      setStepFormData({ title: '', description: '', due_date: '' });
+      setStepFormData({ title: '', description: '', due_date: '', procurement_phase: '', procurement_stage: '' });
     },
     onError: (error) => {
       console.error('Add step error:', error);
@@ -495,6 +553,13 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
                   <Workflow className="h-4 w-4 mr-2" />
                   Workflow Officiel
                 </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsProcurementWorkflowDialogOpen(true)}
+                >
+                  <Workflow className="h-4 w-4 mr-2" />
+                  Marché Public
+                </Button>
                 <Button onClick={() => setIsAddStepDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Étape Personnalisée
@@ -724,7 +789,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId,readonly = false }: TenderWor
                 variant="outline" 
                 onClick={() => {
                   setIsAddStepDialogOpen(false);
-                  setStepFormData({ title: '', description: '', due_date: '' });
+                  setStepFormData({ title: '', description: '', due_date: '', procurement_phase: '', procurement_stage: '' });
                 }}
               >
                 Annuler

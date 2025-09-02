@@ -16,6 +16,13 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import { OFFICIAL_WORKFLOW_STEPS, OfficialWorkflowStep } from './OfficialWorkflowSteps';
+import { 
+  PROCUREMENT_PHASES, 
+  PROCUREMENT_STAGES, 
+  PROCUREMENT_PHASE_LABELS,
+  ProcurementPhase,
+  ProcurementStage 
+} from './PublicProcurementWorkflow';
 
 interface Tender {
   id: string;
@@ -48,7 +55,9 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
   const [isWorkflowSelectorOpen, setIsWorkflowSelectorOpen] = useState(false);
+  const [isProcurementWorkflowSelectorOpen, setIsProcurementWorkflowSelectorOpen] = useState(false);
   const [selectedWorkflowSteps, setSelectedWorkflowSteps] = useState<OfficialWorkflowStep[]>([]);
+  const [selectedProcurementSteps, setSelectedProcurementSteps] = useState<Array<{phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }}>>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -127,19 +136,39 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         if (error) throw error;
         
         // Add workflow steps if creating new tender and steps are selected
+        let stepNumber = 1;
+        const allStepsToInsert: any[] = [];
+
         if (selectedWorkflowSteps.length > 0) {
-          const stepsToInsert = selectedWorkflowSteps.map((step, index) => ({
+          const officialSteps = selectedWorkflowSteps.map((step) => ({
             tender_id: data.id,
             title: step.title,
             description: step.description,
-            step_number: index + 1,
+            step_number: stepNumber++,
             required_documents: step.requiredDocuments || [],
             status: 'pending'
           }));
+          allStepsToInsert.push(...officialSteps);
+        }
 
+        if (selectedProcurementSteps.length > 0) {
+          const procurementSteps = selectedProcurementSteps.map(({ phase, stage }) => ({
+            tender_id: data.id,
+            title: stage.label,
+            description: `Phase: ${PROCUREMENT_PHASE_LABELS[phase]} - ${stage.label}`,
+            step_number: stepNumber++,
+            required_documents: [],
+            procurement_phase: phase,
+            procurement_stage: stage.value,
+            status: 'pending'
+          }));
+          allStepsToInsert.push(...procurementSteps);
+        }
+
+        if (allStepsToInsert.length > 0) {
           const { error: stepsError } = await supabase
             .from('tender_steps')
-            .insert(stepsToInsert);
+            .insert(allStepsToInsert);
           
           if (stepsError) {
             console.error('Error adding workflow steps:', stepsError);
@@ -222,6 +251,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     setIsDialogOpen(false);
     setEditingTender(null);
     setSelectedWorkflowSteps([]);
+    setSelectedProcurementSteps([]);
     setFormData({
       title: '',
       description: '',
@@ -245,6 +275,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
   const removeWorkflowStep = (stepId: number) => {
     setSelectedWorkflowSteps(prev => prev.filter(s => s.id !== stepId));
+  };
+
+  const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }) => {
+    if (!selectedProcurementSteps.find(s => s.phase === phase && s.stage.value === stage.value)) {
+      setSelectedProcurementSteps(prev => [...prev, { phase, stage }]);
+    }
+    setIsProcurementWorkflowSelectorOpen(false);
+  };
+
+  const removeProcurementStep = (phase: ProcurementPhase, stageValue: string) => {
+    setSelectedProcurementSteps(prev => prev.filter(s => !(s.phase === phase && s.stage.value === stageValue)));
   };
 
   const getExistingStepIds = () => {
@@ -375,40 +416,64 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
             {!editingTender && (
               <div className="md:col-span-2 space-y-3">
                 <Label>Étapes du Workflow Initial (optionnel)</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsWorkflowSelectorOpen(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Workflow className="h-4 w-4" />
-                    Ajouter Étapes Officielles
-                  </Button>
-                </div>
+                 <div className="flex flex-wrap gap-2">
+                   <Button 
+                     type="button"
+                     variant="outline"
+                     onClick={() => setIsWorkflowSelectorOpen(true)}
+                     className="flex items-center gap-2"
+                   >
+                     <Workflow className="h-4 w-4" />
+                     Ajouter Étapes Officielles
+                   </Button>
+                   <Button 
+                     type="button"
+                     variant="outline"
+                     onClick={() => setIsProcurementWorkflowSelectorOpen(true)}
+                     className="flex items-center gap-2"
+                   >
+                     <Workflow className="h-4 w-4" />
+                     Ajouter Marché Public
+                   </Button>
+                 </div>
                 
-                {selectedWorkflowSteps.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Étapes sélectionnées :</p>
-                    <div className="space-y-2">
-                      {selectedWorkflowSteps.map((step) => (
-                        <div key={step.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm font-medium">
-                            Étape {step.id}: {step.title}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeWorkflowStep(step.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                 {(selectedWorkflowSteps.length > 0 || selectedProcurementSteps.length > 0) && (
+                   <div className="space-y-2">
+                     <p className="text-sm text-gray-600">Étapes sélectionnées :</p>
+                     <div className="space-y-2">
+                       {selectedWorkflowSteps.map((step) => (
+                         <div key={step.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                           <span className="text-sm font-medium">
+                             Étape {step.id}: {step.title}
+                           </span>
+                           <Button
+                             type="button"
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => removeWorkflowStep(step.id)}
+                           >
+                             <Trash2 className="h-3 w-3" />
+                           </Button>
+                         </div>
+                       ))}
+                       {selectedProcurementSteps.map(({ phase, stage }) => (
+                         <div key={`${phase}-${stage.value}`} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                           <span className="text-sm font-medium">
+                             {PROCUREMENT_PHASE_LABELS[phase]}: {stage.label}
+                           </span>
+                           <Button
+                             type="button"
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => removeProcurementStep(phase, stage.value)}
+                           >
+                             <Trash2 className="h-3 w-3" />
+                           </Button>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
                 
                 <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
                   💡 Vous pourrez ajouter d'autres étapes personnalisées ou officielles après la création de l'appel d'offres dans la section "Workflow".
@@ -435,6 +500,41 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         onSelectStep={handleSelectWorkflowStep}
         existingStepNumbers={getExistingStepIds()}
       />
+
+      {/* Procurement Workflow Step Selector */}
+      <Dialog open={isProcurementWorkflowSelectorOpen} onOpenChange={setIsProcurementWorkflowSelectorOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Sélectionner des Étapes de Marché Public</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {Object.entries(PROCUREMENT_PHASES).map(([phase, phaseData]) => (
+              <div key={phase} className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  {React.createElement(phaseData.icon)}
+                  {PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase]}
+                </h3>
+                <div className="grid gap-2">
+                  {phaseData.stages.map((stage) => (
+                    <Button
+                      key={stage.value}
+                      variant="outline"
+                      className="justify-start text-left h-auto p-3"
+                      onClick={() => handleSelectProcurementStep(phase as ProcurementPhase, stage)}
+                    >
+                      <div>
+                        <div className="font-medium">{stage.label}</div>
+                        <div className="text-sm text-gray-600">{stage.value}</div>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Tenders List */}
       <div className="grid gap-4">
