@@ -135,7 +135,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
               >
                 <div className="flex items-center space-x-3">
                   {allowMultipleSelection ? (
-                    <Checkbox checked={isSelected} readOnly />
+                    <Checkbox checked={isSelected} />
                   ) : (
                     <div className={`w-4 h-4 rounded-full border-2 ${
                       isSelected ? 'border-primary bg-primary' : 'border-gray-300'
@@ -182,7 +182,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
         )}
       </div>
 
-      {documents?.length > 0 && (
+      {(documents?.length ?? 0) > 0 && (
         <div className="flex justify-end pt-4 border-t">
           <Button
             onClick={handleConfirmSelection}
