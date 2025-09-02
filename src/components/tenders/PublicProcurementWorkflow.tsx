@@ -11,9 +11,12 @@ import {
   Shield,
   ChevronRight,
   Share2,
-  Users
+  Users,
+  Upload,
+  Eye
 } from 'lucide-react';
 import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
+import TenderDocumentSelector from '@/components/documents/TenderDocumentSelector';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -87,9 +90,21 @@ const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
   controle_regulation: 'Contrôle & Régulation'
 };
 
-const PublicProcurementWorkflow = () => {
+interface PublicProcurementWorkflowProps {
+  selectedTender?: {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    project_id?: string;
+  };
+}
+
+const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ selectedTender }) => {
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
+  const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
+  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
 
   function getPhaseDescription(phase: ProcurementPhase): string {
     const descriptions = {
@@ -114,12 +129,34 @@ const PublicProcurementWorkflow = () => {
   }));
 
   const handleShareWithSuppliers = (stepTitle: string, stepPhase: ProcurementPhase) => {
+    setSelectedWorkflowStep({ phase: stepPhase, stepTitle });
+    
+    if (!selectedTender) {
+      // If no tender is selected, use the general sharing approach
+      setSelectedSupplier({
+        id: 'all-suppliers',
+        name: `Tous les fournisseurs - ${stepTitle}`,
+        email: 'all-suppliers@tender-portal.com',
+        phase: stepPhase
+      });
+      setDocumentSharingOpen(true);
+    } else {
+      // If a tender is selected, open document selector for this tender
+      setDocumentSelectorOpen(true);
+    }
+  };
+
+  const handleDocumentSelected = (documentIds: string[]) => {
+    // Create a supplier context for the selected tender
     setSelectedSupplier({
-      id: 'all-suppliers',
-      name: `Tous les fournisseurs - ${stepTitle}`,
-      email: 'all-suppliers@tender-portal.com',
-      phase: stepPhase
+      id: `tender-${selectedTender?.id}`,
+      name: `Fournisseurs - ${selectedTender?.title} - ${selectedWorkflowStep?.stepTitle}`,
+      email: `tender-${selectedTender?.id}@portal.com`,
+      phase: selectedWorkflowStep?.phase,
+      tender_id: selectedTender?.id,
+      selected_documents: documentIds
     });
+    setDocumentSelectorOpen(false);
     setDocumentSharingOpen(true);
   };
 
@@ -127,12 +164,42 @@ const PublicProcurementWorkflow = () => {
     <>
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            Workflow des Marchés Publics en Mauritanie
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-6 w-6" />
+              <CardTitle>
+                Workflow des Marchés Publics en Mauritanie
+                {selectedTender && (
+                  <Badge variant="outline" className="ml-2">
+                    {selectedTender.title}
+                  </Badge>
+                )}
+              </CardTitle>
+            </div>
+            {selectedTender && (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  Statut: {selectedTender.status}
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDocumentSelectorOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Documents de l'appel d'offres
+                </Button>
+              </div>
+            )}
+          </div>
           <p className="text-sm text-gray-600">
             Étapes générales de la procédure des marchés publics utilisée par les entreprises publiques
+            {selectedTender && (
+              <span className="block mt-1 text-blue-600 font-medium">
+                Appel d'offres sélectionné: {selectedTender.title}
+              </span>
+            )}
           </p>
         </CardHeader>
         <CardContent>
@@ -156,16 +223,29 @@ const PublicProcurementWorkflow = () => {
                             </Badge>
                             <h3 className="font-semibold text-lg">{step.title}</h3>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleShareWithSuppliers(step.title, step.phase)}
-                            className="flex items-center gap-2"
-                          >
-                            <Share2 className="h-4 w-4" />
-                            <Users className="h-4 w-4" />
-                            Partager avec fournisseurs
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {selectedTender && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDocumentSelectorOpen(true)}
+                                className="flex items-center gap-2"
+                              >
+                                <Upload className="h-4 w-4" />
+                                Documents
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleShareWithSuppliers(step.title, step.phase)}
+                              className="flex items-center gap-2"
+                            >
+                              <Share2 className="h-4 w-4" />
+                              <Users className="h-4 w-4" />
+                              Partager avec fournisseurs
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-gray-700 mb-3">{step.description}</p>
                         
@@ -206,6 +286,24 @@ const PublicProcurementWorkflow = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Selector Dialog */}
+      {selectedTender && (
+        <Dialog open={documentSelectorOpen} onOpenChange={setDocumentSelectorOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                Documents de l'appel d'offres: {selectedTender.title}
+              </DialogTitle>
+            </DialogHeader>
+            <TenderDocumentSelector
+              tenderId={selectedTender.id}
+              onDocumentsSelected={handleDocumentSelected}
+              allowMultipleSelection={true}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Document Sharing Dialog */}
       {selectedSupplier && (
