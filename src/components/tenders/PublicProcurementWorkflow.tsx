@@ -1,15 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Calendar, 
   Megaphone, 
   FileText, 
   Award, 
   Shield,
-  ChevronRight
+  ChevronRight,
+  Share2,
+  Users
 } from 'lucide-react';
+import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -88,19 +93,39 @@ const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
 
 
 const PublicProcurementWorkflow = () => {
-  const workflowSteps = [
-    {
-      id: 1,
-      title: "Planification des achats",
-      icon: Calendar,
-      description: "Élaboration du Plan Annuel d'Achats (PAA) et du Plan de Passation des Marchés (PPM)",
-      details: [
-        "Estimation des ressources financières nécessaires",
-        "Planification des achats par catégorie (personnel, locations, assurances, etc.)",
-        "Définition des modalités de planification"
-      ],
-      color: "bg-blue-100 border-blue-300"
-    },
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
+
+  const workflowSteps = Object.entries(PROCUREMENT_STAGES).map(([phase, stages], index) => ({
+    id: index + 1,
+    phase: phase as ProcurementPhase,
+    title: PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase],
+    icon: [Calendar, Megaphone, FileText, Award, Shield][index],
+    description: getPhaseDescription(phase as ProcurementPhase),
+    details: stages.map(stage => stage.label),
+    color: ["bg-blue-100 border-blue-300", "bg-green-100 border-green-300", "bg-yellow-100 border-yellow-300", "bg-purple-100 border-purple-300", "bg-red-100 border-red-300"][index],
+    stages
+  }));
+
+  function getPhaseDescription(phase: ProcurementPhase): string {
+    const descriptions = {
+      planification: "Élaboration du Plan Annuel d'Achats (PAA) et du Plan de Passation des Marchés (PPM)",
+      publicite: "Publication des avis selon les procédures formalisées ou adaptées", 
+      reception_analyse: "Analyse des offres par la Commission de Passation des Marchés Publics (CPMP)",
+      attribution: "Attribution au soumissionnaire présentant l'offre économiquement la plus avantageuse",
+      controle_regulation: "Contrôle par la CNCMP et régulation par l'ARMP"
+    };
+    return descriptions[phase];
+  }
+
+  const handleShareWithSuppliers = (stepTitle: string) => {
+    setSelectedSupplier({
+      id: 'all-suppliers',
+      name: `Tous les fournisseurs - ${stepTitle}`,
+      email: 'all-suppliers@tender-portal.com'
+    });
+    setDocumentSharingOpen(true);
+  };
     {
       id: 2,
       title: "Publicité et appel d'offres",
