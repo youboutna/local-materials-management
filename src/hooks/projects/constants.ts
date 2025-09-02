@@ -1,6 +1,5 @@
 
-// Flag to determine whether to use TypeORM or Supabase
-// TypeORM is disabled due to browser compatibility issues
+// Using Supabase for all database operations
 export const USE_TYPEORM = false;
 
 // Application settings

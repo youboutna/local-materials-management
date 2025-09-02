@@ -1,5 +1,5 @@
 
-import "reflect-metadata"; // Import reflect-metadata at the top
+// reflect-metadata import removed - no longer needed without TypeORM
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';

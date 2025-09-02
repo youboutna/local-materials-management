@@ -1,6 +1,5 @@
 
 import { useProjects as useSupabaseProjects } from '@/hooks/useProjects';
-import { useTypeOrmProjectOperations } from './useTypeOrmProjectOperations';
 import { USE_TYPEORM } from './constants';
 import { projectToasts } from './projectToasts';
 import { ProjectData } from '@/types/project';
@@ -8,22 +7,19 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useProjects = () => {
-  const typeOrmOperations = useTypeOrmProjectOperations();
+  // TypeORM operations removed - using Supabase only
   const supabaseProjects = useSupabaseProjects();
 
-  // Always use Supabase since TypeORM has browser compatibility issues
-  const projects = USE_TYPEORM ? typeOrmOperations.projects : supabaseProjects.projects;
-  const loading = USE_TYPEORM ? typeOrmOperations.loading : supabaseProjects.loading;
-  const error = USE_TYPEORM ? typeOrmOperations.error : supabaseProjects.error;
-  const fetchProjects = USE_TYPEORM ? typeOrmOperations.fetchProjects : supabaseProjects.fetchProjects;
-  const createProject = USE_TYPEORM ? typeOrmOperations.createProject : supabaseProjects.createProject;
-  const getProject = USE_TYPEORM ? typeOrmOperations.getProject : supabaseProjects.getProject;
+  // Using Supabase for all operations
+  const projects = supabaseProjects.projects;
+  const loading = supabaseProjects.loading;
+  const error = supabaseProjects.error;
+  const fetchProjects = supabaseProjects.fetchProjects;
+  const createProject = supabaseProjects.createProject;
+  const getProject = supabaseProjects.getProject;
 
-  // Update project with actual implementation for Supabase
+  // Update project with Supabase implementation
   const updateProject = async (id: string, projectData: Partial<ProjectData>): Promise<ProjectData | null> => {
-    if (USE_TYPEORM) {
-      return typeOrmOperations.updateProject(id, projectData);
-    }
     
     try {
       // Transform the project data to match database schema
@@ -130,11 +126,8 @@ export const useProjects = () => {
     }
   };
 
-  // Delete project with actual implementation for Supabase
+  // Delete project with Supabase implementation
   const deleteProject = async (id: string): Promise<boolean> => {
-    if (USE_TYPEORM) {
-      return typeOrmOperations.deleteProject(id);
-    }
     
     try {
       const { error } = await supabase
