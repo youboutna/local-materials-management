@@ -114,7 +114,8 @@ const UnifiedSupplierPortal = () => {
     if (data) {
       setSupplierProfile(data as Supplier);
     } else {
-      await createSupplierProfile();
+      throw new Error('User must be authenticated and autorized to supplier portal');
+      //await createSupplierProfile();
     }
   };
 
