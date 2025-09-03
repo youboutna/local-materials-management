@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Key, Shield, Cog, Folder } from "lucide-react";
+import { Database, Key, Shield, Cog, Folder, Cloud, Settings2 } from "lucide-react";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DatabaseSettings from '@/components/admin/DatabaseSettings';
@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DEV_ROLES, getActiveDevRole, setActiveDevRole } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ProviderSettings from '@/components/admin/ProviderSettings';
+import DeploymentSettings from '@/components/admin/DeploymentSettings';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -81,7 +83,13 @@ const Settings = () => {
           )}
           
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-5 mb-8">
+            <TabsList className="grid grid-cols-7 mb-8">
+              <TabsTrigger value="providers" className="flex items-center">
+                <Cloud className="mr-2 h-4 w-4" /> Providers
+              </TabsTrigger>
+              <TabsTrigger value="deployment" className="flex items-center">
+                <Settings2 className="mr-2 h-4 w-4" /> Deployment
+              </TabsTrigger>
               <TabsTrigger value="database" className="flex items-center">
                 <Database className="mr-2 h-4 w-4" /> {t("settings.tabs.database")}
               </TabsTrigger>
@@ -98,6 +106,14 @@ const Settings = () => {
                 <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
               </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="providers">
+              <ProviderSettings />
+            </TabsContent>
+            
+            <TabsContent value="deployment">
+              <DeploymentSettings />
+            </TabsContent>
             
             <TabsContent value="database">
               <DatabaseSettings />
