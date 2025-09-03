@@ -1,22 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Calendar, 
   Megaphone, 
   FileText, 
   Award, 
   Shield,
-  ChevronRight,
-  Share2,
-  Users,
-  Upload,
-  Eye
-} from 'lucide-react';
-import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
-import TenderDocumentSelector from '@/components/documents/TenderDocumentSelector';
+  ChevronRight} from 'lucide-react';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -90,7 +81,334 @@ export const PROCUREMENT_PHASE_LABELS: { [key in ProcurementPhase]: string } = {
   controle_regulation: 'Contrôle & Régulation'
 };
 
-interface PublicProcurementWorkflowProps {
+
+
+
+// Export workflowSteps data for use in other components
+export const PROCUREMENT_PHASES = Object.fromEntries(
+  Object.entries(PROCUREMENT_STAGES).map(([phase, stages], index) => [
+    phase,
+    {
+      id: index + 1,
+      phase: phase as ProcurementPhase,
+      title: PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase],
+      icon: [Calendar, Megaphone, FileText, Award, Shield][index],
+      stages
+    }
+  ])
+) as { [key in ProcurementPhase]: { id: number; phase: ProcurementPhase; title: string; icon: any; stages: { value: ProcurementStage; label: string }[] } };
+
+// Add this to your PublicProcurementWorkflow.tsx or create a new file
+
+export const SUGGESTED_DOCUMENTS: {
+  [key in ProcurementPhase]: {
+    stage: ProcurementStage;
+    documents: {
+      category: TenderDocumentCategory;
+      subcategory: TenderDocumentSubcategory;
+      title: string;
+      isRequired: boolean;
+    }[];
+  }[]
+} = {
+  planification: [
+    {
+      stage: 'estimation_ressources',
+      documents: [
+        {
+          category: 'financial',
+          subcategory: 'montant_alloue',
+          title: 'Budget alloué et estimation des ressources',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'planification_achats',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'plan_annuel_achats',
+          title: 'Plan Annuel d\'Achats (PAA)',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'modele_paa',
+          title: 'Modèle de Plan Annuel des Achats',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'modalites_planification',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'procedure_proposee',
+          title: 'Modalités de planification et procédure proposée',
+          isRequired: true
+        }
+      ]
+    }
+  ],
+  publicite: [
+    {
+      stage: 'publication_portail',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'publication_armp',
+          title: 'Preuve de publication sur le portail ARMP',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'demande_initiation',
+          title: 'Demande d\'initiation de la procédure',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'diffusion_journaux',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'preuves_publication',
+          title: 'Preuves de diffusion dans les journaux',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'inscription_candidats',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'registre_reception_plis',
+          title: 'Registre d\'inscription des candidats',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'notification_opportunites',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'lettre_invitation',
+          title: 'Lettres de notification aux candidats',
+          isRequired: true
+        }
+      ]
+    }
+  ],
+  reception_analyse: [
+    {
+      stage: 'soumission_dossiers',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'lettre_soumission',
+          title: 'Lettre de soumission',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'pouvoir_signature',
+          title: 'Pouvoir de signature',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'acte_groupement',
+          title: 'Acte de groupement',
+          isRequired: false
+        },
+        {
+          category: 'administrative',
+          subcategory: 'attestation_impot',
+          title: 'Attestation d\'impôt',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'attestation_cnss',
+          title: 'Attestation CNSS',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'attestation_non_faillite',
+          title: 'Attestation de non-faillite',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'analyse_cpmp',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'pv_ouverture_plis',
+          title: 'Procès-verbal d\'ouverture des plis',
+          isRequired: true
+        },
+        {
+          category: 'technical',
+          subcategory: 'pv_evaluation_technique',
+          title: 'PV d\'évaluation technique',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'assistance_sous_commission',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'pv_evaluation_attribution',
+          title: 'Rapport d\'assistance de la sous-commission',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'evaluation_conformite',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'recu_depot_plis',
+          title: 'Rapport d\'évaluation de conformité',
+          isRequired: true
+        }
+      ]
+    }
+  ],
+  attribution: [
+    {
+      stage: 'selection_prix',
+      documents: [
+        {
+          category: 'financial',
+          subcategory: 'devis_comparatifs',
+          title: 'Analyse comparative des prix',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'choix_economique',
+      documents: [
+        {
+          category: 'financial',
+          subcategory: 'factures_commandes',
+          title: 'Analyse de l\'offre économiquement la plus avantageuse',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'publication_attribution',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'lettre_notification',
+          title: 'Avis d\'attribution provisoire',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'publication_provisoire',
+          title: 'Preuve de publication de l\'attribution',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'signature_marche',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'signature_contrat',
+          title: 'Contrat signé',
+          isRequired: true
+        },
+        {
+          category: 'financial',
+          subcategory: 'garantie_bancaire',
+          title: 'Garantie bancaire',
+          isRequired: true
+        }
+      ]
+    }
+  ],
+  controle_regulation: [
+    {
+      stage: 'controle_cncmp',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'original_offres',
+          title: 'Dossier complet de contrôle CNCMP',
+          isRequired: true
+        },
+        {
+          category: 'administrative',
+          subcategory: 'pv_archivage',
+          title: 'PV de contrôle',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'verification_regulier',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'chemises_archivage',
+          title: 'Rapports de vérification régulière',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'regulation_armp',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'double_numerique',
+          title: 'Documents de régulation ARMP',
+          isRequired: true
+        }
+      ]
+    },
+    {
+      stage: 'commission_disciplinaire',
+      documents: [
+        {
+          category: 'administrative',
+          subcategory: 'contrats_signes',
+          title: 'Procès-verbaux de la commission disciplinaire',
+          isRequired: true
+        }
+      ]
+    }
+  ]
+};
+// Helper function to get suggested documents for a phase and stage
+export const getSuggestedDocuments = (phase: ProcurementPhase, stage: ProcurementStage) => {
+  const phaseDocuments = SUGGESTED_DOCUMENTS[phase];
+  const stageData = phaseDocuments.find(item => item.stage === stage);
+  return stageData?.documents || [];
+};
+
+// Helper function to get all suggested documents for a phase
+export const getSuggestedDocumentsForPhase = (phase: ProcurementPhase) => {
+  return SUGGESTED_DOCUMENTS[phase].flatMap(item => item.documents);
+};
+export interface PublicProcurementWorkflowProps {
   selectedTender?: {
     id: string;
     title: string;
@@ -101,10 +419,8 @@ interface PublicProcurementWorkflowProps {
 }
 
 const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ selectedTender }) => {
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
-  const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
-  const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
-  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
+  
+  const [, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
 
   function getPhaseDescription(phase: ProcurementPhase): string {
     const descriptions = {
@@ -128,38 +444,6 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
     stages
   }));
 
-  const handleShareWithSuppliers = (stepTitle: string, stepPhase: ProcurementPhase) => {
-    setSelectedWorkflowStep({ phase: stepPhase, stepTitle });
-    
-    if (!selectedTender) {
-      // If no tender is selected, use the general sharing approach
-      setSelectedSupplier({
-        id: 'all-suppliers',
-        name: `Tous les fournisseurs - ${stepTitle}`,
-        email: 'all-suppliers@tender-portal.com',
-        phase: stepPhase
-      });
-      setDocumentSharingOpen(true);
-    } else {
-      // If a tender is selected, open document selector for this tender
-      setDocumentSelectorOpen(true);
-    }
-  };
-
-  const handleDocumentSelected = (documentIds: string[]) => {
-    // Create a supplier context for the selected tender
-    setSelectedSupplier({
-      id: `tender-${selectedTender?.id}`,
-      name: `Fournisseurs - ${selectedTender?.title} - ${selectedWorkflowStep?.stepTitle}`,
-      email: `tender-${selectedTender?.id}@portal.com`,
-      phase: selectedWorkflowStep?.phase,
-      tender_id: selectedTender?.id,
-      selected_documents: documentIds
-    });
-    setDocumentSelectorOpen(false);
-    setDocumentSharingOpen(true);
-  };
-
   return (
     <>
       <Card className="w-full">
@@ -176,22 +460,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
                 )}
               </CardTitle>
             </div>
-            {selectedTender && (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  Statut: {selectedTender.status}
-                </Badge>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setDocumentSelectorOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Documents de l'appel d'offres
-                </Button>
-              </div>
-            )}
+    
           </div>
           <p className="text-sm text-gray-600">
             Étapes générales de la procédure des marchés publics utilisée par les entreprises publiques
@@ -223,29 +492,6 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
                             </Badge>
                             <h3 className="font-semibold text-lg">{step.title}</h3>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {selectedTender && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setDocumentSelectorOpen(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <Upload className="h-4 w-4" />
-                                Documents
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleShareWithSuppliers(step.title, step.phase)}
-                              className="flex items-center gap-2"
-                            >
-                              <Share2 className="h-4 w-4" />
-                              <Users className="h-4 w-4" />
-                              Partager avec fournisseurs
-                            </Button>
-                          </div>
                         </div>
                         <p className="text-gray-700 mb-3">{step.description}</p>
                         
@@ -258,14 +504,7 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
                                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{detail}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleShareWithSuppliers(`${step.title} - ${detail}`, step.phase)}
-                                    className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
-                                  >
-                                    <Share2 className="h-3 w-3" />
-                                  </Button>
+                                  
                                 </div>
                               </li>
                             ))}
@@ -287,48 +526,12 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
         </CardContent>
       </Card>
 
-      {/* Document Selector Dialog */}
-      {selectedTender && (
-        <Dialog open={documentSelectorOpen} onOpenChange={setDocumentSelectorOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>
-                Documents de l'appel d'offres: {selectedTender.title}
-              </DialogTitle>
-            </DialogHeader>
-            <TenderDocumentSelector
-              tenderId={selectedTender.id}
-              onDocumentsSelected={handleDocumentSelected}
-              allowMultipleSelection={true}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+    
 
-      {/* Document Sharing Dialog */}
-      {selectedSupplier && (
-        <EnhancedDocumentSharing
-          supplier={selectedSupplier}
-          isOpen={documentSharingOpen}
-          onOpenChange={setDocumentSharingOpen}
-        />
-      )}
+  
     </>
   );
 };
 
-// Export workflowSteps data for use in other components
-export const PROCUREMENT_PHASES = Object.fromEntries(
-  Object.entries(PROCUREMENT_STAGES).map(([phase, stages], index) => [
-    phase,
-    {
-      id: index + 1,
-      phase: phase as ProcurementPhase,
-      title: PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase],
-      icon: [Calendar, Megaphone, FileText, Award, Shield][index],
-      stages
-    }
-  ])
-) as { [key in ProcurementPhase]: { id: number; phase: ProcurementPhase; title: string; icon: any; stages: { value: ProcurementStage; label: string }[] } };
 
 export default PublicProcurementWorkflow;

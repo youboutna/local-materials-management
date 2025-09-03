@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
-import PublicProcurementWorkflow from '../tenders/PublicProcurementWorkflow';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { supabase } from '@/integrations/supabase/client';
@@ -290,10 +289,6 @@ const WaterfallProjectManager = () => {
               <BarChart3 className="h-4 w-4" />
               Gantt & KPIs
             </TabsTrigger>
-            <TabsTrigger value="workflow" className="flex items-center gap-2">
-              <Workflow className="h-4 w-4" />
-              Workflow Mauritanie
-            </TabsTrigger>
             {/**             
              <TabsTrigger value="phases" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -332,9 +327,6 @@ const WaterfallProjectManager = () => {
             />
           </TabsContent>
 
-          <TabsContent value="workflow" className="space-y-4">
-            <PublicProcurementWorkflow />
-          </TabsContent>
 
         {/*    <TabsContent value="phases" className="space-y-4">
             Module en développement

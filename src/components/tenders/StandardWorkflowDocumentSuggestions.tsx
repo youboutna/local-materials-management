@@ -1,183 +1,194 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, CheckCircle } from 'lucide-react';
-import { getStepIcon, getStepColor } from './OfficialWorkflowSteps';
-
-interface StandardDocumentTemplate {
-  id: number;
-  stage: string;
-  title: string;
-  mandatoryDocuments: string[];
-  category: 'planning' | 'publicity' | 'analysis' | 'attribution' | 'control';
-  attachmentNumbers?: string[];
-}
-
-const STANDARD_DOCUMENT_TEMPLATES: StandardDocumentTemplate[] = [
-  {
-    id: 1,
-    stage: "Planning (APP)",
-    title: "Planification des achats",
-    mandatoryDocuments: ["Attachment N°1 (APP Template)"],
-    category: 'planning',
-    attachmentNumbers: ["N°1"]
-  },
-  {
-    id: 2,
-    stage: "Initiation",
-    title: "Lancement du processus",
-    mandatoryDocuments: ["Attachment N°2 (Initiation Request)"],
-    category: 'publicity',
-    attachmentNumbers: ["N°2"]
-  },
-  {
-    id: 3,
-    stage: "Selection",
-    title: "Sélection des soumissionnaires",
-    mandatoryDocuments: [
-      "Attachment N°3 - Lettre de soumission",
-      "Attachment N°4 - Pouvoir de signature", 
-      "Attachment N°5 - Acte de groupement",
-      "Attachment N°6 - Attestation d'impôt",
-      "Attachment N°7 - Attestation CNSS",
-      "Attachment N°8 - Attestation non faillite"
-    ],
-    category: 'analysis',
-    attachmentNumbers: ["N°3", "N°4", "N°5", "N°6", "N°7", "N°8"]
-  },
-  {
-    id: 4,
-    stage: "Award",
-    title: "Attribution du marché",
-    mandatoryDocuments: [
-      "Attachment N°11 (Notification)",
-      "Signed Contract"
-    ],
-    category: 'attribution',
-    attachmentNumbers: ["N°11"]
-  },
-  {
-    id: 5,
-    stage: "Archiving",
-    title: "Archivage et contrôle",
-    mandatoryDocuments: [
-      "Complete file (bids)",
-      "Meeting minutes", 
-      "Contracts",
-      "Proofs of execution"
-    ],
-    category: 'control'
-  }
-];
+import { 
+  ProcurementPhase, 
+  ProcurementStage,
+  getSuggestedDocuments,
+  PROCUREMENT_STAGES,
+  PROCUREMENT_PHASE_LABELS
+} from './PublicProcurementWorkflow';
+import { TenderDocumentCategory } from '@/types/tender';
 
 interface StandardWorkflowDocumentSuggestionsProps {
+  selectedPhase: ProcurementPhase;
   selectedStepId?: number;
-  onAddDocument?: (documentTemplate: string, category: string) => void;
+  onAddDocument: (documentData: {
+    category: TenderDocumentCategory;
+    subcategory: string;
+    title: string;
+    isRequired: boolean;
+  }) => void;
   existingDocuments?: string[];
 }
 
-const StandardWorkflowDocumentSuggestions = ({ 
-  selectedStepId, 
-  onAddDocument, 
-  existingDocuments = [] 
+const StandardWorkflowDocumentSuggestions = ({
+  selectedPhase,
+  selectedStepId,
+  onAddDocument,
+  existingDocuments = []
 }: StandardWorkflowDocumentSuggestionsProps) => {
-  
-  const selectedTemplate = STANDARD_DOCUMENT_TEMPLATES.find(template => template.id === selectedStepId);
+  const [selectedStage, setSelectedStage] = useState<ProcurementStage | null>(null);
 
-  if (!selectedTemplate) {
-    return (
-      <Card>
-        <CardContent className="text-center py-8">
-          <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium mb-2">Sélectionnez une étape</h3>
-          <p className="text-gray-600">
-            Choisissez une étape du workflow standard pour voir les documents suggérés.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Safely get stages for the selected phase
+  const phaseStages = PROCUREMENT_STAGES[selectedPhase] || [];
 
-  const IconComponent = getStepIcon(selectedTemplate.category);
-  const isDocumentAlreadyAdded = (docName: string) => {
-    return existingDocuments.some(doc => 
-      doc.toLowerCase().includes(docName.toLowerCase()) || 
-      docName.toLowerCase().includes(doc.toLowerCase())
+  const isDocumentAlreadyAdded = (docTitle: string) => {
+    return existingDocuments.some(doc =>
+      doc.toLowerCase().includes(docTitle.toLowerCase()) ||
+      docTitle.toLowerCase().includes(doc.toLowerCase())
     );
   };
+
+  const handleAddDocument = (documentData: {
+    category: TenderDocumentCategory;
+    subcategory: string;
+    title: string;
+    isRequired: boolean;
+  }) => {
+    onAddDocument(documentData);
+  };
+
+  // Get stage-specific documents
+  const getStageSpecificDocuments = () => {
+    if (!selectedPhase || !selectedStage) return [];
+    return getSuggestedDocuments(selectedPhase, selectedStage);
+  };
+
+  const stageDocuments = getStageSpecificDocuments();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <IconComponent className="h-5 w-5" />
-          Documents suggérés - {selectedTemplate.title}
+          <FileText className="h-5 w-5" />
+          Documents suggérés pour l'étape
         </CardTitle>
-        <p className="text-sm text-gray-600">
-          Stage: {selectedTemplate.stage}
-        </p>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-sm">
+            Phase: {PROCUREMENT_PHASE_LABELS[selectedPhase] || selectedPhase}
+          </Badge>
+          <p className="text-sm text-gray-600">
+            Sélectionnez une étape pour voir les documents recommandés
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-4">
-            <Badge className={getStepColor(selectedTemplate.category)}>
-              Étape {selectedTemplate.id}
-            </Badge>
-            <Badge variant="outline">
-              {selectedTemplate.mandatoryDocuments.length} documents requis
-            </Badge>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm text-gray-700">Documents obligatoires:</h4>
-            {selectedTemplate.mandatoryDocuments.map((document, index) => {
-              const isAdded = isDocumentAlreadyAdded(document);
-              
-              return (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm font-medium">{document}</p>
-                      {selectedTemplate.attachmentNumbers?.[index] && (
-                        <p className="text-xs text-gray-500">
-                          Référence: {selectedTemplate.attachmentNumbers[index]}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {isAdded ? (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Ajouté
-                      </Badge>
-                    ) : (
-                      onAddDocument && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => onAddDocument(document, selectedTemplate.category)}
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Ajouter
-                        </Button>
-                      )
-                    )}
-                  </div>
+        <div className="space-y-4">
+          {/* Stage Selection */}
+          <div className="mb-4">
+            <h4 className="font-medium text-sm mb-2">Sélectionnez une étape:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {phaseStages.length > 0 ? (
+                phaseStages.map((stage) => (
+                  <Button
+                    key={stage.value}
+                    variant={selectedStage === stage.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedStage(selectedStage === stage.value ? null : stage.value)}
+                    className="text-xs justify-start text-left h-auto min-h-[40px] py-2"
+                  >
+                    {stage.label}
+                  </Button>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-4 text-gray-500">
+                  <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm">Aucune étape disponible pour cette phase.</p>
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-800">
-              <strong>Note:</strong> Ces documents sont basés sur les standards des marchés publics mauritaniens. 
-              Vous pouvez les utiliser comme modèle et les adapter selon vos besoins spécifiques.
-            </p>
-          </div>
+          {selectedStage && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge variant="outline" className="text-sm">
+                  {PROCUREMENT_PHASE_LABELS[selectedPhase] || selectedPhase}
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  {phaseStages.find(s => s.value === selectedStage)?.label || selectedStage}
+                </Badge>
+                <Badge variant="secondary">
+                  {stageDocuments.length} documents suggérés
+                </Badge>
+              </div>
+
+              <div className="space-y-3">
+                {stageDocuments.length > 0 ? (
+                  stageDocuments.map((doc, index) => {
+                    const isAdded = isDocumentAlreadyAdded(doc.title);
+
+                    return (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.title}</p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <Badge variant="outline" className="text-xs">
+                                {doc.category === 'administrative' ? 'Admin' : 
+                                 doc.category === 'technical' ? 'Tech' : 'Fin'}
+                              </Badge>
+                              {doc.isRequired && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Requis
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {isAdded ? (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Ajouté
+                            </Badge>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAddDocument(doc)}
+                              disabled={isAdded}
+                              className="whitespace-nowrap"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Ajouter
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm">Aucune suggestion de document pour cette étape.</p>
+                    <p className="text-xs mt-1">
+                      Vous pourrez ajouter des documents manuellement après avoir créé l'étape.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  <strong>Note:</strong> Ces documents sont spécifiques à l'étape sélectionnée 
+                  et sont basés sur les standards des marchés publics mauritaniens.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!selectedStage && phaseStages.length > 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-sm">Sélectionnez une étape pour voir les documents suggérés</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
 import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
+import { ProcurementPhase, ProcurementStage } from './PublicProcurementWorkflow';
 
 interface WorkflowStepSelectorProps {
   isOpen: boolean;
@@ -16,9 +17,11 @@ interface WorkflowStepSelectorProps {
 
 const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingStepNumbers }: WorkflowStepSelectorProps) => {
   const [selectedStep, setSelectedStep] = useState<OfficialWorkflowStep | null>(null);
+    const [selectedPhase, setSelectedPhase] = useState<ProcurementPhase | null>(null);
 
-  const handleSelectStep = (step: OfficialWorkflowStep) => {
+  const handleSelectStep = (step: OfficialWorkflowStep, phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selectedDocuments?: string[]) => {
     setSelectedStep(step);
+    setSelectedPhase(phase);
   };
 
   const handleConfirmSelection = () => {

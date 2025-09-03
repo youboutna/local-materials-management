@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,28 +26,26 @@ interface Tender {
 const TenderManagement = () => {
   const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
 
-  const handleTenderSelect = (tender: Tender) => {
-    setSelectedTender(tender);
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Gestion des Appels d'Offres</h1>
-      </div>
+      <h1 className="text-3xl font-bold">Gestion des Appels d'Offres</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Tender CRUD */}
-        <div className="space-y-6">
-          <TenderCrud 
-            onTenderSelect={handleTenderSelect}
-            selectedTenderId={selectedTender?.id}
-          />
-        </div>
+        <TenderCrud 
+          onTenderSelect={setSelectedTender}
+          selectedTenderId={selectedTender?.id}
+        />
 
-        {/* Right Column - Tender Details and Workflow */}
-        <div className="space-y-6">
-          {selectedTender ? (
+        {/* Right Column - Tender Details */}
+        {selectedTender ? (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>
+                {selectedTender.title}
+              </CardTitle>
+            </CardHeader>
+
             <Tabs defaultValue="workflow" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="workflow">Workflow</TabsTrigger>
@@ -57,61 +54,32 @@ const TenderManagement = () => {
                 <TabsTrigger value="evaluation">Évaluation</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="workflow">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Workflow de Marché Public - {selectedTender.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PublicProcurementWorkflow selectedTender={selectedTender} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="steps">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Étapes du Workflow</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TenderWorkflowSteps tenderId={selectedTender.id} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="documents">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Documents de l'Appel d'Offres</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TenderDocumentManager tenderId={selectedTender.id} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="evaluation">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Évaluation des Offres</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TenderEvaluationPanel tenderId={selectedTender.id} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="text-gray-500">
-                  <p className="text-lg mb-2">Aucun appel d'offres sélectionné</p>
-                  <p className="text-sm">Sélectionnez un appel d'offres à gauche pour voir ses détails et gérer son workflow.</p>
-                </div>
+              <CardContent>
+                <TabsContent value="workflow">
+                  <PublicProcurementWorkflow selectedTender={selectedTender} />
+                </TabsContent>
+                <TabsContent value="steps">
+                  <TenderWorkflowSteps tenderId={selectedTender.id} />
+                </TabsContent>
+                <TabsContent value="documents">
+                  <TenderDocumentManager tenderId={selectedTender.id} />
+                </TabsContent>
+                <TabsContent value="evaluation">
+                  <TenderEvaluationPanel tenderId={selectedTender.id} />
+                </TabsContent>
               </CardContent>
-            </Card>
-          )}
-        </div>
+            </Tabs>
+          </Card>
+        ) : (
+          <Card className="w-full">
+            <CardContent className="text-center py-12">
+              <p className="text-lg mb-2 text-gray-500">Aucun appel d'offres sélectionné</p>
+              <p className="text-sm text-gray-400">
+                Sélectionnez un appel d'offres à gauche pour voir ses détails et gérer son workflow.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,15 +14,15 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import WorkflowStepSelector from './WorkflowStepSelector';
-import { OFFICIAL_WORKFLOW_STEPS, OfficialWorkflowStep } from './OfficialWorkflowSteps';
 import { 
   PROCUREMENT_PHASES, 
   PROCUREMENT_STAGES, 
   PROCUREMENT_PHASE_LABELS,
   ProcurementPhase,
-  ProcurementStage 
+  ProcurementStage,
+  SUGGESTED_DOCUMENTS
 } from './PublicProcurementWorkflow';
-
+import ProcurementStepSelector from './ProcurementStepSelector';
 interface Tender {
   id: string;
   title: string;
@@ -56,8 +55,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
   const [isWorkflowSelectorOpen, setIsWorkflowSelectorOpen] = useState(false);
   const [isProcurementWorkflowSelectorOpen, setIsProcurementWorkflowSelectorOpen] = useState(false);
-  const [selectedWorkflowSteps, setSelectedWorkflowSteps] = useState<OfficialWorkflowStep[]>([]);
-  const [selectedProcurementSteps, setSelectedProcurementSteps] = useState<Array<{phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }}>>([]);
+  const [selectedProcurementSteps, setSelectedProcurementSteps] = useState<Array<{phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selected_documents?: string[]}>>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -70,6 +68,10 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     project_reference: '',
     status: 'draft' as 'draft' | 'published' | 'closed' | 'awarded'
   });
+
+  const [isEditDocsOpen, setIsEditDocsOpen] = useState(false);
+  const [editDocsIndex, setEditDocsIndex] = useState<number | null>(null);
+  const [editDocsSelection, setEditDocsSelection] = useState<string[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -139,25 +141,14 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         let stepNumber = 1;
         const allStepsToInsert: any[] = [];
 
-        if (selectedWorkflowSteps.length > 0) {
-          const officialSteps = selectedWorkflowSteps.map((step) => ({
-            tender_id: data.id,
-            title: step.title,
-            description: step.description,
-            step_number: stepNumber++,
-            required_documents: step.requiredDocuments || [],
-            status: 'pending'
-          }));
-          allStepsToInsert.push(...officialSteps);
-        }
 
         if (selectedProcurementSteps.length > 0) {
-          const procurementSteps = selectedProcurementSteps.map(({ phase, stage }) => ({
+          const procurementSteps = selectedProcurementSteps.map(({ phase, stage, selected_documents }) => ({
             tender_id: data.id,
             title: stage.label,
             description: `Phase: ${PROCUREMENT_PHASE_LABELS[phase]} - ${stage.label}`,
             step_number: stepNumber++,
-            required_documents: [],
+            required_documents: selected_documents || [],
             procurement_phase: phase,
             procurement_stage: stage.value,
             status: 'pending'
@@ -250,7 +241,6 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingTender(null);
-    setSelectedWorkflowSteps([]);
     setSelectedProcurementSteps([]);
     setFormData({
       title: '',
@@ -266,20 +256,13 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     });
   };
 
-  const handleSelectWorkflowStep = (step: OfficialWorkflowStep) => {
-    if (!selectedWorkflowSteps.find(s => s.id === step.id)) {
-      setSelectedWorkflowSteps(prev => [...prev, step]);
-    }
-    setIsWorkflowSelectorOpen(false);
-  };
 
-  const removeWorkflowStep = (stepId: number) => {
-    setSelectedWorkflowSteps(prev => prev.filter(s => s.id !== stepId));
-  };
-
-  const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }) => {
+  /**
+   * Updated: now receives optional selectedDocuments
+   */
+  const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selectedDocuments?: string[]) => {
     if (!selectedProcurementSteps.find(s => s.phase === phase && s.stage.value === stage.value)) {
-      setSelectedProcurementSteps(prev => [...prev, { phase, stage }]);
+      setSelectedProcurementSteps(prev => [...prev, { phase, stage, selected_documents: selectedDocuments || [] }]);
     }
     setIsProcurementWorkflowSelectorOpen(false);
   };
@@ -288,8 +271,31 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     setSelectedProcurementSteps(prev => prev.filter(s => !(s.phase === phase && s.stage.value === stageValue)));
   };
 
-  const getExistingStepIds = () => {
-    return selectedWorkflowSteps.map(step => step.id);
+  // --- Edit documents per step (inline small dialog) ---
+  const openEditDocsForStep = (index: number) => {
+    const step = selectedProcurementSteps[index];
+    setEditDocsIndex(index);
+    setEditDocsSelection(step.selected_documents ? [...step.selected_documents] : []);
+    setIsEditDocsOpen(true);
+  };
+
+  const toggleEditDoc = (doc: string) => {
+    setEditDocsSelection(prev => prev.includes(doc) ? prev.filter(d => d !== doc) : [...prev, doc]);
+  };
+
+  const saveEditedDocs = () => {
+    if (editDocsIndex === null) return;
+    setSelectedProcurementSteps(prev => {
+      const copy = [...prev];
+      copy[editDocsIndex] = {
+        ...copy[editDocsIndex],
+        selected_documents: editDocsSelection
+      };
+      return copy;
+    });
+    setIsEditDocsOpen(false);
+    setEditDocsIndex(null);
+    setEditDocsSelection([]);
   };
 
   const getStatusBadge = (status: string) => {
@@ -420,55 +426,53 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                    <Button 
                      type="button"
                      variant="outline"
-                     onClick={() => setIsWorkflowSelectorOpen(true)}
-                     className="flex items-center gap-2"
-                   >
-                     <Workflow className="h-4 w-4" />
-                     Ajouter Étapes Officielles
-                   </Button>
-                   <Button 
-                     type="button"
-                     variant="outline"
                      onClick={() => setIsProcurementWorkflowSelectorOpen(true)}
                      className="flex items-center gap-2"
                    >
                      <Workflow className="h-4 w-4" />
-                     Ajouter Marché Public
+                      Ajouter Étapes Officielles
                    </Button>
                  </div>
                 
-                 {(selectedWorkflowSteps.length > 0 || selectedProcurementSteps.length > 0) && (
+                 {( selectedProcurementSteps.length > 0) && (
                    <div className="space-y-2">
                      <p className="text-sm text-gray-600">Étapes sélectionnées :</p>
                      <div className="space-y-2">
-                       {selectedWorkflowSteps.map((step) => (
-                         <div key={step.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                           <span className="text-sm font-medium">
-                             Étape {step.id}: {step.title}
-                           </span>
-                           <Button
-                             type="button"
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => removeWorkflowStep(step.id)}
-                           >
-                             <Trash2 className="h-3 w-3" />
-                           </Button>
-                         </div>
-                       ))}
-                       {selectedProcurementSteps.map(({ phase, stage }) => (
+
+                       {selectedProcurementSteps.map(({ phase, stage, selected_documents }, idx) => (
                          <div key={`${phase}-${stage.value}`} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                           <span className="text-sm font-medium">
-                             {PROCUREMENT_PHASE_LABELS[phase]}: {stage.label}
-                           </span>
-                           <Button
-                             type="button"
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => removeProcurementStep(phase, stage.value)}
-                           >
-                             <Trash2 className="h-3 w-3" />
-                           </Button>
+                           <div>
+                             <div className="text-sm font-medium">
+                               {PROCUREMENT_PHASE_LABELS[phase]}: {stage.label}
+                             </div>
+                             <div className="text-xs text-gray-600 mt-1">
+                               {selected_documents && selected_documents.length > 0 ? (
+                                 <span>Documents: {selected_documents.join(', ')}</span>
+                               ) : (
+                                 <span className="italic text-gray-400">Aucun document attaché</span>
+                               )}
+                             </div>
+                           </div>
+
+                           <div className="flex items-center gap-2">
+                             <Button
+                               type="button"
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => openEditDocsForStep(idx)}
+                             >
+                               Documents
+                             </Button>
+
+                             <Button
+                               type="button"
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => removeProcurementStep(phase, stage.value)}
+                             >
+                               <Trash2 className="h-3 w-3" />
+                             </Button>
+                           </div>
                          </div>
                        ))}
                      </div>
@@ -492,46 +496,54 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Workflow Step Selector */}
-      <WorkflowStepSelector
-        isOpen={isWorkflowSelectorOpen}
-        onClose={() => setIsWorkflowSelectorOpen(false)}
-        onSelectStep={handleSelectWorkflowStep}
-        existingStepNumbers={getExistingStepIds()}
+  
+      {/* Procurement Workflow Step Selector */}
+      <ProcurementStepSelector
+        isOpen={isProcurementWorkflowSelectorOpen}
+        onClose={() => setIsProcurementWorkflowSelectorOpen(false)}
+        onSelectStep={handleSelectProcurementStep}
+        existingSteps={selectedProcurementSteps}
       />
 
-      {/* Procurement Workflow Step Selector */}
-      <Dialog open={isProcurementWorkflowSelectorOpen} onOpenChange={setIsProcurementWorkflowSelectorOpen}>
-        <DialogContent className="max-w-3xl">
+      {/* Edit documents dialog (inline) */}
+      <Dialog open={isEditDocsOpen} onOpenChange={setIsEditDocsOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Sélectionner des Étapes de Marché Public</DialogTitle>
+            <DialogTitle>Modifier les documents de l'étape</DialogTitle>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            {Object.entries(PROCUREMENT_PHASES).map(([phase, phaseData]) => (
-              <div key={phase} className="border rounded-lg p-4">
-                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                  {React.createElement(phaseData.icon)}
-                  {PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase]}
-                </h3>
-                <div className="grid gap-2">
-                  {phaseData.stages.map((stage) => (
-                    <Button
-                      key={stage.value}
-                      variant="outline"
-                      className="justify-start text-left h-auto p-3"
-                      onClick={() => handleSelectProcurementStep(phase as ProcurementPhase, stage)}
-                    >
-                      <div>
-                        <div className="font-medium">{stage.label}</div>
-                        <div className="text-sm text-gray-600">{stage.value}</div>
-                      </div>
-                    </Button>
+
+          <div className="space-y-3">
+            {editDocsIndex !== null ? (
+              <>
+                <p className="text-sm text-gray-600">
+                  Étape: {selectedProcurementSteps[editDocsIndex].stage.label}
+                </p>
+
+                <div className="space-y-2">
+                  {(SUGGESTED_DOCUMENTS[selectedProcurementSteps[editDocsIndex].stage.value] || []).map((doc) => (
+                    <label key={doc} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={editDocsSelection.includes(doc)}
+                        onChange={() => toggleEditDoc(doc)}
+                      />
+                      <span>{doc}</span>
+                    </label>
                   ))}
+
+                  {(SUGGESTED_DOCUMENTS[selectedProcDocsIndex]?.length === 0) && (
+                    <p className="text-xs text-gray-500">Aucune suggestion disponible pour cette étape.</p>
+                  )}
                 </div>
-              </div>
-            ))}
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setIsEditDocsOpen(false)}>Annuler</Button>
+                  <Button onClick={saveEditedDocs}>Enregistrer</Button>
+                </div>
+              </>
+            ) : (
+              <p>Aucune étape sélectionnée.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
