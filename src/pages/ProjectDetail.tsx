@@ -536,103 +536,6 @@ const ProjectDetail = () => {
                   </Button>
                 </div>
               </div>
-
-              <p className="text-gray-700 leading-relaxed mt-4">
-                {project.description}
-              </p>
-            </div>
-
-            {/* Quick Action Panel - Enhanced design */}
-            <Card className="border-l-4 border-l-terracotta-500 shadow-md hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-3 text-lg lg:text-xl">
-                  <div className="p-2 bg-terracotta-100 rounded-lg">
-                    <CreditCard className="h-5 w-5 text-terracotta-600" />
-                  </div>
-                  {t("projects.payments_management")}
-                </CardTitle>
-                <CardDescription className="text-sm lg:text-base">
-                  {t("projects.quick_payment_actions")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  <div className="flex-1 space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {t("project_create.form.budget")}
-                        </p>
-                        <p className="font-semibold text-lg">
-                          {project.budget.toLocaleString()} MRU
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {t("project_create.form.progress")}
-                        </p>
-                        <p className="font-semibold text-lg">
-                          {project.progress}%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full sm:w-auto">
-                    <PaymentDialog
-                      project={project}
-                      onPaymentComplete={handleDataUpdate}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Project details grid - Enhanced responsive design */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Progress Card */}
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base lg:text-lg">
-                    {t("project_create.form.progress")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ProgressIndicator value={project.progress} />
-                  <p className="text-sm text-gray-600 mt-2">
-                    {project.progress}% {t("projects.progress_done")}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Budget Card */}
-              <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base lg:text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    {t("project_create.form.budget")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xl lg:text-2xl font-bold text-terracotta-600">
-                    {project.budget.toLocaleString()} MRU
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Team Card */}
-              <Card className="hover:shadow-md transition-shadow md:col-span-2 lg:col-span-1">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base lg:text-lg flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    {t("project_create.form.team_size")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xl lg:text-2xl font-bold text-adrar-600">
-                    {project.teamSize} {t("dashboard.members")}
-                  </p>
-                </CardContent>
-              </Card>
             </div>
 
             {/* Main Tabs Section - Enhanced responsive design */}
@@ -710,6 +613,98 @@ const ProjectDetail = () => {
                       <p className="text-gray-700 leading-relaxed">
                         {project.description}
                       </p>
+            {/* Quick Action Panel - Enhanced design */}
+            <Card className="border-l-4 border-l-terracotta-500 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg lg:text-xl">
+                  <div className="p-2 bg-terracotta-100 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-terracotta-600" />
+                  </div>
+                  {t("projects.payments_management")}
+                </CardTitle>
+                <CardDescription className="text-sm lg:text-base">
+                  {t("projects.quick_payment_actions")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="flex-1 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("project_create.form.budget")}
+                        </p>
+                        <p className="font-semibold text-lg">
+                          {project.budget.toLocaleString()} MRU
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("project_create.form.progress")}
+                        </p>
+                        <p className="font-semibold text-lg">
+                          {project.progress}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-auto">
+                    <PaymentDialog
+                      project={project}
+                      onPaymentComplete={handleDataUpdate}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Project details grid - Enhanced responsive design */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Progress Card */}
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base lg:text-lg">
+                    {t("project_create.form.progress")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ProgressIndicator value={project.progress} />
+                  <p className="text-sm text-gray-600 mt-2">
+                    {project.progress}% {t("projects.progress_done")}
+                  </p>
+                </CardContent>
+              </Card>
+
+                {/* Budget Card */}
+                <Card className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base lg:text-lg flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      {t("project_create.form.budget")}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xl lg:text-2xl font-bold text-terracotta-600">
+                      {project.budget.toLocaleString()} MRU
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Team Card */}
+                <Card className="hover:shadow-md transition-shadow md:col-span-2 lg:col-span-1">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base lg:text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      {t("project_create.form.team_size")}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xl lg:text-2xl font-bold text-adrar-600">
+                      {project.teamSize} {t("dashboard.members")}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
 
                       {/* Timeline */}
                       <div className="space-y-4">
