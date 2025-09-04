@@ -19,9 +19,8 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingStepNumbe
   const [selectedStep, setSelectedStep] = useState<OfficialWorkflowStep | null>(null);
     const [selectedPhase, setSelectedPhase] = useState<ProcurementPhase | null>(null);
 
-  const handleSelectStep = (step: OfficialWorkflowStep, phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selectedDocuments?: string[]) => {
+  const handleSelectStep = (step: OfficialWorkflowStep) => {
     setSelectedStep(step);
-    setSelectedPhase(phase);
   };
 
   const handleConfirmSelection = () => {

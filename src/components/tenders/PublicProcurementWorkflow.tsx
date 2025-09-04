@@ -7,7 +7,9 @@ import {
   FileText, 
   Award, 
   Shield,
-  ChevronRight} from 'lucide-react';
+  ChevronRight,
+  Share2} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -397,6 +399,20 @@ export const SUGGESTED_DOCUMENTS: {
     }
   ]
 };
+// Define types first
+export type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
+export type TenderDocumentSubcategory = 
+  | 'lettre_soumission' | 'pouvoir_signature' | 'acte_groupement'
+  | 'attestation_impot' | 'attestation_cnss' | 'attestation_non_faillite'
+  | 'pv_ouverture_plis' | 'pv_evaluation_technique' | 'pv_evaluation_attribution'
+  | 'recu_depot_plis' | 'registre_reception_plis' | 'lettre_invitation'
+  | 'publication_armp' | 'demande_initiation' | 'preuves_publication'
+  | 'lettre_notification' | 'publication_provisoire' | 'signature_contrat'
+  | 'original_offres' | 'pv_archivage' | 'chemises_archivage'
+  | 'double_numerique' | 'contrats_signes' | 'plan_annuel_achats'
+  | 'modele_paa' | 'procedure_proposee' | 'montant_alloue'
+  | 'devis_comparatifs' | 'factures_commandes' | 'garantie_bancaire';
+
 // Helper function to get suggested documents for a phase and stage
 export const getSuggestedDocuments = (phase: ProcurementPhase, stage: ProcurementStage) => {
   const phaseDocuments = SUGGESTED_DOCUMENTS[phase];
@@ -416,9 +432,10 @@ export interface PublicProcurementWorkflowProps {
     status: string;
     project_id?: string;
   };
+  onShareWithSuppliers?: (stepTitle: string, stepPhase: ProcurementPhase) => void;
 }
 
-const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ selectedTender }) => {
+const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ selectedTender, onShareWithSuppliers }) => {
   
   const [, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
 
@@ -503,8 +520,17 @@ const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ s
                               <li key={detailIndex} className="flex items-start gap-2 text-sm text-gray-600">
                                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
                                 <div className="flex items-center justify-between w-full">
-                                  <span>{detail}</span>
-                                  
+                                  <span className="flex-1">{detail}</span>
+                                  {onShareWithSuppliers && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => onShareWithSuppliers(`${step.title} - ${detail}`, step.phase)}
+                                      className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
+                                    >
+                                      <Share2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </div>
                               </li>
                             ))}

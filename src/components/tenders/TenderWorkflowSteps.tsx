@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow, ChevronDown, ChevronUp, Search, X, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { DEV_MODE } from '@/config/constants';
@@ -73,9 +73,10 @@ interface TenderWorkflowStepsProps {
   tenderId: string;
   readonly?: boolean;
   projectId?: string;
+  onShareWithSuppliers?: (stepTitle: string, stepPhase: ProcurementPhase) => void;
 }
 
-const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false }: TenderWorkflowStepsProps) => {
+const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWithSuppliers }: TenderWorkflowStepsProps) => {
   const [isAddStepDialogOpen, setIsAddStepDialogOpen] = useState(false);
   const [isProcurementWorkflowDialogOpen, setIsProcurementWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
@@ -184,7 +185,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false }: TenderWo
     const completedSteps = tenderSteps.filter(step =>
       step.status === 'completed' || step.status === 'approved'
     ).length;
-    return (completedSteps / tenderSteps.length) * 100;
+    return (completedSteps / (tenderSteps?.length || 1)) * 100;
   };
 
   const getExistingStepNumbers = () => {
@@ -546,7 +547,7 @@ const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: Pr
 
         <CardContent>
           {/* Progress Bar */}
-          {tenderSteps?.length > 0 && (
+          {(tenderSteps?.length || 0) > 0 && (
             <div className="space-y-2 mb-6">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Progression globale</span>

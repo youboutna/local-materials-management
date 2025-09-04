@@ -531,7 +531,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                     </label>
                   ))}
 
-                  {(SUGGESTED_DOCUMENTS[selectedProcDocsIndex]?.length === 0) && (
+                  {(!SUGGESTED_DOCUMENTS[selectedProcurementSteps[editDocsIndex]?.stage?.value] || SUGGESTED_DOCUMENTS[selectedProcurementSteps[editDocsIndex]?.stage?.value]?.length === 0) && (
                     <p className="text-xs text-gray-500">Aucune suggestion disponible pour cette étape.</p>
                   )}
                 </div>
