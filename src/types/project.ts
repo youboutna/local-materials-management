@@ -190,7 +190,7 @@ export interface ProjectData {
   pertAnalysis?: PERTAnalysis;
   earnedValueManagement?: EVMData;
   contacts?: ProjectContact[];
-  checkSchedule?: CheckSchedule;
+  checkScheduleLastRun?: CheckScheduleLastRun;
 }
 
 export interface ProjectRisk {
@@ -264,15 +264,10 @@ export interface ProjectContact {
   isPrimary: boolean;
 }
 
-export interface CheckSchedule {
-  insuranceCheck: number;
-  delayCheck: number;
-  inspectionCheck: number;
-  lastRun: {
-    insurance?: string;
-    delay?: string;
-    inspection?: string;
-  };
+export interface CheckScheduleLastRun {
+  insurance?: string;
+  delay?: string;
+  inspection?: string;
 }
 
 export type EscalationRoles = {

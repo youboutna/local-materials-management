@@ -112,7 +112,7 @@ export class MonitoringService {
     const exportSuggestions: string[] = [];
 
     // Analyze project structure for creation suggestions
-    if (!project.checkSchedule) {
+    if (!project.checkScheduleLastRun) {
       creationSuggestions.push('Configure automated check schedules');
     }
     

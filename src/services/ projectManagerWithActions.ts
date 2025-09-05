@@ -1,6 +1,7 @@
 // projectManagerWithActions.ts
 
-import { ActionLabels, Alert, CheckSchedule, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
+import { ActionLabels, Alert, CheckScheduleLastRun, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
+import { CHECK_SCHEDULE_INTERVALS } from "@/hooks/projects/constants";
 
 
 
@@ -46,14 +47,11 @@ export class ProjectManager {
   ) {}
 
   private shouldRunCheck(checkType: keyof typeof this.lastChecks): boolean {
-    const schedule = this.project.checkSchedule;
-    if (!schedule) return true;
-
     const now = new Date();
     const lastCheck = this.lastChecks[checkType];
     const daysSinceLastCheck = daysBetween(lastCheck, now);
     
-    const requiredInterval = schedule[`${checkType}Check` as keyof CheckSchedule] as number || 1;
+    const requiredInterval = CHECK_SCHEDULE_INTERVALS[`${checkType}Check` as keyof typeof CHECK_SCHEDULE_INTERVALS] || 1;
     return daysSinceLastCheck >= requiredInterval;
   }
 
@@ -1017,12 +1015,7 @@ const exampleProject: ProjectData = {
       isPrimary: true
     }
   ],
-  checkSchedule: {
-    insuranceCheck: 1,
-    delayCheck: 7,
-    inspectionCheck: 1,
-    lastRun: {}
-  }
+  checkScheduleLastRun: {}
 };
 
 const roles: EscalationRoles = {
