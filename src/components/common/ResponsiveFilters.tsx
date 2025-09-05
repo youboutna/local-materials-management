@@ -57,13 +57,16 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
     setLocalSearchValue(searchValue);
   }, [searchValue]);
   
-  // Debounced search effect
+  // Debounced search effect with AJAX/autocomplete behavior
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (onSearchChange && localSearchValue !== searchValue) {
-        onSearchChange(localSearchValue);
+        // Only trigger search if user has typed at least 2 characters or cleared the search
+        if (localSearchValue.trim().length >= 2 || localSearchValue.trim().length === 0) {
+          onSearchChange(localSearchValue);
+        }
       }
-    }, 500); // 500ms delay
+    }, 800); // Increased to 800ms delay for better typing experience
 
     return () => clearTimeout(timeoutId);
   }, [localSearchValue]);
