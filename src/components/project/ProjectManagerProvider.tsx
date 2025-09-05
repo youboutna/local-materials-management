@@ -1,42 +1,19 @@
-// services/ProjectManagerContext.tsx
-import React, { createContext, useState, useCallback, ReactNode } from "react";
+// services/ProjectManagerProvider.tsx
+import React, { useState, useCallback, ReactNode } from "react";
+
 import {
   ProjectManager,
-  ProjectData,
-  EscalationRoles,
-  Alert,
-  EVMData,
-  GanttChartData,
-  PERTAnalysis,
-  actionLabels
-} from '@/services/ projectManagerWithActions';
-
-interface ProjectManagerState {
-  alerts: Alert[];
-  progress: number;
-  evmData: EVMData;
-  ganttData: GanttChartData;
-  pertData: PERTAnalysis;
-}
-
-interface ProjectManagerContextValue {
-  data: ProjectManagerState | null;
-  runChecks: () => Promise<void>;
-  acknowledgeAlert: (
-    alertId: string,
-    userId: string,
-    actionTaken?: string
-  ) => void;
-}
-
-export const ProjectManagerContext =
-  createContext<ProjectManagerContextValue | null>(null);
+}  from "@/services/ projectManagerWithActions"
+import { ProjectManagerState,ProjectManagerContext } from "@/services/ProjectManagerContext";
+import { EscalationRoles, ActionLabels } from "@/types/project";
+import { ProjectData } from "../ProjectCard";
 
 export const ProjectManagerProvider: React.FC<{
   project: ProjectData;
   roles: EscalationRoles;
+  actionLabels : ActionLabels;
   children: ReactNode;
-}> = ({ project, roles, children }) => {
+}> = ({ project, roles, children,actionLabels }) => {
   const [manager] = useState(() => new ProjectManager(project, roles, actionLabels));
   const [data, setData] = useState<ProjectManagerState | null>(null);
 
@@ -47,14 +24,13 @@ export const ProjectManagerProvider: React.FC<{
       progress: result.progress,
       evmData: result.evmData,
       ganttData: result.ganttData,
-      pertData: result.pertData
+      pertData: result.pertData,
     });
   }, [manager]);
 
   const acknowledgeAlert = useCallback(
     (alertId: string, userId: string, actionTaken?: string) => {
       manager.acknowledgeAlert(alertId, userId, actionTaken);
-      // Refresh the data after acknowledging the alert
       runChecks();
     },
     [manager, runChecks]

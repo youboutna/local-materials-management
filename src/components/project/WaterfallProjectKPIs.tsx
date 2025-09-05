@@ -8,7 +8,6 @@ import {
   Activity, 
   Clock, 
   DollarSign, 
-  Users, 
   Target, 
   AlertTriangle,
   CheckCircle2,
@@ -16,18 +15,20 @@ import {
   BarChart3
 } from 'lucide-react';
 
-import { useProjectManager } from "@/hooks/useProjectManager";
+import { ProjectData, ActionLabels, EscalationRoles } from '@/types/project';
+import { ProjectManager } from '@/services/ projectManagerWithActions';
+
 
 interface ProjectMetrics {
-  schedulePerformanceIndex: number; // SPI
-  costPerformanceIndex: number; // CPI
-  earnedValue: number; // EV
-  plannedValue: number; // PV
-  actualCost: number; // AC
-  budgetAtCompletion: number; // BAC
-  estimateAtCompletion: number; // EAC
-  estimateToComplete: number; // ETC
-  varianceAtCompletion: number; // VAC
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  earnedValue: number;
+  plannedValue: number;
+  actualCost: number;
+  budgetAtCompletion: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
 }
 
 interface PhaseMetrics {
@@ -46,33 +47,106 @@ interface PhaseMetrics {
 }
 
 interface WaterfallProjectKPIsProps {
+  projectData: ProjectData;
+  roles: EscalationRoles;
+  actions: ActionLabels;
   projectTitle?: string;
-  projectBudget?: number;
 }
 
 const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
+  projectData,
+  roles,
+  actions,
   projectTitle = "Projet"
 }) => {
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
-  const { data, runChecks, acknowledgeAlert } = useProjectManager();
+  const [metrics, setMetrics] = useState<{projectMetrics: ProjectMetrics; phases: PhaseMetrics[]} | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    runChecks();
-  }, [runChecks]);
+    const projectManager = new ProjectManager(projectData, roles, actions);
+    
+    const updateMetrics = () => {
+      setLoading(true);
+      const results = projectManager.runAllChecks();
+      
+      // Convert the results to the expected format
+      const evmData = results.evmData;
+      const projectMetrics: ProjectMetrics = {
+        schedulePerformanceIndex: evmData.schedulePerformanceIndex,
+        costPerformanceIndex: evmData.costPerformanceIndex,
+        earnedValue: evmData.earnedValue,
+        plannedValue: evmData.plannedValue,
+        actualCost: evmData.actualCost,
+        budgetAtCompletion: projectData.budget || 0,
+        estimateAtCompletion: evmData.estimateAtCompletion,
+        estimateToComplete: evmData.estimateToComplete,
+        varianceAtCompletion: evmData.varianceAtCompletion
+      };
+      
+      // Convert planned phases to phase metrics
+      const phases: PhaseMetrics[] = (projectData.plannedPhases || []).map((phase, index) => {
+        // Calculate phase progress based on tasks in this phase
+        const phaseTasks = projectData.tasks?.filter(task => task.phaseId === index.toString()) || [];
+        let actualProgress = 0;
+        let actualCost = 0;
+        
+        if (phaseTasks.length > 0) {
+          actualProgress = phaseTasks.reduce((sum, task) => sum + task.progress, 0) / phaseTasks.length;
+          actualCost = phaseTasks.reduce((sum, task) => sum + (task.actualCost || 0), 0);
+        }
+        
+        // Calculate planned progress based on time elapsed
+        const today = new Date();
+        const startDate = new Date(phase.startDate);
+        const endDate = new Date(phase.endDate);
+        const totalDuration = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        const elapsedDuration = (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+        const plannedProgress = Math.min(100, Math.max(0, (elapsedDuration / totalDuration) * 100));
+        
+        // Count risks and issues for this phase
+        const risks = projectData.risks?.filter(risk => 
+          risk.relatedTasks?.some(taskId => phaseTasks.some(task => task.id === taskId))
+        ).length || 0;
+        
+        const issues = projectData.inspections?.filter(inspection => 
+          inspection.issues?.some(issue => 
+            issue.description.toLowerCase().includes(phase.phase.toLowerCase())
+          )
+        ).length || 0;
+        
+        return {
+          id: index.toString(),
+          name: phase.phase,
+          plannedProgress,
+          actualProgress,
+          budget: (projectData.budget || 0) * (phase.weight || 0),
+          actualCost,
+          startDate: phase.startDate,
+          endDate: phase.endDate,
+          status: phase.status as 'not_started' | 'in_progress' | 'completed' | 'delayed',
+          risks,
+          issues
+        };
+      });
+      
+      setMetrics({ projectMetrics, phases });
+      setLoading(false);
+    };
 
-  if (!data) {
-    return (
-      <div className="p-4">
-        <span className="text-muted-foreground">Chargement des indicateurs...</span>
-      </div>
-    );
-  }
+    updateMetrics();
+    
+    // Update every 5 minutes
+    const interval = setInterval(updateMetrics, 300000);
+    return () => clearInterval(interval);
+  }, [projectData, roles, actions]);
 
-  const { progress, evmData, alerts, pertData, ganttData } = data;
-
+  // Rest of the component remains the same...
   // Calculate overall project health
   const getHealthStatus = () => {
-    const { schedulePerformanceIndex, costPerformanceIndex } = evmData;
+    if (!metrics) return { status: 'critical', color: 'text-red-600', icon: AlertTriangle };
+    
+    const { schedulePerformanceIndex, costPerformanceIndex } = metrics.projectMetrics;
     
     if (schedulePerformanceIndex >= 1.0 && costPerformanceIndex >= 1.0) {
       return { status: 'excellent', color: 'text-green-600', icon: CheckCircle2 };
@@ -85,8 +159,10 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
     }
   };
 
-  const healthStatus = getHealthStatus();
-  const HealthIcon = healthStatus.icon;
+  // Calculate phase completion rate
+  const overallProgress = metrics && metrics.phases.length > 0 
+    ? metrics.phases.reduce((sum, phase) => sum + phase.actualProgress, 0) / metrics.phases.length 
+    : 0;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -96,6 +172,17 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
       minimumFractionDigits: 0
     }).format(amount);
   };
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">Chargement des métriques...</div>;
+  }
+
+  if (!metrics) {
+    return <div className="flex justify-center items-center h-64 text-red-600">Erreur lors du chargement des données</div>;
+  }
+
+  const healthStatus = getHealthStatus();
+  const HealthIcon = healthStatus.icon;
 
   return (
     <div className="space-y-6">
@@ -132,19 +219,19 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className={`text-2xl font-bold ${
-                  evmData.schedulePerformanceIndex >= 1.0 ? 'text-green-600' :
-                  evmData.schedulePerformanceIndex >= 0.9 ? 'text-yellow-600' : 'text-red-600'
+                  metrics.projectMetrics.schedulePerformanceIndex >= 1.0 ? 'text-green-600' :
+                  metrics.projectMetrics.schedulePerformanceIndex >= 0.9 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
-                  {evmData.schedulePerformanceIndex.toFixed(2)}
+                  {metrics.projectMetrics.schedulePerformanceIndex.toFixed(2)}
                 </span>
-                {evmData.schedulePerformanceIndex >= 1.0 ? 
+                {metrics.projectMetrics.schedulePerformanceIndex >= 1.0 ? 
                   <TrendingUp className="h-4 w-4 text-green-600" /> :
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 }
               </div>
               <p className="text-xs text-muted-foreground">
-                {evmData.schedulePerformanceIndex >= 1.0 ? 'En avance' :
-                 evmData.schedulePerformanceIndex >= 0.9 ? 'Légèrement en retard' : 'En retard'}
+                {metrics.projectMetrics.schedulePerformanceIndex >= 1.0 ? 'En avance' :
+                 metrics.projectMetrics.schedulePerformanceIndex >= 0.9 ? 'Légèrement en retard' : 'En retard'}
               </p>
             </div>
 
@@ -156,19 +243,19 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className={`text-2xl font-bold ${
-                  evmData.costPerformanceIndex >= 1.0 ? 'text-green-600' :
-                  evmData.costPerformanceIndex >= 0.9 ? 'text-yellow-600' : 'text-red-600'
+                  metrics.projectMetrics.costPerformanceIndex >= 1.0 ? 'text-green-600' :
+                  metrics.projectMetrics.costPerformanceIndex >= 0.9 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
-                  {evmData.costPerformanceIndex.toFixed(2)}
+                  {metrics.projectMetrics.costPerformanceIndex.toFixed(2)}
                 </span>
-                {evmData.costPerformanceIndex >= 1.0 ? 
+                {metrics.projectMetrics.costPerformanceIndex >= 1.0 ? 
                   <TrendingUp className="h-4 w-4 text-green-600" /> :
                   <TrendingDown className="h-4 w-4 text-red-600" />
                 }
               </div>
               <p className="text-xs text-muted-foreground">
-                {evmData.costPerformanceIndex >= 1.0 ? 'Sous budget' :
-                 evmData.costPerformanceIndex >= 0.9 ? 'Proche du budget' : 'Dépassement budget'}
+                {metrics.projectMetrics.costPerformanceIndex >= 1.0 ? 'Sous budget' :
+                 metrics.projectMetrics.costPerformanceIndex >= 0.9 ? 'Proche du budget' : 'Dépassement budget'}
               </p>
             </div>
 
@@ -180,12 +267,12 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               </div>
               <div className="space-y-1">
                 <span className="text-2xl font-bold text-primary">
-                  {progress.toFixed(1)}%
+                  {overallProgress.toFixed(1)}%
                 </span>
-                <Progress value={progress} className="h-2" />
+                <Progress value={overallProgress} className="h-2" />
               </div>
               <p className="text-xs text-muted-foreground">
-                Progression globale du projet
+                {metrics.phases.filter(p => p.status === 'completed').length} / {metrics.phases.length} phases terminées
               </p>
             </div>
 
@@ -197,11 +284,11 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               </div>
               <div className="space-y-1">
                 <span className="text-lg font-bold text-primary">
-                  {formatCurrency(evmData.actualCost)}
+                  {formatCurrency(metrics.projectMetrics.actualCost)}
                 </span>
                 <div className="text-xs text-muted-foreground">
-                  <div>EV: {formatCurrency(evmData.earnedValue)}</div>
-                  <div>EAC: {formatCurrency(evmData.estimateAtCompletion)}</div>
+                  <div>Budget: {formatCurrency(metrics.projectMetrics.budgetAtCompletion)}</div>
+                  <div>EAC: {formatCurrency(metrics.projectMetrics.estimateAtCompletion)}</div>
                 </div>
               </div>
             </div>
@@ -225,15 +312,15 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Valeur Planifiée (PV)</span>
-                  <span className="font-medium">{formatCurrency(evmData.plannedValue)}</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.plannedValue)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Valeur Acquise (EV)</span>
-                  <span className="font-medium">{formatCurrency(evmData.earnedValue)}</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.earnedValue)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Coût Réel (AC)</span>
-                  <span className="font-medium">{formatCurrency(evmData.actualCost)}</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.actualCost)}</span>
                 </div>
               </div>
             </div>
@@ -242,16 +329,16 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
               <h4 className="font-medium">Prévisions</h4>
               <div className="space-y-3">
                 <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Budget Final (BAC)</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.budgetAtCompletion)}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Estimation Finale (EAC)</span>
-                  <span className="font-medium">{formatCurrency(evmData.estimateAtCompletion)}</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.estimateAtCompletion)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Reste à faire (ETC)</span>
-                  <span className="font-medium">{formatCurrency(evmData.estimateToComplete)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Écart Final (VAC)</span>
-                  <span className="font-medium">{formatCurrency(evmData.varianceAtCompletion)}</span>
+                  <span className="font-medium">{formatCurrency(metrics.projectMetrics.estimateToComplete)}</span>
                 </div>
               </div>
             </div>
@@ -262,22 +349,26 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Écart Planning (SV)</span>
                   <span className={`font-medium ${
-                    (evmData.earnedValue - evmData.plannedValue) >= 0 ? 'text-green-600' : 'text-red-600'
+                    (metrics.projectMetrics.earnedValue - metrics.projectMetrics.plannedValue) >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {formatCurrency(evmData.earnedValue - evmData.plannedValue)}
+                    {formatCurrency(metrics.projectMetrics.earnedValue - metrics.projectMetrics.plannedValue)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Écart Coût (CV)</span>
                   <span className={`font-medium ${
-                    (evmData.earnedValue - evmData.actualCost) >= 0 ? 'text-green-600' : 'text-red-600'
+                    (metrics.projectMetrics.earnedValue - metrics.projectMetrics.actualCost) >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {formatCurrency(evmData.earnedValue - evmData.actualCost)}
+                    {formatCurrency(metrics.projectMetrics.earnedValue - metrics.projectMetrics.actualCost)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">PERT Durée</span>
-                  <span className="font-medium">{pertData.totalExpectedDuration.toFixed(1)} j</span>
+                  <span className="text-sm text-muted-foreground">Écart Final (VAC)</span>
+                  <span className={`font-medium ${
+                    metrics.projectMetrics.varianceAtCompletion >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {formatCurrency(metrics.projectMetrics.varianceAtCompletion)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -285,92 +376,82 @@ const WaterfallProjectKPIs: React.FC<WaterfallProjectKPIsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Alerts & Gantt */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Alertes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {alerts.length === 0 ? (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                Aucune alerte
-              </Badge>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex items-center justify-between bg-red-50 p-3 rounded text-sm"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <AlertTriangle className="text-red-500 h-4 w-4 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">[{alert.severity.toUpperCase()}] {alert.title}</div>
-                        <div className="text-xs text-muted-foreground">{alert.message}</div>
-                      </div>
-                    </div>
-                    {!alert.acknowledged && (
-                      <button
-                        onClick={() =>
-                          acknowledgeAlert(alert.id, "user123", "Ack via KPIs")
-                        }
-                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex-shrink-0"
-                      >
-                        Ack
-                      </button>
+      {/* Phases Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Statut des Phases Waterfall
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="space-y-4">
+            {metrics.phases.map((phase) => (
+              <div 
+                key={phase.id}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  selectedPhase === phase.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => setSelectedPhase(selectedPhase === phase.id ? null : phase.id)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <h4 className="font-medium">{phase.name}</h4>
+                    <Badge 
+                      variant={
+                        phase.status === 'completed' ? 'default' :
+                        phase.status === 'in_progress' ? 'secondary' :
+                        phase.status === 'delayed' ? 'destructive' : 'outline'
+                      }
+                    >
+                      {phase.status === 'completed' ? 'Terminé' :
+                       phase.status === 'in_progress' ? 'En cours' :
+                       phase.status === 'delayed' ? 'Retardé' : 'Non commencé'}
+                    </Badge>
+                    {phase.procurementStep && (
+                      <Badge variant="outline">
+                        Étape {phase.procurementStep}
+                      </Badge>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span>{phase.actualProgress.toFixed(1)}%</span>
+                    <span>{formatCurrency(phase.actualCost)} / {formatCurrency(phase.budget)}</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Progression</span>
+                    <span>{phase.actualProgress.toFixed(1)}% / {phase.plannedProgress.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={phase.actualProgress} className="h-2" />
+                </div>
 
-        {/* Gantt Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Diagramme de Gantt
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {ganttData.tasks.length > 0
-                ? ganttData.tasks.slice(0, 8).map((task, i) => (
-                    <div key={i} className="p-2 bg-muted rounded border">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium text-sm">{task.text}</span>
-                        <div className="text-xs text-muted-foreground">
-                          {(task.progress * 100).toFixed(0)}%
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-muted-foreground">{task.start_date}</span>
-                        <span className="text-xs text-muted-foreground">{task.duration}j</span>
-                      </div>
-                      <Progress value={task.progress * 100} className="h-1" />
+                {selectedPhase === phase.id && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-sm font-medium mb-2">Période</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(phase.startDate).toLocaleDateString('fr-FR')} - {new Date(phase.endDate).toLocaleDateString('fr-FR')}
+                      </p>
                     </div>
-                  ))
-                : (
-                  <div className="text-center text-muted-foreground">
-                    Pas de données Gantt disponibles
+                    <div>
+                      <p className="text-sm font-medium mb-2">Risques & Problèmes</p>
+                      <div className="flex gap-2">
+                        <Badge variant="outline">{phase.risks} risques</Badge>
+                        <Badge variant="outline">{phase.issues} problèmes</Badge>
+                      </div>
+                    </div>
                   </div>
                 )}
-              {ganttData.tasks.length > 8 && (
-                <div className="text-xs text-muted-foreground text-center">
-                  +{ganttData.tasks.length - 8} autres tâches
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,13 +1,7 @@
 // services/ProjectManagerService.ts
+import { Alert, EVMData, ProjectData, EscalationRoles, ActionLabels, GanttChartData, PERTAnalysis } from "@/types/project";
 import {
   ProjectManager,
-  ProjectData,
-  EscalationRoles,
-  Alert,
-  EVMData,
-  GanttChartData,
-  PERTAnalysis,
-  actionLabels
 } from "./ projectManagerWithActions";
 
 export interface ProjectManagerState {
@@ -17,6 +11,20 @@ export interface ProjectManagerState {
   ganttData: GanttChartData;
   pertData: PERTAnalysis;
 }
+export const actionLabels: ActionLabels = {
+  task_assignment: 'Assigner une tâche',
+  hierarchy_notification: 'Notifier la hiérarchie',
+  sms: 'Envoyer SMS',
+  call: 'Programmer appel',
+  email: 'Envoyer email',
+  mail: 'Courrier postal',
+  export_receipt: 'Exporter reçu',
+  blockchain_verification: 'Vérification blockchain',
+  document_upload: 'Uploader document',
+  meeting_schedule: 'Planifier réunion',
+  financial_review: 'Revue financière',
+  legal_consultation: 'Consultation juridique',
+};
 
 export class ProjectManagerService {
   private manager: ProjectManager;

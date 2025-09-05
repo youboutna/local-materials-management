@@ -1,284 +1,8 @@
 // projectManagerWithActions.ts
 
-/**
- * ---------------------------
- * Interfaces principales
- * ---------------------------
- */
+import { ActionLabels, Alert, CheckSchedule, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
 
-export interface InsurancePolicy {
-  id: string;
-  type: 'assurance' | 'garantie_bancaire';
-  reference: string;
-  projectId: string;
-  issuer: string;
-  startDate: string;
-  endDate: string;
-  amount: number;
-  coverage: string;
-  status: 'active' | 'expiring_soon' | 'expired';
-  renewalDate?: string;
-  documents?: string[];
-  notes?: string;
-  alertSent?: boolean;
-}
 
-export interface Task {
-  id: string;
-  name: string;
-  description: string;
-  phaseId: string;
-  dependencies: string[];
-  assignedTo: string[];
-  estimatedDuration: number;
-  actualDuration?: number;
-  startDate: string;
-  endDate: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  progress: number;
-  weight: number;
-  costEstimate: number;
-  actualCost?: number;
-  optimisticEstimate?: number;
-  pessimisticEstimate?: number;
-  criticalPath?: boolean;
-  ganttColor?: string;
-}
-
-export interface Inspection {
-  id: string;
-  project_id: string;
-  inspector: string;
-  date: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  progress_at_inspection: number;
-  comments?: string | null;
-  created_at: string;
-  updated_at: string;
-  phase_id?: string | null;
-  documents?: string[];
-  issues?: InspectionIssue[];
-}
-
-export interface InspectionIssue {
-  id: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved';
-  deadline?: string;
-  assignedTo?: string;
-}
-
-export interface Alert {
-  id: string;
-  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  message: string;
-  projectId: string;
-  relatedEntityId?: string;
-  triggerDate: string;
-  acknowledged: boolean;
-  acknowledgedBy?: string;
-  acknowledgedAt?: string;
-  actionRequired: boolean;
-  actionTaken?: string;
-  actionTakenBy?: string;
-  actionTakenAt?: string;
-  escalationLevel?: number;
-  availableActions?: string[];
-  actionProof?: ActionProof[];
-  deadline?: string;
-  recurrence?: number;
-}
-
-export interface ActionProof {
-  type: 'email' | 'sms' | 'document' | 'call' | 'meeting';
-  timestamp: string;
-  performedBy: string;
-  details: string;
-  documentUrl?: string;
-}
-
-export interface ProjectData {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  status: ProjectStatus;
-  progress: number;
-  budget: number;
-  startDate: string;
-  endDate?: string;
-  thumbnail: string;
-  teamSize: number;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  financingSource?: string;
-  marketType?: string;
-  selectionMode?: string;
-  launchDate?: string;
-  attributionDate?: string;
-  projectResponsableId?: string;
-  mainContractor?: string;
-  projectReference?: string;
-  allowsInitialPayment?: boolean;
-  initialPaymentPercentage?: number;
-  currentPhase?: ConstructionPhase;
-  currentStage?: ConstructionStage;
-  plannedPhases?: {
-    phase: ConstructionPhase;
-    startDate: string;
-    endDate: string;
-    estimatedDuration: number;
-    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-    weight: number;
-  }[];
-  constructionMilestones?: {
-    id: string;
-    title: string;
-    phase: ConstructionPhase;
-    stage: ConstructionStage;
-    targetDate: string;
-    completedDate?: string;
-    status: 'pending' | 'completed' | 'overdue';
-    notes?: string;
-    weight: number;
-  }[];
-  inspections? :Inspection[];
-  tasks?: Task[];
-  risks?: ProjectRisk[];
-  resources?: ProjectResource[];
-  insurancePolicies?: InsurancePolicy[];
-  alerts?: Alert[];
-  escalationThresholds?: {
-    alert: number;
-    notification: number;
-    guarantee: number;
-    legal: number;
-  };
-  methodology?: 'waterfall' | 'agile' | 'hybrid';
-  ganttChart?: GanttChartData;
-  pertAnalysis?: PERTAnalysis;
-  earnedValueManagement?: EVMData;
-  contacts?: ProjectContact[];
-  checkSchedule?: CheckSchedule;
-}
-
-export interface ProjectRisk {
-  id: string;
-  title: string;
-  description: string;
-  probability: number;
-  impact: number;
-  mitigationPlan: string;
-  status: 'identified' | 'monitored' | 'mitigated' | 'resolved';
-  relatedTasks: string[];
-}
-
-export interface ProjectResource {
-  id: string;
-  name: string;
-  type: 'human' | 'material' | 'equipment';
-  skills?: string[];
-  costPerHour?: number;
-  availability: number;
-  assignedTasks: string[];
-}
-
-export interface GanttChartData {
-  tasks: GanttTask[];
-  dependencies: GanttDependency[];
-}
-
-export interface GanttTask {
-  id: string;
-  text: string;
-  start_date: string;
-  duration: number;
-  progress: number;
-  parent?: string;
-  color?: string;
-}
-
-export interface GanttDependency {
-  id: string;
-  source: string;
-  target: string;
-  type: string;
-}
-
-export interface PERTAnalysis {
-  expectedDurations: { [taskId: string]: number };
-  criticalPath: string[];
-  totalExpectedDuration: number;
-  variances: { [taskId: string]: number };
-}
-
-export interface EVMData {
-  plannedValue: number;
-  earnedValue: number;
-  actualCost: number;
-  schedulePerformanceIndex: number;
-  costPerformanceIndex: number;
-  estimateAtCompletion: number;
-  estimateToComplete: number;
-  varianceAtCompletion: number;
-}
-
-export interface ProjectContact {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  isPrimary: boolean;
-}
-
-export interface CheckSchedule {
-  insuranceCheck: number;
-  delayCheck: number;
-  inspectionCheck: number;
-  lastRun: {
-    insurance?: string;
-    delay?: string;
-    inspection?: string;
-  };
-}
-
-export type ProjectStatus = 'planned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
-export type ConstructionPhase = 'design' | 'procurement' | 'construction' | 'testing' | 'commissioning';
-export type ConstructionStage = 'preliminary' | 'foundation' | 'structure' | 'systems' | 'finishing';
-
-export type EscalationRoles = {
-  level1: string;
-  level2: string;
-  level3: string;
-  level4: string;
-};
-
-/**
- * ---------------------------
- * Actions disponibles
- * ---------------------------
- */
-export const actionLabels = {
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-  sms: 'Envoyer SMS',
-  call: 'Programmer appel',
-  email: 'Envoyer email',
-  mail: 'Courrier postal',
-  export_receipt: 'Exporter reçu',
-  blockchain_verification: 'Vérification blockchain',
-  document_upload: 'Uploader document',
-  meeting_schedule: 'Planifier réunion',
-  financial_review: 'Revue financière',
-  legal_consultation: 'Consultation juridique',
-};
 
 /**
  * ---------------------------
@@ -315,7 +39,7 @@ export class ProjectManager {
   constructor(
     private project: ProjectData,
     private roles: EscalationRoles,
-    private actions: typeof actionLabels
+    private actions:  ActionLabels
   ) {}
 
   private shouldRunCheck(checkType: keyof typeof this.lastChecks): boolean {
@@ -1018,11 +742,11 @@ export class ProjectManager {
  * ---------------------------
  */
 const exampleProject: ProjectData = {
-  id: 'projet-ligne-ht-001',
+  id: '9146da6c-29b9-4787-b901-3bead2a57068',
   title: 'Ligne HT Nouakchott-Zouerate',
   description: 'Construction de lignes haute tension reliant Nouakchott et Zouerate.',
   location: 'Nouakchott - Zouerate',
-  status: 'in_progress',
+  status: 'en cours',
   progress: 15,
   budget: 120000000,
   startDate: '2021-03-23',
@@ -1040,11 +764,11 @@ const exampleProject: ProjectData = {
   attributionDate: '2021-02-28',
   allowsInitialPayment: true,
   initialPaymentPercentage: 15,
-  currentPhase: 'construction',
-  currentStage: 'structure',
+  currentPhase: 'structural_work',
+  currentStage: 'structural_framing',
   plannedPhases: [
     {
-      phase: 'design',
+      phase: 'pre_construction',
       startDate: '2021-03-23',
       endDate: '2021-09-30',
       estimatedDuration: 190,
@@ -1052,7 +776,7 @@ const exampleProject: ProjectData = {
       weight: 0.15
     },
     {
-      phase: 'procurement',
+      phase: 'site_preparation',
       startDate: '2021-10-01',
       endDate: '2022-12-31',
       estimatedDuration: 456,
@@ -1060,7 +784,7 @@ const exampleProject: ProjectData = {
       weight: 0.25
     },
     {
-      phase: 'construction',
+      phase: 'structural_work',
       startDate: '2023-01-01',
       endDate: '2025-06-30',
       estimatedDuration: 911,
@@ -1068,7 +792,7 @@ const exampleProject: ProjectData = {
       weight: 0.40
     },
     {
-      phase: 'testing',
+      phase: 'finishing',
       startDate: '2025-07-01',
       endDate: '2025-12-31',
       estimatedDuration: 184,
@@ -1076,7 +800,7 @@ const exampleProject: ProjectData = {
       weight: 0.10
     },
     {
-      phase: 'commissioning',
+      phase: 'handover',
       startDate: '2026-01-01',
       endDate: '2026-12-31',
       estimatedDuration: 365,
@@ -1086,20 +810,20 @@ const exampleProject: ProjectData = {
   ],
   constructionMilestones: [
     {
-      id: 'milestone-1',
+      id: '9546da6c-29c9-4787-b901-4bead2a57068',
       title: 'Approval des études techniques',
-      phase: 'design',
-      stage: 'preliminary',
+      phase: 'pre_construction',
+      stage: 'planning_design',
       targetDate: '2021-06-30',
       completedDate: '2021-06-15',
       status: 'completed',
       weight: 0.3
     },
     {
-      id: 'milestone-2',
+      id: '9146da6c-23b9-4787-b901-4aead2a57068',
       title: 'Commande des matériaux principaux',
-      phase: 'procurement',
-      stage: 'preliminary',
+      phase: 'site_preparation',
+      stage: 'permits_approvals',
       targetDate: '2022-03-31',
       completedDate: '2022-04-15',
       status: 'completed',
@@ -1107,10 +831,10 @@ const exampleProject: ProjectData = {
       weight: 0.4
     },
     {
-      id: 'milestone-3',
+      id: '9146da6c-29b9-1787-b901-4aead2a57068',
       title: 'Installation des 100 premiers pylônes',
-      phase: 'construction',
-      stage: 'structure',
+      phase: 'structural_work',
+      stage: 'structural_framing',
       targetDate: '2023-12-31',
       completedDate: undefined,
       status: 'pending',
@@ -1119,12 +843,12 @@ const exampleProject: ProjectData = {
   ],
   tasks: [
     {
-      id: 'task-1',
+      id: '9146da6c-29b9-4787-b201-4aead2a57068',
       name: 'Études géotechniques',
       description: 'Analyses des sols pour les foundations des pylônes',
-      phaseId: '0',
+      phaseId: 'phase-001',
       dependencies: [],
-      assignedTo: ['resource-1', 'resource-2'],
+      assignedTo: ['1146da6c-29b9-4787-b901-7aaad2a57068', '2146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 60,
       actualDuration: 55,
       startDate: '2021-03-23',
@@ -1136,12 +860,12 @@ const exampleProject: ProjectData = {
       actualCost: 480000
     },
     {
-      id: 'task-2',
+      id: '8146da6c-29n9-4787-b901-4aead2a57068',
       name: 'Conception des foundations',
       description: 'Calcul et conception des foundations des pylônes',
-      phaseId: '0',
-      dependencies: ['task-1'],
-      assignedTo: ['resource-3'],
+      phaseId: 'phase-001',
+      dependencies: ['9146da6c-29b9-4787-b201-4aead2a5706'],
+      assignedTo: ['3146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 90,
       actualDuration: 85,
       startDate: '2021-05-23',
@@ -1153,12 +877,12 @@ const exampleProject: ProjectData = {
       actualCost: 720000
     },
     {
-      id: 'task-3',
+      id: '7146da6c-29b9-4767-b901-4aead2a57068',
       name: 'Commande des câbles',
       description: 'Négociation et commande des câbles haute tension',
-      phaseId: '1',
+      phaseId: 'phase-002',
       dependencies: [],
-      assignedTo: ['resource-4'],
+      assignedTo: ['4146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 120,
       actualDuration: 150,
       startDate: '2021-10-01',
@@ -1170,12 +894,12 @@ const exampleProject: ProjectData = {
       actualCost: 32000000
     },
     {
-      id: 'task-4',
+      id: '6146da6c-29b9-4717-b901-4kead2a57068',
       name: 'Installation des premiers pylônes',
       description: 'Installation des 50 premiers pylônes sur le tronçon initial',
-      phaseId: '2',
-      dependencies: ['task-2', 'task-3'],
-      assignedTo: ['resource-5', 'resource-6', 'resource-7'],
+      phaseId: 'phase-003',
+      dependencies: ['task-002', 'task-003'],
+      assignedTo: ['1146da6c-29b9-4787-b901-7aaad2a57068', '1146da6c-29b9-4787-b901-7aaad2a57068', '2146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 180,
       actualDuration: 210,
       startDate: '2023-01-01',
@@ -1191,60 +915,60 @@ const exampleProject: ProjectData = {
   ],
   risks: [
     {
-      id: 'risk-1',
+      id: '9146da6c-29b9-4787-b301-4zexd2a57068',
       title: 'Retard d\'approvisionnement',
       description: 'Retard possible dans la livraison des matériaux due à des problèmes logistiques',
       probability: 40,
       impact: 70,
       mitigationPlan: 'Prévoir des stocks tampons et identifier des fournisseurs alternatifs',
       status: 'monitored',
-      relatedTasks: ['task-3']
+      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068','6146da6c-29b9-4717-b901-4kead2a57068']
     },
     {
-      id: 'risk-2',
+      id: '9146da6c-29b9-4787-q901-4aewd2a57068',
       title: 'Conditions météorologiques défavorables',
       description: 'Tempêtes de sable pouvant ralentir les travaux',
       probability: 60,
       impact: 50,
       mitigationPlan: 'Planifier les travaux critiques en dehors de la période de tempêtes',
       status: 'identified',
-      relatedTasks: ['task-4']
+      relatedTasks: ['8146da6c-29n9-4787-b901-4aead2a57068']
     }
   ],
   resources: [
     {
-      id: 'resource-1',
+      id: '1146da6c-29b9-4787-b901-7aaad2a57068',
       name: 'Équipe géotechnique',
       type: 'human',
       skills: ['géotechnique', 'forage'],
       costPerHour: 120,
       availability: 100,
-      assignedTasks: ['task-1']
+      assignedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068']
     },
     {
-      id: 'resource-2',
+      id: '2146da6c-29b9-4787-b901-7aaad2a57068',
       name: 'Foreuse',
       type: 'equipment',
       costPerHour: 200,
       availability: 100,
-      assignedTasks: ['task-1']
+      assignedTasks: ['8146da6c-29b9-4787-b201-4aead2a57068']
     },
     {
-      id: 'resource-3',
+      id: '3146da6c-29b9-4787-b901-7aaad2a57068',
       name: 'Ingénieur structures',
       type: 'human',
       skills: ['ingénierie structures'],
       costPerHour: 80,
       availability: 100,
-      assignedTasks: ['task-2']
+      assignedTasks: ['146da6c-29b9-4787-b201-4aead2a57068']
     }
   ],
   insurancePolicies: [
     {
-      id: 'assurance-001',
+      id: '9146da6c-29b9-4787-b901-4dddd2a57068',
       type: 'assurance',
       reference: 'ASS-2023-001',
-      projectId: 'projet-ligne-ht-001',
+      projectId: '9146da6c-29b9-4787-b901-3bead2a57068',
       issuer: 'AXA',
       startDate: '2023-01-01',
       endDate: '2024-01-01',
@@ -1255,8 +979,8 @@ const exampleProject: ProjectData = {
   ],
   inspections: [
     {
-      id: 'insp-001',
-      project_id: 'projet-ligne-ht-001',
+      id: '9196da6c-00b9-4787-c901-4aead2a57068',
+      project_id: '9146da6c-29b9-4787-b901-3bead2a57068',
       inspector: 'Ingénieur QA',
       date: '2023-07-01',
       status: 'in_progress',
@@ -1265,7 +989,7 @@ const exampleProject: ProjectData = {
       updated_at: '2023-07-01',
       issues: [
         {
-          id: 'issue-1',
+          id: '9146da6c-29b9-4787-b901-4zzzd2a57068',
           description: 'Pylône #45 non conforme aux spécifications',
           severity: 'high',
           status: 'open'
@@ -1282,8 +1006,8 @@ const exampleProject: ProjectData = {
   methodology: 'waterfall',
   contacts: [
     {
-      id: 'contact-1',
-      name: 'ali Mohamed',
+      id: '7146da6c-29b9-4787-b901-7aaad2a57068',
+      name: 'Ali Mohamed',
       role: 'Chef de projet',
       email: 'ali.mohamed01@somelec.com',
       phone: '+2224567890',
@@ -1305,6 +1029,21 @@ const roles: EscalationRoles = {
   level4: 'Comité juridique'
 };
 
+const actionLabels: ActionLabels = {
+  task_assignment: 'Assigner une tâche',
+  hierarchy_notification: 'Notifier la hiérarchie',
+  sms: 'Envoyer SMS',
+  call: 'Programmer appel',
+  email: 'Envoyer email',
+  mail: 'Courrier postal',
+  export_receipt: 'Exporter reçu',
+  blockchain_verification: 'Vérification blockchain',
+  document_upload: 'Uploader document',
+  meeting_schedule: 'Planifier réunion',
+  financial_review: 'Revue financière',
+  legal_consultation: 'Consultation juridique',
+};
+
 const manager = new ProjectManager(exampleProject, roles, actionLabels);
 
 // Exécution des vérifications
@@ -1315,5 +1054,5 @@ console.log(JSON.stringify(alerts, null, 2));
 
 // Simulation de traitement d'une alerte
 if (alerts.alerts.length > 0) {
-  manager.acknowledgeAlert(alerts.alerts[0].id, 'user-123', 'Email envoyé au fournisseur');
+  manager.acknowledgeAlert(alerts.alerts[0].id, 'bb01aec4-397d-4830-ab5c-7d5e0b21b704', 'Email envoyé au fournisseur');
 }

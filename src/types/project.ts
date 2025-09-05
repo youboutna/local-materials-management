@@ -26,6 +26,106 @@ export type ConstructionStage =
   | 'final_inspection'
   | 'handover_complete';
 
+/**
+ * ---------------------------
+ * Interfaces principales
+ * ---------------------------
+ */
+
+export interface InsurancePolicy {
+  id: string;
+  type: 'assurance' | 'garantie_bancaire';
+  reference: string;
+  projectId: string;
+  issuer: string;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  coverage: string;
+  status: 'active' | 'expiring_soon' | 'expired';
+  renewalDate?: string;
+  documents?: string[];
+  notes?: string;
+  alertSent?: boolean;
+}
+
+export interface Task {
+  id: string;
+  name: string;
+  description: string;
+  phaseId: string;
+  dependencies: string[];
+  assignedTo: string[];
+  estimatedDuration: number;
+  actualDuration?: number;
+  startDate: string;
+  endDate: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  progress: number;
+  weight: number;
+  costEstimate: number;
+  actualCost?: number;
+  optimisticEstimate?: number;
+  pessimisticEstimate?: number;
+  criticalPath?: boolean;
+  ganttColor?: string;
+}
+
+export interface Inspection {
+  id: string;
+  project_id: string;
+  inspector: string;
+  date: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  progress_at_inspection: number;
+  comments?: string | null;
+  created_at: string;
+  updated_at: string;
+  phase_id?: string | null;
+  documents?: string[];
+  issues?: InspectionIssue[];
+}
+
+export interface InspectionIssue {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'in_progress' | 'resolved';
+  deadline?: string;
+  assignedTo?: string;
+}
+
+export interface Alert {
+  id: string;
+  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  projectId: string;
+  relatedEntityId?: string;
+  triggerDate: string;
+  acknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  actionRequired: boolean;
+  actionTaken?: string;
+  actionTakenBy?: string;
+  actionTakenAt?: string;
+  escalationLevel?: number;
+  availableActions?: string[];
+  actionProof?: ActionProof[];
+  deadline?: string;
+  recurrence?: number;
+}
+
+export interface ActionProof {
+  type: 'email' | 'sms' | 'document' | 'call' | 'meeting';
+  timestamp: string;
+  performedBy: string;
+  details: string;
+  documentUrl?: string;
+}
+
 export interface ProjectData {
   id: string;
   title: string;
@@ -42,7 +142,6 @@ export interface ProjectData {
     latitude: number;
     longitude: number;
   };
-  // New optional fields
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;
@@ -51,10 +150,8 @@ export interface ProjectData {
   projectResponsableId?: string;
   mainContractor?: string;
   projectReference?: string;
-  // Payment settings
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
-  // Construction workflow fields - making sure these are included
   currentPhase?: ConstructionPhase;
   currentStage?: ConstructionStage;
   plannedPhases?: {
@@ -63,6 +160,7 @@ export interface ProjectData {
     endDate: string;
     estimatedDuration: number;
     status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+    weight: number;
   }[];
   constructionMilestones?: {
     id: string;
@@ -73,8 +171,136 @@ export interface ProjectData {
     completedDate?: string;
     status: 'pending' | 'completed' | 'overdue';
     notes?: string;
+    weight: number;
   }[];
+  inspections? :Inspection[];
+  tasks?: Task[];
+  risks?: ProjectRisk[];
+  resources?: ProjectResource[];
+  insurancePolicies?: InsurancePolicy[];
+  alerts?: Alert[];
+  escalationThresholds?: {
+    alert: number;
+    notification: number;
+    guarantee: number;
+    legal: number;
+  };
+  methodology?: 'waterfall' | 'agile' | 'hybrid';
+  ganttChart?: GanttChartData;
+  pertAnalysis?: PERTAnalysis;
+  earnedValueManagement?: EVMData;
+  contacts?: ProjectContact[];
+  checkSchedule?: CheckSchedule;
 }
+
+export interface ProjectRisk {
+  id: string;
+  title: string;
+  description: string;
+  probability: number;
+  impact: number;
+  mitigationPlan: string;
+  status: 'identified' | 'monitored' | 'mitigated' | 'resolved';
+  relatedTasks: string[];
+}
+
+export interface ProjectResource {
+  id: string;
+  name: string;
+  type: 'human' | 'material' | 'equipment';
+  skills?: string[];
+  costPerHour?: number;
+  availability: number;
+  assignedTasks: string[];
+}
+
+export interface GanttChartData {
+  tasks: GanttTask[];
+  dependencies: GanttDependency[];
+}
+
+export interface GanttTask {
+  id: string;
+  text: string;
+  start_date: string;
+  duration: number;
+  progress: number;
+  parent?: string;
+  color?: string;
+}
+
+export interface GanttDependency {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface PERTAnalysis {
+  expectedDurations: { [taskId: string]: number };
+  criticalPath: string[];
+  totalExpectedDuration: number;
+  variances: { [taskId: string]: number };
+}
+
+export interface EVMData {
+  plannedValue: number;
+  earnedValue: number;
+  actualCost: number;
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
+}
+
+export interface ProjectContact {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  isPrimary: boolean;
+}
+
+export interface CheckSchedule {
+  insuranceCheck: number;
+  delayCheck: number;
+  inspectionCheck: number;
+  lastRun: {
+    insurance?: string;
+    delay?: string;
+    inspection?: string;
+  };
+}
+
+export type EscalationRoles = {
+  level1: string;
+  level2: string;
+  level3: string;
+  level4: string;
+};
+
+/**
+ * ---------------------------
+ * Actions disponibles
+ * ---------------------------
+ */
+export type ActionLabels = {
+  task_assignment: 'Assigner une tâche',
+  hierarchy_notification: 'Notifier la hiérarchie',
+  sms: 'Envoyer SMS',
+  call: 'Programmer appel',
+  email: 'Envoyer email',
+  mail: 'Courrier postal',
+  export_receipt: 'Exporter reçu',
+  blockchain_verification: 'Vérification blockchain',
+  document_upload: 'Uploader document',
+  meeting_schedule: 'Planifier réunion',
+  financial_review: 'Revue financière',
+  legal_consultation: 'Consultation juridique',
+};
 
 export interface Payment {
   id: string;

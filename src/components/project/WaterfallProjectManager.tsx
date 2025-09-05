@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, 
   BarChart3, 
-  Workflow, 
   Target,
   Clock,
   CheckCircle2,
@@ -16,11 +15,35 @@ import {
 } from 'lucide-react';
 import WaterfallGanttChart from './WaterfallGanttChart';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
-import ConstructionPhaseManager from './ConstructionPhaseManager';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectData, ConstructionPhase, ConstructionStage } from '@/types/project';
-import WaterfallProjectPhasesManager from './WaterfallProjectPhasesManager';
+import { EscalationRoles,ActionLabels, ProjectData } from '@/types/project';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+
+// Define default roles (adjust based on your actual role structure use )
+//@TODO use position and hierachy from template   of Organization
+const defaultRoles: EscalationRoles = {
+  level1: 'Chef de projet',
+  level2: 'Directeur Technique',
+  level3: 'DG',
+  level4: 'Comité juridique'
+};
+
+const actionLabels: ActionLabels = {
+  task_assignment: 'Assigner une tâche',
+  hierarchy_notification: 'Notifier la hiérarchie',
+  sms: 'Envoyer SMS',
+  call: 'Programmer appel',
+  email: 'Envoyer email',
+  mail: 'Courrier postal',
+  export_receipt: 'Exporter reçu',
+  blockchain_verification: 'Vérification blockchain',
+  document_upload: 'Uploader document',
+  meeting_schedule: 'Planifier réunion',
+  financial_review: 'Revue financière',
+  legal_consultation: 'Consultation juridique',
+};
 
 const WaterfallProjectManager = () => {
   const [activeTab, setActiveTab] = useState('gantt');
@@ -68,14 +91,14 @@ const WaterfallProjectManager = () => {
           setPhases(phasesData.map(p => ({
             id: p.id,
             name: p.phase_name,
-            plannedProgress: 0, // Fixed: use hardcoded value since field doesn't exist
+            plannedProgress: 0,
             actualProgress: p.progress || 0,
             budget: p.estimated_cost || 0,
             actualCost: p.actual_cost || 0,
             startDate: p.start_date,
             endDate: p.end_date,
             status: p.status,
-            procurementStep: '', // Fixed: use hardcoded value since field doesn't exist
+            procurementStep: '',
             projectId: p.project_id
           })));
         }
@@ -88,15 +111,15 @@ const WaterfallProjectManager = () => {
             completedDate: m.completion_date,
             status: m.status,
             projectId: m.project_id,
-            phase: '', // Fixed: use hardcoded value since field doesn't exist
-            stage: '' // Fixed: use hardcoded value since field doesn't exist
+            phase: '',
+            stage: ''
           })));
         }
 
         // Calcul des métriques EVM à partir des phases
         if (phasesData && phasesData.length > 0) {
           const earnedValue = phasesData.reduce((sum, p) => sum + ((p.progress || 0) / 100) * (p.estimated_cost || 0), 0);
-          const plannedValue = phasesData.reduce((sum, p) => sum + (0 / 100) * (p.estimated_cost || 0), 0); // Fixed: use 0 since planned_progress doesn't exist
+          const plannedValue = phasesData.reduce((sum, p) => sum + (0 / 100) * (p.estimated_cost || 0), 0);
           const actualCost = phasesData.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
           const budgetAtCompletion = selectedProject.budget || phasesData.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
 
@@ -283,84 +306,64 @@ const WaterfallProjectManager = () => {
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="gantt" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Gantt & KPIs
-            </TabsTrigger>
-            {/**             
-             <TabsTrigger value="phases" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Phases Waterfall
-            </TabsTrigger> **/}
+        {/* Wrap the tabs with ProjectManagerProvider */}
+        <ProjectManagerProvider project={selectedProject} roles={defaultRoles}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="gantt" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Gantt & KPIs
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Analytics EVM
+              </TabsTrigger>
+            </TabsList>
 
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Analytics EVM
-            </TabsTrigger>
-          </TabsList>
+            <TabsContent value="gantt" className="space-y-4">
+              <WaterfallGanttChart 
+                tasks={phases.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  startDate: new Date(p.startDate),
+                  endDate: new Date(p.endDate),
+                  progress: p.actualProgress,
+                  phase: p.name,
+                  status: p.status,
+                  procurementStep: 1,
+                  assignedTo: '',
+                  budget: p.budget
+                }))}
+                projectStartDate={new Date(Math.min(...phases.map(p => new Date(p.startDate).getTime())))}
+                projectEndDate={new Date(Math.max(...phases.map(p => new Date(p.endDate).getTime())))}
+                ProjectTitle={selectedProject.title}
+                ProjectDescription={selectedProject.description}
+                ProjectLocation={selectedProject.location}
+                ProjectStatus={selectedProject.status}
+                ProjectProgress={selectedProject.progress}
+                projectBudget={selectedProject.budget}
+                ProjectTeamSize={selectedProject.teamSize}
+              />
+            </TabsContent>
 
-          <TabsContent value="gantt" className="space-y-4">
-            <WaterfallGanttChart 
-              tasks={phases.map(p => ({
-                id: p.id,
-                name: p.name,
-                startDate: new Date(p.startDate),
-                endDate: new Date(p.endDate),
-                progress: p.actualProgress,
-                phase: p.name,
-                status: p.status,
-                procurementStep: 1,
-                assignedTo: '',
-                budget: p.budget
-              }))}
-              projectStartDate={new Date(Math.min(...phases.map(p => new Date(p.startDate).getTime())))}
-              projectEndDate={new Date(Math.max(...phases.map(p => new Date(p.endDate).getTime())))}
-              ProjectTitle={selectedProject.title}
-              ProjectDescription={selectedProject.description}
-              ProjectLocation={selectedProject.location}
-              ProjectStatus={selectedProject.status}
-              ProjectProgress={selectedProject.progress}
-              projectBudget={selectedProject.budget}
-              ProjectTeamSize={selectedProject.teamSize}
-            />
-          </TabsContent>
-
-
-        {/*    <TabsContent value="phases" className="space-y-4">
-            Module en développement
-              <WaterfallProjectPhasesManager
-              phases={phases.map(p => ({
-                id: p.id,
-                title: p.name,
-                description: `Phase ${p.name}`,
-                startDate: p.startDate,
-                endDate: p.endDate,
-                estimatedDuration: 30,
-                status: p.status,
-                budget: p.budget,
-                actualCost: p.actualCost,
-                progress: p.actualProgress,
-                materials: [],
-                humanResources: [],
-                suppliers: [],
-                location: selectedProject.location,
-                notes: ''
-              }))}
-              projectBudget={selectedProject.budget}
-              projectId={selectedProject.id}
-            />
-           
-          </TabsContent>  */}       
-
-          <TabsContent value="analytics" className="space-y-4">
-            <WaterfallProjectKPIs
-              projectTitle={selectedProject.title}
-              projectBudget={selectedProject.budget}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="analytics" className="space-y-4">
+              <ErrorBoundary fallback={
+                <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                  <h3 className="text-lg font-medium text-red-800">Erreur de chargement</h3>
+                  <p className="text-red-600">Impossible de charger les indicateurs de performance.</p>
+                </div>
+              }>
+                <WaterfallProjectKPIs
+                  projectData={selectedProject}
+                  roles={defaultRoles}
+                  actions={actionLabels}
+                  projectTitle={selectedProject.title}
+                  projectBudget={selectedProject.budget}
+                />
+              </ErrorBoundary>
+            </TabsContent>
+          </Tabs>
+        </ProjectManagerProvider>
       </div>
     </div>
   );
