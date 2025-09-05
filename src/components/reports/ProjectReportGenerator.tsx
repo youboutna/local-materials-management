@@ -243,133 +243,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     }));
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    const newSections = Object.keys(reportConfig.includeSections).reduce((acc, key) => ({
-      ...acc,
-      [key]: checked
-    }), {} as ReportConfig['includeSections']);
-    
-    setReportConfig(prev => ({
-      ...prev,
-      includeSections: newSections
-    }));
-  };
-
-  const handleReportTypeChange = (type: ReportConfig['reportType']) => {
-    let sectionsConfig: ReportConfig['includeSections'];
-    
-    switch (type) {
-      case 'summary':
-        sectionsConfig = {
-          overview: true,
-          financial: true,
-          timeline: true,
-          materials: false,
-          phases: true,
-          inspections: false,
-          risks: true,
-          kpi: true,
-          milestones: true,
-          bankGuarantees: false,
-          insurance: false,
-          paymentBlocks: false,
-          suppliers: false,
-          documents: false,
-          employees: false,
-          escalationAlerts: false,
-          evmAnalysis: false,
-          pertAnalysis: false,
-          ganttChart: false,
-        };
-        break;
-        
-      case 'financial':
-        sectionsConfig = {
-          overview: true,
-          financial: true,
-          timeline: false,
-          materials: true,
-          phases: true,
-          inspections: false,
-          risks: true,
-          kpi: true,
-          milestones: false,
-          bankGuarantees: true,
-          insurance: true,
-          paymentBlocks: true,
-          suppliers: true,
-          documents: false,
-          employees: true,
-          escalationAlerts: false,
-          evmAnalysis: true,
-          pertAnalysis: false,
-          ganttChart: false,
-        };
-        break;
-        
-      case 'detailed':
-        sectionsConfig = {
-          overview: true,
-          financial: true,
-          timeline: true,
-          materials: true,
-          phases: true,
-          inspections: true,
-          risks: true,
-          kpi: true,
-          milestones: true,
-          bankGuarantees: true,
-          insurance: true,
-          paymentBlocks: true,
-          suppliers: true,
-          documents: true,
-          employees: true,
-          escalationAlerts: true,
-          evmAnalysis: true,
-          pertAnalysis: true,
-          ganttChart: true,
-        };
-        break;
-        
-      case 'project_manager':
-        sectionsConfig = {
-          overview: true,
-          financial: true,
-          timeline: true,
-          materials: true,
-          phases: true,
-          inspections: true,
-          risks: true,
-          kpi: true,
-          milestones: true,
-          bankGuarantees: false,
-          insurance: false,
-          paymentBlocks: true,
-          suppliers: false,
-          documents: true,
-          employees: true,
-          escalationAlerts: true,
-          evmAnalysis: true,
-          pertAnalysis: true,
-          ganttChart: true,
-        };
-        break;
-        
-      default:
-        sectionsConfig = reportConfig.includeSections;
-    }
-    
-    setReportConfig(prev => ({
-      ...prev,
-      reportType: type,
-      includeSections: sectionsConfig
-    }));
-  };
-
-  const isAllSelected = Object.values(reportConfig.includeSections).every(Boolean);
-  const isSomeSelected = Object.values(reportConfig.includeSections).some(Boolean);
-  const isIndeterminate = isSomeSelected && !isAllSelected;
-
   if (loading && !reportData) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -403,7 +276,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
               <Label htmlFor="type">Type de rapport</Label>
               <Select
                 value={reportConfig.reportType}
-                onValueChange={handleReportTypeChange}
+                onValueChange={(value) => setReportConfig(prev => ({ ...prev, reportType: value as any }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -420,28 +293,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
           {/* Sections à inclure */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Sections à inclure</Label>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="select-all"
-                  checked={isAllSelected}
-                  onCheckedChange={handleSelectAll}
-                  className={isIndeterminate ? "data-[state=checked]:bg-primary/50" : ""}
-                />
-                <Label htmlFor="select-all" className="text-sm font-normal cursor-pointer">
-                  {isAllSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-                </Label>
-              </div>
-            </div>
-            
-            <div className="text-xs text-muted-foreground mb-2">
-              {reportConfig.reportType === 'summary' && '📋 Rapport résumé : sections essentielles pour un aperçu rapide'}
-              {reportConfig.reportType === 'financial' && '💰 Rapport financier : focus sur les aspects budgétaires et financiers'}
-              {reportConfig.reportType === 'detailed' && '📊 Rapport détaillé : toutes les sections pour une analyse complète'}
-              {reportConfig.reportType === 'project_manager' && '👨‍💼 Rapport chef de projet : sections orientées gestion et suivi'}
-            </div>
-            
+            <Label className="text-base font-medium">Sections à inclure</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(reportConfig.includeSections).map(([key, value]) => (
                 <div key={key} className="flex items-center space-x-2">
