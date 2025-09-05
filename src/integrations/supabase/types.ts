@@ -3741,10 +3741,15 @@ export type Database = {
       }
       tender_steps: {
         Row: {
+          assigned_to: string | null
+          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string | null
           id: string
+          notes: string | null
+          procurement_phase: string | null
+          procurement_stage: string | null
           required_documents: string[] | null
           status: string
           step_number: number
@@ -3753,10 +3758,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
+          procurement_phase?: string | null
+          procurement_stage?: string | null
           required_documents?: string[] | null
           status?: string
           step_number: number
@@ -3765,10 +3775,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
+          procurement_phase?: string | null
+          procurement_stage?: string | null
           required_documents?: string[] | null
           status?: string
           step_number?: number
