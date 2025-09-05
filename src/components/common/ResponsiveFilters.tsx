@@ -66,7 +66,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
     }, 500); // 500ms delay
 
     return () => clearTimeout(timeoutId);
-  }, [localSearchValue, onSearchChange, searchValue]);
+  }, [localSearchValue]);
   
   // Handle search input change
   const handleSearchChange = (value: string) => {
