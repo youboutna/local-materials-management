@@ -14,6 +14,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle, Upload, FileText, Bell, Settings, Calendar, Users, MessageSquare, Phone, Mail } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
@@ -67,12 +69,7 @@ const EnhancedPaymentBlockingInterface = () => {
   });
   const { toast } = useToast();
 
-  // Mock blocked payments data for demonstration
-  const payments = [
-    { id: 'pay-001', amount: 2500000, project_id: 'proj-001', project_title: 'Pont Hassan II', recipient_id: 'contractor-001', contractor_name: 'Entreprise Sahel BTP', blocking_reason: 'expired_insurance', status: 'blocked' },
-    { id: 'pay-002', amount: 1800000, project_id: 'proj-002', project_title: 'Hôpital Central', recipient_id: 'contractor-002', contractor_name: 'Construction Moderne SARL', blocking_reason: 'project_delay', status: 'blocked' },
-    { id: 'pay-003', amount: 850000, project_id: 'proj-003', project_title: 'École Primaire', recipient_id: 'contractor-003', contractor_name: 'Atlantic Construction', blocking_reason: 'missing_documents', status: 'blocked' }
-  ];
+  const [recentPaymentBlocks, setRecentPaymentBlocks] = useState<any[]>([]);
 
   const {
     currentData: paginatedPayments,
@@ -82,7 +79,7 @@ const EnhancedPaymentBlockingInterface = () => {
     itemsPerPage,
     goToPage
   } = usePagination({
-    data: payments,
+    data: recentPaymentBlocks,
     itemsPerPage: 10
   });
 
@@ -268,7 +265,7 @@ const EnhancedPaymentBlockingInterface = () => {
 
   const handlePaymentAction = async (paymentId: string, actionType: string, contractorName?: string) => {
     try {
-      const payment = payments.find(p => p.id === paymentId);
+      const payment = recentPaymentBlocks.find(p => p.id === paymentId);
       if (!payment) {
         toast({
           title: 'Erreur',
@@ -877,7 +874,12 @@ const EnhancedPaymentBlockingInterface = () => {
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <Badge variant="destructive">{getReasonLabel(payment.blocking_reason)}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(payment.blocked_at || Date.now()), { 
+                        addSuffix: true, 
+                        locale: fr 
+                      })}
+                    </p>
                   </div>
                   <ActionsDropdown
                     entityType="payment"
@@ -890,7 +892,7 @@ const EnhancedPaymentBlockingInterface = () => {
             ))}
             
             {/* Pagination */}
-            {payments.length > 10 && (
+            {recentPaymentBlocks.length > 10 && (
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}

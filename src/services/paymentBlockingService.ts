@@ -1,6 +1,7 @@
 // Simplified service for payment blocking
 // This will be fully functional once Supabase types are regenerated
 
+import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
 import { validateInsuranceCoverage } from './insuranceCertificateService';
 import { detectProjectDelays } from './bankGuaranteeService';
@@ -188,21 +189,33 @@ export const getPaymentBlockHistory = async (projectId?: string) => {
   try {
     console.log('Fetching payment block history for project:', projectId);
     
-    // Mock data for demonstration
-    return [
-      {
-        id: 'block-1',
-        project_id: 'proj-axe-idini',
-        contractor_id: 'cont-sahel-btp',
-        amount: 850000,
-        blocked_at: new Date().toISOString(),
-        blocking_reasons: [
-          { reason: 'expired_insurance', description: 'Assurance expirée' }
-        ]
-      }
-    ];
+    let query = supabase
+      .from('payment_blocks')
+      .select(`
+        *,
+        projects:project_id (
+          title,
+          contractors:contractor_id (
+            name
+          )
+        )
+      `)
+      .order('blocked_at', { ascending: false });
+
+    if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+
+    const { data, error } = await query.limit(50);
+    
+    if (error) {
+      console.error('Error fetching payment block history:', error);
+      return [];
+    }
+
+    return data || [];
   } catch (error) {
-    console.error('Error fetching payment block history:', error);
+    console.error('Error in getPaymentBlockHistory:', error);
     return [];
   }
 };
