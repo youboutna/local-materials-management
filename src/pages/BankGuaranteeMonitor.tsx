@@ -109,10 +109,10 @@ const BankGuaranteeMonitorPage = () => {
   }, []);
 
   const defaultRoles: EscalationRoles = {
-    manager: 'chef_projet',
-    director: 'directeur',
-    siteEngineer: 'chef_chantier',
-    admin: 'admin'
+    level1: 'chef_projet',
+    level2: 'chef_chantier',
+    level3: 'directeur',
+    level4: 'admin'
   };
 
   if (!selectedProject) {
