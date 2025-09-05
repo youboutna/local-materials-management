@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import MaterialFilters from "@/components/materials/MaterialFilters";
 import MaterialGrid from "@/components/materials/MaterialGrid";
 import { usePagination } from "@/hooks/usePagination";
+import { useMaterialsFilter } from "@/hooks/useMaterialsFilter";
 import InteractiveMaterialFilters from "@/components/materials/InteractiveMaterialFilters";
 import InteractiveMaterialsList from "@/components/materials/InteractiveMaterialsList";
 import EnhancedInteractiveMaterialMap from "@/components/materials/EnhancedInteractiveMaterialMap";
@@ -39,18 +40,33 @@ interface Material {
 const Materials: React.FC = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<Material[]>([]);
-  const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedLocalType, setSelectedLocalType] = useState("all");
   
-  // Interactive map filters
-  const [interactiveSearchTerm, setInteractiveSearchTerm] = useState("");
-  const [selectedInteractiveCategory, setSelectedInteractiveCategory] = useState("all");
-  const [selectedRegion, setSelectedRegion] = useState("all");
-  const [selectedStockLevel, setSelectedStockLevel] = useState("all");
+  // Use the custom hook for filtering with debouncing
+  const {
+    searchTerm,
+    selectedCategory,
+    selectedLocalType,
+    filteredMaterials,
+    interactiveSearchTerm,
+    selectedInteractiveCategory,
+    selectedRegion,
+    selectedStockLevel,
+    filteredInteractiveMaterials,
+    categories,
+    localTypes,
+    regions,
+    handleResetFilters,
+    handleResetInteractiveFilters,
+    performSearch,
+    performInteractiveSearch,
+    setSelectedCategory,
+    setSelectedLocalType,
+    setSelectedInteractiveCategory,
+    setSelectedRegion,
+    setSelectedStockLevel
+  } = useMaterialsFilter(materials);
 
   // Helper function to safely extract address string - always returns a string
   const getAddressString = (adresse: any): string => {
@@ -108,7 +124,6 @@ const Materials: React.FC = () => {
 
         console.log("Transformed materials:", transformedData);
         setMaterials(transformedData);
-        setFilteredMaterials(transformedData);
 
         // Convert materials to map locations with proper address handling
         const locations: MapLocation[] = transformedData
@@ -152,50 +167,15 @@ const Materials: React.FC = () => {
     fetchMaterials();
   }, []);
 
-  // Filter materials based on search and category
+  // Update map locations when filtered materials change
   useEffect(() => {
-    console.log("Filtering materials with:", {
-      searchTerm,
-      selectedCategory,
-      selectedLocalType,
-    });
-    let filtered = materials;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (material) =>
-          material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          material.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter(
-        (material) => material.category === selectedCategory
-      );
-    }
-
-    if (selectedLocalType && selectedLocalType !== "all") {
-      filtered = filtered.filter(
-        (material) => material.local_type === selectedLocalType
-      );
-    }
-
-    console.log("Filtered materials:", filtered);
-    setFilteredMaterials(filtered);
-
-    // Update map locations based on filtered materials with proper address handling
-    const filteredLocations: MapLocation[] = filtered
+    const filteredLocations: MapLocation[] = filteredMaterials
       .filter(
         (material) =>
           material.coordinates_latitude && material.coordinates_longitude
       )
       .map((material) => {
         const addressString = getAddressString(material.adresse);
-        console.log(
-          `Processing filtered material ${material.name} with address:`,
-          addressString
-        );
 
         const baseLocation: MapLocation = {
           id: material.id,
@@ -214,21 +194,8 @@ const Materials: React.FC = () => {
         return baseLocation;
       });
 
-    console.log("Updated filtered map locations:", filteredLocations);
     setMapLocations(filteredLocations);
-  }, [materials, searchTerm, selectedCategory, selectedLocalType]);
-
-  const categories = Array.from(
-    new Set(materials.map((m) => m.category))
-  ).filter(Boolean);
-  const localTypes = Array.from(
-    new Set(materials.map((m) => m.local_type).filter(Boolean))
-  ) as string[];
-
-  // Get regions for interactive filters
-  const regions = Array.from(
-    new Set(materials.map((m) => m.origin_location).filter(Boolean))
-  ) as string[];
+  }, [filteredMaterials]);
 
   // Pagination for materials
   const {
@@ -242,57 +209,6 @@ const Materials: React.FC = () => {
     itemsPerPage: 20
   });
 
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("all");
-    setSelectedLocalType("all");
-  };
-
-  const handleResetInteractiveFilters = () => {
-    setInteractiveSearchTerm("");
-    setSelectedInteractiveCategory("all");
-    setSelectedRegion("all");
-    setSelectedStockLevel("all");
-  };
-
-  // Filter materials for interactive map
-  const getStockLevel = (available: number) => {
-    if (available === 0) return 'out';
-    if (available < 10) return 'low';
-    if (available < 50) return 'medium';
-    return 'high';
-  };
-
-  const filteredInteractiveMaterials = materials.filter(material => {
-    // Only show materials with GPS coordinates
-    if (!material.coordinates_latitude || !material.coordinates_longitude) return false;
-
-    // Search filter
-    if (interactiveSearchTerm && !material.name.toLowerCase().includes(interactiveSearchTerm.toLowerCase()) && 
-        !material.description.toLowerCase().includes(interactiveSearchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Category filter
-    if (selectedInteractiveCategory !== "all" && material.category !== selectedInteractiveCategory) {
-      return false;
-    }
-
-    // Region filter
-    if (selectedRegion !== "all" && material.origin_location !== selectedRegion) {
-      return false;
-    }
-
-    // Stock level filter
-    if (selectedStockLevel !== "all") {
-      const stockLevel = getStockLevel(material.available_quantity);
-      if (stockLevel !== selectedStockLevel) {
-        return false;
-      }
-    }
-
-    return true;
-  });
 
   // Interactive materials map view component
   const InteractiveMaterialsMapView: React.FC<{ materials: Material[] }> = ({ materials }) => {
@@ -309,7 +225,7 @@ const Materials: React.FC = () => {
           selectedStockLevel={selectedStockLevel}
           categories={categories}
           regions={regions}
-          onSearchChange={setInteractiveSearchTerm}
+          onSearchChange={performInteractiveSearch}
           onCategoryChange={setSelectedInteractiveCategory}
           onRegionChange={setSelectedRegion}
           onStockLevelChange={setSelectedStockLevel}
@@ -386,7 +302,7 @@ const Materials: React.FC = () => {
               selectedLocalType={selectedLocalType}
               categories={categories}
               localTypes={localTypes}
-              onSearchChange={setSearchTerm}
+              onSearchChange={performSearch}
               onCategoryChange={setSelectedCategory}
               onLocalTypeChange={setSelectedLocalType}
               onReset={handleResetFilters}
