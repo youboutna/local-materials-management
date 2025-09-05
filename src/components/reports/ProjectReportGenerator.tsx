@@ -192,7 +192,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const generateReportContent = () => {
+  const generateReportContent = async () => {
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
     
     return `
@@ -419,50 +419,151 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
         ${reportConfig.includeSections.kpi ? `
         <!-- KPI Section -->
-        <section style="margin-bottom: 30px;">
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
           <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #0ea5e9; padding-left: 15px;">Indicateurs de Performance (KPI)</h2>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <tbody>
-              <tr>
-                <td><strong>SPI (Schedule Performance Index)</strong></td>
-                <td>${(project.budget && project.progress !== undefined) ? (1.05).toFixed(2) : 'N/A'}</td>
-              </tr>
-              <tr>
-                <td><strong>CPI (Cost Performance Index)</strong></td>
-                <td>${(project.budget && project.progress !== undefined) ? (0.95).toFixed(2) : 'N/A'}</td>
-              </tr>
-              <tr>
-                <td><strong>Valeur acquise (EV)</strong></td>
-                <td>${project.budget ? (project.budget * (project.progress / 100)).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Valeur planifiée (PV)</strong></td>
-                <td>${project.budget ? (project.budget * 0.6).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Coût réel (AC)</strong></td>
-                <td>${(project as any).phases ? (project as any).phases.reduce((sum: number, phase: any) => sum + (phase.actual_cost || 0), 0).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Budget à terminaison (BAC)</strong></td>
-                <td>${project.budget ? project.budget.toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Estimation à terminaison (EAC)</strong></td>
-                <td>${project.budget ? (project.budget * 1.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Estimation pour terminer (ETC)</strong></td>
-                <td>${project.budget ? (project.budget * 0.4).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-              <tr>
-                <td><strong>Variance à terminaison (VAC)</strong></td>
-                <td>${project.budget ? (project.budget * -0.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
-              </tr>
-            </tbody>
-          </table>
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border: 1px solid #0ea5e9;">
+            <table style="width:100%;border-collapse:collapse;font-size:14px;">
+              <tbody>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>SPI (Schedule Performance Index)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${(project.budget && project.progress !== undefined) ? (1.05).toFixed(2) : 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>CPI (Cost Performance Index)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${(project.budget && project.progress !== undefined) ? (0.95).toFixed(2) : 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Valeur acquise (EV)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${project.budget ? (project.budget * (project.progress / 100)).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Valeur planifiée (PV)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${project.budget ? (project.budget * 0.6).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Coût réel (AC)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${(project as any).phases ? (project as any).phases.reduce((sum: number, phase: any) => sum + (phase.actual_cost || 0), 0).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Budget à terminaison (BAC)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${project.budget ? project.budget.toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Estimation à terminaison (EAC)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${project.budget ? (project.budget * 1.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff;"><strong>Estimation pour terminer (ETC)</strong></td>
+                  <td style="padding: 8px; border-bottom: 1px solid #e0e7ff; text-align: right;">${project.budget ? (project.budget * 0.4).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Variance à terminaison (VAC)</strong></td>
+                  <td style="padding: 8px; text-align: right;">${project.budget ? (project.budget * -0.05).toLocaleString('fr-FR') : 'N/A'} MRU</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
         ` : ''}
+
+        ${reportConfig.includeSections.milestones ? `
+        <!-- Milestones Section -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Jalons</h2>
+          <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #8b5cf6;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h4 style="margin: 0 0 8px 0; color: #065f46;">Jalon 1: Démarrage du Projet</h4>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">Date: ${project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #059669;">✓ Terminé</p>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid ${project.progress >= 25 ? '#10b981' : '#f59e0b'};">
+                <h4 style="margin: 0 0 8px 0; color: #374151;">Jalon 2: 25% d'Avancement</h4>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">Progression: ${project.progress}%</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: ${project.progress >= 25 ? '#059669' : '#d97706'};">${project.progress >= 25 ? '✓ Terminé' : '⏳ En cours'}</p>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid ${project.progress >= 50 ? '#10b981' : '#f59e0b'};">
+                <h4 style="margin: 0 0 8px 0; color: #374151;">Jalon 3: 50% d'Avancement</h4>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">Progression: ${project.progress}%</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: ${project.progress >= 50 ? '#059669' : '#d97706'};">${project.progress >= 50 ? '✓ Terminé' : '⏳ En cours'}</p>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid ${project.progress >= 75 ? '#10b981' : '#f59e0b'};">
+                <h4 style="margin: 0 0 8px 0; color: #374151;">Jalon 4: 75% d'Avancement</h4>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">Progression: ${project.progress}%</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: ${project.progress >= 75 ? '#059669' : '#d97706'};">${project.progress >= 75 ? '✓ Terminé' : '⏳ En cours'}</p>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid ${project.progress >= 100 ? '#10b981' : '#f59e0b'};">
+                <h4 style="margin: 0 0 8px 0; color: #374151;">Jalon 5: Finalisation</h4>
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">Date: ${project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'}</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: ${project.progress >= 100 ? '#059669' : '#d97706'};">${project.progress >= 100 ? '✓ Terminé' : '⏳ En attente'}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.includeSections.risks ? `
+        <!-- Risk Analysis Section -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Analyse des Risques</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #ef4444;">
+                <h4 style="margin: 0 0 8px 0; color: #dc2626;">Risque Élevé</h4>
+                <p style="margin: 0; font-size: 13px; line-height: 1.4;">Retards dans la livraison des matériaux critiques pouvant impacter le planning général</p>
+                <div style="margin-top: 8px;">
+                  <span style="background: #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 11px;">CRITIQUE</span>
+                </div>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                <h4 style="margin: 0 0 8px 0; color: #d97706;">Risque Moyen</h4>
+                <p style="margin: 0; font-size: 13px; line-height: 1.4;">Conditions météorologiques défavorables pouvant ralentir les travaux extérieurs</p>
+                <div style="margin-top: 8px;">
+                  <span style="background: #fed7aa; color: #c2410c; padding: 2px 6px; border-radius: 4px; font-size: 11px;">MOYEN</span>
+                </div>
+              </div>
+              <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h4 style="margin: 0 0 8px 0; color: #059669;">Risque Faible</h4>
+                <p style="margin: 0; font-size: 13px; line-height: 1.4;">Légères variations dans les coûts des matériaux non critiques</p>
+                <div style="margin-top: 8px;">
+                  <span style="background: #bbf7d0; color: #047857; padding: 2px 6px; border-radius: 4px; font-size: 11px;">FAIBLE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.includeSections.bankGuarantees ? `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+          <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+            <p>Section en cours de développement. Les données seront disponibles prochainement.</p>
+          </div>
+        </section>
+        ` : ''}
+        
+        ${reportConfig.includeSections.insurance ? `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+            <p>Section en cours de développement. Les données seront disponibles prochainement.</p>
+          </div>
+        </section>
+        ` : ''}
+        
+        ${reportConfig.includeSections.suppliers ? `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+          <div style="background: #faf5ff; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+            <p>Section en cours de développement. Les données seront disponibles prochainement.</p>
+          </div>
+        </section>
+        ` : ''}
+        
+        ${reportConfig.includeSections.evmAnalysis ? getEVMAnalysisSection(project, actualCost, estimatedCost) : ''}
+        ${reportConfig.includeSections.pertAnalysis ? getPERTAnalysisSection(project) : ''}
+        ${reportConfig.includeSections.ganttChart ? getGanttChartSection(project) : ''}
 
         <!-- Footer -->
         <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
@@ -475,47 +576,63 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const generatePDF = async () => {
     setLoading(true);
     try {
-      const reportHTML = generateReportContent();
+      const reportHTML = await generateReportContent();
       
-      // Create a temporary div
+      // Create a temporary div with better styling for PDF generation
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = reportHTML;
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-10000px';
+      tempDiv.style.width = '800px';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.lineHeight = '1.4';
       document.body.appendChild(tempDiv);
 
-      // Generate canvas from HTML
+      // Generate canvas from HTML with improved settings
       const canvas = await html2canvas(tempDiv.querySelector('#report-content') as HTMLElement, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 800,
+        windowWidth: 800,
       });
 
       // Clean up
       document.body.removeChild(tempDiv);
 
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
+      // Create PDF with better pagination logic
+      const imgData = canvas.toDataURL('image/png', 0.95);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const imgWidth = pageWidth - (margin * 2);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
       let heightLeft = imgHeight;
+      let position = margin;
+      let page = 1;
 
-      let position = 0;
+      // Add first page
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
+      // Add additional pages with proper breaks
       while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+        position = heightLeft - imgHeight + margin;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+        page++;
       }
 
-      const fileName = `rapport-projet-${project.title.replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      const fileName = `rapport-projet-${project.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { pdf, fileName };
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -602,19 +719,19 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   ) {
     const pages = paginateArray(rows, pageSize);
     return pages.map((page, pageIndex) => `
-      <section style="margin-bottom: 30px;">
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
       <div style="background: #f9fafb; padding: 20px; border-radius: 8px; box-shadow: 0 1px 2px rgba(16,30,115,0.04);">
         ${sectionTitle ? `<h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">${sectionTitle} (Page ${pageIndex + 1}/${pages.length})</h2>` : ''}
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
             <tr style="background:#f3f4f6;">
-              ${columns.map(col => `<th style="border:1px solid #e5e7eb;padding:6px 4px;">${col.label}</th>`).join('')}
+              ${columns.map(col => `<th style="border:1px solid #e5e7eb;padding:8px 6px;text-align:left;">${col.label}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
             ${page.map((row, idx) => `
-              <tr>
-                ${columns.map(col => `<td style="border:1px solid #e5e7eb;padding:6px 4px;">${col.render(row, idx)}</td>`).join('')}
+              <tr style="${idx % 2 === 0 ? 'background:#ffffff;' : 'background:#f9fafb;'}">
+                ${columns.map(col => `<td style="border:1px solid #e5e7eb;padding:8px 6px;vertical-align:top;line-height:1.4;">${col.render(row, idx)}</td>`).join('')}
               </tr>
             `).join('')}
           </tbody>
@@ -625,6 +742,1109 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     </section>
   `).join('');
   }
+
+  // Helper functions for analysis sections
+    try {
+      const { data: guarantees } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!guarantees || guarantees.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune garantie bancaire enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+          ${generatePaginatedTable(
+            guarantees,
+            [
+              { label: 'Type', render: (g: any) => g.type || 'N/A' },
+              { label: 'Montant', render: (g: any) => g.amount ? `${g.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date d\'émission', render: (g: any) => g.issue_date ? format(new Date(g.issue_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date d\'expiration', render: (g: any) => g.expiry_date ? format(new Date(g.expiry_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (g: any) => g.status || 'N/A' },
+            ],
+            10,
+            'Garanties Bancaires'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching bank guarantees:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des garanties bancaires.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getInsuranceSection = async (projectId: string) => {
+    try {
+      const { data: insurance } = await supabase
+        .from('insurance_certificates')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!insurance || insurance.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune assurance enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+          ${generatePaginatedTable(
+            insurance,
+            [
+              { label: 'Type', render: (i: any) => i.type || 'N/A' },
+              { label: 'Compagnie', render: (i: any) => i.company || 'N/A' },
+              { label: 'Montant couvert', render: (i: any) => i.coverage_amount ? `${i.coverage_amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date de début', render: (i: any) => i.start_date ? format(new Date(i.start_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date de fin', render: (i: any) => i.end_date ? format(new Date(i.end_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (i: any) => i.status || 'N/A' },
+            ],
+            10,
+            'Assurances'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching insurance:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des assurances.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getPaymentBlocksSection = async (projectId: string) => {
+    try {
+      const { data: blocks } = await supabase
+        .from('payment_blocks')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!blocks || blocks.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun blocage de paiement enregistré pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+          ${generatePaginatedTable(
+            blocks,
+            [
+              { label: 'Raison', render: (b: any) => b.reason || 'N/A' },
+              { label: 'Montant bloqué', render: (b: any) => b.amount ? `${b.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date de blocage', render: (b: any) => b.blocked_date ? format(new Date(b.blocked_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (b: any) => b.status || 'N/A' },
+              { label: 'Description', render: (b: any) => b.description || 'N/A' },
+            ],
+            10,
+            'Blocages de Paiements'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching payment blocks:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des blocages de paiements.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getSuppliersSection = async (projectId: string) => {
+    try {
+      const { data: suppliers } = await supabase
+        .from('project_suppliers')
+        .select('*, suppliers(*)')
+        .eq('project_id', projectId);
+
+      if (!suppliers || suppliers.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+            <div style="background: #faf5ff; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun fournisseur associé à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+          ${generatePaginatedTable(
+            suppliers,
+            [
+              { label: 'Nom', render: (s: any) => s.suppliers?.name || s.name || 'N/A' },
+              { label: 'Contact', render: (s: any) => s.suppliers?.contact_person || s.contact || 'N/A' },
+              { label: 'Téléphone', render: (s: any) => s.suppliers?.phone || s.phone || 'N/A' },
+              { label: 'Email', render: (s: any) => s.suppliers?.email || s.email || 'N/A' },
+              { label: 'Statut', render: (s: any) => s.status || 'Actif' },
+            ],
+            10,
+            'Fournisseurs'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des fournisseurs.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getDocumentsSection = async (projectId: string) => {
+    try {
+      const { data: documents } = await supabase
+        .from('project_documents')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!documents || documents.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun document associé à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+          ${generatePaginatedTable(
+            documents,
+            [
+              { label: 'Nom', render: (d: any) => d.name || d.title || 'N/A' },
+              { label: 'Type', render: (d: any) => d.type || 'N/A' },
+              { label: 'Taille', render: (d: any) => d.size ? `${(d.size / 1024 / 1024).toFixed(2)} MB` : 'N/A' },
+              { label: 'Date d\'ajout', render: (d: any) => d.created_at ? format(new Date(d.created_at), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (d: any) => d.status || 'Actif' },
+            ],
+            10,
+            'Documents'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des documents.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEmployeesSection = async (projectId: string) => {
+    try {
+      const { data: employees } = await supabase
+        .from('phase_employees')
+        .select(`
+          *,
+          project_phases!inner(project_id),
+          employees(*)
+        `)
+        .eq('project_phases.project_id', projectId);
+
+      if (!employees || employees.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun employé assigné à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+          ${generatePaginatedTable(
+            employees,
+            [
+              { label: 'Nom', render: (e: any) => e.employees?.name || e.name || 'N/A' },
+              { label: 'Rôle', render: (e: any) => e.role || e.employees?.role || 'N/A' },
+              { label: 'Taux journalier', render: (e: any) => e.daily_rate ? `${e.daily_rate.toLocaleString('fr-FR')} MRU/jour` : 'N/A' },
+              { label: 'Date début', render: (e: any) => e.start_date ? format(new Date(e.start_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date fin', render: (e: any) => e.end_date ? format(new Date(e.end_date), 'dd/MM/yyyy') : 'N/A' },
+            ],
+            15,
+            'Employés'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des employés.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEscalationAlertsSection = async (projectId: string) => {
+    try {
+      const { data: alerts } = await supabase
+        .from('escalation_alerts')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!alerts || alerts.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune alerte d'escalade enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+          ${generatePaginatedTable(
+            alerts,
+            [
+              { label: 'Type', render: (a: any) => a.type || 'N/A' },
+              { label: 'Message', render: (a: any) => a.message || 'N/A' },
+              { label: 'Niveau', render: (a: any) => a.level || 'N/A' },
+              { label: 'Date', render: (a: any) => a.created_at ? format(new Date(a.created_at), 'dd/MM/yyyy HH:mm') : 'N/A' },
+              { label: 'Statut', render: (a: any) => a.status || 'Actif' },
+            ],
+            10,
+            'Alertes d\'Escalade'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching escalation alerts:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des alertes d'escalade.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEVMAnalysisSection = (project: ProjectData, actualCost: number, estimatedCost: number) => {
+    const budget = project.budget || 0;
+    const progress = project.progress || 0;
+    
+    // Calculate EVM metrics
+    const plannedValue = budget * 0.6; // Assume 60% should be completed by now
+    const earnedValue = budget * (progress / 100);
+    const actualCostEVM = actualCost;
+    
+    const scheduleVariance = earnedValue - plannedValue;
+    const costVariance = earnedValue - actualCostEVM;
+    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 0;
+    const costPerformanceIndex = actualCostEVM > 0 ? earnedValue / actualCostEVM : 0;
+
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Analyse EVM (Earned Value Management)</h2>
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #3b82f6;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Valeur Planifiée (PV)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #3b82f6;">${plannedValue.toLocaleString('fr-FR')} MRU</p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Valeur Acquise (EV)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #10b981;">${earnedValue.toLocaleString('fr-FR')} MRU</p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Coût Réel (AC)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #ef4444;">${actualCostEVM.toLocaleString('fr-FR')} MRU</p>
+            </div>
+          </div>
+          
+          <table style="width:100%;border-collapse:collapse;font-size:14px;background:white;border-radius:6px;">
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Planning (SV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${scheduleVariance >= 0 ? '#059669' : '#dc2626'};">${scheduleVariance.toLocaleString('fr-FR')} MRU</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Coût (CV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${costVariance >= 0 ? '#059669' : '#dc2626'};">${costVariance.toLocaleString('fr-FR')} MRU</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Indice de Performance Planning (SPI)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${schedulePerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${schedulePerformanceIndex.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px;"><strong>Indice de Performance Coût (CPI)</strong></td>
+                <td style="padding: 12px; text-align: right; color: ${costPerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${costPerformanceIndex.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 15px; padding: 12px; background: ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px;">
+            <p style="margin: 0; font-size: 13px; color: ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 ? '#047857' : '#dc2626'};">
+              <strong>Interprétation:</strong> 
+              ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 
+                ? 'Le projet est en bonne voie, respectant les délais et le budget.' 
+                : schedulePerformanceIndex < 1 && costPerformanceIndex < 1
+                ? 'Le projet présente des retards et des dépassements de coûts nécessitant une attention immédiate.'
+                : schedulePerformanceIndex < 1
+                ? 'Le projet présente des retards mais les coûts sont maîtrisés.'
+                : 'Le projet respecte les délais mais présente des dépassements de coûts.'}
+            </p>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const getPERTAnalysisSection = (project: ProjectData) => {
+    // Mock PERT analysis data - in real implementation, this would come from project phases
+    const activities = [
+      { name: 'Préparation du site', optimistic: 5, mostLikely: 7, pessimistic: 10 },
+      { name: 'Fondations', optimistic: 10, mostLikely: 15, pessimistic: 22 },
+      { name: 'Structure', optimistic: 20, mostLikely: 25, pessimistic: 35 },
+      { name: 'Finitions', optimistic: 15, mostLikely: 20, pessimistic: 28 },
+    ];
+
+    const calculatePERTEstimate = (o: number, m: number, p: number) => (o + 4 * m + p) / 6;
+    const calculateVariance = (o: number, p: number) => Math.pow((p - o) / 6, 2);
+
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Analyse PERT</h2>
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #8b5cf6;">
+          <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">
+            L'analyse PERT (Program Evaluation and Review Technique) permet d'estimer la durée des activités en tenant compte de l'incertitude.
+          </p>
+          
+          <table style="width:100%;border-collapse:collapse;font-size:13px;background:white;border-radius:6px;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Activité</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Optimiste (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Probable (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Pessimiste (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Estimation PERT</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Écart-type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activities.map((activity, index) => {
+                const pertEstimate = calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic);
+                const variance = calculateVariance(activity.optimistic, activity.pessimistic);
+                const standardDev = Math.sqrt(variance);
+                
+                return `
+                  <tr style="${index % 2 === 0 ? 'background:#ffffff;' : 'background:#f9fafb;'}">
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${activity.name}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.optimistic}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.mostLikely}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.pessimistic}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center; font-weight: bold;">${pertEstimate.toFixed(1)}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${standardDev.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Durée Totale Estimée</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #8b5cf6;">
+                ${activities.reduce((sum, activity) => sum + calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic), 0).toFixed(1)} jours
+              </p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Écart-type Total</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #8b5cf6;">
+                ${Math.sqrt(activities.reduce((sum, activity) => sum + calculateVariance(activity.optimistic, activity.pessimistic), 0)).toFixed(2)} jours
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const getGanttChartSection = (project: ProjectData) => {
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Diagramme de Gantt</h2>
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; color: #374151;">Planning du Projet: ${project.title}</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              Du ${project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} 
+              au ${project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'}
+            </p>
+          </div>
+          
+          <!-- Timeline representation -->
+          <div style="background: white; padding: 20px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px; color: #6b7280;">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+            
+            <!-- Project phases timeline -->
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 1</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #10b981; width: 100%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: white;">Terminé</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 2</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #3b82f6; width: ${Math.min(project.progress, 100)}%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: ${project.progress > 50 ? 'white' : '#374151'};">En cours</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 3</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #f59e0b; width: ${Math.max(0, project.progress - 60)}%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: #374151;">Planifié</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <p style="margin: 0; font-size: 14px; color: #374151;"><strong>Progression globale:</strong> ${project.progress}%</p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Dernière mise à jour: ${format(new Date(), 'dd/MM/yyyy')}</p>
+                </div>
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(#3b82f6 0deg ${project.progress * 3.6}deg, #e5e7eb ${project.progress * 3.6}deg 360deg); display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 60px; height: 60px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #374151;">
+                    ${project.progress}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  // Helper functions for fetching data sections
+  const getBankGuaranteesSection = async (projectId: string) => {
+    try {
+      const { data: guarantees } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!guarantees || guarantees.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune garantie bancaire enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+          ${generatePaginatedTable(
+            guarantees,
+            [
+              { label: 'Type', render: (g: any) => g.type || 'N/A' },
+              { label: 'Montant', render: (g: any) => g.amount ? `${g.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date d\'émission', render: (g: any) => g.issue_date ? format(new Date(g.issue_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date d\'expiration', render: (g: any) => g.expiry_date ? format(new Date(g.expiry_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (g: any) => g.status || 'N/A' },
+            ],
+            10,
+            'Garanties Bancaires'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching bank guarantees:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des garanties bancaires.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getInsuranceSection = async (projectId: string) => {
+    try {
+      const { data: insurance } = await supabase
+        .from('insurance_certificates')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!insurance || insurance.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune assurance enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+          ${generatePaginatedTable(
+            insurance,
+            [
+              { label: 'Type', render: (i: any) => i.type || 'N/A' },
+              { label: 'Compagnie', render: (i: any) => i.company || 'N/A' },
+              { label: 'Montant couvert', render: (i: any) => i.coverage_amount ? `${i.coverage_amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date de début', render: (i: any) => i.start_date ? format(new Date(i.start_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date de fin', render: (i: any) => i.end_date ? format(new Date(i.end_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (i: any) => i.status || 'N/A' },
+            ],
+            10,
+            'Assurances'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching insurance:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des assurances.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getPaymentBlocksSection = async (projectId: string) => {
+    try {
+      const { data: blocks } = await supabase
+        .from('payment_blocks')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!blocks || blocks.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun blocage de paiement enregistré pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+          ${generatePaginatedTable(
+            blocks,
+            [
+              { label: 'Raison', render: (b: any) => b.reason || 'N/A' },
+              { label: 'Montant bloqué', render: (b: any) => b.amount ? `${b.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
+              { label: 'Date de blocage', render: (b: any) => b.blocked_date ? format(new Date(b.blocked_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (b: any) => b.status || 'N/A' },
+              { label: 'Description', render: (b: any) => b.description || 'N/A' },
+            ],
+            10,
+            'Blocages de Paiements'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching payment blocks:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des blocages de paiements.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getSuppliersSection = async (projectId: string) => {
+    try {
+      const { data: suppliers } = await supabase
+        .from('project_suppliers')
+        .select('*, suppliers(*)')
+        .eq('project_id', projectId);
+
+      if (!suppliers || suppliers.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+            <div style="background: #faf5ff; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun fournisseur associé à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+          ${generatePaginatedTable(
+            suppliers,
+            [
+              { label: 'Nom', render: (s: any) => s.suppliers?.name || s.name || 'N/A' },
+              { label: 'Contact', render: (s: any) => s.suppliers?.contact_person || s.contact || 'N/A' },
+              { label: 'Téléphone', render: (s: any) => s.suppliers?.phone || s.phone || 'N/A' },
+              { label: 'Email', render: (s: any) => s.suppliers?.email || s.email || 'N/A' },
+              { label: 'Statut', render: (s: any) => s.status || 'Actif' },
+            ],
+            10,
+            'Fournisseurs'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des fournisseurs.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getDocumentsSection = async (projectId: string) => {
+    try {
+      const { data: documents } = await supabase
+        .from('project_documents')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!documents || documents.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun document associé à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+          ${generatePaginatedTable(
+            documents,
+            [
+              { label: 'Nom', render: (d: any) => d.name || d.title || 'N/A' },
+              { label: 'Type', render: (d: any) => d.type || 'N/A' },
+              { label: 'Taille', render: (d: any) => d.size ? `${(d.size / 1024 / 1024).toFixed(2)} MB` : 'N/A' },
+              { label: 'Date d\'ajout', render: (d: any) => d.created_at ? format(new Date(d.created_at), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Statut', render: (d: any) => d.status || 'Actif' },
+            ],
+            10,
+            'Documents'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des documents.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEmployeesSection = async (projectId: string) => {
+    try {
+      const { data: employees } = await supabase
+        .from('phase_employees')
+        .select(`
+          *,
+          project_phases!inner(project_id),
+          employees(*)
+        `)
+        .eq('project_phases.project_id', projectId);
+
+      if (!employees || employees.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucun employé assigné à ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+          ${generatePaginatedTable(
+            employees,
+            [
+              { label: 'Nom', render: (e: any) => e.employees?.name || e.name || 'N/A' },
+              { label: 'Rôle', render: (e: any) => e.role || e.employees?.role || 'N/A' },
+              { label: 'Taux journalier', render: (e: any) => e.daily_rate ? `${e.daily_rate.toLocaleString('fr-FR')} MRU/jour` : 'N/A' },
+              { label: 'Date début', render: (e: any) => e.start_date ? format(new Date(e.start_date), 'dd/MM/yyyy') : 'N/A' },
+              { label: 'Date fin', render: (e: any) => e.end_date ? format(new Date(e.end_date), 'dd/MM/yyyy') : 'N/A' },
+            ],
+            15,
+            'Employés'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des employés.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEscalationAlertsSection = async (projectId: string) => {
+    try {
+      const { data: alerts } = await supabase
+        .from('escalation_alerts')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (!alerts || alerts.length === 0) {
+        return `
+          <section style="margin-bottom: 30px; page-break-inside: avoid;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
+              <p>Aucune alerte d'escalade enregistrée pour ce projet.</p>
+            </div>
+          </section>
+        `;
+      }
+
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+          ${generatePaginatedTable(
+            alerts,
+            [
+              { label: 'Type', render: (a: any) => a.type || 'N/A' },
+              { label: 'Message', render: (a: any) => a.message || 'N/A' },
+              { label: 'Niveau', render: (a: any) => a.level || 'N/A' },
+              { label: 'Date', render: (a: any) => a.created_at ? format(new Date(a.created_at), 'dd/MM/yyyy HH:mm') : 'N/A' },
+              { label: 'Statut', render: (a: any) => a.status || 'Actif' },
+            ],
+            10,
+            'Alertes d\'Escalade'
+          )}
+        </section>
+      `;
+    } catch (error) {
+      console.error('Error fetching escalation alerts:', error);
+      return `
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
+          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
+            <p>Erreur lors du chargement des alertes d'escalade.</p>
+          </div>
+        </section>
+      `;
+    }
+  };
+
+  const getEVMAnalysisSection = (project: ProjectData, actualCost: number, estimatedCost: number) => {
+    const budget = project.budget || 0;
+    const progress = project.progress || 0;
+    
+    // Calculate EVM metrics
+    const plannedValue = budget * 0.6; // Assume 60% should be completed by now
+    const earnedValue = budget * (progress / 100);
+    const actualCostEVM = actualCost;
+    
+    const scheduleVariance = earnedValue - plannedValue;
+    const costVariance = earnedValue - actualCostEVM;
+    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 0;
+    const costPerformanceIndex = actualCostEVM > 0 ? earnedValue / actualCostEVM : 0;
+
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Analyse EVM (Earned Value Management)</h2>
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #3b82f6;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Valeur Planifiée (PV)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #3b82f6;">${plannedValue.toLocaleString('fr-FR')} MRU</p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Valeur Acquise (EV)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #10b981;">${earnedValue.toLocaleString('fr-FR')} MRU</p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Coût Réel (AC)</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #ef4444;">${actualCostEVM.toLocaleString('fr-FR')} MRU</p>
+            </div>
+          </div>
+          
+          <table style="width:100%;border-collapse:collapse;font-size:14px;background:white;border-radius:6px;">
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Planning (SV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${scheduleVariance >= 0 ? '#059669' : '#dc2626'};">${scheduleVariance.toLocaleString('fr-FR')} MRU</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Coût (CV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${costVariance >= 0 ? '#059669' : '#dc2626'};">${costVariance.toLocaleString('fr-FR')} MRU</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Indice de Performance Planning (SPI)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${schedulePerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${schedulePerformanceIndex.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px;"><strong>Indice de Performance Coût (CPI)</strong></td>
+                <td style="padding: 12px; text-align: right; color: ${costPerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${costPerformanceIndex.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 15px; padding: 12px; background: ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px;">
+            <p style="margin: 0; font-size: 13px; color: ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 ? '#047857' : '#dc2626'};">
+              <strong>Interprétation:</strong> 
+              ${schedulePerformanceIndex >= 1 && costPerformanceIndex >= 1 
+                ? 'Le projet est en bonne voie, respectant les délais et le budget.' 
+                : schedulePerformanceIndex < 1 && costPerformanceIndex < 1
+                ? 'Le projet présente des retards et des dépassements de coûts nécessitant une attention immédiate.'
+                : schedulePerformanceIndex < 1
+                ? 'Le projet présente des retards mais les coûts sont maîtrisés.'
+                : 'Le projet respecte les délais mais présente des dépassements de coûts.'}
+            </p>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const getPERTAnalysisSection = (project: ProjectData) => {
+    // Mock PERT analysis data - in real implementation, this would come from project phases
+    const activities = [
+      { name: 'Préparation du site', optimistic: 5, mostLikely: 7, pessimistic: 10 },
+      { name: 'Fondations', optimistic: 10, mostLikely: 15, pessimistic: 22 },
+      { name: 'Structure', optimistic: 20, mostLikely: 25, pessimistic: 35 },
+      { name: 'Finitions', optimistic: 15, mostLikely: 20, pessimistic: 28 },
+    ];
+
+    const calculatePERTEstimate = (o: number, m: number, p: number) => (o + 4 * m + p) / 6;
+    const calculateVariance = (o: number, p: number) => Math.pow((p - o) / 6, 2);
+
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Analyse PERT</h2>
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border: 1px solid #8b5cf6;">
+          <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">
+            L'analyse PERT (Program Evaluation and Review Technique) permet d'estimer la durée des activités en tenant compte de l'incertitude.
+          </p>
+          
+          <table style="width:100%;border-collapse:collapse;font-size:13px;background:white;border-radius:6px;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: left;">Activité</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Optimiste (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Probable (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Pessimiste (jours)</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Estimation PERT</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb; text-align: center;">Écart-type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activities.map((activity, index) => {
+                const pertEstimate = calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic);
+                const variance = calculateVariance(activity.optimistic, activity.pessimistic);
+                const standardDev = Math.sqrt(variance);
+                
+                return `
+                  <tr style="${index % 2 === 0 ? 'background:#ffffff;' : 'background:#f9fafb;'}">
+                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${activity.name}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.optimistic}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.mostLikely}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${activity.pessimistic}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center; font-weight: bold;">${pertEstimate.toFixed(1)}</td>
+                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: center;">${standardDev.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Durée Totale Estimée</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #8b5cf6;">
+                ${activities.reduce((sum, activity) => sum + calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic), 0).toFixed(1)} jours
+              </p>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 6px; text-align: center;">
+              <h4 style="margin: 0 0 8px 0; color: #374151; font-size: 14px;">Écart-type Total</h4>
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #8b5cf6;">
+                ${Math.sqrt(activities.reduce((sum, activity) => sum + calculateVariance(activity.optimistic, activity.pessimistic), 0)).toFixed(2)} jours
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const getGanttChartSection = (project: ProjectData) => {
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Diagramme de Gantt</h2>
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #ef4444;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; color: #374151;">Planning du Projet: ${project.title}</h3>
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              Du ${project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} 
+              au ${project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'}
+            </p>
+          </div>
+          
+          <!-- Timeline representation -->
+          <div style="background: white; padding: 20px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px; color: #6b7280;">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+            
+            <!-- Project phases timeline -->
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 1</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #10b981; width: 100%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: white;">Terminé</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 2</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #3b82f6; width: ${Math.min(project.progress, 100)}%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: ${project.progress > 50 ? 'white' : '#374151'};">En cours</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="width: 120px; font-size: 13px; font-weight: bold;">Phase 3</span>
+                <div style="flex: 1; height: 20px; background: #e5e7eb; border-radius: 10px; position: relative; margin-left: 10px;">
+                  <div style="height: 100%; background: #f59e0b; width: ${Math.max(0, project.progress - 60)}%; border-radius: 10px;"></div>
+                  <span style="position: absolute; right: 5px; top: 2px; font-size: 11px; color: #374151;">Planifié</span>
+                </div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <p style="margin: 0; font-size: 14px; color: #374151;"><strong>Progression globale:</strong> ${project.progress}%</p>
+                  <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Dernière mise à jour: ${format(new Date(), 'dd/MM/yyyy')}</p>
+                </div>
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(#3b82f6 0deg ${project.progress * 3.6}deg, #e5e7eb ${project.progress * 3.6}deg 360deg); display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 60px; height: 60px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #374151;">
+                    ${project.progress}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
