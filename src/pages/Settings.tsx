@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProviderSettings from '@/components/admin/ProviderSettings';
 import DeploymentSettings from '@/components/admin/DeploymentSettings';
+import EscalationThresholdsSettings from '@/components/admin/EscalationThresholdsSettings';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -132,17 +133,7 @@ const Settings = () => {
             </TabsContent>
             
             <TabsContent value="system">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("settings.system.title")}</CardTitle>
-                  <CardDescription>
-                    {t("settings.system.desc")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{t("settings.system.coming_soon")}</p>
-                </CardContent>
-              </Card>
+              <EscalationThresholdsSettings />
             </TabsContent>
           </Tabs>
         </div>
