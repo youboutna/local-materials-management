@@ -14,6 +14,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import WaterfallGanttChart from './WaterfallGanttChart';
+import GanttDiagramWithMilestones from './GanttDiagramWithMilestones';
+import { ReportCalculations } from '@/utils/reportCalculations';
 import WaterfallProjectKPIs from './WaterfallProjectKPIs';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { supabase } from '@/integrations/supabase/client';
@@ -314,6 +316,10 @@ const WaterfallProjectManager = () => {
                 <BarChart3 className="h-4 w-4" />
                 Gantt & KPIs
               </TabsTrigger>
+              <TabsTrigger value="gantt-diagram" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Diagramme de Gantt
+              </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Analytics EVM
@@ -343,6 +349,25 @@ const WaterfallProjectManager = () => {
                 ProjectProgress={selectedProject.progress}
                 projectBudget={selectedProject.budget}
                 ProjectTeamSize={selectedProject.teamSize}
+              />
+            </TabsContent>
+
+            <TabsContent value="gantt-diagram" className="space-y-4">
+              <GanttDiagramWithMilestones
+                projectTitle={selectedProject?.title || 'Projet sans nom'}
+                projectPeriod={{
+                  start: selectedProject?.startDate ? new Date(selectedProject.startDate) : new Date(),
+                  end: selectedProject?.endDate ? new Date(selectedProject.endDate) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+                }}
+                phases={phases.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  startDate: new Date(p.startDate),
+                  endDate: new Date(p.endDate),
+                  progress: p.actualProgress || 0,
+                  status: p.status === 'completed' ? 'completed' : p.status === 'in_progress' ? 'in_progress' : 'planned'
+                }))}
+                milestones={ReportCalculations.calculateMilestoneStatus(selectedProject?.progress || 0)}
               />
             </TabsContent>
 

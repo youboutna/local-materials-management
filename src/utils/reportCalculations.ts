@@ -133,26 +133,98 @@ export class ReportCalculations {
    * Calculate milestone progress based on project progress
    */
   static calculateMilestoneStatus(progress: number): Array<{
+    id: string;
     name: string;
     targetProgress: number;
-    status: 'completed' | 'in-progress' | 'pending';
+    status: 'completed' | 'current' | 'upcoming';
+    date: Date;
     color: string;
+    isKey?: boolean;
   }> {
+    const today = new Date();
     const milestones = [
-      { name: 'Démarrage du Projet', targetProgress: 0 },
-      { name: '25% d\'Avancement', targetProgress: 25 },
-      { name: '50% d\'Avancement', targetProgress: 50 },
-      { name: '75% d\'Avancement', targetProgress: 75 },
-      { name: 'Finalisation', targetProgress: 100 }
+      { 
+        id: '1',
+        name: 'Démarrage du Projet', 
+        targetProgress: 0,
+        daysOffset: 0,
+        isKey: true
+      },
+      { 
+        id: '2',
+        name: 'Validation des Plans', 
+        targetProgress: 15,
+        daysOffset: 30,
+        isKey: false
+      },
+      { 
+        id: '3',
+        name: '25% d\'Avancement', 
+        targetProgress: 25,
+        daysOffset: 60,
+        isKey: true
+      },
+      { 
+        id: '4',
+        name: 'Inspection Intermédiaire', 
+        targetProgress: 40,
+        daysOffset: 120,
+        isKey: false
+      },
+      { 
+        id: '5',
+        name: '50% d\'Avancement', 
+        targetProgress: 50,
+        daysOffset: 150,
+        isKey: true
+      },
+      { 
+        id: '6',
+        name: 'Tests et Validation', 
+        targetProgress: 75,
+        daysOffset: 210,
+        isKey: false
+      },
+      { 
+        id: '7',
+        name: '75% d\'Avancement', 
+        targetProgress: 75,
+        daysOffset: 240,
+        isKey: true
+      },
+      { 
+        id: '8',
+        name: 'Finalisation', 
+        targetProgress: 100,
+        daysOffset: 300,
+        isKey: true
+      }
     ];
 
-    return milestones.map(milestone => ({
-      ...milestone,
-      status: progress >= milestone.targetProgress ? 'completed' : 
-              progress >= milestone.targetProgress - 10 ? 'in-progress' : 'pending',
-      color: progress >= milestone.targetProgress ? '#10b981' : 
-             progress >= milestone.targetProgress - 10 ? '#f59e0b' : '#6b7280'
-    }));
+    return milestones.map(milestone => {
+      const milestoneDate = new Date(today);
+      milestoneDate.setDate(today.getDate() + milestone.daysOffset);
+      
+      let status: 'completed' | 'current' | 'upcoming';
+      if (progress >= milestone.targetProgress) {
+        status = 'completed';
+      } else if (progress >= milestone.targetProgress - 15) {
+        status = 'current';
+      } else {
+        status = 'upcoming';
+      }
+
+      return {
+        id: milestone.id,
+        name: milestone.name,
+        targetProgress: milestone.targetProgress,
+        status,
+        date: milestoneDate,
+        color: status === 'completed' ? '#10b981' : 
+               status === 'current' ? '#f59e0b' : '#6b7280',
+        isKey: milestone.isKey
+      };
+    });
   }
 
   /**
@@ -214,40 +286,81 @@ export class ReportCalculations {
    * Generate phase timeline data for Gantt chart
    */
   static generatePhaseTimeline(project: ProjectData, phases?: any[]): Array<{
+    id: string;
     name: string;
+    startDate: Date;
+    endDate: Date;
     progress: number;
-    color: string;
-    status: string;
+    status: 'planned' | 'in_progress' | 'completed';
   }> {
+    const today = new Date();
+    const projectStart = project.startDate ? new Date(project.startDate) : today;
+    
     if (phases && phases.length > 0) {
-      return phases.map((phase, index) => ({
-        name: phase.name || phase.title || `Phase ${index + 1}`,
-        progress: phase.progress || Math.min(100, Math.max(0, project.progress - (index * 30))),
-        color: phase.progress >= 100 ? '#10b981' : phase.progress > 0 ? '#3b82f6' : '#f59e0b',
-        status: phase.progress >= 100 ? 'Terminé' : phase.progress > 0 ? 'En cours' : 'Planifié'
-      }));
+      return phases.map((phase, index) => {
+        const phaseStart = new Date(projectStart);
+        phaseStart.setDate(projectStart.getDate() + (index * 60)); // 2 months per phase
+        const phaseEnd = new Date(phaseStart);
+        phaseEnd.setDate(phaseStart.getDate() + 60);
+        
+        const phaseProgress = phase.progress || Math.min(100, Math.max(0, project.progress - (index * 25)));
+        
+        return {
+          id: phase.id || `phase-${index + 1}`,
+          name: phase.name || phase.title || `Phase ${index + 1}`,
+          startDate: phaseStart,
+          endDate: phaseEnd,
+          progress: phaseProgress,
+          status: phaseProgress >= 100 ? 'completed' : phaseProgress > 0 ? 'in_progress' : 'planned'
+        };
+      });
     }
 
     // Default phases
-    return [
-      {
-        name: 'Phase 1',
-        progress: 100,
-        color: '#10b981',
-        status: 'Terminé'
-      },
-      {
-        name: 'Phase 2',
-        progress: Math.min(project.progress, 100),
-        color: project.progress > 50 ? '#3b82f6' : '#3b82f6',
-        status: 'En cours'
-      },
-      {
-        name: 'Phase 3',
-        progress: Math.max(0, project.progress - 60),
-        color: '#f59e0b',
-        status: 'Planifié'
-      }
+    const phases1: Array<{
+      id: string;
+      name: string;
+      startDate: Date;
+      endDate: Date;
+      progress: number;
+      status: 'planned' | 'in_progress' | 'completed';
+    }> = [];
+
+    const phaseNames = [
+      'Préparation et études',
+      'Fouilles et fondations',
+      'Structure et gros œuvre',
+      'Second œuvre',
+      'Finitions et livraison'
     ];
+
+    phaseNames.forEach((name, index) => {
+      const phaseStart = new Date(projectStart);
+      phaseStart.setDate(projectStart.getDate() + (index * 60));
+      const phaseEnd = new Date(phaseStart);
+      phaseEnd.setDate(phaseStart.getDate() + 60);
+      
+      let phaseProgress: number;
+      if (index === 0) {
+        phaseProgress = 100; // First phase completed
+      } else if (index === 1) {
+        phaseProgress = 100; // Second phase completed
+      } else if (index === 2) {
+        phaseProgress = Math.max(0, project.progress - 50); // Current phase
+      } else {
+        phaseProgress = 0; // Future phases
+      }
+
+      phases1.push({
+        id: `phase-${index + 1}`,
+        name,
+        startDate: phaseStart,
+        endDate: phaseEnd,
+        progress: Math.min(100, phaseProgress),
+        status: phaseProgress >= 100 ? 'completed' : phaseProgress > 0 ? 'in_progress' : 'planned'
+      });
+    });
+
+    return phases1;
   }
 }
