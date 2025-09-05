@@ -84,9 +84,10 @@ const InsuranceContent = () => {
 // Main component with ProjectManager provider
 const InsuranceManagementPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+  const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
 
   useEffect(() => {
-    // Load a default project for monitoring
+    // Load a default project for monitoring with its hierarchy
     const loadDefaultProject = async () => {
       try {
         const { data: projects } = await supabase
@@ -97,11 +98,19 @@ const InsuranceManagementPage = () => {
         
         if (projects && projects.length > 0) {
           const project = projects[0];
-          setSelectedProject({
+          const projectData = {
             ...project,
             startDate: project.start_date || new Date().toISOString(),
             teamSize: project.team_size || 0
-          } as ProjectData);
+          } as ProjectData;
+          
+          setSelectedProject(projectData);
+
+          // Load organizational hierarchy for this project
+          const { data: hierarchy } = await supabase
+            .rpc('get_project_hierarchy', { project_id_param: project.id });
+          
+          setProjectHierarchy(hierarchy || []);
         }
       } catch (error) {
         console.error('Error loading default project:', error);
@@ -111,11 +120,44 @@ const InsuranceManagementPage = () => {
     loadDefaultProject();
   }, []);
 
-  const defaultRoles: EscalationRoles = {
-    level1: 'chef_projet',
-    level2: 'chef_chantier',
-    level3: 'directeur',
-    level4: 'admin'
+  // Build dynamic escalation roles from project hierarchy
+  const buildEscalationRoles = (): EscalationRoles => {
+    if (projectHierarchy.length === 0) {
+      return {
+        level1: 'employee',
+        level2: 'supervisor', 
+        level3: 'manager',
+        level4: 'director'
+      };
+    }
+
+    const sortedHierarchy = [...projectHierarchy].sort((a, b) => a.level - b.level);
+    const levels = [...new Set(sortedHierarchy.map(h => h.level))].sort();
+    
+    const roles: EscalationRoles = {
+      level1: 'employee',
+      level2: 'supervisor',
+      level3: 'manager', 
+      level4: 'director'
+    };
+
+    // Map actual hierarchy positions to escalation levels
+    if (levels.length >= 1) {
+      const highestLevel = sortedHierarchy.filter(h => h.level === levels[0]);
+      roles.level4 = highestLevel[0]?.position_title || 'director';
+    }
+    
+    if (levels.length >= 2) {
+      const secondLevel = sortedHierarchy.filter(h => h.level === levels[1]);
+      roles.level3 = secondLevel[0]?.position_title || 'manager';
+    }
+    
+    if (levels.length >= 3) {
+      const thirdLevel = sortedHierarchy.filter(h => h.level === levels[2]);
+      roles.level2 = thirdLevel[0]?.position_title || 'supervisor';
+    }
+
+    return roles;
   };
 
   if (!selectedProject) {
@@ -123,7 +165,7 @@ const InsuranceManagementPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement du projet de monitoring...</p>
+          <p className="text-muted-foreground">Chargement du projet et de l'organisation...</p>
         </div>
       </div>
     );
@@ -132,7 +174,7 @@ const InsuranceManagementPage = () => {
   return (
     <ProjectManagerProvider 
       project={selectedProject} 
-      roles={defaultRoles} 
+      roles={buildEscalationRoles()} 
       actionLabels={actionLabels}
     >
       <InsuranceContent />
