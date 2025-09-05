@@ -32,12 +32,16 @@ export class ReportingService {
       const [
         bankGuaranteesResult,
         insuranceResult,
+        paymentBlocksResult,
         materialsResult,
         phasesResult,
-        inspectionsResult
+        inspectionsResult,
+        documentsResult,
+        employeesResult
       ] = await Promise.all([
         supabase.from('bank_guarantees').select('*').eq('project_id', projectId),
         supabase.from('insurance_certificates').select('*').eq('project_id', projectId),
+        supabase.from('payment_blocks').select('*').eq('project_id', projectId),
         supabase.from('project_materials').select(`
           quantity,
           materials (
@@ -47,17 +51,39 @@ export class ReportingService {
           )
         `).eq('project_id', projectId),
         supabase.from('project_phases').select('*').eq('project_id', projectId),
-        supabase.from('inspections').select('*').eq('project_id', projectId)
+        supabase.from('inspections').select('*').eq('project_id', projectId),
+        supabase.from('documents').select('*').eq('project_id', projectId),
+        supabase.from('phase_employees').select(`
+          *,
+          employees (
+            full_name,
+            position,
+            department
+          ),
+          project_phases!inner (
+            project_id
+          )
+        `).eq('project_phases.project_id', projectId)
       ]);
+
+      // Fetch suppliers (simplified for now)
+      const suppliersResult = await supabase.from('suppliers').select('*').limit(50);
+
+      // Fetch escalation alerts (notifications)
+      const alertsResult = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('related_id', projectId)
+        .in('type', ['escalation', 'alert', 'warning']);
 
       return {
         bankGuarantees: bankGuaranteesResult.data || [],
         insurance: insuranceResult.data || [],
-        paymentBlocks: [], // Will be implemented when table exists
-        suppliers: [], // Will be implemented when table exists
-        documents: [], // Will be implemented when table exists
-        employees: [], // Will be implemented when table exists
-        escalationAlerts: [], // Will be implemented when table exists
+        paymentBlocks: paymentBlocksResult.data || [],
+        suppliers: suppliersResult.data || [],
+        documents: documentsResult.data || [],
+        employees: employeesResult.data || [],
+        escalationAlerts: alertsResult.data || [],
         materials: materialsResult.data || [],
         phases: phasesResult.data || [],
         inspections: inspectionsResult.data || []
