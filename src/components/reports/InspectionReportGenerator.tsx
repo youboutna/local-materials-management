@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Mail, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { FileText, Download, Mail, Loader2, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { InspectionReportingService, InspectionReportData, InspectionMetrics } from '@/services/inspectionReportingService';
+import { ReportFormatting } from '@/utils/reportFormatting';
 
 interface InspectionReportGeneratorProps {
   inspection: any; // Inspection type from your system
@@ -25,18 +29,51 @@ interface InspectionReportConfig {
   notes?: string;
   includeRecommendations: boolean;
   includePhotos: boolean;
+  includeMetrics: boolean;
+  includeTimeline: boolean;
+  includeQualityScore: boolean;
 }
 
 export function InspectionReportGenerator({ inspection, project, onClose }: InspectionReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [reportData, setReportData] = useState<InspectionReportData | null>(null);
+  const [metrics, setMetrics] = useState<InspectionMetrics | null>(null);
   const [reportConfig, setReportConfig] = useState<InspectionReportConfig>({
     title: `Rapport d'inspection - ${inspection.title || inspection.id}`,
     recipientEmail: '',
     notes: '',
     includeRecommendations: true,
     includePhotos: false,
+    includeMetrics: true,
+    includeTimeline: true,
+    includeQualityScore: true,
   });
+
+  useEffect(() => {
+    const fetchReportData = async () => {
+      try {
+        setLoading(true);
+        const [data, projectMetrics] = await Promise.all([
+          InspectionReportingService.fetchInspectionReportData(inspection.id),
+          InspectionReportingService.calculateInspectionMetrics(project?.id)
+        ]);
+        setReportData(data);
+        setMetrics(projectMetrics);
+      } catch (error) {
+        console.error('Error fetching inspection report data:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données du rapport.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, [inspection.id, project?.id, toast]);
 
   const getInspectionStatusColor = (status: string) => {
     const colors = {
@@ -53,88 +90,157 @@ export function InspectionReportGenerator({ inspection, project, onClose }: Insp
   const generateInspectionReportContent = () => {
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
     
+    if (!reportData) return '';
+    
+    const qualityScore = InspectionReportingService.calculateQualityScore([reportData.inspection]);
+    const timeline = reportData.inspection ? InspectionReportingService.generateInspectionTimeline([reportData.inspection]) : [];
+    
     return `
-      <div id="inspection-report-content" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
-        <!-- Header -->
-        <div style="border-bottom: 3px solid #dc2626; padding-bottom: 20px; margin-bottom: 30px;">
-          <h1 style="color: #dc2626; font-size: 28px; margin: 0 0 10px 0;">${reportConfig.title}</h1>
-          <p style="color: #6b7280; margin: 0; font-size: 14px;">Généré le ${currentDate}</p>
-        </div>
+      <div id="inspection-report-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
+        ${ReportFormatting.generateSectionHeader(
+          reportConfig.title,
+          `Généré le ${currentDate}`,
+          'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)'
+        )}
 
         <!-- Inspection Overview -->
-        <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Détails de l'Inspection</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-              <div>
-                <p style="margin: 5px 0;"><strong>ID Inspection:</strong> ${inspection.id}</p>
-                <p style="margin: 5px 0;"><strong>Type:</strong> ${inspection.inspection_type || 'Non spécifié'}</p>
-                <p style="margin: 5px 0;"><strong>Date:</strong> ${inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy') : 'Non défini'}</p>
-                ${project ? `<p style="margin: 5px 0;"><strong>Projet:</strong> ${project.title}</p>` : ''}
-              </div>
-              <div>
-                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px;" class="${getInspectionStatusColor(inspection.status)}">${inspection.status || 'En attente'}</span></p>
-                <p style="margin: 5px 0;"><strong>Inspecteur:</strong> ${inspection.inspector_name || 'Non assigné'}</p>
-                <p style="margin: 5px 0;"><strong>Progression:</strong> ${inspection.progress || 0}%</p>
-              </div>
-            </div>
-            ${inspection.description ? `<p style="margin: 15px 0 5px 0;"><strong>Description:</strong></p><p style="margin: 5px 0; line-height: 1.5;">${inspection.description}</p>` : ''}
+        ${ReportFormatting.generatePaginatedTable(
+          [reportData.inspection],
+          [
+            { label: 'ID Inspection', render: (item) => item.id, width: '25%' },
+            { label: 'Type', render: (item) => item.inspection_type || 'Non spécifié', width: '25%' },
+            { label: 'Date', render: (item) => item.inspection_date ? format(new Date(item.inspection_date), 'dd/MM/yyyy') : 'Non défini', width: '25%' },
+            { label: 'Statut', render: (item) => ReportFormatting.generateStatusBadge(item.status || 'En attente'), width: '25%' }
+          ],
+          { pageSize: 10, includeHeaders: true },
+          'Détails de l\'Inspection'
+        )}
+
+        ${reportConfig.includeMetrics && metrics ? `
+        <!-- Metrics Overview -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          ${ReportFormatting.generateSectionHeader('Métriques de Performance', undefined, 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)')}
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px;">
+            ${ReportFormatting.generateMetricCard(
+              'Total Inspections',
+              metrics.totalInspections.toString(),
+              '#3b82f6',
+              '📊'
+            )}
+            ${ReportFormatting.generateMetricCard(
+              'Inspections Réussies',
+              metrics.passedInspections.toString(),
+              '#10b981',
+              '✅'
+            )}
+            ${ReportFormatting.generateMetricCard(
+              'Taux de Conformité',
+              ReportFormatting.formatPercentage(metrics.complianceRate),
+              '#059669',
+              '📈'
+            )}
+            ${ReportFormatting.generateMetricCard(
+              'Score Moyen',
+              ReportFormatting.formatPercentage(metrics.averageScore),
+              '#8b5cf6',
+              '🎯'
+            )}
           </div>
         </section>
+        ` : ''}
 
-        <!-- Inspection Results -->
-        <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #059669; padding-left: 15px;">Résultats</h2>
+        ${reportConfig.includeQualityScore ? `
+        <!-- Quality Score -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          ${ReportFormatting.generateSectionHeader('Score de Qualité', undefined, 'linear-gradient(135deg, #10b981 0%, #059669 100%)')}
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
-            <div style="display: grid; gap: 15px;">
-              <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border-radius: 6px; border: 1px solid #d1fae5;">
-                ${inspection.status === 'passed' || inspection.status === 'approved' ? 
-                  '<div style="width: 20px; height: 20px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">✓</div>' :
-                  '<div style="width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">!</div>'
-                }
-                <span style="font-weight: 500; color: #374151;">
-                  ${inspection.status === 'passed' || inspection.status === 'approved' ? 'Inspection réussie' : 
-                    inspection.status === 'failed' || inspection.status === 'requires_changes' ? 'Inspection échouée - Actions requises' :
-                    'Inspection en cours'}
-                </span>
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="display: inline-block; padding: 20px; background: white; border-radius: 50%; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                <span style="font-size: 32px; font-weight: bold; color: #059669;">${qualityScore.score.toFixed(1)}%</span>
               </div>
-              
-              ${inspection.notes ? `
-              <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 3px solid #3b82f6;">
-                <h4 style="margin: 0 0 10px 0; color: #1e40af;">Notes de l'inspecteur:</h4>
-                <p style="margin: 0; line-height: 1.5; color: #374151;">${inspection.notes}</p>
-              </div>
-              ` : ''}
-            </div>
-          </div>
-        </section>
-
-        ${reportConfig.includeRecommendations && (inspection.status === 'failed' || inspection.status === 'requires_changes') ? `
-        <!-- Recommendations -->
-        <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Recommandations</h2>
-          <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fbbf24;">
-            <div style="display: flex; align-items-start; gap: 10px; margin-bottom: 15px;">
-              <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; margin-top: 2px;">!</div>
-              <div>
-                <h4 style="margin: 0 0 10px 0; color: #92400e;">Actions correctives recommandées:</h4>
-                <ul style="margin: 0; padding-left: 20px; color: #92400e;">
-                  <li style="margin-bottom: 8px;">Vérifier la conformité des travaux aux spécifications</li>
-                  <li style="margin-bottom: 8px;">Corriger les défauts identifiés</li>
-                  <li style="margin-bottom: 8px;">Programmer une nouvelle inspection</li>
-                  <li style="margin-bottom: 8px;">Documenter les corrections apportées</li>
-                </ul>
-              </div>
+              <p style="margin: 10px 0 5px 0; font-size: 18px; font-weight: 600; color: #065f46;">${qualityScore.grade}</p>
+              <p style="margin: 0; color: #374151; line-height: 1.5;">${qualityScore.interpretation}</p>
             </div>
           </div>
         </section>
         ` : ''}
 
+        ${reportConfig.includeTimeline && timeline.length > 0 ? `
+        <!-- Inspection Timeline -->
+        ${ReportFormatting.generatePaginatedTable(
+          timeline,
+          [
+            { label: 'Date', render: (item) => item.date, width: '20%' },
+            { label: 'Inspecteur', render: (item) => item.inspector, width: '25%' },
+            { label: 'Statut', render: (item) => ReportFormatting.generateStatusBadge(item.status), width: '20%' },
+            { label: 'Progression', render: (item) => `${item.progress}%`, width: '15%' },
+            { label: 'Notes', render: (item) => item.notes, width: '20%' }
+          ],
+          { pageSize: 15, includeHeaders: true },
+          'Chronologie des Inspections'
+        )}
+        ` : ''}
+
+        <!-- Inspection Results -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          ${ReportFormatting.generateSectionHeader('Résultats de l\'Inspection', undefined, 'linear-gradient(135deg, #059669 0%, #10b981 100%)')}
+          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+              ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 
+                '<div style="width: 40px; height: 40px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">✓</div>' :
+                '<div style="width: 40px; height: 40px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">!</div>'
+              }
+              <div>
+                <h3 style="margin: 0; color: #374151; font-size: 18px;">
+                  ${reportData.inspection.status === 'passed' || reportData.inspection.status === 'approved' ? 'Inspection Réussie' : 
+                    reportData.inspection.status === 'failed' || reportData.inspection.status === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
+                    'Inspection en Cours'}
+                </h3>
+                <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${reportData.inspection.progress_at_inspection || 0}%</p>
+              </div>
+            </div>
+            
+            ${reportData.inspection.comments ? `
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+              <h4 style="margin: 0 0 10px 0; color: #1e40af;">Notes de l'inspecteur:</h4>
+              <p style="margin: 0; line-height: 1.6; color: #374151;">${reportData.inspection.comments}</p>
+            </div>
+            ` : ''}
+          </div>
+        </section>
+
+        ${reportConfig.includeRecommendations && reportData.recommendations && reportData.recommendations.length > 0 ? `
+        <!-- Recommendations -->
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          ${ReportFormatting.generateSectionHeader('Recommandations', undefined, 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)')}
+          <div style="background: #fffbeb; padding: 20px; border-radius: 8px;">
+            <ul style="margin: 0; padding-left: 20px; color: #92400e; line-height: 1.6;">
+              ${reportData.recommendations.map(rec => `<li style="margin-bottom: 8px;">${rec}</li>`).join('')}
+            </ul>
+          </div>
+        </section>
+        ` : ''}
+
+        ${reportConfig.includePhotos && reportData.photos && reportData.photos.length > 0 ? `
+        <!-- Photos and Documents -->
+        ${ReportFormatting.generatePaginatedTable(
+          reportData.photos,
+          [
+            { label: 'Document', render: (item) => item.title || item.file_name, width: '40%' },
+            { label: 'Type', render: (item) => item.document_type || 'Photo', width: '20%' },
+            { label: 'Date', render: (item) => item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
+            { label: 'Taille', render: (item) => item.file_size ? `${(item.file_size / 1024).toFixed(1)} KB` : 'N/A', width: '20%' }
+          ],
+          { pageSize: 10, includeHeaders: true },
+          'Photos et Documents'
+        )}
+        ` : ''}
+
         ${reportConfig.notes ? `
         <!-- Additional Notes -->
-        <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #6366f1; padding-left: 15px;">Notes Additionnelles</h2>
-          <div style="background: #eef2ff; padding: 20px; border-radius: 8px; border: 1px solid #a5b4fc;">
+        <section style="margin-bottom: 30px; page-break-inside: avoid;">
+          ${ReportFormatting.generateSectionHeader('Notes Additionnelles', undefined, 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)')}
+          <div style="background: #eef2ff; padding: 20px; border-radius: 8px;">
             <p style="margin: 0; line-height: 1.6; color: #374151;">${reportConfig.notes}</p>
           </div>
         </section>
@@ -297,30 +403,56 @@ export function InspectionReportGenerator({ inspection, project, onClose }: Insp
 
           <div className="space-y-4">
             <Label>Options du rapport</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="includeRecommendations"
-                  checked={reportConfig.includeRecommendations}
-                  onChange={(e) => setReportConfig(prev => ({ ...prev, includeRecommendations: e.target.checked }))}
-                  className="rounded"
-                />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <Label htmlFor="includeRecommendations" className="text-sm">
                   Inclure les recommandations
                 </Label>
+                <Switch
+                  id="includeRecommendations"
+                  checked={reportConfig.includeRecommendations}
+                  onCheckedChange={(checked) => setReportConfig(prev => ({ ...prev, includeRecommendations: checked }))}
+                />
               </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includePhotos" className="text-sm">
+                  Inclure les photos
+                </Label>
+                <Switch
                   id="includePhotos"
                   checked={reportConfig.includePhotos}
-                  onChange={(e) => setReportConfig(prev => ({ ...prev, includePhotos: e.target.checked }))}
-                  className="rounded"
+                  onCheckedChange={(checked) => setReportConfig(prev => ({ ...prev, includePhotos: checked }))}
                 />
-                <Label htmlFor="includePhotos" className="text-sm">
-                  Inclure les photos (si disponibles)
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeMetrics" className="text-sm">
+                  Inclure les métriques
                 </Label>
+                <Switch
+                  id="includeMetrics"
+                  checked={reportConfig.includeMetrics}
+                  onCheckedChange={(checked) => setReportConfig(prev => ({ ...prev, includeMetrics: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeTimeline" className="text-sm">
+                  Inclure la chronologie
+                </Label>
+                <Switch
+                  id="includeTimeline"
+                  checked={reportConfig.includeTimeline}
+                  onCheckedChange={(checked) => setReportConfig(prev => ({ ...prev, includeTimeline: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="includeQualityScore" className="text-sm">
+                  Inclure le score de qualité
+                </Label>
+                <Switch
+                  id="includeQualityScore"
+                  checked={reportConfig.includeQualityScore}
+                  onCheckedChange={(checked) => setReportConfig(prev => ({ ...prev, includeQualityScore: checked }))}
+                />
               </div>
             </div>
           </div>
@@ -337,15 +469,39 @@ export function InspectionReportGenerator({ inspection, project, onClose }: Insp
           />
         </div>
 
+        <Separator />
+
+        {/* Metrics Summary */}
+        {metrics && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Total Inspections</p>
+              <p className="font-bold text-lg">{metrics.totalInspections}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Réussies</p>
+              <p className="font-bold text-lg text-green-600">{metrics.passedInspections}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Taux de Conformité</p>
+              <p className="font-bold text-lg text-blue-600">{metrics.complianceRate.toFixed(1)}%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Score Moyen</p>
+              <p className="font-bold text-lg text-purple-600">{metrics.averageScore.toFixed(1)}%</p>
+            </div>
+          </div>
+        )}
+
         {/* Inspection Status */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Statut de l'inspection:</span>
           <Badge variant="secondary" className={getInspectionStatusColor(inspection.status)}>
             {inspection.status || 'En attente'}
           </Badge>
-          {inspection.progress && (
+          {inspection.progress_at_inspection && (
             <span className="text-sm text-muted-foreground">
-              Progression: {inspection.progress}%
+              Progression: {inspection.progress_at_inspection}%
             </span>
           )}
         </div>
