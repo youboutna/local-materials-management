@@ -2207,6 +2207,94 @@ export type Database = {
           },
         ]
       }
+      project_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          action_proofs: Json | null
+          assigned_actions: string[] | null
+          created_at: string
+          description: string | null
+          escalation_level: number | null
+          id: string
+          metadata: Json | null
+          project_id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_proofs?: Json | null
+          assigned_actions?: string[] | null
+          created_at?: string
+          description?: string | null
+          escalation_level?: number | null
+          id?: string
+          metadata?: Json | null
+          project_id: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_proofs?: Json | null
+          assigned_actions?: string[] | null
+          created_at?: string
+          description?: string | null
+          escalation_level?: number | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "project_alerts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       project_comments: {
         Row: {
           comment: string
@@ -2504,6 +2592,59 @@ export type Database = {
           },
         ]
       }
+      project_resources: {
+        Row: {
+          allocation_date: string | null
+          cost_per_unit: number | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          project_id: string
+          quantity: number | null
+          total_cost: number | null
+          type: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          allocation_date?: string | null
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          project_id: string
+          quantity?: number | null
+          total_cost?: number | null
+          type: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allocation_date?: string | null
+          cost_per_unit?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          project_id?: string
+          quantity?: number | null
+          total_cost?: number | null
+          type?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_resources_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_risks: {
         Row: {
           created_at: string | null
@@ -2566,6 +2707,7 @@ export type Database = {
           allows_initial_payment: boolean | null
           attribution_date: string | null
           budget: number
+          check_schedule_last_run: Json | null
           completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
@@ -2601,6 +2743,7 @@ export type Database = {
           allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget: number
+          check_schedule_last_run?: Json | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -2636,6 +2779,7 @@ export type Database = {
           allows_initial_payment?: boolean | null
           attribution_date?: string | null
           budget?: number
+          check_schedule_last_run?: Json | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
