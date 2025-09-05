@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, RotateCcw, X } from 'lucide-react';
+import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -37,6 +38,8 @@ export interface ResponsiveFiltersProps {
   resultCount?: number;
   className?: string;
   showMobileDropdown?: boolean;
+  autocompleteOptions?: AutocompleteOption[];
+  onAutocompleteSelect?: (option: AutocompleteOption) => void;
 }
 
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
@@ -47,7 +50,9 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   onReset,
   resultCount,
   className = '',
-  showMobileDropdown = true
+  showMobileDropdown = true,
+  autocompleteOptions = [],
+  onAutocompleteSelect
 }) => {
   // Local search state for immediate UI updates
   const [localSearchValue, setLocalSearchValue] = useState(searchValue);
@@ -57,20 +62,13 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
     setLocalSearchValue(searchValue);
   }, [searchValue]);
   
-  // Debounced search effect with proper AJAX/autocomplete behavior
+  // Debounced search effect with proper autocomplete behavior
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      // Only trigger search if:
-      // 1. There's a search handler
-      // 2. Local search value has changed from the external search value
-      // 3. User has typed at least 2 characters OR cleared the search completely
       if (onSearchChange && localSearchValue !== searchValue) {
-        const trimmedValue = localSearchValue.trim();
-        if (trimmedValue.length >= 2 || trimmedValue.length === 0) {
-          onSearchChange(localSearchValue);
-        }
+        onSearchChange(localSearchValue);
       }
-    }, 1000); // Increased to 1 second for better typing experience
+    }, 300); // Reduced delay for better autocomplete responsiveness
 
     return () => clearTimeout(timeoutId);
   }, [localSearchValue, onSearchChange, searchValue]);
@@ -78,6 +76,15 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   // Handle search input change
   const handleSearchChange = (value: string) => {
     setLocalSearchValue(value);
+  };
+
+  // Handle autocomplete selection
+  const handleAutocompleteSelect = (option: AutocompleteOption) => {
+    setLocalSearchValue(option.label);
+    onAutocompleteSelect?.(option);
+    if (onSearchChange) {
+      onSearchChange(option.label);
+    }
   };
 
   const activeFiltersCount = filters.filter(f => f.value && f.value !== 'all').length;
@@ -108,13 +115,27 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         <div className={`grid gap-4 ${filters.length <= 2 ? 'grid-cols-1 lg:grid-cols-3' : filters.length === 3 ? 'grid-cols-1 lg:grid-cols-4' : 'grid-cols-1 lg:grid-cols-5'}`}>
           {onSearchChange && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder={searchPlaceholder}
-                value={localSearchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10"
-              />
+              {autocompleteOptions.length > 0 ? (
+                <Autocomplete
+                  value={localSearchValue}
+                  onChange={handleSearchChange}
+                  onSelect={handleAutocompleteSelect}
+                  options={autocompleteOptions}
+                  placeholder={searchPlaceholder}
+                  minSearchLength={1}
+                  maxSuggestions={6}
+                />
+              ) : (
+                <>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder={searchPlaceholder}
+                    value={localSearchValue}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-10"
+                  />
+                </>
+              )}
             </div>
           )}
 
@@ -201,13 +222,27 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
       {/* Search Bar Always Visible */}
       {onSearchChange && (
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={localSearchValue}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10"
-          />
+          {autocompleteOptions.length > 0 ? (
+            <Autocomplete
+              value={localSearchValue}
+              onChange={handleSearchChange}
+              onSelect={handleAutocompleteSelect}
+              options={autocompleteOptions}
+              placeholder={searchPlaceholder}
+              minSearchLength={1}
+              maxSuggestions={6}
+            />
+          ) : (
+            <>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={localSearchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10"
+              />
+            </>
+          )}
         </div>
       )}
 

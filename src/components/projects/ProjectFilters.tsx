@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { AutocompleteOption } from '@/components/ui/autocomplete';
 
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
 
@@ -17,6 +18,8 @@ interface ProjectFiltersProps {
   availableRegions: { code: string; name: string; nameAr: string }[];
   onReset: () => void;
   resultCount?: number;
+  autocompleteOptions?: AutocompleteOption[];
+  onAutocompleteSelect?: (option: AutocompleteOption) => void;
 }
 
 const ProjectFilters: React.FC<ProjectFiltersProps> = ({ 
@@ -31,7 +34,9 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
   availableStatuses,
   availableRegions,
   onReset,
-  resultCount
+  resultCount,
+  autocompleteOptions,
+  onAutocompleteSelect
 }) => {
   const filters: FilterField[] = [
     {
@@ -86,6 +91,8 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}
+      autocompleteOptions={autocompleteOptions}
+      onAutocompleteSelect={onAutocompleteSelect}
     />
   );
 };
