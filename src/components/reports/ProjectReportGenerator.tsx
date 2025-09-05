@@ -32,8 +32,18 @@ interface ReportConfig {
     risks: boolean;
     kpi: boolean;
     milestones: boolean;
+    bankGuarantees: boolean;
+    insurance: boolean;
+    paymentBlocks: boolean;
+    suppliers: boolean;
+    documents: boolean;
+    employees: boolean;
+    escalationAlerts: boolean;
+    evmAnalysis: boolean;
+    pertAnalysis: boolean;
+    ganttChart: boolean;
   };
-  reportType: 'summary' | 'detailed' | 'financial';
+  reportType: 'summary' | 'detailed' | 'financial' | 'project_manager';
   recipientEmail?: string;
   notes?: string;
 }
@@ -55,6 +65,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       risks: true,
       kpi: true,
       milestones: true,
+      bankGuarantees: false,
+      insurance: false,
+      paymentBlocks: false,
+      suppliers: false,
+      documents: false,
+      employees: false,
+      escalationAlerts: false,
+      evmAnalysis: false,
+      pertAnalysis: false,
+      ganttChart: false,
     },
     reportType: 'summary',
     recipientEmail: '',
@@ -631,7 +651,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
               <Label htmlFor="reportType">Type de rapport</Label>
               <Select
                 value={reportConfig.reportType}
-                onValueChange={(value: 'summary' | 'detailed' | 'financial') => 
+                onValueChange={(value: 'summary' | 'detailed' | 'financial' | 'project_manager') => 
                   setReportConfig(prev => ({ ...prev, reportType: value }))
                 }
               >
@@ -642,6 +662,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                   <SelectItem value="summary">Résumé</SelectItem>
                   <SelectItem value="detailed">Détaillé</SelectItem>
                   <SelectItem value="financial">Financier</SelectItem>
+                  <SelectItem value="project_manager">Gestionnaire de Projet</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -686,6 +707,16 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     {key === 'risks' && 'Analyse des risques'}
                     {key === 'kpi' && 'Indicateurs de Performance (KPI)'}
                     {key === 'milestones' && 'Jalons'}
+                    {key === 'bankGuarantees' && 'Garanties bancaires'}
+                    {key === 'insurance' && 'Assurances'}
+                    {key === 'paymentBlocks' && 'Blocages de paiements'}
+                    {key === 'suppliers' && 'Fournisseurs'}
+                    {key === 'documents' && 'Documents'}
+                    {key === 'employees' && 'Employés'}
+                    {key === 'escalationAlerts' && 'Alertes d\'escalade'}
+                    {key === 'evmAnalysis' && 'Analyse EVM'}
+                    {key === 'pertAnalysis' && 'Analyse PERT'}
+                    {key === 'ganttChart' && 'Diagramme de Gantt'}
                   </Label>
                 </div>
               ))}
