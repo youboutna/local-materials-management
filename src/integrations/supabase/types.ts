@@ -722,6 +722,54 @@ export type Database = {
           },
         ]
       }
+      escalation_thresholds: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          escalation_level: number
+          id: string
+          is_active: boolean
+          severity_level: string
+          threshold_name: string
+          threshold_type: string
+          threshold_unit: string
+          threshold_value: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          escalation_level?: number
+          id?: string
+          is_active?: boolean
+          severity_level: string
+          threshold_name: string
+          threshold_type: string
+          threshold_unit?: string
+          threshold_value: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          escalation_level?: number
+          id?: string
+          is_active?: boolean
+          severity_level?: string
+          threshold_name?: string
+          threshold_type?: string
+          threshold_unit?: string
+          threshold_value?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       fishing_licenses: {
         Row: {
           authorized_zones: string[] | null
@@ -4527,6 +4575,17 @@ export type Database = {
           employee_phone: string
           hierarchy_level: number
           position_title: string
+        }[]
+      }
+      get_escalation_thresholds: {
+        Args: { threshold_type_param: string }
+        Returns: {
+          description: string
+          escalation_level: number
+          severity_level: string
+          threshold_name: string
+          threshold_unit: string
+          threshold_value: number
         }[]
       }
       get_hierarchy_chain: {
