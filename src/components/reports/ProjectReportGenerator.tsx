@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Download, Mail, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Mail, Loader2, CheckSquare, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectData } from '@/types/project';
 import { pdf } from '@react-pdf/renderer';
@@ -243,6 +244,122 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     }));
   };
 
+  const handleSelectAll = () => {
+    const allSections = Object.keys(reportConfig.includeSections) as Array<keyof ReportConfig['includeSections']>;
+    const allSelected = allSections.every(section => reportConfig.includeSections[section]);
+    
+    const newSections = {} as ReportConfig['includeSections'];
+    allSections.forEach(section => {
+      newSections[section] = !allSelected;
+    });
+    
+    setReportConfig(prev => ({
+      ...prev,
+      includeSections: newSections
+    }));
+  };
+
+  const handleReportTypeChange = (newType: string) => {
+    const reportType = newType as ReportConfig['reportType'];
+    
+    // Define default sections for each report type
+    const defaultSections: Record<ReportConfig['reportType'], Partial<ReportConfig['includeSections']>> = {
+      summary: {
+        overview: true,
+        financial: true,
+        timeline: true,
+        phases: true,
+        kpi: true,
+        milestones: true,
+        risks: false,
+        materials: false,
+        inspections: false,
+        bankGuarantees: false,
+        insurance: false,
+        paymentBlocks: false,
+        suppliers: false,
+        documents: false,
+        employees: false,
+        escalationAlerts: false,
+        evmAnalysis: false,
+        pertAnalysis: false,
+        ganttChart: false,
+      },
+      detailed: {
+        overview: true,
+        financial: true,
+        timeline: true,
+        materials: true,
+        phases: true,
+        inspections: true,
+        risks: true,
+        kpi: true,
+        milestones: true,
+        bankGuarantees: true,
+        insurance: true,
+        paymentBlocks: true,
+        suppliers: true,
+        documents: true,
+        employees: true,
+        escalationAlerts: true,
+        evmAnalysis: true,
+        pertAnalysis: true,
+        ganttChart: true,
+      },
+      financial: {
+        overview: true,
+        financial: true,
+        timeline: false,
+        materials: false,
+        phases: true,
+        inspections: false,
+        risks: true,
+        kpi: true,
+        milestones: false,
+        bankGuarantees: true,
+        insurance: true,
+        paymentBlocks: true,
+        suppliers: true,
+        documents: false,
+        employees: false,
+        escalationAlerts: true,
+        evmAnalysis: true,
+        pertAnalysis: false,
+        ganttChart: false,
+      },
+      project_manager: {
+        overview: true,
+        financial: true,
+        timeline: true,
+        materials: true,
+        phases: true,
+        inspections: true,
+        risks: true,
+        kpi: true,
+        milestones: true,
+        bankGuarantees: false,
+        insurance: false,
+        paymentBlocks: false,
+        suppliers: false,
+        documents: true,
+        employees: true,
+        escalationAlerts: true,
+        evmAnalysis: true,
+        pertAnalysis: true,
+        ganttChart: true,
+      },
+    };
+
+    setReportConfig(prev => ({
+      ...prev,
+      reportType,
+      includeSections: {
+        ...prev.includeSections,
+        ...defaultSections[reportType]
+      }
+    }));
+  };
+
   if (loading && !reportData) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -272,41 +389,99 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                 onChange={(e) => setReportConfig(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Type de rapport</Label>
+            <div className="space-y-3">
+              <Label htmlFor="type" className="text-sm font-medium">Type de rapport</Label>
               <Select
                 value={reportConfig.reportType}
-                onValueChange={(value) => setReportConfig(prev => ({ ...prev, reportType: value as any }))}
+                onValueChange={handleReportTypeChange}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="summary">Résumé</SelectItem>
-                  <SelectItem value="detailed">Détaillé</SelectItem>
-                  <SelectItem value="financial">Financier</SelectItem>
-                  <SelectItem value="project_manager">Chef de projet</SelectItem>
+                  <SelectItem value="summary">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Rapide</Badge>
+                      <span>Résumé exécutif</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="detailed">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Complet</Badge>
+                      <span>Rapport détaillé</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="financial">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Finance</Badge>
+                      <span>Analyse financière</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="project_manager">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Gestion</Badge>
+                      <span>Chef de projet</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+              <div className="text-xs text-muted-foreground mt-1">
+                {getReportTypeDescription(reportConfig.reportType)}
+              </div>
             </div>
           </div>
 
           {/* Sections à inclure */}
           <div className="space-y-4">
-            <Label className="text-base font-medium">Sections à inclure</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(reportConfig.includeSections).map(([key, value]) => (
-                <div key={key} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={key}
-                    checked={value}
-                    onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
-                  />
-                  <Label htmlFor={key} className="text-sm font-normal">
-                    {getSectionLabel(key)}
-                  </Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-medium">Sections à inclure</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectAll}
+                className="h-8 px-3 text-xs"
+              >
+                {Object.values(reportConfig.includeSections).every(Boolean) ? (
+                  <>
+                    <Square className="h-3 w-3 mr-1" />
+                    Désélectionner tout
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-3 w-3 mr-1" />
+                    Sélectionner tout
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            <div className="bg-muted/30 p-4 rounded-lg border">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.entries(reportConfig.includeSections).map(([key, value]) => (
+                  <div 
+                    key={key} 
+                    className={`flex items-center space-x-3 p-2 rounded-md transition-colors hover:bg-background/50 ${
+                      value ? 'bg-primary/5 border border-primary/20' : 'bg-background/30'
+                    }`}
+                  >
+                    <Checkbox
+                      id={key}
+                      checked={value}
+                      onCheckedChange={(checked) => updateSectionConfig(key as any, checked as boolean)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <Label htmlFor={key} className="text-sm font-normal cursor-pointer flex-1">
+                      {getSectionLabel(key)}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <div className="text-xs text-muted-foreground">
+                  {Object.values(reportConfig.includeSections).filter(Boolean).length} sections sélectionnées sur {Object.keys(reportConfig.includeSections).length}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
@@ -390,4 +565,14 @@ function getSectionLabel(key: string): string {
     ganttChart: 'Diagramme de Gantt'
   };
   return labels[key] || key;
+}
+
+function getReportTypeDescription(type: ReportConfig['reportType']): string {
+  const descriptions: Record<ReportConfig['reportType'], string> = {
+    summary: 'Rapport concis avec les informations essentielles du projet',
+    detailed: 'Rapport complet incluant toutes les sections et analyses disponibles',
+    financial: 'Focus sur les aspects financiers, garanties et contrôles de paiement',
+    project_manager: 'Rapport orienté gestion avec timeline, ressources et analyses avancées'
+  };
+  return descriptions[type];
 }
