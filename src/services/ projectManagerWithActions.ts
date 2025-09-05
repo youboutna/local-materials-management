@@ -326,7 +326,7 @@ export class ProjectManager {
     const lastCheck = this.lastChecks[checkType];
     const daysSinceLastCheck = daysBetween(lastCheck, now);
     
-    const requiredInterval = schedule[`${checkType}Check` as keyof CheckSchedule] || 1;
+    const requiredInterval = schedule[`${checkType}Check` as keyof CheckSchedule] as number || 1;
     return daysSinceLastCheck >= requiredInterval;
   }
 

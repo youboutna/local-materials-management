@@ -1,6 +1,6 @@
 // useProjectManager.ts
 import { useContext } from "react";
-import { ProjectManagerContext } from "@Contexts/ProjectManagerContext";
+import { ProjectManagerContext } from "@/contexts/ProjectManagerContext";
 
 export const useProjectManager = () => {
   const ctx = useContext(ProjectManagerContext);

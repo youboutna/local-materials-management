@@ -8,7 +8,7 @@ import {
   GanttChartData,
   PERTAnalysis,
   actionLabels
-} from "./projectManagerWithActions";
+} from "./ projectManagerWithActions";
 
 export interface ProjectManagerState {
   alerts: Alert[];

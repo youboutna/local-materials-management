@@ -356,8 +356,6 @@ const WaterfallProjectManager = () => {
 
           <TabsContent value="analytics" className="space-y-4">
             <WaterfallProjectKPIs
-              projectMetrics={metrics}
-              phases={phases}
               projectTitle={selectedProject.title}
               projectBudget={selectedProject.budget}
             />

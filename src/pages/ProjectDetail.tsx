@@ -891,32 +891,8 @@ const ProjectDetail = () => {
                 <div className="space-y-6">
                   {/* Waterfall KPIs */}
                   <WaterfallProjectKPIs
-                    projectMetrics={{
-                      schedulePerformanceIndex: 1.05,
-                      costPerformanceIndex: 0.95,
-                      earnedValue: project?.budget ? project.budget * (project.progress / 100) : 0,
-                      plannedValue: project?.budget ? project.budget * 0.6 : 0,
-                      actualCost: project?.phases?.reduce((sum, phase) => sum + (phase.actual_cost || 0), 0) || 0,
-                      budgetAtCompletion: project?.budget || 0,
-                      estimateAtCompletion: (project?.budget || 0) * 1.05,
-                      estimateToComplete: (project?.budget || 0) * 0.4,
-                      varianceAtCompletion: (project?.budget || 0) * -0.05
-                    }}
-                    phases={project?.phases?.map(phase => ({
-                      id: phase.id,
-                      name: phase.title,
-                      plannedProgress: 80,
-                      actualProgress: phase.progress || 0,
-                      budget: phase.budget || 0,
-                      actualCost: phase.actual_cost || 0,
-                      startDate: phase.start_date,
-                      endDate: phase.end_date,
-                      status: phase.status as any,
-                      procurementStep: Math.floor(Math.random() * 5) + 1,
-                      risks: 2,
-                      issues: 0
-                    })) || []}
                     projectTitle={project?.title || "Projet"}
+                    projectBudget={project?.budget}
                   />
                   
                   {/* Gantt Chart */}
