@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
   getPaymentBlockHistory,
   PaymentValidationResult 
 } from '@/services/paymentBlockingService';
+import { supabase } from '@/integrations/supabase/client';
 
 const paymentFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),
@@ -32,10 +33,90 @@ const paymentFormSchema = z.object({
 
 const PaymentBlockingInterface = () => {
   const [validationResult, setValidationResult] = useState<PaymentValidationResult | null>(null);
-  const [blockHistory, setBlockHistory] = useState([]);
+  const [blockHistory, setBlockHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [stats, setStats] = useState({
+    blockedPayments: 0,
+    expiredInsurances: 0,
+    delayedProjects: 0,
+    missingDocuments: 0
+  });
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        // Load blocked payments
+        const { data: blockedPayments } = await supabase
+          .from('payment_blocks')
+          .select('*')
+          .is('resolved_at', null);
+
+        // Load expired insurances
+        const { data: expiredInsurances } = await supabase
+          .from('insurance_certificates')
+          .select('*')
+          .lt('valid_until', new Date().toISOString().split('T')[0]);
+
+        // Load delayed projects (using escalation threshold)
+        const { data: thresholds } = await supabase
+          .from('escalation_thresholds')
+          .select('threshold_value')
+          .eq('threshold_type', 'project_delay')
+          .eq('threshold_name', 'major_delay')
+          .single();
+
+        const delayThreshold = thresholds?.threshold_value || 20;
+
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('status', 'en_cours');
+
+        const delayedProjects = projects?.filter(project => {
+          if (!project.end_date) return false;
+          const endDate = new Date(project.end_date);
+          const today = new Date();
+          const totalDuration = endDate.getTime() - new Date(project.start_date).getTime();
+          const elapsed = today.getTime() - new Date(project.start_date).getTime();
+          const progressExpected = Math.min(100, (elapsed / totalDuration) * 100);
+          const actualProgress = project.progress || 0;
+          return (progressExpected - actualProgress) > delayThreshold;
+        }) || [];
+
+        // Load documents with missing status
+        const { data: missingDocs } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('status', 'draft');
+
+        setStats({
+          blockedPayments: blockedPayments?.length || 0,
+          expiredInsurances: expiredInsurances?.length || 0,
+          delayedProjects: delayedProjects.length,
+          missingDocuments: missingDocs?.length || 0
+        });
+
+        // Load recent blocked payments
+        const { data: recentBlocks } = await supabase
+          .from('payment_blocks')
+          .select(`
+            *,
+            projects(title),
+            suppliers(name)
+          `)
+          .order('blocked_at', { ascending: false })
+          .limit(5);
+
+        setBlockHistory(recentBlocks || []);
+      } catch (error) {
+        console.error('Error loading payment stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -346,14 +427,14 @@ const PaymentBlockingInterface = () => {
       </div>
 
       {/* Payment Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
             <Ban className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">12</div>
+            <div className="text-2xl font-bold text-red-600">{stats.blockedPayments}</div>
             <p className="text-xs text-muted-foreground">
               Ce mois
             </p>
@@ -366,7 +447,7 @@ const PaymentBlockingInterface = () => {
             <Shield className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">5</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.expiredInsurances}</div>
             <p className="text-xs text-muted-foreground">
               Entrepreneurs concernés
             </p>
@@ -379,9 +460,22 @@ const PaymentBlockingInterface = () => {
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">8</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats.delayedProjects}</div>
             <p className="text-xs text-muted-foreground">
               Retards &gt; 20%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.missingDocuments}</div>
+            <p className="text-xs text-muted-foreground">
+              À fournir
             </p>
           </CardContent>
         </Card>
@@ -397,34 +491,35 @@ const PaymentBlockingInterface = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Mock data - replace with real data */}
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Ban className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="font-medium">Entreprise Sahel BTP</p>
-                  <p className="text-sm text-muted-foreground">Projet Axe Idini - 850,000 MRU</p>
+            {blockHistory.length > 0 ? (
+              blockHistory.map((block: any) => (
+                <div key={block.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Ban className="h-5 w-5 text-red-500" />
+                    <div>
+                      <p className="font-medium">{block.suppliers?.name || 'Entrepreneur inconnu'}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {block.projects?.title || 'Projet inconnu'} - {block.amount?.toLocaleString()} MRU
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="destructive">
+                      {block.blocking_reasons?.[0]?.reason === 'expired_insurance' ? 'Assurance expirée' :
+                       block.blocking_reasons?.[0]?.reason === 'project_delay' ? 'Retard projet' :
+                       'Problème conformité'}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(block.blocked_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <Badge variant="destructive">Assurance expirée</Badge>
-                <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <Ban className="h-5 w-5 text-red-500" />
-                <div>
-                  <p className="font-medium">Construction Moderne SARL</p>
-                  <p className="text-sm text-muted-foreground">Projet Électrification - 1,200,000 MRU</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <Badge variant="destructive">Retard &gt; 20%</Badge>
-                <p className="text-xs text-muted-foreground mt-1">Il y a 1 jour</p>
-              </div>
-            </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Aucun paiement bloqué récemment
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

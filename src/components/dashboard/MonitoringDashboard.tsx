@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Shield, AlertTriangle, TrendingUp } from 'lucide-react';
@@ -6,8 +6,60 @@ import HttpMonitor from '@/components/monitoring/HttpMonitor';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
 import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
+import { supabase } from '@/integrations/supabase/client';
 
 const MonitoringDashboard: React.FC = () => {
+  const [stats, setStats] = useState({
+    guarantees: { count: 0, status: "0 Alertes" },
+    payments: { count: 0, status: "0 Bloqués" },
+    inspections: { count: 0, status: "0 En Retard" }
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        // Load guarantees about to expire (next 30 days)
+        const { data: guarantees } = await supabase
+          .from('bank_guarantees')
+          .select('*')
+          .eq('status', 'active')
+          .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+        // Load blocked payments
+        const { data: blockedPayments } = await supabase
+          .from('payment_blocks')
+          .select('*')
+          .is('resolved_at', null);
+
+        // Load delayed inspections
+        const { data: inspections } = await supabase
+          .from('inspections')
+          .select('*')
+          .eq('status', 'scheduled')
+          .lt('date', new Date().toISOString());
+
+        setStats({
+          guarantees: { 
+            count: guarantees?.length || 0,
+            status: guarantees?.length ? `${guarantees.length} Alertes` : "Surveillées"
+          },
+          payments: { 
+            count: blockedPayments?.length || 0,
+            status: blockedPayments?.length ? `${blockedPayments.length} Bloqués` : "Actif"
+          },
+          inspections: { 
+            count: inspections?.length || 0,
+            status: inspections?.length ? `${inspections.length} En Retard` : "Suivi"
+          }
+        });
+      } catch (error) {
+        console.error('Error loading monitoring stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -28,8 +80,12 @@ const MonitoringDashboard: React.FC = () => {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">Surveillées</div>
-            <p className="text-xs text-muted-foreground">Détection automatique des retards</p>
+            <div className={`text-2xl font-bold ${stats.guarantees.count > 0 ? 'text-red-600' : 'text-blue-600'}`}>
+              {stats.guarantees.status}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.guarantees.count > 0 ? 'Garanties expirant bientôt' : 'Détection automatique des retards'}
+            </p>
           </CardContent>
         </Card>
 
@@ -39,8 +95,12 @@ const MonitoringDashboard: React.FC = () => {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">Actif</div>
-            <p className="text-xs text-muted-foreground">Validation automatique</p>
+            <div className={`text-2xl font-bold ${stats.payments.count > 0 ? 'text-red-600' : 'text-orange-600'}`}>
+              {stats.payments.status}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.payments.count > 0 ? 'Paiements en attente' : 'Validation automatique'}
+            </p>
           </CardContent>
         </Card>
 
@@ -50,8 +110,12 @@ const MonitoringDashboard: React.FC = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">Suivi</div>
-            <p className="text-xs text-muted-foreground">Monitoring des inspections</p>
+            <div className={`text-2xl font-bold ${stats.inspections.count > 0 ? 'text-red-600' : 'text-purple-600'}`}>
+              {stats.inspections.status}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.inspections.count > 0 ? 'Inspections en retard' : 'Monitoring des inspections'}
+            </p>
           </CardContent>
         </Card>
       </div>
