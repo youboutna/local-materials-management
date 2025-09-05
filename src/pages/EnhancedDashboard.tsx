@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { detectExpiringInsurance } from '@/services/insuranceCertificateService';
-import { detectOverdueInspections } from '@/services/inspectionMonitoringService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +20,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+import { useProjectManager } from '@/hooks/useProjectManager';
+import { actionLabels } from '@/services/ProjectManagerService';
+import { EscalationRoles, ProjectData } from '@/types/project';
 
 interface ProjectAlert {
   id: string;
@@ -55,209 +57,97 @@ interface Alert {
   data?: any;
 }
 
-const EnhancedDashboard = () => {
+// Dashboard Content Component that uses ProjectManager
+const DashboardContent = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data, runChecks } = useProjectManager();
   
-  const [projectAlerts, setProjectAlerts] = useState<ProjectAlert[]>([
-    {
-      id: '1',
-      title: 'Axe Idini',
-      delay: 15,
-      status: 'crisis',
-      action: 'Garantie déclenchée → Banque notifiée'
-    }
-  ]);
-
-  const [milestones, setMilestones] = useState<Milestone[]>([
-    {
-      id: '1',
-      title: 'Fouilles Tani',
-      date: '15/08',
-      status: 'completed'
-    },
-    {
-      id: '2',
-      title: 'Inspection structure R+2',
-      date: '18/08',
-      status: 'pending'
-    }
-  ]);
-
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: '1',
-      title: 'Plan R+2.pdf',
-      sharedBy: 'Chef Projet',
-      date: '15/08',
-      type: 'plan'
-    }
-  ]);
-
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [activeChantiers] = useState(3);
+  const [projectAlerts, setProjectAlerts] = useState<ProjectAlert[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [activeChantiers, setActiveChantiers] = useState(0);
   const [isLoadingAlerts, setIsLoadingAlerts] = useState(true);
 
-  // Load real alerts from all monitoring systems
+  // Convert ProjectManager alerts to dashboard format
+  const alerts: Alert[] = data?.alerts?.map(alert => ({
+    id: alert.id,
+    message: alert.message,
+    type: alert.type as Alert['type'],
+    severity: alert.severity,
+    source: alert.source as Alert['source'],
+    data: alert
+  })) || [];
+
+  // Load real data and run project checks
   useEffect(() => {
-    const loadAllAlerts = async () => {
+    const loadDashboardData = async () => {
       try {
         setIsLoadingAlerts(true);
-        const allAlerts: Alert[] = [];
+        
+        // Run project manager checks to get comprehensive alerts
+        await runChecks();
+        
+        // Load additional dashboard data
+        const { data: projectsData } = await supabase.from('projects').select('*');
+        const activeProjectsCount = projectsData?.filter(p => p.status === 'en cours').length || 0;
+        setActiveChantiers(activeProjectsCount);
 
-        // 1. Load Insurance Expiry Alerts
-        try {
-          const insuranceAlerts = await detectExpiringInsurance();
-          insuranceAlerts.forEach(alert => {
-            allAlerts.push({
-              id: `insurance-${alert.projectId}-${alert.contractorId}`,
-              message: `Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s) (Police: ${alert.policyNumber})`,
-              type: 'insurance_expiry',
-              severity: alert.alertLevel === 'critical' ? 'critical' : alert.alertLevel === 'warning' ? 'medium' : 'high',
-              source: 'insurance',
-              data: alert
-            });
-          });
-        } catch (error) {
-          console.error('Error loading insurance alerts:', error);
+        // Load recent milestones
+        const { data: milestonesData } = await supabase
+          .from('project_milestones')
+          .select('*')
+          .gte('target_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .lte('target_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order('target_date', { ascending: true })
+          .limit(5);
+
+        if (milestonesData) {
+          setMilestones(milestonesData.map(m => ({
+            id: m.id,
+            title: m.title || 'Jalon sans titre',
+            date: m.target_date ? new Date(m.target_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '',
+            status: m.completion_date ? 'completed' : (m.target_date && new Date(m.target_date) < new Date()) ? 'overdue' : 'pending'
+          })));
         }
 
-        // 2. Load Overdue Inspection Alerts
-        try {
-          const overdueInspections = await detectOverdueInspections();
-          overdueInspections.forEach(inspection => {
-            const daysPastDue = Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
-            allAlerts.push({
-              id: `inspection-${inspection.id}`,
-              message: `Inspection en retard de ${daysPastDue} jour(s) sur le projet "${inspection.projects?.title || 'Projet inconnu'}"`,
-              type: 'inspection_overdue',
-              severity: daysPastDue > 7 ? 'critical' : daysPastDue > 3 ? 'high' : 'medium',
-              source: 'inspection',
-              data: inspection
-            });
-          });
-        } catch (error) {
-          console.error('Error loading inspection alerts:', error);
+        // Load recent documents
+        const { data: documentsData } = await supabase
+          .from('documents')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (documentsData) {
+          setDocuments(documentsData.map(d => ({
+            id: d.id,
+            title: d.title || d.file_name || 'Document sans titre',
+            sharedBy: 'Chef Projet', // You might want to join with users table for actual names
+            date: d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '',
+            type: d.document_type === 'project_report' ? 'report' as const : 'plan' as const
+          })));
         }
 
-        // 3. Load Bank Guarantee Alerts (delayed projects that may trigger guarantees)
-        try {
-          const { data: delayedProjects, error } = await supabase
-            .from('projects')
-            .select(`
-              id,
-              title,
-              start_date,
-              end_date,
-              status,
-              bank_guarantees!inner(*)
-            `)
-            .in('status', ['in_progress', 'delayed']);
-
-          if (!error && delayedProjects) {
-            delayedProjects.forEach(project => {
-              if (project.end_date && new Date(project.end_date) < new Date()) {
-                const delayDays = Math.ceil((new Date().getTime() - new Date(project.end_date).getTime()) / (1000 * 60 * 60 * 24));
-                if (delayDays > 10) { // Significant delay threshold
-                  allAlerts.push({
-                    id: `bank-guarantee-${project.id}`,
-                    message: `Projet "${project.title}" en retard de ${delayDays} jours - Risque de déclenchement de garantie bancaire`,
-                    type: 'bank_guarantee',
-                    severity: delayDays > 30 ? 'critical' : 'high',
-                    source: 'bank_guarantee',
-                    data: { project, delayDays }
-                  });
-                }
-              }
-            });
-          }
-        } catch (error) {
-          console.error('Error loading bank guarantee alerts:', error);
+        // Generate project alerts from data
+        if (data?.alerts) {
+          const criticalProjectAlerts = data.alerts
+            .filter(alert => alert.severity === 'critical' || alert.severity === 'high')
+            .slice(0, 3)
+            .map(alert => ({
+              id: alert.id,
+              title: alert.title || 'Projet inconnu',
+              delay: 0,
+              status: alert.severity === 'critical' ? 'crisis' as const : 'warning' as const,
+              action: alert.message
+            }));
+          setProjectAlerts(criticalProjectAlerts);
         }
 
-        // 4. Load Payment Block Alerts
-        try {
-          const { data: paymentBlocks, error } = await supabase
-            .from('payment_blocks')
-            .select('*')
-            .is('resolved_at', null); // Only unresolved blocks
-
-          if (!error && paymentBlocks) {
-            // Get project titles separately to avoid relation issues
-            for (const block of paymentBlocks) {
-              try {
-                const { data: project } = await supabase
-                  .from('projects')
-                  .select('title')
-                  .eq('id', block.project_id)
-                  .single();
-
-                allAlerts.push({
-                  id: `payment-block-${block.id}`,
-                  message: `Paiement bloqué pour le projet "${project?.title || 'Projet inconnu'}" - Montant: ${block.amount?.toLocaleString()} MRU`,
-                  type: 'payment_blocked',
-                  severity: 'high',
-                  source: 'payment',
-                  data: block
-                });
-              } catch (projectError) {
-                console.error('Error loading project for payment block:', projectError);
-                allAlerts.push({
-                  id: `payment-block-${block.id}`,
-                  message: `Paiement bloqué - Montant: ${block.amount?.toLocaleString()} MRU`,
-                  type: 'payment_blocked',
-                  severity: 'high',
-                  source: 'payment',
-                  data: block
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error loading payment block alerts:', error);
-        }
-
-        // 5. Load High Priority Notifications
-        if (user?.id) {
-          try {
-            const { data: notifications, error } = await supabase
-              .from('notifications')
-              .select('*')
-              .eq('recipient_id', user.id)
-              .eq('read', false)
-              .contains('metadata', { priority: 'urgent' })
-              .order('created_at', { ascending: false })
-              .limit(10);
-
-            if (!error && notifications) {
-              notifications.forEach(notif => {
-                allAlerts.push({
-                  id: `notification-${notif.id}`,
-                  message: notif.message,
-                  type: notif.type === 'compliance_alert' ? 'compliance_violation' : 'deadline',
-                  severity: 'high',
-                  source: 'notification',
-                  data: notif
-                });
-              });
-            }
-          } catch (error) {
-            console.error('Error loading notification alerts:', error);
-          }
-        }
-
-        // Sort alerts by severity (critical first)
-        allAlerts.sort((a, b) => {
-          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-          return severityOrder[b.severity] - severityOrder[a.severity];
-        });
-
-        setAlerts(allAlerts);
       } catch (error) {
-        console.error('Error loading alerts:', error);
+        console.error('Error loading dashboard data:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les alertes",
+          description: "Impossible de charger les données du tableau de bord",
           variant: "destructive"
         });
       } finally {
@@ -266,9 +156,9 @@ const EnhancedDashboard = () => {
     };
 
     if (user) {
-      loadAllAlerts();
+      loadDashboardData();
     }
-  }, [user, toast]);
+  }, [user, toast, runChecks, data]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -356,6 +246,12 @@ const EnhancedDashboard = () => {
                   <div className="text-2xl font-bold text-primary">{activeChantiers}</div>
                   <div className="text-sm text-muted-foreground">chantiers actifs</div>
                 </div>
+                {data?.progress !== undefined && (
+                  <div className="mb-4">
+                    <div className="text-lg font-semibold text-green-600">{Math.round(data.progress)}%</div>
+                    <div className="text-xs text-muted-foreground">progression moyenne</div>
+                  </div>
+                )}
                 <Button variant="outline" className="gap-2">
                   <Eye className="h-4 w-4" />
                   Voir {activeChantiers} chantiers actifs
@@ -546,6 +442,65 @@ const EnhancedDashboard = () => {
         </div>
       </ErrorBoundary>
     </div>
+  );
+};
+
+// Main component with ProjectManager provider
+const EnhancedDashboard = () => {
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+
+  useEffect(() => {
+    // Load a default project for monitoring
+    const loadDefaultProject = async () => {
+      try {
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('status', 'en cours')
+          .limit(1);
+        
+        if (projects && projects.length > 0) {
+          const project = projects[0];
+          setSelectedProject({
+            ...project,
+            startDate: project.start_date || new Date().toISOString(),
+            teamSize: project.team_size || 0
+          } as ProjectData);
+        }
+      } catch (error) {
+        console.error('Error loading default project:', error);
+      }
+    };
+
+    loadDefaultProject();
+  }, []);
+
+  const defaultRoles: EscalationRoles = {
+    manager: 'chef_projet',
+    director: 'directeur',
+    siteEngineer: 'chef_chantier',
+    admin: 'admin'
+  };
+
+  if (!selectedProject) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du projet de monitoring...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProjectManagerProvider 
+      project={selectedProject} 
+      roles={defaultRoles} 
+      actionLabels={actionLabels}
+    >
+      <DashboardContent />
+    </ProjectManagerProvider>
   );
 };
 

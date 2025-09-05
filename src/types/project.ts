@@ -97,12 +97,16 @@ export interface InspectionIssue {
 
 export interface Alert {
   id: string;
-  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk';
+  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk' | 'bank_guarantee' | 'inspection_overdue' | 'payment_blocked' | 'compliance_violation' | 'delivery' | 'deadline' | 'quality';
   severity: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   message: string;
   projectId: string;
   relatedEntityId?: string;
+  source?: 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification';
+  projectTitle?: string;
+  delayDays?: number;
+  timestamp: string;
   triggerDate: string;
   acknowledged: boolean;
   acknowledgedBy?: string;

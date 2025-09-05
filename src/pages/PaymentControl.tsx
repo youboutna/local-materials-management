@@ -19,6 +19,10 @@ import PaymentControlActions from '@/components/payments/PaymentControlActions';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+import { useProjectManager } from '@/hooks/useProjectManager';
+import { actionLabels } from '@/services/ProjectManagerService';
+import { EscalationRoles, ProjectData } from '@/types/project';
 
 interface NotificationData {
   id: string;
@@ -30,7 +34,71 @@ interface NotificationData {
   metadata: any;
 }
 
-const PaymentControlPage = () => {
+// Component to render payment control actions with real data
+const PaymentControlActionsContainer = () => {
+  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
+  const { data } = useProjectManager();
+
+  useEffect(() => {
+    const loadPendingPayments = async () => {
+      try {
+        const { data: payments } = await supabase
+          .from('payment_blocks')
+          .select(`
+            *,
+            projects(title, responsible_id),
+            profiles(display_name)
+          `)
+          .is('resolved_at', null)
+          .limit(3);
+
+        setPendingPayments(payments || []);
+      } catch (error) {
+        console.error('Error loading pending payments:', error);
+      }
+    };
+
+    loadPendingPayments();
+  }, []);
+
+  // Get blocking reasons from project manager alerts
+  const getBlockingReasons = (paymentId: string) => {
+    if (!data?.alerts) return [];
+    
+    return data.alerts
+      .filter(alert => alert.severity === 'critical' || alert.severity === 'high')
+      .slice(0, 2)
+      .map(alert => ({
+        reason: alert.type,
+        description: alert.message,
+        severity: alert.severity === 'critical' ? 'blocking' as const : 'warning' as const
+      }));
+  };
+
+  return (
+    <div className="space-y-4">
+      {pendingPayments.map((payment) => (
+        <PaymentControlActions
+          key={payment.id}
+          paymentId={payment.id}
+          projectId={payment.project_id}
+          contractorId={payment.contractor_id || 'unknown'}
+          amount={payment.amount || 0}
+          blockingReasons={getBlockingReasons(payment.id)}
+        />
+      ))}
+      {pendingPayments.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>Aucun paiement en attente de validation</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main content component
+const PaymentControlContent = () => {
   const [paymentNotifications, setPaymentNotifications] = useState<NotificationData[]>([]);
   const [loading, setLoading] = useState(true);
   const { unreadCount } = useNotifications();
@@ -234,25 +302,8 @@ const PaymentControlPage = () => {
             </CardContent>
           </Card>
 
-          {/* Payment Control Actions */}
-          <PaymentControlActions 
-            paymentId="pay-example-001"
-            projectId="proj-axe-idini"
-            contractorId="cont-sahel-btp"
-            amount={850000}
-            blockingReasons={[
-              {
-                reason: 'expired_insurance',
-                description: 'Assurance responsabilité civile expirée',
-                severity: 'blocking' as const
-              },
-              {
-                reason: 'project_delay',
-                description: 'Retard de projet de 15%',
-                severity: 'warning' as const
-              }
-            ]}
-          />
+          {/* Payment Control Actions - Using real data from database */}
+          <PaymentControlActionsContainer />
 
           {/* Payment Control Interface */}
           <EnhancedPaymentBlockingInterface />
@@ -264,6 +315,65 @@ const PaymentControlPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Main component with ProjectManager provider
+const PaymentControlPage = () => {
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+
+  useEffect(() => {
+    // Load a default project for monitoring
+    const loadDefaultProject = async () => {
+      try {
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('status', 'en cours')
+          .limit(1);
+        
+        if (projects && projects.length > 0) {
+          const project = projects[0];
+          setSelectedProject({
+            ...project,
+            startDate: project.start_date || new Date().toISOString(),
+            teamSize: project.team_size || 0
+          } as ProjectData);
+        }
+      } catch (error) {
+        console.error('Error loading default project:', error);
+      }
+    };
+
+    loadDefaultProject();
+  }, []);
+
+  const defaultRoles: EscalationRoles = {
+    manager: 'chef_projet',
+    director: 'directeur',
+    siteEngineer: 'chef_chantier',
+    admin: 'admin'
+  };
+
+  if (!selectedProject) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du projet de monitoring...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProjectManagerProvider 
+      project={selectedProject} 
+      roles={defaultRoles} 
+      actionLabels={actionLabels}
+    >
+      <PaymentControlContent />
+    </ProjectManagerProvider>
   );
 };
 

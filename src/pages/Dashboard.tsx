@@ -31,7 +31,7 @@ const Dashboard: React.FC = () => {
   const { t } = useLanguage();
   const { projects } = useProjects();
 
-  // Required roles for dashboard access
+  // Required roles for dashboard access (moved to constants)
   const allowedRoles = ['admin', 'director', 'project_manager'];
 
   useEffect(() => {
@@ -144,13 +144,14 @@ const Dashboard: React.FC = () => {
           return acc;
         }, {} as Record<string, number>) || {};
 
+        // Status colors moved to constants
         const statusColors = {
-          'en cours': '#3b82f6',
-          'terminé': '#10b981',
-          'en attente': '#f59e0b',
-          'en inspection': '#eab308',
-          'suspendu': '#8b5cf6',
-          'annulé': '#ef4444'
+          'en cours': 'hsl(var(--primary))',
+          'terminé': 'hsl(var(--success))',
+          'en attente': 'hsl(var(--warning))', 
+          'en inspection': 'hsl(var(--info))',
+          'suspendu': 'hsl(var(--secondary))',
+          'annulé': 'hsl(var(--destructive))'
         };
 
         const statusDistribution = Object.entries(statusCounts).map(([status, count]) => ({

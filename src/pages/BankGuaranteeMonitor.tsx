@@ -1,18 +1,72 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedBankGuaranteeCrud from '@/components/alerts/EnhancedBankGuaranteeCrud';
+import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
+import { useProjectManager } from '@/hooks/useProjectManager';
+import { actionLabels } from '@/services/ProjectManagerService';
+import { EscalationRoles, ProjectData } from '@/types/project';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
-const BankGuaranteeMonitorPage = () => {
+// Content component that uses ProjectManager
+const BankGuaranteeContent = () => {
+  const { data, acknowledgeAlert } = useProjectManager();
+
+  const bankGuaranteeAlerts = data?.alerts?.filter(alert => 
+    alert.type === 'bank_guarantee' || alert.source === 'bank_guarantee'
+  ) || [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">🏦 Surveillance Garanties Bancaires</h1>
-            <p className="text-gray-600 mt-2">
-              Système automatisé de détection des retards et déclenchement des garanties bancaires
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">🏦 Surveillance Garanties Bancaires</h1>
+                <p className="text-gray-600 mt-2">
+                  Système automatisé de détection des retards et déclenchement des garanties bancaires
+                </p>
+              </div>
+              {bankGuaranteeAlerts.length > 0 && (
+                <Badge variant="destructive" className="text-lg px-4 py-2">
+                  {bankGuaranteeAlerts.length} Alerte(s) Active(s)
+                </Badge>
+              )}
+            </div>
           </div>
+
+          {/* Project Manager Alerts */}
+          {bankGuaranteeAlerts.length > 0 && (
+            <Card className="mb-8 border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="text-red-800">Alertes du Gestionnaire de Projet</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {bankGuaranteeAlerts.map((alert) => (
+                    <div key={alert.id} className="p-4 bg-white border border-red-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-red-800">{alert.message}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          Sévérité: {alert.severity} | Type: {alert.type}
+                        </p>
+                        </div>
+                        <button
+                          onClick={() => acknowledgeAlert(alert.id, 'current-user', 'Pris en compte depuis le monitoring')}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        >
+                          Acquitter
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <BankGuaranteeMonitor />
           <div className="mt-8">
@@ -21,6 +75,65 @@ const BankGuaranteeMonitorPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Main component with ProjectManager provider
+const BankGuaranteeMonitorPage = () => {
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
+
+  useEffect(() => {
+    // Load a default project for monitoring
+    const loadDefaultProject = async () => {
+      try {
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('status', 'en cours')
+          .limit(1);
+        
+        if (projects && projects.length > 0) {
+          const project = projects[0];
+          setSelectedProject({
+            ...project,
+            startDate: project.start_date || new Date().toISOString(),
+            teamSize: project.team_size || 0
+          } as ProjectData);
+        }
+      } catch (error) {
+        console.error('Error loading default project:', error);
+      }
+    };
+
+    loadDefaultProject();
+  }, []);
+
+  const defaultRoles: EscalationRoles = {
+    manager: 'chef_projet',
+    director: 'directeur',
+    siteEngineer: 'chef_chantier',
+    admin: 'admin'
+  };
+
+  if (!selectedProject) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du projet de monitoring...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProjectManagerProvider 
+      project={selectedProject} 
+      roles={defaultRoles} 
+      actionLabels={actionLabels}
+    >
+      <BankGuaranteeContent />
+    </ProjectManagerProvider>
   );
 };
 
