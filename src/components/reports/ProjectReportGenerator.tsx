@@ -14,6 +14,9 @@ import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { ReportingService, ReportData, CostCalculation } from '@/services/reportingService';
+import { ReportCalculations, EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
+import { ReportFormatting } from '@/utils/reportFormatting';
 
 interface ProjectReportGeneratorProps {
   project: ProjectData;
@@ -51,8 +54,11 @@ interface ReportConfig {
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [actualCost, setActualCost] = useState<number>(0);
-  const [estimatedCost, setEstimatedCost] = useState<number>(0);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [costCalculation, setCostCalculation] = useState<CostCalculation | null>(null);
+  const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
+  const [pertAnalysis, setPertAnalysis] = useState<PERTAnalysis | null>(null);
+  
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
     includeSections: {
@@ -81,104 +87,43 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     notes: '',
   });
 
-  // Calculate costs based on project data
+  // Load all report data on component mount
   useEffect(() => {
-    const calculateCosts = async () => {
+    const loadReportData = async () => {
       try {
-        // Calculate actualCost from Materials and Human Resources
-        const { data: materialCosts } = await supabase
-          .from('project_materials')
-          .select(`
-            quantity,
-            materials (
-              price_per_unit
-            )
-          `)
-          .eq('project_id', project.id);
-
-        const { data: humanResourceCosts } = await supabase
-          .from('phase_employees')
-          .select(`
-            daily_rate,
-            start_date,
-            end_date,
-            project_phases!inner (
-              project_id
-            )
-          `)
-          .eq('project_phases.project_id', project.id);
-
-        let materialTotal = 0;
-        if (materialCosts) {
-          materialTotal = materialCosts.reduce((sum, item) => {
-            const price = item.materials?.price_per_unit || 0;
-            return sum + (item.quantity * price);
-          }, 0);
-        }
-
-        let hrActualTotal = 0;
-        if (humanResourceCosts) {
-          hrActualTotal = humanResourceCosts.reduce((sum, employee) => {
-            if (!employee.daily_rate || !employee.start_date || !employee.end_date) return sum;
-            const startDate = new Date(employee.start_date);
-            const endDate = new Date(employee.end_date);
-            const workingDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-            return sum + (employee.daily_rate * workingDays);
-          }, 0);
-        }
-
-        console.log('ActualCost calculation:', { materialTotal, hrActualTotal, total: materialTotal + hrActualTotal });
-        setActualCost(materialTotal + hrActualTotal);
-
-        // Calculate estimatedCost from Quantity Takeoffs and Human Resources
-        const { data: quantityTakeoffs } = await supabase
-          .from('quantity_takeoffs')
-          .select(`
-            quantity,
-            materials (
-              price_per_unit
-            )
-          `)
-          .eq('project_id', project.id);
-
-        const { data: phaseData } = await supabase
-          .from('project_phases')
-          .select('estimated_cost, human_resources')
-          .eq('project_id', project.id);
-
-        let takeoffTotal = 0;
-        if (quantityTakeoffs) {
-          takeoffTotal = quantityTakeoffs.reduce((sum, item) => {
-            const price = item.materials?.price_per_unit || 0;
-            return sum + (item.quantity * price);
-          }, 0);
-        }
-
-        let hrEstimatedTotal = 0;
-        if (phaseData) {
-          hrEstimatedTotal = phaseData.reduce((sum, phase) => {
-            if (phase.human_resources && Array.isArray(phase.human_resources)) {
-              const phaseHrCost = phase.human_resources.reduce((hrSum: number, hr: any) => {
-                const dailyRate = hr.daily_rate || 0;
-                const estimatedDays = hr.estimated_days || 30;
-                return hrSum + (dailyRate * estimatedDays);
-              }, 0);
-              return sum + phaseHrCost;
-            }
-            return sum + (phase.estimated_cost || 0);
-          }, 0);
-        }
-
-        console.log('EstimatedCost calculation:', { takeoffTotal, hrEstimatedTotal, total: takeoffTotal + hrEstimatedTotal, quantityTakeoffs, phaseData });
-        setEstimatedCost(takeoffTotal + hrEstimatedTotal);
-
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [reportDataResult, costCalculationResult] = await Promise.all([
+          ReportingService.fetchReportData(project.id),
+          ReportingService.calculateProjectCosts(project.id)
+        ]);
+        
+        setReportData(reportDataResult);
+        setCostCalculation(costCalculationResult);
+        
+        // Calculate EVM metrics
+        const evmMetricsResult = ReportCalculations.calculateEVMMetrics(project, costCalculationResult.actualCost);
+        setEvmMetrics(evmMetricsResult);
+        
+        // Calculate PERT analysis
+        const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(reportDataResult.phases);
+        setPertAnalysis(pertAnalysisResult);
+        
       } catch (error) {
-        console.error('Error calculating costs:', error);
+        console.error('Error loading report data:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données du rapport.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    calculateCosts();
-  }, [project.id]);
+    loadReportData();
+  }, [project.id, toast]);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -236,11 +181,11 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </div>
             <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #92400e; margin: 0; font-size: 14px;">Coût Estimé</h3>
-              <p style="color: #d97706; font-size: 24px; font-weight: bold, margin: 5px 0;">${estimatedCost ? `${estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #d97706; font-size: 24px; font-weight: bold, margin: 5px 0;">${costCalculation?.estimatedCost ? `${costCalculation.estimatedCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
             <div style="background: #fce7f3; padding: 15px; border-radius: 8px; text-align: center;">
               <h3 style="color: #be185d; margin: 0; font-size: 14px;">Coût Réel</h3>
-              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${actualCost ? `${actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
+              <p style="color: #e11d48; font-size: 24px; font-weight: bold; margin: 5px 0;">${costCalculation?.actualCost ? `${costCalculation.actualCost.toLocaleString('fr-FR')} MRU` : 'Non défini'}</p>
             </div>
           </div>
         </section>
@@ -561,15 +506,146 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         </section>
         ` : ''}
         
-        ${reportConfig.includeSections.evmAnalysis ? getEVMAnalysisSection(project, actualCost, estimatedCost) : ''}
-        ${reportConfig.includeSections.pertAnalysis ? getPERTAnalysisSection(project) : ''}
-        ${reportConfig.includeSections.ganttChart ? getGanttChartSection(project) : ''}
+        ${reportConfig.includeSections.evmAnalysis && evmMetrics ? generateEVMSection(evmMetrics) : ''}
+        ${reportConfig.includeSections.pertAnalysis && pertAnalysis ? generatePERTSection(pertAnalysis) : ''}
+        ${reportConfig.includeSections.ganttChart ? generateGanttSection(project, reportData?.phases) : ''}
 
         <!-- Footer -->
         <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
           <p style="margin: 0;">Ce rapport a été généré automatiquement le ${currentDate}</p>
         </div>
       </div>
+    `;
+  };
+
+  // Helper functions for generating sections
+  const generateEVMSection = (metrics: EVMMetrics): string => {
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        ${ReportFormatting.generateSectionHeader(
+          'Analyse EVM (Earned Value Management)',
+          'Analyse de la valeur acquise pour le suivi de performance'
+        )}
+        <div style="background: white; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            ${ReportFormatting.generateMetricCard('Valeur Planifiée (PV)', ReportFormatting.formatCurrency(metrics.plannedValue), '#3b82f6', '📅')}
+            ${ReportFormatting.generateMetricCard('Valeur Acquise (EV)', ReportFormatting.formatCurrency(metrics.earnedValue), '#10b981', '✅')}
+            ${ReportFormatting.generateMetricCard('Coût Réel (AC)', ReportFormatting.formatCurrency(metrics.actualCost), '#ef4444', '💰')}
+          </div>
+          
+          <table style="width:100%;border-collapse:collapse;font-size:14px;background:white;border-radius:6px;border:1px solid #e5e7eb;">
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Planning (SV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${metrics.scheduleVariance >= 0 ? '#059669' : '#dc2626'};">${ReportFormatting.formatCurrency(metrics.scheduleVariance)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Variance de Coût (CV)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${metrics.costVariance >= 0 ? '#059669' : '#dc2626'};">${ReportFormatting.formatCurrency(metrics.costVariance)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>Indice de Performance Planning (SPI)</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: ${metrics.schedulePerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${metrics.schedulePerformanceIndex.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px;"><strong>Indice de Performance Coût (CPI)</strong></td>
+                <td style="padding: 12px; text-align: right; color: ${metrics.costPerformanceIndex >= 1 ? '#059669' : '#dc2626'};">${metrics.costPerformanceIndex.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 15px; padding: 15px; background: ${metrics.schedulePerformanceIndex >= 1 && metrics.costPerformanceIndex >= 1 ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px; border: 1px solid ${metrics.schedulePerformanceIndex >= 1 && metrics.costPerformanceIndex >= 1 ? '#bbf7d0' : '#fecaca'};">
+            <p style="margin: 0; font-size: 14px; color: ${metrics.schedulePerformanceIndex >= 1 && metrics.costPerformanceIndex >= 1 ? '#047857' : '#dc2626'};">
+              <strong>Interprétation:</strong> 
+              ${metrics.schedulePerformanceIndex >= 1 && metrics.costPerformanceIndex >= 1 
+                ? 'Le projet est en bonne voie, respectant les délais et le budget.' 
+                : metrics.schedulePerformanceIndex < 1 && metrics.costPerformanceIndex < 1
+                ? 'Le projet présente des retards et des dépassements de coûts nécessitant une attention immédiate.'
+                : metrics.schedulePerformanceIndex < 1
+                ? 'Le projet présente des retards mais les coûts sont maîtrisés.'
+                : 'Le projet respecte les délais mais présente des dépassements de coûts.'}
+            </p>
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const generatePERTSection = (analysis: PERTAnalysis): string => {
+    const tableColumns = [
+      { label: 'Activité', render: (a: any) => a.name },
+      { label: 'Optimiste (j)', render: (a: any) => a.optimistic.toString() },
+      { label: 'Probable (j)', render: (a: any) => a.mostLikely.toString() },
+      { label: 'Pessimiste (j)', render: (a: any) => a.pessimistic.toString() },
+      { label: 'Estimation PERT', render: (a: any) => a.pertEstimate.toFixed(1) },
+      { label: 'Écart-type', render: (a: any) => a.standardDeviation.toFixed(2) }
+    ];
+
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        ${ReportFormatting.generateSectionHeader(
+          'Analyse PERT',
+          'Program Evaluation and Review Technique pour l\'estimation des durées'
+        )}
+        <div style="background: white; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none;">
+          <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.6;">
+            L'analyse PERT permet d'estimer la durée des activités en tenant compte de l'incertitude et de calculer la probabilité de respect des délais.
+          </p>
+          
+          ${ReportFormatting.generatePaginatedTable(analysis.activities, tableColumns, { pageSize: 10 })}
+          
+          <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            ${ReportFormatting.generateMetricCard('Durée Totale Estimée', `${analysis.totalDuration.toFixed(1)} jours`, '#8b5cf6', '⏱️')}
+            ${ReportFormatting.generateMetricCard('Écart-type Total', `${analysis.totalStandardDeviation.toFixed(2)} jours`, '#8b5cf6', '📊')}
+          </div>
+        </div>
+      </section>
+    `;
+  };
+
+  const generateGanttSection = (project: ProjectData, phases?: any[]): string => {
+    const timeline = ReportCalculations.generatePhaseTimeline(project, phases);
+    
+    return `
+      <section style="margin-bottom: 30px; page-break-inside: avoid;">
+        ${ReportFormatting.generateSectionHeader(
+          'Diagramme de Gantt',
+          `Planning du projet: ${project.title}`
+        )}
+        <div style="background: white; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; border-top: none;">
+          <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              Période: Du ${project.startDate ? ReportFormatting.formatDate(project.startDate) : 'Non défini'} 
+              au ${project.endDate ? ReportFormatting.formatDate(project.endDate) : 'Non défini'}
+            </p>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #6b7280; padding: 0 20px;">
+              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+            
+            ${timeline.map(phase => `
+              <div style="display: flex; align-items: center; margin-bottom: 12px; padding: 8px; background: #f9fafb; border-radius: 4px;">
+                <span style="width: 120px; font-size: 13px; font-weight: 600; color: #374151;">${phase.name}</span>
+                <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; position: relative; margin-left: 15px; overflow: hidden;">
+                  <div style="height: 100%; background: ${phase.color}; width: ${phase.progress}%; border-radius: 12px; transition: width 0.3s ease;"></div>
+                  <span style="position: absolute; right: 8px; top: 4px; font-size: 11px; color: ${phase.progress > 50 ? 'white' : '#374151'}; font-weight: 500;">${phase.status}</span>
+                </div>
+                <span style="margin-left: 10px; font-size: 12px; font-weight: 600; color: ${phase.color}; min-width: 40px;">${phase.progress}%</span>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="margin-top: 25px; padding: 20px; background: #f8fafc; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="margin: 0; font-size: 16px; color: #374151; font-weight: 600;">Progression globale: ${project.progress}%</p>
+              <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Dernière mise à jour: ${ReportFormatting.formatDate(new Date())}</p>
+            </div>
+            ${ReportFormatting.generateProgressBar(project.progress, '#3b82f6', '12px')}
+          </div>
+        </div>
+      </section>
     `;
   };
 
@@ -1105,11 +1181,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
       </CardContent>
     </Card>
   );
