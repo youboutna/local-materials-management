@@ -132,6 +132,34 @@ export function ProjectPDFDocument({
         </PDFSection>
       )}
 
+      {/* Calendrier */}
+      {reportConfig.includeSections.timeline && (
+        <PDFSection title="Calendrier du Projet" borderColor="#8b5cf6">
+          <PDFCard>
+            <PDFRow>
+              <PDFCol>
+                <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label="Durée totale" value={project.startDate && project.endDate ? 
+                  `${Math.ceil((new Date(project.endDate).getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
+                  'Non calculé'} />
+              </PDFCol>
+              <PDFCol>
+                <PDFText label="Progression actuelle" value={`${project.progress}%`} />
+                <PDFText label="Temps écoulé" value={project.startDate ? 
+                  `${Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
+                  'Non calculé'} />
+                <PDFText label="Statut planning" value={
+                  project.progress >= 90 ? 'Presque terminé' :
+                  project.progress >= 50 ? 'En bonne voie' :
+                  project.progress >= 25 ? 'En cours' : 'Début de projet'
+                } />
+              </PDFCol>
+            </PDFRow>
+          </PDFCard>
+        </PDFSection>
+      )}
+
       {/* Matériaux */}
       {reportConfig.includeSections.materials && reportData.materials && reportData.materials.length > 0 && (
         <PDFSection title="Matériaux" borderColor="#8b5cf6">
@@ -215,6 +243,188 @@ export function ProjectPDFDocument({
               ins.status || ''
             ])}
             columnWidths={['20%', '20%', '15%', '15%', '15%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Blocages de paiements */}
+      {reportConfig.includeSections.paymentBlocks && reportData.paymentBlocks && reportData.paymentBlocks.length > 0 && (
+        <PDFSection title="Blocages de Paiements" borderColor="#dc2626">
+          <PDFTable
+            headers={['Montant bloqué', 'Raisons', 'Date de blocage', 'Bloqué par', 'Date de résolution', 'Statut']}
+            data={reportData.paymentBlocks.map(pb => [
+              pb.amount ? `${pb.amount.toLocaleString('fr-FR')} MRU` : '',
+              pb.blocking_reasons ? (Array.isArray(pb.blocking_reasons) ? pb.blocking_reasons.join(', ') : pb.blocking_reasons) : '',
+              pb.blocked_at ? format(new Date(pb.blocked_at), 'dd/MM/yyyy') : '',
+              pb.blocked_by || '',
+              pb.resolved_at ? format(new Date(pb.resolved_at), 'dd/MM/yyyy') : 'Non résolu',
+              pb.resolved_at ? 'Résolu' : 'Actif'
+            ])}
+            columnWidths={['15%', '25%', '15%', '15%', '15%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Fournisseurs */}
+      {reportConfig.includeSections.suppliers && reportData.suppliers && reportData.suppliers.length > 0 && (
+        <PDFSection title="Fournisseurs" borderColor="#8b5cf6">
+          <PDFTable
+            headers={['Nom', 'Contact', 'Email', 'Téléphone', 'Type', 'Statut']}
+            data={reportData.suppliers.map(supplier => [
+              supplier.name || '',
+              supplier.contact_person || '',
+              supplier.email || '',
+              supplier.phone || '',
+              supplier.supplier_type || '',
+              supplier.status || 'Actif'
+            ])}
+            columnWidths={['20%', '15%', '20%', '15%', '15%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Documents */}
+      {reportConfig.includeSections.documents && reportData.documents && reportData.documents.length > 0 && (
+        <PDFSection title="Documents" borderColor="#059669">
+          <PDFTable
+            headers={['Titre', 'Type', 'Date de création', 'Uploadé par', 'Taille', 'Statut']}
+            data={reportData.documents.map(doc => [
+              doc.title || '',
+              doc.document_type || '',
+              doc.created_at ? format(new Date(doc.created_at), 'dd/MM/yyyy') : '',
+              doc.uploaded_by || '',
+              doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : '',
+              doc.status || 'Actif'
+            ])}
+            columnWidths={['25%', '15%', '15%', '15%', '15%', '15%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Employés */}
+      {reportConfig.includeSections.employees && reportData.employees && reportData.employees.length > 0 && (
+        <PDFSection title="Employés" borderColor="#f59e0b">
+          <PDFTable
+            headers={['Nom', 'Poste', 'Département', 'Taux journalier', 'Jours travaillés', 'Coût total']}
+            data={reportData.employees.map(emp => [
+              emp.employees?.full_name || '',
+              emp.employees?.position || '',
+              emp.employees?.department || '',
+              emp.daily_rate ? `${emp.daily_rate.toLocaleString('fr-FR')} MRU` : '',
+              emp.days_worked?.toString() || '0',
+              emp.daily_rate && emp.days_worked ? `${(emp.daily_rate * emp.days_worked).toLocaleString('fr-FR')} MRU` : ''
+            ])}
+            columnWidths={['20%', '15%', '15%', '15%', '15%', '20%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Analyse des risques */}
+      {reportConfig.includeSections.risks && evmMetrics && (
+        <PDFSection title="Analyse des Risques" borderColor="#dc2626">
+          <PDFCard>
+            <PDFRow>
+              <PDFCol>
+                <PDFText 
+                  label="Risque de délai" 
+                  value={evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
+                />
+                <PDFText 
+                  label="Risque de coût" 
+                  value={evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
+                />
+              </PDFCol>
+              <PDFCol>
+                <PDFText label="Indice SPI" value={evmMetrics.schedulePerformanceIndex.toFixed(2)} />
+                <PDFText label="Indice CPI" value={evmMetrics.costPerformanceIndex.toFixed(2)} />
+              </PDFCol>
+            </PDFRow>
+            <PDFRow>
+              <PDFCol>
+                <PDFText 
+                  label="Recommandations" 
+                  value={evmMetrics.schedulePerformanceIndex < 0.9 || evmMetrics.costPerformanceIndex < 0.9 ? 
+                    "Actions correctives urgentes requises. Révision du planning et du budget nécessaire." : 
+                    "Continuer la surveillance régulière des indicateurs de performance."
+                  } 
+                />
+              </PDFCol>
+            </PDFRow>
+          </PDFCard>
+        </PDFSection>
+      )}
+
+      {/* Indicateurs de Performance (KPI) */}
+      {reportConfig.includeSections.kpi && evmMetrics && (
+        <PDFSection title="Indicateurs de Performance (KPI)" borderColor="#3b82f6">
+          <PDFRow>
+            <PDFMetricCard
+              title="Indice SPI"
+              value={evmMetrics.schedulePerformanceIndex.toFixed(2)}
+              color={evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+            />
+            <PDFMetricCard
+              title="Indice CPI"
+              value={evmMetrics.costPerformanceIndex.toFixed(2)}
+              color={evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
+            />
+            <PDFMetricCard
+              title="Écart Budget"
+              value={`${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(1)}%`}
+              color={evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
+            />
+            <PDFMetricCard
+              title="Progression"
+              value={`${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(1)}%`}
+              color="#8b5cf6"
+            />
+          </PDFRow>
+          <PDFCard>
+            <PDFRow>
+              <PDFCol>
+                <PDFText label="Performance délai" value={evmMetrics.schedulePerformanceIndex >= 1 ? "Excellent" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+                <PDFText label="Performance coût" value={evmMetrics.costPerformanceIndex >= 1 ? "Excellent" : evmMetrics.costPerformanceIndex >= 0.9 ? "Satisfaisant" : "À améliorer"} />
+              </PDFCol>
+              <PDFCol>
+                <PDFText label="Tendance générale" value={evmMetrics.schedulePerformanceIndex >= 0.9 && evmMetrics.costPerformanceIndex >= 0.9 ? "Positive" : "Nécessite attention"} />
+                <PDFText label="Statut global" value={evmMetrics.schedulePerformanceIndex >= 1 && evmMetrics.costPerformanceIndex >= 1 ? "Très bon" : "En surveillance"} />
+              </PDFCol>
+            </PDFRow>
+          </PDFCard>
+        </PDFSection>
+      )}
+
+      {/* Jalons */}
+      {reportConfig.includeSections.milestones && (
+        <PDFSection title="Jalons du Projet" borderColor="#10b981">
+          <PDFTable
+            headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
+            data={[
+              ['Démarrage du Projet', '0%', project.progress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 0 ? '✓' : '⏳'],
+              ['25% d\'Avancement', '25%', project.progress >= 25 ? 'Terminé' : project.progress >= 15 ? 'En cours' : 'En attente', '', project.progress >= 25 ? '✓' : project.progress >= 15 ? '⏳' : '⌛'],
+              ['50% d\'Avancement', '50%', project.progress >= 50 ? 'Terminé' : project.progress >= 40 ? 'En cours' : 'En attente', '', project.progress >= 50 ? '✓' : project.progress >= 40 ? '⏳' : '⌛'],
+              ['75% d\'Avancement', '75%', project.progress >= 75 ? 'Terminé' : project.progress >= 65 ? 'En cours' : 'En attente', '', project.progress >= 75 ? '✓' : project.progress >= 65 ? '⏳' : '⌛'],
+              ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
+            ]}
+            columnWidths={['25%', '15%', '20%', '20%', '20%']}
+          />
+        </PDFSection>
+      )}
+
+      {/* Alertes d'escalade */}
+      {reportConfig.includeSections.escalationAlerts && reportData.escalationAlerts && reportData.escalationAlerts.length > 0 && (
+        <PDFSection title="Alertes d'Escalade" borderColor="#ef4444">
+          <PDFTable
+            headers={['Type', 'Titre', 'Message', 'Date', 'Statut', 'Destinataire']}
+            data={reportData.escalationAlerts.map(alert => [
+              alert.type || '',
+              alert.title || '',
+              alert.message?.substring(0, 50) + (alert.message?.length > 50 ? '...' : '') || '',
+              alert.created_at ? format(new Date(alert.created_at), 'dd/MM/yyyy') : '',
+              alert.read ? 'Lu' : 'Non lu',
+              alert.recipient_id || ''
+            ])}
+            columnWidths={['15%', '20%', '25%', '15%', '15%', '10%']}
           />
         </PDFSection>
       )}
