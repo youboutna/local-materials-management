@@ -16,7 +16,7 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   
   // Debounce search query to allow user to finish typing
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   
   // Extract all unique statuses from projects for filtering
   const availableStatuses = useMemo(() => {
@@ -121,32 +121,11 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setShowSearchResults(false);
   };
   
-  // Function for real-time search as user types
+  // Function for real-time search as user types - only updates search query
   const performSearch = (query: string) => {
     setSearchQuery(query);
-    
-    if (query) {
-      const searchTerm = query.toLowerCase().trim();
-      let results = projects.filter(project => 
-        project.title?.toLowerCase().includes(searchTerm) || 
-        project.description?.toLowerCase().includes(searchTerm) ||
-        project.location?.toLowerCase().includes(searchTerm)
-      );
-
-      // Apply current region filter to search results
-      if (regionFilter !== 'all') {
-        const selectedRegion = MAURITANIA_REGIONS.find(r => r.code === regionFilter);
-        if (selectedRegion) {
-          results = results.filter(project => 
-            project.location?.toLowerCase().includes(selectedRegion.name.toLowerCase()) ||
-            project.location?.toLowerCase().includes(selectedRegion.nameAr.toLowerCase())
-          );
-        }
-      }
-      
-      setSearchResults(results);
-      setShowSearchResults(true);
-    } else {
+    // Don't perform immediate search - let debounced effect handle it
+    if (!query.trim()) {
       clearSearch();
     }
   };
