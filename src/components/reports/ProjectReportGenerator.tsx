@@ -1110,9 +1110,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   );
 }
 
-            <p style="margin: 0; color: #6b7280; font-size: 14px;">
-              Du ${project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} 
-              au ${project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'}
             </p>
           </div>
           
