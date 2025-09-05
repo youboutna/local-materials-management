@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import {
   getPaymentBlockHistory,
   PaymentValidationResult 
 } from '@/services/paymentBlockingService';
+import { detectProjectDelays } from '@/services/bankGuaranteeService';
 import { createPaymentControlAction } from '@/services/paymentControlActionService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -58,6 +59,12 @@ const EnhancedPaymentBlockingInterface = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [stats, setStats] = useState({
+    blockedPayments: 0,
+    expiredInsurances: 0,
+    delayedProjects: 0,
+    missingDocuments: 0
+  });
   const { toast } = useToast();
 
   // Mock blocked payments data for demonstration
@@ -78,6 +85,59 @@ const EnhancedPaymentBlockingInterface = () => {
     data: payments,
     itemsPerPage: 10
   });
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      // Count blocked payments this month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { data: blockedPaymentsCount } = await supabase
+        .from('payment_blocks')
+        .select('id', { count: 'exact' })
+        .is('resolved_at', null)
+        .gte('blocked_at', startOfMonth.toISOString());
+
+      // Count expired insurances
+      const { data: expiredInsurancesData } = await supabase
+        .from('insurance_certificates')
+        .select('contractor_id', { count: 'exact' })
+        .lt('valid_until', new Date().toISOString());
+
+      // Count delayed projects (using threshold from our escalation service)
+      const delayedProjects = await detectProjectDelays();
+      const { data: thresholdData } = await supabase
+        .from('escalation_thresholds')
+        .select('threshold_value')
+        .eq('threshold_type', 'project_delay')
+        .eq('threshold_name', 'bank_notification')
+        .single();
+
+      const threshold = thresholdData?.threshold_value || 20;
+      const criticallyDelayed = delayedProjects.filter(p => p.delayPercentage >= threshold);
+
+      // Count missing documents (payments pending due to missing docs)
+      const { data: missingDocsCount } = await supabase
+        .from('documents')
+        .select('project_id', { count: 'exact' })
+        .eq('status', 'draft')
+        .eq('document_type', 'contract');
+
+      setStats({
+        blockedPayments: blockedPaymentsCount?.length || 0,
+        expiredInsurances: expiredInsurancesData?.length || 0,
+        delayedProjects: criticallyDelayed.length,
+        missingDocuments: missingDocsCount?.length || 0
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -754,7 +814,7 @@ const EnhancedPaymentBlockingInterface = () => {
             <Ban className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">12</div>
+            <div className="text-2xl font-bold text-red-600">{stats.blockedPayments}</div>
             <p className="text-xs text-muted-foreground">Ce mois</p>
           </CardContent>
         </Card>
@@ -765,7 +825,7 @@ const EnhancedPaymentBlockingInterface = () => {
             <Shield className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">5</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.expiredInsurances}</div>
             <p className="text-xs text-muted-foreground">Entrepreneurs concernés</p>
           </CardContent>
         </Card>
@@ -776,7 +836,7 @@ const EnhancedPaymentBlockingInterface = () => {
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">8</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats.delayedProjects}</div>
             <p className="text-xs text-muted-foreground">Retards &gt; 20%</p>
           </CardContent>
         </Card>
@@ -787,7 +847,7 @@ const EnhancedPaymentBlockingInterface = () => {
             <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">3</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.missingDocuments}</div>
             <p className="text-xs text-muted-foreground">Paiements en attente</p>
           </CardContent>
         </Card>
