@@ -5,7 +5,12 @@ import { ProjectManagerContext } from '@/services/ProjectManagerContext';
 export const useProjectManager = () => {
   const context = useContext(ProjectManagerContext);
   if (!context) {
-    throw new Error('useProjectManager must be used within a ProjectManagerProvider');
+    // Return a default implementation when provider is not available
+    return {
+      data: null,
+      runChecks: async () => {},
+      acknowledgeAlert: () => {}
+    };
   }
   return context;
 };
