@@ -744,346 +744,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   }
 
   // Helper functions for analysis sections
-    try {
-      const { data: guarantees } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!guarantees || guarantees.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucune garantie bancaire enregistrée pour ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-          ${generatePaginatedTable(
-            guarantees,
-            [
-              { label: 'Type', render: (g: any) => g.type || 'N/A' },
-              { label: 'Montant', render: (g: any) => g.amount ? `${g.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date d\'émission', render: (g: any) => g.issue_date ? format(new Date(g.issue_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date d\'expiration', render: (g: any) => g.expiry_date ? format(new Date(g.expiry_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (g: any) => g.status || 'N/A' },
-            ],
-            10,
-            'Garanties Bancaires'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching bank guarantees:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des garanties bancaires.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getInsuranceSection = async (projectId: string) => {
-    try {
-      const { data: insurance } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!insurance || insurance.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucune assurance enregistrée pour ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-          ${generatePaginatedTable(
-            insurance,
-            [
-              { label: 'Type', render: (i: any) => i.type || 'N/A' },
-              { label: 'Compagnie', render: (i: any) => i.company || 'N/A' },
-              { label: 'Montant couvert', render: (i: any) => i.coverage_amount ? `${i.coverage_amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date de début', render: (i: any) => i.start_date ? format(new Date(i.start_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date de fin', render: (i: any) => i.end_date ? format(new Date(i.end_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (i: any) => i.status || 'N/A' },
-            ],
-            10,
-            'Assurances'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching insurance:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des assurances.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getPaymentBlocksSection = async (projectId: string) => {
-    try {
-      const { data: blocks } = await supabase
-        .from('payment_blocks')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!blocks || blocks.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun blocage de paiement enregistré pour ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-          ${generatePaginatedTable(
-            blocks,
-            [
-              { label: 'Raison', render: (b: any) => b.reason || 'N/A' },
-              { label: 'Montant bloqué', render: (b: any) => b.amount ? `${b.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date de blocage', render: (b: any) => b.blocked_date ? format(new Date(b.blocked_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (b: any) => b.status || 'N/A' },
-              { label: 'Description', render: (b: any) => b.description || 'N/A' },
-            ],
-            10,
-            'Blocages de Paiements'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching payment blocks:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des blocages de paiements.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getSuppliersSection = async (projectId: string) => {
-    try {
-      const { data: suppliers } = await supabase
-        .from('project_suppliers')
-        .select('*, suppliers(*)')
-        .eq('project_id', projectId);
-
-      if (!suppliers || suppliers.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-            <div style="background: #faf5ff; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun fournisseur associé à ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-          ${generatePaginatedTable(
-            suppliers,
-            [
-              { label: 'Nom', render: (s: any) => s.suppliers?.name || s.name || 'N/A' },
-              { label: 'Contact', render: (s: any) => s.suppliers?.contact_person || s.contact || 'N/A' },
-              { label: 'Téléphone', render: (s: any) => s.suppliers?.phone || s.phone || 'N/A' },
-              { label: 'Email', render: (s: any) => s.suppliers?.email || s.email || 'N/A' },
-              { label: 'Statut', render: (s: any) => s.status || 'Actif' },
-            ],
-            10,
-            'Fournisseurs'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des fournisseurs.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getDocumentsSection = async (projectId: string) => {
-    try {
-      const { data: documents } = await supabase
-        .from('project_documents')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!documents || documents.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun document associé à ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-          ${generatePaginatedTable(
-            documents,
-            [
-              { label: 'Nom', render: (d: any) => d.name || d.title || 'N/A' },
-              { label: 'Type', render: (d: any) => d.type || 'N/A' },
-              { label: 'Taille', render: (d: any) => d.size ? `${(d.size / 1024 / 1024).toFixed(2)} MB` : 'N/A' },
-              { label: 'Date d\'ajout', render: (d: any) => d.created_at ? format(new Date(d.created_at), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (d: any) => d.status || 'Actif' },
-            ],
-            10,
-            'Documents'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des documents.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getEmployeesSection = async (projectId: string) => {
-    try {
-      const { data: employees } = await supabase
-        .from('phase_employees')
-        .select(`
-          *,
-          project_phases!inner(project_id),
-          employees(*)
-        `)
-        .eq('project_phases.project_id', projectId);
-
-      if (!employees || employees.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun employé assigné à ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-          ${generatePaginatedTable(
-            employees,
-            [
-              { label: 'Nom', render: (e: any) => e.employees?.name || e.name || 'N/A' },
-              { label: 'Rôle', render: (e: any) => e.role || e.employees?.role || 'N/A' },
-              { label: 'Taux journalier', render: (e: any) => e.daily_rate ? `${e.daily_rate.toLocaleString('fr-FR')} MRU/jour` : 'N/A' },
-              { label: 'Date début', render: (e: any) => e.start_date ? format(new Date(e.start_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date fin', render: (e: any) => e.end_date ? format(new Date(e.end_date), 'dd/MM/yyyy') : 'N/A' },
-            ],
-            15,
-            'Employés'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des employés.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getEscalationAlertsSection = async (projectId: string) => {
-    try {
-      const { data: alerts } = await supabase
-        .from('escalation_alerts')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!alerts || alerts.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
-            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucune alerte d'escalade enregistrée pour ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
-          ${generatePaginatedTable(
-            alerts,
-            [
-              { label: 'Type', render: (a: any) => a.type || 'N/A' },
-              { label: 'Message', render: (a: any) => a.message || 'N/A' },
-              { label: 'Niveau', render: (a: any) => a.level || 'N/A' },
-              { label: 'Date', render: (a: any) => a.created_at ? format(new Date(a.created_at), 'dd/MM/yyyy HH:mm') : 'N/A' },
-              { label: 'Statut', render: (a: any) => a.status || 'Actif' },
-            ],
-            10,
-            'Alertes d\'Escalade'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching escalation alerts:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Alertes d'Escalade</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des alertes d'escalade.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
   const getEVMAnalysisSection = (project: ProjectData, actualCost: number, estimatedCost: number) => {
     const budget = project.budget || 0;
     const progress = project.progress || 0;
@@ -1294,306 +954,161 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     `;
   };
 
-  // Helper functions for fetching data sections
-  const getBankGuaranteesSection = async (projectId: string) => {
-    try {
-      const { data: guarantees } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!guarantees || guarantees.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucune garantie bancaire enregistrée pour ce projet.</p>
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Génération de Rapport - {project.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Report Configuration */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="reportTitle">Titre du rapport</Label>
+              <Input
+                id="reportTitle"
+                value={reportConfig.title}
+                onChange={(e) => setReportConfig(prev => ({ ...prev, title: e.target.value }))}
+              />
             </div>
-          </section>
-        `;
-      }
 
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-          ${generatePaginatedTable(
-            guarantees,
-            [
-              { label: 'Type', render: (g: any) => g.type || 'N/A' },
-              { label: 'Montant', render: (g: any) => g.amount ? `${g.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date d\'émission', render: (g: any) => g.issue_date ? format(new Date(g.issue_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date d\'expiration', render: (g: any) => g.expiry_date ? format(new Date(g.expiry_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (g: any) => g.status || 'N/A' },
-            ],
-            10,
-            'Garanties Bancaires'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching bank guarantees:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Garanties Bancaires</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des garanties bancaires.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getInsuranceSection = async (projectId: string) => {
-    try {
-      const { data: insurance } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!insurance || insurance.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucune assurance enregistrée pour ce projet.</p>
+            <div>
+              <Label htmlFor="reportType">Type de rapport</Label>
+              <Select
+                value={reportConfig.reportType}
+                onValueChange={(value: 'summary' | 'detailed' | 'financial' | 'project_manager') => 
+                  setReportConfig(prev => ({ ...prev, reportType: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="summary">Résumé</SelectItem>
+                  <SelectItem value="detailed">Détaillé</SelectItem>
+                  <SelectItem value="financial">Financier</SelectItem>
+                  <SelectItem value="project_manager">Gestionnaire de Projet</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </section>
-        `;
-      }
 
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-          ${generatePaginatedTable(
-            insurance,
-            [
-              { label: 'Type', render: (i: any) => i.type || 'N/A' },
-              { label: 'Compagnie', render: (i: any) => i.company || 'N/A' },
-              { label: 'Montant couvert', render: (i: any) => i.coverage_amount ? `${i.coverage_amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date de début', render: (i: any) => i.start_date ? format(new Date(i.start_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date de fin', render: (i: any) => i.end_date ? format(new Date(i.end_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (i: any) => i.status || 'N/A' },
-            ],
-            10,
-            'Assurances'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching insurance:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Assurances</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des assurances.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getPaymentBlocksSection = async (projectId: string) => {
-    try {
-      const { data: blocks } = await supabase
-        .from('payment_blocks')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (!blocks || blocks.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-            <div style="background: #fffbeb; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun blocage de paiement enregistré pour ce projet.</p>
+            <div>
+              <Label htmlFor="recipientEmail">Email destinataire (optionnel)</Label>
+              <Input
+                id="recipientEmail"
+                type="email"
+                value={reportConfig.recipientEmail}
+                onChange={(e) => setReportConfig(prev => ({ ...prev, recipientEmail: e.target.value }))}
+                placeholder="email@example.com"
+              />
             </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-          ${generatePaginatedTable(
-            blocks,
-            [
-              { label: 'Raison', render: (b: any) => b.reason || 'N/A' },
-              { label: 'Montant bloqué', render: (b: any) => b.amount ? `${b.amount.toLocaleString('fr-FR')} MRU` : 'N/A' },
-              { label: 'Date de blocage', render: (b: any) => b.blocked_date ? format(new Date(b.blocked_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (b: any) => b.status || 'N/A' },
-              { label: 'Description', render: (b: any) => b.description || 'N/A' },
-            ],
-            10,
-            'Blocages de Paiements'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching payment blocks:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Blocages de Paiements</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des blocages de paiements.</p>
           </div>
-        </section>
-      `;
-    }
-  };
 
-  const getSuppliersSection = async (projectId: string) => {
-    try {
-      const { data: suppliers } = await supabase
-        .from('project_suppliers')
-        .select('*, suppliers(*)')
-        .eq('project_id', projectId);
-
-      if (!suppliers || suppliers.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-            <div style="background: #faf5ff; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun fournisseur associé à ce projet.</p>
+          <div className="space-y-4">
+            <Label>Sections à inclure</Label>
+            <div className="space-y-2">
+              {Object.entries(reportConfig.includeSections).map(([key, value]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={key}
+                    checked={value}
+                    onChange={(e) => setReportConfig(prev => ({
+                      ...prev,
+                      includeSections: {
+                        ...prev.includeSections,
+                        [key]: e.target.checked
+                      }
+                    }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor={key} className="text-sm">
+                    {key === 'overview' && 'Aperçu général'}
+                    {key === 'financial' && 'Résumé financier'}
+                    {key === 'timeline' && 'Calendrier'}
+                    {key === 'materials' && 'Matériaux'}
+                    {key === 'phases' && 'Phases'}
+                    {key === 'inspections' && 'Inspections'}
+                    {key === 'risks' && 'Analyse des risques'}
+                    {key === 'kpi' && 'Indicateurs de Performance (KPI)'}
+                    {key === 'milestones' && 'Jalons'}
+                    {key === 'bankGuarantees' && 'Garanties bancaires'}
+                    {key === 'insurance' && 'Assurances'}
+                    {key === 'paymentBlocks' && 'Blocages de paiements'}
+                    {key === 'suppliers' && 'Fournisseurs'}
+                    {key === 'documents' && 'Documents'}
+                    {key === 'employees' && 'Employés'}
+                    {key === 'escalationAlerts' && 'Alertes d\'escalade'}
+                    {key === 'evmAnalysis' && 'Analyse EVM'}
+                    {key === 'pertAnalysis' && 'Analyse PERT'}
+                    {key === 'ganttChart' && 'Diagramme de Gantt'}
+                  </Label>
+                </div>
+              ))}
             </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-          ${generatePaginatedTable(
-            suppliers,
-            [
-              { label: 'Nom', render: (s: any) => s.suppliers?.name || s.name || 'N/A' },
-              { label: 'Contact', render: (s: any) => s.suppliers?.contact_person || s.contact || 'N/A' },
-              { label: 'Téléphone', render: (s: any) => s.suppliers?.phone || s.phone || 'N/A' },
-              { label: 'Email', render: (s: any) => s.suppliers?.email || s.email || 'N/A' },
-              { label: 'Statut', render: (s: any) => s.status || 'Actif' },
-            ],
-            10,
-            'Fournisseurs'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching suppliers:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Fournisseurs</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des fournisseurs.</p>
           </div>
-        </section>
-      `;
-    }
-  };
+        </div>
 
-  const getDocumentsSection = async (projectId: string) => {
-    try {
-      const { data: documents } = await supabase
-        .from('project_documents')
-        .select('*')
-        .eq('project_id', projectId);
+        <div>
+          <Label htmlFor="notes">Notes additionnelles</Label>
+          <Textarea
+            id="notes"
+            value={reportConfig.notes}
+            onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
+            placeholder="Ajoutez des notes ou commentaires pour ce rapport..."
+            rows={3}
+          />
+        </div>
 
-      if (!documents || documents.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-            <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun document associé à ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
+        {/* Project Status Badge */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Statut actuel:</span>
+          <Badge variant="secondary" className={getStatusColor(project.status)}>
+            {project.status}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            Progression: {project.progress}%
+          </span>
+        </div>
 
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-          ${generatePaginatedTable(
-            documents,
-            [
-              { label: 'Nom', render: (d: any) => d.name || d.title || 'N/A' },
-              { label: 'Type', render: (d: any) => d.type || 'N/A' },
-              { label: 'Taille', render: (d: any) => d.size ? `${(d.size / 1024 / 1024).toFixed(2)} MB` : 'N/A' },
-              { label: 'Date d\'ajout', render: (d: any) => d.created_at ? format(new Date(d.created_at), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Statut', render: (d: any) => d.status || 'Actif' },
-            ],
-            10,
-            'Documents'
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4 border-t">
+          <Button onClick={handleDownload} disabled={loading} className="flex-1">
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Télécharger PDF
+          </Button>
+          
+          <Button 
+            onClick={handleSendEmail} 
+            disabled={loading || !reportConfig.recipientEmail}
+            variant="outline"
+            className="flex-1"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4 mr-2" />
+            )}
+            Envoyer par Email
+          </Button>
+          
+          {onClose && (
+            <Button onClick={onClose} variant="ghost">
+              Fermer
+            </Button>
           )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #ef4444; padding-left: 15px;">Documents</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des documents.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getEmployeesSection = async (projectId: string) => {
-    try {
-      const { data: employees } = await supabase
-        .from('phase_employees')
-        .select(`
-          *,
-          project_phases!inner(project_id),
-          employees(*)
-        `)
-        .eq('project_phases.project_id', projectId);
-
-      if (!employees || employees.length === 0) {
-        return `
-          <section style="margin-bottom: 30px; page-break-inside: avoid;">
-            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; text-align: center; color: #6b7280;">
-              <p>Aucun employé assigné à ce projet.</p>
-            </div>
-          </section>
-        `;
-      }
-
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-          ${generatePaginatedTable(
-            employees,
-            [
-              { label: 'Nom', render: (e: any) => e.employees?.name || e.name || 'N/A' },
-              { label: 'Rôle', render: (e: any) => e.role || e.employees?.role || 'N/A' },
-              { label: 'Taux journalier', render: (e: any) => e.daily_rate ? `${e.daily_rate.toLocaleString('fr-FR')} MRU/jour` : 'N/A' },
-              { label: 'Date début', render: (e: any) => e.start_date ? format(new Date(e.start_date), 'dd/MM/yyyy') : 'N/A' },
-              { label: 'Date fin', render: (e: any) => e.end_date ? format(new Date(e.end_date), 'dd/MM/yyyy') : 'N/A' },
-            ],
-            15,
-            'Employés'
-          )}
-        </section>
-      `;
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      return `
-        <section style="margin-bottom: 30px; page-break-inside: avoid;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #06b6d4; padding-left: 15px;">Employés</h2>
-          <div style="background: #fef2f2; padding: 20px; border-radius: 8px; text-align: center; color: #dc2626;">
-            <p>Erreur lors du chargement des employés.</p>
-          </div>
-        </section>
-      `;
-    }
-  };
-
-  const getEscalationAlertsSection = async (projectId: string) => {
-    try {
-      const { data: alerts } = await supabase
-        .from('escalation_alerts')
-        .select('*')
-        .eq('project_id', projectId);
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
       if (!alerts || alerts.length === 0) {
         return `
