@@ -180,7 +180,7 @@ const Projects: React.FC = () => {
           <TabsContent value="grid" className="space-y-6">
             <ProjectFilters 
               searchQuery={searchQuery}
-              onSearchChange={performSearch}
+              onSearchChange={setSearchQuery}
               statusFilter={statusFilter}
               onStatusChange={setStatusFilter}
               regionFilter={regionFilter}

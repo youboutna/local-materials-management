@@ -121,13 +121,10 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setShowSearchResults(false);
   };
   
-  // Function for real-time search as user types - only updates search query
+  // Function for real-time search as user types - only updates search query with debouncing
   const performSearch = (query: string) => {
-    setSearchQuery(query);
-    // Don't perform immediate search - let debounced effect handle it
-    if (!query.trim()) {
-      clearSearch();
-    }
+    // Don't update state immediately - let ResponsiveFilters handle debouncing
+    // This function is now just a placeholder for API compatibility
   };
 
   return {

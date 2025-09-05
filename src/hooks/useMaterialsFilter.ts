@@ -143,13 +143,13 @@ export const useMaterialsFilter = (materials: Material[]) => {
     setSelectedStockLevel("all");
   };
   
-  // Functions for real-time search - only updates search query
+  // Functions for real-time search - only used for API compatibility
   const performSearch = (query: string) => {
-    setSearchTerm(query);
+    // Don't update state immediately - let ResponsiveFilters handle debouncing
   };
   
   const performInteractiveSearch = (query: string) => {
-    setInteractiveSearchTerm(query);
+    // Don't update state immediately - let ResponsiveFilters handle debouncing
   };
 
   return {

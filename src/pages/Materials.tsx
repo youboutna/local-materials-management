@@ -46,10 +46,12 @@ const Materials: React.FC = () => {
   // Use the custom hook for filtering with debouncing
   const {
     searchTerm,
+    setSearchTerm,
     selectedCategory,
     selectedLocalType,
     filteredMaterials,
     interactiveSearchTerm,
+    setInteractiveSearchTerm,
     selectedInteractiveCategory,
     selectedRegion,
     selectedStockLevel,
@@ -225,7 +227,7 @@ const Materials: React.FC = () => {
           selectedStockLevel={selectedStockLevel}
           categories={categories}
           regions={regions}
-          onSearchChange={performInteractiveSearch}
+          onSearchChange={setInteractiveSearchTerm}
           onCategoryChange={setSelectedInteractiveCategory}
           onRegionChange={setSelectedRegion}
           onStockLevelChange={setSelectedStockLevel}
@@ -302,7 +304,7 @@ const Materials: React.FC = () => {
               selectedLocalType={selectedLocalType}
               categories={categories}
               localTypes={localTypes}
-              onSearchChange={performSearch}
+              onSearchChange={setSearchTerm}
               onCategoryChange={setSelectedCategory}
               onLocalTypeChange={setSelectedLocalType}
               onReset={handleResetFilters}
