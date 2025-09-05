@@ -64,7 +64,7 @@ const MainNavbar = () => {
     <header className="bg-adrar-700 text-white py-4 fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link to="/" className="text-xl font-bold">
-          Construction ERP
+         HadraTech-GPI
           {DEV_MODE && (
             <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded">
               DEV

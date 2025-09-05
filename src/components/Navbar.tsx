@@ -95,7 +95,7 @@ const Navbar = () => {
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <span className="text-lg sm:text-xl font-bold text-adrar-900 font-serif hidden sm:block">
-              Construct
+             HadraTech-GPI
             </span>
           </Link>
 

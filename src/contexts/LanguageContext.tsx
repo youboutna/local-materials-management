@@ -622,7 +622,7 @@ export const translations = {
 
         footer: {
             about: "À propos",
-            about_desc: "Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
+            about_desc: "Notre système de gestion ,HadraTech-GPI, ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
             rights: "Tous droits réservés",
             by_hadratech: "Développé par HadraTech",
             quick_links: "Liens rapides",

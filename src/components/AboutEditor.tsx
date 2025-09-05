@@ -14,7 +14,7 @@ const AboutEditor = () => {
   const { t } = useLanguage(); // Add translation hook
   const [isEditing, setIsEditing] = useState(false);
   const [aboutContent, setAboutContent] = useState(`
-Notre système de gestion de construction ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction. 
+Notre système de gestion de construction/Infrastructure  ERP,HadraTech-GPI , est conçu pour simplifier et optimiser tous les aspects de vos projets de construction. 
 
 Avec une interface intuitive et des fonctionnalités avancées, nous vous aidons à :
 • Gérer efficacement vos projets de A à Z
