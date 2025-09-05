@@ -212,16 +212,17 @@ const ProjectDetail = () => {
       const inspections: Inspection[] =
         inspectionsData?.map((inspection) => ({
           id: inspection.id,
+          project_id: inspection.project_id || projectId,
           date: inspection.date,
-          status: inspection.status as InspectionStatus,
+          status: inspection.status as any,
           inspector: inspection.inspector,
           progress_at_inspection: inspection.progress_at_inspection,
           comments: inspection.comments,
-          documents: inspection.documents
-            ? Array.isArray(inspection.documents)
-              ? inspection.documents
-              : []
-            : undefined,
+          created_at: inspection.created_at || new Date().toISOString(),
+          updated_at: inspection.updated_at || new Date().toISOString(),
+          documents: inspection.documents 
+            ? (inspection.documents as any[]).filter(d => d !== null).map(d => String(d))
+            : [],
         })) || [];
 
       // Combine data with real calculated values
@@ -890,10 +891,7 @@ const ProjectDetail = () => {
               <TabsContent value="phases">
                 <div className="space-y-6">
                   {/* Waterfall KPIs */}
-                  <WaterfallProjectKPIs
-                    projectTitle={project?.title || "Projet"}
-                    projectBudget={project?.budget}
-                  />
+                  <WaterfallProjectKPIs />
                   
                   {/* Gantt Chart */}
                   <WaterfallGanttChart 

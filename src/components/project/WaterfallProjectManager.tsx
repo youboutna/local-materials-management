@@ -307,7 +307,7 @@ const WaterfallProjectManager = () => {
         </div>
 
         {/* Wrap the tabs with ProjectManagerProvider */}
-        <ProjectManagerProvider project={selectedProject} roles={defaultRoles}>
+        <ProjectManagerProvider project={selectedProject} roles={defaultRoles} actionLabels={actionLabels}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="gantt" className="flex items-center gap-2">
@@ -353,13 +353,7 @@ const WaterfallProjectManager = () => {
                   <p className="text-red-600">Impossible de charger les indicateurs de performance.</p>
                 </div>
               }>
-                <WaterfallProjectKPIs
-                  projectData={selectedProject}
-                  roles={defaultRoles}
-                  actions={actionLabels}
-                  projectTitle={selectedProject.title}
-                  projectBudget={selectedProject.budget}
-                />
+                <WaterfallProjectKPIs />
               </ErrorBoundary>
             </TabsContent>
           </Tabs>

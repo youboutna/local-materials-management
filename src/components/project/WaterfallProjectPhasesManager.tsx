@@ -532,10 +532,7 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
-            <WaterfallProjectKPIs
-              projectTitle={selectedProject.title}
-              projectBudget={selectedProject.budget}
-            />
+            <WaterfallProjectKPIs />
           </TabsContent>
         </Tabs>
       </div>

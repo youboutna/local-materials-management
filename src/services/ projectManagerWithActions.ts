@@ -25,6 +25,9 @@ const isDateInPast = (date: string) => new Date(date) < new Date();
  * Classe de gestion du projet avec actions injectables
  * ---------------------------
  */
+// Export types for use in other modules
+export type { Alert, EVMData, GanttChartData, PERTAnalysis } from "@/types/project";
+
 export class ProjectManager {
   private lastChecks: {
     insurance: Date;

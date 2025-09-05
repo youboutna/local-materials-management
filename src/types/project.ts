@@ -76,7 +76,7 @@ export interface Inspection {
   project_id: string;
   inspector: string;
   date: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
   progress_at_inspection: number;
   comments?: string | null;
   created_at: string;
@@ -324,7 +324,7 @@ export interface Payment {
 
 export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';
 
-export interface Inspection {
+export interface InspectionData {
   id: string;
   date: string;
   status: InspectionStatus;

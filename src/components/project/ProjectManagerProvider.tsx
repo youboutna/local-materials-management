@@ -5,8 +5,7 @@ import {
   ProjectManager,
 }  from "@/services/ projectManagerWithActions"
 import { ProjectManagerState,ProjectManagerContext } from "@/services/ProjectManagerContext";
-import { EscalationRoles, ActionLabels } from "@/types/project";
-import { ProjectData } from "../ProjectCard";
+import { EscalationRoles, ActionLabels, ProjectData } from "@/types/project";
 
 export const ProjectManagerProvider: React.FC<{
   project: ProjectData;

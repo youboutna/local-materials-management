@@ -5,7 +5,7 @@ import {
   EVMData,
   GanttChartData,
   PERTAnalysis,
-} from "@/services/ projectManagerWithActions"
+} from "@/types/project"
 
 export interface ProjectManagerState {
   alerts: Alert[];
