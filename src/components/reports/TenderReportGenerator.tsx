@@ -10,13 +10,13 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { FileText, Download, Mail, Loader2, PenTool, CheckCircle, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { TenderReportingService, TenderReportData } from '@/services/tenderReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
+import { TenderPDFDocument } from './pdf/TenderPDFDocument';
 
 interface TenderReportGeneratorProps {
   tender: any; // Tender type from your system
@@ -231,47 +231,19 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
   const generatePDF = async () => {
     setLoading(true);
     try {
-      const reportHTML = generateTenderReportContent();
+      // Create PDF document using @react-pdf/renderer
+      const pdfDocument = (
+        <TenderPDFDocument
+          tender={tender}
+          reportConfig={reportConfig}
+        />
+      );
+
+      // Generate PDF blob
+      const blob = await pdf(pdfDocument).toBlob();
       
-      // Create a temporary div
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = reportHTML;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-10000px';
-      document.body.appendChild(tempDiv);
-
-      // Generate canvas from HTML
-      const canvas = await html2canvas(tempDiv.querySelector('#tender-report-content') as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-      });
-
-      // Clean up
-      document.body.removeChild(tempDiv);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
       const fileName = `rapport-tender-${(tender.reference || tender.title || 'tender').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      return { pdf, fileName };
+      return { blob, fileName };
     } finally {
       setLoading(false);
     }
@@ -279,8 +251,17 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
 
   const handleDownload = async () => {
     try {
-      const { pdf, fileName } = await generatePDF();
-      pdf.save(fileName);
+      const { blob, fileName } = await generatePDF();
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Rapport téléchargé",
@@ -308,8 +289,7 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
 
     setLoading(true);
     try {
-      const { pdf, fileName } = await generatePDF();
-      const pdfBlob = pdf.output('blob');
+      const { blob, fileName } = await generatePDF();
 
       // Call edge function to send email with PDF attachment
       const { error } = await supabase.functions.invoke('send-tender-report', {
@@ -317,7 +297,7 @@ export function TenderReportGenerator({ tender, onClose }: TenderReportGenerator
           to: reportConfig.recipientEmail,
           tenderTitle: tender.title || tender.reference,
           reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await pdfBlob.arrayBuffer())),
+          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
           fileName,
         },
       });

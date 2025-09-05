@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { FileDown, Mail, PenTool, Upload, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { DevisPDFDocument } from './pdf/DevisPDFDocument';
 
 interface EstimateItem {
   id?: string;
@@ -394,48 +394,21 @@ export function QuantitativeEstimateExporter({
   const generatePDF = async () => {
     setLoading(true);
     try {
-      const estimateHTML = generateEstimateContent();
-      
-      // Create temporary div
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = estimateHTML;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-10000px';
-      document.body.appendChild(tempDiv);
+      // Create PDF document using @react-pdf/renderer
+      const pdfDocument = (
+        <DevisPDFDocument
+          estimate={estimate}
+          estimateItems={estimateItems}
+          tender={tender}
+          config={exportConfig}
+          company={company}
+        />
+      );
 
-      // Generate canvas from HTML
-      const canvas = await html2canvas(tempDiv.querySelector('#estimate-content') as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      });
-
-      // Clean up
-      document.body.removeChild(tempDiv);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
+      // Generate PDF blob
+      const blob = await pdf(pdfDocument).toBlob();
       const fileName = `devis-quantitatif-${(tender?.reference || tender?.title || 'estimate').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      return { pdf, fileName };
+      return { blob, fileName };
     } finally {
       setLoading(false);
     }
@@ -443,8 +416,17 @@ export function QuantitativeEstimateExporter({
 
   const handleDownload = async () => {
     try {
-      const { pdf, fileName } = await generatePDF();
-      pdf.save(fileName);
+      const { blob, fileName } = await generatePDF();
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Devis téléchargé",
@@ -472,8 +454,7 @@ export function QuantitativeEstimateExporter({
 
     setLoading(true);
     try {
-      const { pdf, fileName } = await generatePDF();
-      const pdfBlob = pdf.output('blob');
+      const { blob, fileName } = await generatePDF();
 
       // Save estimate as submitted if sending by email
       if (estimate.id) {
@@ -489,7 +470,7 @@ export function QuantitativeEstimateExporter({
           to: exportConfig.recipientEmail,
           tenderTitle: tender?.title || tender?.reference || 'Appel d\'Offres',
           reportTitle: exportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await pdfBlob.arrayBuffer())),
+          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
           fileName,
         },
       });

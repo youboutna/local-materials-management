@@ -9,13 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { DollarSign, Download, Mail, Loader2, CreditCard, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { SupplierPaymentReportingService, SupplierPaymentReportData } from '@/services/supplierPaymentReportingService';
 import { ReportFormatting } from '@/utils/reportFormatting';
+import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: any; // Supplier type from your system
@@ -190,47 +190,21 @@ export function SupplierPaymentReportGenerator({
   const generatePDF = async () => {
     setLoading(true);
     try {
-      const reportHTML = generatePaymentReportContent();
+      // Create PDF document using @react-pdf/renderer
+      const pdfDocument = (
+        <SupplierPaymentPDFDocument
+          supplier={supplier}
+          payments={payments}
+          dateRange={dateRange}
+          reportConfig={reportConfig}
+        />
+      );
+
+      // Generate PDF blob
+      const blob = await pdf(pdfDocument).toBlob();
       
-      // Create a temporary div
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = reportHTML;
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-10000px';
-      document.body.appendChild(tempDiv);
-
-      // Generate canvas from HTML
-      const canvas = await html2canvas(tempDiv.querySelector('#payment-report-content') as HTMLElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-      });
-
-      // Clean up
-      document.body.removeChild(tempDiv);
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
       const fileName = `rapport-paiements-${supplier.name?.replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      return { pdf, fileName };
+      return { blob, fileName };
     } finally {
       setLoading(false);
     }
@@ -238,8 +212,17 @@ export function SupplierPaymentReportGenerator({
 
   const handleDownload = async () => {
     try {
-      const { pdf, fileName } = await generatePDF();
-      pdf.save(fileName);
+      const { blob, fileName } = await generatePDF();
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Rapport téléchargé",
@@ -267,8 +250,7 @@ export function SupplierPaymentReportGenerator({
 
     setLoading(true);
     try {
-      const { pdf, fileName } = await generatePDF();
-      const pdfBlob = pdf.output('blob');
+      const { blob, fileName } = await generatePDF();
 
       // Call edge function to send email (you would need to create this)
       const { error } = await supabase.functions.invoke('send-payment-report', {
@@ -276,7 +258,7 @@ export function SupplierPaymentReportGenerator({
           to: reportConfig.recipientEmail,
           supplierName: supplier.name,
           reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await pdfBlob.arrayBuffer())),
+          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
           fileName,
         },
       });
