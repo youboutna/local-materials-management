@@ -220,22 +220,90 @@ const ProjectDetail = () => {
           comments: inspection.comments,
           created_at: inspection.created_at || new Date().toISOString(),
           updated_at: inspection.updated_at || new Date().toISOString(),
-          documents: inspection.documents 
-            ? (inspection.documents as any[]).filter(d => d !== null).map(d => String(d))
+          documents: Array.isArray(inspection.documents) 
+            ? inspection.documents.filter(d => d !== null).map(d => String(d))
             : [],
         })) || [];
+
+      // Fetch documents for the project
+      const { data: documentsData, error: documentsError } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (documentsError) {
+        console.error("Error fetching documents:", documentsError);
+      }
+
+      // Create mock tasks based on example project structure
+      const tasks = [
+        {
+          id: `task-${projectId}-1`,
+          name: "Préparation du site",
+          description: "Préparation et nettoyage du site de construction",
+          phaseId: "phase-001",
+          dependencies: [],
+          assignedTo: [],
+          estimatedDuration: 30,
+          actualDuration: 0,
+          startDate: projectData.startDate || "",
+          endDate: "",
+          status: "not_started" as const,
+          progress: 0,
+          weight: 0.2,
+          costEstimate: 100000,
+          actualCost: 0
+        }
+      ];
+
+      // Fetch resources (employees and equipment)
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from("employees")
+        .select("*")
+        .limit(10);
+
+      if (resourcesError) {
+        console.error("Error fetching resources:", resourcesError);
+      }
+
+      // Transform resources to match interface
+      const resources = resourcesData?.map(resource => ({
+        id: resource.id,
+        name: resource.full_name || "",
+        type: 'human' as const,
+        skills: resource.skills || [],
+        costPerHour: resource.salary ? Number(resource.salary) / 160 : 0, // Assuming 160 hours/month
+        availability: 100,
+        assignedTasks: []
+      })) || [];
 
       // Combine data with real calculated values
       const projectWithDetails: ProjectWithPayments = {
         ...projectData,
         progress: realProgress, // Use calculated progress from phases
         teamSize: realTeamSize, // Use calculated team size
+        // ProjectWithPayments specific fields
         payments: payments,
         inspections: inspections,
         phases: phasesData || [],
         milestones: milestonesData || [],
         materials: materialsData || [],
         team: teamData || [],
+        // Ensure ProjectData fields are properly initialized
+        tasks: tasks,
+        resources: resources,
+        risks: [],
+        contacts: [],
+        insurancePolicies: [],
+        alerts: [],
+        constructionMilestones: [],
+        escalationThresholds: {
+          alert: 10,
+          notification: 20,
+          guarantee: 30,
+          legal: 40
+        },
+        checkScheduleLastRun: {}
       };
 
       console.log("Project with details loaded:", projectWithDetails);
