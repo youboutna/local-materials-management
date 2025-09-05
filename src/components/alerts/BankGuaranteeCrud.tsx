@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
@@ -138,22 +139,52 @@ const BankGuaranteeCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedGuarantee) {
-        // Mock update
+        // Update guarantee in database
+        const { error } = await supabase
+          .from('bank_guarantees')
+          .update({
+            bank_name: formData.bank_name,
+            guarantee_type: formData.guarantee_type,
+            guarantee_amount: formData.guarantee_amount,
+            issue_date: formData.issue_date,
+            expiry_date: formData.expiry_date,
+            status: formData.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedGuarantee.id);
+
+        if (error) throw error;
+
+        // Update local state
         const updatedGuarantee = { ...selectedGuarantee, ...formData };
         setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
+        
         toast({
           title: "Succès",
           description: "Garantie bancaire mise à jour avec succès",
         });
       } else {
-        // Mock create
-        const newGuarantee: BankGuarantee = {
-          id: `bg-${Date.now()}`,
-          ...formData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setGuarantees(prev => [...prev, newGuarantee]);
+        // Create new guarantee in database
+        const { data, error } = await supabase
+          .from('bank_guarantees')
+          .insert({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id,
+            bank_name: formData.bank_name,
+            guarantee_type: formData.guarantee_type,
+            guarantee_amount: formData.guarantee_amount,
+            issue_date: formData.issue_date,
+            expiry_date: formData.expiry_date,
+            status: formData.status || 'active'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Add to local state
+        setGuarantees(prev => [...prev, data]);
+        
         toast({
           title: "Succès",
           description: "Garantie bancaire créée avec succès",

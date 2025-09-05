@@ -404,19 +404,38 @@ const PaymentCrud: React.FC = () => {
   };
 
   const validatePayment = async () => {
-    // Mock payment validation - simulate checking against bank guarantees, insurance, etc.
-    const mockBlocked = Math.random() > 0.7; // 30% chance of being blocked
-    setPaymentBlocked(mockBlocked);
-    
-    if (mockBlocked) {
-      toast({
-        title: "Paiement bloqué",
-        description: "Ce paiement est bloqué en raison de problèmes de conformité (assurance expirée, garanties manquantes, etc.)",
-        variant: "destructive",
-      });
-      return false;
+    try {
+      // Real payment validation - check against bank guarantees, insurance, etc.
+      const { data: paymentBlocks, error } = await supabase
+        .from('payment_blocks')
+        .select('*')
+        .eq('project_id', formData.project_id)
+        .eq('contractor_id', formData.contractor_id)
+        .is('resolved_at', null);
+
+      if (error) {
+        console.error('Error checking payment blocks:', error);
+        setPaymentBlocked(false);
+        return;
+      }
+
+      const isBlocked = paymentBlocks && paymentBlocks.length > 0;
+      setPaymentBlocked(isBlocked);
+      
+      if (isBlocked) {
+        toast({
+          title: "Paiement bloqué",
+          description: "Ce paiement est bloqué en raison de problèmes de conformité (assurance expirée, garanties manquantes, etc.)",
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error validating payment:', error);
+      setPaymentBlocked(false);
+      return true;
     }
-    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

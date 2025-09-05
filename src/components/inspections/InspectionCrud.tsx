@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 
 interface Inspection {
@@ -120,7 +121,23 @@ const InspectionCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedInspection) {
-        // Mock update
+        // Update inspection in database
+        const { error } = await supabase
+          .from('inspections')
+          .update({
+            project_id: formData.project_id,
+            inspector: formData.inspector,
+            date: new Date(formData.date).toISOString(),
+            status: formData.status,
+            progress_at_inspection: formData.progress_at_inspection,
+            comments: formData.comments,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedInspection.id);
+
+        if (error) throw error;
+
+        // Update local state
         const updatedInspection = { 
           ...selectedInspection, 
           ...formData,
@@ -128,20 +145,31 @@ const InspectionCrud: React.FC = () => {
           updated_at: new Date().toISOString()
         };
         setInspections(prev => prev.map(i => i.id === selectedInspection.id ? updatedInspection : i));
+        
         toast({
           title: "Succès",
           description: "Inspection mise à jour avec succès",
         });
       } else {
-        // Mock create
-        const newInspection: Inspection = {
-          id: `insp-${Date.now()}`,
-          ...formData,
-          date: new Date(formData.date).toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setInspections(prev => [...prev, newInspection]);
+        // Create new inspection in database
+        const { data, error } = await supabase
+          .from('inspections')
+          .insert({
+            project_id: formData.project_id,
+            inspector: formData.inspector,
+            date: new Date(formData.date).toISOString(),
+            status: formData.status,
+            progress_at_inspection: formData.progress_at_inspection,
+            comments: formData.comments
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Add to local state
+        setInspections(prev => [...prev, data as any]);
+        
         toast({
           title: "Succès",
           description: "Inspection créée avec succès",

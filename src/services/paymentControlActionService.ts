@@ -250,22 +250,54 @@ const getStoredActions = (): PaymentControlAction[] => {
 };
 
 export const getHierarchyUsers = async (escalationLevel: string): Promise<Array<{id: string, name: string, role: string}>> => {
-  // Mock data - in real implementation, this would query user roles
-  const hierarchyMap = {
-    team: [
-      { id: 'user-001', name: 'Jean Dupont', role: 'Gestionnaire de projet' },
-      { id: 'user-002', name: 'Marie Martin', role: 'Contrôleur financier' }
-    ],
-    supervisor: [
-      { id: 'user-003', name: 'Pierre Supervisor', role: 'Superviseur' },
-    ],
-    manager: [
-      { id: 'user-004', name: 'Claire Manager', role: 'Manager' },
-    ],
-    director: [
-      { id: 'user-005', name: 'Robert Director', role: 'Directeur' },
-    ]
-  };
+  try {
+    // Query real user hierarchy from database
+    const { data: users, error } = await supabase
+      .from('organizational_hierarchy')
+      .select(`
+        employee_id,
+        position_title,
+        department,
+        level,
+        employees!inner (
+          id,
+          full_name,
+          email
+        )
+      `)
+      .order('level', { ascending: true });
 
-  return hierarchyMap[escalationLevel as keyof typeof hierarchyMap] || [];
+    if (error) {
+      console.error('Error fetching hierarchy users:', error);
+      return [];
+    }
+
+    // Filter based on escalation level
+    const filteredUsers = users?.filter(user => {
+      switch (escalationLevel) {
+        case 'team':
+          return user.level >= 3;
+        case 'supervisor':
+          return user.level === 2 && user.position_title.toLowerCase().includes('supervisor');
+        case 'manager':
+          return user.level === 2 && user.position_title.toLowerCase().includes('manager');
+        case 'director':
+          return user.level === 1;
+        default:
+          return true;
+      }
+    }) || [];
+
+    return filteredUsers.map(user => ({
+      id: user.employees.id,
+      name: user.employees.full_name,
+      role: user.position_title
+    }));
+  } catch (error) {
+    console.error('Error fetching hierarchy users:', error);
+    // Fallback to mock data if database query fails
+    return [
+      { id: 'user-001', name: 'Gestionnaire par défaut', role: 'Gestionnaire de projet' }
+    ];
+  }
 };

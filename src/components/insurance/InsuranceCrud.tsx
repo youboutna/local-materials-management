@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, Shield, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 
@@ -165,26 +166,64 @@ const InsuranceCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedCertificate) {
-        // Mock update
+        // Update insurance certificate in database
+        const { error } = await supabase
+          .from('insurance_certificates')
+          .update({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id,
+            contractor_name: formData.contractor_name,
+            insurance_company: formData.insurance_company,
+            policy_number: formData.policy_number,
+            coverage_type: formData.coverage_type,
+            coverage_amount: formData.coverage_amount,
+            valid_from: formData.valid_from,
+            valid_until: formData.valid_until,
+            status: formData.status,
+            notes: formData.notes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedCertificate.id);
+
+        if (error) throw error;
+
+        // Update local state
         const updatedCertificate = { 
           ...selectedCertificate, 
           ...formData,
           updated_at: new Date().toISOString()
         };
         setCertificates(prev => prev.map(c => c.id === selectedCertificate.id ? updatedCertificate : c));
+        
         toast({
           title: "Succès",
           description: "Certificat d'assurance mis à jour avec succès",
         });
       } else {
-        // Mock create
-        const newCertificate: InsuranceCertificate = {
-          id: `cert-${Date.now()}`,
-          ...formData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setCertificates(prev => [...prev, newCertificate]);
+        // Create new insurance certificate in database
+        const { data, error } = await supabase
+          .from('insurance_certificates')
+          .insert({
+            project_id: formData.project_id,
+            contractor_id: formData.contractor_id,
+            contractor_name: formData.contractor_name,
+            insurance_company: formData.insurance_company,
+            policy_number: formData.policy_number,
+            coverage_type: formData.coverage_type,
+            coverage_amount: formData.coverage_amount,
+            valid_from: formData.valid_from,
+            valid_until: formData.valid_until,
+            status: formData.status || 'active',
+            notes: formData.notes
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Add to local state
+        setCertificates(prev => [...prev, data as any]);
+        
         toast({
           title: "Succès",
           description: "Certificat d'assurance créé avec succès",
