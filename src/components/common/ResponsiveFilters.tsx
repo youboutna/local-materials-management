@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,8 +49,32 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   className = '',
   showMobileDropdown = true
 }) => {
+  // Local search state for immediate UI updates
+  const [localSearchValue, setLocalSearchValue] = useState(searchValue);
+  
+  // Update local state when external searchValue changes
+  useEffect(() => {
+    setLocalSearchValue(searchValue);
+  }, [searchValue]);
+  
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (onSearchChange && localSearchValue !== searchValue) {
+        onSearchChange(localSearchValue);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [localSearchValue, onSearchChange, searchValue]);
+  
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setLocalSearchValue(value);
+  };
+
   const activeFiltersCount = filters.filter(f => f.value && f.value !== 'all').length;
-  const hasActiveFilters = activeFiltersCount > 0 || (searchValue && searchValue.trim().length > 0);
+  const hasActiveFilters = activeFiltersCount > 0 || (localSearchValue && localSearchValue.trim().length > 0);
 
   // Desktop View
   const DesktopFilters = () => (
@@ -80,8 +104,8 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={searchPlaceholder}
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.target.value)}
+                value={localSearchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -126,15 +150,15 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         {/* Active Filters Display */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-            {searchValue && searchValue.trim().length > 0 && (
+            {localSearchValue && localSearchValue.trim().length > 0 && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Search className="h-3 w-3" />
-                "{searchValue}"
+                "{localSearchValue}"
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 ml-1"
-                  onClick={() => onSearchChange?.('')}
+                  onClick={() => {setLocalSearchValue(''); onSearchChange?.('');}}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -173,8 +197,8 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -254,15 +278,15 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {searchValue && searchValue.trim().length > 0 && (
+          {localSearchValue && localSearchValue.trim().length > 0 && (
             <Badge variant="secondary" className="flex items-center gap-1">
               <Search className="h-3 w-3" />
-              "{searchValue}"
+              "{localSearchValue}"
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 ml-1"
-                onClick={() => onSearchChange?.('')}
+                onClick={() => {setLocalSearchValue(''); onSearchChange?.('');}}
               >
                 <X className="h-3 w-3" />
               </Button>
