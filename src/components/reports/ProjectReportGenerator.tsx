@@ -18,8 +18,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ReportingService, ReportData, CostCalculation } from '@/services/reportingService';
 import { ReportCalculations, EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
-import ProjectGantt from '@/components/project/ProjectGantt';
-import GanttDiagramWithMilestones from '@/components/project/GanttDiagramWithMilestones';
+import { ReportDataTransformer } from '@/services/reportDataTransformer';
+import { ProjectReportDTO } from '@/types/reportTypes';
 
 interface ProjectReportGeneratorProps {
   project: ProjectData;
@@ -61,6 +61,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const [costCalculation, setCostCalculation] = useState<CostCalculation | null>(null);
   const [evmMetrics, setEvmMetrics] = useState<EVMMetrics | null>(null);
   const [pertAnalysis, setPertAnalysis] = useState<PERTAnalysis | null>(null);
+  const [enrichedData, setEnrichedData] = useState<ProjectReportDTO | null>(null);
   
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     title: `Rapport de projet - ${project.title}`,
@@ -97,13 +98,15 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         setLoading(true);
         
         // Fetch all data in parallel
-        const [reportDataResult, costCalculationResult] = await Promise.all([
+        const [reportDataResult, costCalculationResult, enrichedDataResult] = await Promise.all([
           ReportingService.fetchReportData(project.id),
-          ReportingService.calculateProjectCosts(project.id)
+          ReportingService.calculateProjectCosts(project.id),
+          ReportDataTransformer.transformProjectForReport(project)
         ]);
         
         setReportData(reportDataResult);
         setCostCalculation(costCalculationResult);
+        setEnrichedData(enrichedDataResult);
         
         // Calculate EVM metrics
         const evmMetricsResult = ReportCalculations.calculateEVMMetrics(project, costCalculationResult.actualCost);
@@ -149,6 +152,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           evmMetrics={evmMetrics || undefined}
           pertAnalysis={pertAnalysis || undefined}
           reportConfig={reportConfig}
+          enrichedData={enrichedData || undefined}
         />
       );
 
@@ -201,6 +205,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           evmMetrics={evmMetrics || undefined}
           pertAnalysis={pertAnalysis || undefined}
           reportConfig={reportConfig}
+          enrichedData={enrichedData || undefined}
         />
       );
 
@@ -541,24 +546,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         </CardContent>
       </Card>
 
-      {/* Preview Gantt if selected */}
-      {reportConfig.includeSections.ganttChart && reportData && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Aperçu du Diagramme de Gantt
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProjectGantt 
-              project={project} 
-              phases={reportData.phases} 
-              compact={true}
-            />
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

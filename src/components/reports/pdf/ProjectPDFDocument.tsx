@@ -5,6 +5,7 @@ import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PD
 import { ProjectData } from '@/types/project';
 import { ReportData, CostCalculation } from '@/services/reportingService';
 import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
+import { ProjectReportDTO } from '@/types/reportTypes';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -37,6 +38,7 @@ interface ProjectPDFDocumentProps {
     };
     notes?: string;
   };
+  enrichedData?: ProjectReportDTO;
 }
 
 export function ProjectPDFDocument({
@@ -45,7 +47,8 @@ export function ProjectPDFDocument({
   costCalculation,
   evmMetrics,
   pertAnalysis,
-  reportConfig
+  reportConfig,
+  enrichedData
 }: ProjectPDFDocumentProps) {
   
   const getStatusText = (status: string) => {
