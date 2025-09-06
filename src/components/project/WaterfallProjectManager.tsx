@@ -330,11 +330,11 @@ const WaterfallProjectManager = () => {
               <WaterfallGanttChart 
                 tasks={phases.map(p => ({
                   id: p.id,
-                  name: p.name,
+                  name: p.title,
                   startDate: new Date(p.startDate),
                   endDate: new Date(p.endDate),
                   progress: p.actualProgress,
-                  phase: p.name,
+                  phase: p.title,
                   status: p.status,
                   procurementStep: 1,
                   assignedTo: '',
@@ -361,7 +361,7 @@ const WaterfallProjectManager = () => {
                 }}
                 phases={phases.map(p => ({
                   id: p.id,
-                  name: p.name,
+                  name: p.title,
                   startDate: new Date(p.startDate),
                   endDate: new Date(p.endDate),
                   progress: p.actualProgress || 0,

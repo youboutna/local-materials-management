@@ -469,8 +469,8 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
             <ConstructionPhaseManager
               phases={phases.map(p => ({
                 id: p.id,
-                title: p.name,
-                description: p.description || `Phase ${p.name}`,
+                title: p.title,
+                description: p.description || `Phase ${p.title}`,
                 startDate: p.startDate,
                 endDate: p.endDate,
                 estimatedDuration: Math.ceil((new Date(p.endDate).getTime() - new Date(p.startDate).getTime()) / (1000 * 60 * 60 * 24)),
@@ -509,11 +509,11 @@ const WaterfallProjectPhasesManager: React.FC<WaterfallProjectPhasesManagerProps
             <WaterfallGanttChart 
               tasks={phases.map(p => ({
                 id: p.id,
-                name: p.name,
+                name: p.title,
                 startDate: new Date(p.startDate),
                 endDate: new Date(p.endDate),
                 progress: p.actualProgress,
-                phase: p.name,
+                phase: p.title,
                 status: p.status,
                 procurementStep: 1,
                 assignedTo: '',

@@ -183,7 +183,7 @@ export function ProjectPDFDocument({
           <PDFTable
             headers={['Phase', 'Statut', 'Coût estimé', 'Coût réel', 'Écart']}
             data={reportData.phases.map(p => [
-              p.title || p.name || '',
+              p.title || p.title || '',
               p.status || 'Non défini',
               p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
               p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
