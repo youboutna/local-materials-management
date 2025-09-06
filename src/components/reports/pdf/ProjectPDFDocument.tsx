@@ -6,6 +6,7 @@ import { ProjectData } from '@/types/project';
 import { ReportData, CostCalculation } from '@/services/reportingService';
 import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { ProjectReportDTO } from '@/types/reportTypes';
+import ProjectGantt from '@/components/project/ProjectGantt';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -410,7 +411,21 @@ export function ProjectPDFDocument({
               ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
             ]}
             columnWidths={['25%', '15%', '20%', '20%', '20%']}
+        
           />
+        </PDFSection>
+      )}
+
+      {/* Preview Gantt if selected */}
+      {reportConfig.includeSections.ganttChart && reportData && (
+        <PDFSection title={`${project.title} Gantt`} >
+          <PDFCard>
+            <ProjectGantt 
+              project={project} 
+              phases={reportData.phases} 
+              compact={true}
+            />
+          </PDFCard>
         </PDFSection>
       )}
 
