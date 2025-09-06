@@ -31,13 +31,15 @@ interface GanttDiagramWithMilestonesProps {
   };
   phases: GanttPhase[];
   milestones: Milestone[];
+  compact?: boolean;
 }
 
 const GanttDiagramWithMilestones: React.FC<GanttDiagramWithMilestonesProps> = ({
   projectTitle,
   projectPeriod,
   phases,
-  milestones
+  milestones,
+  compact = false
 }) => {
   const [currentViewStart, setCurrentViewStart] = useState(startOfMonth(projectPeriod.start));
   
@@ -121,21 +123,23 @@ const GanttDiagramWithMilestones: React.FC<GanttDiagramWithMilestonesProps> = ({
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header with gradient matching your reference */}
+    <div className={compact ? "space-y-3" : "space-y-6"}>
+      {/* Header with gradient */}
       <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-6">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-6 w-6" />
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4">
+          <div className="flex items-center gap-2">
+            <Calendar className={compact ? "h-4 w-4" : "h-6 w-6"} />
             <div>
-              <h2 className="text-2xl font-bold">Diagramme de Gantt</h2>
-              <p className="text-primary-foreground/90 mt-1">
-                Planning du projet: {projectTitle}
-              </p>
+              <h2 className={compact ? "text-lg font-bold" : "text-2xl font-bold"}>Diagramme de Gantt</h2>
+              {!compact && (
+                <p className="text-primary-foreground/90 mt-1">
+                  Planning du projet: {projectTitle}
+                </p>
+              )}
             </div>
           </div>
-          <div className="mt-4 text-center">
-            <p className="text-lg font-medium">
+          <div className={compact ? "mt-2" : "mt-4 text-center"}>
+            <p className={compact ? "text-sm font-medium" : "text-lg font-medium"}>
               Période: Du {format(projectPeriod.start, 'dd/MM/yyyy', { locale: fr })} au {format(projectPeriod.end, 'dd/MM/yyyy', { locale: fr })}
             </p>
           </div>
@@ -144,14 +148,14 @@ const GanttDiagramWithMilestones: React.FC<GanttDiagramWithMilestonesProps> = ({
 
       {/* Progress Overview */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
+        <CardContent className={compact ? "pt-3" : "pt-6"}>
+          <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">Avancement global du projet</span>
-            <span className="text-2xl font-bold text-primary">{overallProgress}%</span>
+            <span className={compact ? "text-lg font-bold text-primary" : "text-2xl font-bold text-primary"}>{overallProgress}%</span>
           </div>
-          <div className="w-full bg-muted rounded-full h-3">
+          <div className={`w-full bg-muted rounded-full ${compact ? "h-2" : "h-3"}`}>
             <div 
-              className="bg-primary h-3 rounded-full transition-all duration-300"
+              className={`bg-primary ${compact ? "h-2" : "h-3"} rounded-full transition-all duration-300`}
               style={{ width: `${overallProgress}%` }}
             />
           </div>

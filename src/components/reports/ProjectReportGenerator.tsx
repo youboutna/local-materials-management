@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Mail, Loader2, CheckSquare, Square } from 'lucide-react';
+import { FileText, Download, Mail, Loader2, CheckSquare, Square, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectData } from '@/types/project';
 import { pdf } from '@react-pdf/renderer';
@@ -18,6 +18,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { ReportingService, ReportData, CostCalculation } from '@/services/reportingService';
 import { ReportCalculations, EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
+import ProjectGantt from '@/components/project/ProjectGantt';
+import GanttDiagramWithMilestones from '@/components/project/GanttDiagramWithMilestones';
 
 interface ProjectReportGeneratorProps {
   project: ProjectData;
@@ -538,6 +540,25 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           </div>
         </CardContent>
       </Card>
+
+      {/* Preview Gantt if selected */}
+      {reportConfig.includeSections.ganttChart && reportData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Aperçu du Diagramme de Gantt
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ProjectGantt 
+              project={project} 
+              phases={reportData.phases} 
+              compact={true}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
