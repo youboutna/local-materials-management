@@ -6,7 +6,6 @@ import { ProjectData } from '@/types/project';
 import { ReportData, CostCalculation } from '@/services/reportingService';
 import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { ProjectReportDTO } from '@/types/reportTypes';
-import ProjectGantt from '@/components/project/ProjectGantt';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -416,15 +415,38 @@ export function ProjectPDFDocument({
         </PDFSection>
       )}
 
-      {/* Preview Gantt if selected */}
-      {reportConfig.includeSections.ganttChart && reportData && (
-        <PDFSection title={`${project.title} Gantt`} >
+      {/* Diagramme de Gantt */}
+      {reportConfig.includeSections.ganttChart && reportData && reportData.phases && (
+        <PDFSection title="Diagramme de Gantt" borderColor="#3b82f6">
           <PDFCard>
-            <ProjectGantt 
-              project={project} 
-              phases={reportData.phases} 
-              compact={true}
+            <PDFText label="Section" value="Phases du Projet" />
+            <PDFTable
+              headers={['Phase', 'Début', 'Fin', 'Progression', 'Statut']}
+              data={reportData.phases.map(phase => [
+                phase.name || 'Sans nom',
+                phase.startDate ? format(new Date(phase.startDate), 'dd/MM/yyyy') : 'Non défini',
+                phase.endDate ? format(new Date(phase.endDate), 'dd/MM/yyyy') : 'Non défini',
+                `${phase.progress || 0}%`,
+                (phase.progress || 0) >= 100 ? '✅ Terminée' : (phase.progress || 0) > 0 ? '🔄 En cours' : '⏳ En attente'
+              ])}
+              columnWidths={['30%', '15%', '15%', '15%', '25%']}
             />
+            
+            {/* Jalons/Milestones */}
+            {reportData.constructionMilestones && reportData.constructionMilestones.length > 0 && (
+              <>
+                <PDFText label="Section" value="Jalons du Projet" />
+                <PDFTable
+                  headers={['Jalon', 'Date Cible', 'Statut']}
+                  data={reportData.constructionMilestones.map(milestone => [
+                    `📍 ${milestone.title || 'Jalon sans titre'}`,
+                    milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Date à définir',
+                    milestone.isCompleted ? '✅ Terminé' : '⏳ En attente'
+                  ])}
+                  columnWidths={['50%', '25%', '25%']}
+                />
+              </>
+            )}
           </PDFCard>
         </PDFSection>
       )}

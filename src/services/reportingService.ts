@@ -13,6 +13,7 @@ export interface ReportData {
   materials?: any[];
   phases?: any[];
   inspections?: any[];
+  constructionMilestones?: any[];
 }
 
 export interface CostCalculation {
@@ -76,6 +77,16 @@ export class ReportingService {
         .eq('related_id', projectId)
         .in('type', ['escalation', 'alert', 'warning']);
 
+      // Generate construction milestones from phases
+      const constructionMilestones = (phasesResult.data || []).map(phase => ({
+        id: phase.id,
+        title: `Jalon: ${phase.phase_name || 'Phase sans nom'}`,
+        description: phase.description || '',
+        targetDate: phase.end_date,
+        isCompleted: (phase.progress || 0) >= 100,
+        phase: phase.phase_name || 'Phase sans nom'
+      }));
+
       return {
         bankGuarantees: bankGuaranteesResult.data || [],
         insurance: insuranceResult.data || [],
@@ -86,7 +97,8 @@ export class ReportingService {
         escalationAlerts: alertsResult.data || [],
         materials: materialsResult.data || [],
         phases: phasesResult.data || [],
-        inspections: inspectionsResult.data || []
+        inspections: inspectionsResult.data || [],
+        constructionMilestones: constructionMilestones
       };
     } catch (error) {
       console.error('Error fetching report data:', error);
