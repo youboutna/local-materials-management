@@ -97,7 +97,9 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       try {
         setLoading(true);
         
-        // Fetch all data in parallel
+        // Fetch all data in parallel using DTO approach
+        const enriched = await ReportDataTransformer.transformProjectForReport(project);
+        setEnrichedData(enriched);
         const [reportDataResult, costCalculationResult, enrichedDataResult] = await Promise.all([
           ReportingService.fetchReportData(project.id),
           ReportingService.calculateProjectCosts(project.id),
