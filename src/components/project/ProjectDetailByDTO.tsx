@@ -440,7 +440,9 @@ function GanttTab({ project, phases, milestones }: {
         </CardHeader>
         <CardContent>
           <GanttDiagramWithMilestones 
-            project={project}
+            projectTitle={project.title}
+            projectPeriode={project.startDate}
+            phases={phases}
             milestones={milestones.map(m => ({
               id: m.id,
               name: m.title,
