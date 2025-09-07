@@ -3,6 +3,7 @@ import { ProjectData, ConstructionPhase, ConstructionStage, Task, ProjectRisk, P
 import { supabase } from '@/integrations/supabase/client';
 
 
+
 export class ProjectDataTransformer {
   /**
    * Transform raw database data into enriched ProjectData object
@@ -163,6 +164,172 @@ export class ProjectDataTransformer {
   }
 
   /**
+   * Fetch project risks from the database
+   */
+  private static async fetchProjectRisks(projectId: string): Promise<ProjectRisk[]> {
+    try {
+      const { data: risks, error } = await supabase
+        .from('project_risks')
+        .select(`
+          *,
+          related_tasks:risk_tasks(task_id)
+        `)
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching project risks:', error);
+        return [];
+      }
+
+      return risks.map(risk => ({
+        id: risk.id,
+        title: risk.title,
+        description: risk.description,
+        probability: risk.probability,
+        impact: risk.impact,
+        mitigationPlan: risk.mitigation_plan,
+        status: risk.status as 'identified' | 'monitored' | 'mitigated' | 'resolved',
+        relatedTasks: risk.related_tasks?.map((rt: any) => rt.task_id) || []
+      }));
+    } catch (error) {
+      console.error('Error in fetchProjectRisks:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch project resources from the database
+   */
+  private static async fetchProjectResources(projectId: string): Promise<ProjectResource[]> {
+    try {
+      const { data: resources, error } = await supabase
+        .from('project_resources')
+        .select(`
+          *,
+          assigned_tasks:resource_tasks(task_id)
+        `)
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching project resources:', error);
+        return [];
+      }
+
+      return resources.map(resource => ({
+        id: resource.id,
+        name: resource.name,
+        type: resource.type as 'human' | 'equipment' | 'material',
+        skills: resource.skills || [],
+        costPerHour: resource.cost_per_hour,
+        availability: resource.availability,
+        assignedTasks: resource.assigned_tasks?.map((at: any) => at.task_id) || []
+      }));
+    } catch (error) {
+      console.error('Error in fetchProjectResources:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch project inspections from the database
+   */
+  private static async fetchProjectInspections(projectId: string): Promise<any[]> {
+    try {
+      const { data: inspections, error } = await supabase
+        .from('project_inspections')
+        .select(`
+          *,
+          inspection_issues(*)
+        `)
+        .eq('project_id', projectId)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching project inspections:', error);
+        return [];
+      }
+
+      return inspections.map(inspection => ({
+        id: inspection.id,
+        inspector: inspection.inspector,
+        date: inspection.date,
+        status: inspection.status,
+        progressAtInspection: inspection.progress_at_inspection,
+        issues: inspection.inspection_issues?.map((issue: any) => ({
+          id: issue.id,
+          description: issue.description,
+          severity: issue.severity,
+          status: issue.status
+        })) || []
+      }));
+    } catch (error) {
+      console.error('Error in fetchProjectInspections:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch insurance policies from the database
+   */
+  private static async fetchInsurancePolicies(projectId: string): Promise<any[]> {
+    try {
+      const { data: policies, error } = await supabase
+        .from('insurance_policies')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching insurance policies:', error);
+        return [];
+      }
+
+      return policies.map(policy => ({
+        id: policy.id,
+        type: policy.type,
+        reference: policy.reference,
+        issuer: policy.issuer,
+        startDate: policy.start_date,
+        endDate: policy.end_date,
+        amount: policy.amount,
+        coverage: policy.coverage,
+        status: policy.status
+      }));
+    } catch (error) {
+      console.error('Error in fetchInsurancePolicies:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch project contacts from the database
+   */
+  private static async fetchProjectContacts(projectId: string): Promise<any[]> {
+    try {
+      const { data: contacts, error } = await supabase
+        .from('project_contacts')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching project contacts:', error);
+        return [];
+      }
+
+      return contacts.map(contact => ({
+        id: contact.id,
+        name: contact.name,
+        role: contact.role,
+        email: contact.email,
+        phone: contact.phone,
+        isPrimary: contact.is_primary
+      }));
+    } catch (error) {
+      console.error('Error in fetchProjectContacts:', error);
+      return [];
+    }
+  }
+
+  /**
    * Determine current phase and stage based on progress
    */
   private static determineCurrentPhase(phases: any[]): { phase: ConstructionPhase; stage: ConstructionStage } {
@@ -200,13 +367,18 @@ export class ProjectDataTransformer {
    */
   private static transformPhases(phases: any[]): any[] {
     return phases.map(phase => ({
+      id: phase.id,
       phase: phase.phase_name,
       startDate: phase.start_date,
       endDate: phase.end_date,
       estimatedDuration: phase.estimated_duration,
       status: phase.status,
+      progress: phase.progress,
+      budget: phase.budget,
+      actualCost: phase.actual_cost,
       weight: phase.weight || this.calculatePhaseWeight(phase),
       stages: phase.phase_stages?.map((stage: any) => ({
+        id: stage.id,
         name: stage.stage_name,
         startDate: stage.start_date,
         endDate: stage.end_date,
@@ -356,6 +528,105 @@ export class ProjectDataTransformer {
     }
     
     return dependencies;
+  }
+
+  /**
+   * Transform task assignments to Task format
+   */
+  private static transformTaskAssignments(taskAssignments: any[], phases: any[]): Task[] {
+    return taskAssignments.map(assignment => {
+      // Try to find which phase this task belongs to
+      let phaseId = '';
+      if (assignment.phase_id) {
+        phaseId = assignment.phase_id;
+      } else {
+        // Try to infer phase based on due date
+        const dueDate = new Date(assignment.due_date);
+        for (const phase of phases) {
+          const phaseStart = new Date(phase.start_date);
+          const phaseEnd = new Date(phase.end_date);
+          if (dueDate >= phaseStart && dueDate <= phaseEnd) {
+            phaseId = phase.id;
+            break;
+          }
+        }
+      }
+
+      // Calculate progress based on status
+      let progress = 0;
+      switch (assignment.status) {
+        case 'completed':
+          progress = 100;
+          break;
+        case 'in_progress':
+          progress = assignment.completion_percentage || 50;
+          break;
+        default:
+          progress = 0;
+      }
+
+      return {
+        id: assignment.id,
+        name: assignment.title,
+        description: assignment.description,
+        phaseId: phaseId,
+        dependencies: [], // Could be extracted from a relations table
+        assignedTo: assignment.assigned_to ? [assignment.assigned_to.id || assignment.assigned_to] : [],
+        estimatedDuration: this.calculateDaysDifference(assignment.created_at, assignment.due_date),
+        actualDuration: 0, // Calculate based on status and dates
+        startDate: assignment.created_at,
+        endDate: assignment.due_date,
+        status: this.mapTaskStatus(assignment.status),
+        progress: progress,
+        weight: this.calculateTaskWeight(assignment.priority),
+        costEstimate: assignment.cost_estimate || 0,
+        actualCost: assignment.actual_cost || 0,
+        notes: assignment.notes,
+        priority: assignment.priority
+      };
+    });
+  }
+
+  /**
+   * Transform project tasks to Task format
+   */
+  private static transformProjectTasks(projectTasks: any[], phases: any[]): Task[] {
+    return projectTasks.map(task => {
+      // Try to find which phase this task belongs to
+      let phaseId = task.phase_id || '';
+      if (!phaseId) {
+        // Try to infer phase based on start date
+        const startDate = new Date(task.start_date);
+        for (const phase of phases) {
+          const phaseStart = new Date(phase.start_date);
+          const phaseEnd = new Date(phase.end_date);
+          if (startDate >= phaseStart && startDate <= phaseEnd) {
+            phaseId = phase.id;
+            break;
+          }
+        }
+      }
+
+      return {
+        id: task.id,
+        name: task.name,
+        description: task.description,
+        phaseId: phaseId,
+        dependencies: task.task_dependencies?.map((td: any) => td.dependency_id) || [],
+        assignedTo: task.assigned_resources?.map((ar: any) => ar.resource_id) || [],
+        estimatedDuration: task.estimated_duration,
+        actualDuration: task.actual_duration,
+        startDate: task.start_date,
+        endDate: task.end_date,
+        status: this.mapTaskStatus(task.status),
+        progress: task.progress,
+        weight: task.weight,
+        costEstimate: task.cost_estimate,
+        actualCost: task.actual_cost,
+        optimisticEstimate: task.optimistic_estimate,
+        pessimisticEstimate: task.pessimistic_estimate
+      };
+    });
   }
 
   /**
@@ -526,272 +797,6 @@ export class ProjectDataTransformer {
     return stageDuration / phaseDuration;
   }
 
-
-  /**
-   * Fetch project risks from the database
-   */
-  private static async fetchProjectRisks(projectId: string): Promise<ProjectRisk[]> {
-    try {
-      const { data: risks, error } = await supabase
-        .from('project_risks')
-        .select(`
-          *,
-          related_tasks:risk_tasks(task_id)
-        `)
-        .eq('project_id', projectId);
-
-      if (error) {
-        console.error('Error fetching project risks:', error);
-        return [];
-      }
-
-      return risks.map(risk => ({
-        id: risk.id,
-        title: risk.title,
-        description: risk.description,
-        probability: risk.probability,
-        impact: risk.impact,
-        mitigationPlan: risk.mitigation_plan,
-        status: risk.status as 'identified' | 'monitored' | 'mitigated' | 'resolved',
-        relatedTasks: risk.related_tasks?.map((rt: any) => rt.task_id) || []
-      }));
-    } catch (error) {
-      console.error('Error in fetchProjectRisks:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch project resources from the database
-   */
-  private static async fetchProjectResources(projectId: string): Promise<ProjectResource[]> {
-    try {
-      const { data: resources, error } = await supabase
-        .from('project_resources')
-        .select(`
-          *,
-          assigned_tasks:resource_tasks(task_id)
-        `)
-        .eq('project_id', projectId);
-
-      if (error) {
-        console.error('Error fetching project resources:', error);
-        return [];
-      }
-
-      return resources.map(resource => ({
-        id: resource.id,
-        name: resource.name,
-        type: resource.type as 'human' | 'equipment' | 'material',
-        skills: resource.skills || [],
-        costPerHour: resource.cost_per_hour,
-        availability: resource.availability,
-        assignedTasks: resource.assigned_tasks?.map((at: any) => at.task_id) || []
-      }));
-    } catch (error) {
-      console.error('Error in fetchProjectResources:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch project inspections from the database
-   */
-  private static async fetchProjectInspections(projectId: string): Promise<any[]> {
-    try {
-      const { data: inspections, error } = await supabase
-        .from('project_inspections')
-        .select(`
-          *,
-          inspection_issues(*)
-        `)
-        .eq('project_id', projectId)
-        .order('date', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching project inspections:', error);
-        return [];
-      }
-
-      return inspections.map(inspection => ({
-        id: inspection.id,
-        inspector: inspection.inspector,
-        date: inspection.date,
-        status: inspection.status,
-        progressAtInspection: inspection.progress_at_inspection,
-        issues: inspection.inspection_issues?.map((issue: any) => ({
-          id: issue.id,
-          description: issue.description,
-          severity: issue.severity,
-          status: issue.status
-        })) || []
-      }));
-    } catch (error) {
-      console.error('Error in fetchProjectInspections:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch insurance policies from the database
-   */
-  private static async fetchInsurancePolicies(projectId: string): Promise<any[]> {
-    try {
-      const { data: policies, error } = await supabase
-        .from('insurance_policies')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (error) {
-        console.error('Error fetching insurance policies:', error);
-        return [];
-      }
-
-      return policies.map(policy => ({
-        id: policy.id,
-        type: policy.type,
-        reference: policy.reference,
-        issuer: policy.issuer,
-        startDate: policy.start_date,
-        endDate: policy.end_date,
-        amount: policy.amount,
-        coverage: policy.coverage,
-        status: policy.status
-      }));
-    } catch (error) {
-      console.error('Error in fetchInsurancePolicies:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Fetch project contacts from the database
-   */
-  private static async fetchProjectContacts(projectId: string): Promise<any[]> {
-    try {
-      const { data: contacts, error } = await supabase
-        .from('project_contacts')
-        .select('*')
-        .eq('project_id', projectId);
-
-      if (error) {
-        console.error('Error fetching project contacts:', error);
-        return [];
-      }
-
-      return contacts.map(contact => ({
-        id: contact.id,
-        name: contact.name,
-        role: contact.role,
-        email: contact.email,
-        phone: contact.phone,
-        isPrimary: contact.is_primary
-      }));
-    } catch (error) {
-      console.error('Error in fetchProjectContacts:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Transform task assignments to Task format
-   */
-  private static transformTaskAssignments(taskAssignments: any[], phases: any[]): Task[] {
-    return taskAssignments.map(assignment => {
-      // Try to find which phase this task belongs to
-      let phaseId = '';
-      if (assignment.phase_id) {
-        phaseId = assignment.phase_id;
-      } else {
-        // Try to infer phase based on due date
-        const dueDate = new Date(assignment.due_date);
-        for (const phase of phases) {
-          const phaseStart = new Date(phase.start_date);
-          const phaseEnd = new Date(phase.end_date);
-          if (dueDate >= phaseStart && dueDate <= phaseEnd) {
-            phaseId = phase.id;
-            break;
-          }
-        }
-      }
-
-      // Calculate progress based on status
-      let progress = 0;
-      switch (assignment.status) {
-        case 'completed':
-          progress = 100;
-          break;
-        case 'in_progress':
-          progress = assignment.completion_percentage || 50;
-          break;
-        default:
-          progress = 0;
-      }
-
-      return {
-        id: assignment.id,
-        name: assignment.title,
-        description: assignment.description,
-        phaseId: phaseId,
-        dependencies: [], // Could be extracted from a relations table
-        assignedTo: assignment.assigned_to ? [assignment.assigned_to.id || assignment.assigned_to] : [],
-        estimatedDuration: this.calculateDaysDifference(assignment.created_at, assignment.due_date),
-        actualDuration: 0, // Calculate based on status and dates
-        startDate: assignment.created_at,
-        endDate: assignment.due_date,
-        status: this.mapTaskStatus(assignment.status),
-        progress: progress,
-        weight: this.calculateTaskWeight(assignment.priority),
-        costEstimate: assignment.cost_estimate || 0,
-        actualCost: assignment.actual_cost || 0,
-        notes: assignment.notes,
-        priority: assignment.priority
-      };
-    });
-  }
-
-  /**
-   * Transform project tasks to Task format
-   */
-  private static transformProjectTasks(projectTasks: any[], phases: any[]): Task[] {
-    return projectTasks.map(task => {
-      // Try to find which phase this task belongs to
-      let phaseId = task.phase_id || '';
-      if (!phaseId) {
-        // Try to infer phase based on start date
-        const startDate = new Date(task.start_date);
-        for (const phase of phases) {
-          const phaseStart = new Date(phase.start_date);
-          const phaseEnd = new Date(phase.end_date);
-          if (startDate >= phaseStart && startDate <= phaseEnd) {
-            phaseId = phase.id;
-            break;
-          }
-        }
-      }
-
-      return {
-        id: task.id,
-        name: task.name,
-        description: task.description,
-        phaseId: phaseId,
-        dependencies: task.task_dependencies?.map((td: any) => td.dependency_id) || [],
-        assignedTo: task.assigned_resources?.map((ar: any) => ar.resource_id) || [],
-        estimatedDuration: task.estimated_duration,
-        actualDuration: task.actual_duration,
-        startDate: task.start_date,
-        endDate: task.end_date,
-        status: this.mapTaskStatus(task.status),
-        progress: task.progress,
-        weight: task.weight,
-        costEstimate: task.cost_estimate,
-        actualCost: task.actual_cost,
-        optimisticEstimate: task.optimistic_estimate,
-        pessimisticEstimate: task.pessimistic_estimate
-      };
-    });
-  }
-
   /**
    * Calculate task weight based on priority
    */
@@ -805,6 +810,16 @@ export class ProjectDataTransformer {
   }
 
   /**
+   * Calculate days difference between two dates
+   */
+  private static calculateDaysDifference(startDate: string, endDate: string): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  /**
    * Map task status to standardized format
    */
   private static mapTaskStatus(status: string): 'completed' | 'in_progress' | 'not_started' | 'delayed' {
@@ -815,17 +830,4 @@ export class ProjectDataTransformer {
       default: return 'not_started';
     }
   }
-
-  /**
-   * Calculate days difference between two dates
-   */
-  private static calculateDaysDifference(startDate: string, endDate: string): number {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }
-
-  // ... rest of the class methods ...
-}
 }
