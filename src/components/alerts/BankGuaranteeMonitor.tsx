@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { AlertTriangle, DollarSign, Clock, Send, Settings, Calendar, Users, MessageSquare, Phone, Mail, FileText } from 'lucide-react';
-import { detectProjectDelays, triggerBankGuaranteeNotification, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
-import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
-import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
+import { detectProjectDelays, triggerBankGuaranteeNotification } from '@/services/bankGuaranteeService';
+import { AlertTriangle, Clock, DollarSign, Send } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { DELAY_THRESHOLDS } from '../../types/project';
 
 const BankGuaranteeMonitor: React.FC = () => {
   const [delays, setDelays] = useState<any[]>([]);
