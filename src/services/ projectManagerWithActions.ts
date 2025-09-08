@@ -774,44 +774,54 @@ const exampleProject: ProjectData = {
   currentStage: 'structural_framing',
   plannedPhases: [
     {
+      id: 'a1b2c3d4-e5f6-4787-b901-3bead2a57068',
       phase: 'pre_construction',
       startDate: '2021-03-23',
       endDate: '2021-09-30',
       estimatedDuration: 190,
       status: 'completed',
-      weight: 0.15
+      weight: 0.15,
+      dependencies: []
     },
     {
+      id: 'b2c3d4e5-f6g7-4787-b901-3bead2a57068',
       phase: 'site_preparation',
       startDate: '2021-10-01',
       endDate: '2022-12-31',
       estimatedDuration: 456,
       status: 'completed',
-      weight: 0.25
+      weight: 0.25,
+      dependencies: ['a1b2c3d4-e5f6-4787-b901-3bead2a57068']
     },
     {
+      id: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
       phase: 'structural_work',
       startDate: '2023-01-01',
       endDate: '2025-06-30',
       estimatedDuration: 911,
       status: 'in_progress',
-      weight: 0.40
+      weight: 0.40,
+      dependencies: ['b2c3d4e5-f6g7-4787-b901-3bead2a57068']
     },
     {
+      id: 'd4e5f6g7-h8i9-4787-b901-3bead2a57068',
       phase: 'finishing',
       startDate: '2025-07-01',
       endDate: '2025-12-31',
       estimatedDuration: 184,
       status: 'not_started',
-      weight: 0.10
+      weight: 0.10,
+      dependencies: ['c3d4e5f6-g7h8-4787-b901-3bead2a57068']
     },
     {
+      id: 'e5f6g7h8-i9j0-4787-b901-3bead2a57068',
       phase: 'handover',
       startDate: '2026-01-01',
       endDate: '2026-12-31',
       estimatedDuration: 365,
       status: 'not_started',
-      weight: 0.10
+      weight: 0.10,
+      dependencies: ['d4e5f6g7-h8i9-4787-b901-3bead2a57068']
     }
   ],
   constructionMilestones: [
@@ -823,7 +833,8 @@ const exampleProject: ProjectData = {
       targetDate: '2021-06-30',
       completedDate: '2021-06-15',
       status: 'completed',
-      weight: 0.3
+      weight: 0.3,
+      dependencies: []
     },
     {
       id: '9146da6c-23b9-4787-b901-4aead2a57068',
@@ -834,7 +845,8 @@ const exampleProject: ProjectData = {
       completedDate: '2022-04-15',
       status: 'completed',
       notes: 'Délai d\'approvisionnement dû à des contraintes logistiques',
-      weight: 0.4
+      weight: 0.4,
+      dependencies: ['9546da6c-29c9-4787-b901-4bead2a57068']
     },
     {
       id: '9146da6c-29b9-1787-b901-4aead2a57068',
@@ -844,7 +856,8 @@ const exampleProject: ProjectData = {
       targetDate: '2023-12-31',
       completedDate: undefined,
       status: 'pending',
-      weight: 0.5
+      weight: 0.5,
+      dependencies: ['9146da6c-23b9-4787-b901-4aead2a57068']
     }
   ],
   tasks: [
@@ -852,7 +865,7 @@ const exampleProject: ProjectData = {
       id: '9146da6c-29b9-4787-b201-4aead2a57068',
       name: 'Études géotechniques',
       description: 'Analyses des sols pour les foundations des pylônes',
-      phaseId: 'phase-001',
+      phaseId: 'a1b2c3d4-e5f6-4787-b901-3bead2a57068',
       dependencies: [],
       assignedTo: ['1146da6c-29b9-4787-b901-7aaad2a57068', '2146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 60,
@@ -863,14 +876,19 @@ const exampleProject: ProjectData = {
       progress: 100,
       weight: 0.3,
       costEstimate: 500000,
-      actualCost: 480000
+      actualCost: 480000,
+      criticalPath: true,
+      float: 0,
+      baselineStartDate: '2021-03-23',
+      baselineEndDate: '2021-05-22',
+      wbsCode: '1.1.1'
     },
     {
       id: '8146da6c-29n9-4787-b901-4aead2a57068',
       name: 'Conception des foundations',
       description: 'Calcul et conception des foundations des pylônes',
-      phaseId: 'phase-001',
-      dependencies: ['9146da6c-29b9-4787-b201-4aead2a5706'],
+      phaseId: 'a1b2c3d4-e5f6-4787-b901-3bead2a57068',
+      dependencies: ['9146da6c-29b9-4787-b201-4aead2a57068'],
       assignedTo: ['3146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 90,
       actualDuration: 85,
@@ -880,14 +898,19 @@ const exampleProject: ProjectData = {
       progress: 100,
       weight: 0.4,
       costEstimate: 700000,
-      actualCost: 720000
+      actualCost: 720000,
+      criticalPath: true,
+      float: 0,
+      baselineStartDate: '2021-05-23',
+      baselineEndDate: '2021-08-21',
+      wbsCode: '1.1.2'
     },
     {
       id: '7146da6c-29b9-4767-b901-4aead2a57068',
       name: 'Commande des câbles',
       description: 'Négociation et commande des câbles haute tension',
-      phaseId: 'phase-002',
-      dependencies: [],
+      phaseId: 'b2c3d4e5-f6g7-4787-b901-3bead2a57068',
+      dependencies: ['9146da6c-23b9-4787-b901-4aead2a57068'],
       assignedTo: ['4146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 120,
       actualDuration: 150,
@@ -897,15 +920,20 @@ const exampleProject: ProjectData = {
       progress: 100,
       weight: 0.6,
       costEstimate: 30000000,
-      actualCost: 32000000
+      actualCost: 32000000,
+      criticalPath: false,
+      float: 5,
+      baselineStartDate: '2021-10-01',
+      baselineEndDate: '2022-01-29',
+      wbsCode: '1.2.1'
     },
     {
       id: '6146da6c-29b9-4717-b901-4kead2a57068',
       name: 'Installation des premiers pylônes',
       description: 'Installation des 50 premiers pylônes sur le tronçon initial',
-      phaseId: 'phase-003',
-      dependencies: ['task-002', 'task-003'],
-      assignedTo: ['1146da6c-29b9-4787-b901-7aaad2a57068', '1146da6c-29b9-4787-b901-7aaad2a57068', '2146da6c-29b9-4787-b901-7aaad2a57068'],
+      phaseId: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
+      dependencies: ['8146da6c-29n9-4787-b901-4aead2a57068', '7146da6c-29b9-4767-b901-4aead2a57068'],
+      assignedTo: ['1146da6c-29b9-4787-b901-7aaad2a57068', '2146da6c-29b9-4787-b901-7aaad2a57068'],
       estimatedDuration: 180,
       actualDuration: 210,
       startDate: '2023-01-01',
@@ -916,7 +944,12 @@ const exampleProject: ProjectData = {
       costEstimate: 5000000,
       actualCost: 4200000,
       optimisticEstimate: 150,
-      pessimisticEstimate: 240
+      pessimisticEstimate: 240,
+      criticalPath: true,
+      float: 0,
+      baselineStartDate: '2023-01-01',
+      baselineEndDate: '2023-06-30',
+      wbsCode: '1.3.1'
     }
   ],
   risks: [
@@ -928,7 +961,9 @@ const exampleProject: ProjectData = {
       impact: 70,
       mitigationPlan: 'Prévoir des stocks tampons et identifier des fournisseurs alternatifs',
       status: 'monitored',
-      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068','6146da6c-29b9-4717-b901-4kead2a57068']
+      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068'],
+      phaseId: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
+      riskScore: 28
     },
     {
       id: '9146da6c-29b9-4787-q901-4aewd2a57068',
@@ -938,7 +973,9 @@ const exampleProject: ProjectData = {
       impact: 50,
       mitigationPlan: 'Planifier les travaux critiques en dehors de la période de tempêtes',
       status: 'identified',
-      relatedTasks: ['8146da6c-29n9-4787-b901-4aead2a57068']
+      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068'],
+      phaseId: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
+      riskScore: 30
     }
   ],
   resources: [
@@ -957,7 +994,7 @@ const exampleProject: ProjectData = {
       type: 'equipment',
       costPerHour: 200,
       availability: 100,
-      assignedTasks: ['8146da6c-29b9-4787-b201-4aead2a57068']
+      assignedTasks: ['9146da6c-29b9-4787-b201-4aead2a57068']
     },
     {
       id: '3146da6c-29b9-4787-b901-7aaad2a57068',
@@ -966,7 +1003,7 @@ const exampleProject: ProjectData = {
       skills: ['ingénierie structures'],
       costPerHour: 80,
       availability: 100,
-      assignedTasks: ['146da6c-29b9-4787-b201-4aead2a57068']
+      assignedTasks: ['8146da6c-29n9-4787-b901-4aead2a57068']
     }
   ],
   insurancePolicies: [
@@ -1006,8 +1043,8 @@ const exampleProject: ProjectData = {
   escalationThresholds: {
     alert: 10,
     notification: 20,
-    guarantee: 30,
-    legal: 40,
+    guarantee: 40,
+    legal: 50,
   },
   methodology: 'waterfall',
   contacts: [
@@ -1022,7 +1059,6 @@ const exampleProject: ProjectData = {
   ],
   checkScheduleLastRun: {}
 };
-
 const roles: EscalationRoles = {
   level1: 'Chef de projet',
   level2: 'Directeur Technique',
@@ -1045,15 +1081,15 @@ const actionLabels: ActionLabels = {
   legal_consultation: 'Consultation juridique',
 };
 
-const manager = new ProjectManager(exampleProject, roles, actionLabels);
+//const manager = new ProjectManager(exampleProject, roles, actionLabels);
 
 // Exécution des vérifications
-const alerts = manager.runAllChecks();
+//const alerts = manager.runAllChecks();
 
-console.log('=== Alertes générées avec actions ===');
-console.log(JSON.stringify(alerts, null, 2));
+//console.log('=== Alertes générées avec actions ===');
+//console.log(JSON.stringify(alerts, null, 2));
 
 // Simulation de traitement d'une alerte
-if (alerts.alerts.length > 0) {
-  manager.acknowledgeAlert(alerts.alerts[0].id, 'bb01aec4-397d-4830-ab5c-7d5e0b21b704', 'Email envoyé au fournisseur');
-}
+//if (alerts.alerts.length > 0) {
+  //manager.acknowledgeAlert(alerts.alerts[0].id, 'bb01aec4-397d-4830-ab5c-7d5e0b21b704', 'Email envoyé au fournisseur');
+//}

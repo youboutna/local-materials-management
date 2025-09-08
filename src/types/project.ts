@@ -159,12 +159,14 @@ export interface ProjectData {
   currentPhase?: ConstructionPhase;
   currentStage?: ConstructionStage;
   plannedPhases?: {
+    id: string;
     phase: ConstructionPhase;
     startDate: string;
     endDate: string;
     estimatedDuration: number;
     status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
     weight: number;
+    dependencies?:any[];
   }[];
   constructionMilestones?: {
     id: string;
@@ -176,6 +178,7 @@ export interface ProjectData {
     status: 'pending' | 'completed' | 'overdue';
     notes?: string;
     weight: number;
+  dependencies?:any[];
   }[];
   inspections? :Inspection[];
   tasks?: Task[];
