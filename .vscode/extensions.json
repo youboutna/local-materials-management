@@ -1,0 +1,40 @@
+{
+  "recommendations": [
+    // 🟦 TypeScript / React
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "bradlc.vscode-tailwindcss",
+
+    // 🟪 Prisma
+    "Prisma.prisma",
+
+    // 🟩 Supabase (SQL + Postgres helpers)
+    "supabase.supabase-vscode",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+
+    // 🟥 Java
+    "vscjava.vscode-java-pack", 
+    "vscjava.vscode-java-debug",
+    "vscjava.vscode-java-dependency",
+    "vscjava.vscode-java-test",
+    "vscjava.vscode-maven",
+
+    // 🟨 Python
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-toolsai.jupyter",
+
+    // 🤖 AI Assistants
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "gencay.vscode-chatgpt",          // ChatGPT (OpenAI)
+    "DanielSanMedium.dscodegpt",      // CodeGPT (OpenAI + Anthropic Claude support)
+
+    // 🛠️ Utilities
+    "rangav.vscode-thunder-client",   // REST client (like Postman inside VS Code)
+    "ms-azuretools.vscode-docker",    // Docker support
+    "oderwat.indent-rainbow"          // Helpful indentation
+  ]
+}
