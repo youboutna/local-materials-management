@@ -87,79 +87,91 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [risks, setRisks] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
 
-  // Transform project data when loaded
+  // Transform project data when loaded and fetch additional data
   useEffect(() => {
-    if (project) {
-      // Extract tasks from phases or create mock data
-      const allTasks = project.plannedPhases?.flatMap((phase: any) => 
-        phase.stages?.map((stage: any, index: number) => ({
+    if (project && projectId) {
+      fetchAdditionalData();
+    }
+  }, [project, projectId]);
+
+  const fetchAdditionalData = async () => {
+    if (!project || !projectId) return;
+
+    try {
+      // Extract tasks from phases with real data structure
+      const allTasks = project.plannedPhases?.flatMap((phase: any) => {
+        // Use the actual phase data structure from ProjectDataTransformer
+        const phaseData = phase.customPhaseData || {};
+        const stages = phaseData.stages || phase.stages || [];
+        
+        return stages.map((stage: any, index: number) => ({
           id: `${phase.id}-task-${index}`,
-          name: stage.name || `Tâche ${index + 1}`,
-          description: stage.description || `Description de la tâche ${stage.name}`,
+          name: stage.name || stage.stage || `Tâche ${index + 1}`,
+          description: stage.description || `Tâche de la phase ${phase.constructionPhase}`,
           status: stage.status || 'not_started',
           progress: stage.progress || 0,
           startDate: phase.startDate,
           endDate: phase.endDate,
-          assignedTo: [],
-          dependencies: []
-        })) || []
-      ) || [];
+          assignedTo: stage.assignedTo || [],
+          dependencies: stage.dependencies || []
+        }));
+      }) || [];
       setTasks(allTasks);
 
-      // Create mock risks data based on project characteristics
-      const projectRisks = [
-        {
-          id: '1',
-          title: 'Retard de livraison des matériaux',
-          description: 'Risque de retard dans la livraison des matériaux critiques',
-          probability: 30,
-          impact: 70,
-          status: 'identified',
-          mitigationPlan: 'Identification de fournisseurs alternatifs',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: 'Conditions météorologiques défavorables',
-          description: 'Impact des conditions climatiques sur les travaux extérieurs',
-          probability: 50,
-          impact: 60,
-          status: 'mitigated',
-          mitigationPlan: 'Planification de travaux de repli en intérieur',
-          createdAt: new Date().toISOString()
+      // Fetch risks from the database or project data
+      const projectRisks = project.risks || [];
+      if (projectRisks.length === 0) {
+        // If no risks in project data, try to fetch from database
+        try {
+          const { data: riskData } = await supabase
+            .from('project_phases')
+            .select('risk_factors')
+            .eq('project_id', projectId);
+          
+          const combinedRisks = riskData?.flatMap((phase: any) => 
+            phase.risk_factors || []
+          ) || [];
+          setRisks(combinedRisks);
+        } catch (error) {
+          console.log('No risks table, using empty risks');
+          setRisks([]);
         }
-      ];
-      setRisks(projectRisks);
+      } else {
+        setRisks(projectRisks);
+      }
 
-      // Create mock resources data
-      const projectResources = [
-        {
-          id: '1',
-          name: 'Chef de projet',
+      // Extract resources from project phases and materials
+      const phaseResources = project.plannedPhases?.flatMap((phase: any) => {
+        const phaseData = phase.customPhaseData || {};
+        const materials = phaseData.materials || [];
+        const humanResources = phaseData.humanResources || [];
+
+        const materialResources = materials.map((material: any, index: number) => ({
+          id: `material-${phase.id}-${index}`,
+          name: material.name || material.materialId,
+          type: 'material',
+          costPerHour: material.pricePerUnit || 0,
+          availability: 100,
+          quantity: material.quantity
+        }));
+
+        const humanResourcesList = humanResources.map((resource: any, index: number) => ({
+          id: `human-${phase.id}-${index}`,
+          name: resource.name || resource.employeeId,
           type: 'human',
-          position: 'Management',
-          costPerHour: 150,
-          availability: 100
-        },
-        {
-          id: '2',
-          name: 'Ingénieur structure',
-          type: 'human',
-          position: 'Technique',
-          costPerHour: 120,
-          availability: 80
-        },
-        {
-          id: '3',
-          name: 'Excavatrice',
-          type: 'equipment',
-          costPerHour: 80,
-          availability: 90
-        }
-      ];
-      setResources(projectResources);
+          position: resource.role || 'Worker',
+          costPerHour: resource.dailyRate || 0,
+          availability: resource.availability || 100
+        }));
+
+        return [...materialResources, ...humanResourcesList];
+      }) || [];
+
+      setResources(phaseResources);
+    } catch (error) {
+      console.error('Error fetching additional data:', error);
     }
-  }, [project]);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
