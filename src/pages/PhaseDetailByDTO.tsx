@@ -62,11 +62,11 @@ const PhaseDetailByDTO: React.FC = () => {
           setPhase(foundPhase);
           
           // Calculate actual cost from materials
-          const materialCost = foundPhase.materials?.reduce((sum: number, material: any) => 
+          const materialCost = (foundPhase as any).materials?.reduce((sum: number, material: any) => 
             sum + (material.quantity * (material.pricePerUnit || 0)), 0) || 0;
           
           // Calculate cost from employees
-          const employeeCost = foundPhase.humanResources?.reduce((sum: number, emp: any) => {
+          const employeeCost = (foundPhase as any).humanResources?.reduce((sum: number, emp: any) => {
             const dailyRate = emp.dailyRate || 0;
             const startDate = emp.startDate ? new Date(emp.startDate) : null;
             const endDate = emp.endDate ? new Date(emp.endDate) : null;
@@ -80,8 +80,8 @@ const PhaseDetailByDTO: React.FC = () => {
           }, 0) || 0;
 
           setActualCost(materialCost + employeeCost);
-          setMaterialsCount(foundPhase.materials?.length || 0);
-          setEmployeesCount(foundPhase.humanResources?.length || 0);
+          setMaterialsCount((foundPhase as any).materials?.length || 0);
+          setEmployeesCount((foundPhase as any).humanResources?.length || 0);
         } else {
           toast({
             title: "Erreur",
