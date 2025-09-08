@@ -183,7 +183,9 @@ export interface ProjectData {
   inspections? :Inspection[];
   tasks?: Task[];
   risks?: ProjectRisk[];
+  expenses? :any[];//real budget project consumation 
   resources?: ProjectResource[];
+  
   insurancePolicies?: InsurancePolicy[];
   alerts?: Alert[];
   escalationThresholds?: {
@@ -430,3 +432,41 @@ export interface TaskAssignment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface BankGuaranteeData {
+  projectId: string;
+  contractorId: string;
+  bankLiaisonEmail: string;
+  guaranteeAmount: number;
+  delayPercentage: number;
+  contractClause: string;
+}
+
+export interface ProjectDelay {
+  projectId: string;
+  projectName: string;
+  contractorName: string;
+  plannedEndDate: string;
+  currentDate: string;
+  delayDays: number;
+  delayPercentage: number;
+  milestonesMissed: number;
+}
+
+// Role-based notification recipients
+export const NOTIFICATION_ROLES = {
+  PROJECT_MANAGER: 'project_manager',
+  DIRECTOR_PROGRAMMING: 'director_programming', 
+  DIRECTOR: 'director',
+  BANK_LIAISON: 'bank_liaison',
+  ENGINEERING_CONSULTANT: 'engineering_consultant',
+  CONTRACTOR: 'contractor'
+};
+
+// Delay thresholds for escalation
+export const DELAY_THRESHOLDS = {
+  WARNING: 10, // 10% delay triggers warning
+  BANK_NOTIFICATION: 20, // 20% delay triggers bank notification
+  GUARANTEE_TRIGGER: 30, // 30% delay triggers guarantee clause
+  LEGAL_ESCALATION: 40 // 40% delay triggers legal team
+};
