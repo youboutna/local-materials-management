@@ -1,11 +1,10 @@
-import React from 'react';
+import { CostCalculation, ReportData } from '@/services/reportingService';
+import { ProjectData } from '@/types/project';
+import { ProjectReportDTO } from '@/types/reportTypes';
+import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PDFMetricCard } from './PDFDocument';
-import { ProjectData } from '@/types/project';
-import { ReportData, CostCalculation } from '@/services/reportingService';
-import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
-import { ProjectReportDTO } from '@/types/reportTypes';
+import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -517,14 +516,14 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Durée totale estimée" value={`${pertAnalysis.totalDuration.toFixed(1)} jours`} />
-                <PDFText label="Écart-type total" value={`${pertAnalysis.totalStandardDeviation.toFixed(2)} jours`} />
+                <PDFText label="Durée totale estimée" value={`${pertAnalysis.expectedDurations.toFixed(1)} jours`} />
+                <PDFText label="Écart-type total" value={`${pertAnalysis.totalExpectedDuration.toFixed(2)} jours`} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
           <PDFTable
             headers={['Activité', 'Optimiste (j)', 'Probable (j)', 'Pessimiste (j)', 'Estimation PERT (j)', 'Écart-type']}
-            data={pertAnalysis.activities.map(activity => [
+            data={pertAnalysis?.activities.map(activity => [
               activity.name,
               activity.optimistic.toString(),
               activity.mostLikely.toString(),
