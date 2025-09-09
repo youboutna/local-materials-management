@@ -245,13 +245,38 @@ export interface GanttDependency {
   type: string;
 }
 
+
+
+export interface EVMMetrics {
+  plannedValue: number;
+  earnedValue: number;
+  actualCost: number;
+  scheduleVariance: number;
+  costVariance: number;
+  schedulePerformanceIndex: number;
+  costPerformanceIndex: number;
+  budgetAtCompletion: number;
+  estimateAtCompletion: number;
+  estimateToComplete: number;
+  varianceAtCompletion: number;
+}
+
+export interface PERTActivity {
+  name: string;
+  optimistic: number;
+  mostLikely: number;
+  pessimistic: number;
+  pertEstimate: number;
+  standardDeviation: number;
+}
+
 export interface PERTAnalysis {
+  activities: PERTActivity[];
   expectedDurations: { [taskId: string]: number };
   criticalPath: string[];
   totalExpectedDuration: number;
   variances: { [taskId: string]: number };
 }
-
 export interface EVMData {
   plannedValue: number;
   earnedValue: number;

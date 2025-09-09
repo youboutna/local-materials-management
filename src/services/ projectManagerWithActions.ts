@@ -1,9 +1,8 @@
 // projectManagerWithActions.ts
 
 import { CHECK_SCHEDULE_INTERVALS } from "@/hooks/projects/constants";
-import { ActionLabels, Alert, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
-
-
+import { ActionLabels, Alert, EscalationRoles, EVMData, GanttChartData, InsurancePolicy, PERTAnalysis, ProjectData } from "@/types/project";
+import { ReportCalculations } from "@/utils/reportCalculations";
 
 /**
  * ---------------------------
@@ -16,19 +15,11 @@ const uid = (prefix = 'id') =>
 const daysBetween = (d1: Date, d2: Date) =>
   Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
-
-const isDateInPast = (date: string) => new Date(date) < new Date();
-
 /**
  * ---------------------------
  * Classe de gestion du projet avec actions injectables
  * ---------------------------
  */
-// Export types for use in other modules
-export type { Alert, EVMData, GanttChartData, PERTAnalysis } from "@/types/project";
-
 export class ProjectManager {
   private lastChecks: {
     insurance: Date;
@@ -309,35 +300,132 @@ export class ProjectManager {
   }
 
   checkFinancialRisks(): Alert[] {
-    const alerts: Alert[] = [];
-    const tasks = this.project.tasks ?? [];
+  const alerts: Alert[] = [];
+  const tasks = this.project.tasks ?? [];
+  const today = new Date();
 
-    // Détection des dépassements de budget (exemple simplifié)
-    const budgetOverrunTasks = tasks.filter(task => {
-      // Ici vous pourriez avoir une logique de calcul de coût réel vs prévu/@TODOD
-      return task.status === 'in_progress' && task?.actualCost ? task?.actualCost>task.costEstimate: (task.costEstimate/this.project.budget)>0.8 // Exemple aléatoire
-    });
+  // 1. Detect budget overruns for individual tasks
+  const budgetOverrunTasks = tasks.filter(task => {
+    if (task.status === 'in_progress' || task.status === 'completed') {
+      // Check if we have actual cost data
+      if (task.actualCost !== undefined && task.costEstimate !== undefined) {
+        // Calculate overrun percentage
+        const overrunPercentage = ((task.actualCost - task.costEstimate) / task.costEstimate) * 100;
+        
+        // Flag tasks with significant overruns (more than 10%)
+        return overrunPercentage > 10;
+      }
+    }
+    return false;
+  });
 
-    if (budgetOverrunTasks.length > 3) {
-      const alert: Alert = {
-        id: uid('alert'),
-        type: 'financial_risk',
-        severity: 'high',
-        title: 'Risque financier détecté',
-        message: `${budgetOverrunTasks.length} tâches présentent des dépassements de budget`,
-        projectId: this.project.id,
-        triggerDate: new Date().toISOString(),
-        timestamp: new Date().toISOString(),
-        acknowledged: false,
-        actionRequired: true,
-        escalationLevel: 3,
-      };
+  // 2. Detect overall project budget risks
+  const totalEstimatedCost = tasks.reduce((sum, task) => sum + (task.costEstimate || 0), 0);
+  const totalActualCost = tasks.reduce((sum, task) => sum + (task.actualCost || 0), 0);
+  const budgetUtilization = (totalActualCost / this.project.budget) * 100;
+  const estimatedToBudgetRatio = (totalEstimatedCost / this.project.budget) * 100;
 
-      alerts.push(this.assignActions(alert));
+  // 3. Check for projects with high estimated costs compared to budget
+  const highEstimateTasks = tasks.filter(task => {
+    if (task.costEstimate !== undefined) {
+      const taskBudgetRatio = (task.costEstimate / this.project.budget) * 100;
+      return taskBudgetRatio > 15; // Flag tasks that consume more than 15% of total budget
+    }
+    return false;
+  });
+
+  // 4. Generate alerts based on different risk scenarios
+
+  // Individual task overruns
+  if (budgetOverrunTasks.length > 0) {
+    const totalOverrunAmount = budgetOverrunTasks.reduce((sum, task) => 
+      sum + (task.actualCost || 0) - (task.costEstimate || 0), 0);
+    
+    const avgOverrunPercentage = budgetOverrunTasks.reduce((sum, task) => {
+      const overrun = ((task.actualCost || 0) - (task.costEstimate || 0)) / (task.costEstimate || 1) * 100;
+      return sum + overrun;
+    }, 0) / budgetOverrunTasks.length;
+
+    let severity: Alert['severity'] = 'medium';
+    let escalationLevel = 1;
+    
+    if (avgOverrunPercentage > 25 || totalOverrunAmount > this.project.budget * 0.05) {
+      severity = 'high';
+      escalationLevel = 2;
+    }
+    if (avgOverrunPercentage > 50 || totalOverrunAmount > this.project.budget * 0.1) {
+      severity = 'critical';
+      escalationLevel = 3;
     }
 
-    return alerts;
+    alerts.push({
+      id: uid('alert'),
+      type: 'financial_risk',
+      severity,
+      title: 'Dépassement de budget sur les tâches',
+      message: `${budgetOverrunTasks.length} tâche(s) présente(nt) un dépassement de budget. Surcoût total: ${totalOverrunAmount.toLocaleString()} € (${avgOverrunPercentage.toFixed(1)}% en moyenne)`,
+      projectId: this.project.id,
+      triggerDate: today.toISOString(),
+      timestamp: today.toISOString(),
+      acknowledged: false,
+      actionRequired: true,
+      escalationLevel,
+      metadata: {
+        affectedTasks: budgetOverrunTasks.map(t => t.id),
+        totalOverrunAmount,
+        avgOverrunPercentage
+      }
+    });
   }
+
+  // Overall budget utilization risk
+  if (budgetUtilization > 80) {
+    const remainingBudget = this.project.budget - totalActualCost;
+    const severity = budgetUtilization > 90 ? 'critical' : budgetUtilization > 80 ? 'high' : 'medium';
+    
+    alerts.push({
+      id: uid('alert'),
+      type: 'financial_risk',
+      severity,
+      title: 'Utilisation élevée du budget',
+      message: `Le projet a utilisé ${budgetUtilization.toFixed(1)}% de son budget total. Budget restant: ${remainingBudget.toLocaleString()} €`,
+      projectId: this.project.id,
+      triggerDate: today.toISOString(),
+      timestamp: today.toISOString(),
+      acknowledged: false,
+      actionRequired: true,
+      escalationLevel: budgetUtilization > 90 ? 3 : budgetUtilization > 80 ? 2 : 1,
+      metadata: {
+        budgetUtilization,
+        remainingBudget
+      }
+    });
+  }
+
+  // High estimate tasks risk
+  if (highEstimateTasks.length > 0 && estimatedToBudgetRatio > 110) {
+    alerts.push({
+      id: uid('alert'),
+      type: 'financial_risk',
+      severity: 'high',
+      title: 'Estimations dépassant le budget',
+      message: `Les estimations de coût total (${estimatedToBudgetRatio.toFixed(1)}%) dépassent le budget alloué. ${highEstimateTasks.length} tâche(s) représente(nt) plus de 15% du budget chacune.`,
+      projectId: this.project.id,
+      triggerDate: today.toISOString(),
+      timestamp: today.toISOString(),
+      acknowledged: false,
+      actionRequired: true,
+      escalationLevel: 2,
+      metadata: {
+        estimatedToBudgetRatio,
+        highEstimateTasks: highEstimateTasks.map(t => t.id)
+      }
+    });
+  }
+
+  // Assign actions to all financial risk alerts
+  return alerts.map(alert => this.assignActions(alert));
+}
 
   escalate(alerts: Alert[]): Alert[] {
     return alerts.map(alert => {
@@ -380,53 +468,9 @@ export class ProjectManager {
       };
     }
 
-    const today = new Date();
-    const startDate = new Date(this.project.startDate);
-    const totalDuration = daysBetween(startDate, new Date(this.project.endDate || today));
-    const elapsedDuration = daysBetween(startDate, today);
-    
-    let plannedValue = 0;
-    let earnedValue = 0;
-    let actualCost = 0;
-
-    for (const task of this.project.tasks) {
-      const taskStartDate = new Date(task.startDate);
-      const taskEndDate = new Date(task.endDate);
-      const taskDuration = daysBetween(taskStartDate, taskEndDate);
-      const taskElapsed = daysBetween(taskStartDate, today);
-      
-      // PV: Budgeted Cost of Work Scheduled
-      const taskPV = task.costEstimate * Math.min(1, Math.max(0, taskElapsed / taskDuration));
-      plannedValue += taskPV;
-      
-      // EV: Budgeted Cost of Work Performed
-      const taskEV = task.costEstimate * (task.progress / 100);
-      earnedValue += taskEV;
-      
-      // AC: Actual Cost of Work Performed
-      actualCost += task.actualCost || 0;
-    }
-
-    // Calcul des indicateurs EVM
-    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 0;
-    const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 0;
-    const estimateAtCompletion = costPerformanceIndex > 0 ? this.project.budget / costPerformanceIndex : this.project.budget;
-    const estimateToComplete = estimateAtCompletion - actualCost;
-    const varianceAtCompletion = this.project.budget - estimateAtCompletion;
-
-    const evmData: EVMData = {
-      plannedValue,
-      earnedValue,
-      actualCost,
-      schedulePerformanceIndex,
-      costPerformanceIndex,
-      estimateAtCompletion,
-      estimateToComplete,
-      varianceAtCompletion
-    };
-
-    this.project.earnedValueManagement = evmData;
-    return evmData;
+    // Use ReportCalculations for EVM metrics
+    const actualCost = this.project.tasks.reduce((sum, task) => sum + (task.actualCost || 0), 0);
+    return ReportCalculations.calculateEVMMetrics(this.project, actualCost);
   }
 
   /**
@@ -437,54 +481,8 @@ export class ProjectManager {
       return { tasks: [], dependencies: [] };
     }
 
-    const ganttTasks: GanttTask[] = [];
-    const ganttDependencies: GanttDependency[] = [];
-
-    // Créer les tâches pour le diagramme de Gantt
-    for (const task of this.project.tasks) {
-      ganttTasks.push({
-        id: task.id,
-        text: task.name,
-        start_date: task.startDate,
-        duration: task.estimatedDuration,
-        progress: task.progress / 100,
-        color: this.getTaskColor(task)
-      });
-
-      // Créer les dépendances pour le diagramme de Gantt
-      for (const depId of task.dependencies) {
-        ganttDependencies.push({
-          id: `dep-${task.id}-${depId}`,
-          source: depId,
-          target: task.id,
-          type: '0' // Fin à Début
-        });
-      }
-    }
-
-    const ganttData: GanttChartData = {
-      tasks: ganttTasks,
-      dependencies: ganttDependencies
-    };
-
-    this.project.ganttChart = ganttData;
-    return ganttData;
-  }
-
-  /**
-   * Retourne la couleur d'une tâche pour le diagramme de Gantt
-   */
-  private getTaskColor(task: Task): string {
-    switch (task.status) {
-      case 'completed':
-        return '#4CAF50'; // Vert
-      case 'in_progress':
-        return '#2196F3'; // Bleu
-      case 'delayed':
-        return '#F44336'; // Rouge
-      default:
-        return '#9E9E9E'; // Gris
-    }
+    // Use ReportCalculations for Gantt chart generation
+    return ReportCalculations.generatePhaseTimeline(this.project, this.project.tasks);
   }
 
   /**
@@ -493,6 +491,7 @@ export class ProjectManager {
   performPertAnalysis(): PERTAnalysis {
     if (!this.project.tasks) {
       return {
+        activities: [],
         expectedDurations: {},
         criticalPath: [],
         totalExpectedDuration: 0,
@@ -500,127 +499,18 @@ export class ProjectManager {
       };
     }
 
-    const expectedDurations: { [taskId: string]: number } = {};
-    const variances: { [taskId: string]: number } = {};
-    
-    // Calcul des durées attendues et variances pour chaque tâche
-    for (const task of this.project.tasks) {
-      const optimistic = task.optimisticEstimate || task.estimatedDuration * 0.8;
-      const pessimistic = task.pessimisticEstimate || task.estimatedDuration * 1.5;
-      const expected = (optimistic + 4 * task.estimatedDuration + pessimistic) / 6;
-      const variance = Math.pow((pessimistic - optimistic) / 6, 2);
-      
-      expectedDurations[task.id] = expected;
-      variances[task.id] = variance;
-    }
-    
-    // Calcul du chemin critique
-    const criticalPath = this.calculateCriticalPath(this.project.tasks, expectedDurations);
-    
-    // Calcul de la durée totale attendue
-    const totalExpectedDuration = criticalPath.reduce((total, taskId) => {
-      const task = this.project.tasks?.find(t => t.id === taskId);
-      return total + (task ? expectedDurations[task.id] : 0);
-    }, 0);
-    
-    const pertAnalysis: PERTAnalysis = {
-      expectedDurations,
-      criticalPath,
-      totalExpectedDuration,
-      variances
-    };
+    // Convert tasks to PERT activities format
+    const pertActivities = this.project.tasks.map(task => ({
+      name: task.name,
+      optimistic: task.optimisticEstimate || task.estimatedDuration * 0.8,
+      mostLikely: task.estimatedDuration,
+      pessimistic: task.pessimisticEstimate || task.estimatedDuration * 1.5,
+      pertEstimate: 0,
+      standardDeviation: 0
+    }));
 
-    this.project.pertAnalysis = pertAnalysis;
-    return pertAnalysis;
-  }
-
-  /**
-   * Calcule le chemin critique (version améliorée)
-   */
-  private calculateCriticalPath(tasks: Task[], expectedDurations: { [taskId: string]: number }): string[] {
-    // Implémentation simplifiée - dans une application réelle, utiliser un algorithme de graphe complet
-    const taskMap = new Map(tasks.map(task => [task.id, task]));
-    
-    // Calcul des dates au plus tôt
-    const earlyStart: { [taskId: string]: number } = {};
-    const earlyFinish: { [taskId: string]: number } = {};
-    
-    // Trier les tâches dans l'ordre topologique
-    const sortedTasks = this.topologicalSort(tasks);
-    
-    // Calcul des dates au plus tôt
-    for (const task of sortedTasks) {
-      if (task.dependencies.length === 0) {
-        earlyStart[task.id] = 0;
-      } else {
-        earlyStart[task.id] = Math.max(...task.dependencies.map(
-          depId => earlyFinish[depId] || 0
-        ));
-      }
-      earlyFinish[task.id] = earlyStart[task.id] + expectedDurations[task.id];
-    }
-    
-    // Calcul des dates au plus tard
-    const lateFinish: { [taskId: string]: number } = {};
-    const lateStart: { [taskId: string]: number } = {};
-    const projectDuration = Math.max(...Object.values(earlyFinish));
-    
-    for (const task of sortedTasks.reverse()) {
-      const successors = tasks.filter(t => t.dependencies.includes(task.id));
-      
-      if (successors.length === 0) {
-        lateFinish[task.id] = projectDuration;
-      } else {
-        lateFinish[task.id] = Math.min(...successors.map(
-          succ => lateStart[succ.id] || projectDuration
-        ));
-      }
-      
-      lateStart[task.id] = lateFinish[task.id] - expectedDurations[task.id];
-    }
-    
-    // Identification du chemin critique
-    const criticalPath: string[] = [];
-    for (const task of tasks) {
-      const slack = lateStart[task.id] - earlyStart[task.id];
-      if (slack === 0) {
-        criticalPath.push(task.id);
-        task.criticalPath = true;
-      } else {
-        task.criticalPath = false;
-      }
-    }
-    
-    return criticalPath;
-  }
-
-  /**
-   * Tri topologique des tâches
-   */
-  private topologicalSort(tasks: Task[]): Task[] {
-    const visited = new Set<string>();
-    const sorted: Task[] = [];
-    
-    const visit = (task: Task) => {
-      if (visited.has(task.id)) return;
-      
-      visited.add(task.id);
-      
-      for (const depId of task.dependencies) {
-        const depTask = tasks.find(t => t.id === depId);
-        if (depTask) visit(depTask);
-      }
-      
-      sorted.push(task);
-    };
-    
-    for (const task of tasks) {
-      if (!visited.has(task.id)) {
-        visit(task);
-      }
-    }
-    
-    return sorted;
+    // Use ReportCalculations for PERT analysis
+    return ReportCalculations.calculatePERTAnalysis(pertActivities);
   }
 
   /**
