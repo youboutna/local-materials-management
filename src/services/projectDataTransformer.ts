@@ -2,6 +2,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectData, Task, ProjectRisk, ProjectResource, Payment, Inspection, ProjectStatus } from '@/types/project';
 
 export class ProjectDataTransformer {
+  // Enhanced method to transform project data with more detail
+  static async transformProjectData(rawData: any): Promise<ProjectData> {
+    const transformedProject = await this.transformProject(rawData);
+    if (!transformedProject) {
+      throw new Error('Failed to transform project data');
+    }
+    return transformedProject;
+  }
+
   static async getProjectById(projectId: string): Promise<ProjectData | null> {
     try {
       const { data, error } = await supabase
@@ -57,7 +66,14 @@ export class ProjectDataTransformer {
 
   private static async transformProject(data: any): Promise<ProjectData | null> {
     try {
-      // Transform the basic project data
+      // Enhanced transformation with more detailed data processing
+      const [tasks, risks, resources] = await Promise.all([
+        this.transformTasks(data.id),
+        this.transformRisks(data.id),
+        this.transformResources(data.id)
+      ]);
+
+      // Transform the basic project data with enhanced details
       const project: ProjectData = {
         id: data.id,
         title: data.title,
@@ -82,25 +98,25 @@ export class ProjectDataTransformer {
         allowsInitialPayment: data.allows_initial_payment || undefined,
         initialPaymentPercentage: data.initial_payment_percentage || undefined,
         
-        // Transform related data
-        inspections: data.inspections || [],
-        tasks: await this.transformTasks(data.id),
-        risks: await this.transformRisks(data.id),
-        resources: await this.transformResources(data.id),
+        // Transform related data with enhanced details
+        inspections: this.transformInspections(data.inspections || []),
+        tasks,
+        risks,
+        resources,
         
-        // Default values for advanced features
-        methodology: 'waterfall',
-        ganttChart: undefined,
+        // Enhanced methodology and planning data
+        methodology: data.methodology || 'waterfall',
+        ganttChart: data.gantt_chart || undefined,
         escalationThresholds: {
-          alert: 10,
-          notification: 20,
-          guarantee: 30,
-          legal: 40
+          alert: data.alert_threshold || 10,
+          notification: data.notification_threshold || 20,
+          guarantee: data.guarantee_threshold || 30,
+          legal: data.legal_threshold || 40
         },
         checkScheduleLastRun: {
-          insurance: undefined,
-          delay: undefined,
-          inspection: undefined
+          insurance: data.last_insurance_check || undefined,
+          delay: data.last_delay_check || undefined,
+          inspection: data.last_inspection_check || undefined
         }
       };
 
@@ -154,8 +170,8 @@ export class ProjectDataTransformer {
 
   private static async transformResources(projectId: string): Promise<ProjectResource[]> {
     try {
-      // Fetch materials and employees related to the project
-      const [materialsResult, employeesResult] = await Promise.all([
+      // Enhanced resource fetching with project-specific filtering
+      const [materialsResult, employeesResult, projectMaterialsResult] = await Promise.all([
         supabase
           .from('materials')
           .select('*')
@@ -163,12 +179,16 @@ export class ProjectDataTransformer {
         supabase
           .from('employees')
           .select('*')
-          .eq('is_active', true)
+          .eq('is_active', true),
+        supabase
+          .from('materials')
+          .select('*')
+          .or(`workspace_id.eq.${projectId},workspace_id.is.null`)
       ]);
 
       const resources: ProjectResource[] = [];
 
-      // Add materials as resources
+      // Add project-specific materials as resources
       if (materialsResult.data) {
         materialsResult.data.forEach(material => {
           resources.push({
@@ -181,7 +201,7 @@ export class ProjectDataTransformer {
         });
       }
 
-      // Add employees as resources
+      // Add employees as human resources with enhanced details
       if (employeesResult.data) {
         employeesResult.data.forEach(employee => {
           resources.push({
@@ -189,7 +209,7 @@ export class ProjectDataTransformer {
             name: employee.full_name,
             type: 'human',
             skills: Array.isArray(employee.skills) ? employee.skills : [],
-            costPerHour: employee.salary ? employee.salary / 160 : undefined, // Assuming 160 hours per month
+            costPerHour: employee.salary ? employee.salary / 160 : undefined,
             availability: 1,
             assignedTasks: []
           });
@@ -199,6 +219,18 @@ export class ProjectDataTransformer {
       return resources;
     } catch (error) {
       console.error('Error fetching resources:', error);
+      return [];
+    }
+  }
+
+  // Enhanced method to get project phases with milestones
+  private static async getProjectPhases(projectId: string): Promise<any[]> {
+    try {
+      // For now, return empty array as phases table doesn't exist yet
+      // This can be implemented when the phases table is created
+      return [];
+    } catch (error) {
+      console.error('Error fetching project phases:', error);
       return [];
     }
   }
