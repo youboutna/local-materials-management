@@ -1,7 +1,7 @@
 // projectManagerWithActions.ts
 
-import { ActionLabels, Alert, CheckScheduleLastRun, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
 import { CHECK_SCHEDULE_INTERVALS } from "@/hooks/projects/constants";
+import { ActionLabels, Alert, EscalationRoles, EVMData, GanttChartData, GanttDependency, GanttTask, InsurancePolicy, PERTAnalysis, ProjectData, Task } from "@/types/project";
 
 
 
@@ -314,8 +314,8 @@ export class ProjectManager {
 
     // Détection des dépassements de budget (exemple simplifié)
     const budgetOverrunTasks = tasks.filter(task => {
-      // Ici vous pourriez avoir une logique de calcul de coût réel vs prévu
-      return task.status === 'in_progress' && Math.random() > 0.8; // Exemple aléatoire
+      // Ici vous pourriez avoir une logique de calcul de coût réel vs prévu/@TODOD
+      return task.status === 'in_progress' && task?.actualCost ? task?.actualCost>task.costEstimate: (task.costEstimate/this.project.budget)>0.8 // Exemple aléatoire
     });
 
     if (budgetOverrunTasks.length > 3) {
