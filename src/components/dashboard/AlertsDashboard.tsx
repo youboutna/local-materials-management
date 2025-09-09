@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Clock, DollarSign, Shield, TrendingDown, Bell } from 'lucide-react';
-import { detectProjectDelays, DELAY_THRESHOLDS } from '@/services/bankGuaranteeService';
+import { detectProjectDelays } from '@/services/bankGuaranteeService';
+import { DELAY_THRESHOLDS } from '@/types/project';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 

@@ -58,7 +58,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ['project-dto', projectId],
     queryFn: async () => {
       if (!projectId) throw new Error('ID du projet manquant');
-      return await ProjectDataTransformer.transformProjectData(projectId);
+      return await ProjectDataTransformer.getProjectById(projectId);
     },
     enabled: !!projectId,
   });

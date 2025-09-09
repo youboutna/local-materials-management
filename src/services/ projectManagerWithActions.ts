@@ -877,11 +877,7 @@ const exampleProject: ProjectData = {
       weight: 0.3,
       costEstimate: 500000,
       actualCost: 480000,
-      criticalPath: true,
-      float: 0,
-      baselineStartDate: '2021-03-23',
-      baselineEndDate: '2021-05-22',
-      wbsCode: '1.1.1'
+      criticalPath: true
     },
     {
       id: '8146da6c-29n9-4787-b901-4aead2a57068',
@@ -899,11 +895,7 @@ const exampleProject: ProjectData = {
       weight: 0.4,
       costEstimate: 700000,
       actualCost: 720000,
-      criticalPath: true,
-      float: 0,
-      baselineStartDate: '2021-05-23',
-      baselineEndDate: '2021-08-21',
-      wbsCode: '1.1.2'
+      criticalPath: true
     },
     {
       id: '7146da6c-29b9-4767-b901-4aead2a57068',
@@ -921,11 +913,7 @@ const exampleProject: ProjectData = {
       weight: 0.6,
       costEstimate: 30000000,
       actualCost: 32000000,
-      criticalPath: false,
-      float: 5,
-      baselineStartDate: '2021-10-01',
-      baselineEndDate: '2022-01-29',
-      wbsCode: '1.2.1'
+      criticalPath: false
     },
     {
       id: '6146da6c-29b9-4717-b901-4kead2a57068',
@@ -945,11 +933,7 @@ const exampleProject: ProjectData = {
       actualCost: 4200000,
       optimisticEstimate: 150,
       pessimisticEstimate: 240,
-      criticalPath: true,
-      float: 0,
-      baselineStartDate: '2023-01-01',
-      baselineEndDate: '2023-06-30',
-      wbsCode: '1.3.1'
+      criticalPath: true
     }
   ],
   risks: [
@@ -961,9 +945,7 @@ const exampleProject: ProjectData = {
       impact: 70,
       mitigationPlan: 'Prévoir des stocks tampons et identifier des fournisseurs alternatifs',
       status: 'monitored',
-      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068'],
-      phaseId: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
-      riskScore: 28
+      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068']
     },
     {
       id: '9146da6c-29b9-4787-q901-4aewd2a57068',
@@ -973,9 +955,7 @@ const exampleProject: ProjectData = {
       impact: 50,
       mitigationPlan: 'Planifier les travaux critiques en dehors de la période de tempêtes',
       status: 'identified',
-      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068'],
-      phaseId: 'c3d4e5f6-g7h8-4787-b901-3bead2a57068',
-      riskScore: 30
+      relatedTasks: ['6146da6c-29b9-4717-b901-4kead2a57068']
     }
   ],
   resources: [

@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notificationService';
-import{ProjectDelay,BankGuaranteeData, DELAY_THRESHOLDS, NOTIFICATION_ROLES} from '@/types/project';
+import {ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS} from '@/types/project';
 
 export const detectProjectDelays = async (): Promise<ProjectDelay[]> => {
   try {

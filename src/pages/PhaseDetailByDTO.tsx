@@ -45,7 +45,7 @@ const PhaseDetailByDTO: React.FC = () => {
     queryKey: ['project', projectId],
     queryFn: async () => {
       if (!projectId) return null;
-      return await ProjectDataTransformer.transformProjectData(projectId);
+      return await ProjectDataTransformer.getProjectById(projectId);
     },
     enabled: !!projectId,
   });
