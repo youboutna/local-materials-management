@@ -1,7 +1,6 @@
-// services/projectDataTransformer.ts
 import { supabase } from '@/integrations/supabase/client';
 import { GanttChartData, GanttDependency, GanttTask, Inspection, ProjectData, ProjectResource, ProjectRisk, ProjectStatus, Task } from '@/types/project';
-import { PERTAnalysis } from '../utils/reportCalculations';
+import { ReportCalculations } from '@/utils/reportCalculations';
 
 export class ProjectDataTransformer {
   static async transformProjectData(rawData: any): Promise<ProjectData> {
@@ -82,13 +81,13 @@ export class ProjectDataTransformer {
       const currentPhaseInfo = this.determineCurrentPhase(phases);
       const milestones = this.generateMilestonesFromPhases(phases);
 
-      const pertAnalysis = this.calculatePERTAnalysis(tasks);
+      const pertAnalysis = ReportCalculations.calculatePERTAnalysis(tasks);
       
       const ganttChart = this.generateGanttChart(tasks);
       const resourceAllocation = this.calculateResourceAllocation(tasks, resources);
       const costAnalysis = this.calculateCostAnalysis(tasks, phases, data.budget);
   
-      const criticalPath= this.calculateCriticalPath(tasks, pertAnalysis.expectedDurations);
+      const criticalPath = this.calculateCriticalPath(tasks, pertAnalysis.expectedDurations);
 
       const project: ProjectData = {
         id: data.id,
@@ -118,7 +117,7 @@ export class ProjectDataTransformer {
         tasks,
         risks,
         resources,
-      expenses: [payments,costAnalysis],
+        expenses: [payments, costAnalysis],
 
         methodology: data.methodology || 'waterfall',
         ganttChart,
@@ -145,6 +144,7 @@ export class ProjectDataTransformer {
       return null;
     }
   }
+
   /**
   * Calcule le chemin critique avec un algorithme de graphe complet
   */
@@ -228,7 +228,6 @@ export class ProjectDataTransformer {
     return sorted;
   }
 
-
   private static async transformTasks(projectId: string): Promise<Task[]> {
     try {
       const { data: taskAssignments } = await supabase
@@ -274,7 +273,6 @@ export class ProjectDataTransformer {
         impact: risk.impact,
         mitigationPlan: risk.mitigation_strategy,
         status: risk.status as 'identified' | 'monitored' | 'mitigated' | 'resolved',
-        //relatedTasks: risk.related_tasks?.map((rt: any) => rt.task_id) || []
       }));
     } catch (error) {
       console.error('Error fetching risks:', error);
@@ -375,42 +373,7 @@ export class ProjectDataTransformer {
     return (phases || []).flatMap(phase => phase.milestones || []);
   }
 
-  /** On calcule optimiste / probable / pessimiste pour chaque tâche.
-
-pertEstimate = durée attendue pondérée selon la formule PERT classique.
-
-standardDeviation = incertitude de la tâche.
-
-totalDuration = somme des durées PERT.
-
-totalStandardDeviation = racine de la somme des variances, pour mesurer l’incertitude globale.*/
-private static calculatePERTAnalysis(tasks: Task[]): PERTAnalysis {
-  const expectedDurations: { [taskId: string]: number } = {};
-  const variances: { [taskId: string]: number } = {};
-
-  for (const task of tasks) {
-    const optimistic = task.optimisticEstimate || (task.estimatedDuration || 1) * 0.8;
-    const mostLikely = task.estimatedDuration || 1;
-    const pessimistic = task.pessimisticEstimate || (task.estimatedDuration || 1) * 1.5;
-
-    expectedDurations[task.id] = (optimistic + 4 * mostLikely + pessimistic) / 6;
-    variances[task.id] = Math.pow((pessimistic - optimistic) / 6, 2);
-  }
-
-  const totalExpectedDuration = Object.values(expectedDurations).reduce((a, b) => a + b, 0);
-  const criticalPath = tasks.filter(t => t.progress < 100).map(t => t.id);
-
-  return {
-    expectedDurations,
-    criticalPath,
-    totalExpectedDuration,
-    variances
-  };
-}
-
-
-
-    private static generateGanttChart(tasks: Task[]): GanttChartData {
+  private static generateGanttChart(tasks: Task[]): GanttChartData {
     if (!tasks || tasks.length === 0) {
       return { tasks: [], dependencies: [] };
     }
@@ -447,7 +410,8 @@ private static calculatePERTAnalysis(tasks: Task[]): PERTAnalysis {
       dependencies: ganttDependencies
     };
   }
-    private static getTaskColor(task: Task): string {
+
+  private static getTaskColor(task: Task): string {
     switch (task.status) {
       case "completed":
         return "#4CAF50"; // Vert
@@ -460,9 +424,6 @@ private static calculatePERTAnalysis(tasks: Task[]): PERTAnalysis {
     }
   }
 
-
-
-
   private static calculateResourceAllocation(tasks: Task[], resources: ProjectResource[]) {
     return resources.map(resource => ({
       resourceId: resource.id,
@@ -470,15 +431,14 @@ private static calculatePERTAnalysis(tasks: Task[]): PERTAnalysis {
     }));
   }
 
- private static calculateCostAnalysis(tasks: Task[], budget: number, expenses: { amount: number }[]) {
-  const estimatedCost = tasks.reduce((sum, t) => sum + (t.costEstimate || 0), 0);
-  const actualExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-  return {
-    budget,
-    estimatedCost,
-    actualExpenses,
-    variance: budget - actualExpenses
-  };
-}
-
+  private static calculateCostAnalysis(tasks: Task[], budget: number, expenses: { amount: number }[]) {
+    const estimatedCost = tasks.reduce((sum, t) => sum + (t.costEstimate || 0), 0);
+    const actualExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    return {
+      budget,
+      estimatedCost,
+      actualExpenses,
+      variance: budget - actualExpenses
+    };
+  }
 }

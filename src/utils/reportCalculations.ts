@@ -112,7 +112,7 @@ export class ReportCalculations {
 
     return {
       activities: processedActivities,
-      totalExpectedDuration:totalDuration,
+      totalExpectedDuration: totalDuration,
       totalStandardDeviation
     };
   }
