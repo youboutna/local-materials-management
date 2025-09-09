@@ -141,3 +141,42 @@ export interface MitigationStrategyDTO {
   effectiveness: number; // 0-100
   status: 'planned' | 'implementing' | 'completed';
 }
+// Interfaces for our transformed data
+export interface ReportData {
+  id: string;
+  projectId: string;
+  generatedAt: Date;
+  financialSummary: FinancialSummary;
+  taskProgress: TaskProgress[];
+  riskAssessment: RiskAssessment[];
+}
+
+interface FinancialSummary {
+  totalBudget: number;
+  spentAmount: number;
+  remainingBudget: number;
+  costVariance: number;
+}
+
+interface TaskProgress {
+  taskId: string;
+  name: string;
+  progress: number;
+  status: string;
+}
+
+interface RiskAssessment {
+  id: string;
+  title: string;
+  severity: string;
+  status: string;
+}
+
+export interface CostCalculation {
+  totalBudget: number;
+  spentAmount: number;
+  remainingBudget: number;
+  costVariance: number;
+  estimatedCost: number;
+  actualCost: number;
+}

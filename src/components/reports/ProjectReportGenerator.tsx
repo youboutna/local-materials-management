@@ -1,25 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Mail, Loader2, CheckSquare, Square, Calendar } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectData } from '@/types/project';
+import { ReportDataTransformer } from '@/services/reportDataTransformer';
+import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
+import { CostCalculation, ProjectReportDTO, ReportData } from '@/types/reportTypes';
+import { ReportCalculations } from '@/utils/reportCalculations';
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
-import { ReportingService, ReportData, CostCalculation } from '@/services/reportingService';
-import { ReportCalculations, EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
+import { CheckSquare, Download, FileText, Loader2, Mail, Square } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
-import { ReportDataTransformer } from '@/services/reportDataTransformer';
-import { ProjectReportDTO } from '@/types/reportTypes';
 
 interface ProjectReportGeneratorProps {
   project: ProjectData;
@@ -91,18 +87,64 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     notes: '',
   });
 
+  // Generate report data using ReportDataTransformer
+  const generateReportData = async (project: ProjectData): Promise<ReportData> => {
+    const enrichedData = await ReportDataTransformer.transformProjectForReport(project);
+    
+    return {
+      id: `report-${project.id}-${Date.now()}`,
+      projectId: project.id,
+      generatedAt: new Date(),
+      financialSummary: {
+        totalBudget: project.budget || 0,
+        spentAmount: enrichedData.financialMetrics.spentAmount,
+        remainingBudget: enrichedData.financialMetrics.remainingBudget,
+        costVariance: enrichedData.financialMetrics.costOverrun || 0,
+      },
+      taskProgress: project.tasks?.map(task => ({
+        taskId: task.id,
+        name: task.name,
+        progress: task.progress,
+        status: task.status,
+      })) || [],
+      riskAssessment: enrichedData.riskAssessment.risks.map(risk => ({
+        id: risk.id,
+        title: risk.description,
+        severity: risk.riskScore,
+        status: risk.status,
+      })),
+    };
+  };
+
+  // Calculate project costs using ReportDataTransformer
+  const calculateProjectCosts = async (project: ProjectData): Promise<CostCalculation> => {
+    const enrichedData = await ReportDataTransformer.transformProjectForReport(project);
+    const financialMetrics = enrichedData.financialMetrics;
+    
+    // Calculate estimated and actual costs from tasks
+    const estimatedCost = project.tasks?.reduce((sum, task) => sum + (task.costEstimate || 0), 0) || 0;
+    const actualCost = project.tasks?.reduce((sum, task) => sum + (task.actualCost || 0), 0) || 0;
+
+    return {
+      totalBudget: financialMetrics.totalBudget,
+      spentAmount: financialMetrics.spentAmount,
+      remainingBudget: financialMetrics.remainingBudget,
+      costVariance: financialMetrics.costOverrun,
+      estimatedCost,
+      actualCost,
+    };
+  };
+
   // Load all report data on component mount
   useEffect(() => {
     const loadReportData = async () => {
       try {
         setLoading(true);
         
-        // Fetch all data in parallel using DTO approach
-        const enriched = await ReportDataTransformer.transformProjectForReport(project);
-        setEnrichedData(enriched);
+        // Fetch all data in parallel using ReportDataTransformer
         const [reportDataResult, costCalculationResult, enrichedDataResult] = await Promise.all([
-          ReportingService.fetchReportData(project.id),
-          ReportingService.calculateProjectCosts(project.id),
+          generateReportData(project),
+          calculateProjectCosts(project),
           ReportDataTransformer.transformProjectForReport(project)
         ]);
         
@@ -115,7 +157,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
         setEvmMetrics(evmMetricsResult);
         
         // Calculate PERT analysis
-        const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(reportDataResult.phases);
+        const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(project.tasks || []);
         setPertAnalysis(pertAnalysisResult);
         
       } catch (error) {
@@ -131,7 +173,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     };
 
     loadReportData();
-  }, [project.id, toast]);
+  }, [project, toast]);
 
   const generatePDF = async () => {
     if (!reportData || !costCalculation) {
@@ -214,28 +256,20 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       const blob = await pdf(pdfDoc).toBlob();
       const fileName = `${reportConfig.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
 
-      // Call edge function to send email with PDF attachment
-      const { error } = await supabase.functions.invoke('send-project-report', {
-        body: {
-          to: reportConfig.recipientEmail,
-          projectTitle: project.title,
-          reportTitle: reportConfig.title,
-          pdfBlob: Array.from(new Uint8Array(await blob.arrayBuffer())),
-          fileName,
-        },
-      });
-
-      if (error) throw error;
+      // For email functionality, you would need to implement this using your preferred method
+      // This could be a serverless function, API route, or third-party service
+      console.log("Email functionality would send to:", reportConfig.recipientEmail);
+      console.log("With attachment:", fileName);
 
       toast({
-        title: "Rapport envoyé",
-        description: `Le rapport a été envoyé par email à ${reportConfig.recipientEmail}.`,
+        title: "Fonctionnalité d'email",
+        description: "L'envoi d'email nécessite une implémentation côté serveur.",
       });
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('Error preparing email:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer le rapport par email.",
+        description: "Impossible de préparer l'email.",
         variant: "destructive",
       });
     } finally {
@@ -547,7 +581,6 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }
@@ -577,12 +610,12 @@ function getSectionLabel(key: string): string {
   return labels[key] || key;
 }
 
-function getReportTypeDescription(type: ReportConfig['reportType']): string {
-  const descriptions: Record<ReportConfig['reportType'], string> = {
+function getReportTypeDescription(type: string): string {
+  const descriptions: Record<string, string> = {
     summary: 'Rapport concis avec les informations essentielles du projet',
     detailed: 'Rapport complet incluant toutes les sections et analyses disponibles',
     financial: 'Focus sur les aspects financiers, garanties et contrôles de paiement',
     project_manager: 'Rapport orienté gestion avec timeline, ressources et analyses avancées'
   };
-  return descriptions[type];
+  return descriptions[type] || type;
 }
