@@ -1,15 +1,13 @@
-import { CostCalculation, ReportData } from '@/services/reportingService';
-import { ProjectData } from '@/types/project';
-import { ProjectReportDTO } from '@/types/reportTypes';
-import { EVMMetrics, PERTAnalysis } from '@/utils/reportCalculations';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { EVMMetrics, PERTAnalysis, ProjectData } from '../../../types/project';
+import { ProjectReportDTO } from '../../../types/reportTypes';
 import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTable, PDFText } from './PDFDocument';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
-  reportData: ReportData;
-  costCalculation: CostCalculation;
+  reportData: any;
+  costCalculation: any;
   evmMetrics?: EVMMetrics;
   pertAnalysis?: PERTAnalysis;
   reportConfig: {
@@ -61,6 +59,67 @@ export function ProjectPDFDocument({
     return statusMap[status] || status;
   };
 
+  // Get materials from project resources
+  const materials = project.resources?.filter(r => r.type === 'material') || [];
+  
+  // Get employees from project resources
+  const employees = project.resources?.filter(r => r.type === 'human') || [];
+  
+  // Get expenses from project data
+  const expenses = project.expenses || [];
+  
+  // Calculate material costs
+  const materialCost = materials?.reduce((sum, material) => {
+    const quantity = material.availability || 1;
+    const unitCost = material.costPerHour || material.costPerUnit || 0;
+    return sum + (quantity * unitCost);
+  }, 0);
+  
+  // Calculate labor costs
+  const laborCost = employees.reduce((sum, employee) => {
+    const hoursWorked = employee.assignedTasks?.length * 8 || 40;
+    const hourlyRate = employee.costPerHour || 0;
+    return sum + (hoursWorked * hourlyRate);
+  }, 0);
+  
+  // Calculate actual cost from expenses
+  const actualCost = expenses.reduce((sum, expense) => {
+    if (Array.isArray(expense)) {
+      return sum + expense.reduce((subSum, item) => subSum + (item.amount || 0), 0);
+    }
+    return sum + (expense.amount || 0);
+  }, 0);
+  
+  // Use enriched data if available, otherwise use calculated values
+  const financialData = enrichedData?.financialMetrics || {
+    totalBudget: project.budget || 0,
+    spentAmount: actualCost,
+    remainingBudget: (project.budget || 0) - actualCost,
+    costOverrun: actualCost - (project.budget || 0)
+  };
+
+  // Calculate total variance for PERT analysis safely
+  const totalVariance = pertAnalysis?.variances 
+    ? Object.values(pertAnalysis?.variances).reduce((sum: number, variance: number) => sum + (variance || 0), 0)
+    : 0;
+  
+  const totalStandardDeviation = totalVariance!=null ? Math.sqrt(totalVariance):0;
+
+  // Safe access to report data properties
+  const safeReportData = {
+    materials: reportData?.materials || [],
+    phases: reportData?.phases || [],
+    inspections: reportData?.inspections || [],
+    bankGuarantees: reportData?.bankGuarantees || [],
+    insurance: reportData?.insurance || [],
+    paymentBlocks: reportData?.paymentBlocks || [],
+    suppliers: reportData?.suppliers || [],
+    documents: reportData?.documents || [],
+    employees: reportData?.employees || [],
+    escalationAlerts: reportData?.escalationAlerts || [],
+    constructionMilestones: reportData?.constructionMilestones || []
+  };
+
   return (
     <PDFDocument
       title={reportConfig.title}
@@ -100,34 +159,40 @@ export function ProjectPDFDocument({
           <PDFRow>
             <PDFMetricCard
               title="Budget Total"
-              value={project.budget ? `${project.budget.toLocaleString('fr-FR')} MRU` : 'Non défini'}
+              value={financialData.totalBudget ? `${financialData.totalBudget.toLocaleString('fr-FR')} MRU` : 'Non défini'}
               color="#10b981"
             />
             <PDFMetricCard
-              title="Coût Estimé"
-              value={`${costCalculation.estimatedCost.toLocaleString('fr-FR')} MRU`}
+              title="Dépenses Total"
+              value={`${financialData.spentAmount.toLocaleString('fr-FR')} MRU`}
               color="#f59e0b"
             />
             <PDFMetricCard
-              title="Coût Réel"
-              value={`${costCalculation.actualCost.toLocaleString('fr-FR')} MRU`}
-              color="#ef4444"
+              title="Budget Restant"
+              value={`${financialData.remainingBudget.toLocaleString('fr-FR')} MRU`}
+              color="#3b82f6"
             />
             <PDFMetricCard
-              title="Écart"
-              value={`${(costCalculation.actualCost - costCalculation.estimatedCost).toLocaleString('fr-FR')} MRU`}
-              color="#8b5cf6"
+              title="Écart Budget"
+              value={`${financialData.costOverrun.toLocaleString('fr-FR')} MRU`}
+              color={financialData.costOverrun > 0 ? "#ef4444" : "#10b981"}
             />
           </PDFRow>
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Coût Matériaux" value={`${costCalculation.materialCost.toLocaleString('fr-FR')} MRU`} />
-                <PDFText label="Coût Main-d'œuvre" value={`${costCalculation.laborCost.toLocaleString('fr-FR')} MRU`} />
+                <PDFText label="Coût Matériaux" value={`${materialCost} MRU`} />
+                <PDFText label="Coût Main-d'œuvre" value={`${laborCost} MRU`} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Pourcentage Matériaux" value={`${((costCalculation.materialCost / costCalculation.actualCost) * 100).toFixed(1)}%`} />
-                <PDFText label="Pourcentage Main-d'œuvre" value={`${((costCalculation.laborCost / costCalculation.actualCost) * 100).toFixed(1)}%`} />
+                <PDFText 
+                  label="Pourcentage Matériaux" 
+                  value={financialData.spentAmount > 0 ? `${((materialCost / financialData.spentAmount) * 100).toFixed(1)}%` : '0%'} 
+                />
+                <PDFText 
+                  label="Pourcentage Main-d'œuvre" 
+                  value={financialData.spentAmount > 0 ? `${((laborCost / financialData.spentAmount) * 100).toFixed(1)}%` : '0%'} 
+                />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -163,29 +228,53 @@ export function ProjectPDFDocument({
       )}
 
       {/* Matériaux */}
-      {reportConfig.includeSections.materials && reportData.materials && reportData.materials.length > 0 && (
-        <PDFSection title="Matériaux" borderColor="#8b5cf6">
+   
+    {reportConfig.includeSections.materials && materials.length > 0 && (
+      <PDFSection title="Matériaux" borderColor="#8b5cf6">
+        <PDFTable
+          headers={['Nom', 'Quantité', 'Unité', 'Coût Unitaire', 'Coût Total']}
+          data={materials.map(material => {
+            const quantity = Number(material?.availability) || 0;
+            const unitCost = Number(material?.costPerUnit) || 0;
+            const totalCost = quantity * unitCost;
+
+            return [
+              material.name,
+              quantity.toString(),
+              'unité',
+              `${unitCost.toLocaleString('fr-FR')} MRU`,
+              `${totalCost.toLocaleString('fr-FR')} MRU`
+            ];
+          })}
+          columnWidths={['30%', '15%', '15%', '20%', '20%']}
+        />
+      </PDFSection>
+    )}
+
+      {/* Employés */}
+      {reportConfig.includeSections.employees && employees.length > 0 && (
+        <PDFSection title="Employés" borderColor="#f59e0b">
           <PDFTable
-            headers={['Nom', 'Quantité', 'Unité', 'Prix unitaire', 'Total']}
-            data={reportData.materials.map(m => [
-              m.materials?.name || m.name || '',
-              m.quantity?.toString() || '0',
-              m.materials?.unit || m.unit || '',
-              m.materials?.price_per_unit ? `${m.materials.price_per_unit.toLocaleString('fr-FR')} MRU` : '',
-              ((m.materials?.price_per_unit || 0) * (m.quantity || 0)).toLocaleString('fr-FR') + ' MRU'
+            headers={['Nom', 'Compétences', 'Taux Horaire', 'Heures Estimées', 'Coût Total']}
+            data={employees.map(employee => [
+              employee.name,
+              employee.skills?.join(', ') || 'Non spécifié',
+              employee.costPerHour ? `${employee.costPerHour.toLocaleString('fr-FR')} MRU/h` : '0 MRU/h',
+              '40h',
+              employee.costPerHour ? `${(employee.costPerHour * 40).toLocaleString('fr-FR')} MRU` : '0 MRU'
             ])}
-            columnWidths={['25%', '15%', '15%', '20%', '25%']}
+            columnWidths={['25%', '25%', '15%', '15%', '20%']}
           />
         </PDFSection>
       )}
 
       {/* Phases */}
-      {reportConfig.includeSections.phases && reportData.phases && reportData.phases.length > 0 && (
+      {reportConfig.includeSections.phases && safeReportData.phases.length > 0 && (
         <PDFSection title="Phases du Projet" borderColor="#f59e0b">
           <PDFTable
-            headers={['Phase', 'Statut', 'Coût estimé', 'Coût réel', 'Écart']}
-            data={reportData.phases.map(p => [
-              p.title || p.title || '',
+            headers={['Phase', 'Statut', 'Budget', 'Coût Réel', 'Écart']}
+            data={safeReportData.phases.map((p: any) => [
+              p.title || p.name || 'Sans nom',
               p.status || 'Non défini',
               p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
               p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
@@ -197,11 +286,11 @@ export function ProjectPDFDocument({
       )}
 
       {/* Inspections */}
-      {reportConfig.includeSections.inspections && reportData.inspections && reportData.inspections.length > 0 && (
+      {reportConfig.includeSections.inspections && safeReportData.inspections.length > 0 && (
         <PDFSection title="Inspections" borderColor="#dc2626">
           <PDFTable
             headers={['Date', 'Type', 'Statut', 'Inspecteur', 'Commentaires']}
-            data={reportData.inspections.map(i => [
+            data={safeReportData.inspections.map((i: any) => [
               i.date ? format(new Date(i.date), 'dd/MM/yyyy') : '',
               i.inspection_type || i.type || '',
               i.status || '',
@@ -214,11 +303,11 @@ export function ProjectPDFDocument({
       )}
 
       {/* Garanties bancaires */}
-      {reportConfig.includeSections.bankGuarantees && reportData.bankGuarantees && reportData.bankGuarantees.length > 0 && (
+      {reportConfig.includeSections.bankGuarantees && safeReportData.bankGuarantees.length > 0 && (
         <PDFSection title="Garanties Bancaires" borderColor="#059669">
           <PDFTable
             headers={['Type', 'Banque', 'Montant', 'Date d\'émission', 'Date d\'expiration', 'Statut']}
-            data={reportData.bankGuarantees.map(bg => [
+            data={safeReportData.bankGuarantees.map((bg: any) => [
               bg.guarantee_type || '',
               bg.bank_name || '',
               bg.guarantee_amount ? `${bg.guarantee_amount.toLocaleString('fr-FR')} MRU` : '',
@@ -232,11 +321,11 @@ export function ProjectPDFDocument({
       )}
 
       {/* Assurances */}
-      {reportConfig.includeSections.insurance && reportData.insurance && reportData.insurance.length > 0 && (
+      {reportConfig.includeSections.insurance && safeReportData.insurance.length > 0 && (
         <PDFSection title="Assurances" borderColor="#7c3aed">
           <PDFTable
             headers={['Compagnie', 'Type de couverture', 'Montant', 'Valide du', 'Valide jusqu\'au', 'Statut']}
-            data={reportData.insurance.map(ins => [
+            data={safeReportData.insurance.map((ins: any) => [
               ins.insurance_company || '',
               ins.coverage_type || '',
               ins.coverage_amount ? `${ins.coverage_amount.toLocaleString('fr-FR')} MRU` : '',
@@ -245,78 +334,6 @@ export function ProjectPDFDocument({
               ins.status || ''
             ])}
             columnWidths={['20%', '20%', '15%', '15%', '15%', '15%']}
-          />
-        </PDFSection>
-      )}
-
-      {/* Blocages de paiements */}
-      {reportConfig.includeSections.paymentBlocks && reportData.paymentBlocks && reportData.paymentBlocks.length > 0 && (
-        <PDFSection title="Blocages de Paiements" borderColor="#dc2626">
-          <PDFTable
-            headers={['Montant bloqué', 'Raisons', 'Date de blocage', 'Bloqué par', 'Date de résolution', 'Statut']}
-            data={reportData.paymentBlocks.map(pb => [
-              pb.amount ? `${pb.amount.toLocaleString('fr-FR')} MRU` : '',
-              pb.blocking_reasons ? (Array.isArray(pb.blocking_reasons) ? pb.blocking_reasons.join(', ') : pb.blocking_reasons) : '',
-              pb.blocked_at ? format(new Date(pb.blocked_at), 'dd/MM/yyyy') : '',
-              pb.blocked_by || '',
-              pb.resolved_at ? format(new Date(pb.resolved_at), 'dd/MM/yyyy') : 'Non résolu',
-              pb.resolved_at ? 'Résolu' : 'Actif'
-            ])}
-            columnWidths={['15%', '25%', '15%', '15%', '15%', '15%']}
-          />
-        </PDFSection>
-      )}
-
-      {/* Fournisseurs */}
-      {reportConfig.includeSections.suppliers && reportData.suppliers && reportData.suppliers.length > 0 && (
-        <PDFSection title="Fournisseurs" borderColor="#8b5cf6">
-          <PDFTable
-            headers={['Nom', 'Contact', 'Email', 'Téléphone', 'Type', 'Statut']}
-            data={reportData.suppliers.map(supplier => [
-              supplier.name || '',
-              supplier.contact_person || '',
-              supplier.email || '',
-              supplier.phone || '',
-              supplier.supplier_type || '',
-              supplier.status || 'Actif'
-            ])}
-            columnWidths={['20%', '15%', '20%', '15%', '15%', '15%']}
-          />
-        </PDFSection>
-      )}
-
-      {/* Documents */}
-      {reportConfig.includeSections.documents && reportData.documents && reportData.documents.length > 0 && (
-        <PDFSection title="Documents" borderColor="#059669">
-          <PDFTable
-            headers={['Titre', 'Type', 'Date de création', 'Uploadé par', 'Taille', 'Statut']}
-            data={reportData.documents.map(doc => [
-              doc.title || '',
-              doc.document_type || '',
-              doc.created_at ? format(new Date(doc.created_at), 'dd/MM/yyyy') : '',
-              doc.uploaded_by || '',
-              doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : '',
-              doc.status || 'Actif'
-            ])}
-            columnWidths={['25%', '15%', '15%', '15%', '15%', '15%']}
-          />
-        </PDFSection>
-      )}
-
-      {/* Employés */}
-      {reportConfig.includeSections.employees && reportData.employees && reportData.employees.length > 0 && (
-        <PDFSection title="Employés" borderColor="#f59e0b">
-          <PDFTable
-            headers={['Nom', 'Poste', 'Département', 'Taux journalier', 'Jours travaillés', 'Coût total']}
-            data={reportData.employees.map(emp => [
-              emp.employees?.full_name || '',
-              emp.employees?.position || '',
-              emp.employees?.department || '',
-              emp.daily_rate ? `${emp.daily_rate.toLocaleString('fr-FR')} MRU` : '',
-              emp.days_worked?.toString() || '0',
-              emp.daily_rate && emp.days_worked ? `${(emp.daily_rate * emp.days_worked).toLocaleString('fr-FR')} MRU` : ''
-            ])}
-            columnWidths={['20%', '15%', '15%', '15%', '15%', '20%']}
           />
         </PDFSection>
       )}
@@ -372,12 +389,12 @@ export function ProjectPDFDocument({
             />
             <PDFMetricCard
               title="Écart Budget"
-              value={`${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(1)}%`}
-              color={evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
+              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.actualCost / evmMetrics.budgetAtCompletion - 1) * 100).toFixed(1)}%` : '0%'}
+              color={evmMetrics.budgetAtCompletion > 0 && evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
             />
             <PDFMetricCard
               title="Progression"
-              value={`${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(1)}%`}
+              value={evmMetrics.budgetAtCompletion > 0 ? `${((evmMetrics.earnedValue / evmMetrics.budgetAtCompletion) * 100).toFixed(1)}%` : '0%'}
               color="#8b5cf6"
             />
           </PDFRow>
@@ -409,61 +426,6 @@ export function ProjectPDFDocument({
               ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
             ]}
             columnWidths={['25%', '15%', '20%', '20%', '20%']}
-        
-          />
-        </PDFSection>
-      )}
-
-      {/* Diagramme de Gantt */}
-      {reportConfig.includeSections.ganttChart && reportData && reportData.phases && (
-        <PDFSection title="Diagramme de Gantt" borderColor="#3b82f6">
-          <PDFCard>
-            <PDFText label="Section" value="Phases du Projet" />
-            <PDFTable
-              headers={['Phase', 'Début', 'Fin', 'Progression', 'Statut']}
-              data={reportData.phases.map(phase => [
-                phase.name || 'Sans nom',
-                phase.startDate ? format(new Date(phase.startDate), 'dd/MM/yyyy') : 'Non défini',
-                phase.endDate ? format(new Date(phase.endDate), 'dd/MM/yyyy') : 'Non défini',
-                `${phase.progress || 0}%`,
-                (phase.progress || 0) >= 100 ? '✅ Terminée' : (phase.progress || 0) > 0 ? '🔄 En cours' : '⏳ En attente'
-              ])}
-              columnWidths={['30%', '15%', '15%', '15%', '25%']}
-            />
-            
-            {/* Jalons/Milestones */}
-            {reportData.constructionMilestones && reportData.constructionMilestones.length > 0 && (
-              <>
-                <PDFText label="Section" value="Jalons du Projet" />
-                <PDFTable
-                  headers={['Jalon', 'Date Cible', 'Statut']}
-                  data={reportData.constructionMilestones.map(milestone => [
-                    `📍 ${milestone.title || 'Jalon sans titre'}`,
-                    milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Date à définir',
-                    milestone.isCompleted ? '✅ Terminé' : '⏳ En attente'
-                  ])}
-                  columnWidths={['50%', '25%', '25%']}
-                />
-              </>
-            )}
-          </PDFCard>
-        </PDFSection>
-      )}
-
-      {/* Alertes d'escalade */}
-      {reportConfig.includeSections.escalationAlerts && reportData.escalationAlerts && reportData.escalationAlerts.length > 0 && (
-        <PDFSection title="Alertes d'Escalade" borderColor="#ef4444">
-          <PDFTable
-            headers={['Type', 'Titre', 'Message', 'Date', 'Statut', 'Destinataire']}
-            data={reportData.escalationAlerts.map(alert => [
-              alert.type || '',
-              alert.title || '',
-              alert.message?.substring(0, 50) + (alert.message?.length > 50 ? '...' : '') || '',
-              alert.created_at ? format(new Date(alert.created_at), 'dd/MM/yyyy') : '',
-              alert.read ? 'Lu' : 'Non lu',
-              alert.recipient_id || ''
-            ])}
-            columnWidths={['15%', '20%', '25%', '15%', '15%', '10%']}
           />
         </PDFSection>
       )}
@@ -516,23 +478,31 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Durée totale estimée" value={`${pertAnalysis.expectedDurations.toFixed(1)} jours`} />
-                <PDFText label="Écart-type total" value={`${pertAnalysis.totalExpectedDuration.toFixed(2)} jours`} />
+                <PDFText 
+                  label="Durée totale estimée" 
+                  value={`${pertAnalysis.totalExpectedDuration?.toFixed(1) || '0.0'} jours`} 
+                />
+                <PDFText 
+                  label="Écart-type total" 
+                  value={`${totalStandardDeviation?.toFixed(2)} jours`} 
+                />
               </PDFCol>
             </PDFRow>
           </PDFCard>
-          <PDFTable
-            headers={['Activité', 'Optimiste (j)', 'Probable (j)', 'Pessimiste (j)', 'Estimation PERT (j)', 'Écart-type']}
-            data={pertAnalysis?.activities.map(activity => [
-              activity.name,
-              activity.optimistic.toString(),
-              activity.mostLikely.toString(),
-              activity.pessimistic.toString(),
-              activity.pertEstimate.toFixed(1),
-              activity.standardDeviation.toFixed(2)
-            ])}
-            columnWidths={['25%', '12%', '12%', '12%', '15%', '12%']}
-          />
+          {pertAnalysis.activities && pertAnalysis.activities.length > 0 && (
+            <PDFTable
+              headers={['Activité', 'Optimiste (j)', 'Probable (j)', 'Pessimiste (j)', 'Estimation PERT (j)', 'Écart-type']}
+              data={pertAnalysis.activities.map((activity: any) => [
+                activity.name || 'Activité sans nom',
+                activity.optimistic?.toString() || '0',
+                activity.mostLikely?.toString() || '0',
+                activity.pessimistic?.toString() || '0',
+                activity.pertEstimate?.toFixed(1) || '0.0',
+                activity.standardDeviation?.toFixed(2) || '0.00'
+              ])}
+              columnWidths={['25%', '12%', '12%', '12%', '15%', '12%']}
+            />
+          )}
         </PDFSection>
       )}
 
