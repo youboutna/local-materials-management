@@ -24,9 +24,10 @@ export interface PERTActivity {
 }
 
 export interface PERTAnalysis {
-  activities: PERTActivity[];
-  totalDuration: number;
-  totalStandardDeviation: number;
+  expectedDurations: { [taskId: string]: number };
+  criticalPath: string[];
+  totalExpectedDuration: number;
+  variances: { [taskId: string]: number };
 }
 
 export class ReportCalculations {
