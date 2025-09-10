@@ -30,10 +30,17 @@ interface Tender {
   project_id?: string;
   launch_date?: string;
   attribution_date?: string;
+  deadline_date?: string;
+  submission_deadline?: string;
+  evaluation_deadline?: string;
   selection_mode?: string;
   market_type?: string;
   financing_source?: string;
   project_reference?: string;
+  current_phase?: string;
+  current_stage?: string;
+  procurement_type?: string;
+  estimated_value?: number;
   status: 'draft' | 'published' | 'closed' | 'awarded';
   created_at: string;
   updated_at: string;
@@ -62,10 +69,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     project_id: '',
     launch_date: '',
     attribution_date: '',
+    deadline_date: '',
+    submission_deadline: '',
+    evaluation_deadline: '',
     selection_mode: '',
     market_type: '',
     financing_source: '',
     project_reference: '',
+    current_phase: '',
+    current_stage: '',
+    procurement_type: '',
+    estimated_value: '',
     status: 'draft' as 'draft' | 'published' | 'closed' | 'awarded'
   });
 
@@ -86,7 +100,11 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Tender[] || [];
+      return (data || []).map(tender => ({
+        ...tender,
+        current_phase: tender.current_phase?.toString() || '',
+        current_stage: tender.current_stage?.toString() || ''
+      })) as Tender[];
     },
   });
 
@@ -113,10 +131,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         project_id: tenderData.project_id || null,
         launch_date: tenderData.launch_date || null,
         attribution_date: tenderData.attribution_date || null,
+        deadline_date: tenderData.deadline_date || null,
+        submission_deadline: tenderData.submission_deadline || null,
+        evaluation_deadline: tenderData.evaluation_deadline || null,
         selection_mode: tenderData.selection_mode || null,
         market_type: tenderData.market_type || null,
         financing_source: tenderData.financing_source || null,
         project_reference: tenderData.project_reference || null,
+        procurement_type: tenderData.procurement_type || null,
+        estimated_value: tenderData.estimated_value ? parseFloat(tenderData.estimated_value) : null,
         status: tenderData.status
       };
 
@@ -229,10 +252,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       project_id: tender.project_id || '',
       launch_date: tender.launch_date || '',
       attribution_date: tender.attribution_date || '',
+      deadline_date: tender.deadline_date || '',
+      submission_deadline: tender.submission_deadline || '',
+      evaluation_deadline: tender.evaluation_deadline || '',
       selection_mode: tender.selection_mode || '',
       market_type: tender.market_type || '',
       financing_source: tender.financing_source || '',
       project_reference: tender.project_reference || '',
+      current_phase: tender.current_phase || '',
+      current_stage: tender.current_stage || '',
+      procurement_type: tender.procurement_type || '',
+      estimated_value: tender.estimated_value?.toString() || '',
       status: tender.status
     });
     setIsDialogOpen(true);
@@ -248,10 +278,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       project_id: '',
       launch_date: '',
       attribution_date: '',
+      deadline_date: '',
+      submission_deadline: '',
+      evaluation_deadline: '',
       selection_mode: '',
       market_type: '',
       financing_source: '',
       project_reference: '',
+      current_phase: '',
+      current_stage: '',
+      procurement_type: '',
+      estimated_value: '',
       status: 'draft'
     });
   };
@@ -398,6 +435,156 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, attribution_date: e.target.value }))}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="deadline_date">Date limite générale</Label>
+                <Input
+                  id="deadline_date"
+                  type="datetime-local"
+                  value={formData.deadline_date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deadline_date: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="submission_deadline">Date limite de soumission</Label>
+                <Input
+                  id="submission_deadline"
+                  type="datetime-local"
+                  value={formData.submission_deadline}
+                  onChange={(e) => setFormData(prev => ({ ...prev, submission_deadline: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="evaluation_deadline">Date limite d'évaluation</Label>
+                <Input
+                  id="evaluation_deadline"
+                  type="datetime-local"
+                  value={formData.evaluation_deadline}
+                  onChange={(e) => setFormData(prev => ({ ...prev, evaluation_deadline: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="estimated_value">Valeur estimée (MRU)</Label>
+                <Input
+                  id="estimated_value"
+                  type="number"
+                  step="0.01"
+                  value={formData.estimated_value}
+                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_value: e.target.value }))}
+                  placeholder="Valeur estimée du marché"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="procurement_type">Type de procédure</Label>
+                <Select 
+                  value={formData.procurement_type} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, procurement_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner le type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Appel d'offres ouvert</SelectItem>
+                    <SelectItem value="restricted">Appel d'offres restreint</SelectItem>
+                    <SelectItem value="negotiated">Procédure négociée</SelectItem>
+                    <SelectItem value="competitive_dialogue">Dialogue compétitif</SelectItem>
+                    <SelectItem value="direct_consultation">Consultation directe</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="current_phase">Phase actuelle</Label>
+                <Select 
+                  value={formData.current_phase} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, current_phase: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner la phase..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planification</SelectItem>
+                    <SelectItem value="initiation">Initiation</SelectItem>
+                    <SelectItem value="selection">Sélection</SelectItem>
+                    <SelectItem value="attribution">Attribution</SelectItem>
+                    <SelectItem value="execution">Exécution</SelectItem>
+                    <SelectItem value="archival">Archivage</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="current_stage">Étape actuelle</Label>
+                <Input
+                  id="current_stage"
+                  value={formData.current_stage}
+                  onChange={(e) => setFormData(prev => ({ ...prev, current_stage: e.target.value }))}
+                  placeholder="Étape détaillée actuelle"
+                />
+              </div>
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="selection_mode">Mode de sélection</Label>
+                  <Select 
+                    value={formData.selection_mode} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Mode..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lowest_price">Moins-disant</SelectItem>
+                      <SelectItem value="best_value">Mieux-disant</SelectItem>
+                      <SelectItem value="technical_criteria">Critères techniques</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="market_type">Type de marché</Label>
+                  <Select 
+                    value={formData.market_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="works">Travaux</SelectItem>
+                      <SelectItem value="supplies">Fournitures</SelectItem>
+                      <SelectItem value="services">Services</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="financing_source">Source de financement</Label>
+                  <Input
+                    id="financing_source"
+                    value={formData.financing_source}
+                    onChange={(e) => setFormData(prev => ({ ...prev, financing_source: e.target.value }))}
+                    placeholder="Source de financement"
+                  />
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="project_reference">Référence projet</Label>
+                <Input
+                  id="project_reference"
+                  value={formData.project_reference}
+                  onChange={(e) => setFormData(prev => ({ ...prev, project_reference: e.target.value }))}
+                  placeholder="Référence du projet associé"
+                />
+              </div>
+              
+              <div>
               
               <div>
                 <Label htmlFor="status">Statut</Label>

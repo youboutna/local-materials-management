@@ -4131,6 +4131,59 @@ export type Database = {
           },
         ]
       }
+      tender_workflow_status: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          phase: string
+          responsible_person: string | null
+          stage: string
+          started_at: string | null
+          status: string
+          tender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          phase: string
+          responsible_person?: string | null
+          stage: string
+          started_at?: string | null
+          status?: string
+          tender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          phase?: string
+          responsible_person?: string | null
+          stage?: string
+          started_at?: string | null
+          status?: string
+          tender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_workflow_status_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenders: {
         Row: {
           attribution_date: string | null
@@ -4140,19 +4193,24 @@ export type Database = {
           contract_duration: number | null
           created_at: string
           current_phase: number | null
+          current_stage: string | null
           deadline_date: string | null
           description: string
           eligibility_requirements: Json | null
+          estimated_value: number | null
           evaluation_criteria: Json | null
+          evaluation_deadline: string | null
           financing_source: string | null
           id: string
           launch_date: string | null
           market_type: string | null
+          procurement_type: string | null
           project_id: string | null
           project_reference: string | null
           publication_date: string | null
           selection_mode: string | null
           status: string
+          submission_deadline: string | null
           tender_category: string | null
           tender_number: string | null
           title: string
@@ -4166,19 +4224,24 @@ export type Database = {
           contract_duration?: number | null
           created_at?: string
           current_phase?: number | null
+          current_stage?: string | null
           deadline_date?: string | null
           description: string
           eligibility_requirements?: Json | null
+          estimated_value?: number | null
           evaluation_criteria?: Json | null
+          evaluation_deadline?: string | null
           financing_source?: string | null
           id?: string
           launch_date?: string | null
           market_type?: string | null
+          procurement_type?: string | null
           project_id?: string | null
           project_reference?: string | null
           publication_date?: string | null
           selection_mode?: string | null
           status?: string
+          submission_deadline?: string | null
           tender_category?: string | null
           tender_number?: string | null
           title: string
@@ -4192,19 +4255,24 @@ export type Database = {
           contract_duration?: number | null
           created_at?: string
           current_phase?: number | null
+          current_stage?: string | null
           deadline_date?: string | null
           description?: string
           eligibility_requirements?: Json | null
+          estimated_value?: number | null
           evaluation_criteria?: Json | null
+          evaluation_deadline?: string | null
           financing_source?: string | null
           id?: string
           launch_date?: string | null
           market_type?: string | null
+          procurement_type?: string | null
           project_id?: string | null
           project_reference?: string | null
           publication_date?: string | null
           selection_mode?: string | null
           status?: string
+          submission_deadline?: string | null
           tender_category?: string | null
           tender_number?: string | null
           title?: string

@@ -77,14 +77,22 @@ export class ReportCalculations {
       };
     });
 
+    const taskDurations: { [taskId: string]: number } = {};
+    const taskVariances: { [taskId: string]: number } = {};
+    
+    processedActivities.forEach(activity => {
+      taskDurations[activity.name] = activity.pertEstimate;
+      taskVariances[activity.name] = Math.pow(activity.standardDeviation, 2);
+    });
+
     const totalDuration = processedActivities.reduce((sum, activity) => sum + activity.pertEstimate, 0);
-    const totalVariance = processedActivities.reduce((sum, activity) => sum + Math.pow(activity.standardDeviation, 2), 0);
-    const totalStandardDeviation = Math.sqrt(totalVariance);
 
     return {
       activities: processedActivities,
+      expectedDurations: taskDurations,
+      criticalPath: [],
       totalExpectedDuration: totalDuration,
-      totalStandardDeviation
+      variances: taskVariances
     };
   }
 

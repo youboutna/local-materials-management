@@ -268,11 +268,12 @@ export class ProjectDataTransformer {
       return (risks || []).map(risk => ({
         id: risk.id,
         title: risk.risk_title,
-        description: risk.risk_description,
-        probability: risk.probability,
-        impact: risk.impact,
-        mitigationPlan: risk.mitigation_strategy,
+        description: risk.risk_description || '',
+        probability: Number(risk.probability || 0),
+        impact: Number(risk.impact || 0),
+        mitigationPlan: risk.mitigation_strategy || '',
         status: risk.status as 'identified' | 'monitored' | 'mitigated' | 'resolved',
+        relatedTasks: []
       }));
     } catch (error) {
       console.error('Error fetching risks:', error);

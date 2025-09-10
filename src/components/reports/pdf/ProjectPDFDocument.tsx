@@ -71,7 +71,7 @@ export function ProjectPDFDocument({
   // Calculate material costs
   const materialCost = materials?.reduce((sum, material) => {
     const quantity = material.availability || 1;
-    const unitCost = material.costPerHour || material.costPerUnit || 0;
+    const unitCost = material.costPerHour || 0;
     return sum + (quantity * unitCost);
   }, 0);
   

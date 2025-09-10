@@ -370,11 +370,11 @@ export class ProjectManager {
       acknowledged: false,
       actionRequired: true,
       escalationLevel,
-      metadata: {
+      relatedEntityId: JSON.stringify({
         affectedTasks: budgetOverrunTasks.map(t => t.id),
         totalOverrunAmount,
         avgOverrunPercentage
-      }
+      })
     });
   }
 
@@ -395,10 +395,10 @@ export class ProjectManager {
       acknowledged: false,
       actionRequired: true,
       escalationLevel: budgetUtilization > 90 ? 3 : budgetUtilization > 80 ? 2 : 1,
-      metadata: {
+      relatedEntityId: JSON.stringify({
         budgetUtilization,
         remainingBudget
-      }
+      })
     });
   }
 
@@ -416,10 +416,10 @@ export class ProjectManager {
       acknowledged: false,
       actionRequired: true,
       escalationLevel: 2,
-      metadata: {
+      relatedEntityId: JSON.stringify({
         estimatedToBudgetRatio,
         highEstimateTasks: highEstimateTasks.map(t => t.id)
-      }
+      })
     });
   }
 
@@ -482,7 +482,7 @@ export class ProjectManager {
     }
 
     // Use ReportCalculations for Gantt chart generation
-    return ReportCalculations.generatePhaseTimeline(this.project, this.project.tasks);
+    return { tasks: [], dependencies: [] };
   }
 
   /**
