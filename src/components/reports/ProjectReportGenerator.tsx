@@ -110,7 +110,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       riskAssessment: enrichedData.riskAssessment.risks.map(risk => ({
         id: risk.id,
         title: risk.description,
-        severity: risk.riskScore,
+        severity: String(risk.riskScore),
         status: risk.status,
       })),
     };

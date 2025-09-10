@@ -235,7 +235,7 @@ export function ProjectPDFDocument({
           headers={['Nom', 'Quantité', 'Unité', 'Coût Unitaire', 'Coût Total']}
           data={materials.map(material => {
             const quantity = Number(material?.availability) || 0;
-            const unitCost = Number(material?.costPerUnit) || 0;
+            const unitCost = Number(material?.costPerHour) || 0;
             const totalCost = quantity * unitCost;
 
             return [
