@@ -124,10 +124,11 @@ const EnhancedSupplierTenderPortal = () => {
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
 
-  // Fetch public tenders in phase 2 (call for submissions)
+  // Fetch public tenders in appropriate phases
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('tenders')
         .select(`
@@ -135,8 +136,8 @@ const EnhancedSupplierTenderPortal = () => {
           project:projects(title, description, location)
         `)
         .eq('status', 'published')
-        .gte('current_phase', 2)
-        .lte('current_phase', 3)
+        .in('current_phase', [2, 3])
+        .or(`deadline_date.is.null,deadline_date.gte.${now}`)
         .order('launch_date', { ascending: false });
 
       if (error) throw error;
@@ -427,8 +428,11 @@ const EnhancedSupplierTenderPortal = () => {
                     
                     <div className="flex items-center justify-between">
                       <Badge variant={tender.current_phase === 2 ? 'default' : 'secondary'}>
-                        {tender.current_phase === 2 ? 'Appel de soumissions' : 
+                        {tender.current_phase === 1 ? 'En planification' :
+                         tender.current_phase === 2 ? 'Appel de soumissions' : 
                          tender.current_phase === 3 ? 'Évaluation en cours' : 
+                         tender.current_phase === 4 ? 'Phase d\'attribution' :
+                         tender.current_phase === 5 ? 'Contrôle en cours' :
                          `Phase ${tender.current_phase}`}
                       </Badge>
                       <Button 

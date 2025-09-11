@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import WorkflowStepSelector from './WorkflowStepSelector';
+import DocumentShareDialog from './DocumentShareDialog';
 import { 
   PROCUREMENT_PHASES, 
   PROCUREMENT_STAGES, 
@@ -86,6 +87,8 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [isEditDocsOpen, setIsEditDocsOpen] = useState(false);
   const [editDocsIndex, setEditDocsIndex] = useState<number | null>(null);
   const [editDocsSelection, setEditDocsSelection] = useState<string[]>([]);
+  const [isDocumentShareOpen, setIsDocumentShareOpen] = useState(false);
+  const [sharePhase, setSharePhase] = useState<{ phase: ProcurementPhase; title: string } | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -164,7 +167,6 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         let stepNumber = 1;
         const allStepsToInsert: any[] = [];
 
-
         if (selectedProcurementSteps.length > 0) {
           const procurementSteps = selectedProcurementSteps.map(({ phase, stage, selected_documents }) => ({
             tender_id: data.id,
@@ -188,6 +190,27 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
             console.error('Error adding workflow steps:', stepsError);
             // Don't throw error, tender was created successfully
           }
+        }
+
+        // Update tender with current phase and stage if using standard mauritanien
+        if (dataToSubmit.procurement_type === 'standard_mauritanien' && selectedProcurementSteps.length > 0) {
+          const firstStep = selectedProcurementSteps[0];
+          // Map phase string to number
+          const phaseNumbers: Record<string, number> = {
+            'planification': 1,
+            'publicite': 2,
+            'reception_analyse': 3,
+            'attribution': 4,
+            'controle_regulation': 5
+          };
+          
+          await supabase
+            .from('tenders')
+            .update({
+              current_phase: phaseNumbers[firstStep.phase] || 1,
+              current_stage: firstStep.stage.value
+            })
+            .eq('id', data.id);
         }
         
         return data;
@@ -335,6 +358,11 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     setEditDocsSelection([]);
   };
 
+  const handleShareDocuments = (phase: ProcurementPhase, phaseTitle: string) => {
+    setSharePhase({ phase, title: phaseTitle });
+    setIsDocumentShareOpen(true);
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { label: 'Brouillon', color: 'bg-gray-500' },
@@ -367,15 +395,16 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
       {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               {editingTender ? 'Modifier l\'Appel d\'Offres' : 'Créer un Nouvel Appel d\'Offres'}
             </DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex-1 overflow-y-auto px-1">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Label htmlFor="title">Titre</Label>
                 <Input
@@ -680,7 +709,8 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 {tenderMutation.isPending ? 'En cours...' : editingTender ? 'Modifier' : 'Créer'}
               </Button>
             </div>
-          </form>
+           </form>
+          </div>
         </DialogContent>
       </Dialog>
   
@@ -734,6 +764,20 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Document Share Dialog */}
+      {sharePhase && (
+        <DocumentShareDialog
+          isOpen={isDocumentShareOpen}
+          onClose={() => {
+            setIsDocumentShareOpen(false);
+            setSharePhase(null);
+          }}
+          tenderId={editingTender?.id || ''}
+          phase={sharePhase.phase}
+          phaseTitle={sharePhase.title}
+        />
+      )}
 
       {/* Tenders List */}
       <div className="grid gap-4">
