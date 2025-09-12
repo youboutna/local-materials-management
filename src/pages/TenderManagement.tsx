@@ -11,7 +11,7 @@ import TenderEvaluationPanel from '@/components/tenders/TenderEvaluationPanel';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
 import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ProcurementPhase } from '@/components/tenders/PublicProcurementWorkflow';
+import { WorkflowPhase, WorkflowStage } from '@/types/workflow';
 
 interface Tender {
   id: string;
@@ -33,7 +33,8 @@ interface SelectedSupplier {
   id: string;
   name: string;
   email: string;
-  phase?: ProcurementPhase;
+  phase?: WorkflowPhase;
+  stage?: WorkflowStage;
   tender_id?: string;
   selected_documents?: string[];
 }
@@ -43,18 +44,19 @@ const TenderManagement = () => {
   const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
   const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<SelectedSupplier | null>(null);
-  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
+  const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: WorkflowPhase; stage: WorkflowStage } | null>(null);
 
-  const handleShareWithSuppliers = (stepTitle: string, stepPhase: ProcurementPhase) => {
-    setSelectedWorkflowStep({ phase: stepPhase, stepTitle });
+  const handleShareWithSuppliers = (phase: WorkflowPhase, stage: WorkflowStage) => {
+    setSelectedWorkflowStep({ phase, stage });
     
     if (!selectedTender) {
       // If no tender is selected, use the general sharing approach
       setSelectedSupplier({
         id: 'all-suppliers',
-        name: `Tous les fournisseurs - ${stepTitle}`,
+        name: `Tous les fournisseurs - ${stage.label}`,
         email: 'all-suppliers@tender-portal.com',
-        phase: stepPhase
+        phase: phase,
+        stage: stage
       });
       setDocumentSharingOpen(true);
     } else {
@@ -67,9 +69,10 @@ const TenderManagement = () => {
     // Create a supplier context for the selected tender
     setSelectedSupplier({
       id: `tender-${selectedTender?.id}`,
-      name: `Fournisseurs - ${selectedTender?.title} - ${selectedWorkflowStep?.stepTitle}`,
+      name: `Fournisseurs - ${selectedTender?.title} - ${selectedWorkflowStep?.stage.label}`,
       email: `tender-${selectedTender?.id}@portal.com`,
       phase: selectedWorkflowStep?.phase,
+      stage: selectedWorkflowStep?.stage,
       tender_id: selectedTender?.id,
       selected_documents: documentIds
     });
@@ -97,7 +100,12 @@ const TenderManagement = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleShareWithSuppliers("Ensemble du dossier", "planification")}
+                onClick={() => {
+                  // Use a default workflow step for general sharing
+                  const defaultPhase = { id: 'general', code: 'general', label: 'Partage général', value: 'general', customizable: false, stages: [] };
+                  const defaultStage = { id: 'general', code: 'general', label: 'Ensemble du dossier', value: 'general', customizable: false, tasks: [] };
+                  handleShareWithSuppliers(defaultPhase, defaultStage);
+                }}
               >
                 <Users className="h-4 w-4 mr-2" />
                 Partager
@@ -159,10 +167,12 @@ const TenderManagement = () => {
                       />
                     </TabsContent>
                     <TabsContent value="steps" className="mt-0">
-                      <TenderWorkflowSteps 
-                        tenderId={selectedTender.id}
-                        onShareWithSuppliers={handleShareWithSuppliers}
-                      />
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Configuration des étapes personnalisées</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Utilisez l'onglet Workflow pour le processus standard mauritanien
+                        </p>
+                      </div>
                     </TabsContent>
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentManager tenderId={selectedTender.id} />
@@ -214,7 +224,7 @@ const TenderManagement = () => {
             <DialogContent className="max-w-2xl max-h-[80vh]">
               <DialogHeader>
                 <DialogTitle>
-                  Sélectionner les documents pour {selectedWorkflowStep?.stepTitle}
+                  Sélectionner les documents pour {selectedWorkflowStep?.stage.label}
                 </DialogTitle>
               </DialogHeader>
               <div className="p-4">

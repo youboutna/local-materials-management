@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Calendar, 
   Megaphone, 
@@ -8,8 +9,13 @@ import {
   Award, 
   Shield,
   ChevronRight,
-  Share2} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+  Share2,
+  CheckCircle2,
+  Clock,
+  AlertCircle
+} from 'lucide-react';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
+import { WorkflowService, PhaseProgress } from '@/services/workflowService';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -431,131 +437,213 @@ export interface PublicProcurementWorkflowProps {
     description: string;
     status: string;
     project_id?: string;
+    current_phase?: string;
+    current_stage?: string;
   };
-  onShareWithSuppliers?: (stepTitle: string, stepPhase: ProcurementPhase) => void;
+  onShareWithSuppliers?: (phase: WorkflowPhase, stage: WorkflowStage) => void;
 }
 
 const PublicProcurementWorkflow: React.FC<PublicProcurementWorkflowProps> = ({ selectedTender, onShareWithSuppliers }) => {
-  
-  const [, setSelectedWorkflowStep] = useState<{ phase: ProcurementPhase; stepTitle: string } | null>(null);
+  const [phaseProgress, setPhaseProgress] = useState<PhaseProgress[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  function getPhaseDescription(phase: ProcurementPhase): string {
-    const descriptions = {
-      planification: "Élaboration du Plan Annuel d'Achats (PAA) et du Plan de Passation des Marchés (PPM)",
-      publicite: "Publication des avis selon les procédures formalisées ou adaptées", 
-      reception_analyse: "Analyse des offres par la Commission de Passation des Marchés Publics (CPMP)",
-      attribution: "Attribution au soumissionnaire présentant l'offre économiquement la plus avantageuse",
-      controle_regulation: "Contrôle par la CNCMP et régulation par l'ARMP"
-    };
-    return descriptions[phase];
+  useEffect(() => {
+    if (selectedTender?.id) {
+      loadWorkflowProgress();
+    }
+  }, [selectedTender?.id]);
+
+  const loadWorkflowProgress = async () => {
+    if (!selectedTender?.id) return;
+    
+    setLoading(true);
+    try {
+      const progress = await WorkflowService.calculateEntityProgress(selectedTender.id, 'tender');
+      setPhaseProgress(progress);
+    } catch (error) {
+      console.error('Error loading workflow progress:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStageClick = async (phase: WorkflowPhase, stage: WorkflowStage) => {
+    if (!selectedTender?.id) return;
+    
+    try {
+      // Toggle stage status
+      const currentProgress = phaseProgress.find(p => p.phase_code === phase.code);
+      const stageProgress = currentProgress?.stages.find(s => s.stage_code === stage.code);
+      
+      let newStatus: 'pending' | 'in_progress' | 'completed' = 'in_progress';
+      if (stageProgress?.status === 'pending') {
+        newStatus = 'in_progress';
+      } else if (stageProgress?.status === 'in_progress') {
+        newStatus = 'completed';
+      } else {
+        newStatus = 'pending';
+      }
+
+      await WorkflowService.updateStageStatus(
+        selectedTender.id,
+        'tender',
+        phase.code,
+        stage.code,
+        newStatus
+      );
+
+      // Reload progress
+      await loadWorkflowProgress();
+    } catch (error) {
+      console.error('Error updating stage status:', error);
+    }
+  };
+
+  const getStageIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return CheckCircle2;
+      case 'in_progress':
+        return Clock;
+      default:
+        return AlertCircle;
+    }
+  };
+
+  const getStageColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-600 bg-green-100';
+      case 'in_progress':
+        return 'text-blue-600 bg-blue-100';
+      default:
+        return 'text-gray-400 bg-gray-100';
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="text-center">Chargement du workflow...</div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  const workflowSteps = Object.entries(PROCUREMENT_STAGES).map(([phase, stages], index) => ({
-    id: index + 1,
-    phase: phase as ProcurementPhase,
-    title: PROCUREMENT_PHASE_LABELS[phase as ProcurementPhase],
-    icon: [Calendar, Megaphone, FileText, Award, Shield][index],
-    description: getPhaseDescription(phase as ProcurementPhase),
-    details: stages.map(stage => stage.label),
-    color: ["bg-blue-100 border-blue-300", "bg-green-100 border-green-300", "bg-yellow-100 border-yellow-300", "bg-purple-100 border-purple-300", "bg-red-100 border-red-300"][index],
-    stages
-  }));
-
   return (
-    <>
-      <Card className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              <CardTitle>
-                Workflow des Marchés Publics en Mauritanie
-                {selectedTender && (
-                  <Badge variant="outline" className="ml-2">
-                    {selectedTender.title}
-                  </Badge>
-                )}
-              </CardTitle>
-            </div>
-    
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="h-6 w-6" />
+            <CardTitle>
+              Workflow Standard Mauritanien
+              {selectedTender && (
+                <Badge variant="outline" className="ml-2">
+                  {selectedTender.title}
+                </Badge>
+              )}
+            </CardTitle>
           </div>
-          <p className="text-sm text-gray-600">
-            Étapes générales de la procédure des marchés publics utilisée par les entreprises publiques
-            {selectedTender && (
-              <span className="block mt-1 text-blue-600 font-medium">
-                Appel d'offres sélectionné: {selectedTender.title}
-              </span>
-            )}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {workflowSteps.map((step, index) => {
-              const IconComponent = step.icon;
-              return (
-                <div key={step.id} className="relative">
-                  <div className={`border-2 rounded-lg p-4 ${step.color}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                          <IconComponent className="h-5 w-5 text-gray-700" />
-                        </div>
+        </div>
+        <p className="text-sm text-gray-600">
+          Workflow standardisé pour les projets de travaux publics en Mauritanie
+          {selectedTender && (
+            <span className="block mt-1 text-primary font-medium">
+              Projet sélectionné: {selectedTender.title}
+            </span>
+          )}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {standardWorkflow.map((phase, phaseIndex) => {
+            const phaseIcon = [Calendar, Megaphone, FileText, Award, Shield][phaseIndex] || FileText;
+            const IconComponent = phaseIcon;
+            const currentPhaseProgress = phaseProgress.find(p => p.phase_code === phase.code);
+            
+            return (
+              <div key={phase.id} className="relative">
+                <div className="border rounded-lg p-4 bg-card">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <IconComponent className="h-5 w-5 text-primary" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              Étape {step.id}
-                            </Badge>
-                            <h3 className="font-semibold text-lg">{step.title}</h3>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-3">{step.description}</p>
-                        
-                        {/* Phase stages */}
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm text-gray-800">Étapes détaillées:</h4>
-                          <ul className="space-y-1">
-                            {step.details.map((detail, detailIndex) => (
-                              <li key={detailIndex} className="flex items-start gap-2 text-sm text-gray-600">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
-                                <div className="flex items-center justify-between w-full">
-                                  <span className="flex-1">{detail}</span>
-                                  {onShareWithSuppliers && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => onShareWithSuppliers(`${step.title} - ${detail}`, step.phase)}
-                                      className="h-6 px-2 text-xs opacity-60 hover:opacity-100"
-                                    >
-                                      <Share2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-lg">{phase.label}</h3>
+                        {currentPhaseProgress && (
+                          <Badge variant="secondary">
+                            {currentPhaseProgress.progress_percentage}% complété
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {phase.stages.map((stage, stageIndex) => {
+                          const stageProgress = currentPhaseProgress?.stages.find(s => s.stage_code === stage.code);
+                          const StageIcon = getStageIcon(stageProgress?.status || 'pending');
+                          
+                          return (
+                            <div key={stage.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getStageColor(stageProgress?.status || 'pending')}`}>
+                                  <StageIcon className="h-4 w-4" />
                                 </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-sm">{stage.label}</h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    {stage.tasks.length} tâches • 
+                                    {stageProgress ? ` ${stageProgress.completed_tasks}/${stageProgress.total_tasks} terminées` : ' Non démarré'}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleStageClick(phase, stage)}
+                                  className="h-8"
+                                >
+                                  {stageProgress?.status === 'completed' ? 'Réouvrir' : 
+                                   stageProgress?.status === 'in_progress' ? 'Terminer' : 'Démarrer'}
+                                </Button>
+                                
+                                {onShareWithSuppliers && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onShareWithSuppliers(phase, stage)}
+                                    className="h-8"
+                                  >
+                                    <Share2 className="h-3 w-3 mr-1" />
+                                    Partager
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
-                  
-                  {index < workflowSteps.length - 1 && (
-                    <div className="flex justify-center my-2">
-                      <ChevronRight className="h-6 w-6 text-gray-400" />
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-    
-
-  
-    </>
+                
+                {phaseIndex < standardWorkflow.length - 1 && (
+                  <div className="flex justify-center my-2">
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

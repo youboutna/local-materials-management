@@ -5,34 +5,40 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
-import { OFFICIAL_WORKFLOW_STEPS, getStepIcon, getStepColor, OfficialWorkflowStep } from './OfficialWorkflowSteps';
-import { ProcurementPhase, ProcurementStage } from './PublicProcurementWorkflow';
+import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/types/workflow';
+import { FileText, Settings, CheckCircle2 } from 'lucide-react';
 
 interface WorkflowStepSelectorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectStep: (step: OfficialWorkflowStep) => void;
-  existingStepNumbers: number[];
+  onSelectStep: (phase: WorkflowPhase, stage: WorkflowStage) => void;
+  existingSteps: Array<{ phaseCode: string; stageCode: string }>;
 }
 
-const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingStepNumbers }: WorkflowStepSelectorProps) => {
-  const [selectedStep, setSelectedStep] = useState<OfficialWorkflowStep | null>(null);
-    const [selectedPhase, setSelectedPhase] = useState<ProcurementPhase | null>(null);
+const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: WorkflowStepSelectorProps) => {
+  const [selectedPhase, setSelectedPhase] = useState<WorkflowPhase | null>(null);
+  const [selectedStage, setSelectedStage] = useState<WorkflowStage | null>(null);
 
-  const handleSelectStep = (step: OfficialWorkflowStep) => {
-    setSelectedStep(step);
+  const handleSelectPhase = (phase: WorkflowPhase) => {
+    setSelectedPhase(phase);
+    setSelectedStage(null);
+  };
+
+  const handleSelectStage = (stage: WorkflowStage) => {
+    setSelectedStage(stage);
   };
 
   const handleConfirmSelection = () => {
-    if (selectedStep) {
-      onSelectStep(selectedStep);
-      setSelectedStep(null);
+    if (selectedPhase && selectedStage) {
+      onSelectStep(selectedPhase, selectedStage);
+      setSelectedPhase(null);
+      setSelectedStage(null);
       onClose();
     }
   };
 
-  const isStepAlreadyAdded = (stepId: number) => {
-    return existingStepNumbers.includes(stepId);
+  const isStageAlreadyAdded = (phaseCode: string, stageCode: string) => {
+    return existingSteps.some(step => step.phaseCode === phaseCode && step.stageCode === stageCode);
   };
 
   return (
@@ -44,73 +50,89 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingStepNumbe
         
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Choisissez une étape du processus officiel des marchés publics mauritaniens :
+            Choisissez une phase puis une étape du workflow standard mauritanien :
           </p>
           
-          <div className="grid grid-cols-1 gap-4">
-            {OFFICIAL_WORKFLOW_STEPS.map((step) => {
-              const IconComponent = getStepIcon(step.category);
-              const isAlreadyAdded = isStepAlreadyAdded(step.id);
-              const isSelected = selectedStep?.id === step.id;
-              
-              return (
-                <Card 
-                  key={step.id} 
-                  className={`cursor-pointer transition-all ${
-                    isSelected ? 'ring-2 ring-terracotta-500' : ''
-                  } ${isAlreadyAdded ? 'opacity-50' : 'hover:shadow-md'}`}
-                  onClick={() => !isAlreadyAdded && handleSelectStep(step)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getStepColor(step.category)}`}>
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            Étape {step.id}: {step.title}
-                          </CardTitle>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {step.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isAlreadyAdded && (
-                          <Badge variant="secondary" className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Ajoutée
-                          </Badge>
-                        )}
-                        <Badge variant="outline">
-                          {step.estimatedDuration} jours
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Phases Selection */}
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm">Phases disponibles:</h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {standardWorkflow.map((phase) => {
+                  const isSelected = selectedPhase?.id === phase.id;
                   
-                  <CardContent className="pt-0">
-                    <div>
-                      <h4 className="font-medium text-sm mb-2">Documents requis:</h4>
-                      <ul className="text-xs text-gray-600 space-y-1">
-                        {step.requiredDocuments.slice(0, 3).map((doc, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
-                            {doc}
-                          </li>
-                        ))}
-                        {step.requiredDocuments.length > 3 && (
-                          <li className="text-xs text-gray-500 italic">
-                            ... et {step.requiredDocuments.length - 3} autres documents
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  return (
+                    <Card 
+                      key={phase.id} 
+                      className={`cursor-pointer transition-all ${
+                        isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'
+                      }`}
+                      onClick={() => handleSelectPhase(phase)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <CardTitle className="text-sm">{phase.label}</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-gray-600">
+                          {phase.stages.length} étapes disponibles
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Stages Selection */}
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm">
+                Étapes {selectedPhase ? `de ${selectedPhase.label}` : '(sélectionnez une phase)'}:
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {selectedPhase ? selectedPhase.stages.map((stage) => {
+                  const isAlreadyAdded = isStageAlreadyAdded(selectedPhase.code, stage.code);
+                  const isSelected = selectedStage?.id === stage.id;
+                  
+                  return (
+                    <Card 
+                      key={stage.id} 
+                      className={`cursor-pointer transition-all ${
+                        isSelected ? 'ring-2 ring-secondary' : ''
+                      } ${isAlreadyAdded ? 'opacity-50' : 'hover:shadow-md'}`}
+                      onClick={() => !isAlreadyAdded && handleSelectStage(stage)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            <CardTitle className="text-sm">{stage.label}</CardTitle>
+                          </div>
+                          {isAlreadyAdded && (
+                            <Badge variant="secondary" className="flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Ajoutée
+                            </Badge>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-gray-600">
+                          {stage.tasks.length} tâches définies
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Sélectionnez d'abord une phase</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           <div className="flex justify-end gap-2 pt-4 border-t">
@@ -119,7 +141,7 @@ const WorkflowStepSelector = ({ isOpen, onClose, onSelectStep, existingStepNumbe
             </Button>
             <Button 
               onClick={handleConfirmSelection}
-              disabled={!selectedStep}
+              disabled={!selectedPhase || !selectedStage}
             >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter cette Étape
