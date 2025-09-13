@@ -24,6 +24,7 @@ import {
   SUGGESTED_DOCUMENTS
 } from './PublicProcurementWorkflow';
 import ProcurementStepSelector from './ProcurementStepSelector';
+
 interface Tender {
   id: string;
   title: string;
@@ -61,7 +62,6 @@ interface TenderCrudProps {
 const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
-  const [isWorkflowSelectorOpen, setIsWorkflowSelectorOpen] = useState(false);
   const [isProcurementWorkflowSelectorOpen, setIsProcurementWorkflowSelectorOpen] = useState(false);
   const [selectedProcurementSteps, setSelectedProcurementSteps] = useState<Array<{phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selected_documents?: string[]}>>([]);
   const [formData, setFormData] = useState({
@@ -124,6 +124,31 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       return data as Project[] || [];
     },
   });
+
+  // Handle phase selection - auto-select all stages of the phase
+  const handleSelectProcurementPhase = (phase: ProcurementPhase) => {
+    const phaseStages = PROCUREMENT_STAGES[phase];
+    const newSteps = phaseStages.map(stage => ({
+      phase,
+      stage,
+      selected_documents: [] as string[]
+    }));
+
+    setSelectedProcurementSteps(prev => {
+      // Remove existing steps for this phase
+      const filtered = prev.filter(s => s.phase !== phase);
+      return [...filtered, ...newSteps];
+    });
+    setIsProcurementWorkflowSelectorOpen(false);
+  };
+
+  // Handle individual step selection
+  const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selectedDocuments?: string[]) => {
+    if (!selectedProcurementSteps.find(s => s.phase === phase && s.stage.value === stage.value)) {
+      setSelectedProcurementSteps(prev => [...prev, { phase, stage, selected_documents: selectedDocuments || [] }]);
+    }
+    setIsProcurementWorkflowSelectorOpen(false);
+  };
 
   // Create/Update tender mutation
   const tenderMutation = useMutation({
@@ -188,14 +213,12 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
           
           if (stepsError) {
             console.error('Error adding workflow steps:', stepsError);
-            // Don't throw error, tender was created successfully
           }
         }
 
         // Update tender with current phase and stage if using standard mauritanien
         if (dataToSubmit.procurement_type === 'standard_mauritanien' && selectedProcurementSteps.length > 0) {
           const firstStep = selectedProcurementSteps[0];
-          // Map phase string to number
           const phaseNumbers: Record<string, number> = {
             'planification': 1,
             'publicite': 2,
@@ -316,22 +339,10 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
     });
   };
 
-
-  /**
-   * Updated: now receives optional selectedDocuments
-   */
-  const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }, selectedDocuments?: string[]) => {
-    if (!selectedProcurementSteps.find(s => s.phase === phase && s.stage.value === stage.value)) {
-      setSelectedProcurementSteps(prev => [...prev, { phase, stage, selected_documents: selectedDocuments || [] }]);
-    }
-    setIsProcurementWorkflowSelectorOpen(false);
-  };
-
   const removeProcurementStep = (phase: ProcurementPhase, stageValue: string) => {
     setSelectedProcurementSteps(prev => prev.filter(s => !(s.phase === phase && s.stage.value === stageValue)));
   };
 
-  // --- Edit documents per step (inline small dialog) ---
   const openEditDocsForStep = (index: number) => {
     const step = selectedProcurementSteps[index];
     setEditDocsIndex(index);
@@ -393,323 +404,271 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
         </Button>
       </div>
 
-      {/* Dialog */}
+      {/* Enhanced Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="flex-shrink-0">
-            <DialogTitle>
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0 pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
               {editingTender ? 'Modifier l\'Appel d\'Offres' : 'Créer un Nouvel Appel d\'Offres'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto px-1">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <Label htmlFor="title">Titre</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  required
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="project_id">Projet associé (optionnel)</Label>
-                <Select 
-                  value={formData.project_id} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value === 'none' ? '' : value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un projet..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun projet associé</SelectItem>
-                    {projects?.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="launch_date">Date de lancement</Label>
-                <Input
-                  id="launch_date"
-                  type="date"
-                  value={formData.launch_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, launch_date: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="attribution_date">Date d'attribution</Label>
-                <Input
-                  id="attribution_date"
-                  type="date"
-                  value={formData.attribution_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, attribution_date: e.target.value }))}
-                />
+          <div className="flex-1 overflow-y-auto py-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Basic Information Section */}
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Informations Générales</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="title">Titre *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      required
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <Label htmlFor="description">Description *</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      required
+                      className="mt-1 min-h-[100px]"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="deadline_date">Date limite générale</Label>
-                <Input
-                  id="deadline_date"
-                  type="datetime-local"
-                  value={formData.deadline_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, deadline_date: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="submission_deadline">Date limite de soumission</Label>
-                <Input
-                  id="submission_deadline"
-                  type="datetime-local"
-                  value={formData.submission_deadline}
-                  onChange={(e) => setFormData(prev => ({ ...prev, submission_deadline: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="evaluation_deadline">Date limite d'évaluation</Label>
-                <Input
-                  id="evaluation_deadline"
-                  type="datetime-local"
-                  value={formData.evaluation_deadline}
-                  onChange={(e) => setFormData(prev => ({ ...prev, evaluation_deadline: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="estimated_value">Valeur estimée (MRU)</Label>
-                <Input
-                  id="estimated_value"
-                  type="number"
-                  step="0.01"
-                  value={formData.estimated_value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimated_value: e.target.value }))}
-                  placeholder="Valeur estimée du marché"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="procurement_type">Type de procédure</Label>
-                <Select 
-                  value={formData.procurement_type} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, procurement_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le type..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Appel d'offres ouvert</SelectItem>
-                    <SelectItem value="restricted">Appel d'offres restreint</SelectItem>
-                    <SelectItem value="negotiated">Procédure négociée</SelectItem>
-                    <SelectItem value="competitive_dialogue">Dialogue compétitif</SelectItem>
-                    <SelectItem value="direct_consultation">Consultation directe</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="current_phase">Phase actuelle</Label>
-                <Select 
-                  value={formData.current_phase} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, current_phase: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner la phase..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="planning">Planification</SelectItem>
-                    <SelectItem value="initiation">Initiation</SelectItem>
-                    <SelectItem value="selection">Sélection</SelectItem>
-                    <SelectItem value="attribution">Attribution</SelectItem>
-                    <SelectItem value="execution">Exécution</SelectItem>
-                    <SelectItem value="archival">Archivage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="current_stage">Étape actuelle</Label>
-                <Input
-                  id="current_stage"
-                  value={formData.current_stage}
-                  onChange={(e) => setFormData(prev => ({ ...prev, current_stage: e.target.value }))}
-                  placeholder="Étape détaillée actuelle"
-                />
-              </div>
-              </div>
-
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Project Association Section */}
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Association Projet</h3>
                 <div>
-                  <Label htmlFor="selection_mode">Mode de sélection</Label>
+                  <Label htmlFor="project_id">Projet associé (optionnel)</Label>
                   <Select 
-                    value={formData.selection_mode} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
+                    value={formData.project_id} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value === 'none' ? '' : value }))}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Mode..." />
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Sélectionner un projet..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lowest_price">Moins-disant</SelectItem>
-                      <SelectItem value="best_value">Mieux-disant</SelectItem>
-                      <SelectItem value="technical_criteria">Critères techniques</SelectItem>
+                      <SelectItem value="none">Aucun projet associé</SelectItem>
+                      {projects?.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.title}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div>
-                  <Label htmlFor="market_type">Type de marché</Label>
-                  <Select 
-                    value={formData.market_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="works">Travaux</SelectItem>
-                      <SelectItem value="supplies">Fournitures</SelectItem>
-                      <SelectItem value="services">Services</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="financing_source">Source de financement</Label>
-                  <Input
-                    id="financing_source"
-                    value={formData.financing_source}
-                    onChange={(e) => setFormData(prev => ({ ...prev, financing_source: e.target.value }))}
-                    placeholder="Source de financement"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <Label htmlFor="project_reference">Référence projet</Label>
-                <Input
-                  id="project_reference"
-                  value={formData.project_reference}
-                  onChange={(e) => setFormData(prev => ({ ...prev, project_reference: e.target.value }))}
-                  placeholder="Référence du projet associé"
-                />
               </div>
               
-              <div>
-              
-              <div>
-                <Label htmlFor="status">Statut</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value: 'draft' | 'published' | 'closed' | 'awarded') => setFormData(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Brouillon</SelectItem>
-                    <SelectItem value="published">Publié</SelectItem>
-                    <SelectItem value="closed">Fermé</SelectItem>
-                    <SelectItem value="awarded">Attribué</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              {/* Dates Section */}
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Dates Importantes</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="launch_date">Date de lancement</Label>
+                    <Input
+                      id="launch_date"
+                      type="date"
+                      value={formData.launch_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, launch_date: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="attribution_date">Date d'attribution</Label>
+                    <Input
+                      id="attribution_date"
+                      type="date"
+                      value={formData.attribution_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, attribution_date: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
 
-            {/* Workflow Steps Section - only show during creation */}
-            {!editingTender && (
-              <div className="md:col-span-2 space-y-3">
-                <Label>Étapes du Workflow Initial (optionnel)</Label>
-                 <div className="flex flex-wrap gap-2">
-                   <Button 
-                     type="button"
-                     variant="outline"
-                     onClick={() => setIsProcurementWorkflowSelectorOpen(true)}
-                     className="flex items-center gap-2"
-                   >
-                     <Workflow className="h-4 w-4" />
-                      Ajouter Étapes Officielles
-                   </Button>
-                 </div>
-                
-                 {( selectedProcurementSteps.length > 0) && (
-                   <div className="space-y-2">
-                     <p className="text-sm text-gray-600">Étapes sélectionnées :</p>
-                     <div className="space-y-2">
+                  <div>
+                    <Label htmlFor="deadline_date">Date limite générale</Label>
+                    <Input
+                      id="deadline_date"
+                      type="datetime-local"
+                      value={formData.deadline_date}
+                      onChange={(e) => setFormData(prev => ({ ...prev, deadline_date: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
 
-                       {selectedProcurementSteps.map(({ phase, stage, selected_documents }, idx) => (
-                         <div key={`${phase}-${stage.value}`} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                           <div>
-                             <div className="text-sm font-medium">
-                               {PROCUREMENT_PHASE_LABELS[phase]}: {stage.label}
-                             </div>
-                             <div className="text-xs text-gray-600 mt-1">
-                               {selected_documents && selected_documents.length > 0 ? (
-                                 <span>Documents: {selected_documents.join(', ')}</span>
-                               ) : (
-                                 <span className="italic text-gray-400">Aucun document attaché</span>
-                               )}
-                             </div>
-                           </div>
-
-                           <div className="flex items-center gap-2">
-                             <Button
-                               type="button"
-                               variant="ghost"
-                               size="sm"
-                               onClick={() => openEditDocsForStep(idx)}
-                             >
-                               Documents
-                             </Button>
-
-                             <Button
-                               type="button"
-                               variant="ghost"
-                               size="sm"
-                               onClick={() => removeProcurementStep(phase, stage.value)}
-                             >
-                               <Trash2 className="h-3 w-3" />
-                             </Button>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-                
-                <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                  💡 Vous pourrez ajouter d'autres étapes personnalisées ou officielles après la création de l'appel d'offres dans la section "Workflow".
+                  <div>
+                    <Label htmlFor="submission_deadline">Date limite de soumission</Label>
+                    <Input
+                      id="submission_deadline"
+                      type="datetime-local"
+                      value={formData.submission_deadline}
+                      onChange={(e) => setFormData(prev => ({ ...prev, submission_deadline: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
               </div>
-            )}
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={tenderMutation.isPending}>
-                {tenderMutation.isPending ? 'En cours...' : editingTender ? 'Modifier' : 'Créer'}
-              </Button>
-            </div>
-           </form>
+              {/* Status Section */}
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Configuration</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="status">Statut</Label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(value: 'draft' | 'published' | 'closed' | 'awarded') => setFormData(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Brouillon</SelectItem>
+                        <SelectItem value="published">Publié</SelectItem>
+                        <SelectItem value="closed">Fermé</SelectItem>
+                        <SelectItem value="awarded">Attribué</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="estimated_value">Valeur estimée (MRU)</Label>
+                    <Input
+                      id="estimated_value"
+                      type="number"
+                      value={formData.estimated_value}
+                      onChange={(e) => setFormData(prev => ({ ...prev, estimated_value: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Procurement Type and Workflow */}
+              {!editingTender && (
+                <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Configuration du Workflow</h3>
+                  <div>
+                    <Label htmlFor="procurement_type">Type de procédure</Label>
+                    <Select 
+                      value={formData.procurement_type} 
+                      onValueChange={(value) => {
+                        setFormData(prev => ({ ...prev, procurement_type: value }));
+                        if (value === 'standard_mauritanien') {
+                          // Auto-select first phase when Standard Mauritanien is selected
+                          handleSelectProcurementPhase('planification');
+                        } else {
+                          // Clear steps for other types
+                          setSelectedProcurementSteps([]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Sélectionner un type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard_mauritanien">Modèle Standard Mauritanien</SelectItem>
+                        <SelectItem value="international">Procédure Internationale</SelectItem>
+                        <SelectItem value="urgence">Procédure d'Urgence</SelectItem>
+                        <SelectItem value="gre_gre">Gré à Gré</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.procurement_type === 'standard_mauritanien' && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <Label>Phases du workflow séquentiel</Label>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setIsProcurementWorkflowSelectorOpen(true)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Ajouter une étape
+                          </Button>
+                          <Button 
+                            type="button"
+                            variant="secondary" 
+                            size="sm"
+                            onClick={() => {
+                              Object.keys(PROCUREMENT_STAGES).forEach(phase => {
+                                handleSelectProcurementPhase(phase as ProcurementPhase);
+                              });
+                            }}
+                          >
+                            <Workflow className="h-4 w-4 mr-2" />
+                            Toutes les phases
+                          </Button>
+                        </div>
+                      </div>
+
+                      {selectedProcurementSteps.length > 0 && (
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {selectedProcurementSteps.map((step, index) => (
+                            <div key={`${step.phase}-${step.stage.value}`} className="bg-white p-4 rounded border">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-sm">{step.stage.label}</h4>
+                                  <p className="text-xs text-gray-600">Phase: {PROCUREMENT_PHASE_LABELS[step.phase]}</p>
+                                  {step.selected_documents && step.selected_documents.length > 0 && (
+                                    <p className="text-xs text-blue-600 mt-1">
+                                      {step.selected_documents.length} document(s) sélectionné(s)
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEditDocsForStep(index)}
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeProcurementStep(step.phase, step.stage.value)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded">
+                    💡 Pour le modèle Standard Mauritanien, les phases sont séquentielles : Planification → Publicité → Réception & Analyse → Attribution → Contrôle & Régulation
+                  </div>
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-3 pt-6 border-t mt-8">
+                <Button type="button" variant="outline" onClick={handleCloseDialog} size="lg">
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={tenderMutation.isPending} size="lg">
+                  {tenderMutation.isPending ? 'Enregistrement...' : (editingTender ? 'Modifier' : 'Créer')}
+                </Button>
+              </div>
+            </form>
           </div>
         </DialogContent>
       </Dialog>

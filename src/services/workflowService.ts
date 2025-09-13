@@ -41,13 +41,21 @@ export interface StageProgress {
 }
 
 export class WorkflowService {
-  // Get workflow status for entity (project or tender) - Mock implementation for now
+  // Get workflow status for entity (project or tender)
   static async getEntityWorkflowStatus(entityId: string, entityType: 'project' | 'tender'): Promise<WorkflowStatus[]> {
-    // Mock implementation - in real app this would query the workflow_status table
-    return [];
+    const { data, error } = await supabase
+      .from('workflow_status')
+      .select('*')
+      .eq('entity_id', entityId)
+      .eq('entity_type', entityType)
+      .order('phase_code', { ascending: true })
+      .order('stage_code', { ascending: true });
+
+    if (error) throw error;
+    return (data || []) as WorkflowStatus[];
   }
 
-  // Update workflow stage status - Mock implementation for now
+  // Update workflow stage status
   static async updateStageStatus(
     entityId: string,
     entityType: 'project' | 'tender',
@@ -57,8 +65,34 @@ export class WorkflowService {
     assignedTo?: string,
     notes?: string
   ): Promise<void> {
-    // Mock implementation - in real app this would update the workflow_status table
-    console.log('Updating workflow status:', { entityId, entityType, phaseCode, stageCode, status });
+    const updateData: any = {
+      status,
+      updated_at: new Date().toISOString(),
+      notes: notes || null,
+      assigned_to: assignedTo || null
+    };
+
+    if (status === 'in_progress' && assignedTo) {
+      updateData.started_at = new Date().toISOString();
+    }
+
+    if (status === 'completed') {
+      updateData.completed_at = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('workflow_status')
+      .upsert({
+        entity_id: entityId,
+        entity_type: entityType,
+        phase_code: phaseCode,
+        stage_code: stageCode,
+        ...updateData
+      }, {
+        onConflict: 'entity_id,entity_type,phase_code,stage_code,task_id'
+      });
+
+    if (error) throw error;
   }
 
   // Calculate progress for entity
@@ -110,10 +144,39 @@ export class WorkflowService {
     return progress;
   }
 
-  // Initialize workflow for new entity - Mock implementation for now
+  // Initialize workflow for new entity
   static async initializeWorkflow(entityId: string, entityType: 'project' | 'tender'): Promise<void> {
-    // Mock implementation - in real app this would create initial workflow records
-    console.log('Initializing workflow for:', entityId, entityType);
+    const workflowRecords: any[] = [];
+
+    for (const phase of standardWorkflow) {
+      for (const stage of phase.stages) {
+        for (const task of stage.tasks) {
+          workflowRecords.push({
+            entity_id: entityId,
+            entity_type: entityType,
+            phase_code: phase.code,
+            stage_code: stage.code,
+            task_id: task.id,
+            status: 'pending'
+          });
+        }
+
+        // Also create stage-level record
+        workflowRecords.push({
+          entity_id: entityId,
+          entity_type: entityType,
+          phase_code: phase.code,
+          stage_code: stage.code,
+          status: 'pending'
+        });
+      }
+    }
+
+    const { error } = await supabase
+      .from('workflow_status')
+      .insert(workflowRecords);
+
+    if (error) throw error;
   }
 
   // Get current phase and stage for entity
@@ -143,9 +206,21 @@ export class WorkflowService {
     };
   }
 
-  // Get overdue stages - Mock implementation for now
+  // Get overdue stages
   static async getOverdueStages(entityId?: string, entityType?: 'project' | 'tender'): Promise<WorkflowStatus[]> {
-    // Mock implementation - in real app this would query overdue stages
-    return [];
+    const query = supabase
+      .from('workflow_status')
+      .select('*')
+      .not('due_date', 'is', null)
+      .lt('due_date', new Date().toISOString())
+      .neq('status', 'completed');
+
+    if (entityId && entityType) {
+      query.eq('entity_id', entityId).eq('entity_type', entityType);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []) as WorkflowStatus[];
   }
 }

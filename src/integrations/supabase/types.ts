@@ -4510,6 +4510,57 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_status: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          due_date: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          notes: string | null
+          phase_code: string
+          stage_code: string
+          started_at: string | null
+          status: string
+          task_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          notes?: string | null
+          phase_code: string
+          stage_code: string
+          started_at?: string | null
+          status?: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          phase_code?: string
+          stage_code?: string
+          started_at?: string | null
+          status?: string
+          task_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           contact_manager: string | null
