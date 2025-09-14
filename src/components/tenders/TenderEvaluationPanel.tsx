@@ -167,105 +167,121 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Submissions Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Soumissions Reçues ({submissions.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {submissions.map((submission) => (
-              <div
-                key={submission.id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selectedSubmission === submission.id 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-                onClick={() => setSelectedSubmission(submission.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">{submission.supplier_name}</h4>
-                    <p className="text-sm text-muted-foreground">{submission.supplier_email}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Soumis le {new Date(submission.submission_date).toLocaleDateString('fr-FR')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Documents: {submission.submission_documents?.length || 0} fichier(s)
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(submission.status)}>
-                      {getStatusIcon(submission.status)}
-                      <span className="ml-1">
-                        {submission.status === 'submitted' && 'Soumise'}
-                        {submission.status === 'under_review' && 'En évaluation'}
-                        {submission.status === 'approved' && 'Approuvée'}
-                        {submission.status === 'rejected' && 'Rejetée'}
-                      </span>
-                    </Badge>
-                    {submission.total_score && (
-                      <Badge variant="outline">
-                        Score: {submission.total_score}/100
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Left Sidebar - Submissions List */}
+      <div className="lg:col-span-1">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Soumissions ({submissions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-full overflow-y-auto">
+            <div className="space-y-3">
+              {submissions.map((submission) => (
+                <div
+                  key={submission.id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                    selectedSubmission === submission.id 
+                      ? 'border-primary bg-primary/5 shadow-md' 
+                      : 'border-border hover:border-primary/50 hover:shadow-sm'
+                  }`}
+                  onClick={() => setSelectedSubmission(submission.id)}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <h4 className="font-medium text-sm">{submission.supplier_name}</h4>
+                      <Badge className={getStatusColor(submission.status)}>
+                        {getStatusIcon(submission.status)}
+                        <span className="ml-1 text-xs">
+                          {submission.status === 'submitted' && 'Soumise'}
+                          {submission.status === 'under_review' && 'En cours'}
+                          {submission.status === 'approved' && 'Approuvée'}
+                          {submission.status === 'rejected' && 'Rejetée'}
+                        </span>
                       </Badge>
-                    )}
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">{submission.supplier_email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(submission.submission_date).toLocaleDateString('fr-FR')}
+                    </p>
+                    
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {submission.submission_documents?.length || 0} docs
+                      </span>
+                      {submission.total_score && (
+                        <Badge variant="outline">
+                          {submission.total_score}/100
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Evaluation Panel */}
-      {selectedSubmission && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Évaluation de la Soumission</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="administrative">
-                  Recevabilité Administrative
-                </TabsTrigger>
-                <TabsTrigger value="technical">
-                  Évaluation Technique
-                </TabsTrigger>
-                <TabsTrigger value="financial">
-                  Note Financière
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="administrative" className="space-y-4">
-                <AdministrativeEvaluation
-                  submission={submissions.find(s => s.id === selectedSubmission)!}
-                  onUpdate={updateEvaluation}
-                />
-              </TabsContent>
-
-              <TabsContent value="technical" className="space-y-4">
-                <TechnicalEvaluation
-                  submission={submissions.find(s => s.id === selectedSubmission)!}
-                  onUpdate={updateEvaluation}
-                />
-              </TabsContent>
-
-              <TabsContent value="financial" className="space-y-4">
-                <FinancialEvaluation
-                  submission={submissions.find(s => s.id === selectedSubmission)!}
-                  onUpdate={updateEvaluation}
-                />
-              </TabsContent>
-            </Tabs>
+              ))}
+            </div>
           </CardContent>
         </Card>
-      )}
+      </div>
+
+      {/* Main Content - Evaluation Panel */}
+      <div className="lg:col-span-2">
+        {selectedSubmission ? (
+          <Card className="h-full">
+            <CardHeader className="border-b">
+              <CardTitle>
+                Évaluation - {submissions.find(s => s.id === selectedSubmission)?.supplier_name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="administrative">Administrative</TabsTrigger>
+                  <TabsTrigger value="technical">Technique</TabsTrigger>
+                  <TabsTrigger value="financial">Financière</TabsTrigger>
+                </TabsList>
+
+                <div className="flex-1 overflow-y-auto">
+                  <TabsContent value="administrative" className="h-full">
+                    <AdministrativeEvaluation
+                      submission={submissions.find(s => s.id === selectedSubmission)!}
+                      onUpdate={updateEvaluation}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="technical" className="h-full">
+                    <TechnicalEvaluation
+                      submission={submissions.find(s => s.id === selectedSubmission)!}
+                      onUpdate={updateEvaluation}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="financial" className="h-full">
+                    <FinancialEvaluation
+                      submission={submissions.find(s => s.id === selectedSubmission)!}
+                      onUpdate={updateEvaluation}
+                    />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="h-full">
+            <CardContent className="h-full flex flex-col items-center justify-center text-center py-20">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Sélectionnez une soumission</h3>
+              <p className="text-muted-foreground max-w-md">
+                Choisissez une soumission dans la liste de gauche pour commencer l'évaluation.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
