@@ -16,6 +16,8 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { standardWorkflow } from '@/types/workflow';
 import {
   PROCUREMENT_PHASES,
   PROCUREMENT_STAGES,
@@ -149,6 +151,32 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     },
     enabled: !!tenderSteps?.length
   });
+
+  // Update step status mutation
+  const updateStepStatusMutation = useMutation({
+    mutationFn: async ({ stepId, status }: { stepId: string; status: string }) => {
+      const { error } = await supabase
+        .from('tender_steps')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', stepId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
+      toast({
+        title: 'Statut mis à jour',
+        description: 'Le statut de l\'étape a été mis à jour avec succès.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la mise à jour du statut.',
+        variant: 'destructive',
+      });
+    }
+  });
   // Add these handler functions inside the TenderWorkflowSteps component, before the return statement
   // Add these utility functions as well
 
@@ -230,6 +258,35 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     step.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     step.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getStepDocuments = (stepId: string) => {
+    return stepDocuments?.filter(doc => doc.step_id === stepId) || [];
+  };
+
+  const getTasksForStep = (step: TenderStep) => {
+    // Get tasks from standardWorkflow based on procurement_phase and procurement_stage
+    if (step.procurement_phase && step.procurement_stage) {
+      const phase = standardWorkflow.find(p => p.label === step.procurement_phase);
+      if (phase) {
+        const stage = phase.stages.find(s => s.label === step.procurement_stage);
+        if (stage) {
+          return stage.tasks || [];
+        }
+      }
+    }
+    return [];
+  };
+
+  const getCompletedTasksCount = (stepId: string) => {
+    const documents = getStepDocuments(stepId);
+    return documents.filter(doc => doc.status === 'approved' || doc.status === 'submitted').length;
+  };
+
+  const getTotalTasksCount = (step: TenderStep) => {
+    const tasks = getTasksForStep(step);
+    const documentsRequired = step.required_documents?.length || 0;
+    return Math.max(tasks.length, documentsRequired, 1);
+  };
   const handleAddStep = (e: React.FormEvent) => {
     e.preventDefault();
     if (!stepFormData.title.trim()) {
@@ -622,9 +679,12 @@ const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: Pr
                           </div>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h3 className="text-lg font-medium text-adrar-800 mb-1">
+                              <h3 className="text-lg font-medium text-foreground mb-1">
                                 {step.title}
                               </h3>
+                              <div className="text-xs text-muted-foreground">
+                                {getCompletedTasksCount(step.id)}/{getTotalTasksCount(step)} tâches • {getCompletedTasksCount(step.id)}/{getTotalTasksCount(step)} terminées
+                              </div>
                               {step.description && (
                                 <p className="text-sm text-gray-600 line-clamp-2">
                                   {step.description}
@@ -653,89 +713,235 @@ const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: Pr
 
                     {isExpanded && (
                       <CardContent className="pt-0">
-                        {/* Documents Section */}
-                        {stepDocs.length > 0 && (
-                          <div className="mb-6">
-                            <h4 className="font-medium text-sm mb-3 text-gray-700">Documents</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {stepDocs.map((stepDoc) => (
-                                <div key={stepDoc.id} className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <h4 className="font-medium text-sm">
-                                      {stepDoc.document?.title || stepDoc.document_type}
-                                    </h4>
-                                    <div className="flex items-center gap-2">
-                                      {stepDoc.is_required && (
-                                        <Badge variant="outline" className="text-xs">
-                                          Requis
-                                        </Badge>
-                                      )}
-                                      <Badge className={getStatusColor(stepDoc.status)}>
-                                        {stepDoc.status === 'approved' ? 'Approuvé' :
-                                          stepDoc.status === 'submitted' ? 'Soumis' :
-                                            stepDoc.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                                      </Badge>
-                                    </div>
-                                  </div>
+                        <Tabs defaultValue="overview" className="w-full">
+                          <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="overview" className="text-xs">Aperçu</TabsTrigger>
+                            <TabsTrigger value="tasks" className="text-xs">
+                              Tâches ({getCompletedTasksCount(step.id)}/{getTotalTasksCount(step)})
+                            </TabsTrigger>
+                            <TabsTrigger value="documents" className="text-xs">
+                              Documents ({stepDocs.length})
+                            </TabsTrigger>
+                          </TabsList>
 
-                                  {stepDoc.document?.file_name && (
-                                    <p className="text-xs text-gray-500 mb-2">
-                                      Fichier: {stepDoc.document.file_name}
-                                    </p>
+                          <TabsContent value="overview" className="mt-4">
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">Progression de l'étape</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {getCompletedTasksCount(step.id)}/{getTotalTasksCount(step)} terminées
+                                </span>
+                              </div>
+                              <Progress 
+                                value={(getCompletedTasksCount(step.id) / getTotalTasksCount(step)) * 100} 
+                                className="h-2" 
+                              />
+                              
+                              {step.status !== 'completed' && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => updateStepStatusMutation.mutate({ 
+                                      stepId: step.id, 
+                                      status: step.status === 'pending' ? 'in_progress' : 'completed' 
+                                    })}
+                                    disabled={updateStepStatusMutation.isPending}
+                                  >
+                                    {step.status === 'pending' ? 'Commencer' : 'Terminer l\'étape'}
+                                  </Button>
+                                  {stepDocs.length > 0 && onShareWithSuppliers && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onShareWithSuppliers(step.title, step.procurement_phase as any)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Share2 className="h-4 w-4" />
+                                      Partager
+                                    </Button>
                                   )}
-
-                                  {stepDoc.reviewer_notes && (
-                                    <div className="text-xs text-gray-600 mb-2 p-2 bg-white rounded">
-                                      <strong>Notes:</strong> {stepDoc.reviewer_notes}
-                                    </div>
-                                  )}
-
-                                  <div className="flex justify-end">
-                                    {stepDoc.document && (
-                                      <Button size="sm" variant="ghost">
-                                        <Eye className="h-4 w-4 mr-1" />
-                                        Voir
-                                      </Button>
-                                    )}
-                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        {(!readonly || DEV_MODE) && (
-                          <div className="flex flex-wrap gap-2 pt-4 border-t">
-                            <Button
-                              size="sm"
-                              variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
-                              onClick={() => setSelectedStepForSuggestions(
-                                selectedStepForSuggestions === step.step_number ? null : step.step_number
                               )}
-                              className="flex items-center gap-2"
-                            >
-                              <FileText className="h-4 w-4" />
-                              {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openAddDocumentDialog(step.id)}
-                              className="flex items-center gap-2"
-                            >
-                              <Upload className="h-4 w-4" />
-                              Ajouter Document
-                            </Button>
-                          </div>
-                        )}
+                            </div>
+                          </TabsContent>
+
+                          <TabsContent value="tasks" className="mt-4">
+                            <div className="space-y-3">
+                              {getTasksForStep(step).length > 0 ? (
+                                getTasksForStep(step).map((task, index) => {
+                                  const taskDocument = stepDocs.find(doc => 
+                                    doc.document?.title.toLowerCase().includes(task.label.toLowerCase()) ||
+                                    doc.document_type.toLowerCase().includes(task.code)
+                                  );
+                                  const isCompleted = taskDocument?.status === 'approved' || taskDocument?.status === 'submitted';
+                                  
+                                  return (
+                                    <div key={task.id} className="border rounded-lg p-3 bg-muted/30">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1">
+                                          <h5 className="font-medium text-sm">{task.label}</h5>
+                                          {task.description && (
+                                            <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {isCompleted ? (
+                                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                                              <CheckCircle className="h-3 w-3 mr-1" />
+                                              Terminé
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="outline">
+                                              <Clock className="h-3 w-3 mr-1" />
+                                              En attente
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      {!isCompleted && !readonly && (
+                                        <div className="flex gap-2 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => openAddDocumentDialog(step.id)}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <Upload className="h-3 w-3" />
+                                            Uploader Document
+                                          </Button>
+                                        </div>
+                                      )}
+                                      
+                                      {isCompleted && taskDocument && (
+                                        <div className="mt-2 p-2 bg-background rounded border">
+                                          <p className="text-xs text-muted-foreground">
+                                            Document: {taskDocument.document?.title}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <div className="text-center py-6 text-muted-foreground">
+                                  <p className="text-sm">Aucune tâche définie pour cette étape</p>
+                                  {!readonly && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => openAddDocumentDialog(step.id)}
+                                      className="mt-2"
+                                    >
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Ajouter Document
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </TabsContent>
+
+                          <TabsContent value="documents" className="mt-4">
+                            {stepDocs.length > 0 ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {stepDocs.map((stepDoc) => (
+                                  <div key={stepDoc.id} className="border rounded-lg p-3 bg-muted/30 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-start justify-between mb-2">
+                                      <h4 className="font-medium text-sm">
+                                        {stepDoc.document?.title || stepDoc.document_type}
+                                      </h4>
+                                      <div className="flex items-center gap-2">
+                                        {stepDoc.is_required && (
+                                          <Badge variant="outline" className="text-xs">
+                                            Requis
+                                          </Badge>
+                                        )}
+                                        <Badge className={getStatusColor(stepDoc.status)}>
+                                          {stepDoc.status === 'approved' ? 'Approuvé' :
+                                            stepDoc.status === 'submitted' ? 'Soumis' :
+                                              stepDoc.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                                        </Badge>
+                                      </div>
+                                    </div>
+
+                                    {stepDoc.document?.file_name && (
+                                      <p className="text-xs text-muted-foreground mb-2">
+                                        Fichier: {stepDoc.document.file_name}
+                                      </p>
+                                    )}
+
+                                    {stepDoc.reviewer_notes && (
+                                      <div className="text-xs text-muted-foreground mb-2 p-2 bg-background rounded">
+                                        <strong>Notes:</strong> {stepDoc.reviewer_notes}
+                                      </div>
+                                    )}
+
+                                    <div className="flex justify-end">
+                                      {stepDoc.document && (
+                                        <Button size="sm" variant="ghost">
+                                          <Eye className="h-4 w-4 mr-1" />
+                                          Voir
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-6 text-muted-foreground">
+                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">Aucun document ajouté</p>
+                                {!readonly && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => openAddDocumentDialog(step.id)}
+                                    className="mt-2"
+                                  >
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Ajouter Document
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            
+                            {(!readonly || DEV_MODE) && (
+                              <div className="flex flex-wrap gap-2 pt-4 border-t mt-4">
+                                <Button
+                                  size="sm"
+                                  variant={selectedStepForSuggestions === step.step_number ? "default" : "outline"}
+                                  onClick={() => setSelectedStepForSuggestions(
+                                    selectedStepForSuggestions === step.step_number ? null : step.step_number
+                                  )}
+                                  className="flex items-center gap-2"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  {selectedStepForSuggestions === step.step_number ? 'Masquer' : 'Suggérer'} Documents
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openAddDocumentDialog(step.id)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Upload className="h-4 w-4" />
+                                  Ajouter Document
+                                </Button>
+                              </div>
+                            )}
+                          </TabsContent>
+                        </Tabs>
+                        
                         {/* Document Suggestions */}
                         {selectedPhase && selectedStepForSuggestions && (
-                          <StandardWorkflowDocumentSuggestions
-                            selectedPhase={selectedPhase}
-                            onAddDocument={handleAddSuggestedDocument}
-                            existingDocuments={getExistingDocuments()}
-                          />
+                          <div className="mt-4 border-t pt-4">
+                            <StandardWorkflowDocumentSuggestions
+                              selectedPhase={selectedPhase}
+                              onAddDocument={handleAddSuggestedDocument}
+                              existingDocuments={getExistingDocuments()}
+                            />
+                          </div>
                         )}
                       </CardContent>
                     )}

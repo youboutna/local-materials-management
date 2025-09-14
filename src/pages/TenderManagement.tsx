@@ -221,21 +221,37 @@ const TenderManagement = () => {
         {/* Document Selector Dialog */}
         {selectedTender && documentSelectorOpen && (
           <Dialog open={documentSelectorOpen} onOpenChange={setDocumentSelectorOpen}>
-            <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   Sélectionner les documents pour {selectedWorkflowStep?.stage.label}
                 </DialogTitle>
               </DialogHeader>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="p-4 space-y-4">
+                <p className="text-sm text-muted-foreground">
                   Choisissez les documents à partager avec les fournisseurs pour cette étape.
                 </p>
+                
+                {/* Document List */}
+                <div className="border rounded-lg p-4 bg-muted/30">
+                  <h4 className="font-medium mb-3">Documents disponibles</h4>
+                  <div className="text-sm text-muted-foreground">
+                    Seuls les documents uploadés dans les étapes du workflow sont disponibles pour le partage.
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Aucun document disponible</p>
+                      <p className="text-xs mt-1">Ajoutez des documents aux étapes pour les rendre disponibles au partage</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" onClick={() => setDocumentSelectorOpen(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={() => handleDocumentSelected([])}>
+                  <Button onClick={() => handleDocumentSelected([])} disabled>
                     Continuer sans documents
                   </Button>
                 </div>
