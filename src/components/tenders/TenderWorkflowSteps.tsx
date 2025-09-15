@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -11,13 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { FileText, Plus, Upload, Eye, CheckCircle, Clock, AlertTriangle, Workflow, ChevronDown, ChevronUp, Search, X, Share2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
+import { WorkflowStepDTO, DocumentUploadDTO, DocumentShareDTO } from '@/types/workflow-dto';
 import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { standardWorkflow } from '@/types/workflow';
 import {
   PROCUREMENT_PHASES,
   PROCUREMENT_STAGES,
@@ -35,47 +32,13 @@ import {
 } from '@/types/tender';
 import ProcurementStepSelector from './ProcurementStepSelector';
 
-interface TenderStep {
-  id: string;
-  tender_id: string;
-  step_number: number;
-  title: string;
-  description?: string;
-  required_documents: string[];
-  status: 'pending' | 'in_progress' | 'completed' | 'approved';
-  due_date?: string;
-  procurement_phase?: ProcurementPhase;
-  procurement_stage?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface StepDocument {
-  id: string;
-  step_id: string;
-  document_id: string;
-  document_type: string;
-  is_required: boolean;
-  submitted_at?: string;
-  status: 'pending' | 'submitted' | 'approved' | 'rejected';
-  reviewer_notes?: string;
-  created_at: string;
-  document?: {
-    id: string;
-    title: string;
-    description?: string;
-    file_url?: string;
-    file_name?: string;
-    mime_type?: string;
-    file_size?: number;
-  };
-}
+// Interfaces moved to DTO types
 
 interface TenderWorkflowStepsProps {
   tenderId: string;
   readonly?: boolean;
   projectId?: string;
-  onShareWithSuppliers?: (stepTitle: string, stepPhase: ProcurementPhase) => void;
+  onShareWithSuppliers?: (shareData: DocumentShareDTO) => void;
 }
 
 const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWithSuppliers }: TenderWorkflowStepsProps) => {
@@ -83,17 +46,10 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
   const [isProcurementWorkflowDialogOpen, setIsProcurementWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
-  const [selectedStepForSuggestions, setSelectedStepForSuggestions] = useState<number | null>(null);
+  const [selectedStep, setSelectedStep] = useState<WorkflowStepDTO | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
-  const [stepFormData, setStepFormData] = useState({
-    title: '',
-    description: '',
-    due_date: '',
-    procurement_phase: '' as ProcurementPhase | '',
-    procurement_stage: ''
-  });
   const [documentFormData, setDocumentFormData] = useState({
     category: 'administrative' as TenderDocumentCategory,
     subcategory: 'lettre_soumission' as TenderDocumentSubcategory,
@@ -101,82 +57,22 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     description: '',
     is_required: true
   });
-  const [selectedPhase, setSelectedPhase] = useState<ProcurementPhase | null>(null);
 
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { uploadFile, uploading } = useDocumentStorage();
+  // Use the new workflow steps hook
+  const {
+    steps,
+    progress,
+    stepsLoading,
+    progressLoading,
+    uploading,
+    uploadDocument,
+    updateStatus,
+    useStepDocuments
+  } = useWorkflowSteps(tenderId);
 
-  // Fetch tender steps
-  const { data: tenderSteps, isLoading: stepsLoading } = useQuery({
-    queryKey: ['tender-steps', tenderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_steps')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('step_number', { ascending: true });
+  // Data is now handled by the hook
 
-      if (error) throw error;
-      return (data || []) as TenderStep[];
-    },
-    enabled: !!tenderId
-  });
-
-  // Fetch step documents
-  const { data: stepDocuments, isLoading: documentsLoading } = useQuery({
-    queryKey: ['step-documents', tenderId],
-    queryFn: async () => {
-      if (!tenderSteps?.length) return [];
-
-      const stepIds = tenderSteps.map(step => step.id);
-      const { data, error } = await supabase
-        .from('tender_step_documents')
-        .select(`
-          *,
-          document:documents(
-            id,
-            title,
-            description,
-            file_url,
-            file_name,
-            mime_type,
-            file_size
-          )
-        `)
-        .in('step_id', stepIds);
-
-      if (error) throw error;
-      return (data || []) as StepDocument[];
-    },
-    enabled: !!tenderSteps?.length
-  });
-
-  // Update step status mutation
-  const updateStepStatusMutation = useMutation({
-    mutationFn: async ({ stepId, status }: { stepId: string; status: string }) => {
-      const { error } = await supabase
-        .from('tender_steps')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', stepId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
-      toast({
-        title: 'Statut mis à jour',
-        description: 'Le statut de l\'étape a été mis à jour avec succès.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la mise à jour du statut.',
-        variant: 'destructive',
-      });
-    }
-  });
+  // Status update is now handled by the hook
   // Add these handler functions inside the TenderWorkflowSteps component, before the return statement
   // Add these utility functions as well
 
@@ -209,21 +105,17 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
   };
 
   const getProgressPercentage = () => {
-    if (!tenderSteps?.length) return 0;
-    const completedSteps = tenderSteps.filter(step =>
-      step.status === 'completed' || step.status === 'approved'
-    ).length;
-    return (completedSteps / (tenderSteps?.length || 1)) * 100;
+    return progress?.progress_percentage || 0;
   };
 
   const getExistingStepNumbers = () => {
-    return tenderSteps?.map(step => step.step_number) || [];
+    return steps?.map(step => step.step_number) || [];
   };
 
   const getExistingProcurementSteps = () => {
-    if (!tenderSteps) return [];
+    if (!steps) return [];
 
-    return tenderSteps
+    return steps
       .filter(step => step.procurement_phase && step.procurement_stage)
       .map(step => {
         const phase = step.procurement_phase as ProcurementPhase;
@@ -250,43 +142,12 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
       });
   };
 
-  const getExistingDocuments = () => {
-    return stepDocuments?.map(doc => doc.document?.title || doc.document_type).filter(Boolean) || [];
-  };
-
-  const filteredSteps = tenderSteps?.filter(step =>
+  const filteredSteps = steps?.filter(step =>
     step.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     step.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStepDocuments = (stepId: string) => {
-    return stepDocuments?.filter(doc => doc.step_id === stepId) || [];
-  };
-
-  const getTasksForStep = (step: TenderStep) => {
-    // Get tasks from standardWorkflow based on procurement_phase and procurement_stage
-    if (step.procurement_phase && step.procurement_stage) {
-      const phase = standardWorkflow.find(p => p.label === step.procurement_phase);
-      if (phase) {
-        const stage = phase.stages.find(s => s.label === step.procurement_stage);
-        if (stage) {
-          return stage.tasks || [];
-        }
-      }
-    }
-    return [];
-  };
-
-  const getCompletedTasksCount = (stepId: string) => {
-    const documents = getStepDocuments(stepId);
-    return documents.filter(doc => doc.status === 'approved' || doc.status === 'submitted').length;
-  };
-
-  const getTotalTasksCount = (step: TenderStep) => {
-    const tasks = getTasksForStep(step);
-    const documentsRequired = step.required_documents?.length || 0;
-    return Math.max(tasks.length, documentsRequired, 1);
-  };
+  // Task calculations are now handled in the service layer
   const handleAddStep = (e: React.FormEvent) => {
     e.preventDefault();
     if (!stepFormData.title.trim()) {
@@ -303,19 +164,23 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
   const handleAddDocument = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile || !selectedStepId) {
-      toast({
-        title: 'Erreur',
-        description: 'Veuillez sélectionner un fichier et une étape.',
-        variant: 'destructive',
-      });
       return;
     }
 
-    addDocumentMutation.mutate({
+    const uploadData: DocumentUploadDTO = {
       file: selectedFile,
-      documentData: documentFormData,
-      stepId: selectedStepId
-    });
+      step_id: selectedStepId,
+      title: documentFormData.title,
+      description: documentFormData.description,
+      category: documentFormData.category,
+      subcategory: documentFormData.subcategory,
+      is_required: documentFormData.is_required
+    };
+
+    uploadDocument({ uploadData, projectId });
+    setIsAddDocumentDialogOpen(false);
+    setSelectedFile(null);
+    setSelectedStepId(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,39 +193,31 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     }
   };
 
-  const handleAddSuggestedDocument = (documentData: {
-    category: TenderDocumentCategory;
-    subcategory: string;
-    title: string;
-    isRequired: boolean;
-  }) => {
-    if (!selectedStepForSuggestions) return;
+  const handleShareDocuments = (step: WorkflowStepDTO) => {
+    if (!onShareWithSuppliers) return;
 
-    const stepId = tenderSteps?.find(step => step.step_number === selectedStepForSuggestions)?.id;
-    if (!stepId) return;
+    const stepDocuments = useStepDocuments(step.id);
+    const shareableDocuments = stepDocuments.data?.filter(doc => doc.can_share) || [];
+    
+    if (shareableDocuments.length === 0) return;
 
-    setDocumentFormData({
-      category: documentData.category,
-      subcategory: documentData.subcategory as TenderDocumentSubcategory,
-      title: documentData.title,
-      description: `Document suggéré pour l'étape ${selectedStepForSuggestions}`,
-      is_required: documentData.isRequired
-    });
+    const shareData: DocumentShareDTO = {
+      document_ids: shareableDocuments.map(doc => doc.document_id),
+      step_title: step.title,
+      procurement_phase: step.procurement_phase,
+      procurement_stage: step.procurement_stage
+    };
 
-    setSelectedStepId(stepId);
+    onShareWithSuppliers(shareData);
+  };
+
+  const openAddDocumentDialog = (step: WorkflowStepDTO) => {
+    setSelectedStep(step);
+    setSelectedStepId(step.id);
     setIsAddDocumentDialogOpen(true);
   };
 
-// Update the handleSelectProcurementStep function to set the selected phase
-const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: ProcurementStage; label: string }): void => {
-  setSelectedPhase(phase); // Set the selected phase
-  addProcurementStepMutation.mutate({ phase, stage });
-};
-
-  const openAddDocumentDialog = (stepId: string) => {
-    setSelectedStepId(stepId);
-    setIsAddDocumentDialogOpen(true);
-  };
+  // Function moved above
 
   const toggleStepExpansion = (stepId: string) => {
     const newExpanded = new Set(expandedSteps);
@@ -372,132 +229,7 @@ const handleSelectProcurementStep = (phase: ProcurementPhase, stage: { value: Pr
     setExpandedSteps(newExpanded);
   };
 
-  // Add procurement workflow step
-  const addProcurementStepMutation = useMutation({
-    mutationFn: async ({ phase, stage }: { phase: ProcurementPhase; stage: { value: ProcurementStage; label: string } }) => {
-      const existingSteps = tenderSteps || [];
-      const nextStepNumber = existingSteps.length > 0
-        ? Math.max(...existingSteps.map(s => s.step_number)) + 1
-        : 1;
-
-      const { data, error } = await supabase
-        .from('tender_steps')
-        .insert([{
-          tender_id: tenderId,
-          title: stage.label,
-          description: `Phase: ${PROCUREMENT_PHASE_LABELS[phase]} - ${stage.label}`,
-          step_number: nextStepNumber,
-          required_documents: [],
-          status: 'pending',
-          procurement_phase: PROCUREMENT_PHASE_LABELS[phase],
-          procurement_stage: stage.label
-   
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
-      toast({
-        title: 'Étape de marché public ajoutée',
-        description: 'L\'étape du workflow de marché public a été ajoutée avec succès.',
-      });
-      setIsProcurementWorkflowDialogOpen(false);
-    },
-    onError: (error) => {
-      console.error('Add procurement step error:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Erreur lors de l\'ajout de l\'étape de marché public.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Add new step mutation
-  const addStepMutation = useMutation({
-    mutationFn: async (stepData: typeof stepFormData) => {
-      if (!stepData.title.trim()) {
-        throw new Error('Le titre de l\'étape est requis');
-      }
-
-      const existingSteps = tenderSteps || [];
-      const nextStepNumber = existingSteps.length > 0
-        ? Math.max(...existingSteps.map(s => s.step_number)) + 1
-        : 1;
-
-      const { data, error } = await supabase
-        .from('tender_steps')
-        .insert([{
-          tender_id: tenderId,
-          title: stepData.title.trim(),
-          description: stepData.description?.trim() || null,
-          step_number: nextStepNumber,
-          due_date: stepData.due_date || null,
-          procurement_phase: stepData.procurement_phase || null,
-          procurement_stage: stepData.procurement_stage || null,
-          required_documents: [],
-          status: 'pending'
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-steps', tenderId] });
-      toast({
-        title: 'Étape ajoutée',
-        description: 'La nouvelle étape a été ajoutée avec succès.',
-      });
-      setIsAddStepDialogOpen(false);
-      setStepFormData({ title: '', description: '', due_date: '', procurement_phase: '', procurement_stage: '' });
-    },
-    onError: (error) => {
-      console.error('Add step error:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Erreur lors de l\'ajout de l\'étape.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const addDocumentMutation = useMutation({
-    mutationFn: async ({ file, documentData, stepId }: { file: File; documentData: any; stepId: string }) => {
-      const timestamp = new Date().getTime();
-      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uniqueFilePath = `tender-steps/${tenderId}/${stepId}/${timestamp}_${sanitizedFileName}`;
-
-      const uploadResult = await uploadFile(file, uniqueFilePath);
-
-      if (!uploadResult.success || !uploadResult.url) {
-        throw new Error(`File upload failed: ${uploadResult.error || 'Unknown error'}`);
-      }
-
-      const { data: document, error: docError } = await supabase
-        .from('documents')
-        .insert([{
-          title: documentData.title,
-          description: documentData.description,
-          file_url: uploadResult.url,
-          file_name: file.name,
-          mime_type: file.type,
-          file_size: file.size,
-          document_type: 'tender',
-          project_id: projectId,
-          status: 'draft'
-        }])
-        .select()
-        .single();
-
-      if (docError) throw new Error(`Document creation failed: ${docError.message}`);
-
-      const { error: tenderDocError } = await supabase
+  // Mutations removed - handled by the service layer now
         .from('tender_documents')
         .insert([{
           project_id: projectId,
