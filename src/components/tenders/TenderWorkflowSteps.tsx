@@ -336,6 +336,30 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           </p>
                         </div>
                         <div>
+                          <label className="text-sm font-medium text-muted-foreground">Date de soumission</label>
+                          <p className="text-sm">
+                            {step.submission_date ? new Date(step.submission_date).toLocaleDateString() : 'Non définie'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Date limite de révision</label>
+                          <p className="text-sm">
+                            {step.review_deadline ? new Date(step.review_deadline).toLocaleDateString() : 'Non définie'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Date limite d'approbation</label>
+                          <p className="text-sm">
+                            {step.approval_deadline ? new Date(step.approval_deadline).toLocaleDateString() : 'Non définie'}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Date de finalisation</label>
+                          <p className="text-sm">
+                            {step.actual_completion_date ? new Date(step.actual_completion_date).toLocaleDateString() : 'Non finalisée'}
+                          </p>
+                        </div>
+                        <div>
                           <label className="text-sm font-medium text-muted-foreground">Progression</label>
                           <p className="text-sm">
                             {step.tasks_completed}/{step.tasks_total} tâches terminées

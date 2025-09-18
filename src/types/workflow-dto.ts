@@ -7,6 +7,10 @@ export interface WorkflowStepDTO {
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'approved';
   due_date?: string;
+  submission_date?: string;
+  review_deadline?: string;
+  approval_deadline?: string;
+  actual_completion_date?: string;
   procurement_phase?: string;
   procurement_stage?: string;
   required_documents: string[];

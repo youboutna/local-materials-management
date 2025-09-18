@@ -61,8 +61,17 @@ export const useWorkflowSteps = (tenderId: string) => {
 
   // Mutation for updating step status
   const updateStatusMutation = useMutation({
-    mutationFn: ({ stepId, status }: { stepId: string; status: string }) =>
-      WorkflowStepService.updateStepStatus(stepId, status),
+    mutationFn: ({ stepId, status, dates }: { 
+      stepId: string; 
+      status: string; 
+      dates?: {
+        submission_date?: string;
+        review_deadline?: string;
+        approval_deadline?: string;
+        due_date?: string;
+      }
+    }) =>
+      WorkflowStepService.updateStepStatus(stepId, status, dates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
       queryClient.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
@@ -75,6 +84,34 @@ export const useWorkflowSteps = (tenderId: string) => {
       toast({
         title: 'Erreur',
         description: 'Erreur lors de la mise à jour du statut.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mutation for updating step dates only
+  const updateDatesMutation = useMutation({
+    mutationFn: ({ stepId, dates }: { 
+      stepId: string; 
+      dates: {
+        submission_date?: string;
+        review_deadline?: string;
+        approval_deadline?: string;
+        due_date?: string;
+      }
+    }) =>
+      WorkflowStepService.updateStepDates(stepId, dates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
+      toast({
+        title: 'Dates mises à jour',
+        description: 'Les dates ont été mises à jour avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la mise à jour des dates.',
         variant: 'destructive',
       });
     }
@@ -96,6 +133,7 @@ export const useWorkflowSteps = (tenderId: string) => {
     // Actions
     uploadDocument: uploadDocumentMutation.mutate,
     updateStatus: updateStatusMutation.mutate,
+    updateDates: updateDatesMutation.mutate,
     useStepDocuments,
   };
 };

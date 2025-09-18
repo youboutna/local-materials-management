@@ -3933,6 +3933,8 @@ export type Database = {
       }
       tender_steps: {
         Row: {
+          actual_completion_date: string | null
+          approval_deadline: string | null
           assigned_to: string | null
           completed_at: string | null
           created_at: string
@@ -3943,13 +3945,17 @@ export type Database = {
           procurement_phase: string | null
           procurement_stage: string | null
           required_documents: string[] | null
+          review_deadline: string | null
           status: string
           step_number: number
+          submission_date: string | null
           tender_id: string
           title: string
           updated_at: string
         }
         Insert: {
+          actual_completion_date?: string | null
+          approval_deadline?: string | null
           assigned_to?: string | null
           completed_at?: string | null
           created_at?: string
@@ -3960,13 +3966,17 @@ export type Database = {
           procurement_phase?: string | null
           procurement_stage?: string | null
           required_documents?: string[] | null
+          review_deadline?: string | null
           status?: string
           step_number: number
+          submission_date?: string | null
           tender_id: string
           title: string
           updated_at?: string
         }
         Update: {
+          actual_completion_date?: string | null
+          approval_deadline?: string | null
           assigned_to?: string | null
           completed_at?: string | null
           created_at?: string
@@ -3977,8 +3987,10 @@ export type Database = {
           procurement_phase?: string | null
           procurement_stage?: string | null
           required_documents?: string[] | null
+          review_deadline?: string | null
           status?: string
           step_number?: number
+          submission_date?: string | null
           tender_id?: string
           title?: string
           updated_at?: string

@@ -48,6 +48,10 @@ export class WorkflowStepService {
           ? step.status as WorkflowStepDTO['status'] 
           : 'pending',
         due_date: step.due_date ?? undefined,
+        submission_date: step.submission_date ?? undefined,
+        review_deadline: step.review_deadline ?? undefined,
+        approval_deadline: step.approval_deadline ?? undefined,
+        actual_completion_date: step.actual_completion_date ?? undefined,
         procurement_phase: step.procurement_phase ?? undefined,
         procurement_stage: step.procurement_stage ?? undefined,
         required_documents: step.required_documents || [],
@@ -151,15 +155,56 @@ export class WorkflowStepService {
   }
 
   /**
-   * Update step status
+   * Update step status and optionally update dates
    */
-  static async updateStepStatus(stepId: string, status: string): Promise<void> {
+  static async updateStepStatus(stepId: string, status: string, dates?: {
+    submission_date?: string;
+    review_deadline?: string;
+    approval_deadline?: string;
+    due_date?: string;
+  }): Promise<void> {
+    const updateData: any = { 
+      status, 
+      updated_at: new Date().toISOString() 
+    };
+
+    // Add date fields if provided
+    if (dates) {
+      if (dates.submission_date) updateData.submission_date = dates.submission_date;
+      if (dates.review_deadline) updateData.review_deadline = dates.review_deadline;
+      if (dates.approval_deadline) updateData.approval_deadline = dates.approval_deadline;
+      if (dates.due_date) updateData.due_date = dates.due_date;
+    }
+
     const { error } = await supabase
       .from('tender_steps')
-      .update({ 
-        status, 
-        updated_at: new Date().toISOString() 
-      })
+      .update(updateData)
+      .eq('id', stepId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Update step dates only
+   */
+  static async updateStepDates(stepId: string, dates: {
+    submission_date?: string;
+    review_deadline?: string;
+    approval_deadline?: string;
+    due_date?: string;
+  }): Promise<void> {
+    const updateData: any = { 
+      updated_at: new Date().toISOString() 
+    };
+
+    if (dates.submission_date) updateData.submission_date = dates.submission_date;
+    if (dates.review_deadline) updateData.review_deadline = dates.review_deadline;
+    if (dates.approval_deadline) updateData.approval_deadline = dates.approval_deadline;
+    if (dates.due_date) updateData.due_date = dates.due_date;
+
+    const { error } = await supabase
+      .from('tender_steps')
+      .update(updateData)
       .eq('id', stepId);
 
     if (error) throw error;
