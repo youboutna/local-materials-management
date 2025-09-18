@@ -1,7 +1,6 @@
 // Workflow Step Service - handles all workflow step operations
 import { supabase } from '@/integrations/supabase/client';
 import { WorkflowStepDTO, StepDocumentDTO, WorkflowProgressDTO, DocumentUploadDTO } from '@/types/workflow-dto';
-// import { uploadFile } from '@/hooks/useDocumentStorage';
 
 export class WorkflowStepService {
   
@@ -44,11 +43,13 @@ export class WorkflowStepService {
         tender_id: step.tender_id,
         step_number: step.step_number,
         title: step.title,
-  description: step.description ?? undefined,
-  status: ['pending', 'in_progress', 'completed', 'approved'].includes(step.status) ? step.status as WorkflowStepDTO['status'] : 'pending',
-  due_date: step.due_date ?? undefined,
-        procurement_phase: step.procurement_phase,
-        procurement_stage: step.procurement_stage,
+        description: step.description ?? undefined,
+        status: ['pending', 'in_progress', 'completed', 'approved'].includes(step.status) 
+          ? step.status as WorkflowStepDTO['status'] 
+          : 'pending',
+        due_date: step.due_date ?? undefined,
+        procurement_phase: step.procurement_phase ?? undefined,
+        procurement_stage: step.procurement_stage ?? undefined,
         required_documents: step.required_documents || [],
         can_upload_documents: this.canUploadDocuments(step.status),
         tasks_completed: completedTasks,
@@ -81,17 +82,19 @@ export class WorkflowStepService {
       document_id: doc.document_id,
       document_type: doc.document_type,
       is_required: doc.is_required,
-      status: doc.status,
-      submitted_at: doc.submitted_at,
-      reviewer_notes: doc.reviewer_notes,
+      status: ['pending', 'submitted', 'approved', 'rejected'].includes(doc.status)
+        ? doc.status as StepDocumentDTO['status']
+        : 'pending',
+      submitted_at: doc.submitted_at ?? undefined,
+      reviewer_notes: doc.reviewer_notes ?? undefined,
       document: {
         id: doc.document?.id || '',
         title: doc.document?.title || '',
-  description: doc.document?.description ?? undefined,
-        file_url: doc.document?.file_url,
-        file_name: doc.document?.file_name,
-        mime_type: doc.document?.mime_type,
-        file_size: doc.document?.file_size,
+        description: doc.document?.description ?? undefined,
+        file_url: doc.document?.file_url ?? undefined,
+        file_name: doc.document?.file_name ?? undefined,
+        mime_type: doc.document?.mime_type ?? undefined,
+        file_size: doc.document?.file_size ?? undefined,
       },
       can_share: this.canShareDocument(doc.status)
     }));
@@ -205,13 +208,20 @@ export class WorkflowStepService {
   }
 
   /**
-   * Upload file helper (extracted for easier testing)
+   * Upload file helper using StorageFactory
    */
   private static async uploadFile(file: File, path: string) {
-    // Use the existing upload logic or import from hook
-    // This is a placeholder - actual implementation would use StorageFactory
-    const { StorageFactory } = await import('@/services/storage/StorageFactory');
-    const storageProvider = StorageFactory.createProvider();
-    return await storageProvider.upload(file, path);
+    try {
+      const { StorageFactory } = await import('@/lib/storage/StorageFactory');
+      const storageService = StorageFactory.createStorageService();
+      return await storageService.upload(file, path);
+    } catch (error) {
+      // Fallback to local storage approach if StorageFactory is not available
+      return {
+        success: false,
+        error: 'Storage service not available',
+        url: null
+      };
+    }
   }
 }
