@@ -1,7 +1,7 @@
 // Workflow Step Service - handles all workflow step operations
 import { supabase } from '@/integrations/supabase/client';
 import { WorkflowStepDTO, StepDocumentDTO, WorkflowProgressDTO, DocumentUploadDTO } from '@/types/workflow-dto';
-import { uploadFile } from '@/hooks/useDocumentStorage';
+// import { uploadFile } from '@/hooks/useDocumentStorage';
 
 export class WorkflowStepService {
   
@@ -44,9 +44,9 @@ export class WorkflowStepService {
         tender_id: step.tender_id,
         step_number: step.step_number,
         title: step.title,
-        description: step.description,
-        status: step.status,
-        due_date: step.due_date,
+  description: step.description ?? undefined,
+  status: ['pending', 'in_progress', 'completed', 'approved'].includes(step.status) ? step.status as WorkflowStepDTO['status'] : 'pending',
+  due_date: step.due_date ?? undefined,
         procurement_phase: step.procurement_phase,
         procurement_stage: step.procurement_stage,
         required_documents: step.required_documents || [],
@@ -87,7 +87,7 @@ export class WorkflowStepService {
       document: {
         id: doc.document?.id || '',
         title: doc.document?.title || '',
-        description: doc.document?.description,
+  description: doc.document?.description ?? undefined,
         file_url: doc.document?.file_url,
         file_name: doc.document?.file_name,
         mime_type: doc.document?.mime_type,
