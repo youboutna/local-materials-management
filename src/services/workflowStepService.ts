@@ -197,7 +197,7 @@ export class WorkflowStepService {
    * Business logic: determine if documents can be uploaded for a step
    */
   private static canUploadDocuments(status: string): boolean {
-    return ['in_progress', 'completed', 'approved'].includes(status);
+    return ['pending', 'in_progress', 'completed', 'approved'].includes(status);
   }
 
   /**
