@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +17,8 @@ interface TenderDocumentsProps {
 const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) => {
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
 
-  const { data: tenderDocuments, isLoading } = useQuery({
+  // Fetch tender documents
+  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useQuery({
     queryKey: ['tender-documents', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,7 +41,64 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
       if (error) throw error;
       return (data || []) as TenderDocumentWithDetails[];
     },
+    enabled: !!projectId,
   });
+
+  // Fetch workflow step documents
+  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useQuery({
+    queryKey: ['workflow-step-documents', projectId],
+    queryFn: async () => {
+      // First get all steps for this tender
+      const { data: steps, error: stepsError } = await supabase
+        .from('tender_steps')
+        .select('id, title, step_number')
+        .eq('tender_id', projectId);
+      
+      if (stepsError) throw stepsError;
+      if (!steps?.length) return [];
+
+      // Get all documents for these steps
+      const stepIds = steps.map(s => s.id);
+      const { data: stepDocs, error: docsError } = await supabase
+        .from('tender_step_documents')
+        .select(`
+          *,
+          document:documents(*),
+          step:tender_steps(title, step_number)
+        `)
+        .in('step_id', stepIds);
+
+      if (docsError) throw docsError;
+
+      // Transform to match TenderDocumentWithDetails format
+      return (stepDocs || []).map(doc => ({
+        id: doc.id,
+        project_id: projectId,
+        document_id: doc.document_id,
+        category: doc.document_type as TenderDocumentCategory || 'administrative',
+        subcategory: 'workflow_step' as any,
+        is_required: doc.is_required,
+        reviewer_notes: doc.reviewer_notes,
+        status: doc.status as any,
+        created_at: doc.created_at,
+        updated_at: doc.created_at, // Use created_at since updated_at doesn't exist in the query
+        document: doc.document,
+        step_info: {
+          step_title: doc.step?.title,
+          step_number: doc.step?.step_number
+        }
+      }));
+    },
+    enabled: !!projectId,
+  });
+
+  const isLoading = isTenderDocsLoading || isWorkflowDocsLoading;
+  
+  // Combine all documents
+  const allDocuments = [
+    ...(tenderDocuments || []),
+    ...(workflowStepDocuments || [])
+  ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -51,6 +108,8 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
         return <XCircle className="h-4 w-4 text-red-600" />;
       case 'requires_revision':
         return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      case 'submitted':
+        return <Clock className="h-4 w-4 text-blue-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -64,6 +123,8 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
         return 'bg-red-100 text-red-800';
       case 'requires_revision':
         return 'bg-yellow-100 text-yellow-800';
+      case 'submitted':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -77,16 +138,18 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
         return 'Rejeté';
       case 'requires_revision':
         return 'Révision requise';
+      case 'submitted':
+        return 'Soumis';
       default:
         return 'En attente';
     }
   };
 
   const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
-    return tenderDocuments?.filter(doc => doc.category === category) || [];
+    return allDocuments?.filter(doc => doc.category === category) || [];
   };
 
-  const handleViewDocument = (tenderDoc: TenderDocumentWithDetails) => {
+  const handleViewDocument = (tenderDoc: any) => {
     if (tenderDoc.document && onDocumentSelect) {
       onDocumentSelect(tenderDoc.document);
     } else {
@@ -138,12 +201,23 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-medium text-sm mb-1">
-                              {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                              {tenderDoc.subcategory === 'workflow_step' ? (
+                                tenderDoc.document?.title || 'Document workflow'
+                              ) : (
+                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]
+                              )}
                             </h4>
-                            {tenderDoc.document?.title && (
-                              <p className="text-xs text-gray-600 mb-2">
-                                {tenderDoc.document.title}
+                            {tenderDoc.subcategory === 'workflow_step' ? (
+                              <p className="text-xs text-gray-500 flex items-center">
+                                <FileText className="h-3 w-3 mr-1" />
+                                Étape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
                               </p>
+                            ) : (
+                              tenderDoc.document?.title && (
+                                <p className="text-xs text-gray-600 mb-2">
+                                  {tenderDoc.document.title}
+                                </p>
+                              )
                             )}
                           </div>
                           <div className="flex items-center gap-2">
