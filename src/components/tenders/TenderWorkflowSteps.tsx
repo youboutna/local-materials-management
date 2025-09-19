@@ -57,6 +57,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     is_required: true
   });
 
+  // Get query client instance at component level
+  const queryClient = useQueryClient();
+
   // Use the new workflow steps hook
   const {
     steps,
@@ -638,10 +641,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                       required_documents: ['Lettre de soumission', 'Offre technique', 'Offre financière'],
                       status: 'in_progress'
                     });
-                    const { useQueryClient } = await import('@tanstack/react-query');
-                    const qc = useQueryClient();
-                    qc.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
-                    qc.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
+                    // Use the queryClient instance from component level
+                    queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
+                    queryClient.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
                   } catch (e) {
                     console.error(e);
                   }
