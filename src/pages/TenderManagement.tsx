@@ -167,12 +167,11 @@ const TenderManagement = () => {
                       />
                     </TabsContent>
                     <TabsContent value="steps" className="mt-0">
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">Configuration des étapes personnalisées</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Utilisez l'onglet Workflow pour le processus standard mauritanien
-                        </p>
-                      </div>
+                      <TenderWorkflowSteps 
+                        tenderId={selectedTender.id}
+                        projectId={selectedTender.project_id}
+                        readonly={false}
+                      />
                     </TabsContent>
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentManager tenderId={selectedTender.id} />

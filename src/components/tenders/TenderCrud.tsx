@@ -59,6 +59,17 @@ interface TenderCrudProps {
   selectedTenderId?: string;
 }
 
+// Convert a timestamp/ISO string to HTML input datetime-local value (YYYY-MM-DDTHH:mm)
+const toInputDateTime = (value?: string | null): string => {
+  if (!value) return '';
+  // If it's already in the right format without seconds/timezone
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
@@ -298,9 +309,9 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       project_id: tender.project_id || '',
       launch_date: tender.launch_date || '',
       attribution_date: tender.attribution_date || '',
-      deadline_date: tender.deadline_date || '',
-      submission_deadline: tender.submission_deadline || '',
-      evaluation_deadline: tender.evaluation_deadline || '',
+      deadline_date: toInputDateTime(tender.deadline_date),
+      submission_deadline: toInputDateTime(tender.submission_deadline),
+      evaluation_deadline: toInputDateTime(tender.evaluation_deadline),
       selection_mode: tender.selection_mode || '',
       market_type: tender.market_type || '',
       financing_source: tender.financing_source || '',
