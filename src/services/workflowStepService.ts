@@ -253,20 +253,91 @@ export class WorkflowStepService {
   }
 
   /**
-   * Upload file helper using StorageFactory
+   * Upload file using Supabase Storage
    */
   private static async uploadFile(file: File, path: string) {
     try {
-      const { StorageFactory } = await import('@/lib/storage/StorageFactory');
-      const storageService = StorageFactory.createStorageService();
-      return await storageService.upload(file, path);
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Supabase storage error:', error);
+        return {
+          success: false,
+          error: error.message,
+          url: null
+        };
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(data.path);
+
+      return {
+        success: true,
+        error: null,
+        url: publicUrl
+      };
     } catch (error) {
-      // Fallback to local storage approach if StorageFactory is not available
+      console.error('File upload error:', error);
       return {
         success: false,
-        error: 'Storage service not available',
+        error: error instanceof Error ? error.message : 'Upload failed',
         url: null
       };
     }
+  }
+
+  /**
+   * Create workflow step for testing
+   */
+  static async createWorkflowStep(stepData: {
+    tender_id: string;
+    title: string;
+    description?: string;
+    step_number: number;
+    procurement_phase?: string;
+    procurement_stage?: string;
+    required_documents?: string[];
+    status?: string;
+  }): Promise<WorkflowStepDTO> {
+    const { data, error } = await supabase
+      .from('tender_steps')
+      .insert([{
+        ...stepData,
+        status: stepData.status || 'pending',
+        required_documents: stepData.required_documents || []
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      tender_id: data.tender_id,
+      step_number: data.step_number,
+      title: data.title,
+      description: data.description ?? undefined,
+      status: data.status as WorkflowStepDTO['status'],
+      due_date: data.due_date ?? undefined,
+      submission_date: data.submission_date ?? undefined,
+      review_deadline: data.review_deadline ?? undefined,
+      approval_deadline: data.approval_deadline ?? undefined,
+      actual_completion_date: data.actual_completion_date ?? undefined,
+      procurement_phase: data.procurement_phase ?? undefined,
+      procurement_stage: data.procurement_stage ?? undefined,
+      required_documents: data.required_documents || [],
+      can_upload_documents: this.canUploadDocuments(data.status),
+      tasks_completed: 0,
+      tasks_total: Math.max(data.required_documents?.length || 0, 1),
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   }
 }

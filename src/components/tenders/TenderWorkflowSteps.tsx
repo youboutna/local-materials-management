@@ -331,41 +331,130 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           <label className="text-sm font-medium text-muted-foreground">Étape</label>
                           <p className="text-sm">{step.procurement_stage || 'Non spécifiée'}</p>
                         </div>
+                        
+                        {/* Editable Date Fields */}
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Date d'échéance</label>
-                          <p className="text-sm">
-                            {step.due_date ? new Date(step.due_date).toLocaleDateString() : 'Non définie'}
-                          </p>
+                          <Label htmlFor={`due-date-${step.id}`} className="text-sm font-medium text-muted-foreground">
+                            Date d'échéance
+                          </Label>
+                          {!readonly ? (
+                            <Input
+                              id={`due-date-${step.id}`}
+                              type="date"
+                              value={step.due_date ? step.due_date.split('T')[0] : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateDates({ 
+                                    stepId: step.id, 
+                                    dates: { due_date: e.target.value } 
+                                  });
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm">
+                              {step.due_date ? new Date(step.due_date).toLocaleDateString() : 'Non définie'}
+                            </p>
+                          )}
                         </div>
+                        
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Date de soumission</label>
-                          <p className="text-sm">
-                            {step.submission_date ? new Date(step.submission_date).toLocaleDateString() : 'Non définie'}
-                          </p>
+                          <Label htmlFor={`submission-date-${step.id}`} className="text-sm font-medium text-muted-foreground">
+                            Date de soumission
+                          </Label>
+                          {!readonly ? (
+                            <Input
+                              id={`submission-date-${step.id}`}
+                              type="date"
+                              value={step.submission_date ? step.submission_date.split('T')[0] : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateDates({ 
+                                    stepId: step.id, 
+                                    dates: { submission_date: e.target.value } 
+                                  });
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm">
+                              {step.submission_date ? new Date(step.submission_date).toLocaleDateString() : 'Non définie'}
+                            </p>
+                          )}
                         </div>
+                        
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Date limite de révision</label>
-                          <p className="text-sm">
-                            {step.review_deadline ? new Date(step.review_deadline).toLocaleDateString() : 'Non définie'}
-                          </p>
+                          <Label htmlFor={`review-deadline-${step.id}`} className="text-sm font-medium text-muted-foreground">
+                            Date limite de révision
+                          </Label>
+                          {!readonly ? (
+                            <Input
+                              id={`review-deadline-${step.id}`}
+                              type="date"
+                              value={step.review_deadline ? step.review_deadline.split('T')[0] : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateDates({ 
+                                    stepId: step.id, 
+                                    dates: { review_deadline: e.target.value } 
+                                  });
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm">
+                              {step.review_deadline ? new Date(step.review_deadline).toLocaleDateString() : 'Non définie'}
+                            </p>
+                          )}
                         </div>
+                        
                         <div>
-                          <label className="text-sm font-medium text-muted-foreground">Date limite d'approbation</label>
-                          <p className="text-sm">
-                            {step.approval_deadline ? new Date(step.approval_deadline).toLocaleDateString() : 'Non définie'}
-                          </p>
+                          <Label htmlFor={`approval-deadline-${step.id}`} className="text-sm font-medium text-muted-foreground">
+                            Date limite d'approbation
+                          </Label>
+                          {!readonly ? (
+                            <Input
+                              id={`approval-deadline-${step.id}`}
+                              type="date"
+                              value={step.approval_deadline ? step.approval_deadline.split('T')[0] : ''}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateDates({ 
+                                    stepId: step.id, 
+                                    dates: { approval_deadline: e.target.value } 
+                                  });
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm">
+                              {step.approval_deadline ? new Date(step.approval_deadline).toLocaleDateString() : 'Non définie'}
+                            </p>
+                          )}
                         </div>
+                        
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Date de finalisation</label>
                           <p className="text-sm">
                             {step.actual_completion_date ? new Date(step.actual_completion_date).toLocaleDateString() : 'Non finalisée'}
                           </p>
                         </div>
+                        
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Progression</label>
-                          <p className="text-sm">
-                            {step.tasks_completed}/{step.tasks_total} tâches terminées
-                          </p>
+                          <div className="space-y-1">
+                            <p className="text-sm">
+                              {step.tasks_completed}/{step.tasks_total} tâches terminées
+                            </p>
+                            <Progress 
+                              value={(step.tasks_completed / step.tasks_total) * 100} 
+                              className="h-2"
+                            />
+                          </div>
                         </div>
                       </div>
                     </TabsContent>
@@ -396,8 +485,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="documents" className="space-y-4">
-                      <div className="space-y-2">
+                     <TabsContent value="documents" className="space-y-4">
+                      <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium">Documents</h4>
                           {!readonly && step.can_upload_documents && (
@@ -411,6 +500,40 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             </Button>
                           )}
                         </div>
+
+                        {/* Upload Status Indicator */}
+                        {!step.can_upload_documents && (
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm text-muted-foreground">
+                              Upload de documents non disponible pour cette étape (statut: {step.status})
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Required Documents List */}
+                        {step.required_documents && step.required_documents.length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-sm font-medium text-muted-foreground">Documents requis:</h5>
+                            <div className="grid gap-2">
+                              {step.required_documents.map((docType, index) => {
+                                const hasDocument = stepDocuments.some(doc => 
+                                  doc.document_type === docType || doc.document.title.toLowerCase().includes(docType.toLowerCase())
+                                );
+                                return (
+                                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                                    {hasDocument ? (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                    )}
+                                    <span className="text-sm">{docType}</span>
+                                    {hasDocument && <Badge variant="secondary" className="ml-auto">Fourni</Badge>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
 
                          {isLoadingDocuments ? (
                            <div className="flex items-center justify-center p-4">
