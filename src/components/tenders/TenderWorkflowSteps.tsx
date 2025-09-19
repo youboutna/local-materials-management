@@ -229,6 +229,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
           const stepDocumentsQuery = useStepDocuments(step.id);
           const stepDocuments = stepDocumentsQuery.data || [];
           const hasShareableDocuments = stepDocuments.some(doc => doc.can_share);
+          const isLoadingDocuments = stepDocumentsQuery.isLoading;
 
           return (
             <Card key={step.id} className="mb-4">
@@ -411,47 +412,69 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           )}
                         </div>
 
-                        {stepDocuments.length > 0 ? (
-                          <div className="grid gap-2">
-                            {stepDocuments.map((doc) => (
-                              <div key={doc.id} className="flex items-center gap-2 p-3 border rounded">
-                                <FileText className="h-4 w-4" />
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">
-                                    {doc.document.title}
-                                  </div>
-                                  {doc.document.description && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {doc.document.description}
-                                    </div>
-                                  )}
-                                </div>
-                                <Badge variant="outline" className={getStatusColor(doc.status)}>
-                                  {getStatusIcon(doc.status)}
-                                  <span className="ml-1">
-                                    {doc.status === 'pending' ? 'En attente' :
-                                     doc.status === 'submitted' ? 'Soumis' :
-                                     doc.status === 'approved' ? 'Approuvé' :
-                                     doc.status === 'rejected' ? 'Rejeté' : doc.status}
-                                  </span>
-                                </Badge>
-                                {doc.document.file_url && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => window.open(doc.document.file_url, '_blank')}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Aucun document pour cette étape.
-                          </p>
-                        )}
+                         {isLoadingDocuments ? (
+                           <div className="flex items-center justify-center p-4">
+                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                             <span className="ml-2 text-sm">Chargement des documents...</span>
+                           </div>
+                         ) : stepDocuments.length > 0 ? (
+                           <div className="grid gap-2">
+                             {stepDocuments.map((doc) => (
+                               <div key={doc.id} className="flex items-center gap-2 p-3 border rounded">
+                                 <FileText className="h-4 w-4" />
+                                 <div className="flex-1">
+                                   <div className="font-medium text-sm">
+                                     {doc.document.title}
+                                   </div>
+                                   {doc.document.description && (
+                                     <div className="text-xs text-muted-foreground">
+                                       {doc.document.description}
+                                     </div>
+                                   )}
+                                   <div className="text-xs text-muted-foreground mt-1">
+                                     Type: {doc.document_type} | Requis: {doc.is_required ? 'Oui' : 'Non'}
+                                   </div>
+                                 </div>
+                                 <Badge variant="outline" className={getStatusColor(doc.status)}>
+                                   {getStatusIcon(doc.status)}
+                                   <span className="ml-1">
+                                     {doc.status === 'pending' ? 'En attente' :
+                                      doc.status === 'submitted' ? 'Soumis' :
+                                      doc.status === 'approved' ? 'Approuvé' :
+                                      doc.status === 'rejected' ? 'Rejeté' : doc.status}
+                                   </span>
+                                 </Badge>
+                                 {doc.document.file_url && (
+                                   <Button
+                                     size="sm"
+                                     variant="ghost"
+                                     onClick={() => window.open(doc.document.file_url, '_blank')}
+                                   >
+                                     <Eye className="h-4 w-4" />
+                                   </Button>
+                                 )}
+                               </div>
+                             ))}
+                           </div>
+                         ) : (
+                           <div className="text-center py-4">
+                             <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                             <p className="text-sm text-muted-foreground">
+                               Aucun document pour cette étape.
+                             </p>
+                             {step.can_upload_documents && !readonly && (
+                               <Button
+                                 size="sm"
+                                 variant="outline"
+                                 className="mt-2"
+                                 onClick={() => openAddDocumentDialog(step)}
+                               >
+                                 <Plus className="h-4 w-4 mr-1" />
+                                 Ajouter le premier document
+                               </Button>
+                             )}
+                           </div>
+                         )}
                       </div>
                     </TabsContent>
                   </Tabs>
