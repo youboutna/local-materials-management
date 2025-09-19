@@ -101,19 +101,42 @@ export const useWorkflowSteps = (tenderId: string) => {
       }
     }) =>
       WorkflowStepService.updateStepDates(stepId, dates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
-      toast({
-        title: 'Dates mises à jour',
-        description: 'Les dates ont été mises à jour avec succès.',
-      });
+    onMutate: async ({ stepId, dates }) => {
+      await queryClient.cancelQueries({ queryKey: ['workflow-steps', tenderId] });
+      const previous = queryClient.getQueryData<WorkflowStepDTO[]>(['workflow-steps', tenderId]);
+      if (previous) {
+        const patched = previous.map(s => s.id === stepId ? {
+          ...s,
+          ...dates,
+          // Keep ISO format for display inputs
+          submission_date: dates.submission_date ?? s.submission_date,
+          review_deadline: dates.review_deadline ?? s.review_deadline,
+          approval_deadline: dates.approval_deadline ?? s.approval_deadline,
+          due_date: dates.due_date ?? s.due_date,
+        } : s);
+        queryClient.setQueryData(['workflow-steps', tenderId], patched);
+      }
+      return { previous };
     },
-    onError: (error: Error) => {
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(['workflow-steps', tenderId], ctx.previous);
+      }
       toast({
         title: 'Erreur',
         description: 'Erreur lors de la mise à jour des dates.',
         variant: 'destructive',
       });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Dates mises à jour',
+        description: 'Les dates ont été mises à jour avec succès.',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
     }
   });
 

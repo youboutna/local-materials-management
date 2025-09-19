@@ -44,9 +44,7 @@ export class WorkflowStepService {
         step_number: step.step_number,
         title: step.title,
         description: step.description ?? undefined,
-        status: ['pending', 'in_progress', 'completed', 'approved'].includes(step.status) 
-          ? step.status as WorkflowStepDTO['status'] 
-          : 'pending',
+        status: this.normalizeStatus(step.status),
         due_date: step.due_date ?? undefined,
         submission_date: step.submission_date ?? undefined,
         review_deadline: step.review_deadline ?? undefined,
@@ -239,10 +237,22 @@ export class WorkflowStepService {
   }
 
   /**
+   * Normalize backend status to DTO status
+   */
+  private static normalizeStatus(status: string): WorkflowStepDTO['status'] {
+    const s = (status || '').toLowerCase();
+    if (['in_progress', 'started', 'start', 'open', 'ongoing', 'en_cours'].includes(s)) return 'in_progress';
+    if (['completed', 'done', 'finished', 'terminee', 'terminée'].includes(s)) return 'completed';
+    if (['approved', 'approuvee', 'approuvée', 'validated'].includes(s)) return 'approved';
+    return 'pending';
+  }
+
+  /**
    * Business logic: determine if documents can be uploaded for a step
    */
   private static canUploadDocuments(status: string): boolean {
-    return ['pending', 'in_progress'].includes(status);
+    const norm = this.normalizeStatus(status);
+    return ['pending', 'in_progress'].includes(norm);
   }
 
   /**

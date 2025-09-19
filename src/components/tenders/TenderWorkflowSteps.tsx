@@ -271,6 +271,14 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                   
                   {!readonly && (
                     <div className="flex gap-2">
+                      {step.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateStatus({ stepId: step.id, status: 'in_progress' })}
+                        >
+                          Démarrer
+                        </Button>
+                      )}
                       {step.can_upload_documents && (
                         <Button
                           size="sm"
