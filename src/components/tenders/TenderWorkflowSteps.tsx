@@ -65,6 +65,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     uploading,
     uploadDocument,
     updateStatus,
+    updateDates,
     useStepDocuments
   } = useWorkflowSteps(tenderId);
 

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { projectsData } from "@/data/projectsData";
+import { allProjectsData } from "@/data/projectsData";
 
 /**
  * Loads sample project data from the local data file to Supabase
@@ -25,7 +25,7 @@ export const loadProjectsToSupabase = async () => {
     }
 
     // Transform the project data to match the database schema
-    const projectsToInsert = projectsData.map(project => ({
+    const projectsToInsert = allProjectsData.map(project => ({
       title: project.title,
       description: project.description,
       location: project.location,

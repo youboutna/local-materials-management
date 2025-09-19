@@ -54,6 +54,7 @@ import NotificationsCenterPage from './pages/NotificationsCenter';
 import InsuranceManagementPage from './pages/InsuranceManagement';
 import PaymentControlPage from './pages/PaymentControl';
 import EnhancedSupplierTenderPortal from './components/suppliers/EnhancedSupplierTenderPortal';
+import WorkflowTest from './pages/WorkflowTest';
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ function App() {
                       <Route path="/supplier-portal" element={<UnifiedSupplierPortal />} />
                       <Route path='/supplier-tender' element={<EnhancedSupplierTenderPortal/>}/>
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
+                      <Route path="/workflow-test" element={<WorkflowTest />} />
                       
                       {/* Protected routes - require authentication unless in dev mode */}
 <Route path="/home" element={
