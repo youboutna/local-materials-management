@@ -31,6 +31,7 @@ import {
   ADMINISTRATIVE_SUBCATEGORY_GROUPS
 } from '@/types/tender';
 import ProcurementStepSelector from './ProcurementStepSelector';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TenderWorkflowStepsProps {
   tenderId: string;
@@ -616,10 +617,39 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
         })}
 
         {filteredSteps?.length === 0 && (
-          <div className="text-center py-8">
+          <div className="text-center py-8 space-y-3">
             <p className="text-muted-foreground">
               {searchTerm ? 'Aucune étape trouvée pour cette recherche.' : 'Aucune étape définie pour ce marché public.'}
             </p>
+            {!readonly && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const { WorkflowStepService } = await import('@/services/workflowStepService');
+                  try {
+                    await WorkflowStepService.createWorkflowStep({
+                      tender_id: tenderId,
+                      title: 'Soumission des offres',
+                      description: 'Étape de test - téléversement des documents de soumission',
+                      step_number: 1,
+                      procurement_phase: 'soumission',
+                      procurement_stage: 'reception_offres',
+                      required_documents: ['Lettre de soumission', 'Offre technique', 'Offre financière'],
+                      status: 'in_progress'
+                    });
+                    const { useQueryClient } = await import('@tanstack/react-query');
+                    const qc = useQueryClient();
+                    qc.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });
+                    qc.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+              >
+                Générer une étape de test
+              </Button>
+            )}
           </div>
         )}
         </CardContent>

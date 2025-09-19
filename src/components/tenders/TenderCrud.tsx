@@ -164,15 +164,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   // Create/Update tender mutation
   const tenderMutation = useMutation({
     mutationFn: async (tenderData: typeof formData) => {
+      const toISO = (v: string) => (v ? new Date(v).toISOString() : null);
       const dataToSubmit = {
         title: tenderData.title,
         description: tenderData.description,
         project_id: tenderData.project_id || null,
         launch_date: tenderData.launch_date || null,
         attribution_date: tenderData.attribution_date || null,
-        deadline_date: tenderData.deadline_date || null,
-        submission_deadline: tenderData.submission_deadline || null,
-        evaluation_deadline: tenderData.evaluation_deadline || null,
+        // Use ISO strings for datetime fields to ensure persistence
+        deadline_date: toISO(tenderData.deadline_date),
+        submission_deadline: toISO(tenderData.submission_deadline),
+        evaluation_deadline: toISO(tenderData.evaluation_deadline || ''),
         selection_mode: tenderData.selection_mode || null,
         market_type: tenderData.market_type || null,
         financing_source: tenderData.financing_source || null,
