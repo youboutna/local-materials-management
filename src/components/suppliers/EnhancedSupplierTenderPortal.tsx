@@ -124,7 +124,7 @@ const EnhancedSupplierTenderPortal = () => {
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
 
-  // Fetch public tenders and filter client-side for safety (columns may vary)
+  // Fetch public tenders and filter for submission phase
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
@@ -134,19 +134,24 @@ const EnhancedSupplierTenderPortal = () => {
           *,
           project:projects(title, description, location)
         `)
-        .in('status', ['published', 'public'])
+        .eq('status', 'published')
         .order('launch_date', { ascending: false });
 
       if (error) throw error;
 
       const now = new Date();
-      const filtered = (data || []).filter((t: any) => {
-        const phaseOk = Number(t.current_phase) === 2;
-        const ddlStr = t.deadline_date || t.deadline;
-        if (!ddlStr) return false; // require explicit deadline
-        const ddl = new Date(ddlStr);
-        const dateOk = !isNaN(ddl.getTime()) && ddl >= now;
-        return phaseOk && dateOk;
+      const filtered = (data || []).filter((tender: any) => {
+        // Check if tender is in submission phase (phase 2)
+        const isPhase2 = Number(tender.current_phase) === 2;
+        
+        // Check if deadline is in the future
+        let hasValidDeadline = false;
+        if (tender.deadline_date) {
+          const deadline = new Date(tender.deadline_date);
+          hasValidDeadline = !isNaN(deadline.getTime()) && deadline >= now;
+        }
+        
+        return isPhase2 && hasValidDeadline;
       });
 
       return filtered as PublicTender[];
@@ -415,62 +420,73 @@ const EnhancedSupplierTenderPortal = () => {
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {publicTenders?.map((tender) => (
-              <Card key={tender.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{tender.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3">{tender.description}</p>
-                    </div>
-                    
-                    {tender.project && (
-                      <div className="bg-muted/50 p-3 rounded">
-                        <p className="text-sm font-medium">Projet: {tender.project.title}</p>
-                        {tender.project.location && (
-                          <p className="text-xs text-muted-foreground">Lieu: {tender.project.location}</p>
+          {publicTenders && publicTenders.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {publicTenders.map((tender) => (
+                <Card key={tender.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">{tender.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-3">{tender.description}</p>
+                      </div>
+                      
+                      {tender.project && (
+                        <div className="bg-muted/50 p-3 rounded">
+                          <p className="text-sm font-medium">Projet: {tender.project.title}</p>
+                          {tender.project.location && (
+                            <p className="text-xs text-muted-foreground">Lieu: {tender.project.location}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <Badge variant="default">
+                          Appel de soumissions
+                        </Badge>
+                        <Button 
+                          onClick={() => {
+                            setSelectedTender(tender);
+                            setActiveTab('submit');
+                          }}
+                          size="sm"
+                        >
+                          Soumissionner
+                        </Button>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        {tender.launch_date && (
+                          <p>Lancé le {new Date(tender.launch_date).toLocaleDateString()}</p>
+                        )}
+                        {tender.deadline_date && (
+                          <p className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Limite: {new Date(tender.deadline_date).toLocaleDateString()}
+                          </p>
                         )}
                       </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <Badge variant={tender.current_phase === 2 ? 'default' : 'secondary'}>
-                        {tender.current_phase === 1 ? 'En planification' :
-                         tender.current_phase === 2 ? 'Appel de soumissions' : 
-                         tender.current_phase === 3 ? 'Évaluation en cours' : 
-                         tender.current_phase === 4 ? 'Phase d\'attribution' :
-                         tender.current_phase === 5 ? 'Contrôle en cours' :
-                         `Phase ${tender.current_phase}`}
-                      </Badge>
-                      <Button 
-                        onClick={() => {
-                          setSelectedTender(tender);
-                          setActiveTab('submit');
-                        }}
-                        size="sm"
-                        disabled={tender.current_phase !== 2}
-                      >
-                        {tender.current_phase === 2 ? 'Soumissionner' : 'Voir détails'}
-                      </Button>
                     </div>
-                    
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      {tender.launch_date && (
-                        <p>Lancé le {new Date(tender.launch_date).toLocaleDateString()}</p>
-                      )}
-                      {tender.deadline_date && (
-                        <p className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Limite: {new Date(tender.deadline_date).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">Aucun appel d'offres disponible</h3>
+                <p className="text-muted-foreground mb-4">
+                  Les appels d'offres sont affichés uniquement s'ils répondent aux critères suivants :
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 text-left max-w-md mx-auto">
+                  <li>• Statut : Publié</li>
+                  <li>• Phase : Phase 2 (Appel de soumissions)</li>
+                  <li>• Date limite : Dans le futur</li>
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-6">
