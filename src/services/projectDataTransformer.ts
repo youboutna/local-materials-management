@@ -13,6 +13,8 @@ export class ProjectDataTransformer {
 
   static async getProjectById(projectId: string): Promise<ProjectData | null> {
     try {
+      console.log('🔍 ProjectDataTransformer.getProjectById starting for:', projectId);
+      
       const { data, error } = await supabase
         .from('projects')
         .select(`
@@ -23,17 +25,22 @@ export class ProjectDataTransformer {
         .eq('id', projectId)
         .maybeSingle();
 
+      console.log('🔍 Supabase query completed. Error:', error, 'Data:', data ? 'EXISTS' : 'NULL');
+
       if (error) {
-        console.error('Error fetching project:', error);
+        console.error('❌ Error fetching project:', error);
         throw error;
       }
 
       if (!data) {
-        console.log('No project found with ID:', projectId);
+        console.log('❌ No project found with ID:', projectId);
         return null;
       }
 
-      return this.transformProject(data);
+      console.log('🔍 Starting project transformation...');
+      const result = await this.transformProject(data);
+      console.log('🔍 Project transformation completed:', result ? 'SUCCESS' : 'FAILED');
+      return result;
     } catch (error) {
       console.error('Error in getProjectById:', error);
       throw error;
@@ -69,35 +76,53 @@ export class ProjectDataTransformer {
 
   private static async transformProject(data: any): Promise<ProjectData | null> {
     try {
-      console.log('Transforming project data:', data.id, data.title);
+      console.log('🔍 Transforming project data:', data.id, data.title);
 
-      const [tasks, risks, resources, payments] = await Promise.all([
-        this.transformTasks(data.id),
-        this.transformRisks(data.id),
-        this.transformResources(data.id),
-        this.fetchPayments(data.id)
-      ]);
+      console.log('🔍 Fetching related data...');
+      const startTime = Date.now();
 
-      console.log('Fetched related data:', { tasksCount: tasks.length, risksCount: risks.length, resourcesCount: resources.length, paymentsCount: payments.length });
+      console.log('🔍 Fetching tasks...');
+      const tasks = await this.transformTasks(data.id);
+      console.log('🔍 Tasks fetched:', tasks.length, 'items in', Date.now() - startTime, 'ms');
 
+      console.log('🔍 Fetching risks...');
+      const risks = await this.transformRisks(data.id);
+      console.log('🔍 Risks fetched:', risks.length, 'items');
+
+      console.log('🔍 Fetching resources...');
+      const resources = await this.transformResources(data.id);
+      console.log('🔍 Resources fetched:', resources.length, 'items');
+
+      console.log('🔍 Fetching payments...');
+      const payments = await this.fetchPayments(data.id);
+      console.log('🔍 Payments fetched:', payments.length, 'items');
+
+      console.log('🔍 Processing inspections...');
       const inspections = this.transformInspections(data.inspections || []);
 
+      console.log('🔍 Calculating progress...');
       const overallProgress = data.progress || this.calculateOverallProgress(tasks);
 
+      console.log('🔍 Processing phases...');
       const phases = data.phases || [];
       const currentPhaseInfo = this.determineCurrentPhase(phases);
       const milestones = this.generateMilestonesFromPhases(phases);
 
+      console.log('🔍 Calculating PERT analysis...');
       const pertAnalysis = ReportCalculations.calculatePERTAnalysis(tasks);
       
+      console.log('🔍 Generating charts...');
       const ganttChart = this.generateGanttChart(tasks);
       const resourceAllocation = this.calculateResourceAllocation(tasks, resources);
       const costAnalysis = this.calculateCostAnalysis(tasks, phases, data.budget);
   
+      console.log('🔍 Calculating critical path...');
       const criticalPath = this.calculateCriticalPath(tasks, pertAnalysis.expectedDurations);
 
+      console.log('🔍 Fetching project phases...');
       // Fetch project phases separately for better structure
       const plannedPhases = await this.fetchProjectPhases(data.id);
+      console.log('🔍 Project phases fetched:', plannedPhases.length, 'items');
 
       console.log('Building project object with:', { 
         title: data.title, 
@@ -250,10 +275,13 @@ export class ProjectDataTransformer {
 
   private static async transformTasks(projectId: string): Promise<Task[]> {
     try {
+      console.log('🔍 transformTasks for:', projectId);
       const { data: taskAssignments } = await supabase
         .from('task_assignments')
         .select('*')
         .eq('project_id', projectId);
+
+      console.log('🔍 Found', taskAssignments?.length || 0, 'task assignments');
 
       return (taskAssignments || []).map(task => ({
         id: task.id,
@@ -454,6 +482,7 @@ export class ProjectDataTransformer {
 
   private static async fetchProjectPhases(projectId: string): Promise<any[]> {
     try {
+      console.log('🔍 fetchProjectPhases for:', projectId);
       const { data: phases, error } = await supabase
         .from('project_phases')
         .select('*')
@@ -461,10 +490,11 @@ export class ProjectDataTransformer {
         .order('phase_order', { ascending: true });
 
       if (error) {
-        console.error('Error fetching project phases:', error);
+        console.error('❌ Error fetching project phases:', error);
         return [];
       }
 
+      console.log('🔍 Project phases query result:', phases?.length || 0, 'phases');
       return phases || [];
     } catch (error) {
       console.error('Error in fetchProjectPhases:', error);

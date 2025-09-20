@@ -50,6 +50,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const { t } = useLanguage();
   const projectId = propProjectId || routeProjectId;
 
+  console.log('🔍 ProjectDetailByDTO render - projectId:', projectId);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,13 +59,25 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const { data: project, isLoading: projectLoading, error: projectError } = useQuery({
     queryKey: ['project-dto', projectId],
     queryFn: async () => {
+      console.log('🔍 Query function starting for projectId:', projectId);
       if (!projectId) throw new Error('ID du projet manquant');
-      const result = await ProjectDataTransformer.getProjectById(projectId);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout après 10 secondes')), 10000)
+      );
+      
+      console.log('🔍 Calling ProjectDataTransformer.getProjectById...');
+      const resultPromise = ProjectDataTransformer.getProjectById(projectId);
+      
+      const result = await Promise.race([resultPromise, timeoutPromise]);
+      console.log('🔍 ProjectDataTransformer result:', result ? 'SUCCESS' : 'NULL');
       if (!result) throw new Error('Projet non trouvé');
       return result;
     },
     enabled: !!projectId,
     retry: 1,
+    staleTime: 0, // Always refetch
   });
 
   // Fetch payments data
@@ -102,7 +116,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
     try {
       // Extract tasks from phases with real data structure
-      const allTasks = project.plannedPhases?.flatMap((phase: any) => {
+      const allTasks = project?.plannedPhases?.flatMap((phase: any) => {
         // Use the actual phase data structure from ProjectDataTransformer
         const phaseData = phase.customPhaseData || {};
         const stages = phaseData.stages || phase.stages || [];
@@ -122,7 +136,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       setTasks(allTasks);
 
       // Fetch risks from the database or project data
-      const projectRisks = project.risks || [];
+      const projectRisks = project?.risks || [];
       if (projectRisks.length === 0) {
         // If no risks in project data, try to fetch from database
         try {
@@ -144,7 +158,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
 
       // Extract resources from project phases and materials
-      const phaseResources = project.plannedPhases?.flatMap((phase: any) => {
+      const phaseResources = project?.plannedPhases?.flatMap((phase: any) => {
         const phaseData = phase.customPhaseData || {};
         const materials = phaseData.materials || [];
         const humanResources = phaseData.humanResources || [];
@@ -252,20 +266,20 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               Retour aux projets
             </Button>
           </div>
-          <h1 className="text-3xl font-bold">{project.title}</h1>
-          <p className="text-muted-foreground mt-2">{project.description}</p>
+          <h1 className="text-3xl font-bold">{project?.title || 'Projet sans titre'}</h1>
+          <p className="text-muted-foreground mt-2">{project?.description || 'Aucune description'}</p>
           <div className="flex items-center gap-4 mt-4">
-            <Badge variant={project.status === 'terminé' ? 'default' : 'secondary'} className={getStatusColor(project.status)}>
-              {getStatusIcon(project.status)}
-              {project.status}
+            <Badge variant={project?.status === 'terminé' ? 'default' : 'secondary'} className={getStatusColor(project?.status || 'en cours')}>
+              {getStatusIcon(project?.status || 'en cours')}
+              {project?.status || 'En cours'}
             </Badge>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span className="text-sm">{project.location}</span>
+              <span className="text-sm">{project?.location || 'Localisation non définie'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span className="text-sm">{project.teamSize} membres</span>
+              <span className="text-sm">{project?.teamSize || 0} membres</span>
             </div>
           </div>
         </div>
