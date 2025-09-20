@@ -1,0 +1,307 @@
+// Repository pattern for database operations (CRUD + ACID)
+import { supabase } from '@/integrations/supabase/client';
+import { ProjectEntity, ProjectPhaseEntity, ProjectRiskEntity, TaskAssignmentEntity, InspectionEntity, PaymentEntity } from '@/types/entities';
+
+export class ProjectRepository {
+  // ============= Project CRUD =============
+  
+  async findById(id: string): Promise<ProjectEntity | null> {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data as ProjectEntity | null;
+  }
+
+  async findAll(): Promise<ProjectEntity[]> {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as ProjectEntity[];
+  }
+
+  async create(projectData: Omit<ProjectEntity, 'id' | 'created_at' | 'updated_at'>): Promise<ProjectEntity> {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(projectData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectEntity;
+  }
+
+  async update(id: string, projectData: Partial<ProjectEntity>): Promise<ProjectEntity> {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(projectData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectEntity;
+  }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Project Phases CRUD =============
+
+  async findPhasesByProjectId(projectId: string): Promise<ProjectPhaseEntity[]> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('start_date');
+    
+    if (error) throw error;
+    return (data || []) as ProjectPhaseEntity[];
+  }
+
+  async createPhase(phaseData: any): Promise<ProjectPhaseEntity> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .insert(phaseData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectPhaseEntity;
+  }
+
+  async updatePhase(id: string, phaseData: any): Promise<ProjectPhaseEntity> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .update(phaseData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectPhaseEntity;
+  }
+
+  async deletePhase(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_phases')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Project Risks CRUD =============
+
+  async findRisksByProjectId(projectId: string): Promise<ProjectRiskEntity[]> {
+    const { data, error } = await supabase
+      .from('project_risks')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return (data || []) as ProjectRiskEntity[];
+  }
+
+  async createRisk(riskData: any): Promise<ProjectRiskEntity> {
+    const { data, error } = await supabase
+      .from('project_risks')
+      .insert(riskData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectRiskEntity;
+  }
+
+  async updateRisk(id: string, riskData: any): Promise<ProjectRiskEntity> {
+    const { data, error } = await supabase
+      .from('project_risks')
+      .update(riskData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as ProjectRiskEntity;
+  }
+
+  async deleteRisk(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('project_risks')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Task Assignments CRUD =============
+
+  async findTasksByProjectId(projectId: string): Promise<TaskAssignmentEntity[]> {
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as TaskAssignmentEntity[];
+  }
+
+  async createTask(taskData: Omit<TaskAssignmentEntity, 'id' | 'created_at' | 'updated_at'>): Promise<TaskAssignmentEntity> {
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .insert(taskData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as TaskAssignmentEntity;
+  }
+
+  async updateTask(id: string, taskData: Partial<TaskAssignmentEntity>): Promise<TaskAssignmentEntity> {
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .update(taskData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as TaskAssignmentEntity;
+  }
+
+  async deleteTask(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('task_assignments')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Inspections CRUD =============
+
+  async findInspectionsByProjectId(projectId: string): Promise<InspectionEntity[]> {
+    const { data, error } = await supabase
+      .from('inspections')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('date', { ascending: false });
+    
+    if (error) throw error;
+    return data as InspectionEntity[];
+  }
+
+  async createInspection(inspectionData: Omit<InspectionEntity, 'id' | 'created_at' | 'updated_at'>): Promise<InspectionEntity> {
+    const { data, error } = await supabase
+      .from('inspections')
+      .insert(inspectionData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as InspectionEntity;
+  }
+
+  async updateInspection(id: string, inspectionData: Partial<InspectionEntity>): Promise<InspectionEntity> {
+    const { data, error } = await supabase
+      .from('inspections')
+      .update(inspectionData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as InspectionEntity;
+  }
+
+  async deleteInspection(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('inspections')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Payments CRUD =============
+
+  async findPaymentsByProjectId(projectId: string): Promise<PaymentEntity[]> {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('payment_date', { ascending: false });
+    
+    if (error) throw error;
+    return data as PaymentEntity[];
+  }
+
+  async createPayment(paymentData: Omit<PaymentEntity, 'id' | 'created_at' | 'updated_at'>): Promise<PaymentEntity> {
+    const { data, error } = await supabase
+      .from('payments')
+      .insert(paymentData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as PaymentEntity;
+  }
+
+  async updatePayment(id: string, paymentData: Partial<PaymentEntity>): Promise<PaymentEntity> {
+    const { data, error } = await supabase
+      .from('payments')
+      .update(paymentData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as PaymentEntity;
+  }
+
+  async deletePayment(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // ============= Batch Operations =============
+
+  async findProjectWithRelatedData(projectId: string) {
+    const [project, phases, risks, tasks, inspections, payments] = await Promise.all([
+      this.findById(projectId),
+      this.findPhasesByProjectId(projectId),
+      this.findRisksByProjectId(projectId),
+      this.findTasksByProjectId(projectId),
+      this.findInspectionsByProjectId(projectId),
+      this.findPaymentsByProjectId(projectId)
+    ]);
+
+    return {
+      project,
+      phases,
+      risks,
+      tasks,
+      inspections,
+      payments
+    };
+  }
+}
