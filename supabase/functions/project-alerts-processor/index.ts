@@ -5,11 +5,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Check intervals from ProjectManager (in days)
+const CHECK_SCHEDULE_INTERVALS = {
+  insuranceCheck: 1,
+  delayCheck: 7,
+  inspectionCheck: 1
+} as const;
+
 interface ProcessorConfig {
   enabled: boolean;
   batchSize: number;
   intervalMinutes: number;
   maxRetries: number;
+}
+
+interface ProjectCheckTimestamps {
+  projectId: string;
+  lastChecks: {
+    insurance: string;
+    delay: string;
+    inspection: string;
+  };
+  updatedAt: string;
 }
 
 interface ProjectManagerAlert {
@@ -104,11 +121,24 @@ Deno.serve(async (req) => {
     let totalAlertsGenerated = 0;
     const processedProjects = [];
 
-    // Process each project
+    // Process each project with respect to check intervals
     for (const project of projects) {
       try {
+        // Get or create check timestamps for this project
+        const checkTimestamps = await getProjectCheckTimestamps(supabase, project.id);
+        
+        // Determine which checks need to run based on intervals
+        const checksToRun = determineChecksToRun(checkTimestamps);
+        
+        if (checksToRun.length === 0) {
+          console.log(`Skipping project ${project.title} - no checks due`);
+          continue;
+        }
+
+        console.log(`Running checks for project ${project.title}: ${checksToRun.join(', ')}`);
+
         const projectContext = await buildProjectContext(supabase, project);
-        const alerts = await processProjectAlerts(projectContext);
+        const alerts = await processProjectAlertsWithScheduling(projectContext, checksToRun);
         
         if (alerts.length > 0) {
           await saveAlerts(supabase, alerts);
@@ -116,10 +146,14 @@ Deno.serve(async (req) => {
           console.log(`Generated ${alerts.length} alerts for project ${project.title}`);
         }
 
+        // Update check timestamps for the checks that were run
+        await updateProjectCheckTimestamps(supabase, project.id, checksToRun);
+
         processedProjects.push({
           projectId: project.id,
           title: project.title,
-          alertsGenerated: alerts.length
+          alertsGenerated: alerts.length,
+          checksRun: checksToRun
         });
 
       } catch (error) {
@@ -220,27 +254,109 @@ async function buildProjectContext(supabase: any, project: any): Promise<Project
   };
 }
 
-async function processProjectAlerts(projectContext: ProjectManagerContext): Promise<ProjectManagerAlert[]> {
-  // Import and use the ProjectManager logic
+async function processProjectAlertsWithScheduling(projectContext: ProjectManagerContext, checksToRun: string[]): Promise<ProjectManagerAlert[]> {
   const alerts: ProjectManagerAlert[] = [];
   
-  // Check insurance policies
-  const insuranceAlerts = checkInsurancePolicies(projectContext);
-  alerts.push(...insuranceAlerts);
+  // Only run the checks that are due based on intervals
+  if (checksToRun.includes('insurance')) {
+    const insuranceAlerts = checkInsurancePolicies(projectContext);
+    alerts.push(...insuranceAlerts);
+  }
   
-  // Check project delays
-  const delayAlerts = checkProjectDelays(projectContext);
-  alerts.push(...delayAlerts);
+  if (checksToRun.includes('delay')) {
+    const delayAlerts = checkProjectDelays(projectContext);
+    alerts.push(...delayAlerts);
+  }
   
-  // Check inspections
-  const inspectionAlerts = checkInspections(projectContext);
-  alerts.push(...inspectionAlerts);
+  if (checksToRun.includes('inspection')) {
+    const inspectionAlerts = checkInspections(projectContext);
+    alerts.push(...inspectionAlerts);
+  }
   
-  // Check financial risks
+  // Financial checks can run always as they're not in the scheduled intervals
   const financialAlerts = checkFinancialRisks(projectContext);
   alerts.push(...financialAlerts);
   
   return alerts;
+}
+
+async function getProjectCheckTimestamps(supabase: any, projectId: string): Promise<ProjectCheckTimestamps> {
+  const { data } = await supabase
+    .from('system_settings')
+    .select('*')
+    .eq('category', 'project_check_timestamps')
+    .eq('key', projectId)
+    .maybeSingle();
+
+  if (data?.configuration) {
+    return data.configuration;
+  }
+
+  // Return default timestamps (epoch) for new projects
+  return {
+    projectId,
+    lastChecks: {
+      insurance: new Date(0).toISOString(),
+      delay: new Date(0).toISOString(),
+      inspection: new Date(0).toISOString()
+    },
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function determineChecksToRun(checkTimestamps: ProjectCheckTimestamps): string[] {
+  const now = new Date();
+  const checksToRun: string[] = [];
+
+  // Check insurance (daily)
+  const daysSinceInsurance = Math.floor((now.getTime() - new Date(checkTimestamps.lastChecks.insurance).getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceInsurance >= CHECK_SCHEDULE_INTERVALS.insuranceCheck) {
+    checksToRun.push('insurance');
+  }
+
+  // Check delays (weekly)  
+  const daysSinceDelay = Math.floor((now.getTime() - new Date(checkTimestamps.lastChecks.delay).getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceDelay >= CHECK_SCHEDULE_INTERVALS.delayCheck) {
+    checksToRun.push('delay');
+  }
+
+  // Check inspections (daily)
+  const daysSinceInspection = Math.floor((now.getTime() - new Date(checkTimestamps.lastChecks.inspection).getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceInspection >= CHECK_SCHEDULE_INTERVALS.inspectionCheck) {
+    checksToRun.push('inspection');
+  }
+
+  return checksToRun;
+}
+
+async function updateProjectCheckTimestamps(supabase: any, projectId: string, checksRun: string[]): Promise<void> {
+  const now = new Date().toISOString();
+  
+  // Get current timestamps
+  const currentTimestamps = await getProjectCheckTimestamps(supabase, projectId);
+  
+  // Update only the checks that were run
+  const updatedChecks = { ...currentTimestamps.lastChecks };
+  checksRun.forEach(check => {
+    if (check in updatedChecks) {
+      updatedChecks[check as keyof typeof updatedChecks] = now;
+    }
+  });
+
+  const updatedTimestamps: ProjectCheckTimestamps = {
+    projectId,
+    lastChecks: updatedChecks,
+    updatedAt: now
+  };
+
+  await supabase
+    .from('system_settings')
+    .upsert({
+      category: 'project_check_timestamps',
+      key: projectId,
+      configuration: updatedTimestamps,
+      updated_at: now
+    });
 }
 
 function checkInsurancePolicies(project: ProjectManagerContext): ProjectManagerAlert[] {
