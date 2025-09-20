@@ -11,9 +11,20 @@ import {
   Trash2,
   CreditCard,
   FileText,
+  AlertTriangle,
+  TrendingUp,
+  Package,
+  Target,
+  CheckCircle,
+  Clock,
+  Layers,
+  BarChart3,
+  Settings,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
@@ -49,6 +60,10 @@ import { ReportManager } from "@/components/reports/ReportManager";
 import { useLanguage } from "@/contexts/LanguageContext";
 import WaterfallGanttChart from "@/components/project/WaterfallGanttChart";
 import WaterfallProjectKPIs from "@/components/project/WaterfallProjectKPIs";
+import TaskList from "@/components/project/TaskList";
+import RiskOverview from "@/components/project/RiskOverview";
+import TeamOverview from "@/components/project/TeamOverview";
+import FinancialOverview from "@/components/project/FinaancialOverview";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -487,6 +502,38 @@ const ProjectDetail = () => {
     } else {
       // Enter edit mode
       setIsEditingLocation(true);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'terminé': 
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'en cours': 
+      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'en retard':
+      case 'delayed': return 'bg-red-100 text-red-800 border-red-200';
+      case 'suspendu':
+      case 'on_hold': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'planifié':
+      case 'planned': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'terminé':
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'en cours':
+      case 'in_progress': return <Clock className="h-4 w-4" />;
+      case 'en retard':
+      case 'delayed': return <AlertTriangle className="h-4 w-4" />;
+      case 'suspendu':
+      case 'on_hold': return <Clock className="h-4 w-4" />;
+      case 'planifié':
+      case 'planned': return <Target className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
     }
   };
 
