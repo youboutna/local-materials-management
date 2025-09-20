@@ -611,7 +611,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Écart-type total</p>
-                    <p className="text-2xl font-bold">{(calculations.pertAnalysis.totalStdDeviation || 0).toFixed(1)}</p>
+                    <p className="text-2xl font-bold">
+                      {calculations.pertAnalysis.variances 
+                        ? Math.sqrt(Object.values(calculations.pertAnalysis.variances).reduce((sum, variance) => sum + variance, 0)).toFixed(1)
+                        : '0.0'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
