@@ -77,6 +77,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
+  // Fetch detailed project data (includes plannedPhases, tasks, etc.)
+  const { data: projectDetail } = useQuery({
+    queryKey: ['project-detail', projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      return await projectService.getProjectDetail(projectId);
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
   // Fetch payments data
   const { data: payments = [] } = useQuery({
     queryKey: ['project-payments', projectId],
@@ -155,6 +166,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
+  // Consolidated phases source from detail DTO or direct query
+  const phasesSource: any[] = (projectDetail?.plannedPhases as any[]) || (phasesData as any[]) || [];
+
   // Prepare data for components
   const [tasks, setTasks] = useState<any[]>([]);
   const [risks, setRisks] = useState<any[]>([]);
@@ -165,14 +179,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     if (project && projectId) {
       fetchAdditionalData();
     }
-  }, [project, projectId, phasesData, risksData, stakeholders]);
+  }, [project, projectId, phasesData, risksData, stakeholders, projectDetail]);
 
   const fetchAdditionalData = async () => {
     if (!project || !projectId) return;
 
     try {
       // Create tasks from phases data
-      const allTasks = (phasesData || []).flatMap((phase: any) => {
+      const allTasks = (phasesSource || []).flatMap((phase: any) => {
         const milestones = phase.milestones || {};
         const stages = Array.isArray(phase.stages) && phase.stages.length > 0
           ? phase.stages
@@ -205,7 +219,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       setRisks(risksData || []);
 
       // Extract resources from phases
-      const phaseResources = (phasesData || []).flatMap((phase: any) => {
+      const phaseResources = (phasesSource || []).flatMap((phase: any) => {
         const milestones = phase.milestones || {};
         const materials = milestones.materials || phase.materials || [];
         const humanResources = milestones.humanResources || phase.human_resources || [];
@@ -389,12 +403,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phases</p>
-                <p className="text-2xl font-bold">{phasesData?.length || project.phasesCount || 0}</p>
+                <p className="text-2xl font-bold">{(phasesSource?.length || project.phasesCount || 0)}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {phasesData?.filter((p: any) => p.status === 'completed').length || 0} terminées
+              {(phasesSource?.filter((p: any) => p.status === 'completed').length || 0)} terminées
             </p>
           </CardContent>
         </Card>
@@ -493,7 +507,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Matériaux</p>
                     <p className="text-lg font-bold">
-                      {phasesData?.reduce((total: number, phase: any) => {
+                      {phasesSource?.reduce((total: number, phase: any) => {
                         const milestones = phase.milestones || {};
                         const extra = Array.isArray(phase.materials) ? phase.materials.length : 0;
                         return total + (milestones.materials?.length || 0) + extra;
@@ -510,7 +524,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {phasesData?.length || 0}
+                      {phasesSource?.length || 0}
                     </p>
                   </div>
                 </div>
@@ -534,13 +548,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <FinancialOverview 
             budget={project.budget || 0}
             spent={0}
-            phases={phasesData || []}
+            phases={phasesSource || []}
             financialMetrics={{}}
           />
         </TabsContent>
 
         <TabsContent value="phases" className="mt-6">
-          <PhaseList phases={(phasesData || []).map((phase: any) => ({
+          <PhaseList phases={(phasesSource || []).map((phase: any) => ({
             id: phase.id,
             phase: phase.phase_name || phase.phase || phase.construction_stage || 'Phase',
             status: phase.status || 'planned',
