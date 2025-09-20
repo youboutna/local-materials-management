@@ -19,14 +19,13 @@ export class ProjectDataTransformer {
         .from('projects')
         .select(`
           id, title, description, location, status, progress, budget,
-          start_date, end_date, image, team_size,
+          start_date, end_date, thumbnail, team_size,
           coordinates_latitude, coordinates_longitude,
           financing_source, market_type, selection_mode,
           launch_date, attribution_date,
           allows_initial_payment, initial_payment_percentage,
-          alert_threshold, notification_threshold, guarantee_threshold, legal_threshold,
-          last_insurance_check, last_delay_check, last_inspection_check,
-          created_at
+          created_at, current_phase, current_stage,
+          main_contractor, project_reference, forme, localisation, adresse
         `)
         .eq('id', projectId)
         .maybeSingle();
@@ -156,7 +155,7 @@ export class ProjectDataTransformer {
         budget: data.budget || 0,
         startDate: data.start_date || data.created_at,
         endDate: data.end_date || undefined,
-        thumbnail: data.image || '/img/project-placeholder.jpg',
+        thumbnail: data.thumbnail || '/img/project-placeholder.jpg',
         teamSize: data.team_size || 0,
         coordinates: {
           latitude: data.coordinates_latitude || 0,
@@ -442,7 +441,7 @@ export class ProjectDataTransformer {
         budget: d.budget || 0,
         startDate: d.start_date || d.created_at,
         endDate: d.end_date || undefined,
-        thumbnail: d.image || '/img/project-placeholder.jpg',
+        thumbnail: d.thumbnail || '/img/project-placeholder.jpg',
         teamSize: d.team_size || 0,
         coordinates: {
           latitude: d.coordinates_latitude || 0,
