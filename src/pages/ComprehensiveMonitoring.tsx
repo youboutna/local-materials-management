@@ -1,10 +1,12 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
+import { Shield, TrendingUp, AlertTriangle, DollarSign, Activity, BarChart3 } from 'lucide-react';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
 import UnifiedInsuranceManager from '@/components/insurance/UnifiedInsuranceManager';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
+import SystemHealthOverview from '@/components/monitoring/SystemHealthOverview';
+import PerformanceMetrics from '@/components/monitoring/PerformanceMetrics';
 
 const ComprehensiveMonitoringPage = () => {
   return (
@@ -18,8 +20,16 @@ const ComprehensiveMonitoringPage = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="inspections" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">Vue d'ensemble</span>
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Performance</span>
+              </TabsTrigger>
               <TabsTrigger value="inspections" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 <span className="hidden sm:inline">Inspections</span>
@@ -37,6 +47,14 @@ const ComprehensiveMonitoringPage = () => {
                 <span className="hidden sm:inline">Paiements</span>
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="overview" className="mt-6">
+              <SystemHealthOverview />
+            </TabsContent>
+
+            <TabsContent value="performance" className="mt-6">
+              <PerformanceMetrics />
+            </TabsContent>
 
             <TabsContent value="inspections" className="mt-6">
               <RoleBasedInspectionMonitoring />
