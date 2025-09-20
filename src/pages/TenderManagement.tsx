@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -142,9 +143,11 @@ const TenderManagement = () => {
                       <Badge variant={selectedTender.status === 'published' ? 'default' : 'secondary'}>
                         {selectedTender.status}
                       </Badge>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
+                       <Button variant="outline" size="sm" asChild>
+                         <Link to={`/tender-management/${selectedTender?.id}/settings`}>
+                           <Settings className="h-4 w-4" />
+                         </Link>
+                       </Button>
                     </div>
                   </div>
                 </CardHeader>
@@ -192,9 +195,11 @@ const TenderManagement = () => {
                   <p className="text-sm text-muted-foreground max-w-md">
                     Sélectionnez un appel d'offres à gauche pour voir ses détails et gérer son workflow de soumission.
                   </p>
-                  <Button variant="outline" className="mt-4" size="sm">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Importer un appel d'offres
+                   <Button variant="outline" className="mt-4" size="sm" asChild>
+                     <Link to="/tender-import">
+                       <Upload className="h-4 w-4 mr-2" />
+                       Importer un appel d'offres
+                     </Link>
                   </Button>
                 </CardContent>
               </Card>

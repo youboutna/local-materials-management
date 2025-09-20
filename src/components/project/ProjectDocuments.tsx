@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -465,14 +466,18 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="mr-1 h-3 w-3" />
-                        {t("documents.tabs.viewer")}
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Download className="mr-1 h-3 w-3" />
-                        {t("documents.tabs.upload")}
-                      </Button>
+                       <Button variant="outline" size="sm" className="flex-1" asChild>
+                         <Link to={`/documents?project=${projectId}&document=${doc.id}&view=true`}>
+                           <Eye className="mr-1 h-3 w-3" />
+                           {t("documents.tabs.viewer")}
+                         </Link>
+                       </Button>
+                       <Button variant="outline" size="sm" className="flex-1" asChild>
+                         <Link to={`/documents?project=${projectId}&action=upload`}>
+                           <Download className="mr-1 h-3 w-3" />
+                           {t("documents.tabs.upload")}
+                         </Link>
+                       </Button>
                     </div>
                   </div>
                 </CardContent>

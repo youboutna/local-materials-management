@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -508,9 +509,11 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
                   <TableCell>{request.payment_reason}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                     <Button variant="outline" size="sm" asChild>
+                       <Link to={`/supplier-portal?tab=payments&id=${request.id}`}>
+                         <Eye className="h-4 w-4" />
+                       </Link>
+                     </Button>
                   </TableCell>
                 </TableRow>
               ))}

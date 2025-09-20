@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -504,10 +505,12 @@ const NotificationsCenterPage = () => {
                       <PlayCircle className="h-4 w-4 mr-2" />
                       Démarrer Projet
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Voir Projet
-                    </Button>
+                     <Button variant="outline" size="sm" asChild>
+                       <Link to="/projects" className="flex items-center">
+                         <ExternalLink className="h-4 w-4 mr-2" />
+                         Voir Projet
+                       </Link>
+                     </Button>
                     <Button variant="outline" size="sm">
                       <Calendar className="h-4 w-4 mr-2" />
                       Planifier Étape

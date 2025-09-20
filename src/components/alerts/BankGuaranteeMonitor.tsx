@@ -9,8 +9,9 @@ import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
 import { detectProjectDelays, triggerBankGuaranteeNotification } from '@/services/bankGuaranteeService';
-import { AlertTriangle, Clock, DollarSign, Send } from 'lucide-react';
+import { AlertTriangle, Clock, DollarSign, Send, ExternalLink } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { DELAY_THRESHOLDS } from '../../types/project';
 
 const BankGuaranteeMonitor: React.FC = () => {
@@ -286,9 +287,12 @@ const BankGuaranteeMonitor: React.FC = () => {
                           </Button>
                         )}
                         
-                        <Button variant="outline" size="sm">
-                          Voir Projet
-                        </Button>
+                         <Button variant="outline" size="sm" asChild>
+                           <Link to={`/projects/${delay.projectId}`} className="flex items-center gap-2">
+                             <ExternalLink className="h-4 w-4" />
+                             Voir Projet
+                           </Link>
+                         </Button>
                         
                         <ActionsDropdown
                           entityType="bank_guarantee"
