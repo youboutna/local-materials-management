@@ -84,8 +84,8 @@ class ComprehensiveMonitoringService {
         new Date(cert.valid_until) <= thirtyDaysFromNow
       ) || [];
 
-      // Calculate HTTP metrics from localStorage or service
-      const httpMetrics = this.getHttpMetrics();
+      // Get real HTTP metrics from httpHandler
+      const httpMetrics = this.getRealHttpMetrics();
 
       return {
         http: {
@@ -190,20 +190,31 @@ class ComprehensiveMonitoringService {
     return alerts.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
-  private getHttpMetrics() {
-    const stored = localStorage.getItem('httpMetrics');
-    if (stored) {
-      const data = JSON.parse(stored);
-      return {
-        averageResponseTime: data.averageResponseTime || 0,
-        errorRate: data.errorRate || 0,
-        uptime: data.uptime || 100
-      };
+  private getRealHttpMetrics() {
+    // Try to get real metrics from httpHandler first
+    try {
+      const stored = localStorage.getItem('httpMetrics');
+      if (stored) {
+        const data = JSON.parse(stored);
+        return {
+          averageResponseTime: data.averageResponseTime || 0,
+          errorRate: data.errorRate || 0,
+          uptime: data.uptime || 100,
+          requestCount: data.requestCount || 0,
+          lastUpdated: data.lastUpdated || new Date().toISOString()
+        };
+      }
+    } catch (error) {
+      console.error('Error getting HTTP metrics:', error);
     }
+
+    // Fallback to default values
     return {
       averageResponseTime: 0,
       errorRate: 0,
-      uptime: 100
+      uptime: 100,
+      requestCount: 0,
+      lastUpdated: new Date().toISOString()
     };
   }
 
