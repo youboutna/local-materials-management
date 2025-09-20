@@ -124,24 +124,32 @@ const EnhancedSupplierTenderPortal = () => {
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
 
-  // Fetch public tenders in appropriate phases
+  // Fetch public tenders and filter client-side for safety (columns may vary)
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
-      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('tenders')
         .select(`
           *,
           project:projects(title, description, location)
         `)
-        .eq('status', 'published')
-        .eq('current_phase', 2)
-        .gte('deadline_date', now)
+        .in('status', ['published', 'public'])
         .order('launch_date', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as PublicTender[];
+
+      const now = new Date();
+      const filtered = (data || []).filter((t: any) => {
+        const phaseOk = Number(t.current_phase) === 2;
+        const ddlStr = t.deadline_date || t.deadline;
+        if (!ddlStr) return false; // require explicit deadline
+        const ddl = new Date(ddlStr);
+        const dateOk = !isNaN(ddl.getTime()) && ddl >= now;
+        return phaseOk && dateOk;
+      });
+
+      return filtered as PublicTender[];
     }
   });
 
