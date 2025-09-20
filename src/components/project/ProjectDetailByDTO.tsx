@@ -123,19 +123,34 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch stakeholders (user roles as proxy)
-  const { data: stakeholders = [] } = useQuery({
-    queryKey: ['project-stakeholders', projectId],
+  // Fetch task assignments for this project
+  const { data: taskAssignmentsData = [] } = useQuery({
+    queryKey: ['project-task-assignments', projectId],
     queryFn: async () => {
       if (!projectId) return [];
       const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id, role_name');
+        .from('task_assignments')
+        .select('*')
+        .eq('project_id', projectId);
       if (error) return [];
       return data || [];
     },
     enabled: !!projectId,
     staleTime: 30_000,
+  });
+
+  // Fetch employees for resource mapping
+  const { data: employeesData = [] } = useQuery({
+    queryKey: ['employees-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, full_name, position')
+        .eq('is_active', true);
+      if (error) return [];
+      return data || [];
+    },
+    staleTime: 60_000,
   });
 
   // Fetch phases data (used for counts and phases tab)
@@ -195,7 +210,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     if (project && projectId) {
       fetchAdditionalData();
     }
-  }, [project, projectId, phasesData, risksData, stakeholders, projectDetail]);
+  }, [project, projectId, phasesData, risksData, projectDetail, taskAssignmentsData, employeesData]);
 
   const fetchAdditionalData = async () => {
     if (!project || !projectId) return;
@@ -246,13 +261,75 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }));
       setRisks(transformedRisks);
 
-      // Extract resources from phases
-      const phaseResources = (phasesSource || []).flatMap((phase: any) => {
+      // Get project manager from project data
+      const projectManagerResources: any[] = [];
+      if (projectDetail?.projectResponsableId) {
+        const projectManager = employeesData?.find(emp => emp.id === projectDetail.projectResponsableId);
+        if (projectManager) {
+          projectManagerResources.push({
+            id: `manager-${projectManager.id}`,
+            name: projectManager.full_name,
+            type: 'human',
+            position: 'Chef de projet',
+            costPerHour: 0,
+            availability: 100,
+          });
+        }
+      }
+
+      // Get assigned employees from task assignments
+      const taskAssignedEmployees: any[] = [];
+      if (taskAssignmentsData && Array.isArray(taskAssignmentsData)) {
+        const assignedEmployeeIds = [...new Set(
+          taskAssignmentsData
+            .filter(task => task.project_id === projectId && task.assigned_to)
+            .map(task => task.assigned_to)
+        )];
+        
+        assignedEmployeeIds.forEach(employeeId => {
+          const employee = employeesData?.find(emp => emp.id === employeeId);
+          if (employee && !projectManagerResources.find(r => r.id === `manager-${employee.id}`)) {
+            taskAssignedEmployees.push({
+              id: `assigned-${employee.id}`,
+              name: employee.full_name,
+              type: 'human',
+              position: employee.position || 'Employé assigné',
+              costPerHour: 0,
+              availability: 100,
+            });
+          }
+        });
+      }
+
+      // Get contractors and consultants
+      const contractorResources: any[] = [];
+      if (projectDetail?.mainContractor) {
+        contractorResources.push({
+          id: `contractor-main`,
+          name: projectDetail.mainContractor,
+          type: 'human',
+          position: 'Contractant principal',
+          costPerHour: 0,
+          availability: 100,
+        });
+      }
+      if ((projectDetail as any)?.engineering_consultant) {
+        contractorResources.push({
+          id: `consultant-engineering`,
+          name: (projectDetail as any).engineering_consultant,
+          type: 'human',
+          position: 'Bureau d\'études',
+          costPerHour: 0,
+          availability: 100,
+        });
+      }
+
+      // Extract materials from phases
+      const materialResources = (phasesSource || []).flatMap((phase: any) => {
         const milestones = phase.milestones || {};
         const materials = milestones.materials || phase.materials || [];
-        const humanResources = milestones.humanResources || phase.human_resources || [];
-
-        const materialResources = (Array.isArray(materials) ? materials : []).map((material: any, index: number) => ({
+        
+        return (Array.isArray(materials) ? materials : []).map((material: any, index: number) => ({
           id: `material-${phase.id}-${index}`,
           name: material.name || material.materialId || `Matériau ${index + 1}`,
           type: 'material',
@@ -260,36 +337,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           availability: material.availability || 100,
           quantity: material.quantity || 1,
         }));
-
-        const humanResourcesList = (Array.isArray(humanResources) ? humanResources : []).map((resource: any, index: number) => ({
-          id: `human-${phase.id}-${index}`,
-          name: resource.name || resource.employeeId || `Employé ${index + 1}`,
-          type: 'human',
-          position: resource.role || resource.position || 'Worker',
-          costPerHour: resource.dailyRate || resource.costPerHour || 0,
-          availability: resource.availability || 100,
-        }));
-
-        return [...materialResources, ...humanResourcesList];
       });
 
-      // Map stakeholders to human resources (fallback names as role)
-      const stakeholderResources = (Array.isArray(stakeholders) ? stakeholders : []).map((s: any, idx: number) => ({
-        id: `stakeholder-${idx}`,
-        name: s.role_name || 'Stakeholder',
-        type: 'human',
-        position: s.role_name,
-        costPerHour: 0,
-        availability: 100,
-      }));
+      const allResources = [
+        ...projectManagerResources,
+        ...taskAssignedEmployees,
+        ...contractorResources,
+        ...materialResources,
+      ];
 
-      setResources([...(phaseResources || []), ...stakeholderResources]);
+      setResources(allResources);
       console.debug('📊 ProjectDetailByDTO data:', {
         phasesCount: (phasesSource || []).length,
         tasksCount: allTasks.length,
-        resourcesCount: (phaseResources || []).length + stakeholderResources.length,
+        resourcesCount: allResources.length,
         risksCount: transformedRisks.length,
-        stakeholdersCount: stakeholderResources.length,
+        materialResourcesCount: materialResources.length,
       });
     } catch (error) {
       console.error('Error fetching additional data:', error);
