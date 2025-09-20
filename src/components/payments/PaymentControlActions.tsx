@@ -30,6 +30,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import UserSelector from '@/components/selectors/UserSelector';
 import { useNotifications } from '@/hooks/useNotifications';
+import { supabase } from '@/integrations/supabase/client';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -183,33 +184,162 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   };
 
   const handleTaskAssignment = async (values: any, metadata: any) => {
-    console.log('Creating task assignment:', values, metadata);
-    // Task assignment logic would be implemented here
+    try {
+      // Create task in task management system
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: values.assigneeId,
+          title: values.title,
+          message: values.message,
+          type: 'task_assignment',
+          related_id: paymentId,
+          metadata: {
+            ...metadata,
+            actionType: 'task_assignment',
+            dueDate: values.dueDate,
+            priority: values.priority,
+            assignedBy: user?.id
+          }
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating task assignment:', error);
+      throw error;
+    }
   };
 
   const handleHierarchyNotification = async (values: any, metadata: any) => {
-    console.log('Sending hierarchy notification:', values, metadata);
-    // Hierarchy notification logic would be implemented here
+    try {
+      // Get hierarchy members based on escalation level
+      const { data: hierarchy } = await supabase
+        .rpc('get_escalation_targets', { 
+          project_id_param: projectId, 
+          escalation_level_param: values.escalationLevel 
+        });
+
+      // Send notifications to hierarchy
+      for (const member of (hierarchy || [])) {
+        await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: member.employee_id,
+            title: values.title,
+            message: values.message,
+            type: 'hierarchy_notification',
+            related_id: paymentId,
+            metadata: {
+              ...metadata,
+              escalationLevel: values.escalationLevel,
+              hierarchyPosition: member.position_title
+            }
+          });
+      }
+    } catch (error) {
+      console.error('Error sending hierarchy notification:', error);
+      throw error;
+    }
   };
 
   const handleSMSNotification = async (values: any, metadata: any) => {
-    console.log('Sending SMS notification:', values, metadata);
-    // SMS sending logic would be implemented here
+    try {
+      // Call SMS edge function
+      const { error } = await supabase.functions.invoke('send-sms-notification', {
+        body: {
+          recipients: values.recipientIds,
+          message: values.message,
+          priority: values.priority,
+          metadata: {
+            ...metadata,
+            paymentId,
+            actionType: 'sms'
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending SMS notification:', error);
+      throw error;
+    }
   };
 
   const handleCallAction = async (values: any, metadata: any) => {
-    console.log('Initiating call action:', values, metadata);
-    // Call initiation logic would be implemented here
+    try {
+      // Schedule call via edge function
+      const { error } = await supabase.functions.invoke('schedule-call', {
+        body: {
+          recipients: values.recipientIds,
+          subject: values.title,
+          notes: values.message,
+          priority: values.priority,
+          metadata: {
+            ...metadata,
+            paymentId,
+            actionType: 'call'
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error initiating call action:', error);
+      throw error;
+    }
   };
 
   const handleEmailAction = async (values: any, metadata: any) => {
-    console.log('Sending email:', values, metadata);
-    // Email sending logic would be implemented here
+    try {
+      // Send email via edge function
+      const { error } = await supabase.functions.invoke('send-email-notification', {
+        body: {
+          recipients: values.recipientIds,
+          subject: values.title,
+          message: values.message,
+          priority: values.priority,
+          notificationChannels: values.notificationChannels,
+          metadata: {
+            ...metadata,
+            paymentId,
+            actionType: 'email'
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw error;
+    }
   };
 
   const handleMailAction = async (values: any, metadata: any) => {
-    console.log('Creating mail action:', values, metadata);
-    // Mail creation logic would be implemented here
+    try {
+      // Create postal mail record
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: values.recipientIds[0], // First recipient for mail
+          title: values.title,
+          message: values.message,
+          type: 'postal_mail',
+          related_id: paymentId,
+          metadata: {
+            ...metadata,
+            actionType: 'mail',
+            allRecipients: values.recipientIds,
+            requiresPhysicalDelivery: true
+          }
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error creating mail action:', error);
+      throw error;
+    }
   };
 
   const getActionIcon = (actionType: string) => {
