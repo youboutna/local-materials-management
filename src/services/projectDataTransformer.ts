@@ -419,6 +419,72 @@ export class ProjectDataTransformer {
     }));
   }
 
+  // Fast lightweight summary to avoid heavy initial loads
+  static async getProjectSummaryById(projectId: string): Promise<ProjectData | null> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      const d = data as any;
+      const project = {
+        id: d.id,
+        title: d.title,
+        description: d.description || '',
+        location: d.location || (typeof d.adresse === 'string' ? d.adresse : d.adresse?.address || ''),
+        status: d.status || 'en cours',
+        progress: d.progress || 0,
+        budget: d.budget || 0,
+        startDate: d.start_date || d.created_at,
+        endDate: d.end_date || undefined,
+        thumbnail: d.image || '/img/project-placeholder.jpg',
+        teamSize: d.team_size || 0,
+        coordinates: {
+          latitude: d.coordinates_latitude || 0,
+          longitude: d.coordinates_longitude || 0,
+        },
+        financingSource: d.financing_source || undefined,
+        marketType: d.market_type || undefined,
+        selectionMode: d.selection_mode || undefined,
+        launchDate: d.launch_date || undefined,
+        attributionDate: d.attribution_date || undefined,
+        allowsInitialPayment: d.allows_initial_payment || undefined,
+        initialPaymentPercentage: d.initial_payment_percentage || undefined,
+
+        // Lazy-loaded fields (keep empty for fast render)
+        inspections: [],
+        tasks: [],
+        risks: [],
+        resources: [],
+        expenses: [],
+        plannedPhases: [],
+        methodology: d.methodology || 'waterfall',
+        ganttChart: { tasks: [], dependencies: [] },
+        pertAnalysis: { activities: [], expectedDurations: {}, criticalPath: [], totalExpectedDuration: 0, variances: {} },
+        currentPhase: null,
+        currentStage: null,
+        constructionMilestones: [],
+        escalationThresholds: {
+          alert: 10,
+          notification: 20,
+          guarantee: 30,
+          legal: 40,
+        },
+        checkScheduleLastRun: {},
+      } as any as ProjectData;
+
+      return project;
+    } catch (e) {
+      console.error('getProjectSummaryById error', e);
+      return null;
+    }
+  }
+
   // ---------------- Helper Methods ----------------
 
   private static calculateOverallProgress(tasks: Task[]): number {

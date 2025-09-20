@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +55,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const queryClient = useQueryClient();
 
   // Fetch project data using ProjectDataTransformer
   const { data: project, isLoading: projectLoading, error: projectError } = useQuery<ProjectData>({
@@ -68,8 +70,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         setTimeout(() => reject(new Error('Timeout après 10 secondes')), 10000)
       );
       
-      console.log('🔍 Calling ProjectDataTransformer.getProjectById...');
-      const resultPromise = ProjectDataTransformer.getProjectById(projectId);
+      console.log('🔍 Calling ProjectDataTransformer.getProjectSummaryById...');
+      const resultPromise = ProjectDataTransformer.getProjectSummaryById(projectId);
       
       const result = await Promise.race([resultPromise, timeoutPromise]);
       console.log('🔍 ProjectDataTransformer result:', result ? 'SUCCESS' : 'NULL');
@@ -97,7 +99,24 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
       return data || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && (activeTab === 'financial' || activeTab === 'inspections'),
+  });
+
+  // Fetch phases data (used for counts and phases tab)
+  const { data: phasesData = [] } = useQuery({
+    queryKey: ['project-phases', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('project_phases')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('phase_order', { ascending: true });
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!projectId && (activeTab === 'phases' || activeTab === 'overview'),
+    staleTime: 30_000,
   });
 
   // Prepare data for components
@@ -333,12 +352,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phases</p>
-                <p className="text-2xl font-bold">{project.plannedPhases?.length || 0}</p>
+                <p className="text-2xl font-bold">{(phasesData?.length || project.plannedPhases?.length || 0)}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {project.plannedPhases?.filter((p: any) => p.status === 'completed').length || 0} terminées
+              {(phasesData?.filter((p: any) => p.status === 'completed').length) || (project.plannedPhases?.filter((p: any) => p.status === 'completed').length) || 0} terminées
             </p>
           </CardContent>
         </Card>
@@ -360,7 +379,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
