@@ -21,19 +21,22 @@ export class ProjectDataTransformer {
           payments(*)
         `)
         .eq('id', projectId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching project:', error);
-        return null;
+        throw error;
       }
 
-      if (!data) return null;
+      if (!data) {
+        console.log('No project found with ID:', projectId);
+        return null;
+      }
 
       return this.transformProject(data);
     } catch (error) {
       console.error('Error in getProjectById:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -66,12 +69,16 @@ export class ProjectDataTransformer {
 
   private static async transformProject(data: any): Promise<ProjectData | null> {
     try {
+      console.log('Transforming project data:', data.id, data.title);
+
       const [tasks, risks, resources, payments] = await Promise.all([
         this.transformTasks(data.id),
         this.transformRisks(data.id),
         this.transformResources(data.id),
         this.fetchPayments(data.id)
       ]);
+
+      console.log('Fetched related data:', { tasksCount: tasks.length, risksCount: risks.length, resourcesCount: resources.length, paymentsCount: payments.length });
 
       const inspections = this.transformInspections(data.inspections || []);
 
@@ -88,6 +95,15 @@ export class ProjectDataTransformer {
       const costAnalysis = this.calculateCostAnalysis(tasks, phases, data.budget);
   
       const criticalPath = this.calculateCriticalPath(tasks, pertAnalysis.expectedDurations);
+
+      // Fetch project phases separately for better structure
+      const plannedPhases = await this.fetchProjectPhases(data.id);
+
+      console.log('Building project object with:', { 
+        title: data.title, 
+        progress: overallProgress, 
+        phasesCount: plannedPhases.length 
+      });
 
       const project: ProjectData = {
         id: data.id,
@@ -113,12 +129,15 @@ export class ProjectDataTransformer {
         allowsInitialPayment: data.allows_initial_payment || undefined,
         initialPaymentPercentage: data.initial_payment_percentage || undefined,
 
+        // Related data
         inspections,
         tasks,
         risks,
         resources,
-        expenses: [payments, costAnalysis],
+        expenses: payments,
+        plannedPhases,
 
+        // Analysis data
         methodology: data.methodology || 'waterfall',
         ganttChart,
         pertAnalysis,
@@ -138,6 +157,7 @@ export class ProjectDataTransformer {
         },
       };
 
+      console.log('Project transformation completed successfully');
       return project;
     } catch (error) {
       console.error('Error transforming project:', error);
@@ -432,9 +452,29 @@ export class ProjectDataTransformer {
     }));
   }
 
-  private static calculateCostAnalysis(tasks: Task[], budget: number, expenses: { amount: number }[]) {
+  private static async fetchProjectPhases(projectId: string): Promise<any[]> {
+    try {
+      const { data: phases, error } = await supabase
+        .from('project_phases')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('phase_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching project phases:', error);
+        return [];
+      }
+
+      return phases || [];
+    } catch (error) {
+      console.error('Error in fetchProjectPhases:', error);
+      return [];
+    }
+  }
+
+  private static calculateCostAnalysis(tasks: Task[], phases: any[], budget: number) {
     const estimatedCost = tasks.reduce((sum, t) => sum + (t.costEstimate || 0), 0);
-    const actualExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const actualExpenses = phases.reduce((sum, p) => sum + (p.actualCost || 0), 0);
     return {
       budget,
       estimatedCost,

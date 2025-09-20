@@ -58,9 +58,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ['project-dto', projectId],
     queryFn: async () => {
       if (!projectId) throw new Error('ID du projet manquant');
-      return await ProjectDataTransformer.getProjectById(projectId);
+      const result = await ProjectDataTransformer.getProjectById(projectId);
+      if (!result) throw new Error('Projet non trouvé');
+      return result;
     },
     enabled: !!projectId,
+    retry: 1,
   });
 
   // Fetch payments data
@@ -201,6 +204,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Chargement des données du projet...</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Récupération des informations depuis la base de données
+          </p>
         </div>
       </div>
     );
@@ -211,10 +217,20 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <p className="text-destructive">{projectError?.message || 'Impossible de charger le projet'}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Réessayer
-          </Button>
+          <p className="text-destructive mb-2">
+            {projectError?.message || 'Impossible de charger le projet'}
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            Vérifiez que l'ID du projet est correct ou que vous avez les permissions nécessaires.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Réessayer
+            </Button>
+            <Button onClick={() => navigate('/projects')}>
+              Retour aux projets
+            </Button>
+          </div>
         </div>
       </div>
     );
