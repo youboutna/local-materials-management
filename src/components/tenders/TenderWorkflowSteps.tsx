@@ -32,6 +32,8 @@ import {
 } from '@/types/tender';
 import ProcurementStepSelector from './ProcurementStepSelector';
 import { useQueryClient } from '@tanstack/react-query';
+import { StepDocumentDTO } from '@/types/workflow-dto';
+import StepDocumentsSection from './StepDocumentsSection';
 
 interface TenderWorkflowStepsProps {
   tenderId: string;
@@ -69,8 +71,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     uploading,
     uploadDocument,
     updateStatus,
-    updateDates,
-    useStepDocuments
+    updateDates
   } = useWorkflowSteps(tenderId);
 
   // Utility functions
@@ -144,12 +145,18 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
     }
   };
 
-  const handleShareDocuments = (step: WorkflowStepDTO) => {
+  const handleShareDocuments = async (step: WorkflowStepDTO) => {
     if (!onShareWithSuppliers) return;
 
-    const stepDocuments = useStepDocuments(step.id);
-    const shareableDocuments = stepDocuments.data?.filter(doc => doc.can_share) || [];
-    
+    let docs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]);
+    if (!docs) {
+      const { WorkflowStepService } = await import('@/services/workflowStepService');
+      docs = await WorkflowStepService.getStepDocuments(step.id);
+      // Prime cache for future UI usage
+      queryClient.setQueryData(['step-documents', step.id], docs);
+    }
+
+    const shareableDocuments = (docs || []).filter(doc => doc.can_share);
     if (shareableDocuments.length === 0) return;
 
     const shareData: DocumentShareDTO = {
@@ -230,10 +237,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
 
         {filteredSteps?.map((step) => {
           const isExpanded = expandedSteps.has(step.id);
-          const stepDocumentsQuery = useStepDocuments(step.id);
-          const stepDocuments = stepDocumentsQuery.data || [];
-          const hasShareableDocuments = stepDocuments.some(doc => doc.can_share);
-          const isLoadingDocuments = stepDocumentsQuery.isLoading;
+          const cachedStepDocs = queryClient.getQueryData<StepDocumentDTO[]>(['step-documents', step.id]) || [];
+          const hasShareableDocuments = cachedStepDocs.some(doc => doc.can_share);
 
           return (
             <Card key={step.id} className="mb-4">
@@ -497,120 +502,12 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                       </div>
                     </TabsContent>
 
-                     <TabsContent value="documents" className="space-y-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Documents</h4>
-                          {!readonly && step.can_upload_documents && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openAddDocumentDialog(step)}
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Ajouter
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* Upload Status Indicator */}
-                        {!step.can_upload_documents && (
-                          <div className="p-3 bg-muted rounded-lg">
-                            <p className="text-sm text-muted-foreground">
-                              Upload de documents non disponible pour cette étape (statut: {step.status})
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Required Documents List */}
-                        {step.required_documents && step.required_documents.length > 0 && (
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-medium text-muted-foreground">Documents requis:</h5>
-                            <div className="grid gap-2">
-                              {step.required_documents.map((docType, index) => {
-                                const hasDocument = stepDocuments.some(doc => 
-                                  doc.document_type === docType || doc.document.title.toLowerCase().includes(docType.toLowerCase())
-                                );
-                                return (
-                                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                                    {hasDocument ? (
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    ) : (
-                                      <AlertTriangle className="h-4 w-4 text-orange-500" />
-                                    )}
-                                    <span className="text-sm">{docType}</span>
-                                    {hasDocument && <Badge variant="secondary" className="ml-auto">Fourni</Badge>}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                         {isLoadingDocuments ? (
-                           <div className="flex items-center justify-center p-4">
-                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                             <span className="ml-2 text-sm">Chargement des documents...</span>
-                           </div>
-                         ) : stepDocuments.length > 0 ? (
-                           <div className="grid gap-2">
-                             {stepDocuments.map((doc) => (
-                               <div key={doc.id} className="flex items-center gap-2 p-3 border rounded">
-                                 <FileText className="h-4 w-4" />
-                                 <div className="flex-1">
-                                   <div className="font-medium text-sm">
-                                     {doc.document.title}
-                                   </div>
-                                   {doc.document.description && (
-                                     <div className="text-xs text-muted-foreground">
-                                       {doc.document.description}
-                                     </div>
-                                   )}
-                                   <div className="text-xs text-muted-foreground mt-1">
-                                     Type: {doc.document_type} | Requis: {doc.is_required ? 'Oui' : 'Non'}
-                                   </div>
-                                 </div>
-                                 <Badge variant="outline" className={getStatusColor(doc.status)}>
-                                   {getStatusIcon(doc.status)}
-                                   <span className="ml-1">
-                                     {doc.status === 'pending' ? 'En attente' :
-                                      doc.status === 'submitted' ? 'Soumis' :
-                                      doc.status === 'approved' ? 'Approuvé' :
-                                      doc.status === 'rejected' ? 'Rejeté' : doc.status}
-                                   </span>
-                                 </Badge>
-                                 {doc.document.file_url && (
-                                   <Button
-                                     size="sm"
-                                     variant="ghost"
-                                     onClick={() => window.open(doc.document.file_url, '_blank')}
-                                   >
-                                     <Eye className="h-4 w-4" />
-                                   </Button>
-                                 )}
-                               </div>
-                             ))}
-                           </div>
-                         ) : (
-                           <div className="text-center py-4">
-                             <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                             <p className="text-sm text-muted-foreground">
-                               Aucun document pour cette étape.
-                             </p>
-                             {step.can_upload_documents && !readonly && (
-                               <Button
-                                 size="sm"
-                                 variant="outline"
-                                 className="mt-2"
-                                 onClick={() => openAddDocumentDialog(step)}
-                               >
-                                 <Plus className="h-4 w-4 mr-1" />
-                                 Ajouter le premier document
-                               </Button>
-                             )}
-                           </div>
-                         )}
-                      </div>
+                    <TabsContent value="documents" className="space-y-4">
+                      <StepDocumentsSection 
+                        step={step} 
+                        readonly={readonly}
+                        onOpenAddDocument={openAddDocumentDialog}
+                      />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
