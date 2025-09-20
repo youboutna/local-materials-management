@@ -101,6 +101,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     enabled: !!projectId && (activeTab === 'financial' || activeTab === 'inspections'),
   });
 
+  // Fetch risks data (DB entity), used for risks tab and overview
+  const { data: risksData = [] } = useQuery({
+    queryKey: ['project-risks', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('project_risks')
+        .select('*')
+        .eq('project_id', projectId);
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!projectId && (activeTab === 'risks' || activeTab === 'overview'),
+    staleTime: 30_000,
+  });
+
   // Fetch phases data (used for counts and phases tab)
   const { data: phasesData = [] } = useQuery({
     queryKey: ['project-phases', projectId],
@@ -154,27 +170,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }) || [];
       setTasks(allTasks);
 
-      // Fetch risks from the database or project data
-      const projectRisks = project?.risks || [];
-      if (projectRisks.length === 0) {
-        // If no risks in project data, try to fetch from database
-        try {
-          const { data: riskData } = await supabase
-            .from('project_phases')
-            .select('*')
-            .eq('project_id', projectId);
-          
-          const combinedRisks = riskData?.flatMap((phase: any) => 
-            Array.isArray((phase as any).risk_factors) ? (phase as any).risk_factors : []
-          ) || [];
-          setRisks(combinedRisks);
-        } catch (error) {
-          console.log('No risks table, using empty risks');
-          setRisks([]);
-        }
-      } else {
-        setRisks(projectRisks);
-      }
+      // Use DTO risks if present; otherwise fall back to DB risks
+      const projectRisks = Array.isArray(project?.risks) ? project?.risks : [];
+      const combinedRisks = (risksData as any[])?.length ? (risksData as any[]) : projectRisks;
+      setRisks(combinedRisks);
 
       // Extract resources from project phases and materials
       const phaseResources = project?.plannedPhases?.flatMap((phase: any) => {
