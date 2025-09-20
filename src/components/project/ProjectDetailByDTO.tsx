@@ -53,7 +53,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   console.log('🔍 ProjectDetailByDTO render - projectId:', projectId);
 
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
@@ -162,11 +161,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         try {
           const { data: riskData } = await supabase
             .from('project_phases')
-            .select('risk_factors')
+            .select('*')
             .eq('project_id', projectId);
           
           const combinedRisks = riskData?.flatMap((phase: any) => 
-            phase.risk_factors || []
+            Array.isArray((phase as any).risk_factors) ? (phase as any).risk_factors : []
           ) || [];
           setRisks(combinedRisks);
         } catch (error) {
@@ -232,7 +231,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   };
 
-  if (projectLoading || loading) {
+  if (projectLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
