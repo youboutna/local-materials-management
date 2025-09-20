@@ -18,6 +18,7 @@ import RiskOverview from '@/components/project/RiskOverview';
 import TaskList from '@/components/project/TaskList';
 import TeamOverview from '@/components/project/TeamOverview';
 import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
+import ProjectGantt from '@/components/project/ProjectGantt';
 import {
   ArrowLeft,
   Calendar,
@@ -92,7 +93,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
       return data || [];
     },
-    enabled: !!projectId && (activeTab === 'financial' || activeTab === 'inspections'),
+    enabled: !!projectId,
   });
 
   // Fetch risks data (DB entity), used for risks tab and overview
@@ -107,7 +108,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (error) return [];
       return data || [];
     },
-    enabled: !!projectId && (activeTab === 'risks' || activeTab === 'overview'),
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  // Fetch stakeholders (user roles as proxy)
+  const { data: stakeholders = [] } = useQuery({
+    queryKey: ['project-stakeholders', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, role_name');
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!projectId,
     staleTime: 30_000,
   });
 
@@ -124,7 +140,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (error) return [];
       return data || [];
     },
-    enabled: !!projectId && (activeTab === 'phases' || activeTab === 'overview'),
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  // Calculations (PERT, Gantt)
+  const { data: calculations } = useQuery({
+    queryKey: ['project-calculations', projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      return await projectService.getProjectCalculations(projectId);
+    },
+    enabled: !!projectId && (activeTab === 'gantt' || activeTab === 'pert'),
     staleTime: 30_000,
   });
 
@@ -138,71 +165,83 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     if (project && projectId) {
       fetchAdditionalData();
     }
-  }, [project, projectId]);
+  }, [project, projectId, phasesData, risksData, stakeholders]);
 
   const fetchAdditionalData = async () => {
     if (!project || !projectId) return;
 
     try {
       // Create tasks from phases data
-      const allTasks = phasesData?.flatMap((phase: any) => {
+      const allTasks = (phasesData || []).flatMap((phase: any) => {
         const milestones = phase.milestones || {};
-        const stages = [
-          {
-            name: `${phase.phase_name} - ${phase.construction_stage}`,
-            description: phase.description,
-            status: phase.status,
-            progress: phase.progress,
-            startDate: phase.start_date,
-            endDate: phase.end_date
-          }
-        ];
-        
+        const stages = Array.isArray(phase.stages) && phase.stages.length > 0
+          ? phase.stages
+          : [
+              {
+                name: `${phase.phase_name || phase.phase || phase.construction_stage || 'Phase'} - ${phase.construction_stage || 'Étape'}`,
+                description: phase.description,
+                status: phase.status || 'not_started',
+                progress: phase.progress || 0,
+                startDate: phase.start_date || phase.startDate,
+                endDate: phase.end_date || phase.endDate,
+              },
+            ];
+
         return stages.map((stage: any, index: number) => ({
           id: `${phase.id}-task-${index}`,
           name: stage.name,
           description: stage.description,
           status: stage.status || 'not_started',
           progress: stage.progress || 0,
-          startDate: stage.startDate,
-          endDate: stage.endDate,
+          startDate: stage.startDate || phase.start_date,
+          endDate: stage.endDate || phase.end_date,
           assignedTo: [],
-          dependencies: phase.dependencies || []
+          dependencies: phase.dependencies || [],
         }));
-      }) || [];
+      });
       setTasks(allTasks);
 
       // Use risks from database
       setRisks(risksData || []);
 
       // Extract resources from phases
-      const phaseResources = phasesData?.flatMap((phase: any) => {
+      const phaseResources = (phasesData || []).flatMap((phase: any) => {
         const milestones = phase.milestones || {};
         const materials = milestones.materials || phase.materials || [];
         const humanResources = milestones.humanResources || phase.human_resources || [];
 
-        const materialResources = materials.map((material: any, index: number) => ({
+        const materialResources = (materials || []).map((material: any, index: number) => ({
           id: `material-${phase.id}-${index}`,
           name: material.name || material.materialId || `Matériau ${index + 1}`,
           type: 'material',
-          costPerHour: material.pricePerUnit || 0,
-          availability: 100,
-          quantity: material.quantity || 1
+          costPerHour: material.pricePerUnit || material.costPerHour || 0,
+          availability: material.availability || 100,
+          quantity: material.quantity || 1,
         }));
 
-        const humanResourcesList = humanResources.map((resource: any, index: number) => ({
+        const humanResourcesList = (humanResources || []).map((resource: any, index: number) => ({
           id: `human-${phase.id}-${index}`,
           name: resource.name || resource.employeeId || `Employé ${index + 1}`,
           type: 'human',
-          position: resource.role || 'Worker',
-          costPerHour: resource.dailyRate || 0,
-          availability: resource.availability || 100
+          position: resource.role || resource.position || 'Worker',
+          costPerHour: resource.dailyRate || resource.costPerHour || 0,
+          availability: resource.availability || 100,
         }));
 
         return [...materialResources, ...humanResourcesList];
-      }) || [];
+      });
 
-      setResources(phaseResources);
+      // Map stakeholders to human resources (fallback names as role)
+      const stakeholderResources = (stakeholders || []).map((s: any, idx: number) => ({
+        id: `stakeholder-${idx}`,
+        name: s.role_name || 'Stakeholder',
+        type: 'human',
+        position: s.role_name,
+        costPerHour: 0,
+        availability: 100,
+      }));
+
+      setResources([...(phaseResources || []), ...stakeholderResources]);
     } catch (error) {
       console.error('Error fetching additional data:', error);
     }
@@ -378,13 +417,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
           <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="risks">Risques</TabsTrigger>
           <TabsTrigger value="resources">Ressources</TabsTrigger>
+          <TabsTrigger value="gantt">Gantt</TabsTrigger>
+          <TabsTrigger value="pert">PERT</TabsTrigger>
           <TabsTrigger value="map">Carte</TabsTrigger>
         </TabsList>
 
@@ -454,7 +495,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <p className="text-lg font-bold">
                       {phasesData?.reduce((total: number, phase: any) => {
                         const milestones = phase.milestones || {};
-                        return total + (milestones.materials?.length || 0);
+                        const extra = Array.isArray(phase.materials) ? phase.materials.length : 0;
+                        return total + (milestones.materials?.length || 0) + extra;
                       }, 0) || 0}
                     </p>
                   </div>
@@ -498,7 +540,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="phases" className="mt-6">
-          <PhaseList phases={phasesData || []} projectId={projectId!} />
+          <PhaseList phases={(phasesData || []).map((phase: any) => ({
+            id: phase.id,
+            phase: phase.phase_name || phase.phase || phase.construction_stage || 'Phase',
+            status: phase.status || 'planned',
+            progress: phase.progress || 0,
+            startDate: phase.start_date || phase.startDate,
+            endDate: phase.end_date || phase.endDate,
+            stages: Array.isArray(phase.stages) ? phase.stages : (phase.construction_stage ? [{ name: phase.construction_stage, status: phase.status }] : [])
+          }))} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
@@ -531,6 +581,48 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               // Handle map data updates
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="gantt" className="mt-6">
+          <ProjectGantt 
+            project={project as any}
+            phases={(phasesData || []).map((p: any) => ({
+              id: p.id,
+              name: p.phase_name || p.phase || p.construction_stage || 'Phase',
+              startDate: new Date(p.start_date || p.startDate || new Date()),
+              endDate: new Date(p.end_date || p.endDate || new Date()),
+              progress: p.progress || 0,
+              status: (p.status || 'planned') as any,
+            }))}
+          />
+        </TabsContent>
+
+        <TabsContent value="pert" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analyse PERT</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {calculations?.pertAnalysis ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Durée attendue totale</p>
+                    <p className="text-2xl font-bold">{calculations.pertAnalysis.totalExpectedDuration.toFixed(1)} j</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Écart-type total</p>
+                    <p className="text-2xl font-bold">{(calculations.pertAnalysis.totalStdDeviation || 0).toFixed(1)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
+                    <p className="text-2xl font-bold">{calculations.pertAnalysis.criticalPath?.length || 0}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Sélectionnez l'onglet PERT pour charger l'analyse.</p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
