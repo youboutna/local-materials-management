@@ -62,11 +62,26 @@ export const createPaymentAction = async (actionData: Omit<PaymentControlAction,
       }
     };
 
-    const existingActions = getStoredPaymentActions();
-    existingActions.push(action);
-    localStorage.setItem('paymentControlActions', JSON.stringify(existingActions));
-
+    // Execute action directly without localStorage storage
     await executePaymentAction(action);
+
+    // Track action execution in notifications table  
+    await supabase.from('notifications').insert({
+      type: 'system',
+      title: `Action exécutée: ${action.title}`,
+      message: `Action ${action.actionType} exécutée pour paiement ${action.paymentId}`,
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      metadata: {
+        actionType: action.actionType,
+        entityType: 'payment',
+        entityId: action.paymentId,
+        projectId: action.projectId,
+        priority: action.priority,
+        executedAt: action.createdAt,
+        paymentAmount: action.metadata?.payment?.amount
+      },
+      related_id: action.projectId
+    });
 
     return action;
   } catch (error) {
@@ -362,16 +377,24 @@ const executePaymentBlockchainVerification = async (action: PaymentControlAction
   }
 };
 
-export const getPaymentActions = (paymentId?: string): PaymentControlAction[] => {
-  const actions = getStoredPaymentActions();
-  return paymentId ? actions.filter(action => action.paymentId === paymentId) : actions;
-};
+export const getPaymentActions = async (paymentId?: string): Promise<any[]> => {
+  // Get action history from notifications table
+  const query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('type', 'system')
+    .like('metadata->entityType', 'payment');
 
-const getStoredPaymentActions = (): PaymentControlAction[] => {
-  try {
-    const stored = localStorage.getItem('paymentControlActions');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+  if (paymentId) {
+    query.eq('metadata->entityId', paymentId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching payment actions:', error);
     return [];
   }
+
+  return data || [];
 };

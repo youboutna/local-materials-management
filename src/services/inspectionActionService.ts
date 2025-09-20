@@ -68,11 +68,25 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
       }
     };
 
-    const existingActions = getStoredInspectionActions();
-    existingActions.push(action);
-    localStorage.setItem('inspectionControlActions', JSON.stringify(existingActions));
-
+    // Execute action immediately - no need for localStorage
     await executeInspectionAction(action);
+
+    // Track action in notifications table
+    await supabase.from('notifications').insert({
+      type: 'system',
+      title: `Action exécutée: ${action.title}`,
+      message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      metadata: {
+        actionType: action.actionType,
+        entityType: 'inspection',
+        entityId: action.inspectionId,
+        projectId: action.projectId,
+        priority: action.priority,
+        executedAt: action.createdAt
+      },
+      related_id: action.inspectionId
+    });
 
     return action;
   } catch (error) {
@@ -294,16 +308,24 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
   }
 };
 
-export const getInspectionActions = (inspectionId?: string): InspectionControlAction[] => {
-  const actions = getStoredInspectionActions();
-  return inspectionId ? actions.filter(action => action.inspectionId === inspectionId) : actions;
-};
+export const getInspectionActions = async (inspectionId?: string): Promise<any[]> => {
+  // Get action history from notifications table
+  const query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('type', 'system')
+    .like('metadata->entityType', 'inspection');
 
-const getStoredInspectionActions = (): InspectionControlAction[] => {
-  try {
-    const stored = localStorage.getItem('inspectionControlActions');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+  if (inspectionId) {
+    query.eq('metadata->entityId', inspectionId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching inspection actions:', error);
     return [];
   }
+
+  return data || [];
 };

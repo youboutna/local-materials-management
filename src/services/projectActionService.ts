@@ -60,11 +60,25 @@ export const createProjectAction = async (actionData: Omit<ProjectControlAction,
       }
     };
 
-    const existingActions = getStoredProjectActions();
-    existingActions.push(action);
-    localStorage.setItem('projectControlActions', JSON.stringify(existingActions));
-
+    // Execute action directly without localStorage storage
     await executeProjectAction(action);
+
+    // Track action execution in notifications table
+    await supabase.from('notifications').insert({
+      type: 'system',
+      title: `Action exécutée: ${action.title}`,
+      message: `Action ${action.actionType} exécutée pour projet ${action.projectId}`,
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      metadata: {
+        actionType: action.actionType,
+        entityType: 'project',
+        entityId: action.projectId,
+        projectId: action.projectId,
+        priority: action.priority,
+        executedAt: action.createdAt
+      },
+      related_id: action.projectId
+    });
 
     return action;
   } catch (error) {
@@ -368,16 +382,24 @@ const executeProjectBlockchainVerification = async (action: ProjectControlAction
   }
 };
 
-export const getProjectActions = (projectId?: string): ProjectControlAction[] => {
-  const actions = getStoredProjectActions();
-  return projectId ? actions.filter(action => action.projectId === projectId) : actions;
-};
+export const getProjectActions = async (projectId?: string): Promise<any[]> => {
+  // Get action history from notifications table
+  const query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('type', 'system')
+    .like('metadata->entityType', 'project');
 
-const getStoredProjectActions = (): ProjectControlAction[] => {
-  try {
-    const stored = localStorage.getItem('projectControlActions');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+  if (projectId) {
+    query.eq('metadata->entityId', projectId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching project actions:', error);
     return [];
   }
+
+  return data || [];
 };

@@ -67,11 +67,25 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
       }
     };
 
-    const existingActions = getStoredInsuranceActions();
-    existingActions.push(action);
-    localStorage.setItem('insuranceControlActions', JSON.stringify(existingActions));
-
+    // Execute action directly without localStorage storage
     await executeInsuranceAction(action);
+
+    // Track action execution in notifications table
+    await supabase.from('notifications').insert({
+      type: 'system',
+      title: `Action exécutée: ${action.title}`,
+      message: `Action ${action.actionType} exécutée pour assurance ${action.insuranceId}`,
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      metadata: {
+        actionType: action.actionType,
+        entityType: 'insurance',
+        entityId: action.insuranceId,
+        projectId: action.projectId,
+        priority: action.priority,
+        executedAt: action.createdAt
+      },
+      related_id: action.insuranceId
+    });
 
     return action;
   } catch (error) {
@@ -293,16 +307,24 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
   }
 };
 
-export const getInsuranceActions = (insuranceId?: string): InsuranceControlAction[] => {
-  const actions = getStoredInsuranceActions();
-  return insuranceId ? actions.filter(action => action.insuranceId === insuranceId) : actions;
-};
+export const getInsuranceActions = async (insuranceId?: string): Promise<any[]> => {
+  // Get action history from notifications table
+  const query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('type', 'system')
+    .like('metadata->entityType', 'insurance');
 
-const getStoredInsuranceActions = (): InsuranceControlAction[] => {
-  try {
-    const stored = localStorage.getItem('insuranceControlActions');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+  if (insuranceId) {
+    query.eq('metadata->entityId', insuranceId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching insurance actions:', error);
     return [];
   }
+
+  return data || [];
 };

@@ -68,11 +68,25 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
       }
     };
 
-    const existingActions = getStoredBankGuaranteeActions();
-    existingActions.push(action);
-    localStorage.setItem('bankGuaranteeControlActions', JSON.stringify(existingActions));
-
+    // Execute action immediately - no need to store in localStorage
     await executeBankGuaranteeAction(action);
+
+    // Optionally persist to notifications table for tracking
+    await supabase.from('notifications').insert({
+      type: 'system',
+      title: `Action exécutée: ${action.title}`,
+      message: `Action ${action.actionType} exécutée pour garantie bancaire ${action.bankGuaranteeId}`,
+      recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
+      metadata: {
+        actionType: action.actionType,
+        entityType: 'bank_guarantee',
+        entityId: action.bankGuaranteeId,
+        projectId: action.projectId,
+        priority: action.priority,
+        executedAt: action.createdAt
+      },
+      related_id: action.projectId
+    });
 
     return action;
   } catch (error) {
@@ -407,16 +421,24 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
   }
 };
 
-export const getBankGuaranteeActions = (bankGuaranteeId?: string): BankGuaranteeControlAction[] => {
-  const actions = getStoredBankGuaranteeActions();
-  return bankGuaranteeId ? actions.filter(action => action.bankGuaranteeId === bankGuaranteeId) : actions;
-};
+export const getBankGuaranteeActions = async (bankGuaranteeId?: string): Promise<any[]> => {
+  // Get action history from notifications table
+  const query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('type', 'system')
+    .like('metadata->entityType', 'bank_guarantee');
 
-const getStoredBankGuaranteeActions = (): BankGuaranteeControlAction[] => {
-  try {
-    const stored = localStorage.getItem('bankGuaranteeControlActions');
-    return stored ? JSON.parse(stored) : [];
-  } catch {
+  if (bankGuaranteeId) {
+    query.eq('metadata->entityId', bankGuaranteeId);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching bank guarantee actions:', error);
     return [];
   }
+
+  return data || [];
 };
