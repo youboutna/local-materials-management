@@ -2160,6 +2160,27 @@ export type Database = {
           },
         ]
       }
+      processing_logs: {
+        Row: {
+          created_at: string
+          id: string
+          process_type: string
+          summary: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          process_type: string
+          summary?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          process_type?: string
+          summary?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -3547,6 +3568,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_settings: {
+        Row: {
+          category: string
+          configuration: Json | null
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       task_assignments: {
         Row: {

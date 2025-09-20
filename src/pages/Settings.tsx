@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Key, Shield, Cog, Folder, Cloud, Settings2 } from "lucide-react";
+import { Database, Key, Shield, Cog, Folder, Cloud, Settings2, AlertTriangle } from "lucide-react";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DatabaseSettings from '@/components/admin/DatabaseSettings';
@@ -16,6 +16,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ProviderSettings from '@/components/admin/ProviderSettings';
 import DeploymentSettings from '@/components/admin/DeploymentSettings';
 import EscalationThresholdsSettings from '@/components/admin/EscalationThresholdsSettings';
+import AlertsProcessorSettings from '@/components/admin/AlertsProcessorSettings';
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -84,7 +85,7 @@ const Settings = () => {
           )}
           
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-7 mb-8">
+            <TabsList className="grid grid-cols-8 mb-8">
               <TabsTrigger value="providers" className="flex items-center">
                 <Cloud className="mr-2 h-4 w-4" /> Providers
               </TabsTrigger>
@@ -105,6 +106,9 @@ const Settings = () => {
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center">
                 <Cog className="mr-2 h-4 w-4" /> {t("settings.tabs.system")}
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="flex items-center">
+                <AlertTriangle className="mr-2 h-4 w-4" /> Alertes
               </TabsTrigger>
             </TabsList>
             
@@ -134,6 +138,10 @@ const Settings = () => {
             
             <TabsContent value="system">
               <EscalationThresholdsSettings />
+            </TabsContent>
+            
+            <TabsContent value="alerts">
+              <AlertsProcessorSettings />
             </TabsContent>
           </Tabs>
         </div>
