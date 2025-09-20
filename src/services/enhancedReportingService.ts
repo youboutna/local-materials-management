@@ -1,19 +1,114 @@
-// Data Transformer Service for Project Reports
-import { ProjectData } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
+import { ProjectData } from '@/types/project';
 import { ReportCalculations } from '@/utils/reportCalculations';
 import { ProjectDataCalculations } from '@/utils/projectDataCalculations';
-import { 
-  ProjectReportDTO, 
-  EnhancedPhaseDTO, 
+import {
+  ProjectReportDTO,
+  EnhancedPhaseDTO,
   ConstructionMilestoneDTO,
   ProjectAnalyticsDTO,
   FinancialMetricsDTO,
   RiskAssessmentDTO,
-  RiskItemDTO
+  ReportData,
+  CostCalculation
 } from '@/types/reportTypes';
 
-export class ReportDataTransformer {
+export class EnhancedReportingService {
+  /**
+   * Generate complete project report with all enhanced calculations
+   */
+  static async generateCompleteProjectReport(project: ProjectData): Promise<{
+    reportDTO: ProjectReportDTO;
+    reportData: ReportData;
+    costCalculation: CostCalculation;
+    resourceUtilization: any;
+    healthScore: any;
+  }> {
+    try {
+      // Fetch all required data in parallel
+      const [
+        reportDTO,
+        realCosts,
+        resourceUtilization,
+        phases,
+        inspections
+      ] = await Promise.all([
+        this.transformProjectForReport(project),
+        ProjectDataCalculations.calculateRealProjectCosts(project.id),
+        ProjectDataCalculations.calculateResourceUtilization(project.id),
+        supabase.from('project_phases').select('*').eq('project_id', project.id),
+        supabase.from('inspections').select('*').eq('project_id', project.id)
+      ]);
+
+      const phasesData = phases.data || [];
+      const inspectionsData = inspections.data || [];
+
+      // Calculate comprehensive cost data
+      const costCalculation: CostCalculation = {
+        totalBudget: project.budget || 0,
+        spentAmount: realCosts.totalSpent,
+        remainingBudget: (project.budget || 0) - realCosts.totalSpent,
+        costVariance: realCosts.totalSpent - (project.budget || 0),
+        estimatedCost: realCosts.estimatedCost,
+        actualCost: realCosts.actualPhaseCost
+      };
+
+      // Calculate timeline performance
+      const timelinePerformance = ProjectDataCalculations.calculateTimelinePerformance(
+        project, 
+        phasesData
+      );
+
+      // Calculate quality score from inspections
+      const qualityScore = this.calculateQualityFromInspections(inspectionsData);
+
+      // Calculate overall health score
+      const budgetUtilization = project.budget > 0 ? (realCosts.totalSpent / project.budget) * 100 : 0;
+      const healthScore = ProjectDataCalculations.calculateProjectHealthScore(
+        project.progress,
+        budgetUtilization,
+        timelinePerformance.completionRate || 0,
+        qualityScore
+      );
+
+      // Generate report data
+      const reportData: ReportData = {
+        id: `report-${project.id}-${Date.now()}`,
+        projectId: project.id,
+        generatedAt: new Date(),
+        financialSummary: {
+          totalBudget: costCalculation.totalBudget,
+          spentAmount: costCalculation.spentAmount,
+          remainingBudget: costCalculation.remainingBudget,
+          costVariance: costCalculation.costVariance
+        },
+        taskProgress: project.tasks?.map(task => ({
+          taskId: task.id,
+          name: task.name,
+          progress: task.progress,
+          status: task.status
+        })) || [],
+        riskAssessment: reportDTO.riskAssessment.risks.map(risk => ({
+          id: risk.id,
+          title: risk.description,
+          severity: String(risk.riskScore),
+          status: risk.status
+        }))
+      };
+
+      return {
+        reportDTO,
+        reportData,
+        costCalculation,
+        resourceUtilization,
+        healthScore
+      };
+    } catch (error) {
+      console.error('Error generating complete project report:', error);
+      throw error;
+    }
+  }
+
   /**
    * Transform project data into enriched DTO for reporting
    */
@@ -36,17 +131,11 @@ export class ReportDataTransformer {
     };
   }
 
-  /**
-   * Fetch and enhance project phases data
-   */
   private static async fetchEnhancedPhases(projectId: string): Promise<EnhancedPhaseDTO[]> {
     try {
       const { data: phasesData } = await supabase
         .from('project_phases')
-        .select(`
-          *,
-          project_phase_employees(employee_id, employees(full_name))
-        `)
+        .select('*')
         .eq('project_id', projectId);
 
       if (!phasesData) return [];
@@ -54,7 +143,7 @@ export class ReportDataTransformer {
       return phasesData.map(phase => ({
         id: phase.id,
         name: phase.phase_name,
-        plannedProgress: 0, // No planned_progress field in current schema
+        plannedProgress: 0,
         actualProgress: phase.progress || 0,
         budget: phase.estimated_cost || 0,
         actualCost: phase.actual_cost || 0,
@@ -64,8 +153,8 @@ export class ReportDataTransformer {
         procurementStep: phase.construction_phase || '',
         projectId: phase.project_id,
         riskLevel: this.calculatePhaseRiskLevel(phase),
-        dependencies: Array.isArray(phase.custom_phase_data) ? [] : [],
-        assignedTeam: [] // No employees relation in current schema
+        dependencies: [],
+        assignedTeam: []
       }));
     } catch (error) {
       console.error('Error fetching enhanced phases:', error);
@@ -73,9 +162,6 @@ export class ReportDataTransformer {
     }
   }
 
-  /**
-   * Fetch construction milestones with enhanced data
-   */
   private static async fetchConstructionMilestones(projectId: string): Promise<ConstructionMilestoneDTO[]> {
     try {
       const { data: milestonesData } = await supabase
@@ -83,8 +169,7 @@ export class ReportDataTransformer {
         .select('*')
         .eq('project_id', projectId);
 
-      if (!milestonesData) {
-        // Generate default construction milestones if none exist
+      if (!milestonesData || milestonesData.length === 0) {
         return this.generateDefaultConstructionMilestones(projectId);
       }
 
@@ -96,12 +181,11 @@ export class ReportDataTransformer {
         completedDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
         status: this.mapMilestoneStatus(milestone.status || 'pending'),
         projectId: milestone.project_id,
-        phaseId: undefined, // No phase_id in current schema
         stage: this.inferConstructionStage(milestone.title),
         priority: this.inferMilestonePriority(milestone.title),
         completionPercentage: milestone.progress_percentage || 0,
-        blockers: [], // No blockers field in current schema
-        dependencies: [] // No dependencies field in current schema
+        blockers: [],
+        dependencies: []
       }));
     } catch (error) {
       console.error('Error fetching construction milestones:', error);
@@ -109,83 +193,6 @@ export class ReportDataTransformer {
     }
   }
 
-  /**
-   * Generate default construction milestones based on project type
-   */
-  private static generateDefaultConstructionMilestones(projectId: string): ConstructionMilestoneDTO[] {
-    const baseDate = new Date();
-    return [
-      {
-        id: `milestone-${projectId}-1`,
-        title: 'Validation des études préliminaires',
-        description: 'Validation des études de faisabilité et conception préliminaire',
-        targetDate: new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        projectId,
-        stage: 'conception' as const,
-        priority: 'critical' as const,
-        completionPercentage: 0,
-        blockers: [],
-        dependencies: []
-      },
-      {
-        id: `milestone-${projectId}-2`,
-        title: 'Obtention des autorisations',
-        description: 'Permis de construire et autorisations administratives',
-        targetDate: new Date(baseDate.getTime() + 60 * 24 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        projectId,
-        stage: 'preparation' as const,
-        priority: 'high' as const,
-        completionPercentage: 0,
-        blockers: [],
-        dependencies: [`milestone-${projectId}-1`]
-      },
-      {
-        id: `milestone-${projectId}-3`,
-        title: 'Début des travaux de terrassement',
-        description: 'Commencement des travaux de préparation du terrain',
-        targetDate: new Date(baseDate.getTime() + 90 * 24 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        projectId,
-        stage: 'execution' as const,
-        priority: 'high' as const,
-        completionPercentage: 0,
-        blockers: [],
-        dependencies: [`milestone-${projectId}-2`]
-      },
-      {
-        id: `milestone-${projectId}-4`,
-        title: 'Achèvement du gros œuvre',
-        description: 'Finalisation de la structure principale',
-        targetDate: new Date(baseDate.getTime() + 180 * 24 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        projectId,
-        stage: 'execution' as const,
-        priority: 'critical' as const,
-        completionPercentage: 0,
-        blockers: [],
-        dependencies: [`milestone-${projectId}-3`]
-      },
-      {
-        id: `milestone-${projectId}-5`,
-        title: 'Réception provisoire',
-        description: 'Réception des travaux et validation qualité',
-        targetDate: new Date(baseDate.getTime() + 240 * 24 * 60 * 60 * 1000),
-        status: 'pending' as const,
-        projectId,
-        stage: 'validation' as const,
-        priority: 'critical' as const,
-        completionPercentage: 0,
-        blockers: [],
-        dependencies: [`milestone-${projectId}-4`]
-      }
-    ];
-  }
-
-  /**
-   * Calculate enhanced project analytics from real database data
-   */
   private static async calculateProjectAnalytics(project: ProjectData): Promise<ProjectAnalyticsDTO> {
     try {
       const [phasesResponse, paymentsResponse, inspectionsResponse] = await Promise.all([
@@ -202,14 +209,12 @@ export class ReportDataTransformer {
         return this.getDefaultAnalytics(project);
       }
 
-      // Calculate real EVM metrics using ReportCalculations
       const actualCost = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
       const evmMetrics = ReportCalculations.calculateEVMMetrics(project, actualCost, phasesData);
 
-      // Calculate performance indicators
       const onTimePerformance = this.calculateOnTimePerformance(phasesData);
       const budgetVariance = project.budget > 0 ? ((project.budget - actualCost) / project.budget) * 100 : 0;
-      const qualityScore = this.calculateQualityScore(inspectionsData);
+      const qualityScore = this.calculateQualityFromInspections(inspectionsData);
       const teamEfficiency = this.calculateTeamEfficiency(project, phasesData);
 
       return {
@@ -233,9 +238,6 @@ export class ReportDataTransformer {
     }
   }
 
-  /**
-   * Calculate comprehensive financial metrics for the project
-   */
   private static async calculateFinancialMetrics(projectId: string): Promise<FinancialMetricsDTO> {
     try {
       const [payments, bankGuarantees, insurance, project, expenses] = await Promise.all([
@@ -303,11 +305,8 @@ export class ReportDataTransformer {
     }
   }
 
-  /**
-   * Assess project risks
-   */
   private static async assessProjectRisks(project: ProjectData): Promise<RiskAssessmentDTO> {
-    // For now, generate basic risk assessment based on project status and progress
+    // Generate risk assessment based on project data
     const risks = this.generateRiskAssessment(project);
     
     return {
@@ -317,7 +316,7 @@ export class ReportDataTransformer {
     };
   }
 
-  // Helper methods
+  // Helper methods (implementation copied from reportDataTransformer)
   private static mapPhaseStatus(status: string): 'planned' | 'in_progress' | 'completed' | 'delayed' {
     switch (status) {
       case 'completed': return 'completed';
@@ -371,9 +370,9 @@ export class ReportDataTransformer {
       earnedValue: 0,
       plannedValue: 0,
       actualCost: 0,
-      budgetAtCompletion: project.budget,
-      estimateAtCompletion: project.budget,
-      estimateToComplete: project.budget,
+      budgetAtCompletion: project.budget || 0,
+      estimateAtCompletion: project.budget || 0,
+      estimateToComplete: project.budget || 0,
       varianceAtCompletion: 0,
       onTimePerformance: 100,
       budgetVariance: 0,
@@ -383,20 +382,31 @@ export class ReportDataTransformer {
   }
 
   private static calculateOnTimePerformance(phases: any[]): number {
-    const onTimePhases = phases.filter(p => p.status === 'completed' && new Date(p.end_date) >= new Date()).length;
+    if (!phases || phases.length === 0) return 100;
+    
+    const onTimePhases = phases.filter(p => {
+      if (p.status === 'completed') {
+        const endDate = new Date(p.end_date);
+        const now = new Date();
+        return now <= endDate;
+      }
+      return false;
+    }).length;
+    
     return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
   }
 
-  private static calculateQualityScore(inspections: any[]): number {
-    if (!inspections || inspections.length === 0) return 85; // Default score
+  private static calculateQualityFromInspections(inspections: any[]): number {
+    if (!inspections || inspections.length === 0) return 85;
     
-    const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'approved');
+    const completedInspections = inspections.filter(i => 
+      i.status === 'completed' || i.status === 'approved'
+    );
     const approvedInspections = inspections.filter(i => i.status === 'approved');
     const rejectedInspections = inspections.filter(i => i.status === 'rejected');
     
     if (completedInspections.length === 0) return 85;
     
-    // Calculate score based on inspection results
     const approvalRate = approvedInspections.length / completedInspections.length;
     const rejectionPenalty = (rejectedInspections.length / completedInspections.length) * 30;
     
@@ -404,13 +414,48 @@ export class ReportDataTransformer {
   }
 
   private static calculateTeamEfficiency(project: ProjectData, phases: any[]): number {
-    // Placeholder calculation - could be enhanced with actual team metrics
-    const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length || 0;
-    return Math.min(100, avgProgress * 1.2);
+    if (!phases || phases.length === 0) return 90;
+    
+    const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length;
+    const expectedProgress = project.progress || 0;
+    
+    return Math.min(100, Math.max(50, (avgProgress / Math.max(expectedProgress, 1)) * 100));
   }
 
-  private static generateRiskAssessment(project: ProjectData): RiskItemDTO[] {
-    const risks: RiskItemDTO[] = [];
+  private static generateDefaultConstructionMilestones(projectId: string): ConstructionMilestoneDTO[] {
+    const baseDate = new Date();
+    return [
+      {
+        id: `milestone-${projectId}-1`,
+        title: 'Validation des études préliminaires',
+        description: 'Validation des études de faisabilité et conception préliminaire',
+        targetDate: new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000),
+        status: 'pending' as const,
+        projectId,
+        stage: 'conception' as const,
+        priority: 'critical' as const,
+        completionPercentage: 0,
+        blockers: [],
+        dependencies: []
+      },
+      {
+        id: `milestone-${projectId}-2`,
+        title: 'Obtention des autorisations',
+        description: 'Permis de construire et autorisations administratives',
+        targetDate: new Date(baseDate.getTime() + 60 * 24 * 60 * 60 * 1000),
+        status: 'pending' as const,
+        projectId,
+        stage: 'preparation' as const,
+        priority: 'high' as const,
+        completionPercentage: 0,
+        blockers: [],
+        dependencies: []
+      }
+    ];
+  }
+
+  private static generateRiskAssessment(project: ProjectData): any[] {
+    const risks: any[] = [];
     
     // Budget risk
     if (project.progress < 50 && new Date() > new Date(project.startDate)) {
@@ -425,25 +470,10 @@ export class ReportDataTransformer {
       });
     }
     
-    // Schedule risk
-    const daysSinceStart = Math.floor((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24));
-    const expectedProgress = Math.min(100, (daysSinceStart / 365) * 100);
-    if (project.progress < expectedProgress - 20) {
-      risks.push({
-        id: `risk-${project.id}-schedule`,
-        category: 'schedule' as const,
-        description: 'Retard dans la planification',
-        probability: 80,
-        impact: 70,
-        riskScore: 56,
-        status: 'identified' as const
-      });
-    }
-    
     return risks;
   }
 
-  private static calculateOverallRiskLevel(risks: RiskItemDTO[]): 'low' | 'medium' | 'high' | 'critical' {
+  private static calculateOverallRiskLevel(risks: any[]): 'low' | 'medium' | 'high' | 'critical' {
     if (risks.length === 0) return 'low';
     const avgRiskScore = risks.reduce((sum, r) => sum + r.riskScore, 0) / risks.length;
     if (avgRiskScore > 70) return 'critical';

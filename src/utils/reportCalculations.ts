@@ -5,28 +5,40 @@ import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 export class ReportCalculations {
   
   /**
-   * Calculate Earned Value Management (EVM) metrics
+   * Calculate Earned Value Management (EVM) metrics with real project data
    */
-  static calculateEVMMetrics(project: ProjectData, actualCost: number): EVMMetrics {
+  static calculateEVMMetrics(project: ProjectData, actualCost: number, phases?: any[]): EVMMetrics {
     const budget = project.budget || 0;
     const progress = project.progress || 0;
     
-    // Calculate basic EVM values
-    const plannedValue = budget * 0.6; // Assume 60% should be completed by now
+    // Calculate planned value based on project timeline
+    const projectStart = new Date(project.startDate);
+    const projectEnd = project.endDate ? new Date(project.endDate) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    const today = new Date();
+    
+    const totalDuration = projectEnd.getTime() - projectStart.getTime();
+    const elapsedTime = Math.max(0, today.getTime() - projectStart.getTime());
+    const timeProgress = Math.min(1, elapsedTime / totalDuration);
+    
+    // Calculate planned value based on schedule
+    const plannedValue = budget * timeProgress;
+    
+    // Calculate earned value based on actual progress
     const earnedValue = budget * (progress / 100);
+    
     const budgetAtCompletion = budget;
     
     // Calculate variances
     const scheduleVariance = earnedValue - plannedValue;
     const costVariance = earnedValue - actualCost;
     
-    // Calculate performance indices
-    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 0;
-    const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 0;
+    // Calculate performance indices (avoid division by zero)
+    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 1;
+    const costPerformanceIndex = actualCost > 0 ? earnedValue / actualCost : 1;
     
     // Calculate forecasts
     const estimateAtCompletion = costPerformanceIndex > 0 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
-    const estimateToComplete = estimateAtCompletion - actualCost;
+    const estimateToComplete = Math.max(0, estimateAtCompletion - actualCost);
     const varianceAtCompletion = budgetAtCompletion - estimateAtCompletion;
 
     return {
@@ -45,25 +57,38 @@ export class ReportCalculations {
   }
 
   /**
-   * Calculate PERT analysis for project phases
+   * Calculate PERT analysis for project phases with realistic estimates
    */
-  static calculatePERTAnalysis(phases?: any[]): PERTAnalysis {
-    // Default activities if no phases provided
-    const defaultActivities = [
-      { name: 'Préparation du site', optimistic: 5, mostLikely: 7, pessimistic: 10 },
-      { name: 'Fondations', optimistic: 10, mostLikely: 15, pessimistic: 22 },
-      { name: 'Structure', optimistic: 20, mostLikely: 25, pessimistic: 35 },
-      { name: 'Finitions', optimistic: 15, mostLikely: 20, pessimistic: 28 },
-    ];
+  static calculatePERTAnalysis(phases?: any[], tasks?: any[]): PERTAnalysis {
+    let activities: any[] = [];
 
-    const activities = phases && phases.length > 0 
-      ? phases.map(phase => ({
-          name: phase.name || phase.title || 'Phase inconnue',
-          optimistic: phase.optimistic_duration || 5,
-          mostLikely: phase.most_likely_duration || 10,
-          pessimistic: phase.pessimistic_duration || 15
-        }))
-      : defaultActivities;
+    // Use tasks if available, otherwise use phases
+    if (tasks && tasks.length > 0) {
+      activities = tasks.map(task => ({
+        name: task.name || 'Tâche inconnue',
+        optimistic: task.optimisticEstimate || Math.max(1, (task.estimatedDuration || 7) * 0.7),
+        mostLikely: task.estimatedDuration || 7,
+        pessimistic: task.pessimisticEstimate || (task.estimatedDuration || 7) * 1.5
+      }));
+    } else if (phases && phases.length > 0) {
+      activities = phases.map(phase => ({
+        name: phase.name || phase.phase_name || 'Phase inconnue',
+        optimistic: Math.max(1, this.calculateDurationFromDates(phase.start_date, phase.end_date) * 0.7),
+        mostLikely: this.calculateDurationFromDates(phase.start_date, phase.end_date) || 14,
+        pessimistic: this.calculateDurationFromDates(phase.start_date, phase.end_date) * 1.4
+      }));
+    } else {
+      // Realistic default activities based on typical construction projects
+      activities = [
+        { name: 'Études et conception', optimistic: 14, mostLikely: 21, pessimistic: 35 },
+        { name: 'Préparation du site', optimistic: 5, mostLikely: 10, pessimistic: 18 },
+        { name: 'Fondations et terrassement', optimistic: 20, mostLikely: 30, pessimistic: 45 },
+        { name: 'Structure et gros œuvre', optimistic: 60, mostLikely: 90, pessimistic: 120 },
+        { name: 'Second œuvre', optimistic: 45, mostLikely: 60, pessimistic: 90 },
+        { name: 'Finitions', optimistic: 30, mostLikely: 45, pessimistic: 65 },
+        { name: 'Réception et livraison', optimistic: 7, mostLikely: 14, pessimistic: 21 }
+      ];
+    }
 
     const processedActivities = activities.map(activity => {
       const pertEstimate = this.calculatePERTEstimate(activity.optimistic, activity.mostLikely, activity.pessimistic);
@@ -97,6 +122,16 @@ export class ReportCalculations {
   }
 
   /**
+   * Calculate duration between two dates in days
+   */
+  private static calculateDurationFromDates(startDate: string, endDate: string): number {
+    if (!startDate || !endDate) return 14; // Default 2 weeks
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  }
+
+  /**
    * Calculate PERT estimate: (O + 4M + P) / 6
    */
   private static calculatePERTEstimate(optimistic: number, mostLikely: number, pessimistic: number): number {
@@ -108,6 +143,51 @@ export class ReportCalculations {
    */
   private static calculatePERTVariance(optimistic: number, pessimistic: number): number {
     return Math.pow((pessimistic - optimistic) / 6, 2);
+  }
+
+  /**
+   * Calculate comprehensive financial metrics from actual project data
+   */
+  static async calculateFinancialMetrics(project: ProjectData, payments: any[], expenses: any[]): Promise<{
+    totalBudget: number;
+    spentAmount: number;
+    remainingBudget: number;
+    costOverrun: number;
+    projectedCost: number;
+    costEfficiency: number;
+    burnRate: number;
+  }> {
+    const totalBudget = project.budget || 0;
+    
+    // Calculate spent amount from payments and expenses
+    const paymentTotal = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+    const expenseTotal = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+    const spentAmount = paymentTotal + expenseTotal;
+    
+    const remainingBudget = totalBudget - spentAmount;
+    const costOverrun = spentAmount - totalBudget;
+    
+    // Calculate projected cost based on progress
+    const progress = project.progress || 0;
+    const projectedCost = progress > 0 ? (spentAmount / (progress / 100)) : totalBudget;
+    
+    // Calculate cost efficiency
+    const costEfficiency = totalBudget > 0 ? (totalBudget / Math.max(spentAmount, 1)) * 100 : 100;
+    
+    // Calculate burn rate (spending per day)
+    const projectStart = new Date(project.startDate);
+    const daysSinceStart = Math.max(1, Math.ceil((Date.now() - projectStart.getTime()) / (1000 * 60 * 60 * 24)));
+    const burnRate = spentAmount / daysSinceStart;
+    
+    return {
+      totalBudget,
+      spentAmount,
+      remainingBudget,
+      costOverrun,
+      projectedCost,
+      costEfficiency,
+      burnRate
+    };
   }
 
   /**

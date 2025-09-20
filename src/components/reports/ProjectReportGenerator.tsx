@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ReportDataTransformer } from '@/services/reportDataTransformer';
+import { EnhancedReportingService } from '@/services/enhancedReportingService';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 import { CostCalculation, ProjectReportDTO, ReportData } from '@/types/reportTypes';
 import { ReportCalculations } from '@/utils/reportCalculations';
@@ -87,52 +87,9 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     notes: '',
   });
 
-  // Generate report data using ReportDataTransformer
-  const generateReportData = async (project: ProjectData): Promise<ReportData> => {
-    const enrichedData = await ReportDataTransformer.transformProjectForReport(project);
-    
-    return {
-      id: `report-${project.id}-${Date.now()}`,
-      projectId: project.id,
-      generatedAt: new Date(),
-      financialSummary: {
-        totalBudget: project.budget || 0,
-        spentAmount: enrichedData.financialMetrics.spentAmount,
-        remainingBudget: enrichedData.financialMetrics.remainingBudget,
-        costVariance: enrichedData.financialMetrics.costOverrun || 0,
-      },
-      taskProgress: project.tasks?.map(task => ({
-        taskId: task.id,
-        name: task.name,
-        progress: task.progress,
-        status: task.status,
-      })) || [],
-      riskAssessment: enrichedData.riskAssessment.risks.map(risk => ({
-        id: risk.id,
-        title: risk.description,
-        severity: String(risk.riskScore),
-        status: risk.status,
-      })),
-    };
-  };
-
-  // Calculate project costs using ReportDataTransformer
-  const calculateProjectCosts = async (project: ProjectData): Promise<CostCalculation> => {
-    const enrichedData = await ReportDataTransformer.transformProjectForReport(project);
-    const financialMetrics = enrichedData.financialMetrics;
-    
-    // Calculate estimated and actual costs from tasks
-    const estimatedCost = project.tasks?.reduce((sum, task) => sum + (task.costEstimate || 0), 0) || 0;
-    const actualCost = project.tasks?.reduce((sum, task) => sum + (task.actualCost || 0), 0) || 0;
-
-    return {
-      totalBudget: financialMetrics.totalBudget,
-      spentAmount: financialMetrics.spentAmount,
-      remainingBudget: financialMetrics.remainingBudget,
-      costVariance: financialMetrics.costOverrun,
-      estimatedCost,
-      actualCost,
-    };
+  // Generate complete project report using EnhancedReportingService
+  const generateCompleteReport = async (project: ProjectData) => {
+    return await EnhancedReportingService.generateCompleteProjectReport(project);
   };
 
   // Load all report data on component mount
@@ -141,23 +98,26 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       try {
         setLoading(true);
         
-        // Fetch all data in parallel using ReportDataTransformer
-        const [reportDataResult, costCalculationResult, enrichedDataResult] = await Promise.all([
-          generateReportData(project),
-          calculateProjectCosts(project),
-          ReportDataTransformer.transformProjectForReport(project)
-        ]);
+        // Generate complete report with all enhanced calculations
+        const completeReport = await generateCompleteReport(project);
         
-        setReportData(reportDataResult);
-        setCostCalculation(costCalculationResult);
-        setEnrichedData(enrichedDataResult);
+        setReportData(completeReport.reportData);
+        setCostCalculation(completeReport.costCalculation);
+        setEnrichedData(completeReport.reportDTO);
         
-        // Calculate EVM metrics
-        const evmMetricsResult = ReportCalculations.calculateEVMMetrics(project, costCalculationResult.actualCost);
+        // Calculate EVM metrics with enhanced data
+        const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
+          project, 
+          completeReport.costCalculation.actualCost,
+          completeReport.reportDTO.phases
+        );
         setEvmMetrics(evmMetricsResult);
         
-        // Calculate PERT analysis
-        const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(project.tasks || []);
+        // Calculate PERT analysis with project phases and tasks
+        const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
+          completeReport.reportDTO.phases,
+          project.tasks || []
+        );
         setPertAnalysis(pertAnalysisResult);
         
       } catch (error) {
