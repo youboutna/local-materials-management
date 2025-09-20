@@ -136,7 +136,8 @@ const EnhancedSupplierTenderPortal = () => {
           project:projects(title, description, location)
         `)
         .eq('status', 'published')
-        .or(`deadline.is.null,deadline.gte.${now}`)
+        .eq('current_phase', 2)
+        .gte('deadline_date', now)
         .order('launch_date', { ascending: false });
 
       if (error) throw error;
