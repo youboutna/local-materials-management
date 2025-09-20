@@ -225,14 +225,26 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           progress: stage.progress || 0,
           startDate: stage.startDate || phase.start_date,
           endDate: stage.endDate || phase.end_date,
-          assignedTo: [],
-          dependencies: phase.dependencies || [],
+          assignedTo: Array.isArray(stage.assignedTo) ? stage.assignedTo : [],
+          dependencies: Array.isArray(phase.dependencies) ? phase.dependencies : [],
         }));
       });
       setTasks(allTasks);
 
-      // Use risks from database
-      setRisks(risksData || []);
+      // Use risks from database - transform to expected format
+      const transformedRisks = (risksData || []).map((risk: any) => ({
+        id: risk.id,
+        title: risk.risk_title || 'Risque non nommé',
+        description: risk.risk_description || '',
+        probability: parseInt(risk.probability) || 0,
+        impact: parseInt(risk.impact) || 0,
+        mitigationPlan: risk.mitigation_strategy || '',
+        status: risk.status || 'identified',
+        createdAt: risk.created_at,
+        created_at: risk.created_at,
+        relatedTasks: []
+      }));
+      setRisks(transformedRisks);
 
       // Extract resources from phases
       const phaseResources = (phasesSource || []).flatMap((phase: any) => {
@@ -240,7 +252,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         const materials = milestones.materials || phase.materials || [];
         const humanResources = milestones.humanResources || phase.human_resources || [];
 
-        const materialResources = (materials || []).map((material: any, index: number) => ({
+        const materialResources = (Array.isArray(materials) ? materials : []).map((material: any, index: number) => ({
           id: `material-${phase.id}-${index}`,
           name: material.name || material.materialId || `Matériau ${index + 1}`,
           type: 'material',
@@ -249,7 +261,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           quantity: material.quantity || 1,
         }));
 
-        const humanResourcesList = (humanResources || []).map((resource: any, index: number) => ({
+        const humanResourcesList = (Array.isArray(humanResources) ? humanResources : []).map((resource: any, index: number) => ({
           id: `human-${phase.id}-${index}`,
           name: resource.name || resource.employeeId || `Employé ${index + 1}`,
           type: 'human',
@@ -262,7 +274,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       });
 
       // Map stakeholders to human resources (fallback names as role)
-      const stakeholderResources = (stakeholders || []).map((s: any, idx: number) => ({
+      const stakeholderResources = (Array.isArray(stakeholders) ? stakeholders : []).map((s: any, idx: number) => ({
         id: `stakeholder-${idx}`,
         name: s.role_name || 'Stakeholder',
         type: 'human',
@@ -276,6 +288,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         phasesCount: (phasesSource || []).length,
         tasksCount: allTasks.length,
         resourcesCount: (phaseResources || []).length + stakeholderResources.length,
+        risksCount: transformedRisks.length,
+        stakeholdersCount: stakeholderResources.length,
       });
     } catch (error) {
       console.error('Error fetching additional data:', error);

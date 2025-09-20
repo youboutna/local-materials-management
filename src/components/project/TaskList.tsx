@@ -102,13 +102,13 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
                   </div>
                 </div>
 
-                {task.dependencies && task.dependencies.length > 0 && (
+                {task.dependencies && Array.isArray(task.dependencies) && task.dependencies.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium mb-1">Dépendances:</h4>
                     <div className="flex gap-1 flex-wrap">
                       {task.dependencies.map((depId: string, depIndex: number) => (
                         <Badge key={depIndex} variant="outline" className="text-xs">
-                          Tâche #{depId.slice(-4)}
+                          Tâche #{typeof depId === 'string' ? depId.slice(-4) : depIndex}
                         </Badge>
                       ))}
                     </div>
