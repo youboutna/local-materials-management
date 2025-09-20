@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -169,6 +169,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // Consolidated phases source from detail DTO or direct query
   const phasesSource: any[] = (projectDetail?.plannedPhases as any[]) || (phasesData as any[]) || [];
 
+  // Normalized phases for UI
+  const computedPhases = useMemo(() => {
+    const normalize = (p: any) => ({
+      id: p.id,
+      phase: p.phase_name || p.phase || p.name || p.construction_stage || 'Phase',
+      status: p.status || 'planned',
+      progress: p.progress || 0,
+      startDate: p.start_date || p.startDate || p.start || '',
+      endDate: p.end_date || p.endDate || p.end || '',
+      stages: Array.isArray(p.stages)
+        ? p.stages
+        : (p.construction_stage ? [{ name: p.construction_stage, status: p.status || 'planned' }] : [])
+    });
+    return (phasesSource || []).map(normalize);
+  }, [phasesSource]);
+
   // Prepare data for components
   const [tasks, setTasks] = useState<any[]>([]);
   const [risks, setRisks] = useState<any[]>([]);
@@ -256,6 +272,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }));
 
       setResources([...(phaseResources || []), ...stakeholderResources]);
+      console.debug('📊 ProjectDetailByDTO data:', {
+        phasesCount: (phasesSource || []).length,
+        tasksCount: allTasks.length,
+        resourcesCount: (phaseResources || []).length + stakeholderResources.length,
+      });
     } catch (error) {
       console.error('Error fetching additional data:', error);
     }
@@ -403,12 +424,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phases</p>
-                <p className="text-2xl font-bold">{(phasesSource?.length || project.phasesCount || 0)}</p>
+                <p className="text-2xl font-bold">{computedPhases.length || project.phasesCount || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {(phasesSource?.filter((p: any) => p.status === 'completed').length || 0)} terminées
+              {computedPhases.filter((p: any) => p.status === 'completed').length || 0} terminées
             </p>
           </CardContent>
         </Card>
@@ -507,9 +528,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Matériaux</p>
                     <p className="text-lg font-bold">
-                      {phasesSource?.reduce((total: number, phase: any) => {
-                        const milestones = phase.milestones || {};
-                        const extra = Array.isArray(phase.materials) ? phase.materials.length : 0;
+                      {computedPhases.reduce((total: number, phase: any) => {
+                        const milestones = (phase as any).milestones || {};
+                        const extra = Array.isArray((phase as any).materials) ? (phase as any).materials.length : 0;
                         return total + (milestones.materials?.length || 0) + extra;
                       }, 0) || 0}
                     </p>
@@ -524,7 +545,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {phasesSource?.length || 0}
+                      {computedPhases.length || 0}
                     </p>
                   </div>
                 </div>
@@ -554,15 +575,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="phases" className="mt-6">
-          <PhaseList phases={(phasesSource || []).map((phase: any) => ({
-            id: phase.id,
-            phase: phase.phase_name || phase.phase || phase.construction_stage || 'Phase',
-            status: phase.status || 'planned',
-            progress: phase.progress || 0,
-            startDate: phase.start_date || phase.startDate,
-            endDate: phase.end_date || phase.endDate,
-            stages: Array.isArray(phase.stages) ? phase.stages : (phase.construction_stage ? [{ name: phase.construction_stage, status: phase.status }] : [])
-          }))} projectId={projectId!} />
+          <PhaseList phases={computedPhases} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
@@ -600,11 +613,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="gantt" className="mt-6">
           <ProjectGantt 
             project={project as any}
-            phases={(phasesData || []).map((p: any) => ({
+            phases={(computedPhases || []).map((p: any) => ({
               id: p.id,
-              name: p.phase_name || p.phase || p.construction_stage || 'Phase',
-              startDate: new Date(p.start_date || p.startDate || new Date()),
-              endDate: new Date(p.end_date || p.endDate || new Date()),
+              name: p.phase,
+              startDate: new Date(p.startDate || new Date()),
+              endDate: new Date(p.endDate || new Date()),
               progress: p.progress || 0,
               status: (p.status || 'planned') as any,
             }))}
