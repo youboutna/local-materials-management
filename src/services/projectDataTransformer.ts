@@ -18,9 +18,15 @@ export class ProjectDataTransformer {
       const { data, error } = await supabase
         .from('projects')
         .select(`
-          *,
-          inspections(*),
-          payments(*)
+          id, title, description, location, status, progress, budget,
+          start_date, end_date, image, team_size,
+          coordinates_latitude, coordinates_longitude,
+          financing_source, market_type, selection_mode,
+          launch_date, attribution_date,
+          allows_initial_payment, initial_payment_percentage,
+          alert_threshold, notification_threshold, guarantee_threshold, legal_threshold,
+          last_insurance_check, last_delay_check, last_inspection_check,
+          created_at
         `)
         .eq('id', projectId)
         .maybeSingle();
@@ -78,38 +84,49 @@ export class ProjectDataTransformer {
     try {
       console.log('🔍 Transforming project data:', data.id, data.title);
 
-      console.log('🔍 Fetching related data...');
-      const startTime = Date.now();
+      console.log('🔍 Fetching related data in parallel...');
 
-      console.log('🔍 Fetching tasks...');
-      const tasks = await this.transformTasks(data.id);
-      console.log('🔍 Tasks fetched:', tasks.length, 'items in', Date.now() - startTime, 'ms');
+      const [tasksRes, risksRes, resourcesRes, paymentsRes, phasesRes, inspectionsRes] = await Promise.allSettled([
+        this.withTimeout(this.transformTasks(data.id), 6000, 'tasks'),
+        this.withTimeout(this.transformRisks(data.id), 6000, 'risks'),
+        this.withTimeout(this.transformResources(data.id), 6000, 'resources'),
+        this.withTimeout(this.fetchPayments(data.id), 6000, 'payments'),
+        this.withTimeout(this.fetchProjectPhases(data.id), 6000, 'phases'),
+        this.withTimeout(this.fetchInspections(data.id), 6000, 'inspections'),
+      ]);
 
-      console.log('🔍 Fetching risks...');
-      const risks = await this.transformRisks(data.id);
-      console.log('🔍 Risks fetched:', risks.length, 'items');
+      const tasks = tasksRes.status === 'fulfilled' ? tasksRes.value : [];
+      const risks = risksRes.status === 'fulfilled' ? risksRes.value : [];
+      const resources = resourcesRes.status === 'fulfilled' ? resourcesRes.value : [];
+      const payments = paymentsRes.status === 'fulfilled' ? paymentsRes.value : [];
+      const plannedPhases = phasesRes.status === 'fulfilled' ? phasesRes.value : [];
+      const inspections = inspectionsRes.status === 'fulfilled' ? inspectionsRes.value : [];
 
-      console.log('🔍 Fetching resources...');
-      const resources = await this.transformResources(data.id);
-      console.log('🔍 Resources fetched:', resources.length, 'items');
-
-      console.log('🔍 Fetching payments...');
-      const payments = await this.fetchPayments(data.id);
-      console.log('🔍 Payments fetched:', payments.length, 'items');
-
-      console.log('🔍 Processing inspections...');
-      const inspections = this.transformInspections(data.inspections || []);
+      console.log('🔍 Parallel fetch results:', {
+        tasks: tasks.length,
+        risks: risks.length,
+        resources: resources.length,
+        payments: payments.length,
+        plannedPhases: plannedPhases.length,
+        inspections: inspections.length,
+      });
 
       console.log('🔍 Calculating progress...');
       const overallProgress = data.progress || this.calculateOverallProgress(tasks);
 
-      console.log('🔍 Processing phases...');
-      const phases = data.phases || [];
+      console.log('🔍 Processing phases metadata...');
+      const phases = plannedPhases || [];
       const currentPhaseInfo = this.determineCurrentPhase(phases);
       const milestones = this.generateMilestonesFromPhases(phases);
 
       console.log('🔍 Calculating PERT analysis...');
-      const pertAnalysis = ReportCalculations.calculatePERTAnalysis(tasks);
+      let pertAnalysis;
+      try {
+        pertAnalysis = ReportCalculations.calculatePERTAnalysis(tasks);
+      } catch (e) {
+        console.warn('⚠️ PERT analysis failed, using fallback.', e);
+        pertAnalysis = { activities: [], expectedDurations: {}, criticalPath: [], totalExpectedDuration: 0, variances: {} } as any;
+      }
       
       console.log('🔍 Generating charts...');
       const ganttChart = this.generateGanttChart(tasks);
@@ -117,17 +134,16 @@ export class ProjectDataTransformer {
       const costAnalysis = this.calculateCostAnalysis(tasks, phases, data.budget);
   
       console.log('🔍 Calculating critical path...');
-      const criticalPath = this.calculateCriticalPath(tasks, pertAnalysis.expectedDurations);
-
-      console.log('🔍 Fetching project phases...');
-      // Fetch project phases separately for better structure
-      const plannedPhases = await this.fetchProjectPhases(data.id);
-      console.log('🔍 Project phases fetched:', plannedPhases.length, 'items');
+      try {
+        const criticalPath = this.calculateCriticalPath(tasks, (pertAnalysis as any).expectedDurations || {});
+      } catch (e) {
+        console.warn('⚠️ Critical path calculation failed.', e);
+      }
 
       console.log('Building project object with:', { 
         title: data.title, 
         progress: overallProgress, 
-        phasesCount: plannedPhases.length 
+        phasesCount: phases.length 
       });
 
       const project: ProjectData = {
@@ -511,5 +527,42 @@ export class ProjectDataTransformer {
       actualExpenses,
       variance: budget - actualExpenses
     };
+  }
+
+  private static async fetchInspections(projectId: string): Promise<Inspection[]> {
+    try {
+      const { data, error } = await supabase
+        .from('inspections')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching inspections:', error);
+        return [];
+      }
+
+      return this.transformInspections(data || []);
+    } catch (error) {
+      console.error('Error in fetchInspections:', error);
+      return [];
+    }
+  }
+
+  private static withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const id = setTimeout(() => {
+        reject(new Error(`Timeout in ${label} after ${ms}ms`));
+      }, ms);
+      promise
+        .then((value) => {
+          clearTimeout(id);
+          resolve(value);
+        })
+        .catch((err) => {
+          clearTimeout(id);
+          reject(err);
+        });
+    });
   }
 }

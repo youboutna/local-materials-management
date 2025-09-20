@@ -5,7 +5,7 @@ import { Edit } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SimpleProjectTest from "@/components/project/SimpleProjectTest";
+import ProjectDetailByDTO from "@/components/project/ProjectDetailByDTO";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -25,7 +25,7 @@ const ProjectDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <SimpleProjectTest />
+        <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
       </div>
       <Footer />
     </div>

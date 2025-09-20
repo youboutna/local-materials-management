@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
+import { ProjectData } from '@/types/project';
 import { ReportManager } from '@/components/reports/ReportManager';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
@@ -56,7 +57,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch project data using ProjectDataTransformer
-  const { data: project, isLoading: projectLoading, error: projectError } = useQuery({
+  const { data: project, isLoading: projectLoading, error: projectError } = useQuery<ProjectData>({
     queryKey: ['project-dto', projectId],
     queryFn: async () => {
       console.log('🔍 Query function starting for projectId:', projectId);
