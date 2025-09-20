@@ -9,8 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ProjectDataTransformer } from '@/services/projectDataTransformer';
-import { ProjectData } from '@/types/project';
+import { ProjectService } from '@/services/ProjectService';
+import { ProjectSummaryDTO } from '@/types/dto';
 import { ReportManager } from '@/components/reports/ReportManager';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
@@ -56,30 +56,24 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
+  const projectService = new ProjectService();
 
-  // Fetch project data using ProjectDataTransformer
-  const { data: project, isLoading: projectLoading, error: projectError } = useQuery<ProjectData>({
-    queryKey: ['project-dto', projectId],
+  // Fetch project data using ProjectService
+  const { data: project, isLoading: projectLoading, error: projectError } = useQuery<ProjectSummaryDTO>({
+    queryKey: ['project-summary', projectId],
     queryFn: async () => {
       console.log('🔍 Query function starting for projectId:', projectId);
       if (!projectId) throw new Error('ID du projet manquant');
       
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout après 10 secondes')), 10000)
-      );
-      
-      console.log('🔍 Calling ProjectDataTransformer.getProjectSummaryById...');
-      const resultPromise = ProjectDataTransformer.getProjectSummaryById(projectId);
-      
-      const result = await Promise.race([resultPromise, timeoutPromise]);
-      console.log('🔍 ProjectDataTransformer result:', result ? 'SUCCESS' : 'NULL');
+      console.log('🔍 Calling ProjectService.getProjectSummary...');
+      const result = await projectService.getProjectSummary(projectId);
+      console.log('🔍 ProjectService result:', result ? 'SUCCESS' : 'NULL');
       if (!result) throw new Error('Projet non trouvé');
       return result;
     },
     enabled: !!projectId,
     retry: 1,
-    staleTime: 0, // Always refetch
+    staleTime: 30_000,
   });
 
   // Fetch payments data
@@ -150,49 +144,55 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     if (!project || !projectId) return;
 
     try {
-      // Extract tasks from phases with real data structure
-      const allTasks = project?.plannedPhases?.flatMap((phase: any) => {
-        // Use the actual phase data structure from ProjectDataTransformer
-        const phaseData = phase.customPhaseData || {};
-        const stages = phaseData.stages || phase.stages || [];
+      // Create tasks from phases data
+      const allTasks = phasesData?.flatMap((phase: any) => {
+        const milestones = phase.milestones || {};
+        const stages = [
+          {
+            name: `${phase.phase_name} - ${phase.construction_stage}`,
+            description: phase.description,
+            status: phase.status,
+            progress: phase.progress,
+            startDate: phase.start_date,
+            endDate: phase.end_date
+          }
+        ];
         
         return stages.map((stage: any, index: number) => ({
           id: `${phase.id}-task-${index}`,
-          name: stage.name || stage.stage || `Tâche ${index + 1}`,
-          description: stage.description || `Tâche de la phase ${phase.constructionPhase}`,
+          name: stage.name,
+          description: stage.description,
           status: stage.status || 'not_started',
           progress: stage.progress || 0,
-          startDate: phase.startDate,
-          endDate: phase.endDate,
-          assignedTo: stage.assignedTo || [],
-          dependencies: stage.dependencies || []
+          startDate: stage.startDate,
+          endDate: stage.endDate,
+          assignedTo: [],
+          dependencies: phase.dependencies || []
         }));
       }) || [];
       setTasks(allTasks);
 
-      // Use DTO risks if present; otherwise fall back to DB risks
-      const projectRisks = Array.isArray(project?.risks) ? project?.risks : [];
-      const combinedRisks = (risksData as any[])?.length ? (risksData as any[]) : projectRisks;
-      setRisks(combinedRisks);
+      // Use risks from database
+      setRisks(risksData || []);
 
-      // Extract resources from project phases and materials
-      const phaseResources = project?.plannedPhases?.flatMap((phase: any) => {
-        const phaseData = phase.customPhaseData || {};
-        const materials = phaseData.materials || [];
-        const humanResources = phaseData.humanResources || [];
+      // Extract resources from phases
+      const phaseResources = phasesData?.flatMap((phase: any) => {
+        const milestones = phase.milestones || {};
+        const materials = milestones.materials || phase.materials || [];
+        const humanResources = milestones.humanResources || phase.human_resources || [];
 
         const materialResources = materials.map((material: any, index: number) => ({
           id: `material-${phase.id}-${index}`,
-          name: material.name || material.materialId,
+          name: material.name || material.materialId || `Matériau ${index + 1}`,
           type: 'material',
           costPerHour: material.pricePerUnit || 0,
           availability: 100,
-          quantity: material.quantity
+          quantity: material.quantity || 1
         }));
 
         const humanResourcesList = humanResources.map((resource: any, index: number) => ({
           id: `human-${phase.id}-${index}`,
-          name: resource.name || resource.employeeId,
+          name: resource.name || resource.employeeId || `Employé ${index + 1}`,
           type: 'human',
           position: resource.role || 'Worker',
           costPerHour: resource.dailyRate || 0,
@@ -340,7 +340,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Dépensé: {((project as any).spent || 0).toLocaleString()} MRU
+              Budget alloué
             </p>
           </CardContent>
         </Card>
@@ -350,12 +350,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phases</p>
-                <p className="text-2xl font-bold">{(phasesData?.length || project.plannedPhases?.length || 0)}</p>
+                <p className="text-2xl font-bold">{phasesData?.length || project.phasesCount || 0}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {(phasesData?.filter((p: any) => p.status === 'completed').length) || (project.plannedPhases?.filter((p: any) => p.status === 'completed').length) || 0} terminées
+              {phasesData?.filter((p: any) => p.status === 'completed').length || 0} terminées
             </p>
           </CardContent>
         </Card>
@@ -433,7 +433,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Méthodologie</span>
-                  <Badge variant="outline">{project.methodology || 'Standard'}</Badge>
+                  <Badge variant="outline">Standard</Badge>
                 </div>
                 <Progress value={project.progress} className="mt-4" />
                 <p className="text-xs text-center text-muted-foreground">
@@ -452,8 +452,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Matériaux</p>
                     <p className="text-lg font-bold">
-                      {project.plannedPhases?.reduce((total: number, phase: any) => 
-                        total + (phase.materials?.length || 0), 0) || 0}
+                      {phasesData?.reduce((total: number, phase: any) => {
+                        const milestones = phase.milestones || {};
+                        return total + (milestones.materials?.length || 0);
+                      }, 0) || 0}
                     </p>
                   </div>
                 </div>
@@ -466,8 +468,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {project.plannedPhases?.reduce((total: number, phase: any) => 
-                        total + (phase.stages?.length || 0), 0) || 0}
+                      {phasesData?.length || 0}
                     </p>
                   </div>
                 </div>
@@ -490,14 +491,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="financial" className="mt-6">
           <FinancialOverview 
             budget={project.budget || 0}
-            spent={(project as any).spent || 0}
-            phases={project.plannedPhases || []}
-            financialMetrics={(project as any).financialMetrics}
+            spent={0}
+            phases={phasesData || []}
+            financialMetrics={{}}
           />
         </TabsContent>
 
         <TabsContent value="phases" className="mt-6">
-          <PhaseList phases={project.plannedPhases || []} projectId={projectId!} />
+          <PhaseList phases={phasesData || []} projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
