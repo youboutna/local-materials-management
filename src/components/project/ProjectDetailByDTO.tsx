@@ -15,7 +15,7 @@ import { ReportManager } from '@/components/reports/ReportManager';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
 import RiskOverview from '@/components/project/RiskOverview';
-import TaskList from '@/components/project/TaskList';
+import EnhancedTaskList from '@/components/project/EnhancedTaskList';
 import TeamOverview from '@/components/project/TeamOverview';
 import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
 import ProjectGantt from '@/components/project/ProjectGantt';
@@ -656,7 +656,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <TaskList tasks={tasks} projectId={projectId!} />
+          <EnhancedTaskList projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="risks" className="mt-6">
