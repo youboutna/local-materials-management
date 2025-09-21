@@ -191,7 +191,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
           title: taskData.title,
           description: taskData.description,
           project_id: projectId,
-          phase_id: taskData.phase_id || null,
+          phase_id: taskData.phase_id === 'no-phase' ? null : taskData.phase_id || null,
           assigned_to: taskData.assigned_to || null,
           assigned_by: user.id,
           due_date: taskData.due_date || null,
@@ -463,7 +463,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
                             <SelectValue placeholder="Sélectionner une phase" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Aucune phase</SelectItem>
+                            <SelectItem value="no-phase">Aucune phase</SelectItem>
                             {phases?.map((phase) => (
                               <SelectItem key={phase.id} value={phase.id}>
                                 {phase.phase_name}
