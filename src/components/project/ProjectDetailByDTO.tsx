@@ -14,8 +14,8 @@ import { ProjectSummaryDTO } from '@/types/dto';
 import { ReportManager } from '@/components/reports/ReportManager';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
-import RiskOverview from '@/components/project/RiskOverview';
-import EnhancedTaskList from '@/components/project/EnhancedTaskList';
+import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
+import EnhancedTaskManager from '@/components/project/EnhancedTaskManager';
 import TeamOverview from '@/components/project/TeamOverview';
 import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
 import ProjectGantt from '@/components/project/ProjectGantt';
@@ -656,11 +656,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <EnhancedTaskList projectId={projectId!} />
+          <EnhancedTaskManager projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="risks" className="mt-6">
-          <RiskOverview risks={risks} projectId={projectId!} />
+          <EnhancedRiskManager projectId={projectId!} />
         </TabsContent>
 
         <TabsContent value="resources" className="mt-6">

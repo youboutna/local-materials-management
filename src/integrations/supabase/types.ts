@@ -722,6 +722,69 @@ export type Database = {
           },
         ]
       }
+      enhanced_project_milestones: {
+        Row: {
+          completed_date: string | null
+          created_at: string | null
+          dependencies: Json | null
+          description: string | null
+          id: string
+          notes: string | null
+          phase_id: string | null
+          project_id: string
+          status: string | null
+          target_date: string
+          title: string
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          completed_date?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          phase_id?: string | null
+          project_id: string
+          status?: string | null
+          target_date: string
+          title: string
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          completed_date?: string | null
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          phase_id?: string | null
+          project_id?: string
+          status?: string | null
+          target_date?: string
+          title?: string
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enhanced_project_milestones_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enhanced_project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       escalation_thresholds: {
         Row: {
           created_at: string
@@ -2589,6 +2652,7 @@ export type Database = {
           status: string
           suppliers: Json | null
           updated_at: string
+          weight: number | null
         }
         Insert: {
           actual_cost?: number | null
@@ -2616,6 +2680,7 @@ export type Database = {
           status?: string
           suppliers?: Json | null
           updated_at?: string
+          weight?: number | null
         }
         Update: {
           actual_cost?: number | null
@@ -2643,6 +2708,7 @@ export type Database = {
           status?: string
           suppliers?: Json | null
           updated_at?: string
+          weight?: number | null
         }
         Relationships: [
           {
@@ -2717,50 +2783,78 @@ export type Database = {
       project_risks: {
         Row: {
           created_at: string | null
+          due_date: string | null
           id: string
           identified_by: string | null
           identified_date: string | null
           impact: string | null
+          impact_numeric: number | null
+          mitigation_plan: string | null
           mitigation_strategy: string | null
+          owner_id: string | null
           probability: string | null
+          probability_numeric: number | null
           project_id: string
           risk_description: string | null
           risk_level: string | null
+          risk_score: number | null
           risk_title: string
           status: string | null
+          status_new: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          due_date?: string | null
           id?: string
           identified_by?: string | null
           identified_date?: string | null
           impact?: string | null
+          impact_numeric?: number | null
+          mitigation_plan?: string | null
           mitigation_strategy?: string | null
+          owner_id?: string | null
           probability?: string | null
+          probability_numeric?: number | null
           project_id: string
           risk_description?: string | null
           risk_level?: string | null
+          risk_score?: number | null
           risk_title: string
           status?: string | null
+          status_new?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          due_date?: string | null
           id?: string
           identified_by?: string | null
           identified_date?: string | null
           impact?: string | null
+          impact_numeric?: number | null
+          mitigation_plan?: string | null
           mitigation_strategy?: string | null
+          owner_id?: string | null
           probability?: string | null
+          probability_numeric?: number | null
           project_id?: string
           risk_description?: string | null
           risk_level?: string | null
+          risk_score?: number | null
           risk_title?: string
           status?: string | null
+          status_new?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_risks_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_risks_project_id_fkey"
             columns: ["project_id"]
@@ -3010,6 +3104,90 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_assignments: {
+        Row: {
+          allocation_percentage: number | null
+          created_at: string | null
+          end_date: string | null
+          hourly_rate: number | null
+          id: string
+          resource_id: string
+          start_date: string | null
+          task_id: string
+        }
+        Insert: {
+          allocation_percentage?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          resource_id: string
+          start_date?: string | null
+          task_id: string
+        }
+        Update: {
+          allocation_percentage?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          resource_id?: string
+          start_date?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_assignments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "project_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_task_relations: {
+        Row: {
+          created_at: string | null
+          id: string
+          risk_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          risk_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          risk_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_task_relations_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "project_risks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_task_relations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_assignments"
             referencedColumns: ["id"]
           },
         ]
@@ -3598,58 +3776,94 @@ export type Database = {
       }
       task_assignments: {
         Row: {
+          actual_cost: number | null
+          actual_duration: number | null
           assigned_by: string | null
           assigned_to: string | null
           completion_date: string | null
           completion_token: string | null
           completion_url: string | null
+          cost_estimate: number | null
           created_at: string | null
+          critical_path: boolean | null
           description: string | null
           due_date: string | null
+          end_date: string | null
+          estimated_duration: number | null
           id: string
+          most_likely_estimate: number | null
           notes: string | null
+          optimistic_estimate: number | null
+          pessimistic_estimate: number | null
           phase_id: string | null
           priority: string | null
+          progress: number | null
           project_id: string | null
+          start_date: string | null
           status: string | null
           title: string
           updated_at: string | null
+          weight: number | null
         }
         Insert: {
+          actual_cost?: number | null
+          actual_duration?: number | null
           assigned_by?: string | null
           assigned_to?: string | null
           completion_date?: string | null
           completion_token?: string | null
           completion_url?: string | null
+          cost_estimate?: number | null
           created_at?: string | null
+          critical_path?: boolean | null
           description?: string | null
           due_date?: string | null
+          end_date?: string | null
+          estimated_duration?: number | null
           id?: string
+          most_likely_estimate?: number | null
           notes?: string | null
+          optimistic_estimate?: number | null
+          pessimistic_estimate?: number | null
           phase_id?: string | null
           priority?: string | null
+          progress?: number | null
           project_id?: string | null
+          start_date?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
+          weight?: number | null
         }
         Update: {
+          actual_cost?: number | null
+          actual_duration?: number | null
           assigned_by?: string | null
           assigned_to?: string | null
           completion_date?: string | null
           completion_token?: string | null
           completion_url?: string | null
+          cost_estimate?: number | null
           created_at?: string | null
+          critical_path?: boolean | null
           description?: string | null
           due_date?: string | null
+          end_date?: string | null
+          estimated_duration?: number | null
           id?: string
+          most_likely_estimate?: number | null
           notes?: string | null
+          optimistic_estimate?: number | null
+          pessimistic_estimate?: number | null
           phase_id?: string | null
           priority?: string | null
+          progress?: number | null
           project_id?: string | null
+          start_date?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
+          weight?: number | null
         }
         Relationships: [
           {
@@ -3678,6 +3892,48 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string | null
+          dependency_type: string | null
+          depends_on_task_id: string
+          id: string
+          lag_days: number | null
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_task_id: string
+          id?: string
+          lag_days?: number | null
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_task_id?: string
+          id?: string
+          lag_days?: number | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_depends_on_task_id_fkey"
+            columns: ["depends_on_task_id"]
+            isOneToOne: false
+            referencedRelation: "task_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_assignments"
             referencedColumns: ["id"]
           },
         ]
