@@ -1,5 +1,5 @@
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
@@ -26,12 +26,21 @@ const RoleBasedRoute = ({
   const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 
+  // Track initial resolution to avoid blocking UI on refocus
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!loading && !rolesLoading) {
+      initializedRef.current = true;
+    }
+  }, [loading, rolesLoading]);
+
   // In dev mode, allow access to all pages if DEV_MODE is true
   if (DEV_MODE) {
     return <>{children}</>;
   }
 
-  if (loading || rolesLoading) {
+  // Show loader only before first resolution; avoid blocking on later refetches
+  if (!initializedRef.current && (loading || rolesLoading)) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-adrar-50 to-terracotta-50">
         <div className="text-center">
@@ -44,6 +53,17 @@ const RoleBasedRoute = ({
 
   // Check if authentication is required
   if (requireAuth && !isAuthenticated) {
+    // If auth state not yet stabilized, avoid hard redirect; keep current UI
+    if (!initializedRef.current) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-adrar-50 to-terracotta-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta-500 mx-auto mb-4"></div>
+            <p className="text-adrar-700">{t("role_based_route.loading")}</p>
+          </div>
+        </div>
+      );
+    }
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

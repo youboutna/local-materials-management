@@ -241,17 +241,34 @@ export class HttpStatusHandler {
   private handleUnauthorized(): void {
     // Stocker l'URL actuelle pour redirection après login
     sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-    
+
+    const doRedirect = () => {
+      window.location.href = '/auth';
+    };
+
+    // Si l'onglet est en arrière-plan, ne pas bloquer l'UI ni rediriger tout de suite
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      const onVisible = () => {
+        document.removeEventListener('visibilitychange', onVisible);
+        toast({
+          title: "Session expirée",
+          description: "Veuillez vous reconnecter.",
+          variant: "destructive",
+        });
+        setTimeout(doRedirect, 800);
+      };
+      document.addEventListener('visibilitychange', onVisible);
+      return;
+    }
+
     toast({
       title: "Session expirée",
       description: "Vous allez être redirigé vers la page de connexion.",
       variant: "destructive",
     });
-    
-    // Rediriger vers login après délai
-    setTimeout(() => {
-      window.location.href = '/auth';
-    }, 2000);
+
+    // Rediriger vers login après un court délai pour laisser l'UI se stabiliser
+    setTimeout(doRedirect, 800);
   }
 
   private handleForbidden(): void {
