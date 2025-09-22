@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building } from 'lucide-react';
+import { ConstructionPhase, ConstructionStage } from '@/types/project';
 
 interface EnhancedRiskManagerProps {
   projectId: string;
@@ -62,6 +63,8 @@ interface RiskFormData {
   owner_id: string;
   due_date: string;
   related_tasks: string[];
+  phase_id: string;
+  construction_phase: string;
 }
 
 const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) => {
@@ -78,6 +81,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     owner_id: '',
     due_date: '',
     related_tasks: [],
+    phase_id: '',
+    construction_phase: '',
   });
   
   const queryClient = useQueryClient();
@@ -97,18 +102,63 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     },
   });
 
+  // Fetch project phases
+  const { data: phases } = useQuery({
+    queryKey: ['project-phases', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_phases')
+        .select('id, phase_name, description, construction_phase')
+        .eq('project_id', projectId)
+        .order('phase_name', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Fetch project tasks for risk relations
   const { data: tasks } = useQuery({
     queryKey: ['project-tasks-for-risks', projectId],
     queryFn: async (): Promise<TaskAssignment[]> => {
       const { data, error } = await supabase
         .from('task_assignments')
-        .select('id, title')
+        .select('id, title, phase_id')
         .eq('project_id', projectId)
         .order('title', { ascending: true });
       
       if (error) throw error;
       return data || [];
+    },
+  });
+
+  // Fetch employees/stakeholders
+  const { data: employees } = useQuery({
+    queryKey: ['project-employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, full_name, position, department')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch project details for contractor info
+  const { data: projectDetails } = useQuery({
+    queryKey: ['project-details', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('title, main_contractor')
+        .eq('id', projectId)
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -275,6 +325,40 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     },
   });
 
+  // Standard construction phase risks
+  const STANDARD_PHASE_RISKS = {
+    'pre_construction': [
+      { title: 'Retard dans les approbations', probability: 30, impact: 70, description: 'Retards possibles dans l\'obtention des permis et approbations' },
+      { title: 'Problèmes de financement', probability: 20, impact: 90, description: 'Difficultés d\'obtention ou de déblocage des fonds' },
+      { title: 'Modifications du design', probability: 40, impact: 50, description: 'Changements tardifs dans les plans et spécifications' }
+    ],
+    'site_preparation': [
+      { title: 'Conditions du sol imprévues', probability: 25, impact: 80, description: 'Découverte de conditions géotechniques défavorables' },
+      { title: 'Services publics non identifiés', probability: 15, impact: 60, description: 'Présence non documentée de services souterrains' },
+      { title: 'Problèmes d\'accès au site', probability: 20, impact: 40, description: 'Difficultés d\'accès pour les équipements lourds' }
+    ],
+    'foundation': [
+      { title: 'Problèmes structurels du sol', probability: 30, impact: 90, description: 'Capacité portante insuffisante du sol' },
+      { title: 'Infiltration d\'eau', probability: 35, impact: 70, description: 'Présence d\'eau souterraine non anticipée' },
+      { title: 'Défauts dans le béton', probability: 10, impact: 80, description: 'Problèmes de qualité du béton coulé' }
+    ],
+    'structural_work': [
+      { title: 'Défauts matériaux', probability: 20, impact: 85, description: 'Matériaux structurels défectueux ou non conformes' },
+      { title: 'Erreurs d\'assemblage', probability: 15, impact: 75, description: 'Erreurs dans l\'assemblage des éléments structurels' },
+      { title: 'Conditions météorologiques', probability: 40, impact: 50, description: 'Impact des conditions météo sur les travaux' }
+    ],
+    'finishing': [
+      { title: 'Défauts de finition', probability: 30, impact: 40, description: 'Problèmes de qualité des finitions' },
+      { title: 'Retard livraison matériaux', probability: 25, impact: 60, description: 'Retards dans la livraison des matériaux de finition' },
+      { title: 'Non-conformité aux spécifications', probability: 20, impact: 55, description: 'Finitions non conformes aux spécifications' }
+    ]
+  };
+
+  const suggestRiskBasedOnPhase = (phase: string) => {
+    const phaseRisks = STANDARD_PHASE_RISKS[phase as keyof typeof STANDARD_PHASE_RISKS] || [];
+    return phaseRisks;
+  };
+
   const resetForm = () => {
     setFormData({
       risk_title: '',
@@ -286,6 +370,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
       owner_id: '',
       due_date: '',
       related_tasks: [],
+      phase_id: '',
+      construction_phase: '',
     });
   };
 
@@ -311,9 +397,36 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
       owner_id: risk.owner_id || '',
       due_date: risk.due_date || '',
       related_tasks: relatedTasks,
+      phase_id: '',
+      construction_phase: '',
     });
     setEditingId(risk.id);
     setIsCreating(true);
+  };
+
+  const handlePhaseChange = (phaseId: string) => {
+    setFormData(prev => ({ ...prev, phase_id: phaseId }));
+    
+    // Find the selected phase and suggest risks
+    const selectedPhase = phases?.find(p => p.id === phaseId);
+    if (selectedPhase?.construction_phase) {
+      setFormData(prev => ({ ...prev, construction_phase: selectedPhase.construction_phase || '' }));
+    }
+  };
+
+  const applySuggestedRisk = (suggestedRisk: any) => {
+    setFormData(prev => ({
+      ...prev,
+      risk_title: suggestedRisk.title,
+      risk_description: suggestedRisk.description,
+      probability_numeric: suggestedRisk.probability.toString(),
+      impact_numeric: suggestedRisk.impact.toString(),
+    }));
+  };
+
+  const getFilteredTasks = (phaseId?: string) => {
+    if (!phaseId || phaseId === 'all') return tasks || [];
+    return tasks?.filter(task => (task as any).phase_id === phaseId) || [];
   };
 
   const getRiskLevelColor = (riskScore: number) => {
@@ -424,6 +537,57 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
                     </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Phase Selection */}
+                    <div>
+                      <Label htmlFor="phase_id">Phase du projet</Label>
+                      <Select
+                        value={formData.phase_id}
+                        onValueChange={handlePhaseChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner une phase" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">Phase générale</SelectItem>
+                          {phases?.map((phase) => (
+                            <SelectItem key={phase.id} value={phase.id}>
+                              {phase.phase_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Risk Suggestions based on phase */}
+                    {formData.construction_phase && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <Label className="text-sm font-medium text-blue-800">Risques suggérés pour cette phase:</Label>
+                        <div className="mt-2 space-y-2">
+                          {suggestRiskBasedOnPhase(formData.construction_phase).map((risk, index) => (
+                            <div key={index} className="p-2 bg-white rounded border border-blue-200">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium text-sm">{risk.title}</p>
+                                  <p className="text-xs text-gray-600">{risk.description}</p>
+                                  <p className="text-xs text-blue-600">
+                                    Probabilité: {risk.probability}% | Impact: {risk.impact}%
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => applySuggestedRisk(risk)}
+                                >
+                                  Utiliser
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <Label htmlFor="risk_title">Titre du risque *</Label>
                       <Input
