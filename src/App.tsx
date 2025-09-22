@@ -56,7 +56,16 @@ import PaymentControlPage from './pages/PaymentControl';
 import EnhancedSupplierTenderPortal from './components/suppliers/EnhancedSupplierTenderPortal';
 import WorkflowTest from './pages/WorkflowTest';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
