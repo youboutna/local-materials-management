@@ -120,9 +120,24 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
     queryFn: async (): Promise<ProjectPhase[]> => {
       const { data, error } = await supabase
         .from('project_phases')
-        .select('id, phase_name, status')
+        .select('id, phase_name, status, construction_phase, construction_stage')
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch employees for assignment
+  const { data: employees } = useQuery({
+    queryKey: ['project-employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, full_name, position')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true });
       
       if (error) throw error;
       return data || [];
@@ -454,19 +469,24 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
                         />
                       </div>
                       <div>
-                        <Label htmlFor="phase_id">Phase</Label>
+                        <Label htmlFor="phase_id">Phase *</Label>
                         <Select
                           value={formData.phase_id}
                           onValueChange={(value) => setFormData({ ...formData, phase_id: value })}
+                          required
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner une phase" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="no-phase">Aucune phase</SelectItem>
                             {phases?.map((phase) => (
                               <SelectItem key={phase.id} value={phase.id}>
                                 {phase.phase_name}
+                                {(phase as any).construction_phase && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    ({(phase as any).construction_phase})
+                                  </span>
+                                )}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -486,12 +506,27 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="assigned_to">Assigné à</Label>
-                        <Input
-                          id="assigned_to"
+                        <Select
                           value={formData.assigned_to}
-                          onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                          placeholder="Email ou ID utilisateur"
-                        />
+                          onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un responsable" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Non assigné</SelectItem>
+                            {employees?.map((employee) => (
+                              <SelectItem key={employee.id} value={employee.id}>
+                                {employee.full_name}
+                                {employee.position && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    ({employee.position})
+                                  </span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="priority">Priorité</Label>

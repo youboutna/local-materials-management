@@ -108,7 +108,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_phases')
-        .select('id, phase_name, description, construction_phase')
+        .select('id, phase_name, description, construction_phase, construction_stage')
         .eq('project_id', projectId)
         .order('phase_name', { ascending: true });
       
@@ -663,12 +663,27 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
                       </div>
                       <div>
                         <Label htmlFor="owner_id">Responsable</Label>
-                        <Input
-                          id="owner_id"
+                        <Select
                           value={formData.owner_id}
-                          onChange={(e) => setFormData({ ...formData, owner_id: e.target.value })}
-                          placeholder="ID utilisateur responsable"
-                        />
+                          onValueChange={(value) => setFormData({ ...formData, owner_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un responsable" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Non assigné</SelectItem>
+                            {employees?.map((employee) => (
+                              <SelectItem key={employee.id} value={employee.id}>
+                                {employee.full_name}
+                                {employee.position && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    ({employee.position})
+                                  </span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="due_date">Date d'échéance</Label>
@@ -684,7 +699,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
                     <div>
                       <Label>Tâches liées</Label>
                       <div className="grid grid-cols-2 gap-2 mt-2 max-h-40 overflow-y-auto">
-                        {tasks?.map((task) => (
+                        {getFilteredTasks(formData.phase_id).map((task) => (
                           <div key={task.id} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
@@ -703,12 +718,18 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
                                   });
                                 }
                               }}
+                              className="rounded"
                             />
-                            <Label htmlFor={`task-${task.id}`} className="text-sm">
+                            <Label htmlFor={`task-${task.id}`} className="text-sm cursor-pointer">
                               {task.title}
                             </Label>
                           </div>
                         ))}
+                        {getFilteredTasks(formData.phase_id).length === 0 && (
+                          <div className="col-span-2 p-2 text-sm text-muted-foreground text-center">
+                            {formData.phase_id ? 'Aucune tâche dans cette phase' : 'Sélectionnez d\'abord une phase'}
+                          </div>
+                        )}
                       </div>
                     </div>
 
