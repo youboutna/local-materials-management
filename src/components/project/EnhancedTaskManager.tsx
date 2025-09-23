@@ -514,7 +514,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
                             <SelectValue placeholder="Sélectionner un responsable" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Non assigné</SelectItem>
+                            <SelectItem value="unassigned">Non assigné</SelectItem>
                             {employees?.map((employee) => (
                               <SelectItem key={employee.id} value={employee.id}>
                                 {employee.full_name}

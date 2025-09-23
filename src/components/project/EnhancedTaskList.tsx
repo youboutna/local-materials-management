@@ -315,7 +315,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           <SelectValue placeholder="Sélectionner une phase" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Aucune phase</SelectItem>
+                          <SelectItem value="no_phase">Aucune phase</SelectItem>
                           {phases?.map((phase) => (
                             <SelectItem key={phase.id} value={phase.id}>
                               {phase.phase_name}

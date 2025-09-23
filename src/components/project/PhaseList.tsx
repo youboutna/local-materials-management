@@ -30,6 +30,7 @@ interface PhaseFormData {
   end_date: string;
   estimated_cost: string;
   estimated_duration: string;
+  phase_methodology?: string;
 }
 
 const CONSTRUCTION_PHASES: Record<ConstructionPhase, string> = {
@@ -70,8 +71,45 @@ const PhaseList: React.FC<PhaseListProps> = ({ phases, projectId }) => {
     start_date: '',
     end_date: '',
     estimated_cost: '',
-    estimated_duration: '30'
+    estimated_duration: '30',
+    phase_methodology: 'standard'
   });
+
+  // Helper function to get Waterfall stages based on phase
+  const getWaterfallStages = (phase: string) => {
+    const waterfallStages = {
+      planification: [
+        ['estimation_ressources', 'Estimation des ressources financières'],
+        ['planification_achats', 'Planification des achats par catégorie'],
+        ['modalites_planification', 'Définition des modalités de planification']
+      ],
+      publicite: [
+        ['publication_portail', 'Publication via le Portail National'],
+        ['diffusion_journaux', 'Diffusion dans les journaux d\'annonces légales'],
+        ['inscription_candidats', 'Inscription des candidats potentiels'],
+        ['notification_opportunites', 'Notifications d\'opportunités aux candidats']
+      ],
+      reception_analyse: [
+        ['soumission_dossiers', 'Soumission des dossiers techniques'],
+        ['analyse_cpmp', 'Analyse par la CPMP'],
+        ['assistance_sous_commission', 'Assistance de la sous-commission'],
+        ['evaluation_conformite', 'Évaluation de la conformité des offres']
+      ],
+      attribution: [
+        ['selection_prix', 'Sélection basée sur le prix'],
+        ['choix_economique', 'Choix de l\'offre économiquement avantageuse'],
+        ['publication_attribution', 'Publication de l\'avis d\'attribution'],
+        ['signature_marche', 'Signature du marché avec l\'attributaire']
+      ],
+      controle_regulation: [
+        ['controle_cncmp', 'Contrôle a priori et a posteriori par la CNCMP'],
+        ['verification_regulier', 'Vérification de la régularité des procédures'],
+        ['regulation_armp', 'Régulation par l\'ARMP'],
+        ['commission_disciplinaire', 'Commission Disciplinaire pour les sanctions']
+      ]
+    };
+    return waterfallStages[phase] || [];
+  };
 
   const createPhaseMutation = useMutation({
     mutationFn: async (phaseData: PhaseFormData) => {
@@ -127,7 +165,8 @@ const PhaseList: React.FC<PhaseListProps> = ({ phases, projectId }) => {
       start_date: '',
       end_date: '',
       estimated_cost: '',
-      estimated_duration: '30'
+      estimated_duration: '30',
+      phase_methodology: 'standard'
     });
   };
 
@@ -192,42 +231,86 @@ const PhaseList: React.FC<PhaseListProps> = ({ phases, projectId }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="construction_phase">Phase de construction</Label>
+                  <Label htmlFor="phase_methodology">Méthodologie de phase</Label>
                   <Select
-                    value={formData.construction_phase}
-                    onValueChange={(value) => setFormData({ ...formData, construction_phase: value })}
+                    value={formData.phase_methodology || 'standard'}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      phase_methodology: value,
+                      construction_phase: '',
+                      construction_stage: ''
+                    })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une phase" />
+                      <SelectValue placeholder="Sélectionner une méthodologie" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(CONSTRUCTION_PHASES).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          {label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="standard">Standard Mauritanien</SelectItem>
+                      <SelectItem value="waterfall">Waterfall/Cascade</SelectItem>
+                      <SelectItem value="custom">Personnalisé</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="construction_stage">Étape de construction</Label>
-                  <Select
-                    value={formData.construction_stage}
-                    onValueChange={(value) => setFormData({ ...formData, construction_stage: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une étape" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CONSTRUCTION_STAGES).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="construction_phase">
+                      {formData.phase_methodology === 'waterfall' ? 'Phase Waterfall' : 'Phase de construction'}
+                    </Label>
+                    <Select
+                      value={formData.construction_phase}
+                      onValueChange={(value) => setFormData({ ...formData, construction_phase: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une phase" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.phase_methodology === 'waterfall' ? (
+                          <>
+                            <SelectItem value="planification">Planification</SelectItem>
+                            <SelectItem value="publicite">Publicité</SelectItem>
+                            <SelectItem value="reception_analyse">Réception et Analyse</SelectItem>
+                            <SelectItem value="attribution">Attribution</SelectItem>
+                            <SelectItem value="controle_regulation">Contrôle et Régulation</SelectItem>
+                          </>
+                        ) : (
+                          Object.entries(CONSTRUCTION_PHASES).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="construction_stage">Étape</Label>
+                    <Select
+                      value={formData.construction_stage}
+                      onValueChange={(value) => setFormData({ ...formData, construction_stage: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une étape" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formData.phase_methodology === 'waterfall' && formData.construction_phase ? (
+                          getWaterfallStages(formData.construction_phase).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          Object.entries(CONSTRUCTION_STAGES).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
