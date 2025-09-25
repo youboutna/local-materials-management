@@ -45,6 +45,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [delegation, setDelegation] = useState<any>({});
   const [risks, setRisks] = useState<any[]>([]);
   const [compliance, setCompliance] = useState<any[]>([]);
+  const [phases, setPhases] = useState<any[]>([]);
+  const [shapeData, setShapeData] = useState<any>(null);
 
   const workflowSteps = [
     {
@@ -263,22 +265,26 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-green-500" />
-                Configuration des Parties Prenantes
+                Configuration des Parties Prenantes Externes
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Stakeholders from Suppliers */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Fournisseurs & Entreprises
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Maître d'Ouvrage *</label>
+                <div className="bg-info/10 p-4 rounded-lg border border-info/20">
+                  <p className="text-sm text-info-foreground">
+                    Cette étape concerne les entités externes (entreprises, organismes) impliquées dans le projet.
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Building className="h-5 w-5" />
+                    Entités Externes & Organismes
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Maître d'Ouvrage *</label>
                       <SimpleSupplierSelector
                         value=""
                         onChange={(supplierId: string) => {
@@ -286,101 +292,61 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         }}
                         placeholder="Sélectionner l'entité commanditaire"
                       />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Entrepreneur Principal *</label>
-                        <SimpleSupplierSelector
-                          value=""
-                          onChange={(supplierId) => {
-                            setStakeholders(prev => [...prev, { type: 'entrepreneur', id: supplierId, source: 'supplier' }]);
-                          }}
-                          placeholder="Sélectionner l'entrepreneur principal"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Bureau d'Études</label>
-                        <SimpleSupplierSelector
-                          value=""
-                          onChange={(supplierId) => {
-                            setStakeholders(prev => [...prev, { type: 'bureau_etudes', id: supplierId, source: 'supplier' }]);
-                          }}
-                          placeholder="Sélectionner le bureau d'études"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Bureau de Contrôle</label>
-                        <SimpleSupplierSelector
-                          value=""
-                          onChange={(supplierId) => {
-                            setStakeholders(prev => [...prev, { type: 'bureau_controle', id: supplierId, source: 'supplier' }]);
-                          }}
-                          placeholder="Sélectionner le bureau de contrôle"
-                        />
-                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Stakeholders from Employees */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <UserCheck className="h-5 w-5" />
-                      Équipe Interne & Délégation
-                    </h3>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Maître d'Œuvre *</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {
-                            setStakeholders(prev => [...prev, { type: 'maitre_oeuvre', id: userId, source: 'employee' }]);
-                          }}
-                          label=""
-                          placeholder="Sélectionner le maître d'œuvre"
-                          roleFilter={['manager', 'director', 'engineer']}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Chef de Projet</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {
-                            setStakeholders(prev => [...prev, { type: 'chef_projet', id: userId, source: 'employee' }]);
-                          }}
-                          label=""
-                          placeholder="Sélectionner le chef de projet"
-                          roleFilter={['manager', 'engineer']}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Responsable Qualité</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {
-                            setStakeholders(prev => [...prev, { type: 'responsable_qualite', id: userId, source: 'employee' }]);
-                          }}
-                          label=""
-                          placeholder="Sélectionner le responsable qualité"
-                          roleFilter={['inspector', 'engineer']}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Coordinateur HSE</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {
-                            setStakeholders(prev => [...prev, { type: 'coordinateur_hse', id: userId, source: 'employee' }]);
-                          }}
-                          label=""
-                          placeholder="Sélectionner le coordinateur HSE"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Entrepreneur Principal *</label>
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId) => {
+                          setStakeholders(prev => [...prev, { type: 'entrepreneur', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner l'entrepreneur principal"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Bureau d'Études</label>
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId) => {
+                          setStakeholders(prev => [...prev, { type: 'bureau_etudes', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner le bureau d'études"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Bureau de Contrôle</label>
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId) => {
+                          setStakeholders(prev => [...prev, { type: 'bureau_controle', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner le bureau de contrôle"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Organisme de Certification</label>
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId) => {
+                          setStakeholders(prev => [...prev, { type: 'organisme_certification', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner l'organisme de certification"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Autorité de Régulation</label>
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId) => {
+                          setStakeholders(prev => [...prev, { type: 'autorite_regulation', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner l'autorité de régulation"
+                      />
                     </div>
                   </div>
                 </div>
@@ -388,12 +354,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 {/* Selected Stakeholders Summary */}
                 {stakeholders.length > 0 && (
                   <div className="border rounded-lg p-4 bg-muted/50">
-                    <h4 className="font-medium mb-3">Parties Prenantes Sélectionnées:</h4>
+                    <h4 className="font-medium mb-3">Parties Prenantes Externes Sélectionnées:</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {stakeholders.map((stakeholder, index) => (
                         <div key={index} className="flex items-center justify-between bg-background p-2 rounded text-sm">
                           <span>
-                            {String(stakeholder.type).replace('_', ' ')} - {stakeholder.source === 'supplier' ? 'Fournisseur' : 'Employé'}
+                            {String(stakeholder.type).replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                           </span>
                           <Button
                             variant="ghost"
@@ -431,6 +397,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                <div className="bg-warning/10 p-4 rounded-lg border border-warning/20">
+                  <p className="text-sm text-warning-foreground">
+                    Cette étape concerne l'équipe interne (employés de l'organisation) et les contractants directs.
+                  </p>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Internal Team - Employees */}
                   <div className="space-y-4">
@@ -441,28 +413,28 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     
                     <div className="space-y-4">
                       <UserSelector
-                        value={delegation.chef_equipe || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, chef_equipe: userId}))}
-                        label="Chef d'équipe *"
-                        placeholder="Sélectionner un chef d'équipe"
-                        roleFilter={['manager', 'director']}
+                        value={delegation.maitre_oeuvre || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, maitre_oeuvre: userId}))}
+                        label="Maître d'Œuvre *"
+                        placeholder="Sélectionner le maître d'œuvre"
+                        roleFilter={['manager', 'director', 'engineer']}
                         required
                       />
                       
                       <UserSelector
-                        value={delegation.ingenieur || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, ingenieur: userId}))}
-                        label="Ingénieur responsable *"
-                        placeholder="Sélectionner un ingénieur"
-                        roleFilter={['engineer']}
+                        value={delegation.chef_projet || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, chef_projet: userId}))}
+                        label="Chef de Projet *"
+                        placeholder="Sélectionner le chef de projet"
+                        roleFilter={['manager', 'engineer']}
                         required
                       />
                       
                       <UserSelector
-                        value={delegation.inspecteur || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, inspecteur: userId}))}
-                        label="Inspecteur qualité"
-                        placeholder="Sélectionner un inspecteur"
+                        value={delegation.responsable_qualite || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, responsable_qualite: userId}))}
+                        label="Responsable Qualité"
+                        placeholder="Sélectionner le responsable qualité"
                         roleFilter={['inspector', 'engineer']}
                       />
                       
@@ -470,7 +442,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         value={delegation.coordinateur_hse || ""}
                         onChange={(userId) => setDelegation(prev => ({...prev, coordinateur_hse: userId}))}
                         label="Coordinateur HSE"
-                        placeholder="Sélectionner un coordinateur HSE"
+                        placeholder="Sélectionner le coordinateur HSE"
                         roleFilter={['inspector', 'manager']}
                       />
                     </div>
@@ -480,7 +452,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <Building className="h-5 w-5" />
-                      Contractants & Fournisseurs
+                      Contractants & Fournisseurs Directs
                     </h3>
                     
                     <div className="space-y-4">
@@ -517,7 +489,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 
                 {/* Organizational Template */}
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Organogramme Temporel du Projet</h3>
+                  <h3 className="text-lg font-semibold mb-4">Hiérarchie Organisationnelle du Projet</h3>
                   <div className="border rounded-lg p-4">
                     <OrganizationalHierarchyManager />
                   </div>
@@ -526,7 +498,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 {/* Delegation Summary */}
                 {Object.keys(delegation).length > 0 && (
                   <div className="border rounded-lg p-4 bg-muted/50">
-                    <h4 className="font-medium mb-3">Résumé des Délégations:</h4>
+                    <h4 className="font-medium mb-3">Résumé des Assignations:</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                       {Object.entries(delegation).map(([role, id]) => (
                         <div key={role} className="flex justify-between">
@@ -560,7 +532,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <CardContent>
               <div className="space-y-6">
                 <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Méthodologies Disponibles:</h4>
+                  <h4 className="font-medium mb-2">Méthodologies de Phase Disponibles:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="p-3 bg-background rounded border">
                       <div className="font-medium text-blue-600">Standards Mauritaniens</div>
@@ -578,11 +550,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 </div>
                 
                 {/* Use the existing ConstructionPhaseManager component */}
-                <div className="border rounded-lg p-4">
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Gestionnaire de phases sera intégré ici</p>
-                    <Button variant="outline" className="mt-2">Configurer les Phases</Button>
-                  </div>
+                <div className="border rounded-lg">
+                  <ConstructionPhaseManager 
+                    phases={phases}
+                    onChange={setPhases}
+                  />
                 </div>
                 
                 <div className="flex justify-end">
@@ -649,11 +621,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 {/* Enhanced Interactive Map - Use existing component */}
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-4">Carte Interactive & Localisation</h4>
-                  <div className="h-96 bg-muted rounded border flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-muted-foreground">Carte interactive sera affichée ici</p>
-                    </div>
+                  <div className="h-96 bg-muted rounded border">
+                    <EnhancedInteractiveMap 
+                      projects={[]}
+                      onProjectSelect={() => {}}
+                    />
                   </div>
                 </div>
                 
@@ -663,11 +635,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <div className="bg-muted/50 p-3 rounded mb-3 text-sm">
                     <strong>Instructions:</strong> Utilisez les outils de traçage pour délimiter les zones de construction, stockage, et accès.
                   </div>
-                  <div className="h-64 bg-background rounded border flex items-center justify-center">
-                    <div className="text-center">
-                      <Building className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-muted-foreground text-sm">Outils de traçage seront disponibles ici</p>
-                    </div>
+                  <div className="h-64 bg-background rounded border">
+                    <WarehouseShapeTracer 
+                      onChange={setShapeData}
+                    />
                   </div>
                 </div>
                 
@@ -873,9 +844,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       onSubmit({
                         stakeholders,
                         delegation,
+                        phases,
                         risks,
                         compliance,
-                        selectedMaterials
+                        selectedMaterials,
+                        shapeData
                       });
                     }}
                     className="bg-green-600 hover:bg-green-700"
