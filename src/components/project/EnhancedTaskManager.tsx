@@ -178,13 +178,19 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const { data: phases = [] } = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<ProjectPhase[]> => {
+      console.log('🔍 Fetching phases for project:', projectId);
       const { data, error } = await supabase
         .from('project_phases')
         .select('id, phase_name, status, construction_phase')
         .eq('project_id', projectId)
         .order('phase_order', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error fetching phases:', error);
+        throw error;
+      }
+      
+      console.log('✅ Phases fetched:', data);
       return data?.map(phase => ({
         ...phase,
         construction_phase: phase.construction_phase || undefined
@@ -195,6 +201,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   // Use props or fallback to fetched data
   const currentPhases = propPhases || phases || [];
+  console.log('📋 Current phases in TaskManager:', currentPhases);
 
   // Fetch employees for assignment
   const { data: employees = [] } = useQuery({
@@ -707,10 +714,17 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                   className="rounded border-gray-300"
                                 />
                                 <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
-                                  {phase.phase_name}
+                                  <span className="text-gray-900 dark:text-gray-100">
+                                    {phase.phase_name || `Phase ${phase.id}`}
+                                  </span>
                                   {phase.construction_phase && (
-                                    <span className="text-xs text-muted-foreground ml-2">
+                                    <span className="text-xs text-muted-foreground ml-2 block">
                                       ({phase.construction_phase})
+                                    </span>
+                                  )}
+                                  {phase.status && (
+                                    <span className="text-xs text-green-600 ml-2">
+                                      [{phase.status}]
                                     </span>
                                   )}
                                 </label>
