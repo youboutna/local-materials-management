@@ -168,9 +168,9 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
       console.log('🔍 Fetching phases for project (RiskManager):', projectId);
       const { data, error } = await supabase
         .from('project_phases')
-        .select('id, phase_name, status, construction_phase')
+        .select('id, phase_name, status, construction_phase, description, start_date, end_date')
         .eq('project_id', projectId)
-        .order('phase_order', { ascending: true });
+        .order('start_date', { ascending: true });
       
       if (error) {
         console.error('❌ Error fetching phases (RiskManager):', error);

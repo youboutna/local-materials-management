@@ -10,12 +10,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useProjects } from '@/hooks/projects/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
-import MaterialFormSection from '@/components/MaterialFormSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ProjectCreationWorkflow from '@/components/project/ProjectCreationWorkflow';
 import { PhaseService } from '@/services/phaseService';
-import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
-import { Building, Users, UserCheck, Shield } from 'lucide-react';
 
 interface SelectedMaterial {
   materialId: string;
@@ -202,119 +198,20 @@ const ProjectCreate = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-6xl mx-auto space-y-6"
+            className="max-w-7xl mx-auto space-y-6"
           >
-            {/* Project Creation Workflow */}
+            {/* Enhanced Project Creation Workflow */}
             <div className="bg-white rounded-xl shadow-elegant p-6">
-              <h1 className="text-2xl font-serif text-adrar-800 mb-6">{t("project_create.title")}</h1>
+              <h1 className="text-3xl font-serif text-adrar-800 mb-2">{t("project_create.title")}</h1>
+              <p className="text-gray-600 mb-8">
+                Suivez ce processus structuré pour créer votre projet de manière optimale
+              </p>
               
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-8">
-                  <TabsTrigger value="basic" className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Projet & GIS
-                  </TabsTrigger>
-                  <TabsTrigger value="stakeholders" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Parties Prenantes
-                  </TabsTrigger>
-                  <TabsTrigger value="delegation" className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
-                    Délégation
-                  </TabsTrigger>
-                  <TabsTrigger value="organization" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Organisation
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="basic">
-                  <ProjectFormWithMap 
-                    onSubmit={handleFormSubmit}
-                  />
-                </TabsContent>
-
-                <TabsContent value="stakeholders">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-serif text-adrar-800">
-                        Parties Prenantes du Projet
-                      </CardTitle>
-                      <p className="text-gray-600">
-                        Identifiez et configurez les parties prenantes principales du projet.
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="text-sm text-gray-500">
-                          Configuration des parties prenantes (à implémenter)
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="delegation">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-serif text-adrar-800">
-                        Délégation de Réalisation du Projet
-                      </CardTitle>
-                      <p className="text-gray-600">
-                        Configurez la délégation selon les trois profils principaux : Employés, Bureaux d'études, Entreprises de construction.
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Employés (Personnel Interne)</h4>
-                            <p className="text-sm text-gray-600">
-                              Responsables du suivi et inspection pour assurer la conformité.
-                            </p>
-                          </div>
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Bureaux d'Études</h4>
-                            <p className="text-sm text-gray-600">
-                              Conseil, contrôle, études de faisabilité et assistance technique.
-                            </p>
-                          </div>
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Entreprises de Construction</h4>
-                            <p className="text-sm text-gray-600">
-                              Réalisation physique des travaux et infrastructures.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="organization">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-serif text-adrar-800">
-                        Hiérarchie Organisationnelle & Matériaux
-                      </CardTitle>
-                      <p className="text-gray-600">
-                        Définissez la structure hiérarchique et sélectionnez les matériaux nécessaires.
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <OrganizationalHierarchyManager />
-                      
-                      <div className="border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-4">Sélection des matériaux</h3>
-                        <MaterialFormSection
-                          selectedMaterials={selectedMaterials}
-                          onChange={setSelectedMaterials}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              <ProjectCreationWorkflow
+                onSubmit={handleFormSubmit}
+                selectedMaterials={selectedMaterials}
+                onMaterialsChange={setSelectedMaterials}
+              />
             </div>
           </motion.div>
         </div>
