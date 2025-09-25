@@ -400,7 +400,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     }
 
     try {
-      const tasksToCreate = [];
+      const tasksToCreate: any[] = [];
 
       if (formData.applyToAllPhases) {
         // Create task for each phase

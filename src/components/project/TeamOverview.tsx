@@ -25,12 +25,14 @@ interface ProjectResource {
   project_id: string;
   name: string;
   type: string;
-  skills: string[] | null;
-  cost_per_hour: number | null;
-  availability: number | null;
-  phase_id: string | null;
-  created_at: string | null;
-  updated_at: string | null;
+  allocation_date: string | null;
+  cost_per_unit: number | null;
+  quantity: number | null;
+  total_cost: number | null;
+  unit: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ProjectPhase {
@@ -43,9 +45,10 @@ interface ProjectPhase {
 interface ResourceFormData {
   name: string;
   type: string;
-  skills: string;
-  costPerHour: string;
-  availability: string;
+  notes: string;
+  costPerUnit: string;
+  quantity: string;
+  unit: string;
   phaseId: string;
   applyToAllPhases: boolean;
 }
@@ -61,9 +64,10 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
   const [formData, setFormData] = useState<ResourceFormData>({
     name: '',
     type: '',
-    skills: '',
-    costPerHour: '',
-    availability: '100',
+    notes: '',
+    costPerUnit: '',
+    quantity: '1',
+    unit: '',
     phaseId: '',
     applyToAllPhases: false,
   });
@@ -113,12 +117,17 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
 
   // Create resource mutation
   const createResourceMutation = useMutation({
-    mutationFn: async (data: Partial<ProjectResource>) => {
+    mutationFn: async (data: { name: string; project_id: string; type: string; notes?: string | null; cost_per_unit?: number | null; quantity?: number | null; unit?: string | null; }) => {
       const { error } = await supabase
         .from('project_resources')
         .insert([{
-          ...data,
-          name: data.name || 'Untitled Resource'
+          name: data.name || 'Untitled Resource',
+          project_id: data.project_id,
+          type: data.type,
+          notes: data.notes,
+          cost_per_unit: data.cost_per_unit,
+          quantity: data.quantity,
+          unit: data.unit
         }]);
       
       if (error) throw error;
@@ -146,9 +155,10 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
     setFormData({
       name: '',
       type: '',
-      skills: '',
-      costPerHour: '',
-      availability: '100',
+      notes: '',
+      costPerUnit: '',
+      quantity: '1',
+      unit: '',
       phaseId: '',
       applyToAllPhases: false,
     });
@@ -176,7 +186,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
     }
 
     try {
-      const resourcesToCreate = [];
+      const resourcesToCreate: any[] = [];
 
       if (formData.applyToAllPhases) {
         // Create resource for each phase
@@ -185,10 +195,10 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
             project_id: projectId,
             name: `${formData.name} - ${phase.phase_name}`,
             type: formData.type,
-            skills: formData.skills ? [formData.skills] : [],
-            cost_per_hour: formData.costPerHour ? parseFloat(formData.costPerHour) : null,
-            availability: formData.availability ? parseInt(formData.availability) : 100,
-            phase_id: phase.id
+            notes: formData.notes,
+            cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
+            quantity: formData.quantity ? parseInt(formData.quantity) : 1,
+            unit: formData.unit
           });
         });
       } else {
@@ -197,17 +207,17 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
           project_id: projectId,
           name: formData.name,
           type: formData.type,
-          skills: formData.skills ? [formData.skills] : [],
-          cost_per_hour: formData.costPerHour ? parseFloat(formData.costPerHour) : null,
-          availability: formData.availability ? parseInt(formData.availability) : 100,
-          phase_id: formData.phaseId
+          notes: formData.notes,
+          cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
+          quantity: formData.quantity ? parseInt(formData.quantity) : 1,
+          unit: formData.unit
         });
       }
 
       if (resourcesToCreate.length > 0) {
         const { data, error } = await supabase
           .from('project_resources')
-          .insert(resourcesToCreate as any)
+          .insert(resourcesToCreate)
           .select();
 
         if (error) throw error;
@@ -354,39 +364,48 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
               </div>
 
               <div>
-                <Label htmlFor="skills">Compétences/Description</Label>
+                <Label htmlFor="notes">Notes/Description</Label>
                 <Input
-                  id="skills"
-                  value={formData.skills}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                  placeholder="Compétences ou description"
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Notes ou description"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="costPerHour">Coût par heure (MRU)</Label>
+                  <Label htmlFor="costPerUnit">Coût par unité (MRU)</Label>
                   <Input
-                    id="costPerHour"
+                    id="costPerUnit"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.costPerHour}
-                    onChange={(e) => setFormData({ ...formData, costPerHour: e.target.value })}
+                    value={formData.costPerUnit}
+                    onChange={(e) => setFormData({ ...formData, costPerUnit: e.target.value })}
                     placeholder="0.00"
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="availability">Disponibilité (%)</Label>
+                  <Label htmlFor="quantity">Quantité</Label>
                   <Input
-                    id="availability"
+                    id="quantity"
                     type="number"
-                    min="0"
-                    max="100"
-                    value={formData.availability}
-                    onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
-                    placeholder="100"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    placeholder="1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="unit">Unité</Label>
+                  <Input
+                    id="unit"
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    placeholder="pièce, m2, kg..."
                   />
                 </div>
               </div>
@@ -418,14 +437,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
               <div key={index} className="p-3 border rounded-lg">
                 <h4 className="font-medium">{resource.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {resource.skills?.join(', ') || 'Aucune compétence spécifiée'}
+                  {resource.notes || 'Aucune description'}
                 </p>
                 <div className="flex justify-between items-center mt-2">
                   <Badge variant="outline">
-                    {resource.cost_per_hour || 0} MRU/h
+                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {resource.availability || 0}% disponible
+                    Qté: {resource.quantity || 0}
                   </span>
                 </div>
               </div>
@@ -453,14 +472,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
               <div key={index} className="p-3 border rounded-lg">
                 <h4 className="font-medium">{resource.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {resource.skills?.join(', ') || 'Aucune description'}
+                  {resource.notes || 'Aucune description'}
                 </p>
                 <div className="flex justify-between items-center mt-2">
                   <Badge variant="outline">
-                    {resource.cost_per_hour || 0} MRU/h
+                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {resource.availability || 0}% disponible
+                    Qté: {resource.quantity || 0}
                   </span>
                 </div>
               </div>
@@ -488,14 +507,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
               <div key={index} className="p-3 border rounded-lg">
                 <h4 className="font-medium">{resource.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {resource.skills?.join(', ') || 'Aucune description'}
+                  {resource.notes || 'Aucune description'}
                 </p>
                 <div className="flex justify-between items-center mt-2">
                   <Badge variant="outline">
-                    {resource.cost_per_hour || 0} MRU/unité
+                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    {resource.availability || 0}% disponible
+                    Qté: {resource.quantity || 0}
                   </span>
                 </div>
               </div>

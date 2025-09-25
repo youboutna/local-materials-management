@@ -393,7 +393,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     }
 
     try {
-      const risksToCreate = [];
+      const risksToCreate: any[] = [];
       const probability = parseFloat(formData.probability_numeric) || 0;
       const impact = parseFloat(formData.impact_numeric) || 0;
       const riskScore = probability * impact;
@@ -412,7 +412,6 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
             status_new: formData.status_new,
             owner_id: formData.owner_id || null,
             due_date: formData.due_date || null,
-            phase_id: phase.id,
           });
         });
       } else {
@@ -428,14 +427,13 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
           status_new: formData.status_new,
           owner_id: formData.owner_id || null,
           due_date: formData.due_date || null,
-          phase_id: formData.phase_id,
         });
       }
 
       if (risksToCreate.length > 0) {
         const { data, error } = await supabase
           .from('project_risks')
-          .insert(risksToCreate as any)
+          .insert(risksToCreate)
           .select();
 
         if (error) throw error;
