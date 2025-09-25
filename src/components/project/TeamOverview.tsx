@@ -348,17 +348,26 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                   <div>
                     <Label htmlFor="phaseSelect">Sélectionner une phase</Label>
                     <Select value={formData.phaseId} onValueChange={(value) => setFormData({ ...formData, phaseId: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Choisir une phase" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {currentPhases.map((phase) => (
-                          <SelectItem key={phase.id} value={phase.id}>
-                            {phase.phase_name}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="bg-background border z-50">
+                        {currentPhases.length === 0 ? (
+                          <SelectItem value="" disabled>Aucune phase disponible</SelectItem>
+                        ) : (
+                          currentPhases.map((phase) => (
+                            <SelectItem key={phase.id} value={phase.id}>
+                              {phase.phase_name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
+                    {currentPhases.length === 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
