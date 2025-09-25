@@ -33,7 +33,8 @@ import {
   CheckCircle,
   Clock,
   Layers,
-  BarChart3
+  BarChart3,
+  Shield
 } from 'lucide-react';
 
 interface ProjectDetailByDTOProps {
@@ -529,13 +530,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="grid w-full grid-cols-12">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
           <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="risks">Risques</TabsTrigger>
-          <TabsTrigger value="resources">Ressources</TabsTrigger>
+          <TabsTrigger value="resources">Équipe</TabsTrigger>
+          <TabsTrigger value="payments">Paiements</TabsTrigger>
+          <TabsTrigger value="kpis">KPIs</TabsTrigger>
+          <TabsTrigger value="compliance">Conformité</TabsTrigger>
           <TabsTrigger value="gantt">Gantt</TabsTrigger>
           <TabsTrigger value="pert">PERT</TabsTrigger>
           <TabsTrigger value="map">Carte</TabsTrigger>
@@ -665,6 +669,238 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         <TabsContent value="resources" className="mt-6">
           <TeamOverview resources={resources} projectId={projectId!} />
+        </TabsContent>
+
+        <TabsContent value="payments" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Échéancier de paiements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {project.allowsInitialPayment && (
+                  <div className="p-4 border rounded-lg bg-green-50">
+                    <h4 className="font-medium">Avance initiale autorisée</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {project.initialPaymentPercentage}% du montant total
+                    </p>
+                    <p className="font-semibold text-green-700">
+                      {((project.budget || 0) * (project.initialPaymentPercentage || 0) / 100).toLocaleString()} MRU
+                    </p>
+                  </div>
+                )}
+                {payments.length > 0 ? (
+                  <div className="grid gap-4">
+                    {payments.map((payment: any) => (
+                      <div key={payment.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{payment.description || 'Paiement'}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Date: {new Date(payment.payment_date).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Progression: {payment.progress_at_payment}%
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{(payment.amount || 0).toLocaleString()} MRU</p>
+                            <Badge 
+                              variant={payment.status === 'approved' ? 'default' : 'secondary'}
+                              className={payment.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {payment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">Aucun paiement enregistré</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="kpis" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Indice Performance Coût</p>
+                    <p className="text-2xl font-bold">0.95</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-blue-600" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  CPI (Cost Performance Index)
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Indice Performance Planning</p>
+                    <p className="text-2xl font-bold">0.92</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-orange-600" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  SPI (Schedule Performance Index)
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Incidents Sécurité</p>
+                    <p className="text-2xl font-bold">2</p>
+                  </div>
+                  <AlertTriangle className="h-8 w-8 text-red-600" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Total incidents HSE
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Émissions CO2</p>
+                    <p className="text-2xl font-bold">12.5k</p>
+                  </div>
+                  <Target className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Tonnes CO2 équivalent
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="compliance" className="mt-6">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Conformité réglementaire
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Permis de construire</h4>
+                        <p className="text-sm text-muted-foreground">Ministère Habitat</p>
+                        <p className="text-sm text-muted-foreground">Émis le: 10/05/2021</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Valide</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Audit environnemental</h4>
+                        <p className="text-sm text-muted-foreground">Agence Environnement</p>
+                        <p className="text-sm text-muted-foreground">Complété le: 12/11/2022</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Complété</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Plans HSE
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Plan prévention accidents</h4>
+                        <p className="text-sm text-muted-foreground">Dernière révision: 01/08/2023</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Actif</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Plan gestion déchets chantier</h4>
+                        <p className="text-sm text-muted-foreground">Dernière révision: 01/08/2023</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Actif</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Parties prenantes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Ministère de l'Énergie</h4>
+                        <p className="text-sm text-muted-foreground">Autorité contractante</p>
+                      </div>
+                      <Badge variant="destructive">Haute influence</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">Communes locales</h4>
+                        <p className="text-sm text-muted-foreground">Population impactée</p>
+                      </div>
+                      <Badge className="bg-yellow-100 text-yellow-800">Influence moyenne</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">ONG environnementale</h4>
+                        <p className="text-sm text-muted-foreground">Observateur</p>
+                      </div>
+                      <Badge variant="outline">Faible influence</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="map" className="mt-6">

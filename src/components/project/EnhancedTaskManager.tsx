@@ -170,7 +170,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
         .order('phase_order', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      return data?.map(phase => ({
+        ...phase,
+        construction_phase: phase.construction_phase || undefined
+      })) || [];
     },
     enabled: !!projectId,
   });
@@ -199,7 +202,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
         .eq('is_active', true);
       
       if (error) throw error;
-      return data || [];
+      return data?.map(supplier => ({
+        ...supplier,
+        contact_person: supplier.contact_person || undefined
+      })) || [];
     },
   });
 
@@ -208,7 +214,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
     mutationFn: async (data: Partial<TaskAssignmentExtended>) => {
       const { error } = await supabase
         .from('task_assignments')
-        .insert([data]);
+        .insert([{
+          ...data,
+          title: data.title || 'Untitled Task'
+        }]);
       
       if (error) throw error;
     },
@@ -234,9 +243,13 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, ...data }: Partial<TaskAssignmentExtended> & { id: string }) => {
+      const updateData = {
+        ...data,
+        title: data.title || undefined
+      };
       const { error } = await supabase
         .from('task_assignments')
-        .update(data)
+        .update(updateData)
         .eq('id', id);
       
       if (error) throw error;

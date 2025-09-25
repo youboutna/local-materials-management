@@ -156,7 +156,10 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
         .order('phase_order', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      return data?.map(phase => ({
+        ...phase,
+        construction_phase: phase.construction_phase || undefined
+      })) || [];
     },
     enabled: !!projectId,
   });
@@ -171,7 +174,10 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
         .eq('is_active', true);
       
       if (error) throw error;
-      return data || [];
+      return data?.map(emp => ({
+        ...emp,
+        position: emp.position || undefined
+      })) || [];
     },
   });
 
@@ -185,7 +191,10 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
         .eq('is_active', true);
       
       if (error) throw error;
-      return data || [];
+      return data?.map(supplier => ({
+        ...supplier,
+        contact_person: supplier.contact_person || undefined
+      })) || [];
     },
   });
 
@@ -209,7 +218,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     mutationFn: async (data: Partial<ProjectRisk>) => {
       const { error } = await supabase
         .from('project_risks')
-        .insert([data]);
+        .insert([{
+          ...data,
+          project_id: data.project_id || '',
+          risk_title: data.risk_title || 'Untitled Risk'
+        }]);
       
       if (error) throw error;
     },
