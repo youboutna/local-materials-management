@@ -16,7 +16,8 @@ import {
   Layers,
   CheckCircle,
   Clock,
-  DollarSign
+  DollarSign,
+  Target
 } from 'lucide-react';
 import MaterialFormSection from '../MaterialFormSection';
 import UserSelector from '../selectors/UserSelector';
@@ -25,7 +26,27 @@ import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
 import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyManager';
 import EnhancedInteractiveMap from '../projects/EnhancedInteractiveMap';
 import WarehouseShapeTracer from '../materials/WarehouseShapeTracer';
+import InteractiveMapGIS from '../materials/InteractiveMapGIS';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
+
+// Helper function to calculate polygon area in square meters
+const calculatePolygonArea = (coordinates: Array<{lat: number, lng: number}>): number => {
+  if (coordinates.length < 3) return 0;
+  
+  let area = 0;
+  const n = coordinates.length;
+  
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += coordinates[i].lat * coordinates[j].lng;
+    area -= coordinates[j].lat * coordinates[i].lng;
+  }
+  
+  // Convert to square meters (approximate)
+  area = Math.abs(area) / 2;
+  const metersPerDegree = 111320; // Approximate meters per degree at equator
+  return area * metersPerDegree * metersPerDegree;
+};
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -705,6 +726,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* Coordonnées GPS et adresse */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Adresse du projet *</label>
@@ -713,6 +735,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       rows={3}
                       placeholder="Adresse complète du site de construction..."
                       required
+                      value={shapeData?.address || ''}
+                      onChange={(e) => setShapeData({...shapeData, address: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
@@ -721,57 +745,125 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <input 
                           type="number" 
-                          className="w-full p-3 border rounded-lg"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                           placeholder="Latitude"
                           step="0.000001"
+                          value={shapeData?.coordinates?.lat || ''}
+                          onChange={(e) => setShapeData({
+                            ...shapeData, 
+                            coordinates: {
+                              ...shapeData?.coordinates,
+                              lat: parseFloat(e.target.value) || 0,
+                              lng: shapeData?.coordinates?.lng || 0
+                            }
+                          })}
                         />
                         <input 
                           type="number" 
-                          className="w-full p-3 border rounded-lg"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                           placeholder="Longitude"
                           step="0.000001"
+                          value={shapeData?.coordinates?.lng || ''}
+                          onChange={(e) => setShapeData({
+                            ...shapeData, 
+                            coordinates: {
+                              lat: shapeData?.coordinates?.lat || 0,
+                              lng: parseFloat(e.target.value) || 0
+                            }
+                          })}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Surface (m²)</label>
+                      <label className="block text-sm font-medium mb-2">Surface estimée (m²)</label>
                       <input 
                         type="number" 
-                        className="w-full p-3 border rounded-lg"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="Surface totale du projet"
                         min="0"
+                        value={shapeData?.surface || ''}
+                        onChange={(e) => setShapeData({...shapeData, surface: parseFloat(e.target.value) || 0})}
                       />
                     </div>
                   </div>
                 </div>
                 
-                {/* Enhanced Interactive Map - Use existing component */}
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-4">Carte Interactive & Localisation</h4>
-                  <div className="h-96 bg-muted rounded border">
-                    <EnhancedInteractiveMap 
-                      projects={[]}
-                      onProjectSelect={() => {}}
+                {/* Système GIS Interactif intégré */}
+                <div className="border rounded-lg p-4 bg-gradient-to-br from-muted/20 to-accent/5">
+                  <h4 className="font-medium mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-cyan-500" />
+                    Géolocalisation Interactive & Délimitation des Zones
+                  </h4>
+                  <div className="bg-muted/30 p-3 rounded mb-4 text-sm">
+                    <strong>Instructions:</strong> 
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Cliquez sur la carte pour définir la position GPS (onglet Localisation)</li>
+                      <li>Utilisez l'onglet Forme pour délimiter les zones de travail</li>
+                      <li>Les coordonnées GPS se mettront à jour automatiquement</li>
+                    </ul>
+                  </div>
+                  <div className="h-[500px] w-full">
+                    <InteractiveMapGIS 
+                      title="Carte de Géolocalisation du Projet"
+                      description="Définissez la position et délimitez les zones de construction"
+                      allowPolygon={true}
+                      value={{
+                        coordinates: shapeData?.coordinates,
+                        address: shapeData?.address,
+                        shape: shapeData?.shape,
+                        shapeType: shapeData?.shapeType
+                      }}
+                      onChange={(mapData) => {
+                        console.log('Map data updated:', mapData);
+                        setShapeData({
+                          ...shapeData,
+                          ...mapData,
+                          // Calculate surface if shape is provided
+                          surface: mapData.shape && mapData.shape.length > 2 
+                            ? calculatePolygonArea(mapData.shape) 
+                            : shapeData?.surface
+                        });
+                      }}
+                      className="h-full"
                     />
                   </div>
                 </div>
-                
-                {/* Shape Tracing - Use existing component */}
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-4">Délimitation des Zones de Travail</h4>
-                  <div className="bg-muted/50 p-3 rounded mb-3 text-sm">
-                    <strong>Instructions:</strong> Utilisez les outils de traçage pour délimiter les zones de construction, stockage, et accès.
+
+                {/* Informations calculées */}
+                {shapeData?.coordinates && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4 rounded-lg">
+                    <h5 className="font-medium text-green-800 mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Informations de Géolocalisation
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-green-700">Position GPS:</span>
+                        <div className="font-mono text-green-600">
+                          {shapeData.coordinates.lat.toFixed(6)}, {shapeData.coordinates.lng.toFixed(6)}
+                        </div>
+                      </div>
+                      {shapeData.surface && (
+                        <div>
+                          <span className="font-medium text-green-700">Surface calculée:</span>
+                          <div className="font-mono text-green-600">
+                            {shapeData.surface.toLocaleString()} m²
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="h-64 bg-background rounded border">
-                    <WarehouseShapeTracer 
-                      onChange={setShapeData}
-                    />
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('geolocation')}>
-                    Valider la Géolocalisation
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setActiveTab('phases')}>
+                    Précédent: Phases
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('geolocation');
+                    setActiveTab('resources');
+                  }}>
+                    Suivant: Ressources
                   </Button>
                 </div>
               </div>
