@@ -200,59 +200,185 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Référence projet</label>
+                    <label className="block text-sm font-medium mb-2">Référence du projet</label>
                     <input 
                       type="text" 
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="PRJ-2024-001"
+                      placeholder="REF-2025-001"
                     />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description *</label>
+                  <label className="block text-sm font-medium mb-2">Description détaillée *</label>
                   <textarea 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    rows={4}
-                    placeholder="Description détaillée du projet..."
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
+                    placeholder="Description complète du projet, objectifs et spécifications techniques"
                     required
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Budget (MRU) *</label>
+                    <label className="block text-sm font-medium mb-2">Budget total *</label>
                     <input 
                       type="number" 
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="0"
-                      min="0"
+                      placeholder="1000000"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Statut</label>
+                    <label className="block text-sm font-medium mb-2">Devise *</label>
                     <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                      <option value="Planning">Planification</option>
-                      <option value="InProgress">En cours</option>
-                      <option value="OnHold">En pause</option>
-                      <option value="Completed">Terminé</option>
+                      <option value="MRU">MRU (Ouguiya)</option>
+                      <option value="EUR">EUR (Euro)</option>
+                      <option value="USD">USD (Dollar)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Taille équipe</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="5"
-                      min="1"
-                    />
+                    <label className="block text-sm font-medium mb-2">Statut initial</label>
+                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <option value="planning">Planification</option>
+                      <option value="pending">En attente</option>
+                      <option value="approved">Approuvé</option>
+                    </select>
                   </div>
                 </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('basic')}>
-                    Valider les Informations
+
+                {/* Chronologie Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-blue-500" />
+                    Chronologie du Projet
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Date de début prévue *</label>
+                      <input 
+                        type="date" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Date de fin prévue *</label>
+                      <input 
+                        type="date" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Durée estimée (jours)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="365"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Paramètres de paiement Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    Paramètres de Paiement
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Mode de paiement principal</label>
+                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="progressive">Paiement progressif</option>
+                        <option value="milestone">Par jalons</option>
+                        <option value="completion">À l'achèvement</option>
+                        <option value="mixed">Mixte</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Fréquence des paiements</label>
+                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="monthly">Mensuelle</option>
+                        <option value="quarterly">Trimestrielle</option>
+                        <option value="phase">Par phase</option>
+                        <option value="custom">Personnalisée</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Avance initiale (%)</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Retenue de garantie (%)</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="20" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="5"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informations administratives */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4">Informations Administratives</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Priorité du projet</label>
+                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="low">Basse</option>
+                        <option value="medium">Moyenne</option>
+                        <option value="high">Haute</option>
+                        <option value="critical">Critique</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Type de projet</label>
+                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="construction">Construction</option>
+                        <option value="renovation">Rénovation</option>
+                        <option value="infrastructure">Infrastructure</option>
+                        <option value="maintenance">Maintenance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Secteur d'activité</label>
+                      <input 
+                        type="text" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="Bâtiment, Routes, Ponts..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Numéro de permis</label>
+                      <input 
+                        type="text" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="PERM-2025-001"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" disabled>
+                    Précédent
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('basic');
+                    setActiveTab('stakeholders');
+                  }}>
+                    Suivant: Parties Prenantes
                   </Button>
                 </div>
               </div>
