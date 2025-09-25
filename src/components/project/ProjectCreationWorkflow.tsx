@@ -24,6 +24,7 @@ import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
 import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyManager';
 import EnhancedInteractiveMap from '../projects/EnhancedInteractiveMap';
 import WarehouseShapeTracer from '../materials/WarehouseShapeTracer';
+import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
