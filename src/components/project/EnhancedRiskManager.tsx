@@ -91,6 +91,7 @@ interface RiskFormData {
   phase_id: string;
   construction_phase: string;
   applyToAllPhases: boolean;
+  selectedPhases?: string[];
 }
 
 const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ 
@@ -115,6 +116,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     phase_id: '',
     construction_phase: '',
     applyToAllPhases: false,
+    selectedPhases: [],
   });
   
   const queryClient = useQueryClient();
@@ -332,6 +334,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
       phase_id: '',
       construction_phase: '',
       applyToAllPhases: false,
+      selectedPhases: [],
     });
   };
 
@@ -645,23 +648,49 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
 
                   {!formData.applyToAllPhases && (
                     <div>
-                      <Label htmlFor="phaseSelect">Sélectionner une phase</Label>
-                      <Select value={formData.phase_id} onValueChange={(value) => setFormData({ ...formData, phase_id: value })}>
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="Choisir une phase" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border z-50">
-                          {currentPhases.length === 0 ? (
-                            <SelectItem value="" disabled>Aucune phase disponible</SelectItem>
-                          ) : (
-                            currentPhases.map((phase) => (
-                              <SelectItem key={phase.id} value={phase.id}>
-                                {phase.phase_name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="phaseSelect">Sélectionner une ou plusieurs phases</Label>
+                      <div className="border rounded-md p-3 max-h-48 overflow-y-auto bg-background">
+                        {currentPhases.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Aucune phase disponible</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {currentPhases.map((phase) => (
+                              <div key={phase.id} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`phase-${phase.id}`}
+                                  checked={formData.selectedPhases?.includes(phase.id) || false}
+                                  onChange={(e) => {
+                                    const selectedPhases = formData.selectedPhases || [];
+                                    if (e.target.checked) {
+                                      setFormData({
+                                        ...formData,
+                                        selectedPhases: [...selectedPhases, phase.id],
+                                        phase_id: phase.id // Keep single selection for backward compatibility
+                                      });
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        selectedPhases: selectedPhases.filter(id => id !== phase.id),
+                                        phase_id: selectedPhases.filter(id => id !== phase.id)[0] || ''
+                                      });
+                                    }
+                                  }}
+                                  className="rounded border-gray-300"
+                                />
+                                <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
+                                  {phase.phase_name}
+                                  {phase.construction_phase && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      ({phase.construction_phase})
+                                    </span>
+                                  )}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {currentPhases.length === 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases.
