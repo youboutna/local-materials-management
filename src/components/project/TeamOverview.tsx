@@ -8,10 +8,17 @@ import { useNavigate } from 'react-router-dom';
 
 interface TeamOverviewProps {
   resources: any[];
+  setResources?: (resources: any[]) => void;
   projectId: string;
+  phases?: any[];
 }
 
-const TeamOverview: React.FC<TeamOverviewProps> = ({ resources, projectId }) => {
+const TeamOverview: React.FC<TeamOverviewProps> = ({ 
+  resources, 
+  setResources, 
+  projectId, 
+  phases 
+}) => {
   const navigate = useNavigate();
   
   // Group resources by type

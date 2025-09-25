@@ -15,6 +15,9 @@ import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Ca
 
 interface EnhancedRiskManagerProps {
   projectId: string;
+  risks?: any[];
+  setRisks?: (risks: any[]) => void;
+  phases?: any[];
 }
 
 interface ProjectRisk {
@@ -88,7 +91,12 @@ interface RiskFormData {
   construction_phase: string;
 }
 
-const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) => {
+const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ 
+  projectId, 
+  risks: propRisks, 
+  setRisks: propSetRisks,
+  phases: propPhases 
+}) => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
@@ -108,8 +116,8 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
   
   const queryClient = useQueryClient();
 
-  // Fetch project risks
-  const { data: risks, isLoading } = useQuery({
+  // Use provided risks or fetch from database
+  const { data: fetchedRisks, isLoading } = useQuery({
     queryKey: ['enhanced-project-risks', projectId],
     queryFn: async (): Promise<ProjectRisk[]> => {
       const { data, error } = await supabase
@@ -121,8 +129,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !propRisks,
   });
+
+  // Use props or fallback to fetched data
+  const currentRisks = propRisks || fetchedRisks || [];
 
   // Fetch task assignments for this project (filtered by phase when selected)
   const { data: tasks = [] } = useQuery({
@@ -161,8 +172,11 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
         construction_phase: phase.construction_phase || undefined
       })) || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !propPhases,
   });
+
+  // Use props or fallback to fetched data
+  const currentPhases = propPhases || phases || [];
 
   // Fetch employees for risk ownership
   const { data: employees = [] } = useQuery({
@@ -205,12 +219,12 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
       const { data, error } = await supabase
         .from('risk_task_relations')
         .select('*')
-        .in('risk_id', (risks || []).map(r => r.id));
+        .in('risk_id', (currentRisks || []).map(r => r.id));
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!risks && risks.length > 0,
+    enabled: !!currentRisks && currentRisks.length > 0,
   });
 
   // Create risk mutation
@@ -460,7 +474,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
     return phase?.phase_name || 'Phase inconnue';
   };
 
-  const filteredRisks = risks?.filter(risk => {
+  const filteredRisks = currentRisks?.filter(risk => {
     if (selectedRiskLevel === 'all') return true;
     
     const probability = risk.probability_numeric || 0;
@@ -542,19 +556,19 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ projectId }) 
                       <SelectValue placeholder="Sélectionner une phase existante" />
                     </SelectTrigger>
                     <SelectContent>
-                      {phases.length === 0 && (
+                      {currentPhases.length === 0 && (
                         <SelectItem value="no_phases" disabled>
                           Aucune phase créée - Créez d'abord des phases
                         </SelectItem>
                       )}
-                      {phases.map((phase) => (
+                      {currentPhases.map((phase) => (
                         <SelectItem key={phase.id} value={phase.id}>
-                          {phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
+                          {phase.phase || phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {phases.length === 0 && (
+                  {currentPhases.length === 0 && (
                     <p className="text-xs text-destructive mt-1">
                       Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir créer des risques
                     </p>

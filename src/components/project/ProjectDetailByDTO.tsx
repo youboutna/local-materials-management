@@ -660,15 +660,30 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
-          <EnhancedTaskManager projectId={projectId!} />
+          <EnhancedTaskManager 
+            projectId={projectId!} 
+            tasks={tasks}
+            setTasks={setTasks}
+            phases={computedPhases}
+          />
         </TabsContent>
 
         <TabsContent value="risks" className="mt-6">
-          <EnhancedRiskManager projectId={projectId!} />
+          <EnhancedRiskManager 
+            projectId={projectId!} 
+            risks={risks}
+            setRisks={setRisks}
+            phases={computedPhases}
+          />
         </TabsContent>
 
         <TabsContent value="resources" className="mt-6">
-          <TeamOverview resources={resources} projectId={projectId!} />
+          <TeamOverview 
+            resources={resources} 
+            setResources={setResources}
+            projectId={projectId!} 
+            phases={computedPhases}
+          />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">

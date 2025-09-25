@@ -19,6 +19,9 @@ import {
 
 interface EnhancedTaskManagerProps {
   projectId: string;
+  tasks?: any[];
+  setTasks?: (tasks: any[]) => void;
+  phases?: any[];
 }
 
 interface TaskAssignmentExtended {
@@ -99,7 +102,12 @@ interface TaskFormData {
   critical_path: boolean;
 }
 
-const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) => {
+const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ 
+  projectId, 
+  tasks: propTasks, 
+  setTasks: propSetTasks,
+  phases: propPhases 
+}) => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string>('all');
@@ -128,8 +136,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
   
   const queryClient = useQueryClient();
 
-  // Fetch enhanced task assignments
-  const { data: tasks, isLoading } = useQuery({
+  // Use provided tasks or fetch from database
+  const { data: fetchedTasks, isLoading } = useQuery({
     queryKey: ['enhanced-task-assignments', projectId],
     queryFn: async (): Promise<TaskAssignmentExtended[]> => {
       const { data, error } = await supabase
@@ -141,8 +149,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !propTasks,
   });
+
+  // Use props or fallback to fetched data
+  const currentTasks = propTasks || fetchedTasks || [];
 
   // Fetch task dependencies
   const { data: dependencies = [] } = useQuery({
@@ -151,12 +162,12 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
       const { data, error } = await supabase
         .from('task_dependencies')
         .select('*')
-        .in('task_id', (tasks || []).map(t => t.id));
+        .in('task_id', (currentTasks || []).map(t => t.id));
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!tasks && tasks.length > 0,
+    enabled: !!currentTasks && currentTasks.length > 0,
   });
 
   // Fetch project phases (required for task creation)
@@ -175,8 +186,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
         construction_phase: phase.construction_phase || undefined
       })) || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !propPhases,
   });
+
+  // Use props or fallback to fetched data
+  const currentPhases = propPhases || phases || [];
 
   // Fetch employees for assignment
   const { data: employees = [] } = useQuery({
@@ -434,7 +448,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
     setIsCreating(true);
   };
 
-  const filteredTasks = tasks?.filter(task => {
+  const filteredTasks = currentTasks?.filter(task => {
     const phaseMatch = selectedPhase === 'all' || task.phase_id === selectedPhase;
     const statusMatch = selectedStatus === 'all' || task.status === selectedStatus;
     return phaseMatch && statusMatch;
@@ -547,19 +561,19 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
                       <SelectValue placeholder="Sélectionner une phase existante" />
                     </SelectTrigger>
                     <SelectContent>
-                      {phases.length === 0 && (
+                      {currentPhases.length === 0 && (
                         <SelectItem value="no_phases" disabled>
                           Aucune phase créée - Créez d'abord des phases
                         </SelectItem>
                       )}
-                      {phases.map((phase) => (
+                      {currentPhases.map((phase) => (
                         <SelectItem key={phase.id} value={phase.id}>
-                          {phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
+                          {phase.phase || phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {phases.length === 0 && (
+                  {currentPhases.length === 0 && (
                     <p className="text-xs text-destructive mt-1">
                       Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir créer des tâches
                     </p>
@@ -692,9 +706,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ projectId }) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les phases</SelectItem>
-                {phases.map((phase) => (
+                {currentPhases.map((phase) => (
                   <SelectItem key={phase.id} value={phase.id}>
-                    {phase.phase_name}
+                    {phase.phase || phase.phase_name}
                   </SelectItem>
                 ))}
               </SelectContent>
