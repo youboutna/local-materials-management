@@ -18,9 +18,8 @@ import {
   Clock,
   DollarSign
 } from 'lucide-react';
-import ProjectFormWithMap from './ProjectFormWithMap';
 import MaterialFormSection from '../MaterialFormSection';
-import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyManager';
+import UserSelector from '../selectors/UserSelector';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -45,58 +44,58 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const workflowSteps = [
     {
       id: 'basic',
-      title: 'Données Générales & GIS',
+      title: 'Informations Générales',
       icon: Building,
-      description: 'Informations de base du projet et géolocalisation',
+      description: 'Données de base du projet (titre, description, budget)',
       color: 'bg-blue-500'
     },
     {
       id: 'stakeholders',
       title: 'Parties Prenantes',
       icon: Users,
-      description: 'Identification et configuration des acteurs',
+      description: 'Configuration des acteurs et responsabilités',
       color: 'bg-green-500'
     },
     {
-      id: 'delegation',
-      title: 'Délégation & Responsabilités',
+      id: 'team',
+      title: 'Équipe & Contractants',
       icon: UserCheck,
-      description: 'Attribution des rôles et responsabilités',
+      description: 'Assignment des ressources humaines et fournisseurs',
       color: 'bg-orange-500'
     },
     {
-      id: 'resources',
-      title: 'Ressources & Organisation',
-      icon: Shield,
-      description: 'Matériaux, équipes et hiérarchie',
-      color: 'bg-purple-500'
-    },
-    {
       id: 'phases',
-      title: 'Phases & Étapes',
+      title: 'Phases & Planification',
       icon: Layers,
-      description: 'Planification des phases de réalisation',
+      description: 'Structure des phases et chronologie',
       color: 'bg-indigo-500'
     },
     {
       id: 'geolocation',
-      title: 'Géolocalisation Avancée',
+      title: 'Géolocalisation & Cartographie',
       icon: MapPin,
-      description: 'Cartographie détaillée et zones d\'intervention',
+      description: 'Localisation précise et délimitation des zones',
       color: 'bg-cyan-500'
     },
     {
+      id: 'resources',
+      title: 'Ressources & Matériaux',
+      icon: Shield,
+      description: 'Sélection des matériaux et organisation',
+      color: 'bg-purple-500'
+    },
+    {
       id: 'risks',
-      title: 'Analyse des Risques',
+      title: 'Gestion des Risques',
       icon: AlertTriangle,
-      description: 'Identification et mitigation des risques',
+      description: 'Analyse et mitigation des risques projet',
       color: 'bg-red-500'
     },
     {
       id: 'compliance',
-      title: 'Conformités & Réglementation',
+      title: 'Conformités & Validation',
       icon: FileCheck,
-      description: 'Respect des normes et réglementations',
+      description: 'Respect des normes et validation finale',
       color: 'bg-teal-500'
     }
   ];
@@ -171,23 +170,84 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="hidden" />
 
-        {/* Basic Project Data & GIS */}
+        {/* Basic Project Information */}
         <TabsContent value="basic">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5 text-blue-500" />
-                Données Générales & Géolocalisation
+                Informations Générales du Projet
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ProjectFormWithMap 
-                onSubmit={(data) => {
-                  handleStepComplete('basic');
-                  onSubmit(data);
-                }}
-                initialData={initialData}
-              />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Titre du projet *</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Nom du projet de construction"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Référence projet</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="PRJ-2024-001"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description *</label>
+                  <textarea 
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    rows={4}
+                    placeholder="Description détaillée du projet..."
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Budget (MRU) *</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="0"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Statut</label>
+                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <option value="Planning">Planification</option>
+                      <option value="InProgress">En cours</option>
+                      <option value="OnHold">En pause</option>
+                      <option value="Completed">Terminé</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Taille équipe</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="5"
+                      min="1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleStepComplete('basic')}>
+                    Valider les Informations
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -203,35 +263,73 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 border rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
-                    <h4 className="font-semibold mb-2 text-blue-800">Maître d'Ouvrage</h4>
-                    <p className="text-sm text-blue-600 mb-3">
-                      Entité commanditaire du projet
-                    </p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Configurer
-                    </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Acteurs Principaux</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Maître d'Ouvrage *</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Nom de l'entité commanditaire"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Maître d'Œuvre *</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Responsable de la réalisation technique"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Bureau de Contrôle</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Organisme de contrôle technique"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="p-4 border rounded-lg bg-gradient-to-br from-green-50 to-green-100">
-                    <h4 className="font-semibold mb-2 text-green-800">Maître d'Œuvre</h4>
-                    <p className="text-sm text-green-600 mb-3">
-                      Responsable de la réalisation technique
-                    </p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Configurer
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-purple-100">
-                    <h4 className="font-semibold mb-2 text-purple-800">Entrepreneurs</h4>
-                    <p className="text-sm text-purple-600 mb-3">
-                      Entreprises de construction et fournisseurs
-                    </p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Configurer
-                    </Button>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Contacts & Informations</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Contact Maître d'Ouvrage</label>
+                        <input 
+                          type="email" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="contact@maitre-ouvrage.com"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Contact Maître d'Œuvre</label>
+                        <input 
+                          type="email" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="contact@maitre-oeuvre.com"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Téléphone de Contact</label>
+                        <input 
+                          type="tel" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="+222 XX XX XX XX"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -245,67 +343,93 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Delegation */}
-        <TabsContent value="delegation">
+        {/* Team & Contractors */}
+        <TabsContent value="team">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-orange-500" />
-                Délégation et Responsabilités
+                Équipe & Contractants
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="h-4 w-4 text-blue-500" />
-                      <h4 className="font-semibold">Personnel Interne</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Employés responsables du suivi et de l'inspection
-                    </p>
-                    <div className="space-y-2">
-                      <Badge variant="outline">Chef de Projet</Badge>
-                      <Badge variant="outline">Inspecteur Qualité</Badge>
-                      <Badge variant="outline">Coordinateur HSE</Badge>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Équipe Interne</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Chef de Projet</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {}}
+                          label=""
+                          placeholder="Sélectionner le chef de projet"
+                          roleFilter={['manager', 'director', 'engineer']}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Inspecteur Qualité</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {}}
+                          label=""
+                          placeholder="Sélectionner l'inspecteur"
+                          roleFilter={['inspector', 'engineer']}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Coordinateur HSE</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {}}
+                          label=""
+                          placeholder="Sélectionner le coordinateur HSE"
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building className="h-4 w-4 text-green-500" />
-                      <h4 className="font-semibold">Bureaux d'Études</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Conseil technique et études spécialisées
-                    </p>
-                    <div className="space-y-2">
-                      <Badge variant="outline">Étude Géotechnique</Badge>
-                      <Badge variant="outline">Contrôle Technique</Badge>
-                      <Badge variant="outline">Assistance Maîtrise d'Œuvre</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className="h-4 w-4 text-purple-500" />
-                      <h4 className="font-semibold">Entreprises</h4>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Réalisation des travaux de construction
-                    </p>
-                    <div className="space-y-2">
-                      <Badge variant="outline">Gros Œuvre</Badge>
-                      <Badge variant="outline">Corps d'État</Badge>
-                      <Badge variant="outline">Finitions</Badge>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Contractants Externes</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Entrepreneur Principal</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Nom de l'entreprise principale"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Bureau d'Études Techniques</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Nom du bureau d'études"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Sous-traitants Spécialisés</label>
+                        <textarea 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows={3}
+                          placeholder="Liste des sous-traitants spécialisés..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('delegation')}>
-                    Valider la Délégation
+                  <Button onClick={() => handleStepComplete('team')}>
+                    Valider l'Équipe
                   </Button>
                 </div>
               </div>
@@ -313,28 +437,56 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Resources & Organization */}
+        {/* Resources & Materials */}
         <TabsContent value="resources">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-purple-500" />
-                Ressources & Organisation
+                Ressources & Matériaux
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Hiérarchie Organisationnelle</h3>
-                  <OrganizationalHierarchyManager />
-                </div>
-                
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Sélection des Matériaux</h3>
                   <MaterialFormSection
                     selectedMaterials={selectedMaterials}
                     onChange={onMaterialsChange}
                   />
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Organisation des Ressources</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Entrepôt Principal</label>
+                      <input 
+                        type="text" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="Adresse de l'entrepôt"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Capacité de Stockage (m³)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="1000"
+                        min="0"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Équipements Disponibles</label>
+                      <textarea 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        rows={3}
+                        placeholder="Liste des équipements disponibles..."
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -347,51 +499,82 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Phases & Steps */}
+        {/* Phases & Planning */}
         <TabsContent value="phases">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-indigo-500" />
-                Phases & Étapes de Réalisation
+                Phases & Planification
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Cette section sera automatiquement renseignée une fois le projet créé. 
-                  Vous pourrez ensuite définir les phases détaillées dans l'onglet "Phases" du projet.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 border rounded-lg bg-blue-50">
-                    <Clock className="h-8 w-8 text-blue-500 mb-2" />
-                    <h4 className="font-semibold text-blue-800">Planification</h4>
-                    <p className="text-sm text-blue-600">Définition des étapes</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Chronologie du Projet</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Date de Début *</label>
+                        <input 
+                          type="date" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Date de Fin Prévue *</label>
+                        <input 
+                          type="date" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Durée Estimée (mois)</label>
+                        <input 
+                          type="number" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="12"
+                          min="1"
+                        />
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="p-4 border rounded-lg bg-green-50">
-                    <Building className="h-8 w-8 text-green-500 mb-2" />
-                    <h4 className="font-semibold text-green-800">Préparation</h4>
-                    <p className="text-sm text-green-600">Mise en place du site</p>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg bg-orange-50">
-                    <Shield className="h-8 w-8 text-orange-500 mb-2" />
-                    <h4 className="font-semibold text-orange-800">Réalisation</h4>
-                    <p className="text-sm text-orange-600">Travaux de construction</p>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg bg-purple-50">
-                    <CheckCircle className="h-8 w-8 text-purple-500 mb-2" />
-                    <h4 className="font-semibold text-purple-800">Livraison</h4>
-                    <p className="text-sm text-purple-600">Finalisation et remise</p>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Phases Principales</h3>
+                    
+                    <div className="space-y-3">
+                      {[
+                        { name: 'Études & Conception', duration: '2 mois', status: 'planned' },
+                        { name: 'Préparation du Site', duration: '1 mois', status: 'planned' },
+                        { name: 'Fondations & Gros Œuvre', duration: '4 mois', status: 'planned' },
+                        { name: 'Second Œuvre', duration: '3 mois', status: 'planned' },
+                        { name: 'Finitions & Livraison', duration: '2 mois', status: 'planned' }
+                      ].map((phase, index) => (
+                        <div key={index} className="p-3 border rounded-lg bg-gray-50">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-medium">{phase.name}</h4>
+                              <p className="text-sm text-gray-600">Durée: {phase.duration}</p>
+                            </div>
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                              Planifiée
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 
                 <div className="flex justify-end">
                   <Button onClick={() => handleStepComplete('phases')}>
-                    Confirmer la Structure
+                    Valider la Planification
                   </Button>
                 </div>
               </div>
@@ -399,71 +582,292 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Advanced Geolocation */}
+        {/* Geolocation & Mapping */}
         <TabsContent value="geolocation">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-cyan-500" />
-                Géolocalisation Avancée
+                Géolocalisation & Cartographie
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                La géolocalisation de base est configurée dans les données générales. 
-                Cette section permet d'affiner la cartographie et les zones d'intervention.
-              </p>
-              
-              <div className="flex justify-end">
-                <Button onClick={() => handleStepComplete('geolocation')}>
-                  Valider la Géolocalisation
-                </Button>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Localisation du Projet</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Adresse Complète *</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Adresse du site de construction"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Latitude</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="18.0735"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Longitude</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="-15.9582"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Zone Administrative</label>
+                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                          <option value="">Sélectionner une zone</option>
+                          <option value="nouakchott">Nouakchott</option>
+                          <option value="nouadhibou">Nouadhibou</option>
+                          <option value="atar">Atar</option>
+                          <option value="zouerate">Zouérate</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Zones d'Intervention</h3>
+                    
+                    <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                      <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 mb-2">Carte Interactive</p>
+                      <p className="text-sm text-gray-500">
+                        Cliquez pour définir les zones de travail et délimiter le périmètre du projet
+                      </p>
+                      <Button variant="outline" className="mt-3">
+                        Ouvrir la Carte
+                      </Button>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Surface du Terrain (m²)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="1000"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleStepComplete('geolocation')}>
+                    Valider la Géolocalisation
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Risk Analysis */}
+        {/* Risk Management */}
         <TabsContent value="risks">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-500" />
-                Analyse des Risques
+                Gestion des Risques
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                L'analyse des risques sera disponible une fois le projet créé via la section "Risques" du projet.
-              </p>
-              
-              <div className="flex justify-end">
-                <Button onClick={() => handleStepComplete('risks')}>
-                  Confirmer l'Analyse
-                </Button>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Identification des Risques</h3>
+                    
+                    <div className="space-y-3">
+                      {[
+                        { type: 'Technique', risk: 'Difficultés géotechniques', level: 'Moyen' },
+                        { type: 'Financier', risk: 'Dépassement de budget', level: 'Élevé' },
+                        { type: 'Planning', risk: 'Retards de livraison', level: 'Moyen' },
+                        { type: 'Climatique', risk: 'Conditions météorologiques', level: 'Faible' }
+                      ].map((risk, index) => (
+                        <div key={index} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <Badge variant="outline">{risk.type}</Badge>
+                            <Badge variant={risk.level === 'Élevé' ? 'destructive' : risk.level === 'Moyen' ? 'default' : 'secondary'}>
+                              {risk.level}
+                            </Badge>
+                          </div>
+                          <p className="text-sm">{risk.risk}</p>
+                          <textarea 
+                            className="w-full mt-2 p-2 text-xs border rounded focus:ring-1 focus:ring-primary"
+                            placeholder="Plan de mitigation..."
+                            rows={2}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Nouveau Risque</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Type de Risque</label>
+                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                          <option value="">Sélectionner un type</option>
+                          <option value="technique">Technique</option>
+                          <option value="financier">Financier</option>
+                          <option value="planning">Planning</option>
+                          <option value="climatique">Climatique</option>
+                          <option value="reglementaire">Réglementaire</option>
+                          <option value="humain">Ressources Humaines</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Description du Risque</label>
+                        <textarea 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows={3}
+                          placeholder="Décrivez le risque identifié..."
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Niveau de Criticité</label>
+                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                          <option value="faible">Faible</option>
+                          <option value="moyen">Moyen</option>
+                          <option value="eleve">Élevé</option>
+                          <option value="critique">Critique</option>
+                        </select>
+                      </div>
+                      
+                      <Button variant="outline" className="w-full">
+                        Ajouter le Risque
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleStepComplete('risks')}>
+                    Valider l'Analyse des Risques
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Compliance */}
+        {/* Compliance & Validation */}
         <TabsContent value="compliance">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileCheck className="h-5 w-5 text-teal-500" />
-                Conformités & Réglementation
+                Conformités & Validation
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                La gestion des conformités sera disponible une fois le projet créé.
-              </p>
-              
-              <div className="flex justify-end">
-                <Button onClick={() => handleStepComplete('compliance')}>
-                  Valider les Conformités
-                </Button>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Documents Réglementaires</h3>
+                    
+                    <div className="space-y-3">
+                      {[
+                        { doc: 'Permis de Construire', required: true, status: 'pending' },
+                        { doc: 'Étude d\'Impact Environnemental', required: true, status: 'pending' },
+                        { doc: 'Autorisation de Voirie', required: false, status: 'pending' },
+                        { doc: 'Certificat d\'Urbanisme', required: true, status: 'pending' }
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <input type="checkbox" className="rounded border-gray-300" />
+                            <div>
+                              <p className="font-medium text-sm">{item.doc}</p>
+                              {item.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            En attente
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button variant="outline" className="w-full">
+                      Ajouter un Document
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Validation Finale</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="p-4 border rounded-lg bg-blue-50">
+                        <h4 className="font-semibold text-blue-800 mb-2">Récapitulatif du Projet</h4>
+                        <div className="space-y-1 text-sm text-blue-700">
+                          <p>• Informations générales: ✓</p>
+                          <p>• Parties prenantes: ✓</p>
+                          <p>• Équipe & contractants: ✓</p>
+                          <p>• Planification: ✓</p>
+                          <p>• Géolocalisation: ✓</p>
+                          <p>• Ressources: ✓</p>
+                          <p>• Gestion des risques: ✓</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <label className="text-sm">
+                            Je certifie que toutes les informations fournies sont exactes
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <label className="text-sm">
+                            J'accepte les termes et conditions du projet
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <label className="text-sm">
+                            Le projet respecte les normes environnementales
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => handleStepComplete('compliance')}>
+                    Sauvegarder comme Brouillon
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      handleStepComplete('compliance');
+                      // Submit final project
+                    }}
+                  >
+                    Créer le Projet
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
