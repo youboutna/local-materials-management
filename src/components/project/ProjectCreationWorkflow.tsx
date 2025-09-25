@@ -531,7 +531,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       {Object.entries(delegation).map(([role, id]) => (
                         <div key={role} className="flex justify-between">
                           <span className="capitalize">{role.replace('_', ' ')}:</span>
-                          <span className="text-muted-foreground">{id}</span>
+                          <span className="text-muted-foreground">{String(id)}</span>
                         </div>
                       ))}
                     </div>
