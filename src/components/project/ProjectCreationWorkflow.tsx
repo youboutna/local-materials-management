@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import MaterialFormSection from '../MaterialFormSection';
 import UserSelector from '../selectors/UserSelector';
+import EmployeeSelector from '../selectors/EmployeeSelector';
 import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
 import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyManager';
 import EnhancedInteractiveMap from '../projects/EnhancedInteractiveMap';
@@ -411,41 +412,41 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       Équipe Interne (Employés)
                     </h3>
                     
-                    <div className="space-y-4">
-                      <UserSelector
-                        value={delegation.maitre_oeuvre || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, maitre_oeuvre: userId}))}
-                        label="Maître d'Œuvre *"
-                        placeholder="Sélectionner le maître d'œuvre"
-                        roleFilter={['manager', 'director', 'engineer']}
-                        required
-                      />
-                      
-                      <UserSelector
-                        value={delegation.chef_projet || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, chef_projet: userId}))}
-                        label="Chef de Projet *"
-                        placeholder="Sélectionner le chef de projet"
-                        roleFilter={['manager', 'engineer']}
-                        required
-                      />
-                      
-                      <UserSelector
-                        value={delegation.responsable_qualite || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, responsable_qualite: userId}))}
-                        label="Responsable Qualité"
-                        placeholder="Sélectionner le responsable qualité"
-                        roleFilter={['inspector', 'engineer']}
-                      />
-                      
-                      <UserSelector
-                        value={delegation.coordinateur_hse || ""}
-                        onChange={(userId) => setDelegation(prev => ({...prev, coordinateur_hse: userId}))}
-                        label="Coordinateur HSE"
-                        placeholder="Sélectionner le coordinateur HSE"
-                        roleFilter={['inspector', 'manager']}
-                      />
-                    </div>
+                     <div className="space-y-4">
+                       <EmployeeSelector
+                         value={delegation.maitre_oeuvre || ""}
+                         onChange={(employeeId) => setDelegation(prev => ({...prev, maitre_oeuvre: employeeId}))}
+                         label="Maître d'Œuvre *"
+                         placeholder="Sélectionner le maître d'œuvre"
+                         positionFilter={['Manager', 'Director', 'Engineer', 'Project Manager']}
+                         required
+                       />
+                       
+                       <EmployeeSelector
+                         value={delegation.chef_projet || ""}
+                         onChange={(employeeId) => setDelegation(prev => ({...prev, chef_projet: employeeId}))}
+                         label="Chef de Projet *"
+                         placeholder="Sélectionner le chef de projet"
+                         positionFilter={['Project Manager', 'Engineer', 'Team Lead']}
+                         required
+                       />
+                       
+                       <EmployeeSelector
+                         value={delegation.responsable_qualite || ""}
+                         onChange={(employeeId) => setDelegation(prev => ({...prev, responsable_qualite: employeeId}))}
+                         label="Responsable Qualité"
+                         placeholder="Sélectionner le responsable qualité"
+                         positionFilter={['Quality Manager', 'Inspector', 'Engineer']}
+                       />
+                       
+                       <EmployeeSelector
+                         value={delegation.coordinateur_hse || ""}
+                         onChange={(employeeId) => setDelegation(prev => ({...prev, coordinateur_hse: employeeId}))}
+                         label="Coordinateur HSE"
+                         placeholder="Sélectionner le coordinateur HSE"
+                         positionFilter={['HSE Coordinator', 'Safety Manager', 'Inspector']}
+                       />
+                     </div>
                   </div>
                   
                   {/* External Team - Suppliers/Contractors */}
