@@ -279,13 +279,13 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">Maître d'Ouvrage *</label>
-                        <SimpleSupplierSelector
-                          value=""
-                          onChange={(supplierId) => {
-                            setStakeholders(prev => [...prev, { type: 'maitre_ouvrage', id: supplierId, source: 'supplier' }]);
-                          }}
-                          placeholder="Sélectionner l'entité commanditaire"
-                        />
+                      <SimpleSupplierSelector
+                        value=""
+                        onChange={(supplierId: string) => {
+                          setStakeholders(prev => [...prev, { type: 'maitre_ouvrage', id: supplierId, source: 'supplier' }]);
+                        }}
+                        placeholder="Sélectionner l'entité commanditaire"
+                      />
                       </div>
                       
                       <div>
@@ -393,7 +393,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       {stakeholders.map((stakeholder, index) => (
                         <div key={index} className="flex items-center justify-between bg-background p-2 rounded text-sm">
                           <span>
-                            {stakeholder.type.replace('_', ' ')} - {stakeholder.source === 'supplier' ? 'Fournisseur' : 'Employé'}
+                            {String(stakeholder.type).replace('_', ' ')} - {stakeholder.source === 'supplier' ? 'Fournisseur' : 'Employé'}
                           </span>
                           <Button
                             variant="ghost"
@@ -420,110 +420,260 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Team & Organizational Template */}
+        {/* Team & Delegation */}
         <TabsContent value="team">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-orange-500" />
-                Organogramme & Délégation de Réalisation
+                Équipe Interne & Délégation
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Organizational Template */}
-                  <div className="lg:col-span-2 space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Modèle Organisationnel
-                    </h3>
-                    
-                    <OrganizationalHierarchyManager />
-                  </div>
-                  
-                  {/* Delegation Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Internal Team - Employees */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Shield className="h-5 w-5" />
-                      Délégation de Réalisation
+                      <UserCheck className="h-5 w-5" />
+                      Équipe Interne (Employés)
                     </h3>
                     
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Délégué Maître d'Ouvrage</label>
-                        <UserSelector
-                          value={delegation.maitre_ouvrage || ""}
-                          onChange={(userId) => setDelegation(prev => ({ ...prev, maitre_ouvrage: userId }))}
-                          label=""
-                          placeholder="Sélectionner le délégué"
-                          roleFilter={['director', 'manager']}
-                        />
-                      </div>
+                      <UserSelector
+                        value={delegation.chef_equipe || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, chef_equipe: userId}))}
+                        label="Chef d'équipe *"
+                        placeholder="Sélectionner un chef d'équipe"
+                        roleFilter={['manager', 'director']}
+                        required
+                      />
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Délégué Technique</label>
-                        <UserSelector
-                          value={delegation.technique || ""}
-                          onChange={(userId) => setDelegation(prev => ({ ...prev, technique: userId }))}
-                          label=""
-                          placeholder="Sélectionner le délégué technique"
-                          roleFilter={['engineer', 'manager']}
-                        />
-                      </div>
+                      <UserSelector
+                        value={delegation.ingenieur || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, ingenieur: userId}))}
+                        label="Ingénieur responsable *"
+                        placeholder="Sélectionner un ingénieur"
+                        roleFilter={['engineer']}
+                        required
+                      />
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Délégué Financier</label>
-                        <UserSelector
-                          value={delegation.financier || ""}
-                          onChange={(userId) => setDelegation(prev => ({ ...prev, financier: userId }))}
-                          label=""
-                          placeholder="Sélectionner le délégué financier"
-                          roleFilter={['admin', 'manager']}
-                        />
-                      </div>
+                      <UserSelector
+                        value={delegation.inspecteur || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, inspecteur: userId}))}
+                        label="Inspecteur qualité"
+                        placeholder="Sélectionner un inspecteur"
+                        roleFilter={['inspector', 'engineer']}
+                      />
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Délégué Sécurité</label>
-                        <UserSelector
-                          value={delegation.securite || ""}
-                          onChange={(userId) => setDelegation(prev => ({ ...prev, securite: userId }))}
-                          label=""
-                          placeholder="Sélectionner le délégué sécurité"
-                        />
-                      </div>
+                      <UserSelector
+                        value={delegation.coordinateur_hse || ""}
+                        onChange={(userId) => setDelegation(prev => ({...prev, coordinateur_hse: userId}))}
+                        label="Coordinateur HSE"
+                        placeholder="Sélectionner un coordinateur HSE"
+                        roleFilter={['inspector', 'manager']}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* External Team - Suppliers/Contractors */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Building className="h-5 w-5" />
+                      Contractants & Fournisseurs
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <SimpleSupplierSelector
+                        value={delegation.contractant_principal || ""}
+                        onChange={(supplierId) => setDelegation(prev => ({...prev, contractant_principal: supplierId}))}
+                        placeholder="Sélectionner un contractant principal"
+                        label="Contractant Principal *"
+                      />
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Niveau de Délégation</label>
-                        <select 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          value={delegation.niveau || ""}
-                          onChange={(e) => setDelegation(prev => ({ ...prev, niveau: e.target.value }))}
-                        >
-                          <option value="">Sélectionner le niveau</option>
-                          <option value="operationnel">Opérationnel</option>
-                          <option value="strategique">Stratégique</option>
-                          <option value="total">Délégation Totale</option>
-                          <option value="partiel">Délégation Partielle</option>
-                        </select>
-                      </div>
+                      <SimpleSupplierSelector
+                        value={delegation.sous_traitant || ""}
+                        onChange={(supplierId) => setDelegation(prev => ({...prev, sous_traitant: supplierId}))}
+                        placeholder="Sélectionner un sous-traitant"
+                        label="Sous-traitant Principal"
+                      />
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Durée de Délégation</label>
+                      <SimpleSupplierSelector
+                        value={delegation.fournisseur_materiaux || ""}
+                        onChange={(supplierId) => setDelegation(prev => ({...prev, fournisseur_materiaux: supplierId}))}
+                        placeholder="Sélectionner un fournisseur"
+                        label="Fournisseur Matériaux *"
+                      />
+                      
+                      <SimpleSupplierSelector
+                        value={delegation.transporteur || ""}
+                        onChange={(supplierId) => setDelegation(prev => ({...prev, transporteur: supplierId}))}
+                        placeholder="Sélectionner un transporteur"
+                        label="Transporteur/Logistique"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Organizational Template */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Organogramme Temporel du Projet</h3>
+                  <div className="border rounded-lg p-4">
+                    <OrganizationalHierarchyManager />
+                  </div>
+                </div>
+                
+                {/* Delegation Summary */}
+                {Object.keys(delegation).length > 0 && (
+                  <div className="border rounded-lg p-4 bg-muted/50">
+                    <h4 className="font-medium mb-3">Résumé des Délégations:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      {Object.entries(delegation).map(([role, id]) => (
+                        <div key={role} className="flex justify-between">
+                          <span className="capitalize">{role.replace('_', ' ')}:</span>
+                          <span className="text-muted-foreground">{id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleStepComplete('team')}>
+                    Valider l'Équipe & Délégation
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Phases & Planning */}
+        <TabsContent value="phases">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-500" />
+                Phases & Planification - Méthodologie
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Méthodologies Disponibles:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="p-3 bg-background rounded border">
+                      <div className="font-medium text-blue-600">Standards Mauritaniens</div>
+                      <div className="text-muted-foreground">Normes nationales de construction</div>
+                    </div>
+                    <div className="p-3 bg-background rounded border">
+                      <div className="font-medium text-green-600">Cascade/Waterfall</div>
+                      <div className="text-muted-foreground">Approche séquentielle classique</div>
+                    </div>
+                    <div className="p-3 bg-background rounded border">
+                      <div className="font-medium text-purple-600">Phases Personnalisées</div>
+                      <div className="text-muted-foreground">Configuration sur mesure</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Use the existing ConstructionPhaseManager component */}
+                <div className="border rounded-lg p-4">
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Gestionnaire de phases sera intégré ici</p>
+                    <Button variant="outline" className="mt-2">Configurer les Phases</Button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => handleStepComplete('phases')}>
+                    Valider les Phases & Planification
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Geolocation & Mapping */}
+        <TabsContent value="geolocation">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-cyan-500" />
+                Géolocalisation & Cartographie
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Adresse du projet *</label>
+                    <textarea 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      rows={3}
+                      placeholder="Adresse complète du site de construction..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Coordonnées GPS</label>
+                      <div className="grid grid-cols-2 gap-2">
                         <input 
-                          type="date"
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          value={delegation.duree || ""}
-                          onChange={(e) => setDelegation(prev => ({ ...prev, duree: e.target.value }))}
+                          type="number" 
+                          className="w-full p-3 border rounded-lg"
+                          placeholder="Latitude"
+                          step="0.000001"
+                        />
+                        <input 
+                          type="number" 
+                          className="w-full p-3 border rounded-lg"
+                          placeholder="Longitude"
+                          step="0.000001"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Surface (m²)</label>
+                      <input 
+                        type="number" 
+                        className="w-full p-3 border rounded-lg"
+                        placeholder="Surface totale du projet"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Interactive Map - Use existing component */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-4">Carte Interactive & Localisation</h4>
+                  <div className="h-96 bg-muted rounded border flex items-center justify-center">
+                    <div className="text-center">
+                      <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">Carte interactive sera affichée ici</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Shape Tracing - Use existing component */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-4">Délimitation des Zones de Travail</h4>
+                  <div className="bg-muted/50 p-3 rounded mb-3 text-sm">
+                    <strong>Instructions:</strong> Utilisez les outils de traçage pour délimiter les zones de construction, stockage, et accès.
+                  </div>
+                  <div className="h-64 bg-background rounded border flex items-center justify-center">
+                    <div className="text-center">
+                      <Building className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground text-sm">Outils de traçage seront disponibles ici</p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('team')}>
-                    Valider l'Organisation
+                  <Button onClick={() => handleStepComplete('geolocation')}>
+                    Valider la Géolocalisation
                   </Button>
                 </div>
               </div>
@@ -593,183 +743,6 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Phases & Planning */}
-        <TabsContent value="phases">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-500" />
-                Phases & Planification
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Chronologie du Projet</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Date de Début *</label>
-                        <input 
-                          type="date" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          required
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Date de Fin Prévue *</label>
-                        <input 
-                          type="date" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          required
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Durée Estimée (mois)</label>
-                        <input 
-                          type="number" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="12"
-                          min="1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Phases Principales</h3>
-                    
-                    <div className="space-y-3">
-                      {[
-                        { name: 'Études & Conception', duration: '2 mois', status: 'planned' },
-                        { name: 'Préparation du Site', duration: '1 mois', status: 'planned' },
-                        { name: 'Fondations & Gros Œuvre', duration: '4 mois', status: 'planned' },
-                        { name: 'Second Œuvre', duration: '3 mois', status: 'planned' },
-                        { name: 'Finitions & Livraison', duration: '2 mois', status: 'planned' }
-                      ].map((phase, index) => (
-                        <div key={index} className="p-3 border rounded-lg bg-gray-50">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h4 className="font-medium">{phase.name}</h4>
-                              <p className="text-sm text-gray-600">Durée: {phase.duration}</p>
-                            </div>
-                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                              Planifiée
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('phases')}>
-                    Valider la Planification
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Geolocation & Mapping */}
-        <TabsContent value="geolocation">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-cyan-500" />
-                Géolocalisation & Cartographie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Localisation du Projet</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Adresse Complète *</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Adresse du site de construction"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Latitude</label>
-                          <input 
-                            type="text" 
-                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                            placeholder="18.0735"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Longitude</label>
-                          <input 
-                            type="text" 
-                            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                            placeholder="-15.9582"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Zone Administrative</label>
-                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                          <option value="">Sélectionner une zone</option>
-                          <option value="nouakchott">Nouakchott</option>
-                          <option value="nouadhibou">Nouadhibou</option>
-                          <option value="atar">Atar</option>
-                          <option value="zouerate">Zouérate</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Zones d'Intervention</h3>
-                    
-                    <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                      <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 mb-2">Carte Interactive</p>
-                      <p className="text-sm text-gray-500">
-                        Cliquez pour définir les zones de travail et délimiter le périmètre du projet
-                      </p>
-                      <Button variant="outline" className="mt-3">
-                        Ouvrir la Carte
-                      </Button>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Surface du Terrain (m²)</label>
-                      <input 
-                        type="number" 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="1000"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('geolocation')}>
-                    Valider la Géolocalisation
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Risk Management */}
         <TabsContent value="risks">
           <Card>
@@ -786,76 +759,49 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <h3 className="text-lg font-semibold">Identification des Risques</h3>
                     
                     <div className="space-y-3">
-                      {[
-                        { type: 'Technique', risk: 'Difficultés géotechniques', level: 'Moyen' },
-                        { type: 'Financier', risk: 'Dépassement de budget', level: 'Élevé' },
-                        { type: 'Planning', risk: 'Retards de livraison', level: 'Moyen' },
-                        { type: 'Climatique', risk: 'Conditions météorologiques', level: 'Faible' }
-                      ].map((risk, index) => (
-                        <div key={index} className="p-3 border rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <Badge variant="outline">{risk.type}</Badge>
-                            <Badge variant={risk.level === 'Élevé' ? 'destructive' : risk.level === 'Moyen' ? 'default' : 'secondary'}>
-                              {risk.level}
-                            </Badge>
+                      {['Technique', 'Financier', 'Climatique', 'Sécurité', 'Réglementaire'].map((category) => (
+                        <div key={category} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{category}</span>
+                            <Button variant="outline" size="sm">
+                              Ajouter Risque
+                            </Button>
                           </div>
-                          <p className="text-sm">{risk.risk}</p>
-                          <textarea 
-                            className="w-full mt-2 p-2 text-xs border rounded focus:ring-1 focus:ring-primary"
-                            placeholder="Plan de mitigation..."
-                            rows={2}
-                          />
                         </div>
                       ))}
                     </div>
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Nouveau Risque</h3>
+                    <h3 className="text-lg font-semibold">Stratégies de Mitigation</h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Type de Risque</label>
-                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                          <option value="">Sélectionner un type</option>
-                          <option value="technique">Technique</option>
-                          <option value="financier">Financier</option>
-                          <option value="planning">Planning</option>
-                          <option value="climatique">Climatique</option>
-                          <option value="reglementaire">Réglementaire</option>
-                          <option value="humain">Ressources Humaines</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Description du Risque</label>
+                        <label className="block text-sm font-medium mb-2">Plan de Contingence</label>
                         <textarea 
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                           rows={3}
-                          placeholder="Décrivez le risque identifié..."
+                          placeholder="Décrivez le plan de contingence..."
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Niveau de Criticité</label>
-                        <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                          <option value="faible">Faible</option>
-                          <option value="moyen">Moyen</option>
-                          <option value="eleve">Élevé</option>
-                          <option value="critique">Critique</option>
-                        </select>
+                        <label className="block text-sm font-medium mb-2">Budget Risques (%)</label>
+                        <input 
+                          type="number" 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="5"
+                          min="0"
+                          max="50"
+                        />
                       </div>
-                      
-                      <Button variant="outline" className="w-full">
-                        Ajouter le Risque
-                      </Button>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex justify-end">
                   <Button onClick={() => handleStepComplete('risks')}>
-                    Valider l'Analyse des Risques
+                    Valider la Gestion des Risques
                   </Button>
                 </div>
               </div>
@@ -876,88 +822,63 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Documents Réglementaires</h3>
+                    <h3 className="text-lg font-semibold">Conformités Réglementaires</h3>
                     
                     <div className="space-y-3">
                       {[
-                        { doc: 'Permis de Construire', required: true, status: 'pending' },
-                        { doc: 'Étude d\'Impact Environnemental', required: true, status: 'pending' },
-                        { doc: 'Autorisation de Voirie', required: false, status: 'pending' },
-                        { doc: 'Certificat d\'Urbanisme', required: true, status: 'pending' }
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <input type="checkbox" className="rounded border-gray-300" />
-                            <div>
-                              <p className="font-medium text-sm">{item.doc}</p>
-                              {item.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
-                            </div>
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            En attente
-                          </Badge>
+                        'Permis de construire',
+                        'Étude d\'impact environnemental',
+                        'Normes de sécurité',
+                        'Normes mauritaniennes',
+                        'Certification qualité'
+                      ].map((item) => (
+                        <div key={item} className="flex items-center space-x-2">
+                          <input type="checkbox" className="rounded" />
+                          <label className="text-sm">{item}</label>
                         </div>
                       ))}
                     </div>
-                    
-                    <Button variant="outline" className="w-full">
-                      Ajouter un Document
-                    </Button>
                   </div>
                   
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Validation Finale</h3>
                     
                     <div className="space-y-4">
-                      <div className="p-4 border rounded-lg bg-blue-50">
-                        <h4 className="font-semibold text-blue-800 mb-2">Récapitulatif du Projet</h4>
-                        <div className="space-y-1 text-sm text-blue-700">
-                          <p>• Informations générales: ✓</p>
-                          <p>• Parties prenantes: ✓</p>
-                          <p>• Équipe & contractants: ✓</p>
-                          <p>• Planification: ✓</p>
-                          <p>• Géolocalisation: ✓</p>
-                          <p>• Ressources: ✓</p>
-                          <p>• Gestion des risques: ✓</p>
-                        </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Notes de Validation</label>
+                        <textarea 
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows={4}
+                          placeholder="Notes et observations finales..."
+                        />
                       </div>
                       
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded border-gray-300" />
-                          <label className="text-sm">
-                            Je certifie que toutes les informations fournies sont exactes
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded border-gray-300" />
-                          <label className="text-sm">
-                            J'accepte les termes et conditions du projet
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded border-gray-300" />
-                          <label className="text-sm">
-                            Le projet respecte les normes environnementales
-                          </label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" />
+                        <label className="text-sm">
+                          Je confirme que toutes les informations sont exactes et complètes
+                        </label>
                       </div>
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex justify-between">
-                  <Button variant="outline" onClick={() => handleStepComplete('compliance')}>
+                  <Button variant="outline">
                     Sauvegarder comme Brouillon
                   </Button>
                   <Button 
-                    className="bg-green-600 hover:bg-green-700"
                     onClick={() => {
                       handleStepComplete('compliance');
-                      // Submit final project
+                      onSubmit({
+                        stakeholders,
+                        delegation,
+                        risks,
+                        compliance,
+                        selectedMaterials
+                      });
                     }}
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     Créer le Projet
                   </Button>
@@ -967,38 +888,6 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Navigation */}
-      <div className="flex justify-between items-center mt-8">
-        <Button 
-          variant="outline" 
-          onClick={() => {
-            const currentIndex = workflowSteps.findIndex(step => step.id === activeTab);
-            if (currentIndex > 0) {
-              setActiveTab(workflowSteps[currentIndex - 1].id);
-            }
-          }}
-          disabled={workflowSteps.findIndex(step => step.id === activeTab) === 0}
-        >
-          Précédent
-        </Button>
-        
-        <div className="text-sm text-gray-500">
-          Étape {workflowSteps.findIndex(step => step.id === activeTab) + 1} sur {workflowSteps.length}
-        </div>
-        
-        <Button 
-          onClick={() => {
-            const currentIndex = workflowSteps.findIndex(step => step.id === activeTab);
-            if (currentIndex < workflowSteps.length - 1) {
-              setActiveTab(workflowSteps[currentIndex + 1].id);
-            }
-          }}
-          disabled={workflowSteps.findIndex(step => step.id === activeTab) === workflowSteps.length - 1}
-        >
-          Suivant
-        </Button>
-      </div>
     </div>
   );
 };
