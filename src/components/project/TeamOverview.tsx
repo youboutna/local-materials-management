@@ -22,11 +22,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({ resources, projectId }) => 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Équipe et ressources</h3>
-        <Button onClick={() => navigate(`/projects/${projectId}/resources/new`)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle ressource
-        </Button>
+        <h3 className="text-lg font-semibold">Équipe et ressources (délégation publique)</h3>
+        <div className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span>👥 Employés</span>
+            <span>🏢 Consultants</span>
+            <span>🚧 Contractants</span>
+          </div>
+        </div>
       </div>
 
       {/* Human Resources */}
