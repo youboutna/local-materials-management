@@ -924,9 +924,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 </div>
               </div>
               
-              <div className="flex justify-end">
-                <Button onClick={() => handleStepComplete('resources')}>
-                  Valider les Ressources
+              <div className="flex justify-between pt-6">
+                <Button variant="outline" onClick={() => setActiveTab('geolocation')}>
+                  Précédent: Géolocalisation
+                </Button>
+                <Button onClick={() => {
+                  handleStepComplete('resources');
+                  setActiveTab('risks');
+                }}>
+                  Suivant: Gestion des Risques
                 </Button>
               </div>
             </CardContent>
@@ -989,9 +995,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                 </div>
                 
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('risks')}>
-                    Valider la Gestion des Risques
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setActiveTab('resources')}>
+                    Précédent: Ressources
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('risks');
+                    setActiveTab('compliance');
+                  }}>
+                    Suivant: Conformités
                   </Button>
                 </div>
               </div>
@@ -1053,10 +1065,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                 </div>
                 
-                <div className="flex justify-between">
-                  <Button variant="outline">
-                    Sauvegarder comme Brouillon
-                  </Button>
+                <div className="flex justify-between pt-6">
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setActiveTab('risks')}>
+                      Précédent: Risques
+                    </Button>
+                    <Button variant="outline">
+                      Sauvegarder comme Brouillon
+                    </Button>
+                  </div>
                   <Button 
                     onClick={() => {
                       handleStepComplete('compliance');
