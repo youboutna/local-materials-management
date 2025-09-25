@@ -20,6 +20,10 @@ import {
 } from 'lucide-react';
 import MaterialFormSection from '../MaterialFormSection';
 import UserSelector from '../selectors/UserSelector';
+import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
+import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyManager';
+import EnhancedInteractiveMap from '../projects/EnhancedInteractiveMap';
+import WarehouseShapeTracer from '../materials/WarehouseShapeTracer';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -264,74 +268,146 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             <CardContent>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Stakeholders from Suppliers */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Acteurs Principaux</h3>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Building className="h-5 w-5" />
+                      Fournisseurs & Entreprises
+                    </h3>
                     
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">Maître d'Ouvrage *</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Nom de l'entité commanditaire"
-                          required
+                        <SimpleSupplierSelector
+                          value=""
+                          onChange={(supplierId) => {
+                            setStakeholders(prev => [...prev, { type: 'maitre_ouvrage', id: supplierId, source: 'supplier' }]);
+                          }}
+                          placeholder="Sélectionner l'entité commanditaire"
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Maître d'Œuvre *</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Responsable de la réalisation technique"
-                          required
+                        <label className="block text-sm font-medium mb-2">Entrepreneur Principal *</label>
+                        <SimpleSupplierSelector
+                          value=""
+                          onChange={(supplierId) => {
+                            setStakeholders(prev => [...prev, { type: 'entrepreneur', id: supplierId, source: 'supplier' }]);
+                          }}
+                          placeholder="Sélectionner l'entrepreneur principal"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Bureau d'Études</label>
+                        <SimpleSupplierSelector
+                          value=""
+                          onChange={(supplierId) => {
+                            setStakeholders(prev => [...prev, { type: 'bureau_etudes', id: supplierId, source: 'supplier' }]);
+                          }}
+                          placeholder="Sélectionner le bureau d'études"
                         />
                       </div>
                       
                       <div>
                         <label className="block text-sm font-medium mb-2">Bureau de Contrôle</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Organisme de contrôle technique"
+                        <SimpleSupplierSelector
+                          value=""
+                          onChange={(supplierId) => {
+                            setStakeholders(prev => [...prev, { type: 'bureau_controle', id: supplierId, source: 'supplier' }]);
+                          }}
+                          placeholder="Sélectionner le bureau de contrôle"
                         />
                       </div>
                     </div>
                   </div>
                   
+                  {/* Stakeholders from Employees */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Contacts & Informations</h3>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <UserCheck className="h-5 w-5" />
+                      Équipe Interne & Délégation
+                    </h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Contact Maître d'Ouvrage</label>
-                        <input 
-                          type="email" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="contact@maitre-ouvrage.com"
+                        <label className="block text-sm font-medium mb-2">Maître d'Œuvre *</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {
+                            setStakeholders(prev => [...prev, { type: 'maitre_oeuvre', id: userId, source: 'employee' }]);
+                          }}
+                          label=""
+                          placeholder="Sélectionner le maître d'œuvre"
+                          roleFilter={['manager', 'director', 'engineer']}
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Contact Maître d'Œuvre</label>
-                        <input 
-                          type="email" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="contact@maitre-oeuvre.com"
+                        <label className="block text-sm font-medium mb-2">Chef de Projet</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {
+                            setStakeholders(prev => [...prev, { type: 'chef_projet', id: userId, source: 'employee' }]);
+                          }}
+                          label=""
+                          placeholder="Sélectionner le chef de projet"
+                          roleFilter={['manager', 'engineer']}
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Téléphone de Contact</label>
-                        <input 
-                          type="tel" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="+222 XX XX XX XX"
+                        <label className="block text-sm font-medium mb-2">Responsable Qualité</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {
+                            setStakeholders(prev => [...prev, { type: 'responsable_qualite', id: userId, source: 'employee' }]);
+                          }}
+                          label=""
+                          placeholder="Sélectionner le responsable qualité"
+                          roleFilter={['inspector', 'engineer']}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Coordinateur HSE</label>
+                        <UserSelector
+                          value=""
+                          onChange={(userId) => {
+                            setStakeholders(prev => [...prev, { type: 'coordinateur_hse', id: userId, source: 'employee' }]);
+                          }}
+                          label=""
+                          placeholder="Sélectionner le coordinateur HSE"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
+                
+                {/* Selected Stakeholders Summary */}
+                {stakeholders.length > 0 && (
+                  <div className="border rounded-lg p-4 bg-muted/50">
+                    <h4 className="font-medium mb-3">Parties Prenantes Sélectionnées:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {stakeholders.map((stakeholder, index) => (
+                        <div key={index} className="flex items-center justify-between bg-background p-2 rounded text-sm">
+                          <span>
+                            {stakeholder.type.replace('_', ' ')} - {stakeholder.source === 'supplier' ? 'Fournisseur' : 'Employé'}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setStakeholders(prev => prev.filter((_, i) => i !== index));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex justify-end">
                   <Button onClick={() => handleStepComplete('stakeholders')}>
@@ -343,84 +419,101 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Team & Contractors */}
+        {/* Team & Organizational Template */}
         <TabsContent value="team">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-orange-500" />
-                Équipe & Contractants
+                Organogramme & Délégation de Réalisation
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Équipe Interne</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Organizational Template */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Building className="h-5 w-5" />
+                      Modèle Organisationnel
+                    </h3>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Chef de Projet</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {}}
-                          label=""
-                          placeholder="Sélectionner le chef de projet"
-                          roleFilter={['manager', 'director', 'engineer']}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Inspecteur Qualité</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {}}
-                          label=""
-                          placeholder="Sélectionner l'inspecteur"
-                          roleFilter={['inspector', 'engineer']}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Coordinateur HSE</label>
-                        <UserSelector
-                          value=""
-                          onChange={(userId) => {}}
-                          label=""
-                          placeholder="Sélectionner le coordinateur HSE"
-                        />
-                      </div>
-                    </div>
+                    <OrganizationalHierarchyManager />
                   </div>
                   
+                  {/* Delegation Configuration */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Contractants Externes</h3>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Délégation de Réalisation
+                    </h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Entrepreneur Principal</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Nom de l'entreprise principale"
+                        <label className="block text-sm font-medium mb-2">Délégué Maître d'Ouvrage</label>
+                        <UserSelector
+                          value={delegation.maitre_ouvrage || ""}
+                          onChange={(userId) => setDelegation(prev => ({ ...prev, maitre_ouvrage: userId }))}
+                          label=""
+                          placeholder="Sélectionner le délégué"
+                          roleFilter={['director', 'manager']}
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Bureau d'Études Techniques</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          placeholder="Nom du bureau d'études"
+                        <label className="block text-sm font-medium mb-2">Délégué Technique</label>
+                        <UserSelector
+                          value={delegation.technique || ""}
+                          onChange={(userId) => setDelegation(prev => ({ ...prev, technique: userId }))}
+                          label=""
+                          placeholder="Sélectionner le délégué technique"
+                          roleFilter={['engineer', 'manager']}
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2">Sous-traitants Spécialisés</label>
-                        <textarea 
+                        <label className="block text-sm font-medium mb-2">Délégué Financier</label>
+                        <UserSelector
+                          value={delegation.financier || ""}
+                          onChange={(userId) => setDelegation(prev => ({ ...prev, financier: userId }))}
+                          label=""
+                          placeholder="Sélectionner le délégué financier"
+                          roleFilter={['admin', 'manager']}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Délégué Sécurité</label>
+                        <UserSelector
+                          value={delegation.securite || ""}
+                          onChange={(userId) => setDelegation(prev => ({ ...prev, securite: userId }))}
+                          label=""
+                          placeholder="Sélectionner le délégué sécurité"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Niveau de Délégation</label>
+                        <select 
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          rows={3}
-                          placeholder="Liste des sous-traitants spécialisés..."
+                          value={delegation.niveau || ""}
+                          onChange={(e) => setDelegation(prev => ({ ...prev, niveau: e.target.value }))}
+                        >
+                          <option value="">Sélectionner le niveau</option>
+                          <option value="operationnel">Opérationnel</option>
+                          <option value="strategique">Stratégique</option>
+                          <option value="total">Délégation Totale</option>
+                          <option value="partiel">Délégation Partielle</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Durée de Délégation</label>
+                        <input 
+                          type="date"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          value={delegation.duree || ""}
+                          onChange={(e) => setDelegation(prev => ({ ...prev, duree: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -429,7 +522,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 
                 <div className="flex justify-end">
                   <Button onClick={() => handleStepComplete('team')}>
-                    Valider l'Équipe
+                    Valider l'Organisation
                   </Button>
                 </div>
               </div>
