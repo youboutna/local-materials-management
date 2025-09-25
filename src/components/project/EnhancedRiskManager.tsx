@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building, AlertCircle } from 'lucide-react';
 
 interface EnhancedRiskManagerProps {
   projectId: string;
@@ -89,6 +90,7 @@ interface RiskFormData {
   related_tasks: string[];
   phase_id: string;
   construction_phase: string;
+  applyToAllPhases: boolean;
 }
 
 const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({ 
@@ -112,6 +114,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     related_tasks: [],
     phase_id: '',
     construction_phase: '',
+    applyToAllPhases: false,
   });
   
   const queryClient = useQueryClient();
@@ -328,6 +331,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
       related_tasks: [],
       phase_id: '',
       construction_phase: '',
+      applyToAllPhases: false,
     });
   };
 
@@ -367,7 +371,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     return { options, isConstructionPhase };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.risk_title.trim()) {
@@ -379,37 +383,80 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
       return;
     }
 
-    if (!formData.phase_id) {
+    if (!formData.applyToAllPhases && !formData.phase_id) {
       toast({
         title: "Erreur",
-        description: "Vous devez sélectionner une phase du projet.",
+        description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
         variant: "destructive",
       });
       return;
     }
 
-    const probability = parseFloat(formData.probability_numeric);
-    const impact = parseFloat(formData.impact_numeric);
-    const riskScore = probability * impact;
+    try {
+      const risksToCreate = [];
+      const probability = parseFloat(formData.probability_numeric) || 0;
+      const impact = parseFloat(formData.impact_numeric) || 0;
+      const riskScore = probability * impact;
 
-    const riskData: Partial<ProjectRisk> = {
-      project_id: projectId,
-      risk_title: formData.risk_title,
-      risk_description: formData.risk_description || null,
-      probability_numeric: probability || null,
-      impact_numeric: impact || null,
-      risk_score: riskScore || null,
-      mitigation_plan: formData.mitigation_plan || null,
-      status_new: formData.status_new,
-      owner_id: formData.owner_id || null,
-      due_date: formData.due_date || null,
-      phase_id: formData.phase_id,
-    };
+      if (formData.applyToAllPhases) {
+        // Create risk for each phase
+        currentPhases.forEach(phase => {
+          risksToCreate.push({
+            project_id: projectId,
+            risk_title: `${formData.risk_title} - ${phase.phase_name}`,
+            risk_description: formData.risk_description || null,
+            probability_numeric: probability,
+            impact_numeric: impact,
+            risk_score: riskScore,
+            mitigation_plan: formData.mitigation_plan || null,
+            status_new: formData.status_new,
+            owner_id: formData.owner_id || null,
+            due_date: formData.due_date || null,
+            phase_id: phase.id,
+          });
+        });
+      } else {
+        // Create single risk for selected phase
+        risksToCreate.push({
+          project_id: projectId,
+          risk_title: formData.risk_title,
+          risk_description: formData.risk_description || null,
+          probability_numeric: probability,
+          impact_numeric: impact,
+          risk_score: riskScore,
+          mitigation_plan: formData.mitigation_plan || null,
+          status_new: formData.status_new,
+          owner_id: formData.owner_id || null,
+          due_date: formData.due_date || null,
+          phase_id: formData.phase_id,
+        });
+      }
 
-    if (editingId) {
-      updateRiskMutation.mutate({ id: editingId, ...riskData });
-    } else {
-      createRiskMutation.mutate(riskData);
+      if (risksToCreate.length > 0) {
+        const { data, error } = await supabase
+          .from('project_risks')
+          .insert(risksToCreate as any)
+          .select();
+
+        if (error) throw error;
+
+        // Refresh risks
+        queryClient.invalidateQueries({ queryKey: ['enhanced-project-risks'] });
+        setIsCreating(false);
+        resetForm();
+
+        toast({
+          title: "Risque créé",
+          description: `${risksToCreate.length} risque(s) créé(s) avec succès.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating risk:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le risque.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -428,6 +475,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
         .map(rel => rel.task_id),
       phase_id: risk.phase_id || '',
       construction_phase: '',
+      applyToAllPhases: false,
     });
     setEditingId(risk.id);
     setIsCreating(true);
@@ -492,6 +540,22 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
     );
   }
 
+  if (currentPhases.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvée</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des risques.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with controls */}
@@ -499,38 +563,65 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
         <div>
           <h3 className="text-lg font-semibold">Gestion des risques</h3>
           <p className="text-sm text-muted-foreground">
-            Les risques sont systématiquement liés aux phases et tâches du projet
+            {filteredRisks.length} risque(s) • {currentPhases.length} phase(s)
           </p>
         </div>
         
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              resetForm();
-              setEditingId(null);
-            }} disabled={phases.length === 0}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau risque
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingId ? 'Modifier le risque' : 'Créer un nouveau risque'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="risk_title">Titre du risque *</Label>
-                  <Input
-                    id="risk_title"
-                    value={formData.risk_title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, risk_title: e.target.value }))}
-                    placeholder="Nom du risque"
-                    required
-                  />
+        <div className="flex flex-wrap gap-2">
+          <Select value={selectedRiskLevel} onValueChange={setSelectedRiskLevel}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Tous niveaux" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous niveaux</SelectItem>
+              <SelectItem value="Faible">Faible</SelectItem>
+              <SelectItem value="Moyen">Moyen</SelectItem>
+              <SelectItem value="Élevé">Élevé</SelectItem>
+              <SelectItem value="Très élevé">Très élevé</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau risque
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingId ? 'Modifier le risque' : 'Créer un nouveau risque'}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="risk_title">Titre du risque</Label>
+                    <Input
+                      id="risk_title"
+                      value={formData.risk_title}
+                      onChange={(e) => setFormData({ ...formData, risk_title: e.target.value })}
+                      placeholder="Nom du risque"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="status_new">Statut</Label>
+                    <Select value={formData.status_new} onValueChange={(value) => setFormData({ ...formData, status_new: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="identified">Identifié</SelectItem>
+                        <SelectItem value="monitoring">Surveillance</SelectItem>
+                        <SelectItem value="mitigated">Atténué</SelectItem>
+                        <SelectItem value="occurred">Survenu</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
@@ -538,342 +629,221 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                   <Textarea
                     id="risk_description"
                     value={formData.risk_description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, risk_description: e.target.value }))}
+                    onChange={(e) => setFormData({ ...formData, risk_description: e.target.value })}
                     placeholder="Description détaillée du risque"
                     rows={3}
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phase_id">Phase du projet *</Label>
-                  <Select 
-                    value={formData.phase_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, phase_id: value, owner_id: '', related_tasks: [] }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une phase existante" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentPhases.length === 0 && (
-                        <SelectItem value="no_phases" disabled>
-                          Aucune phase créée - Créez d'abord des phases
-                        </SelectItem>
-                      )}
-                      {currentPhases.map((phase) => (
-                        <SelectItem key={phase.id} value={phase.id}>
-                          {phase.phase || phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {currentPhases.length === 0 && (
-                    <p className="text-xs text-destructive mt-1">
-                      Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir créer des risques
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="applyToAllPhases"
+                      checked={formData.applyToAllPhases}
+                      onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
+                    />
+                    <Label htmlFor="applyToAllPhases">Appliquer à toutes les phases</Label>
+                  </div>
+
+                  {!formData.applyToAllPhases && (
+                    <div>
+                      <Label htmlFor="phaseSelect">Sélectionner une phase</Label>
+                      <Select value={formData.phase_id} onValueChange={(value) => setFormData({ ...formData, phase_id: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir une phase" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currentPhases.map((phase) => (
+                            <SelectItem key={phase.id} value={phase.id}>
+                              {phase.phase_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="owner_id">Responsable du risque (délégation publique)</Label>
-                  <Select 
-                    value={formData.owner_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, owner_id: value }))}
-                    disabled={!formData.phase_id || phases.length === 0}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner selon le contexte" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Non assigné</SelectItem>
-                      {(() => {
-                        const { options } = getOwnershipOptions();
-                        return options.map((category) => (
-                          <React.Fragment key={category.category}>
-                            <div className="px-2 py-1 text-xs font-medium text-muted-foreground border-b">
-                              {category.category}
-                            </div>
-                            {category.items.map((item) => (
-                              <SelectItem key={`${item.type}-${item.id}`} value={item.id}>
-                                {item.name} {item.subtitle && `- ${item.subtitle}`}
-                              </SelectItem>
-                            ))}
-                          </React.Fragment>
-                        ));
-                      })()}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(() => {
-                      const { isConstructionPhase } = getOwnershipOptions();
-                      return isConstructionPhase 
-                        ? "Phase construction → Privilégier contractants principaux"
-                        : "Phase pré-construction → Privilégier employés/consultants";
-                    })()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="probability_numeric">Probabilité (1-5)</Label>
-                  <Select value={formData.probability_numeric} onValueChange={(value) => setFormData(prev => ({ ...prev, probability_numeric: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 - Très faible</SelectItem>
-                      <SelectItem value="2">2 - Faible</SelectItem>
-                      <SelectItem value="3">3 - Moyen</SelectItem>
-                      <SelectItem value="4">4 - Élevé</SelectItem>
-                      <SelectItem value="5">5 - Très élevé</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="probability_numeric">Probabilité (1-5)</Label>
+                    <Input
+                      id="probability_numeric"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={formData.probability_numeric}
+                      onChange={(e) => setFormData({ ...formData, probability_numeric: e.target.value })}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="impact_numeric">Impact (1-5)</Label>
+                    <Input
+                      id="impact_numeric"
+                      type="number"
+                      min="1"
+                      max="5"
+                      value={formData.impact_numeric}
+                      onChange={(e) => setFormData({ ...formData, impact_numeric: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="impact_numeric">Impact (1-5)</Label>
-                  <Select value={formData.impact_numeric} onValueChange={(value) => setFormData(prev => ({ ...prev, impact_numeric: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 - Très faible</SelectItem>
-                      <SelectItem value="2">2 - Faible</SelectItem>
-                      <SelectItem value="3">3 - Moyen</SelectItem>
-                      <SelectItem value="4">4 - Élevé</SelectItem>
-                      <SelectItem value="5">5 - Très élevé</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="mitigation_plan">Plan d'atténuation</Label>
+                  <Textarea
+                    id="mitigation_plan"
+                    value={formData.mitigation_plan}
+                    onChange={(e) => setFormData({ ...formData, mitigation_plan: e.target.value })}
+                    placeholder="Stratégies pour atténuer ce risque"
+                    rows={3}
+                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="status_new">Statut</Label>
-                  <Select value={formData.status_new} onValueChange={(value) => setFormData(prev => ({ ...prev, status_new: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="identified">Identifié</SelectItem>
-                      <SelectItem value="monitoring">Surveillé</SelectItem>
-                      <SelectItem value="mitigated">Atténué</SelectItem>
-                      <SelectItem value="occurred">Survenu</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="owner_id">Responsable</Label>
+                    <Select value={formData.owner_id} onValueChange={(value) => setFormData({ ...formData, owner_id: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un responsable" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
+                        <SelectItem value="consulting_firms">Consulting Firms</SelectItem>
+                        <SelectItem value="main_contractor">Main Contractor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="due_date">Date d'échéance</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="mitigation_plan">Plan d'atténuation</Label>
-                <Textarea
-                  id="mitigation_plan"
-                  value={formData.mitigation_plan}
-                  onChange={(e) => setFormData(prev => ({ ...prev, mitigation_plan: e.target.value }))}
-                  placeholder="Stratégie pour atténuer ce risque"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="related_tasks">Tâches associées (phase sélectionnée)</Label>
-                <div className="border rounded-md p-2 max-h-32 overflow-y-auto">
-                  {!formData.phase_id ? (
-                    <p className="text-sm text-muted-foreground">Sélectionnez d'abord une phase</p>
-                  ) : tasks.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Aucune tâche dans cette phase - Créez des tâches d'abord
-                    </p>
-                  ) : (
-                    tasks.map((task) => (
-                      <div key={task.id} className="flex items-center space-x-2 py-1">
-                        <input
-                          type="checkbox"
-                          id={`task-${task.id}`}
-                          checked={formData.related_tasks.includes(task.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({
-                                ...prev,
-                                related_tasks: [...prev.related_tasks, task.id]
-                              }));
-                            } else {
-                              setFormData(prev => ({
-                                ...prev,
-                                related_tasks: prev.related_tasks.filter(id => id !== task.id)
-                              }));
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <label htmlFor={`task-${task.id}`} className="text-sm">
-                          {task.title || 'Tâche sans titre'}
-                        </label>
-                      </div>
-                    ))
-                  )}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    {editingId ? 'Mettre à jour' : 'Créer'}
+                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Les risques sont systématiquement liés aux tâches de la phase sélectionnée
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                  Annuler
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createRiskMutation.isPending || updateRiskMutation.isPending || !formData.phase_id}
-                >
-                  {editingId ? 'Mettre à jour' : 'Créer le risque'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Phase validation warning */}
-      {phases.length === 0 && (
-        <Card className="border-destructive bg-destructive/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              <p className="font-medium">Aucune phase créée</p>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir gérer les risques.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters */}
-      {phases.length > 0 && (
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <Label>Filtrer par niveau de risque</Label>
-            <Select value={selectedRiskLevel} onValueChange={setSelectedRiskLevel}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les niveaux</SelectItem>
-                <SelectItem value="Faible">Faible</SelectItem>
-                <SelectItem value="Moyen">Moyen</SelectItem>
-                <SelectItem value="Élevé">Élevé</SelectItem>
-                <SelectItem value="Très élevé">Très élevé</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      {/* Risks list */}
+      {/* Risks grid */}
       <div className="grid gap-4">
-        {filteredRisks.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-medium text-lg mb-2">Aucun risque</h3>
-              <p className="text-muted-foreground mb-4">
-                {phases.length === 0 
-                  ? "Créez d'abord des phases dans l'onglet 'Phases'"
-                  : "Commencez par identifier vos premiers risques"
-                }
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredRisks.map((risk) => (
-            <Card key={risk.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-4">
+        {filteredRisks.map((risk) => {
+          const probability = risk.probability_numeric || 0;
+          const impact = risk.impact_numeric || 0;
+          const riskLevel = getRiskLevel(probability, impact);
+          const riskColor = getRiskColor(probability, impact);
+          
+          return (
+            <Card key={risk.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-lg">{risk.risk_title}</h4>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {risk.risk_description}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
-                      {risk.phase_id && (
-                        <span className="flex items-center gap-1">
-                          <Building className="h-4 w-4" />
-                          {getPhaseName(risk.phase_id)}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold">{risk.risk_title}</h4>
+                      <Badge className={riskColor}>
+                        {riskLevel}
+                      </Badge>
+                      <Badge className={getStatusColor(risk.status_new || 'identified')}>
+                        {risk.status_new || 'Identified'}
+                      </Badge>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-2">{risk.risk_description}</p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                       <span className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
+                        <Building className="h-3 w-3" />
+                        {getPhaseName(risk.phase_id || '')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
                         {getOwnerName(risk.owner_id || '')}
                       </span>
                       {risk.due_date && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
+                          <Calendar className="h-3 w-3" />
                           {new Date(risk.due_date).toLocaleDateString()}
                         </span>
                       )}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {risk.probability_numeric && risk.impact_numeric && (
-                      <Badge className={getRiskColor(risk.probability_numeric, risk.impact_numeric)}>
-                        {getRiskLevel(risk.probability_numeric, risk.impact_numeric)}
-                      </Badge>
-                    )}
-                    <Badge className={getStatusColor(risk.status_new || 'identified')}>
-                      {risk.status_new === 'identified' ? 'Identifié' :
-                       risk.status_new === 'monitoring' ? 'Surveillé' :
-                       risk.status_new === 'mitigated' ? 'Atténué' : 'Survenu'}
-                    </Badge>
-                  </div>
-                </div>
-
-                {risk.probability_numeric && risk.impact_numeric && (
-                  <div className="mb-4">
-                    <div className="grid grid-cols-3 gap-4 text-sm">
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Probabilité:</span>
-                        <div className="font-medium">{risk.probability_numeric}/5</div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={probability * 20} className="h-2 flex-1" />
+                          <span className="text-xs">{probability}/5</span>
+                        </div>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Impact:</span>
-                        <div className="font-medium">{risk.impact_numeric}/5</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Score:</span>
-                        <div className="font-medium">{risk.risk_score || (risk.probability_numeric * risk.impact_numeric)}</div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={impact * 20} className="h-2 flex-1" />
+                          <span className="text-xs">{impact}/5</span>
+                        </div>
                       </div>
                     </div>
+                    
+                    {risk.mitigation_plan && (
+                      <div className="mt-3">
+                        <span className="text-xs text-muted-foreground">Plan d'atténuation:</span>
+                        <p className="text-sm mt-1">{risk.mitigation_plan}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {risk.mitigation_plan && (
-                  <div className="mb-4 p-3 bg-muted rounded-lg">
-                    <h5 className="font-medium text-sm mb-1">Plan d'atténuation:</h5>
-                    <p className="text-sm text-muted-foreground">{risk.mitigation_plan}</p>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(risk)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteRiskMutation.mutate(risk.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(risk)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteRiskMutation.mutate(risk.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
-          ))
+          );
+        })}
+        
+        {filteredRisks.length === 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucun risque trouvé</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Commencez par créer un nouveau risque pour ce projet.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

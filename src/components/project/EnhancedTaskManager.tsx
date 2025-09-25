@@ -100,6 +100,7 @@ interface TaskFormData {
   pessimistic_estimate: string;
   most_likely_estimate: string;
   critical_path: boolean;
+  applyToAllPhases: boolean;
 }
 
 const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ 
@@ -132,6 +133,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     pessimistic_estimate: '',
     most_likely_estimate: '',
     critical_path: false,
+    applyToAllPhases: false,
   });
   
   const queryClient = useQueryClient();
@@ -333,6 +335,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       pessimistic_estimate: '',
       most_likely_estimate: '',
       critical_path: false,
+      applyToAllPhases: false,
     });
   };
 
@@ -375,7 +378,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     return { options, defaultType };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title.trim()) {
@@ -387,40 +390,91 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       return;
     }
 
-    if (!formData.phase_id) {
+    if (!formData.applyToAllPhases && !formData.phase_id) {
       toast({
-        title: "Erreur",
-        description: "Vous devez sélectionner une phase du projet.",
+        title: "Erreur", 
+        description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
         variant: "destructive",
       });
       return;
     }
 
-    const taskData: Partial<TaskAssignmentExtended> = {
-      title: formData.title,
-      description: formData.description || null,
-      project_id: projectId,
-      phase_id: formData.phase_id,
-      assigned_to: formData.assigned_to || null,
-      due_date: formData.due_date || null,
-      priority: formData.priority,
-      status: formData.status,
-      notes: formData.notes || null,
-      estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
-      start_date: formData.start_date || null,
-      end_date: formData.end_date || null,
-      weight: formData.weight ? parseFloat(formData.weight) : 1,
-      cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
-      optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
-      pessimistic_estimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : null,
-      most_likely_estimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : null,
-      critical_path: formData.critical_path,
-    };
+    try {
+      const tasksToCreate = [];
 
-    if (editingId) {
-      updateTaskMutation.mutate({ id: editingId, ...taskData });
-    } else {
-      createTaskMutation.mutate(taskData);
+      if (formData.applyToAllPhases) {
+        // Create task for each phase
+        currentPhases.forEach(phase => {
+          tasksToCreate.push({
+            title: `${formData.title} - ${phase.phase_name}`,
+            description: formData.description || null,
+            project_id: projectId,
+            phase_id: phase.id,
+            assigned_to: formData.assigned_to || null,
+            due_date: formData.due_date || null,
+            priority: formData.priority,
+            status: formData.status,
+            notes: formData.notes || null,
+            estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
+            start_date: formData.start_date || null,
+            end_date: formData.end_date || null,
+            weight: formData.weight ? parseFloat(formData.weight) : 1,
+            cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
+            optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
+            pessimistic_estimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : null,
+            most_likely_estimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : null,
+            critical_path: formData.critical_path,
+          });
+        });
+      } else {
+        // Create single task for selected phase
+        tasksToCreate.push({
+          title: formData.title,
+          description: formData.description || null,
+          project_id: projectId,
+          phase_id: formData.phase_id,
+          assigned_to: formData.assigned_to || null,
+          due_date: formData.due_date || null,
+          priority: formData.priority,
+          status: formData.status,
+          notes: formData.notes || null,
+          estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : null,
+          start_date: formData.start_date || null,
+          end_date: formData.end_date || null,
+          weight: formData.weight ? parseFloat(formData.weight) : 1,
+          cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
+          optimistic_estimate: formData.optimistic_estimate ? parseInt(formData.optimistic_estimate) : null,
+          pessimistic_estimate: formData.pessimistic_estimate ? parseInt(formData.pessimistic_estimate) : null,
+          most_likely_estimate: formData.most_likely_estimate ? parseInt(formData.most_likely_estimate) : null,
+          critical_path: formData.critical_path,
+        });
+      }
+
+      if (tasksToCreate.length > 0) {
+        const { data, error } = await supabase
+          .from('task_assignments')
+          .insert(tasksToCreate as any)
+          .select();
+
+        if (error) throw error;
+
+        // Refresh tasks
+        queryClient.invalidateQueries({ queryKey: ['enhanced-task-assignments'] });
+        setIsCreating(false);
+        resetForm();
+
+        toast({
+          title: "Tâche créée",
+          description: `${tasksToCreate.length} tâche(s) créée(s) avec succès.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la tâche.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -443,6 +497,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       pessimistic_estimate: task.pessimistic_estimate?.toString() || '',
       most_likely_estimate: task.most_likely_estimate?.toString() || '',
       critical_path: task.critical_path || false,
+      applyToAllPhases: false,
     });
     setEditingId(task.id);
     setIsCreating(true);
@@ -497,6 +552,22 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     );
   }
 
+  if (currentPhases.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune phase trouvée</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des tâches.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with controls */}
@@ -504,337 +575,256 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         <div>
           <h3 className="text-lg font-semibold">Gestion des tâches</h3>
           <p className="text-sm text-muted-foreground">
-            Les tâches sont systématiquement liées aux phases du projet
+            {filteredTasks.length} tâche(s) • {currentPhases.length} phase(s)
           </p>
         </div>
         
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              resetForm();
-              setEditingId(null);
-            }} disabled={phases.length === 0}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle tâche
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingId ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <Label htmlFor="title">Titre de la tâche *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Nom de la tâche"
-                    required
-                  />
+        <div className="flex flex-wrap gap-2">
+          <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Toutes les phases" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les phases</SelectItem>
+              {currentPhases.map((phase) => (
+                <SelectItem key={phase.id} value={phase.id}>
+                  {phase.phase_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Tous statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="in_progress">En cours</SelectItem>
+              <SelectItem value="completed">Terminé</SelectItem>
+              <SelectItem value="blocked">Bloqué</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle tâche
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingId ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">Titre de la tâche</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Nom de la tâche"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="priority">Priorité</Label>
+                    <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Faible</SelectItem>
+                        <SelectItem value="medium">Moyenne</SelectItem>
+                        <SelectItem value="high">Élevée</SelectItem>
+                        <SelectItem value="urgent">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Description détaillée de la tâche"
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Description de la tâche"
                     rows={3}
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="phase_id">Phase du projet *</Label>
-                  <Select 
-                    value={formData.phase_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, phase_id: value, assigned_to: '' }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une phase existante" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currentPhases.length === 0 && (
-                        <SelectItem value="no_phases" disabled>
-                          Aucune phase créée - Créez d'abord des phases
-                        </SelectItem>
-                      )}
-                      {currentPhases.map((phase) => (
-                        <SelectItem key={phase.id} value={phase.id}>
-                          {phase.phase || phase.phase_name} {phase.construction_phase && `(${phase.construction_phase})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {currentPhases.length === 0 && (
-                    <p className="text-xs text-destructive mt-1">
-                      Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir créer des tâches
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="applyToAllPhases"
+                      checked={formData.applyToAllPhases}
+                      onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
+                    />
+                    <Label htmlFor="applyToAllPhases">Appliquer à toutes les phases</Label>
+                  </div>
+
+                  {!formData.applyToAllPhases && (
+                    <div>
+                      <Label htmlFor="phaseSelect">Sélectionner une phase</Label>
+                      <Select value={formData.phase_id} onValueChange={(value) => setFormData({ ...formData, phase_id: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir une phase" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currentPhases.map((phase) => (
+                            <SelectItem key={phase.id} value={phase.id}>
+                              {phase.phase_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="assigned_to">Assigné à (délégation publique)</Label>
-                  <Select 
-                    value={formData.assigned_to} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, assigned_to: value }))}
-                    disabled={!formData.phase_id || phases.length === 0}
-                  >
+                  <Label htmlFor="assignedTo">Assigné à</Label>
+                  <Select value={formData.assigned_to} onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner selon le contexte" />
+                      <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unassigned">Non assigné</SelectItem>
-                      {(() => {
-                        const { options } = getAssignmentOptions();
-                        return options.map((category) => (
-                          <React.Fragment key={category.category}>
-                            <div className="px-2 py-1 text-xs font-medium text-muted-foreground border-b">
-                              {category.category}
-                            </div>
-                            {category.items.map((item) => (
-                              <SelectItem key={`${item.type}-${item.id}`} value={item.id}>
-                                {item.name} {item.subtitle && `- ${item.subtitle}`}
-                              </SelectItem>
-                            ))}
-                          </React.Fragment>
-                        ));
-                      })()}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(() => {
-                      const selectedPhaseData = phases.find(p => p.id === formData.phase_id);
-                      const isConstructionPhase = selectedPhaseData?.construction_phase && 
-                        ['foundation', 'structure', 'finishing', 'utilities'].includes(selectedPhaseData.construction_phase);
-                      return isConstructionPhase 
-                        ? "Phase construction → Privilégier contractants principaux"
-                        : "Phase pré-construction → Privilégier employés/consultants";
-                    })()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="priority">Priorité</Label>
-                  <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Faible</SelectItem>
-                      <SelectItem value="medium">Moyenne</SelectItem>
-                      <SelectItem value="high">Élevée</SelectItem>
-                      <SelectItem value="urgent">Urgente</SelectItem>
+                      <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
+                      <SelectItem value="consulting_firms">Consulting Firms</SelectItem>
+                      <SelectItem value="main_contractor">Main Contractor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">En attente</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminée</SelectItem>
-                      <SelectItem value="blocked">Bloquée</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="due_date">Date d'échéance</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={formData.due_date}
+                      onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="status">Statut</Label>
+                    <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">En attente</SelectItem>
+                        <SelectItem value="in_progress">En cours</SelectItem>
+                        <SelectItem value="completed">Terminé</SelectItem>
+                        <SelectItem value="blocked">Bloqué</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="due_date">Date d'échéance</Label>
-                  <Input
-                    id="due_date"
-                    type="date"
-                    value={formData.due_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
-                  />
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    {editingId ? 'Mettre à jour' : 'Créer'}
+                  </Button>
                 </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                  Annuler
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createTaskMutation.isPending || updateTaskMutation.isPending || !formData.phase_id}
-                >
-                  {editingId ? 'Mettre à jour' : 'Créer la tâche'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Phase validation warning */}
-      {phases.length === 0 && (
-        <Card className="border-destructive bg-destructive/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              <p className="font-medium">Aucune phase créée</p>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Vous devez créer des phases dans l'onglet "Phases" avant de pouvoir gérer les tâches.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters */}
-      {phases.length > 0 && (
-        <div className="flex flex-wrap gap-4">
-          <div>
-            <Label>Filtrer par phase</Label>
-            <Select value={selectedPhase} onValueChange={setSelectedPhase}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les phases</SelectItem>
-                {currentPhases.map((phase) => (
-                  <SelectItem key={phase.id} value={phase.id}>
-                    {phase.phase || phase.phase_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Filtrer par statut</Label>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="completed">Terminée</SelectItem>
-                <SelectItem value="blocked">Bloquée</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      {/* Tasks list */}
+      {/* Tasks grid */}
       <div className="grid gap-4">
-        {filteredTasks.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-medium text-lg mb-2">Aucune tâche</h3>
-              <p className="text-muted-foreground mb-4">
-                {phases.length === 0 
-                  ? "Créez d'abord des phases dans l'onglet 'Phases'"
-                  : "Commencez par créer votre première tâche"
-                }
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-lg">{task.title}</h4>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {task.description}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
-                      <span className="flex items-center gap-1">
-                        <Layers className="h-4 w-4" />
-                        {getPhaseName(task.phase_id || '')}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        {getAssigneeName(task.assigned_to || '')}
-                      </span>
-                      {task.due_date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(task.due_date).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
+        {filteredTasks.map((task) => (
+          <Card key={task.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-semibold">{task.title}</h4>
                     <Badge className={getPriorityColor(task.priority || 'medium')}>
-                      {task.priority === 'urgent' ? 'Urgente' : 
-                       task.priority === 'high' ? 'Élevée' :
-                       task.priority === 'low' ? 'Faible' : 'Moyenne'}
+                      {task.priority || 'Medium'}
                     </Badge>
                     <Badge className={getStatusColor(task.status || 'pending')}>
-                      {task.status === 'pending' ? 'En attente' :
-                       task.status === 'in_progress' ? 'En cours' :
-                       task.status === 'completed' ? 'Terminée' : 'Bloquée'}
+                      {task.status || 'Pending'}
                     </Badge>
                   </div>
-                </div>
-
-                {task.progress !== null && (
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Progression</span>
-                      <span>{task.progress}%</span>
-                    </div>
-                    <Progress value={task.progress} className="h-2" />
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    {task.cost_estimate && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {task.cost_estimate} MRU
-                      </Badge>
-                    )}
-                    {task.critical_path && (
-                      <Badge variant="destructive">
-                        Chemin critique
-                      </Badge>
+                  
+                  <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                  
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Layers className="h-3 w-3" />
+                      {getPhaseName(task.phase_id || '')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {getAssigneeName(task.assigned_to || '')}
+                    </span>
+                    {task.due_date && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </span>
                     )}
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(task)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteTaskMutation.mutate(task.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {task.progress !== null && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Progression</span>
+                        <span>{task.progress}%</span>
+                      </div>
+                      <Progress value={task.progress} className="h-2" />
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))
+                
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEdit(task)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteTaskMutation.mutate(task.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        
+        {filteredTasks.length === 0 && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <Target className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">Aucune tâche trouvée</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Commencez par créer une nouvelle tâche pour ce projet.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
