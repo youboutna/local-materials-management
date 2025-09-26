@@ -375,7 +375,6 @@ const ProjectEdit = () => {
                   materials: selectedMaterials
                 }}
                 onSubmit={handleFormSubmit}
-                onFormDataChange={handleFormSubmit}
               />
             </div>
           </motion.div>

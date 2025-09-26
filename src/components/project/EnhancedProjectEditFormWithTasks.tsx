@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectService } from '@/services/ProjectService';
+import { ProjectRepository } from '@/services/ProjectRepository';
 import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 import { PhaseService, PhaseData } from '@/services/phaseService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,6 +76,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
 
   // Initialize ProjectService
   const projectService = useMemo(() => new ProjectService(), []);
+  const projectRepository = useMemo(() => new ProjectRepository(), []);
 
   // Update form data when initialData changes (from parent)
   useEffect(() => {
@@ -383,9 +385,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
           // Only include dates if they have valid values
           ...(formData.startDate && { startDate: formData.startDate }),
           ...(formData.endDate && { endDate: formData.endDate }),
-          location: typeof formData.location === 'string' ? formData.location : (formData.location?.address || ''),
-          // Map status to database format
-          status: mapStatusToDB(formData.status || 'planning')
+          location: typeof formData.location === 'string' ? formData.location : (formData.location?.address || '')
         };
         await projectService.updateProject(projectId, partial);
         setOriginalFormData((prev: any) => ({ ...prev, ...partial }));
@@ -460,14 +460,13 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
       setIsSaving(true);
       // Map status to database format before saving
       const dbStatus = mapStatusToDB(newStatus);
-      await projectService.updateProject(projectId, { ...formData, status: dbStatus });
-      // Update form data with the new status
+      await projectRepository.update(projectId, { status: dbStatus });
+      // Update form data with the new status, stay on page
       updateFormData({ status: newStatus });
       toast({
         title: "Statut mis à jour",
         description: `Le statut du projet a été changé vers: ${newStatus}`,
       });
-      navigate(`/projects/${projectId}`);
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -478,7 +477,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, projectService, formData, toast, navigate]);
+  }, [projectId, projectService, formData, toast]);
 
   // Handle step navigation with auto-save
   const handleStepChange = useCallback(async (newStep: number) => {
