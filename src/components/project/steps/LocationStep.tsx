@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import LocationSelector from '@/components/location/LocationSelector';
+import InteractiveMapGIS from '../../materials/InteractiveMapGIS';
 
 interface LocationStepProps {
   formData: any;
@@ -38,7 +38,10 @@ const LocationStep: React.FC<LocationStepProps> = ({
           <div>
             <label className="block text-sm font-medium mb-4">Localisation précise et délimitation</label>
             <div className="border rounded-lg overflow-hidden">
-              <LocationSelector
+              <InteractiveMapGIS
+                title="Géolocalisation du Projet"
+                description="Sélectionnez l'emplacement et tracez la zone de travail"
+                allowPolygon={true}
                 value={formData.facilitiesLocation}
                 onChange={(locationData) => {
                   onUpdate({ facilitiesLocation: locationData });

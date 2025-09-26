@@ -2,6 +2,8 @@ import React from 'react';
 import { Building } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import EmployeeSelector from '../../selectors/EmployeeSelector';
+import SimpleSupplierSelector from '../../selectors/SimpleSupplierSelector';
 
 interface ProjectInfoStepProps {
   formData: any;
@@ -77,7 +79,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner le type de marché" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
                   <SelectItem value="public">Marché public</SelectItem>
                   <SelectItem value="private">Marché privé</SelectItem>
                   <SelectItem value="ppp">Partenariat public-privé (PPP)</SelectItem>
@@ -85,6 +87,15 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                   <SelectItem value="delegation">Délégation de service public</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <EmployeeSelector
+                label="Chef de projet"
+                value={formData.project_manager_id || ''}
+                onChange={(employeeId) => onUpdate({ project_manager_id: employeeId })}
+                placeholder="Sélectionner le chef de projet"
+                departmentFilter={['management', 'engineering']}
+              />
             </div>
           </div>
 
@@ -95,7 +106,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner le mode" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
                   <SelectItem value="open">Appel d'offres ouvert</SelectItem>
                   <SelectItem value="restricted">Appel d'offres restreint</SelectItem>
                   <SelectItem value="negotiated">Procédure négociée</SelectItem>
@@ -110,7 +121,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner la source" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
                   <SelectItem value="budget_state">Budget de l'État</SelectItem>
                   <SelectItem value="budget_local">Budget collectivité locale</SelectItem>
                   <SelectItem value="eu_funds">Fonds européens</SelectItem>
@@ -161,7 +172,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50">
+                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
                   <SelectItem value="planning">En planification</SelectItem>
                   <SelectItem value="en cours">En cours</SelectItem>
                   <SelectItem value="suspendu">Suspendu</SelectItem>
