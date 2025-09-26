@@ -16,7 +16,7 @@ import Footer from '@/components/Footer';
 import { PhaseService } from '@/services/phaseService';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 import { Building, Users, UserCheck, Shield } from 'lucide-react';
-import EnhancedProjectEditFormWithTasks from '../components/project/EnhancedProjectEditFormWithTasks';
+import EnhancedProjectEditForm from '../components/project/EnhancedProjectEditForm';
 
 
 // Add interface for selected materials
@@ -369,7 +369,7 @@ const ProjectEdit = () => {
             <div className="bg-white rounded-xl shadow-mobile card-responsive">
               <h1 className="heading-responsive font-serif text-adrar-800 mb-4 sm:mb-6">{t("projects.edit.title")}</h1>
               
-              <EnhancedProjectEditFormWithTasks 
+              <EnhancedProjectEditForm 
                 initialData={{
                   ...initialData,
                   materials: selectedMaterials
