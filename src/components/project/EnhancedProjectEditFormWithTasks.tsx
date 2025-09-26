@@ -12,10 +12,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import {
   Building, Users, Calendar, MapPin, AlertTriangle, FileText, Package,
   Plus, Edit2, Trash2, Save, Settings, Clock, DollarSign, Upload,
-  User, Phone, Mail, Building2, UserCheck, Layers, Target
+  User, Phone, Mail, Building2, UserCheck, Layers, Target, Shield,
+  FileCheck, CheckCircle
 } from 'lucide-react';
 
 // Import existing components
@@ -45,6 +47,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   const [activeTab, setActiveTab] = useState('basic');
   const [formData, setFormData] = useState(initialData || {});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
   // Dialog states
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
@@ -58,11 +61,83 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     }
   }, [initialData]);
 
+  // Define workflow steps
+  const workflowSteps = [
+    {
+      id: 'basic',
+      title: 'Informations Générales',
+      icon: Building,
+      description: 'Données de base du projet (titre, description, budget)',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 'stakeholders',
+      title: 'Parties Prenantes',
+      icon: Users,
+      description: 'Configuration des acteurs et responsabilités',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'team',
+      title: 'Équipe & Contractants',
+      icon: UserCheck,
+      description: 'Assignment des ressources humaines et fournisseurs',
+      color: 'bg-orange-500'
+    },
+    {
+      id: 'phases',
+      title: 'Phases & Planification',
+      icon: Layers,
+      description: 'Structure des phases et chronologie',
+      color: 'bg-indigo-500'
+    },
+    {
+      id: 'geolocation',
+      title: 'Géolocalisation & Cartographie',
+      icon: MapPin,
+      description: 'Localisation précise et délimitation des zones',
+      color: 'bg-cyan-500'
+    },
+    {
+      id: 'resources',
+      title: 'Ressources & Matériaux',
+      icon: Shield,
+      description: 'Sélection des matériaux et organisation',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'risks',
+      title: 'Gestion des Risques',
+      icon: AlertTriangle,
+      description: 'Analyse et mitigation des risques projet',
+      color: 'bg-red-500'
+    },
+    {
+      id: 'compliance',
+      title: 'Conformités & Validation',
+      icon: FileCheck,
+      description: 'Respect des normes et validation finale',
+      color: 'bg-teal-500'
+    }
+  ];
+
   const updateFormData = (updates: any) => {
     const newData = { ...formData, ...updates };
     setFormData(newData);
     onFormDataChange?.(newData);
   };
+
+  const getStepProgress = () => {
+    return (completedSteps.length / workflowSteps.length) * 100;
+  };
+
+  const handleStepComplete = (stepId: string) => {
+    if (!completedSteps.includes(stepId)) {
+      setCompletedSteps([...completedSteps, stepId]);
+    }
+  };
+
+  const isStepCompleted = (stepId: string) => completedSteps.includes(stepId);
 
   // Save current step data before switching
   const saveCurrentStep = () => {
@@ -150,55 +225,59 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Left Sidebar */}
-        <div className="w-64 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={activeTab === "basic" ? "default" : "outline"}
-              onClick={() => handleTabChange("basic")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <Building className="h-6 w-6 text-blue-500" />
-              <div className="text-center">
-                <div className="font-medium">Informations</div>
-                <div className="font-medium">Générales</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "stakeholders" ? "default" : "outline"}
-              onClick={() => handleTabChange("stakeholders")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <Users className="h-6 w-6 text-green-500" />
-              <div className="text-center">
-                <div className="font-medium">Parties</div>
-                <div className="font-medium">Prenantes</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "geolocation" ? "default" : "outline"}
-              onClick={() => handleTabChange("geolocation")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <MapPin className="h-6 w-6 text-cyan-500" />
-              <div className="text-center">
-                <div className="font-medium">Géolocalisation</div>
-                <div className="font-medium">& Cartographie</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "resources" ? "default" : "outline"}
-              onClick={() => handleTabChange("resources")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <Package className="h-6 w-6 text-purple-500" />
-              <div className="text-center">
-                <div className="font-medium">Resources</div>
-                <div className="font-medium">& Matériaux</div>
-              </div>
-            </Button>
+      {/* Progress Overview */}
+      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-serif text-primary">
+              Édition du Projet
+            </CardTitle>
+            <Badge variant="outline" className="text-sm">
+              {completedSteps.length}/{workflowSteps.length} étapes
+            </Badge>
           </div>
+          <Progress value={getStepProgress()} className="h-2" />
+        </CardHeader>
+      </Card>
+
+      <div className="flex gap-6">
+        {/* Left Sidebar Steps */}
+        <div className="w-80 space-y-3">
+          {workflowSteps.map((step) => {
+            const Icon = step.icon;
+            const isCompleted = isStepCompleted(step.id);
+            const isActive = activeTab === step.id;
+            
+            return (
+              <motion.div
+                key={step.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card 
+                  className={`cursor-pointer transition-all duration-200 ${
+                    isActive ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
+                  } ${isCompleted ? 'border-green-500 bg-green-50' : ''}`}
+                  onClick={() => handleTabChange(step.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-full ${step.color} text-white relative flex-shrink-0`}>
+                        <Icon className="h-5 w-5" />
+                        {isCompleted && (
+                          <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 text-white rounded-full" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">{step.title}</h3>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Main Content Area */}
@@ -506,7 +585,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
+                  <Shield className="h-5 w-5" />
                   Ressources & Matériaux
                 </CardTitle>
               </CardHeader>
@@ -518,81 +597,131 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
               </CardContent>
             </Card>
           )}
-        </div>
 
-        {/* Right Sidebar */}
-        <div className="w-64 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={activeTab === "phases" ? "default" : "outline"}
-              onClick={() => handleTabChange("phases")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <Calendar className="h-6 w-6 text-orange-500" />
-              <div className="text-center">
-                <div className="font-medium">Équipe</div>
-                <div className="font-medium">& Contractants</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "risks" ? "default" : "outline"}
-              onClick={() => handleTabChange("risks")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <AlertTriangle className="h-6 w-6 text-red-500" />
-              <div className="text-center">
-                <div className="font-medium">Gestion</div>
-                <div className="font-medium">des Risques</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "planning" ? "default" : "outline"}
-              onClick={() => handleTabChange("planning")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <Layers className="h-6 w-6 text-indigo-500" />
-              <div className="text-center">
-                <div className="font-medium">Phases</div>
-                <div className="font-medium">& Planification</div>
-              </div>
-            </Button>
-            <Button
-              variant={activeTab === "compliance" ? "default" : "outline"}
-              onClick={() => handleTabChange("compliance")}
-              className="h-20 flex flex-col items-center justify-center gap-2 text-xs"
-            >
-              <FileText className="h-6 w-6 text-teal-500" />
-              <div className="text-center">
-                <div className="font-medium">Conformités</div>
-                <div className="font-medium">& Validation</div>
-              </div>
-            </Button>
-          </div>
+          {/* Team Management */}
+          {activeTab === "team" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Équipe & Contractants
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium">Équipe de Projet</Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Gérez les membres de l'équipe et leurs rôles
+                    </p>
+                    {/* Team management content */}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Phases */}
+          {activeTab === "phases" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="h-5 w-5" />
+                  Phases & Planification
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium">Phases du Projet</Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Structure des phases et chronologie
+                    </p>
+                    {/* Phases management content */}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Risk Management */}
+          {activeTab === "risks" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Gestion des Risques
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium">Analyse des Risques</Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Identification et mitigation des risques projet
+                    </p>
+                    {/* Risk management content */}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Compliance */}
+          {activeTab === "compliance" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5" />
+                  Conformités & Validation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base font-medium">Conformité Réglementaire</Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Respect des normes et validation finale
+                    </p>
+                    {/* Compliance content */}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
       {/* Bottom Actions */}
-      <div className="flex justify-between items-center pt-6 border-t">
-        <div className="text-sm text-muted-foreground">
-          Les modifications sont sauvegardées automatiquement
-        </div>
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleCancel}
-          >
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Target className="h-4 w-4 mr-2" />
-            {isSubmitting ? 'Finalisation...' : 'Finaliser les Modifications'}
-          </Button>
-        </div>
-      </div>
+      <Card className="mt-6">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Les modifications sont sauvegardées automatiquement
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                {isSubmitting ? 'Sauvegarde en cours...' : 'Sauvegarder les Modifications'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
