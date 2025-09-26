@@ -413,7 +413,10 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
 
                   {mapData?.shape && mapData?.shape?.length > 2 && (
                     <Polygon
-                      positions={mapData.shape.map(point => [point.lat, point.lng])}
+                      positions={mapData.shape.map(point => ({
+                        lat: point.lat,
+                        lng: point.lng
+                      }))}
                       pathOptions={{
                         color: "#3b82f6",
                         fillColor: "#3b82f6",

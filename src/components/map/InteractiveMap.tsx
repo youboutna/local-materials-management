@@ -235,10 +235,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
               {mapData.warehouseShape && mapData.warehouseShape.length > 0 && (
                 <Polygon
-                  positions={mapData.warehouseShape.map((point) => [
-                    point.lat,
-                    point.lng,
-                  ])}
+                  positions={mapData.warehouseShape.map((point) => ({
+                    lat: point.lat,
+                    lng: point.lng,
+                  }))}
                   pathOptions={{
                     color: "#3b82f6",
                     fillColor: "#3b82f6",

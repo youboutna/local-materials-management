@@ -39,12 +39,10 @@ const LocationStep: React.FC<LocationStepProps> = ({
             <label className="block text-sm font-medium mb-4">Localisation précise et délimitation</label>
             <div className="border rounded-lg overflow-hidden">
               <LocationSelector
-                onLocationSelect={(locationData) => {
+                value={formData.facilitiesLocation}
+                onChange={(locationData) => {
                   onUpdate({ facilitiesLocation: locationData });
                 }}
-                initialLocation={formData.facilitiesLocation}
-                enableShapeTracing={true}
-                height="400px"
               />
             </div>
           </div>

@@ -11,13 +11,13 @@ import { supabase } from '../../integrations/supabase/client';
 
 interface PhaseDetail {
   id: string;
-  phase_name: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  estimated_cost: number;
-  progress: number;
+  phase_name: string | null;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  status: string | null;
+  estimated_cost: number | null;
+  progress: number | null;
   project_id: string;
 }
 
@@ -60,6 +60,10 @@ const PhaseDetailPage: React.FC = () => {
       setIsLoading(true);
       
       // Load phase details
+      if (!phaseId) {
+        throw new Error('Phase ID is required');
+      }
+
       const { data: phaseData, error: phaseError } = await supabase
         .from('project_phases')
         .select('*')
@@ -158,12 +162,12 @@ const PhaseDetailPage: React.FC = () => {
             Retour au projet
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{phase.phase_name}</h1>
-            <p className="text-muted-foreground">{phase.description}</p>
+            <h1 className="text-2xl font-bold">{phase.phase_name || 'Phase sans nom'}</h1>
+            <p className="text-muted-foreground">{phase.description || 'Aucune description'}</p>
           </div>
         </div>
-        <Badge className={getStatusColor(phase.status)}>
-          {getStatusLabel(phase.status)}
+        <Badge className={getStatusColor(phase.status || 'pending')}>
+          {getStatusLabel(phase.status || 'pending')}
         </Badge>
       </div>
 
@@ -176,7 +180,7 @@ const PhaseDetailPage: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Durée</p>
                 <p className="text-lg font-semibold">
-                  {new Date(phase.start_date).toLocaleDateString()} - {new Date(phase.end_date).toLocaleDateString()}
+                  {phase.start_date ? new Date(phase.start_date).toLocaleDateString() : 'Non défini'} - {phase.end_date ? new Date(phase.end_date).toLocaleDateString() : 'Non défini'}
                 </p>
               </div>
             </div>

@@ -57,9 +57,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
                 </Button>
               </div>
               <EnhancedWorkflowPhaseManager
-                phases={formData.phases || []}
-                onPhasesChange={(phases) => onUpdate({ phases })}
-                isEditing={isEditing}
+                projectId={formData.id || 'new-project'}
               />
             </div>
           </TabsContent>
@@ -68,7 +66,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
             <div className="space-y-6">
               <MaterialFormSection
                 selectedMaterials={selectedMaterials}
-                onMaterialsChange={onMaterialsChange}
+                onChange={onMaterialsChange}
               />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
