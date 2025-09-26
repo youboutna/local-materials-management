@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { ProjectService } from '@/services/ProjectService';
-import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,17 +13,15 @@ import {
   AlertTriangle, FileCheck
 } from 'lucide-react';
 
-// Import existing components and factorized steps
-import EmployeeSelector from '@/components/selectors/EmployeeSelector';
-import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
-import LocationSelector from '@/components/location/LocationSelector';
-import MaterialFormSection from '@/components/MaterialFormSection';
-import EnhancedWorkflowPhaseManager from './EnhancedWorkflowPhaseManager';
+// Import services
+import { ProjectFormService, ProjectFormData, SaveContext } from '@/services/ProjectFormService';
 
-// Import factorized steps
+// Import step components
+import ProjectInfoStep from './steps/ProjectInfoStep';
 import StakeholdersStep from './steps/StakeholdersStep';
 import TeamContractorsStep from './steps/TeamContractorsStep';
-import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
+import PhasePlanificationStep from './steps/PhasePlanificationStep';
+import LocationStep from './steps/LocationStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
 import ComplianceStep from './steps/ComplianceStep';
 
@@ -44,38 +39,13 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const { toast } = useToast();
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState(() => initialData || {});
+  const [formData, setFormData] = useState<ProjectFormData>(() => initialData || {});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
 
-  // Initialize ProjectService
-  const projectService = useMemo(() => new ProjectService(), []);
-
-  // Helper function for date formatting
-  const formatDateForInput = (dateString: any) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
-    } catch (error) {
-      console.warn('Date formatting error:', error);
-      return '';
-    }
-  };
-
-  // Status mapping
-  const mapStatusFromDB = (status: string) => {
-    const mapping = {
-      'en attente': 'planning',
-      'en cours': 'en cours', 
-      'suspendu': 'suspendu',
-      'terminé': 'terminé',
-      'annulé': 'annulé'
-    } as const;
-    return mapping[status as keyof typeof mapping] || 'planning';
-  };
+  // Initialize ProjectFormService
+  const formService = new ProjectFormService();
 
   // Load project data from database if no initialData
   const loadProjectData = useCallback(async () => {
@@ -83,43 +53,9 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     
     setIsLoading(true);
     try {
-      const projectData = await projectService.getProjectDetail(projectId);
+      const projectData = await formService.loadProjectData(projectId);
       if (projectData) {
-        const processedData = {
-          title: projectData.title,
-          description: projectData.description,
-          location: projectData.location,
-          status: mapStatusFromDB(projectData.status || 'planning'),
-          budget: projectData.budget,
-          startDate: formatDateForInput(projectData.startDate),
-          endDate: formatDateForInput(projectData.endDate),
-          start_date: formatDateForInput(projectData.startDate),
-          end_date: formatDateForInput(projectData.endDate),
-          team_size: projectData.teamSize || 1,
-          financing_source: projectData.financingSource || '',
-          market_type: projectData.marketType || '',
-          selection_mode: projectData.selectionMode || '',
-          project_responsable_id: projectData.projectResponsableId || '',
-          main_contractor: projectData.mainContractor || '',
-          engineering_consultant: (projectData as any).engineeringConsultant || '',
-          project_reference: projectData.projectReference || '',
-          allows_initial_payment: projectData.allowsInitialPayment || false,
-          initial_payment_percentage: projectData.initialPaymentPercentage || 0,
-          current_phase: projectData.currentPhase || '',
-          current_stage: projectData.currentStage || '',
-          // Location data
-          facilitiesLocation: projectData.coordinates ? {
-            center: {
-              lat: projectData.coordinates.latitude,
-              lng: projectData.coordinates.longitude
-            },
-            polygon: (projectData as any).localisation || [],
-            warehouseShape: (projectData as any).localisation || [],
-            address: (projectData as any).adresse,
-            shapeType: (projectData as any).forme
-          } : undefined
-        };
-        setFormData(processedData);
+        setFormData(projectData);
       }
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -131,70 +67,34 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, initialData, projectService, toast]);
+  }, [projectId, initialData, formService, toast]);
 
   // Load related data (stakeholders, phases, etc.)
   const loadRelatedData = useCallback(async () => {
     if (!projectId) return;
     
     try {
-      // Load stakeholders
-      const stakeholders = await ProjectStakeholderService.getProjectStakeholders(projectId);
+      const relatedData = await formService.loadRelatedData(projectId);
+      setFormData(prev => ({ ...prev, ...relatedData }));
       
-      // Load phases
-      const { data: phasesData } = await supabase
-        .from('project_phases')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('start_date');
-      
-      // Process phases for form
-      const phases = phasesData?.map(phase => ({
-        id: phase.id,
-        title: phase.phase_name,
-        description: phase.description || '',
-        startDate: formatDateForInput(phase.start_date),
-        endDate: formatDateForInput(phase.end_date),
-        status: phase.status,
-        budget: phase.estimated_cost || 0,
-        progress: phase.progress || 0
-      })) || [];
-
-      // Load materials
-      const { data: materialsData } = await supabase
-        .from('project_materials')
-        .select('material_id, quantity')
-        .eq('project_id', projectId);
-      
-      const materials = materialsData?.map(item => ({
-        materialId: item.material_id,
-        quantity: item.quantity
-      })) || [];
-      
-      setFormData(prev => ({
-        ...prev,
-        stakeholders: stakeholders || [],
-        phases: phases,
-        materials: materials
-      }));
-      
-      setSelectedMaterials(materials);
-      
+      if (relatedData.materials) {
+        setSelectedMaterials(relatedData.materials);
+      }
     } catch (error) {
       console.error('Error loading related data:', error);
     }
-  }, [projectId]);
+  }, [projectId, formService]);
 
   // Update form data when initialData changes
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
       const processedData = {
         ...initialData,
-        startDate: formatDateForInput(initialData.startDate || initialData.start_date),
-        endDate: formatDateForInput(initialData.endDate || initialData.end_date),
-        start_date: formatDateForInput(initialData.startDate || initialData.start_date),
-        end_date: formatDateForInput(initialData.endDate || initialData.end_date),
-        status: initialData.status ? mapStatusFromDB(initialData.status) : 'planning'
+        startDate: formService.formatDateForInput(initialData.startDate || initialData.start_date),
+        endDate: formService.formatDateForInput(initialData.endDate || initialData.end_date),
+        start_date: formService.formatDateForInput(initialData.startDate || initialData.start_date),
+        end_date: formService.formatDateForInput(initialData.endDate || initialData.end_date),
+        status: initialData.status ? formService.mapStatusFromDB(initialData.status) : 'planning'
       };
       setFormData(processedData);
       
@@ -205,7 +105,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     } else {
       loadProjectData();
     }
-  }, [initialData, loadProjectData]);
+  }, [initialData, loadProjectData, formService]);
 
   // Load related data on mount
   useEffect(() => {
@@ -220,24 +120,25 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Handle status change
-  const handleStatusChange = (newStatus: string) => {
-    updateFormData({ status: newStatus });
-  };
-
-  // Save step data only
+  // Save handlers with distinct behavior
   const handleSaveStepOnly = async () => {
     if (!onSubmit) return;
     
     setIsSaving(true);
     try {
-      await onSubmit({
+      const context: SaveContext = {
+        currentStep,
+        saveType: 'step_only',
+        isDraft: true
+      };
+      
+      const processedData = formService.processFormDataForSave({
         ...formData,
-        materials: selectedMaterials,
-        currentStep: currentStep,
-        isDraft: true,
-        saveType: 'step_only'
-      });
+        materials: selectedMaterials
+      }, context);
+      
+      await onSubmit(processedData);
+      
       toast({
         title: 'Étape sauvegardée',
         description: 'Les données de cette étape ont été sauvegardées.',
@@ -254,19 +155,34 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Save and next step
   const handleSaveAndNext = async () => {
     if (!onSubmit) return;
     
+    // Validate current step before proceeding
+    const isValid = formService.validateStep(currentStep, formData);
+    if (!isValid) {
+      toast({
+        title: 'Validation échouée',
+        description: 'Veuillez compléter les champs requis avant de continuer.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsSaving(true);
     try {
-      await onSubmit({
+      const context: SaveContext = {
+        currentStep,
+        saveType: 'save_and_next',
+        isDraft: true
+      };
+      
+      const processedData = formService.processFormDataForSave({
         ...formData,
-        materials: selectedMaterials,
-        currentStep: currentStep,
-        isDraft: true,
-        saveType: 'save_and_next'
-      });
+        materials: selectedMaterials
+      }, context);
+      
+      await onSubmit(processedData);
       
       // Move to next step if not at the end
       if (currentStep < steps.length) {
@@ -289,20 +205,24 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Save global and close
   const handleSaveGlobalAndClose = async () => {
     if (!onSubmit) return;
     
     setIsSaving(true);
     try {
-      await onSubmit({
-        ...formData,
-        materials: selectedMaterials,
-        currentStep: currentStep,
+      const context: SaveContext = {
+        currentStep,
+        saveType: 'global_and_close',
         isDraft: false,
-        isComplete: true,
-        saveType: 'global_and_close'
-      });
+        isComplete: true
+      };
+      
+      const processedData = formService.processFormDataForSave({
+        ...formData,
+        materials: selectedMaterials
+      }, context);
+      
+      await onSubmit(processedData);
       
       toast({
         title: 'Projet sauvegardé',
@@ -323,7 +243,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Step configuration - similar to ProjectCreationWorkflow with additional steps
+  // Step configuration with proper separation of concerns
   const steps = [
     {
       id: 1,
@@ -331,7 +251,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Building,
       description: 'Données de base du projet (titre, description, budget)',
       color: 'bg-blue-500',
-      isCompleted: () => !!(formData.title && formData.description && formData.budget)
+      isCompleted: () => formService.validateStep(1, formData)
     },
     {
       id: 2,
@@ -339,7 +259,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: Users,
       description: 'Configuration des acteurs et responsabilités',
       color: 'bg-green-500',
-      isCompleted: () => !!(formData.stakeholders?.length > 0 || formData.project_responsable_id)
+      isCompleted: () => formService.validateStep(2, formData)
     },
     {
       id: 3,
@@ -347,47 +267,39 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       icon: UserCheck,
       description: 'Assignment des ressources humaines et fournisseurs',
       color: 'bg-orange-500',
-      isCompleted: () => !!(formData.main_contractor || formData.engineering_consultant)
+      isCompleted: () => formService.validateStep(3, formData)
     },
     {
       id: 4,
       title: 'Phases & Planification',
       icon: Layers,
-      description: 'Structure des phases et chronologie',
+      description: 'Structure des phases, chronologie et matériaux',
       color: 'bg-indigo-500',
-      isCompleted: () => !!(formData.phases?.length > 0)
+      isCompleted: () => formService.validateStep(4, formData) && selectedMaterials.length > 0
     },
     {
       id: 5,
-      title: 'Géolocalisation & Cartographie',
+      title: 'Géolocalisation',
       icon: MapPin,
       description: 'Localisation précise et délimitation des zones',
       color: 'bg-cyan-500',
-      isCompleted: () => !!(formData.facilitiesLocation?.center || formData.location)
+      isCompleted: () => formService.validateStep(5, formData)
     },
     {
       id: 6,
-      title: 'Ressources & Matériaux',
-      icon: Package,
-      description: 'Sélection des matériaux et organisation',
-      color: 'bg-purple-500',
-      isCompleted: () => !!(selectedMaterials?.length > 0)
-    },
-    {
-      id: 7,
       title: 'Analyse des Risques',
       icon: AlertTriangle,
       description: 'Analyse et mitigation des risques projet',
       color: 'bg-red-500',
-      isCompleted: () => !!(formData.risks?.length > 0)
+      isCompleted: () => formService.validateStep(6, formData)
     },
     {
-      id: 8,
+      id: 7,
       title: 'Conformités & Validation',
       icon: FileCheck,
       description: 'Respect des normes et validation finale',
       color: 'bg-teal-500',
-      isCompleted: () => !!(formData.compliance?.length > 0)
+      isCompleted: () => formService.validateStep(7, formData)
     }
   ];
 
@@ -395,245 +307,12 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     switch (currentStep) {
       case 1:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5 text-blue-500" />
-                Informations Générales du Projet
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Titre du projet *</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Nom du projet de construction"
-                      required
-                      value={formData.title || ''}
-                      onChange={(e) => updateFormData({ title: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Référence du projet</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="REF-2025-001"
-                      value={formData.project_reference || ''}
-                      onChange={(e) => updateFormData({ project_reference: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description détaillée *</label>
-                  <textarea 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
-                    placeholder="Description complète du projet, objectifs et spécifications techniques"
-                    required
-                    value={formData.description || ''}
-                    onChange={(e) => updateFormData({ description: e.target.value })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Budget total *</label>
-                    <input 
-                      type="number" 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="1000000"
-                      required
-                      value={formData.budget || ''}
-                      onChange={(e) => updateFormData({ budget: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Type de marché *</label>
-                    <select 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.market_type || ''}
-                      onChange={(e) => updateFormData({ market_type: e.target.value })}
-                    >
-                      <option value="">Sélectionner le type de marché</option>
-                      <option value="public">Marché public</option>
-                      <option value="private">Marché privé</option>
-                      <option value="ppp">Partenariat public-privé (PPP)</option>
-                      <option value="concession">Concession</option>
-                      <option value="delegation">Délégation de service public</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Mode de sélection</label>
-                    <select 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.selection_mode || ''}
-                      onChange={(e) => updateFormData({ selection_mode: e.target.value })}
-                    >
-                      <option value="">Sélectionner le mode</option>
-                      <option value="appel_offres">Appel d'offres</option>
-                      <option value="consultation">Consultation</option>
-                      <option value="gre_gre">Gré à gré</option>
-                      <option value="concours">Concours</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Source de financement</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Budget de l'État, Partenaire..."
-                      value={formData.financing_source || ''}
-                      onChange={(e) => updateFormData({ financing_source: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Statut</label>
-                    <select 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.status || 'planning'}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                    >
-                      <option value="planning">Planification</option>
-                      <option value="pending">En attente</option>
-                      <option value="en cours">En cours</option>
-                      <option value="suspendu">Suspendu</option>
-                      <option value="terminé">Terminé</option>
-                      <option value="annulé">Annulé</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Priorité</label>
-                    <select 
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={formData.priority || 'medium'}
-                      onChange={(e) => updateFormData({ priority: e.target.value })}
-                    >
-                      <option value="low">Faible</option>
-                      <option value="medium">Moyenne</option>
-                      <option value="high">Élevée</option>
-                      <option value="urgent">Urgente</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Chronologie Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-500" />
-                    Chronologie du Projet
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Date de début prévue</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.start_date || ''}
-                        onChange={(e) => updateFormData({ start_date: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Date de fin prévue</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.end_date || ''}
-                        onChange={(e) => updateFormData({ end_date: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Durée estimée (jours)</label>
-                      <input 
-                        type="number" 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="365"
-                        readOnly
-                        value={formData.start_date && formData.end_date ? 
-                          Math.ceil((new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 
-                          ''
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Paramètres de paiement Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-500" />
-                    Paramètres de Paiement
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Source de financement</label>
-                      <input 
-                        type="text" 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        placeholder="Banque, fonds propres, etc."
-                        value={formData.financing_source || ''}
-                        onChange={(e) => updateFormData({ financing_source: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Mode de sélection</label>
-                      <select 
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.selection_mode || ''}
-                        onChange={(e) => updateFormData({ selection_mode: e.target.value })}
-                      >
-                        <option value="">Sélectionner le mode</option>
-                        <option value="appel_offres">Appel d'offres</option>
-                        <option value="consultation">Consultation</option>
-                        <option value="gre_gre">Gré à gré</option>
-                        <option value="concours">Concours</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="allows_initial_payment"
-                        checked={formData.allows_initial_payment || false}
-                        onChange={(e) => updateFormData({ allows_initial_payment: e.target.checked })}
-                        className="rounded border-gray-300"
-                      />
-                      <label htmlFor="allows_initial_payment" className="text-sm font-medium">
-                        Autoriser paiement initial
-                      </label>
-                    </div>
-                    
-                    {formData.allows_initial_payment && (
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Pourcentage paiement initial (%)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          value={formData.initial_payment_percentage || 0}
-                          onChange={(e) => updateFormData({ initial_payment_percentage: parseFloat(e.target.value) })}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProjectInfoStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
         );
-
       case 2:
         return (
           <StakeholdersStep
@@ -642,114 +321,33 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-
       case 3:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-orange-500" />
-                Équipe & Contractants
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Entrepreneur principal</label>
-                  <SimpleSupplierSelector
-                    value={formData.main_contractor || ''}
-                    onChange={(supplierId) => updateFormData({ main_contractor: supplierId })}
-                    placeholder="Sélectionner l'entrepreneur principal"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Ingénieur conseil</label>
-                  <SimpleSupplierSelector
-                    value={formData.engineering_consultant || ''}
-                    onChange={(supplierId) => updateFormData({ engineering_consultant: supplierId })}
-                    placeholder="Sélectionner l'ingénieur conseil"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 4:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-500" />
-                Phases & Planification
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EnhancedWorkflowPhaseManager
-                projectId={projectId || ''}
-              />
-              
-              {/* Phase Management Information */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Gestion des phases:</strong> Les phases sont gérées directement depuis la base de données. 
-                  Utilisez le gestionnaire de phases ci-dessus pour créer, modifier et organiser les phases du projet.
-                </p>
-                {formData.phases && formData.phases.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-xs text-blue-600">
-                      Phases actuelles: {formData.phases.length} phase(s) détectée(s)
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 5:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-cyan-500" />
-                Géolocalisation & Cartographie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LocationSelector
-                value={formData.facilitiesLocation?.center ? {
-                  latitude: formData.facilitiesLocation.center.lat,
-                  longitude: formData.facilitiesLocation.center.lng,
-                  address: formData.facilitiesLocation.address
-                } : undefined}
-                onChange={(locationData) => updateFormData({ 
-                  facilitiesLocation: {
-                    ...formData.facilitiesLocation,
-                    center: {
-                      lat: locationData.latitude || 0,
-                      lng: locationData.longitude || 0
-                    },
-                    address: locationData.address
-                  }
-                })}
-              />
-            </CardContent>
-          </Card>
-        );
-
-      case 6:
-        return (
-          <ResourcesMaterialsStep
-            selectedMaterials={selectedMaterials}
-            onMaterialsChange={setSelectedMaterials}
+          <TeamContractorsStep
             formData={formData}
             onUpdate={updateFormData}
             isEditing={true}
           />
         );
-
-      case 7:
+      case 4:
+        return (
+          <PhasePlanificationStep
+            formData={formData}
+            onUpdate={updateFormData}
+            selectedMaterials={selectedMaterials}
+            onMaterialsChange={setSelectedMaterials}
+            isEditing={true}
+          />
+        );
+      case 5:
+        return (
+          <LocationStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
+        );
+      case 6:
         return (
           <RiskAnalysisStep
             formData={formData}
@@ -757,8 +355,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-
-      case 8:
+      case 7:
         return (
           <ComplianceStep
             formData={formData}
@@ -766,181 +363,155 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-
       default:
         return null;
     }
   };
 
+  // Calculate overall progress
+  const completedSteps = steps.filter(step => step.isCompleted()).length;
+  const overallProgress = (completedSteps / steps.length) * 100;
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Progress Overview */}
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+      <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-serif text-primary">
-              Édition de Projet - Modèle de Création
-            </CardTitle>
-            <Badge variant="outline" className="text-sm">
-              {steps.filter(s => s.isCompleted()).length}/{steps.length} étapes
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Edit2 className="h-5 w-5" />
+              Édition du Projet: {formData.title || 'Nouveau Projet'}
+            </span>
+            <Badge variant="outline" className="px-3 py-1">
+              Étape {currentStep} / {steps.length}
             </Badge>
-          </div>
-          <Progress value={(steps.filter(s => s.isCompleted()).length / steps.length) * 100} className="h-2" />
+          </CardTitle>
         </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>Progression globale</span>
+              <span className="font-semibold">{Math.round(overallProgress)}%</span>
+            </div>
+            <Progress value={overallProgress} className="h-2" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4" />
+              {completedSteps} étapes complétées sur {steps.length}
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
-      {/* Workflow Steps Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        {steps.map((step) => {
-          const Icon = step.icon;
-          const isCompleted = step.isCompleted();
-          const isActive = currentStep === step.id;
-          
-          return (
-            <motion.div
-              key={step.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Card 
-                className={cn(
-                  "cursor-pointer transition-all duration-200 border",
-                  isActive ? 'ring-2 ring-primary shadow-lg border-primary' : 'hover:shadow-md border-transparent',
-                  isCompleted ? 'border-green-500/30 bg-green-50' : ''
-                )}
-                onClick={() => setCurrentStep(step.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center text-center space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Navigation Steps */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Navigation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {steps.map((step) => (
+                <motion.div
+                  key={step.id}
+                  className={cn(
+                    "p-3 rounded-lg cursor-pointer transition-all duration-200",
+                    currentStep === step.id
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : step.isCompleted()
+                      ? "bg-green-50 hover:bg-green-100 border border-green-200"
+                      : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
+                  )}
+                  onClick={() => setCurrentStep(step.id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-3">
                     <div className={cn(
-                      "p-3 rounded-full relative text-white",
-                      step.color,
-                      isActive && "shadow-lg",
-                      isCompleted && !isActive && "bg-green-100 text-green-600"
+                      "p-2 rounded-full",
+                      currentStep === step.id
+                        ? "bg-primary-foreground text-primary"
+                        : step.isCompleted()
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-300 text-gray-600"
                     )}>
-                      <Icon className="h-4 w-4" />
-                      {isCompleted && (
-                        <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 text-white rounded-full" />
+                      {step.isCompleted() ? (
+                        <CheckCircle className="h-4 w-4" />
+                      ) : (
+                        <step.icon className="h-4 w-4" />
                       )}
                     </div>
-                    <h3 className="font-medium text-xs">{step.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{step.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {step.title}
+                      </div>
+                      <div className="text-xs opacity-75 truncate">
+                        {step.description}
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Step Content */}
-        <div className="flex-1">
+        {/* Main Content */}
+        <div className="lg:col-span-3">
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             {renderStepContent()}
           </motion.div>
-        </div>
 
-        {/* Step Navigation */}
-        <div className="lg:w-80">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                Navigation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Navigation buttons */}
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                  disabled={currentStep === 1}
-                >
-                  Précédent
-                </Button>
-                <Button
-                  onClick={() => setCurrentStep(Math.min(steps.length, currentStep + 1))}
-                  disabled={currentStep === steps.length}
-                >
-                  Suivant
-                </Button>
-              </div>
-              
-              {/* Save buttons */}
-              <div className="space-y-2">
-                <Button
-                  onClick={handleSaveStepOnly}
-                  disabled={isSaving}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                      Sauvegarde...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Sauvegarder l'Étape
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={handleSaveAndNext}
-                  disabled={isSaving || currentStep === steps.length}
-                  className="w-full"
-                  variant="default"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Sauvegarde...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Sauvegarder & Suivant
-                    </>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={handleSaveGlobalAndClose}
-                  disabled={isSaving}
-                  className="w-full"
-                  variant="secondary"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                      Sauvegarde...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Sauvegarder Global & Fermer
-                    </>
-                  )}
-                </Button>
+          {/* Action Buttons */}
+          <Card className="mt-6">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                    disabled={currentStep === 1}
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveStepOnly}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder cette étape'}
+                  </Button>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveAndNext}
+                    disabled={isSaving || currentStep === steps.length}
+                  >
+                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder et suivant'}
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={handleSaveGlobalAndClose}
+                    disabled={isSaving}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder et fermer'}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
