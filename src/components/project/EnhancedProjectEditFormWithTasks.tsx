@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -67,6 +67,8 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   const [isLoading, setIsLoading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const isStatusSavingRef = useRef(false);
+  const lastStatusRef = useRef<string | null>(null);
 
   // Dialog states
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
@@ -453,16 +455,20 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     }
   };
 
-  // Handle status change: update then go to parent (project detail)
+  // Handle status change with re-entrancy guard and dedupe
   const handleStatusChange = useCallback(async (newStatus: string) => {
     if (!projectId) return;
+    // Ignore if unchanged or a save is in progress
+    if (newStatus === formData.status || isStatusSavingRef.current) return;
+
+    isStatusSavingRef.current = true;
     try {
       setIsSaving(true);
-      // Map status to database format before saving
       const dbStatus = mapStatusToDB(newStatus);
       await projectRepository.update(projectId, { status: dbStatus });
-      // Update form data with the new status, stay on page
-      updateFormData({ status: newStatus });
+      // Update local state without flagging unsaved changes
+      setFormData(prev => ({ ...prev, status: newStatus }));
+      lastStatusRef.current = newStatus;
       toast({
         title: "Statut mis à jour",
         description: `Le statut du projet a été changé vers: ${newStatus}`,
@@ -476,8 +482,9 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
       });
     } finally {
       setIsSaving(false);
+      isStatusSavingRef.current = false;
     }
-  }, [projectId, projectService, formData, toast]);
+  }, [projectId, formData.status, projectRepository, toast]);
 
   // Handle step navigation with auto-save
   const handleStepChange = useCallback(async (newStep: number) => {
@@ -557,7 +564,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner le statut" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[60] bg-background shadow-lg">
                       <SelectItem value="planning">Planification</SelectItem>
                       <SelectItem value="active">En cours</SelectItem>
                       <SelectItem value="on_hold">En attente</SelectItem>
