@@ -90,6 +90,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         description: "Le projet a été mis à jour avec succès",
       });
     } catch (error) {
+      console.error('Error updating project:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la mise à jour",
@@ -98,6 +99,11 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Navigate back or reset form
+    window.history.back();
   };
 
   const addStakeholder = (type: 'manager' | 'team' | 'supplier', stakeholder: any) => {
@@ -573,18 +579,16 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         <div className="flex gap-3">
           <Button 
             variant="outline" 
-            onClick={() => {
-              // Navigate back without submitting
-              window.history.back();
-            }}
+            onClick={handleCancel}
           >
             Annuler
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-primary hover:bg-primary/90"
           >
+            <Target className="h-4 w-4 mr-2" />
             {isSubmitting ? 'Finalisation...' : 'Finaliser les Modifications'}
           </Button>
         </div>
