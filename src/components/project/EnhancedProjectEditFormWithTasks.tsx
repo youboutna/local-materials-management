@@ -309,10 +309,10 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Handle step navigation with auto-save
   const handleStepChange = useCallback(async (newStep: number) => {
     if (hasUnsavedChanges) {
-      await autoSaveStep(formData);
+      await autoSaveStep();
     }
     setCurrentStep(newStep);
-  }, [hasUnsavedChanges, autoSaveStep, formData]);
+  }, [hasUnsavedChanges, autoSaveStep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
