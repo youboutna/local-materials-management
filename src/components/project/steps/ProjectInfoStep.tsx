@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 
 interface ProjectInfoStepProps {
   formData: any;
@@ -72,53 +73,52 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Type de marché *</label>
-              <select 
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.market_type || ''}
-                onChange={(e) => onUpdate({ market_type: e.target.value })}
-                required
-              >
-                <option value="">Sélectionner le type de marché</option>
-                <option value="public">Marché public</option>
-                <option value="private">Marché privé</option>
-                <option value="ppp">Partenariat public-privé (PPP)</option>
-                <option value="concession">Concession</option>
-                <option value="delegation">Délégation de service public</option>
-              </select>
+              <Select value={formData.market_type || ''} onValueChange={(value) => onUpdate({ market_type: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner le type de marché" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="public">Marché public</SelectItem>
+                  <SelectItem value="private">Marché privé</SelectItem>
+                  <SelectItem value="ppp">Partenariat public-privé (PPP)</SelectItem>
+                  <SelectItem value="concession">Concession</SelectItem>
+                  <SelectItem value="delegation">Délégation de service public</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Mode de sélection</label>
-              <select 
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.selection_mode || ''}
-                onChange={(e) => onUpdate({ selection_mode: e.target.value })}
-              >
-                <option value="">Sélectionner le mode</option>
-                <option value="open">Appel d'offres ouvert</option>
-                <option value="restricted">Appel d'offres restreint</option>
-                <option value="negotiated">Procédure négociée</option>
-                <option value="competitive">Dialogue compétitif</option>
-                <option value="innovation">Partenariat d'innovation</option>
-              </select>
+              <Select value={formData.selection_mode || ''} onValueChange={(value) => onUpdate({ selection_mode: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner le mode" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="open">Appel d'offres ouvert</SelectItem>
+                  <SelectItem value="restricted">Appel d'offres restreint</SelectItem>
+                  <SelectItem value="negotiated">Procédure négociée</SelectItem>
+                  <SelectItem value="competitive">Dialogue compétitif</SelectItem>
+                  <SelectItem value="innovation">Partenariat d'innovation</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Source de financement</label>
-              <select 
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.financing_source || ''}
-                onChange={(e) => onUpdate({ financing_source: e.target.value })}
-              >
-                <option value="">Sélectionner la source</option>
-                <option value="budget_state">Budget de l'État</option>
-                <option value="budget_local">Budget collectivité locale</option>
-                <option value="eu_funds">Fonds européens</option>
-                <option value="private">Financement privé</option>
-                <option value="mixed">Financement mixte</option>
-                <option value="loan">Emprunt</option>
-              </select>
+              <Select value={formData.financing_source || ''} onValueChange={(value) => onUpdate({ financing_source: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner la source" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="budget_state">Budget de l'État</SelectItem>
+                  <SelectItem value="budget_local">Budget collectivité locale</SelectItem>
+                  <SelectItem value="eu_funds">Fonds européens</SelectItem>
+                  <SelectItem value="private">Financement privé</SelectItem>
+                  <SelectItem value="mixed">Financement mixte</SelectItem>
+                  <SelectItem value="loan">Emprunt</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -157,17 +157,18 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Statut du projet</label>
-              <select 
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={formData.status || 'planning'}
-                onChange={(e) => onUpdate({ status: e.target.value })}
-              >
-                <option value="planning">En planification</option>
-                <option value="en cours">En cours</option>
-                <option value="suspendu">Suspendu</option>
-                <option value="terminé">Terminé</option>
-                <option value="annulé">Annulé</option>
-              </select>
+              <Select value={formData.status || 'planning'} onValueChange={(value) => onUpdate({ status: value })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner le statut" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  <SelectItem value="planning">En planification</SelectItem>
+                  <SelectItem value="en cours">En cours</SelectItem>
+                  <SelectItem value="suspendu">Suspendu</SelectItem>
+                  <SelectItem value="terminé">Terminé</SelectItem>
+                  <SelectItem value="annulé">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

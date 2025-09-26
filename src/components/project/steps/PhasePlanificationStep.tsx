@@ -1,9 +1,10 @@
 import React from 'react';
-import { Layers, Package } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Layers, Package, ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Button } from '../../ui/button';
 import EnhancedWorkflowPhaseManager from '../EnhancedWorkflowPhaseManager';
-import MaterialFormSection from '@/components/MaterialFormSection';
+import MaterialFormSection from '../MaterialFormSection';
 
 interface PhasePlanificationStepProps {
   formData: any;
@@ -42,11 +43,25 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
           </TabsList>
           
           <TabsContent value="phases" className="space-y-4">
-            <EnhancedWorkflowPhaseManager
-              phases={formData.phases || []}
-              onPhasesChange={(phases) => onUpdate({ phases })}
-              isEditing={isEditing}
-            />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-medium">Gestion des phases</h4>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open('/phases/detail', '_blank')}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Voir détails des phases
+                </Button>
+              </div>
+              <EnhancedWorkflowPhaseManager
+                phases={formData.phases || []}
+                onPhasesChange={(phases) => onUpdate({ phases })}
+                isEditing={isEditing}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="materials" className="space-y-4">
