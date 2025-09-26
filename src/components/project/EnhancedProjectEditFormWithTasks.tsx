@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/services/ProjectService';
+import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
+import { PhaseService, PhaseData } from '@/services/phaseService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,16 +69,16 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Initialize ProjectService
   const projectService = useMemo(() => new ProjectService(), []);
 
-  // Load project data from database
+  // Load project data from database (merge into existing formData, do not wipe)
   const loadProjectData = useCallback(async () => {
     if (!projectId) return;
-    
+
     setIsLoading(true);
     try {
       const projectDetail = await projectService.getProjectDetail(projectId);
       if (projectDetail) {
-        setFormData(projectDetail);
-        setOriginalFormData(projectDetail);
+        setFormData((prev: any) => ({ ...prev, ...projectDetail }));
+        setOriginalFormData((prev: any) => ({ ...prev, ...projectDetail }));
         onFormDataChange?.(projectDetail);
       }
     } catch (error) {
@@ -91,15 +93,52 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     }
   }, [projectId, projectService, onFormDataChange, toast]);
 
+  // Load stakeholders and phases from database and merge into form
+  const loadRelatedData = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const [stakeholdersData, phasesData] = await Promise.all([
+        ProjectStakeholderService.getProjectStakeholders(projectId),
+        PhaseService.loadProjectPhases(projectId)
+      ]);
+
+      const mappedStakeholders = (() => {
+        const managers: any[] = [];
+        const team: any[] = [];
+        const suppliers: any[] = [];
+        (stakeholdersData || []).forEach((s: any) => {
+          if (s.stakeholder_entity_type === 'employee') {
+            if ((s.stakeholder_type || '').includes('manager')) managers.push({ id: s.stakeholder_id, name: s.employee?.full_name || 'Manager' });
+            else team.push({ id: s.stakeholder_id, name: s.employee?.full_name || 'Employé', department: s.employee?.department });
+          } else if (s.stakeholder_entity_type === 'supplier') {
+            suppliers.push({ id: s.stakeholder_id, name: s.supplier?.name || 'Fournisseur', type: 'Fournisseur' });
+          }
+        });
+        return { managers, team, suppliers };
+      })();
+
+      setFormData((prev: any) => ({
+        ...prev,
+        stakeholders: mappedStakeholders,
+        phases: phasesData as PhaseData[]
+      }));
+    } catch (err) {
+      console.error('Error loading related data:', err);
+    }
+  }, [projectId]);
+
   // Load data on mount and when projectId changes
   useEffect(() => {
-    if (projectId && !initialData) {
-      loadProjectData();
-    } else if (initialData) {
-      setFormData(initialData);
-      setOriginalFormData(initialData);
+    if (!projectId) return;
+    if (!initialData) {
+      // Load project core + related in parallel
+      Promise.all([loadProjectData(), loadRelatedData()]);
+    } else {
+      setFormData((prev: any) => ({ ...prev, ...initialData }));
+      setOriginalFormData((prev: any) => ({ ...prev, ...initialData }));
+      loadRelatedData();
     }
-  }, [projectId, initialData, loadProjectData]);
+  }, [projectId, initialData, loadProjectData, loadRelatedData]);
 
   // Define workflow steps
   const steps = [
@@ -160,33 +199,73 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     onFormDataChange?.(updatedData);
   }, [formData, onFormDataChange]);
 
+  // Auto-save and manual save per-step
+  const getCurrentStepId = useCallback(() => steps[currentStep - 1]?.id as string | undefined, [steps, currentStep]);
+
+  const saveByStep = useCallback(async () => {
+    if (!projectId) return;
+    const stepId = getCurrentStepId();
+    if (!stepId) return;
+
+    switch (stepId) {
+      case 'basic': {
+        const partial: any = {
+          title: formData.title,
+          description: formData.description,
+          budget: typeof formData.budget === 'number' ? formData.budget : Number(formData.budget) || 0,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          location: typeof formData.location === 'string' ? formData.location : (formData.location?.address || '')
+        };
+        await projectService.updateProject(projectId, partial);
+        setOriginalFormData((prev: any) => ({ ...prev, ...partial }));
+        break;
+      }
+      case 'stakeholders':
+      case 'team': {
+        const s = formData.stakeholders || { managers: [], team: [], suppliers: [] };
+        const suppliers = (s.suppliers || []).map((sup: any) => ({ id: sup.id, type: sup.type, role_description: sup.role_description, is_primary: sup.is_primary }));
+        const delegation: Record<string, string> = {};
+        if (s.managers && s.managers[0]?.id) delegation.projectManager = s.managers[0].id;
+        (s.team || []).forEach((m: any, idx: number) => { if (m?.id) delegation[`team_member_${idx + 1}`] = m.id; });
+        await ProjectStakeholderService.updateProjectStakeholders(projectId, suppliers, delegation);
+        break;
+      }
+      case 'phases': {
+        const phases: PhaseData[] = formData.phases || [];
+        if (phases.length > 0) await PhaseService.saveProjectPhases(projectId, phases);
+        break;
+      }
+      default: {
+        // For other steps, do nothing special
+        break;
+      }
+    }
+  }, [projectId, getCurrentStepId, formData, projectService]);
+
   // Auto-save on step change
-  const autoSaveStep = useCallback(async (stepData: any) => {
+  const autoSaveStep = useCallback(async () => {
     if (!projectId || !hasUnsavedChanges) return;
-    
     try {
-      await projectService.updateProject(projectId, stepData);
+      await saveByStep();
       setHasUnsavedChanges(false);
-      setOriginalFormData(stepData);
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [projectId, projectService, hasUnsavedChanges]);
+  }, [projectId, hasUnsavedChanges, saveByStep]);
 
   const handleSaveStep = async () => {
     if (!projectId) return;
-    
     setIsSaving(true);
     try {
-      await projectService.updateProject(projectId, formData);
+      await saveByStep();
       setHasUnsavedChanges(false);
-      setOriginalFormData(formData);
-      
+
       toast({
         title: "Étape sauvegardée",
         description: `Les données de l'étape ${currentStep} ont été sauvegardées.`,
       });
-      
+
       // Mark step as completed
       const currentStepId = steps[currentStep - 1]?.id;
       if (currentStepId && !completedSteps.includes(currentStepId)) {
@@ -196,7 +275,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
       console.error('Error saving step:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la sauvegarde.",
+        description: (error as any)?.message || "Une erreur est survenue lors de la sauvegarde.",
         variant: "destructive",
       });
     } finally {
