@@ -204,31 +204,28 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     }
   };
 
-  // Handle status change without leaving edit form
+  // Handle status change: update then go to parent (project detail)
   const handleStatusChange = useCallback(async (newStatus: string) => {
     if (!projectId) return;
-    
     try {
       setIsSaving(true);
       await projectService.updateProject(projectId, { ...formData, status: newStatus });
-      updateFormData({ status: newStatus });
-      setHasUnsavedChanges(false);
-      
       toast({
         title: "Statut mis à jour",
         description: `Le statut du projet a été changé vers: ${newStatus}`,
       });
+      navigate(`/projects/${projectId}`);
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le statut.",
+        description: (error as any)?.message || "Impossible de mettre à jour le statut.",
         variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, projectService, formData, updateFormData, toast]);
+  }, [projectId, projectService, formData, toast, navigate]);
 
   // Handle step navigation with auto-save
   const handleStepChange = useCallback(async (newStep: number) => {
@@ -279,11 +276,11 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Nom du Projet *</Label>
+                  <Label htmlFor="title">Nom du Projet *</Label>
                   <Input
-                    id="name"
-                    value={formData.name || ''}
-                    onChange={(e) => updateFormData({ name: e.target.value })}
+                    id="title"
+                    value={formData.title || ''}
+                    onChange={(e) => updateFormData({ title: e.target.value })}
                     placeholder="Nom du projet"
                   />
                 </div>
@@ -324,29 +321,29 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                   <Input
                     id="budget"
                     type="number"
-                    value={formData.budget || ''}
-                    onChange={(e) => updateFormData({ budget: e.target.value })}
+                    value={formData.budget ?? ''}
+                    onChange={(e) => updateFormData({ budget: Number(e.target.value) || 0 })}
                     placeholder="Budget total"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="start_date">Date de Début</Label>
+                  <Label htmlFor="startDate">Date de Début</Label>
                   <Input
-                    id="start_date"
+                    id="startDate"
                     type="date"
-                    value={formData.start_date || ''}
-                    onChange={(e) => updateFormData({ start_date: e.target.value })}
+                    value={formData.startDate || ''}
+                    onChange={(e) => updateFormData({ startDate: e.target.value })}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="end_date">Date de Fin Prévue</Label>
+                  <Label htmlFor="endDate">Date de Fin Prévue</Label>
                   <Input
-                    id="end_date"
+                    id="endDate"
                     type="date"
-                    value={formData.end_date || ''}
-                    onChange={(e) => updateFormData({ end_date: e.target.value })}
+                    value={formData.endDate || ''}
+                    onChange={(e) => updateFormData({ endDate: e.target.value })}
                   />
                 </div>
               </div>

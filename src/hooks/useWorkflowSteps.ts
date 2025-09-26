@@ -81,9 +81,10 @@ export const useWorkflowSteps = (tenderId: string) => {
       });
     },
     onError: (error: Error) => {
+      console.error('Update step status error:', error);
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de la mise à jour du statut.',
+        description: error.message || 'Erreur lors de la mise à jour du statut.',
         variant: 'destructive',
       });
     }
@@ -118,13 +119,14 @@ export const useWorkflowSteps = (tenderId: string) => {
       }
       return { previous };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (err, _vars, ctx) => {
       if (ctx?.previous) {
         queryClient.setQueryData(['workflow-steps', tenderId], ctx.previous);
       }
+      console.error('Update step dates error:', err);
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de la mise à jour des dates.',
+        description: (err as any)?.message || 'Erreur lors de la mise à jour des dates.',
         variant: 'destructive',
       });
     },
