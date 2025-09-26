@@ -130,6 +130,27 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   const [showStepDialog, setShowStepDialog] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('fr'); // fr, ar, en
 
+  // Sync form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+      // Load phases from initialData if they exist
+      if (initialData.phases && Array.isArray(initialData.phases)) {
+        const transformedPhases = initialData.phases.map((phase: any, index: number) => ({
+          id: phase.id || `phase_${index}`,
+          title: phase.title || phase.phase_name || '',
+          description: phase.description || '',
+          order: phase.order || index + 1,
+          status: phase.status || 'pending',
+          startDate: phase.startDate || phase.start_date || '',
+          endDate: phase.endDate || phase.end_date || '',
+          steps: [] // Initialize empty, will be populated from database
+        }));
+        setProjectPhases(transformedPhases);
+      }
+    }
+  }, [initialData]);
+
   const updateFormData = useCallback((updates: any) => {
     setFormData((prev: any) => ({ ...prev, ...updates }));
     setHasUnsavedChanges(true);
@@ -385,8 +406,12 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                   {formData.title || 'Édition du Projet'}
                 </h1>
                 <div className="flex items-center gap-4 mt-2">
-                  <Badge variant={formData.status === 'en cours' ? 'default' : 'secondary'}>
-                    {formData.status || 'En attente'}
+                  <Badge variant={formData.status === 'InProgress' ? 'default' : 'secondary'}>
+                    {formData.status === 'InProgress' ? 'En cours' :
+                     formData.status === 'Completed' ? 'Terminé' :
+                     formData.status === 'OnHold' ? 'En pause' :
+                     formData.status === 'Cancelled' ? 'Annulé' :
+                     formData.status === 'Planning' ? 'En planification' : 'En attente'}
                   </Badge>
                   <div className="text-sm text-muted-foreground">
                     Progression: {formData.progress || 0}%
@@ -464,25 +489,26 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="status" className="text-base font-medium">
-                                  Statut
-                                </Label>
-                                <Select 
-                                  value={formData.status || 'en cours'} 
-                                  onValueChange={(value) => updateFormData({ status: value })}
-                                >
-                                  <SelectTrigger className="mt-2">
-                                    <SelectValue placeholder="Sélectionner un statut" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="en cours">En cours</SelectItem>
-                                    <SelectItem value="terminé">Terminé</SelectItem>
-                                    <SelectItem value="en pause">En pause</SelectItem>
-                                    <SelectItem value="annulé">Annulé</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                <div>
+                                  <Label htmlFor="status" className="text-base font-medium">
+                                    Statut
+                                  </Label>
+                                  <Select 
+                                    value={formData.status || 'Planning'} 
+                                    onValueChange={(value) => updateFormData({ status: value })}
+                                  >
+                                    <SelectTrigger className="mt-2">
+                                      <SelectValue placeholder="Sélectionner un statut" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Planning">En planification</SelectItem>
+                                      <SelectItem value="InProgress">En cours</SelectItem>
+                                      <SelectItem value="OnHold">En pause</SelectItem>
+                                      <SelectItem value="Completed">Terminé</SelectItem>
+                                      <SelectItem value="Cancelled">Annulé</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
                               <div>
                                 <Label htmlFor="priority" className="text-base font-medium">
@@ -582,7 +608,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                         <Card className="p-4 bg-muted/50">
                           <div className="flex items-center justify-between mb-3">
                             <Label className="text-base font-medium">Progression du Projet</Label>
-                            <Badge variant={formData.status === 'en cours' ? 'default' : 'secondary'}>
+                            <Badge variant={formData.status === 'InProgress' ? 'default' : 'secondary'}>
                               {formData.progress || 0}%
                             </Badge>
                           </div>
