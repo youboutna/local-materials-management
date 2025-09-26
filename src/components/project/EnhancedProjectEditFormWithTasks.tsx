@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { ProjectService } from '@/services/ProjectService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,10 +49,14 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialData || {});
+  const [originalFormData, setOriginalFormData] = useState(initialData || {});
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Dialog states
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
@@ -59,11 +64,42 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
+  // Initialize ProjectService
+  const projectService = useMemo(() => new ProjectService(), []);
+
+  // Load project data from database
+  const loadProjectData = useCallback(async () => {
+    if (!projectId) return;
+    
+    setIsLoading(true);
+    try {
+      const projectDetail = await projectService.getProjectDetail(projectId);
+      if (projectDetail) {
+        setFormData(projectDetail);
+        setOriginalFormData(projectDetail);
+        onFormDataChange?.(projectDetail);
+      }
+    } catch (error) {
+      console.error('Error loading project data:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données du projet.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [initialData]);
+  }, [projectId, projectService, onFormDataChange, toast]);
+
+  // Load data on mount and when projectId changes
+  useEffect(() => {
+    if (projectId && !initialData) {
+      loadProjectData();
+    } else if (initialData) {
+      setFormData(initialData);
+      setOriginalFormData(initialData);
+    }
+  }, [projectId, initialData, loadProjectData]);
 
   // Define workflow steps
   const steps = [
@@ -117,23 +153,35 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     }
   ];
 
-  const updateFormData = (updates: any) => {
-    const newData = { ...formData, ...updates };
-    setFormData(newData);
-    onFormDataChange?.(newData);
-  };
+  const updateFormData = useCallback((newData: any) => {
+    const updatedData = { ...formData, ...newData };
+    setFormData(updatedData);
+    setHasUnsavedChanges(true);
+    onFormDataChange?.(updatedData);
+  }, [formData, onFormDataChange]);
 
-  const handleStepChange = (stepNumber: number) => {
-    if (stepNumber >= 1 && stepNumber <= steps.length) {
-      setCurrentStep(stepNumber);
+  // Auto-save on step change
+  const autoSaveStep = useCallback(async (stepData: any) => {
+    if (!projectId || !hasUnsavedChanges) return;
+    
+    try {
+      await projectService.updateProject(projectId, stepData);
+      setHasUnsavedChanges(false);
+      setOriginalFormData(stepData);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
     }
-  };
+  }, [projectId, projectService, hasUnsavedChanges]);
 
   const handleSaveStep = async () => {
+    if (!projectId) return;
+    
     setIsSaving(true);
     try {
-      // Save current step data
-      await onSubmit(formData);
+      await projectService.updateProject(projectId, formData);
+      setHasUnsavedChanges(false);
+      setOriginalFormData(formData);
+      
       toast({
         title: "Étape sauvegardée",
         description: `Les données de l'étape ${currentStep} ont été sauvegardées.`,
@@ -155,6 +203,40 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
       setIsSaving(false);
     }
   };
+
+  // Handle status change without leaving edit form
+  const handleStatusChange = useCallback(async (newStatus: string) => {
+    if (!projectId) return;
+    
+    try {
+      setIsSaving(true);
+      await projectService.updateProject(projectId, { ...formData, status: newStatus });
+      updateFormData({ status: newStatus });
+      setHasUnsavedChanges(false);
+      
+      toast({
+        title: "Statut mis à jour",
+        description: `Le statut du projet a été changé vers: ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [projectId, projectService, formData, updateFormData, toast]);
+
+  // Handle step navigation with auto-save
+  const handleStepChange = useCallback(async (newStep: number) => {
+    if (hasUnsavedChanges) {
+      await autoSaveStep(formData);
+    }
+    setCurrentStep(newStep);
+  }, [hasUnsavedChanges, autoSaveStep, formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +303,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                   <Label htmlFor="status">Statut</Label>
                   <Select
                     value={formData.status || ''}
-                    onValueChange={(value) => updateFormData({ status: value })}
+                    onValueChange={handleStatusChange}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner le statut" />
