@@ -356,7 +356,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                               {role === 'technicalManager' ? 'Responsable Technique' : 
                                role === 'supervisor' ? 'Superviseur' : 'Client'}
                             </p>
-                            <p className="text-sm text-muted-foreground">ID: {employeeId}</p>
+                            <p className="text-sm text-muted-foreground">ID: {String(employeeId)}</p>
                           </div>
                         </div>
                         <Button 
