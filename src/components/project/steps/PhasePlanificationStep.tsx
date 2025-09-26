@@ -12,6 +12,7 @@ interface PhasePlanificationStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
   onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
   isEditing?: boolean;
+  baseData?: any;
 }
 
 const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
@@ -19,7 +20,8 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
   onUpdate,
   selectedMaterials,
   onMaterialsChange,
-  isEditing = false
+  isEditing = false,
+  baseData = {}
 }) => {
   return (
     <Card>

@@ -15,6 +15,7 @@ interface StakeholdersTeamStepProps {
   formData: any;
   onUpdate: (data: any) => void;
   isEditing?: boolean;
+  baseData?: any;
 }
 
 interface Stakeholder {
@@ -36,21 +37,30 @@ interface TeamMember {
 const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   formData,
   onUpdate,
-  isEditing = false
+  isEditing = false,
+  baseData = {}
 }) => {
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(formData.stakeholders || []);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(formData.teamMembers || []);
   const [newStakeholder, setNewStakeholder] = useState<Partial<Stakeholder>>({});
   const [newTeamMember, setNewTeamMember] = useState<Partial<TeamMember>>({});
   
-  // Database data
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  // Use database data from baseData or local state
+  const [employees, setEmployees] = useState<any[]>(baseData.employees || []);
+  const [suppliers, setSuppliers] = useState<any[]>(baseData.suppliers || []);
+
+  // Update local state when baseData changes
+  useEffect(() => {
+    if (baseData.employees) setEmployees(baseData.employees);
+    if (baseData.suppliers) setSuppliers(baseData.suppliers);
+  }, [baseData]);
 
   useEffect(() => {
-    loadEmployees();
-    loadSuppliers();
-  }, []);
+    if (!baseData.employees || !baseData.suppliers) {
+      loadEmployees();
+      loadSuppliers();
+    }
+  }, [baseData]);
 
   const loadEmployees = async () => {
     try {

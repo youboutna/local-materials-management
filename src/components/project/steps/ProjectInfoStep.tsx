@@ -9,12 +9,14 @@ interface ProjectInfoStepProps {
   formData: any;
   onUpdate: (data: any) => void;
   isEditing?: boolean;
+  baseData?: any;
 }
 
 const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
   formData,
   onUpdate,
-  isEditing = false
+  isEditing = false,
+  baseData = {}
 }) => {
   return (
     <Card>

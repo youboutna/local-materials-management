@@ -42,6 +42,12 @@ export interface ProjectFormData {
   materials_budget?: number;
   procurement_lead_time?: number;
   resource_assignment?: string;
+  // Additional data loaded from database
+  bankGuarantees?: any[];
+  insuranceCertificates?: any[];
+  documents?: any[];
+  employees?: any[];
+  suppliers?: any[];
 }
 
 export interface SaveContext {
@@ -162,15 +168,118 @@ export class ProjectFormService {
         materialId: item.material_id,
         quantity: item.quantity
       })) || [];
+
+      // Load risks
+      const { data: risksData } = await supabase
+        .from('project_risks')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at');
+
+      const risks = risksData?.map(risk => ({
+        id: risk.id,
+        category: risk.risk_level || 'technical',
+        description: risk.risk_description || '',
+        probability: risk.probability || 'medium',
+        impact: risk.impact || 'medium',
+        riskScore: this.calculateRiskScore(risk.probability || 'medium', risk.impact || 'medium'),
+        mitigationPlan: risk.mitigation_strategy || '',
+        owner: risk.owner_id || '',
+        status: risk.status || 'active'
+      })) || [];
+
+      // Load bank guarantees
+      const { data: bankGuaranteesData } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at');
+
+      // Load insurance certificates
+      const { data: insuranceData } = await supabase
+        .from('insurance_certificates')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at');
+
+      // Load project documents
+      const { data: documentsData } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at');
+
+      // Load employees for team/stakeholders
+      const { data: employeesData } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('is_active', true)
+        .order('full_name');
+
+      // Load suppliers for contractors
+      const { data: suppliersData } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
       
       return {
         stakeholders: stakeholders || [],
         phases,
-        materials
+        materials,
+        risks,
+        bankGuarantees: bankGuaranteesData || [],
+        insuranceCertificates: insuranceData || [],
+        documents: documentsData || [],
+        employees: employeesData || [],
+        suppliers: suppliersData || []
       };
     } catch (error) {
       console.error('Error loading related data:', error);
       throw error;
+    }
+  }
+
+  // Helper to calculate risk score
+  private calculateRiskScore(probability: string, impact: string): number {
+    const probabilityValues = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
+    const impactValues = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
+    
+    const probValue = probabilityValues[probability as keyof typeof probabilityValues] || 3;
+    const impactValue = impactValues[impact as keyof typeof impactValues] || 3;
+    
+    return probValue * impactValue;
+  }
+
+  // Load base data for dropdowns and selectors
+  async loadBaseData(): Promise<any> {
+    try {
+      const [
+        { data: employeesData },
+        { data: suppliersData },
+        { data: materialsData },
+        { data: organizationsData }
+      ] = await Promise.all([
+        supabase.from('employees').select('*').eq('is_active', true).order('full_name'),
+        supabase.from('suppliers').select('*').eq('is_active', true).order('name'),
+        supabase.from('materials').select('*').order('name'),
+        supabase.from('organizations').select('*').eq('is_active', true).order('name')
+      ]);
+
+      return {
+        employees: employeesData || [],
+        suppliers: suppliersData || [],
+        materials: materialsData || [],
+        organizations: organizationsData || []
+      };
+    } catch (error) {
+      console.error('Error loading base data:', error);
+      return {
+        employees: [],
+        suppliers: [],
+        materials: [],
+        organizations: []
+      };
     }
   }
 

@@ -42,6 +42,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
+  const [baseData, setBaseData] = useState<any>({});
 
   // Initialize ProjectFormService
   const formService = new ProjectFormService();
@@ -84,6 +85,16 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   }, [projectId, formService]);
 
+  // Load base data for dropdowns
+  const loadBaseData = useCallback(async () => {
+    try {
+      const data = await formService.loadBaseData();
+      setBaseData(data);
+    } catch (error) {
+      console.error('Error loading base data:', error);
+    }
+  }, [formService]);
+
   // Update form data when initialData changes
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
@@ -106,10 +117,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   }, [initialData, loadProjectData, formService]);
 
-  // Load related data on mount
+  // Load related data and base data on mount
   useEffect(() => {
     loadRelatedData();
-  }, [loadRelatedData]);
+    loadBaseData();
+  }, [loadRelatedData, loadBaseData]);
 
   // Update form data helper
   const updateFormData = (updates: any) => {
@@ -303,6 +315,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             formData={formData}
             onUpdate={updateFormData}
             isEditing={true}
+            baseData={baseData}
           />
         );
       case 2:
@@ -311,6 +324,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             formData={formData}
             onUpdate={updateFormData}
             isEditing={true}
+            baseData={baseData}
           />
         );
       case 3:
@@ -321,6 +335,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             selectedMaterials={selectedMaterials}
             onMaterialsChange={setSelectedMaterials}
             isEditing={true}
+            baseData={baseData}
           />
         );
       case 4:
