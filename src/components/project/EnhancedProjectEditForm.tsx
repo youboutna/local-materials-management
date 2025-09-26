@@ -233,7 +233,9 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     try {
       await onSubmit({
         ...formData,
-        materials: selectedMaterials
+        materials: selectedMaterials,
+        currentStep: currentStep,
+        isDraft: true
       });
       toast({
         title: 'Étape sauvegardée',
@@ -244,6 +246,73 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       toast({
         title: 'Erreur',
         description: 'Erreur lors de la sauvegarde.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Save and next step
+  const handleSaveAndNext = async () => {
+    if (!onSubmit) return;
+    
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        ...formData,
+        materials: selectedMaterials,
+        currentStep: currentStep,
+        isDraft: true
+      });
+      
+      // Move to next step if not at the end
+      if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+      }
+      
+      toast({
+        title: 'Étape sauvegardée',
+        description: 'Passage à l\'étape suivante.',
+      });
+    } catch (error) {
+      console.error('Error saving step:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la sauvegarde.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Save global and close
+  const handleSaveGlobalAndClose = async () => {
+    if (!onSubmit) return;
+    
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        ...formData,
+        materials: selectedMaterials,
+        currentStep: currentStep,
+        isDraft: false,
+        isComplete: true
+      });
+      
+      toast({
+        title: 'Projet sauvegardé',
+        description: 'Toutes les modifications ont été sauvegardées.',
+      });
+      
+      // Navigate back or close form
+      window.history.back();
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de la sauvegarde globale.',
         variant: 'destructive',
       });
     } finally {
@@ -735,6 +804,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Navigation buttons */}
               <div className="flex justify-between">
                 <Button
                   variant="outline"
@@ -751,24 +821,65 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                 </Button>
               </div>
               
-              <Button
-                onClick={handleSaveStep}
-                disabled={isSaving}
-                className="w-full"
-                variant="default"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Sauvegarde...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Sauvegarder
-                  </>
-                )}
-              </Button>
+              {/* Save buttons */}
+              <div className="space-y-2">
+                <Button
+                  onClick={handleSaveStep}
+                  disabled={isSaving}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Sauvegarder l'Étape
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleSaveAndNext}
+                  disabled={isSaving || currentStep === steps.length}
+                  className="w-full"
+                  variant="default"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Sauvegarder & Suivant
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleSaveGlobalAndClose}
+                  disabled={isSaving}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Sauvegarder Global & Fermer
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
