@@ -113,9 +113,10 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
   // Update form data helper
   const updateFormData = (updates: any) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    const updatedData = { ...formData, ...updates };
+    setFormData(updatedData);
     if (onFormDataChange) {
-      onFormDataChange({ ...formData, ...updates });
+      onFormDataChange(updatedData);
     }
   };
 

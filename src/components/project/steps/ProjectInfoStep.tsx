@@ -76,15 +76,15 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <div>
               <label className="block text-sm font-medium mb-2">Type de marché *</label>
               <Select value={formData.market_type || ''} onValueChange={(value) => onUpdate({ market_type: value })}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                  <SelectItem value="public">Marché public</SelectItem>
-                  <SelectItem value="private">Marché privé</SelectItem>
-                  <SelectItem value="ppp">Partenariat public-privé (PPP)</SelectItem>
-                  <SelectItem value="concession">Concession</SelectItem>
-                  <SelectItem value="delegation">Délégation de service public</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                  <SelectItem value="public" className="cursor-pointer">Marché public</SelectItem>
+                  <SelectItem value="private" className="cursor-pointer">Marché privé</SelectItem>
+                  <SelectItem value="ppp" className="cursor-pointer">Partenariat public-privé (PPP)</SelectItem>
+                  <SelectItem value="concession" className="cursor-pointer">Concession</SelectItem>
+                  <SelectItem value="delegation" className="cursor-pointer">Délégation de service public</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -103,31 +103,31 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <div>
               <label className="block text-sm font-medium mb-2">Mode de sélection</label>
               <Select value={formData.selection_mode || ''} onValueChange={(value) => onUpdate({ selection_mode: value })}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                  <SelectItem value="open">Appel d'offres ouvert</SelectItem>
-                  <SelectItem value="restricted">Appel d'offres restreint</SelectItem>
-                  <SelectItem value="negotiated">Procédure négociée</SelectItem>
-                  <SelectItem value="competitive">Dialogue compétitif</SelectItem>
-                  <SelectItem value="innovation">Partenariat d'innovation</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                  <SelectItem value="open" className="cursor-pointer">Appel d'offres ouvert</SelectItem>
+                  <SelectItem value="restricted" className="cursor-pointer">Appel d'offres restreint</SelectItem>
+                  <SelectItem value="negotiated" className="cursor-pointer">Procédure négociée</SelectItem>
+                  <SelectItem value="competitive" className="cursor-pointer">Dialogue compétitif</SelectItem>
+                  <SelectItem value="innovation" className="cursor-pointer">Partenariat d'innovation</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Source de financement</label>
               <Select value={formData.financing_source || ''} onValueChange={(value) => onUpdate({ financing_source: value })}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                  <SelectItem value="budget_state">Budget de l'État</SelectItem>
-                  <SelectItem value="budget_local">Budget collectivité locale</SelectItem>
-                  <SelectItem value="eu_funds">Fonds européens</SelectItem>
-                  <SelectItem value="private">Financement privé</SelectItem>
-                  <SelectItem value="mixed">Financement mixte</SelectItem>
-                  <SelectItem value="loan">Emprunt</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                  <SelectItem value="budget_state" className="cursor-pointer">Budget de l'État</SelectItem>
+                  <SelectItem value="budget_local" className="cursor-pointer">Budget collectivité locale</SelectItem>
+                  <SelectItem value="eu_funds" className="cursor-pointer">Fonds européens</SelectItem>
+                  <SelectItem value="private" className="cursor-pointer">Financement privé</SelectItem>
+                  <SelectItem value="mixed" className="cursor-pointer">Financement mixte</SelectItem>
+                  <SelectItem value="loan" className="cursor-pointer">Emprunt</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -169,15 +169,15 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <div>
               <label className="block text-sm font-medium mb-2">Statut du projet</label>
               <Select value={formData.status || 'planning'} onValueChange={(value) => onUpdate({ status: value })}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                  <SelectItem value="planning">En planification</SelectItem>
-                  <SelectItem value="en cours">En cours</SelectItem>
-                  <SelectItem value="suspendu">Suspendu</SelectItem>
-                  <SelectItem value="terminé">Terminé</SelectItem>
-                  <SelectItem value="annulé">Annulé</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                  <SelectItem value="planning" className="cursor-pointer">En planification</SelectItem>
+                  <SelectItem value="en cours" className="cursor-pointer">En cours</SelectItem>
+                  <SelectItem value="suspendu" className="cursor-pointer">Suspendu</SelectItem>
+                  <SelectItem value="terminé" className="cursor-pointer">Terminé</SelectItem>
+                  <SelectItem value="annulé" className="cursor-pointer">Annulé</SelectItem>
                 </SelectContent>
               </Select>
             </div>
