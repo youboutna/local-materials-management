@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, UserCheck, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Button } from '../../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { supabase } from '../../../integrations/supabase/client';
+import { useToast } from '../../../hooks/use-toast';
 
 interface StakeholdersTeamStepProps {
   formData: any;
@@ -36,10 +38,63 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   onUpdate,
   isEditing = false
 }) => {
+  const { toast } = useToast();
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>(formData.stakeholders || []);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(formData.teamMembers || []);
+  const [contractors, setContractors] = useState<any[]>(formData.contractors || []);
   const [newStakeholder, setNewStakeholder] = useState<Partial<Stakeholder>>({});
   const [newTeamMember, setNewTeamMember] = useState<Partial<TeamMember>>({});
+  
+  // Database data
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load real data from database
+  useEffect(() => {
+    loadEmployees();
+    loadSuppliers();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('is_active', true)
+        .order('full_name');
+      
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors du chargement des employés',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const loadSuppliers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('is_active', true)
+        .order('company_name');
+      
+      if (error) throw error;
+      setSuppliers(data || []);
+    } catch (error) {
+      console.error('Error loading suppliers:', error);
+      toast({
+        title: 'Erreur', 
+        description: 'Erreur lors du chargement des fournisseurs',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const stakeholderRoles = [
     'Maître d\'ouvrage',
@@ -50,7 +105,10 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     'Coordinateur SPS',
     'Autorité réglementaire',
     'Collectivité locale',
-    'Représentant usagers'
+    'Représentant usagers',
+    'Gestionnaire de patrimoine',
+    'Organisme financeur',
+    'Assureur'
   ];
 
   const teamPositions = [
@@ -62,7 +120,10 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     'Ouvrier spécialisé',
     'Technicien',
     'Responsable qualité',
-    'Responsable sécurité'
+    'Responsable sécurité',
+    'Métreur',
+    'Dessinateur',
+    'Coordinateur'
   ];
 
   const addStakeholder = () => {
@@ -153,9 +214,11 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <SelectValue placeholder="Sélectionner le responsable" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border shadow-lg z-50">
-                    <SelectItem value="user1">Jean Dupont</SelectItem>
-                    <SelectItem value="user2">Marie Martin</SelectItem>
-                    <SelectItem value="user3">Pierre Durand</SelectItem>
+                    {employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.full_name} - {employee.position}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

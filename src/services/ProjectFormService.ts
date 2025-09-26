@@ -19,6 +19,7 @@ export interface ProjectFormData {
   project_responsable_id?: string;
   main_contractor?: string;
   engineering_consultant?: string;
+  general_contractor?: string;
   project_reference?: string;
   allows_initial_payment?: boolean;
   initial_payment_percentage?: number;
@@ -26,10 +27,21 @@ export interface ProjectFormData {
   current_stage?: string;
   facilitiesLocation?: any;
   stakeholders?: any[];
+  teamMembers?: any[];
+  contractors?: any[];
   phases?: any[];
   materials?: any[];
   risks?: any[];
   compliance?: any[];
+  // Financial instruments
+  bank_guarantee_required?: boolean;
+  bank_guarantee_amount?: number;
+  bank_guarantee_percentage?: number;
+  insurance_required?: boolean;
+  // Materials and resources
+  materials_budget?: number;
+  procurement_lead_time?: number;
+  resource_assignment?: string;
 }
 
 export interface SaveContext {
@@ -168,7 +180,7 @@ export class ProjectFormService {
       case 1:
         return !!(formData.title && formData.description && formData.budget);
       case 2:
-        return !!(formData.stakeholders?.length || formData.project_responsable_id || formData.main_contractor);
+        return !!(formData.stakeholders?.length || formData.project_responsable_id || formData.main_contractor || formData.teamMembers?.length);
       case 3:
         return !!(formData.phases?.length);
       case 4:
