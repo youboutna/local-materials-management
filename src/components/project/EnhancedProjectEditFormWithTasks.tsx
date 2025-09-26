@@ -77,9 +77,23 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     try {
       const projectDetail = await projectService.getProjectDetail(projectId);
       if (projectDetail) {
-        setFormData((prev: any) => ({ ...prev, ...projectDetail }));
-        setOriginalFormData((prev: any) => ({ ...prev, ...projectDetail }));
-        onFormDataChange?.(projectDetail);
+        // Map the project detail data to form format
+        const formattedData = {
+          ...projectDetail,
+          // Ensure dates are in the correct format for form inputs
+          startDate: projectDetail.startDate ? new Date(projectDetail.startDate).toISOString().split('T')[0] : '',
+          endDate: projectDetail.endDate ? new Date(projectDetail.endDate).toISOString().split('T')[0] : '',
+          // Ensure location is properly formatted
+          location: typeof projectDetail.location === 'object' && projectDetail.location ? 
+            (projectDetail.location as any)?.address || JSON.stringify(projectDetail.location) : 
+            projectDetail.location || '',
+          // Ensure status is mapped correctly
+          status: projectDetail.status || 'planning'
+        };
+        
+        setFormData((prev: any) => ({ ...prev, ...formattedData }));
+        setOriginalFormData((prev: any) => ({ ...prev, ...formattedData }));
+        onFormDataChange?.(formattedData);
       }
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -106,26 +120,67 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         const managers: any[] = [];
         const team: any[] = [];
         const suppliers: any[] = [];
+        
         (stakeholdersData || []).forEach((s: any) => {
           if (s.stakeholder_entity_type === 'employee') {
-            if ((s.stakeholder_type || '').includes('manager')) managers.push({ id: s.stakeholder_id, name: s.employee?.full_name || 'Manager' });
-            else team.push({ id: s.stakeholder_id, name: s.employee?.full_name || 'Employé', department: s.employee?.department });
+            const employeeData = {
+              id: s.stakeholder_id,
+              name: s.employee?.full_name || 'Manager',
+              role: s.stakeholder_type,
+              department: s.employee?.department,
+              position: s.employee?.position,
+              email: s.employee?.email,
+              phone: s.employee?.phone
+            };
+            
+            if ((s.stakeholder_type || '').includes('manager')) {
+              managers.push(employeeData);
+            } else {
+              team.push(employeeData);
+            }
           } else if (s.stakeholder_entity_type === 'supplier') {
-            suppliers.push({ id: s.stakeholder_id, name: s.supplier?.name || 'Fournisseur', type: 'Fournisseur' });
+            suppliers.push({
+              id: s.stakeholder_id,
+              name: s.supplier?.name || 'Fournisseur',
+              type: s.stakeholder_type || 'Fournisseur',
+              role_description: s.role_description,
+              is_primary: s.is_primary,
+              contact: s.supplier?.contact_person,
+              email: s.supplier?.email,
+              phone: s.supplier?.phone
+            });
           }
         });
+        
         return { managers, team, suppliers };
       })();
+
+      // Format phases data with all related information
+      const formattedPhases = phasesData.map((phase: any) => ({
+        ...phase,
+        // Ensure dates are in correct format
+        startDate: phase.startDate ? new Date(phase.startDate).toISOString().split('T')[0] : '',
+        endDate: phase.endDate ? new Date(phase.endDate).toISOString().split('T')[0] : '',
+        // Ensure all arrays exist
+        materials: phase.materials || [],
+        humanResources: phase.humanResources || [],
+        suppliers: phase.suppliers || []
+      }));
 
       setFormData((prev: any) => ({
         ...prev,
         stakeholders: mappedStakeholders,
-        phases: phasesData as PhaseData[]
+        phases: formattedPhases
       }));
     } catch (err) {
       console.error('Error loading related data:', err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données liées au projet.",
+        variant: "destructive",
+      });
     }
-  }, [projectId]);
+  }, [projectId, toast]);
 
   // Load data on mount and when projectId changes
   useEffect(() => {
@@ -613,10 +668,135 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <div>
               <Label className="text-base font-medium">Équipe de Projet</Label>
               <p className="text-sm text-muted-foreground mb-4">
-                Gérez les membres de l'équipe et leurs rôles
+                Gérez les membres de l'équipe et leurs rôles spécifiques
               </p>
-              {/* Team management content */}
             </div>
+
+            {/* Internal Team Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700">
+                  <UserCheck className="h-5 w-5" />
+                  Équipe Interne ({((formData.stakeholders?.managers || []).length + (formData.stakeholders?.team || []).length)})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {/* Managers */}
+                  {(formData.stakeholders?.managers || []).map((manager: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-green-200 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="border-2 border-green-300">
+                          <AvatarFallback className="bg-green-100 text-green-700">
+                            {manager.name?.charAt(0) || 'M'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-green-800">{manager.name}</p>
+                          <p className="text-sm text-green-600">{manager.role || 'Manager'}</p>
+                          {manager.department && (
+                            <p className="text-xs text-green-500">{manager.department}</p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="border-green-300 text-green-700">
+                        Chef de Projet
+                      </Badge>
+                    </div>
+                  ))}
+                  
+                  {/* Team Members */}
+                  {(formData.stakeholders?.team || []).map((member: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-green-200 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="border-2 border-green-300">
+                          <AvatarFallback className="bg-green-100 text-green-700">
+                            {member.name?.charAt(0) || 'T'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-green-800">{member.name}</p>
+                          <p className="text-sm text-green-600">{member.position || member.role || 'Membre d\'équipe'}</p>
+                          {member.department && (
+                            <p className="text-xs text-green-500">{member.department}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {member.email && (
+                          <Button variant="ghost" size="sm" className="p-1">
+                            <Mail className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {member.phone && (
+                          <Button variant="ghost" size="sm" className="p-1">
+                            <Phone className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {(formData.stakeholders?.managers || []).length === 0 && (formData.stakeholders?.team || []).length === 0 && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>Aucun membre d'équipe interne configuré</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* External Stakeholders Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <Building2 className="h-5 w-5" />
+                  Contractants Externes ({(formData.stakeholders?.suppliers || []).length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {(formData.stakeholders?.suppliers || []).map((supplier: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-orange-200 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="border-2 border-orange-300">
+                          <AvatarFallback className="bg-orange-100 text-orange-700">
+                            {supplier.name?.charAt(0) || 'S'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-orange-800">{supplier.name}</p>
+                          <p className="text-sm text-orange-600">{supplier.type || 'Fournisseur'}</p>
+                          {supplier.role_description && (
+                            <p className="text-xs text-orange-500">{supplier.role_description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {supplier.is_primary && (
+                          <Badge variant="default" className="bg-orange-600">
+                            Principal
+                          </Badge>
+                        )}
+                        {supplier.contact && (
+                          <Button variant="ghost" size="sm" className="p-1">
+                            <User className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {(formData.stakeholders?.suppliers || []).length === 0 && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>Aucun contractant externe configuré</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
 
@@ -626,10 +806,146 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <div>
               <Label className="text-base font-medium">Phases du Projet</Label>
               <p className="text-sm text-muted-foreground mb-4">
-                Structure des phases et chronologie
+                Structure des phases et chronologie du projet
               </p>
-              {/* Phases management content */}
             </div>
+            
+            {/* Display existing phases */}
+            <div className="space-y-4">
+              {(formData.phases || []).length > 0 ? (
+                formData.phases.map((phase: any, index: number) => (
+                  <Card key={phase.id || index} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-lg">{phase.title}</h3>
+                        <p className="text-muted-foreground text-sm mt-1">{phase.description}</p>
+                        
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Date de début</Label>
+                            <p className="text-sm font-medium">{phase.startDate || 'Non définie'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Date de fin</Label>
+                            <p className="text-sm font-medium">{phase.endDate || 'Non définie'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Budget</Label>
+                            <p className="text-sm font-medium">{phase.budget ? `${phase.budget.toLocaleString()} €` : 'Non défini'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Statut</Label>
+                            <Badge variant={
+                              phase.status === 'completed' ? 'default' :
+                              phase.status === 'in_progress' ? 'secondary' :
+                              phase.status === 'delayed' ? 'destructive' : 'outline'
+                            }>
+                              {phase.status === 'completed' ? 'Terminé' :
+                               phase.status === 'in_progress' ? 'En cours' :
+                               phase.status === 'delayed' ? 'Retard' : 'Non commencé'}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        {/* Progress bar */}
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <Label className="text-xs text-muted-foreground">Progression</Label>
+                            <span className="text-xs text-muted-foreground">{phase.progress || 0}%</span>
+                          </div>
+                          <Progress value={phase.progress || 0} className="h-2" />
+                        </div>
+                        
+                        {/* Resources summary */}
+                        <div className="grid grid-cols-3 gap-4 mt-4">
+                          <div className="text-center p-2 bg-muted/50 rounded">
+                            <p className="text-xs text-muted-foreground">Matériaux</p>
+                            <p className="text-sm font-medium">{(phase.materials || []).length}</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted/50 rounded">
+                            <p className="text-xs text-muted-foreground">Ressources</p>
+                            <p className="text-sm font-medium">{(phase.humanResources || []).length}</p>
+                          </div>
+                          <div className="text-center p-2 bg-muted/50 rounded">
+                            <p className="text-xs text-muted-foreground">Fournisseurs</p>
+                            <p className="text-sm font-medium">{(phase.suppliers || []).length}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedPhaseId(phase.id)}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Détails & CRUD
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-8 text-center">
+                  <div className="text-muted-foreground">
+                    <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucune phase configurée pour ce projet</p>
+                    <p className="text-sm mt-1">Les phases seront créées lors de la planification détaillée</p>
+                  </div>
+                </Card>
+              )}
+            </div>
+            
+            {/* Phase Details Dialog */}
+            {selectedPhaseId && (
+              <Dialog open={!!selectedPhaseId} onOpenChange={() => setSelectedPhaseId(null)}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Gestion de la Phase: {formData.phases?.find((p: any) => p.id === selectedPhaseId)?.title}
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6">
+                    {/* Tabs for different aspects of phase management */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2 text-sm">Matériaux</h4>
+                        <PhaseMaterials
+                          phaseId={selectedPhaseId}
+                          projectId={projectId || ''}
+                        />
+                      </Card>
+                      
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2 text-sm">Tâches & Inspections</h4>
+                        <PhaseTasks
+                          phaseId={selectedPhaseId}
+                          projectId={projectId || ''}
+                        />
+                      </Card>
+                      
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2 text-sm">Paiements</h4>
+                        <PhasePayments
+                          phaseId={selectedPhaseId}
+                          projectId={projectId || ''}
+                        />
+                      </Card>
+                      
+                      <Card className="p-4">
+                        <h4 className="font-medium mb-2 text-sm">Documents</h4>
+                        <PhaseDocuments
+                          phaseId={selectedPhaseId}
+                          projectId={projectId || ''}
+                        />
+                      </Card>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         );
 
