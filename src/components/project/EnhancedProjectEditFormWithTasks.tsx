@@ -128,22 +128,26 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Progress Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Édition du Projet</h1>
+          <h2 className="text-2xl font-bold">Édition du Projet</h2>
           <p className="text-muted-foreground">
             Modifiez les détails et paramètres du projet
           </p>
         </div>
-        <Button onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder'}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={saveCurrentStep} variant="outline">
+            <Save className="h-4 w-4 mr-2" />
+            Sauvegarder
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="general" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="basic" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             Général
           </TabsTrigger>
@@ -155,13 +159,13 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <Calendar className="h-4 w-4" />
             Phases
           </TabsTrigger>
-          <TabsTrigger value="materials" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Matériaux
-          </TabsTrigger>
-          <TabsTrigger value="location" className="flex items-center gap-2">
+          <TabsTrigger value="geolocation" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             Localisation
+          </TabsTrigger>
+          <TabsTrigger value="resources" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Matériaux
           </TabsTrigger>
           <TabsTrigger value="risks" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
@@ -171,14 +175,10 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             <FileText className="h-4 w-4" />
             Conformité
           </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2">
-            <Save className="h-4 w-4" />
-            Actions
-          </TabsTrigger>
         </TabsList>
 
-        {/* General Information */}
-        <TabsContent value="general">
+        {/* Basic Information */}
+        <TabsContent value="basic">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -574,8 +574,8 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
           </Card>
         </TabsContent>
 
-        {/* Materials */}
-        <TabsContent value="materials">
+        {/* Resources & Materials */}
+        <TabsContent value="resources">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -663,13 +663,13 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
           </Card>
         </TabsContent>
 
-        {/* Location */}
-        <TabsContent value="location">
+        {/* Geolocation & Mapping */}
+        <TabsContent value="geolocation">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Localisation & Géolocalisation
+                Géolocalisation & Cartographie
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -783,35 +783,32 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Actions Tab */}
-        <TabsContent value="actions">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Save className="h-5 w-5" />
-                Actions & Sauvegarde
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button onClick={saveCurrentStep} variant="outline">
-                    <Save className="h-4 w-4 mr-2" />
-                    Sauvegarder les Modifications
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? 'Finalisation...' : 'Finaliser le Projet'}
-                  </Button>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Les données sont sauvegardées automatiquement lors du changement d'onglet.
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
+
+      {/* Bottom Actions */}
+      <div className="flex justify-between items-center pt-6 border-t">
+        <div className="text-sm text-muted-foreground">
+          Les modifications sont sauvegardées automatiquement
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              // Navigate back without submitting
+              window.history.back();
+            }}
+          >
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isSubmitting ? 'Finalisation...' : 'Finaliser les Modifications'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
