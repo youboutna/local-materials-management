@@ -656,32 +656,159 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                           </Button>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        {projectPhases.map((phase) => (
-                          <motion.div
-                            key={phase.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="border rounded-lg p-4 mb-4"
-                          >
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <Badge variant={phase.status === 'completed' ? 'default' : 'outline'}>
-                                  Phase {phase.order}
-                                </Badge>
-                                <h3 className="font-semibold text-lg">
-                                  {phase.title || `Phase ${phase.order}`}
-                                </h3>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => createNewStep(phase.id)}
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Nouvelle Étape
-                              </Button>
-                            </div>
+                       <CardContent>
+                         {projectPhases.length === 0 ? (
+                           <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                             <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                             <h3 className="text-lg font-medium text-muted-foreground mb-2">Aucune phase définie</h3>
+                             <p className="text-muted-foreground mb-4">Commencez par créer la première phase de votre projet</p>
+                             <Button onClick={createNewPhase}>
+                               <Plus className="h-4 w-4 mr-2" />
+                               Créer la première phase
+                             </Button>
+                           </div>
+                         ) : (
+                           projectPhases.map((phase) => (
+                             <motion.div
+                               key={phase.id}
+                               initial={{ opacity: 0, y: 20 }}
+                               animate={{ opacity: 1, y: 0 }}
+                               className="border rounded-lg p-4 mb-4"
+                             >
+                               <div className="flex items-center justify-between mb-4">
+                                 <div className="flex items-center gap-3 flex-1">
+                                   <Badge variant={phase.status === 'completed' ? 'default' : 'outline'}>
+                                     Phase {phase.order}
+                                   </Badge>
+                                   <div className="flex-1">
+                                     <Input
+                                       value={phase.title}
+                                       onChange={(e) => {
+                                         setProjectPhases(prev => prev.map(p => 
+                                           p.id === phase.id ? { ...p, title: e.target.value } : p
+                                         ));
+                                         setHasUnsavedChanges(true);
+                                       }}
+                                       placeholder={`Phase ${phase.order}`}
+                                       className="font-semibold text-lg border-none shadow-none p-0 h-auto"
+                                     />
+                                     {phase.description && (
+                                       <p className="text-sm text-muted-foreground mt-1">{phase.description}</p>
+                                     )}
+                                   </div>
+                                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                     <Badge variant="secondary">{phase.steps.length} étapes</Badge>
+                                     <Badge variant={phase.status === 'in_progress' ? 'default' : 'outline'}>
+                                       {phase.status === 'pending' ? 'En attente' :
+                                        phase.status === 'in_progress' ? 'En cours' :
+                                        phase.status === 'completed' ? 'Terminée' : phase.status}
+                                     </Badge>
+                                   </div>
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                   <Dialog>
+                                     <DialogTrigger asChild>
+                                       <Button size="sm" variant="outline">
+                                         <Eye className="h-3 w-3 mr-1" />
+                                         Détails
+                                       </Button>
+                                     </DialogTrigger>
+                                     <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                                       <DialogHeader>
+                                         <DialogTitle>Détails de la Phase: {phase.title || `Phase ${phase.order}`}</DialogTitle>
+                                       </DialogHeader>
+                                       <div className="space-y-6">
+                                         <div className="grid grid-cols-2 gap-4">
+                                           <div>
+                                             <Label>Titre de la Phase</Label>
+                                             <Input
+                                               value={phase.title}
+                                               onChange={(e) => {
+                                                 setProjectPhases(prev => prev.map(p => 
+                                                   p.id === phase.id ? { ...p, title: e.target.value } : p
+                                                 ));
+                                                 setHasUnsavedChanges(true);
+                                               }}
+                                               placeholder="Nom de la phase"
+                                             />
+                                           </div>
+                                           <div>
+                                             <Label>Statut</Label>
+                                             <Select
+                                               value={phase.status}
+                                               onValueChange={(value) => {
+                                                 setProjectPhases(prev => prev.map(p => 
+                                                   p.id === phase.id ? { ...p, status: value as any } : p
+                                                 ));
+                                                 setHasUnsavedChanges(true);
+                                               }}
+                                             >
+                                               <SelectTrigger>
+                                                 <SelectValue />
+                                               </SelectTrigger>
+                                               <SelectContent>
+                                                 <SelectItem value="pending">En attente</SelectItem>
+                                                 <SelectItem value="in_progress">En cours</SelectItem>
+                                                 <SelectItem value="completed">Terminée</SelectItem>
+                                               </SelectContent>
+                                             </Select>
+                                           </div>
+                                         </div>
+                                         <div>
+                                           <Label>Description</Label>
+                                           <Textarea
+                                             value={phase.description || ''}
+                                             onChange={(e) => {
+                                               setProjectPhases(prev => prev.map(p => 
+                                                 p.id === phase.id ? { ...p, description: e.target.value } : p
+                                               ));
+                                               setHasUnsavedChanges(true);
+                                             }}
+                                             placeholder="Description de la phase..."
+                                             rows={3}
+                                           />
+                                         </div>
+                                         <div className="grid grid-cols-2 gap-4">
+                                           <div>
+                                             <Label>Date de début</Label>
+                                             <Input
+                                               type="date"
+                                               value={phase.startDate || ''}
+                                               onChange={(e) => {
+                                                 setProjectPhases(prev => prev.map(p => 
+                                                   p.id === phase.id ? { ...p, startDate: e.target.value } : p
+                                                 ));
+                                                 setHasUnsavedChanges(true);
+                                               }}
+                                             />
+                                           </div>
+                                           <div>
+                                             <Label>Date de fin</Label>
+                                             <Input
+                                               type="date"
+                                               value={phase.endDate || ''}
+                                               onChange={(e) => {
+                                                 setProjectPhases(prev => prev.map(p => 
+                                                   p.id === phase.id ? { ...p, endDate: e.target.value } : p
+                                                 ));
+                                                 setHasUnsavedChanges(true);
+                                               }}
+                                             />
+                                           </div>
+                                         </div>
+                                       </div>
+                                     </DialogContent>
+                                   </Dialog>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => createNewStep(phase.id)}
+                                   >
+                                     <Plus className="h-3 w-3 mr-1" />
+                                     Nouvelle Étape
+                                   </Button>
+                                 </div>
+                               </div>
 
                             {/* Phase Steps */}
                             <div className="space-y-4 ml-4">
@@ -1180,15 +1307,9 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                                 </div>
                               ))}
                             </div>
-                          </motion.div>
-                        ))}
-
-                        {projectPhases.length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>Aucune phase définie. Commencez par créer votre première phase.</p>
-                          </div>
-                        )}
+                           </motion.div>
+                           ))
+                         )}
                       </CardContent>
                     </Card>
                   </div>
@@ -1212,39 +1333,213 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                   </Card>
                 )}
 
-                {/* Stakeholders */}
+                {/* Stakeholders - Interactive Data Display */}
                 {activeTab === 'stakeholders' && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-green-500" />
-                        Parties Prenantes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <Label className="text-base font-medium mb-3 block">Équipe du Projet</Label>
-                            <EmployeeSelector
-                              value={formData.projectManager || ''}
-                              onChange={(value) => updateFormData({ projectManager: value })}
-                              placeholder="Sélectionner le chef de projet"
-                            />
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-green-500" />
+                            Parties Prenantes
+                          </CardTitle>
+                          <Badge variant="outline">
+                            {((formData.stakeholders || []).length + (formData.suppliers || []).length)} parties prenantes
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Project Manager Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <Label className="text-lg font-medium">Chef de Projet</Label>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Edit3 className="h-4 w-4 mr-2" />
+                                  {formData.projectManager ? 'Modifier' : 'Assigner'}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Sélectionner le Chef de Projet</DialogTitle>
+                                </DialogHeader>
+                                <EmployeeSelector
+                                  value={formData.projectManager || ''}
+                                  onChange={(value) => updateFormData({ projectManager: value })}
+                                  placeholder="Sélectionner le chef de projet"
+                                />
+                              </DialogContent>
+                            </Dialog>
                           </div>
-                          <div>
-                            <Label className="text-base font-medium mb-3 block">Fournisseurs</Label>
-                            <SimpleSupplierSelector
-                              value={formData.mainSupplier || ''}
-                              onChange={(value) => updateFormData({ mainSupplier: value })}
-                              placeholder="Sélectionner le fournisseur principal"
-                            />
+                          {formData.projectManager ? (
+                            <div className="bg-muted p-3 rounded flex items-center gap-3">
+                              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium">
+                                PM
+                              </div>
+                              <div>
+                                <div className="font-medium">{formData.projectManagerName || 'Chef de Projet'}</div>
+                                <div className="text-sm text-muted-foreground">Responsable principal</div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                              <UserPlus className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                              <p className="text-muted-foreground">Aucun chef de projet assigné</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Team Members Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <Label className="text-lg font-medium">Équipe du Projet</Label>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Ajouter Membre
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Ajouter un Membre d'Équipe</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <EmployeeSelector
+                                    value=""
+                                    onChange={(value) => {
+                                      const currentStakeholders = formData.stakeholders || [];
+                                      if (!currentStakeholders.find(s => s.employeeId === value)) {
+                                        updateFormData({
+                                          stakeholders: [...currentStakeholders, {
+                                            id: `stakeholder_${Date.now()}`,
+                                            employeeId: value,
+                                            role: 'team_member',
+                                            assignedDate: new Date().toISOString().split('T')[0]
+                                          }]
+                                        });
+                                      }
+                                    }}
+                                    placeholder="Sélectionner un employé"
+                                  />
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {(formData.stakeholders || []).map((stakeholder) => (
+                              <div key={stakeholder.id} className="bg-muted p-3 rounded flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {stakeholder.employeeName?.charAt(0) || 'E'}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{stakeholder.employeeName || 'Employé'}</div>
+                                    <div className="text-sm text-muted-foreground">{stakeholder.role || 'Membre d\'équipe'}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      updateFormData({
+                                        stakeholders: (formData.stakeholders || []).filter(s => s.id !== stakeholder.id)
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                            
+                            {!(formData.stakeholders || []).length && (
+                              <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                                <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-muted-foreground">Aucun membre d'équipe assigné</p>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <OrganizationalHierarchyManager />
-                      </div>
-                    </CardContent>
-                  </Card>
+
+                        {/* Suppliers Section */}
+                        <div className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <Label className="text-lg font-medium">Fournisseurs</Label>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Ajouter Fournisseur
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Ajouter un Fournisseur</DialogTitle>
+                                </DialogHeader>
+                                <SimpleSupplierSelector
+                                  value=""
+                                  onChange={(supplierId) => {
+                                    if (supplierId) {
+                                      const currentSuppliers = formData.suppliers || [];
+                                      if (!currentSuppliers.find(s => s.id === supplierId)) {
+                                        // We need to fetch supplier data to add it properly
+                                        updateFormData({
+                                          suppliers: [...currentSuppliers, {
+                                            id: supplierId,
+                                            name: 'Nouveau Fournisseur', // This should be fetched from the API
+                                            category: 'General'
+                                          }]
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Sélectionner un fournisseur"
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+
+                          <div className="space-y-3">
+                            {(formData.suppliers || []).map((supplier) => (
+                              <div key={supplier.id} className="bg-muted p-3 rounded flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {supplier.name?.charAt(0) || 'S'}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{supplier.name}</div>
+                                    <div className="text-sm text-muted-foreground">{supplier.category || 'Fournisseur'}</div>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    updateFormData({
+                                      suppliers: (formData.suppliers || []).filter(s => s.id !== supplier.id)
+                                    });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            
+                            {!(formData.suppliers || []).length && (
+                              <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                                <Building2 className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-muted-foreground">Aucun fournisseur assigné</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
 
                 {/* Team & Contractors */}
