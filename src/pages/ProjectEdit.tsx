@@ -55,6 +55,19 @@ const ProjectEdit = () => {
           // Load project phases first
           const phases = await loadProjectPhases(id);
           
+          // Safe date formatting helper
+          const formatDateForInput = (dateString: any) => {
+            if (!dateString) return '';
+            try {
+              const date = new Date(dateString);
+              if (isNaN(date.getTime())) return '';
+              return date.toISOString().split('T')[0];
+            } catch (error) {
+              console.warn('Date formatting error:', error);
+              return '';
+            }
+          };
+
           // Prepare initial data for the form including phases
           const formInitialData = {
             title: projectData.title,
@@ -62,8 +75,11 @@ const ProjectEdit = () => {
             location: projectData.location,
             status: statusMapping[projectData.status as keyof typeof statusMapping] || 'Planning',
             budget: projectData.budget,
-            start_date: projectData.startDate,
-            end_date: projectData.endDate,
+            // Use safe date formatting for both legacy and new field names
+            startDate: formatDateForInput(projectData.startDate),
+            endDate: formatDateForInput(projectData.endDate),
+            start_date: formatDateForInput(projectData.startDate),
+            end_date: formatDateForInput(projectData.endDate),
             team_size: projectData.teamSize || 1, // Default to 1 instead of 0
             financing_source: projectData.financingSource || '',
             market_type: projectData.marketType || '',

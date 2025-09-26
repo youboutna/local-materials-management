@@ -54,8 +54,14 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   const navigate = useNavigate();
   const { id: projectId } = useParams<{ id: string }>();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState(initialData || {});
-  const [originalFormData, setOriginalFormData] = useState(initialData || {});
+  const [formData, setFormData] = useState(() => {
+    console.log('🔄 Initializing formData with:', initialData);
+    return initialData || {};
+  });
+  const [originalFormData, setOriginalFormData] = useState(() => {
+    console.log('🔄 Initializing originalFormData with:', initialData);
+    return initialData || {};
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
@@ -69,6 +75,25 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
 
   // Initialize ProjectService
   const projectService = useMemo(() => new ProjectService(), []);
+
+  // Update form data when initialData changes (from parent)
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      console.log('🔄 Updating formData from initialData:', initialData);
+      const processedData = {
+        ...initialData,
+        // Safe date formatting for initialData
+        startDate: formatDateForInput(initialData.startDate || initialData.start_date),
+        endDate: formatDateForInput(initialData.endDate || initialData.end_date),
+        start_date: formatDateForInput(initialData.startDate || initialData.start_date),
+        end_date: formatDateForInput(initialData.endDate || initialData.end_date),
+        // Map status if needed
+        status: initialData.status ? mapStatusFromDB(initialData.status) : 'planning'
+      };
+      setFormData(processedData);
+      setOriginalFormData(processedData);
+    }
+  }, [initialData]);
 
   // Debug: Test basic database connection
   useEffect(() => {
@@ -88,6 +113,42 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     testDatabaseConnection();
   }, []);
 
+  // Safe date formatting function
+  const formatDateForInput = (dateString: any) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.warn('Date formatting error:', error);
+      return '';
+    }
+  };
+
+  // Status mapping functions
+  const mapStatusFromDB = (dbStatus: string) => {
+    const statusMap: Record<string, string> = {
+      'en attente': 'planning',
+      'en cours': 'active', 
+      'suspendu': 'on_hold',
+      'terminé': 'completed',
+      'annulé': 'cancelled'
+    };
+    return statusMap[dbStatus] || 'planning';
+  };
+
+  const mapStatusToDB = (formStatus: string) => {
+    const statusMap: Record<string, string> = {
+      'planning': 'en attente',
+      'active': 'en cours',
+      'on_hold': 'suspendu', 
+      'completed': 'terminé',
+      'cancelled': 'annulé'
+    };
+    return statusMap[formStatus] || 'en attente';
+  };
+
   // Load project data from database (merge into existing formData, do not wipe)
   const loadProjectData = useCallback(async () => {
     if (!projectId) return;
@@ -99,18 +160,22 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
       console.log('✅ Project detail loaded:', projectDetail);
       
       if (projectDetail) {
-        // Map the project detail data to form format
+        // Map the project detail data to form format with safe date handling
         const formattedData = {
           ...projectDetail,
-          // Ensure dates are in the correct format for form inputs
-          startDate: projectDetail.startDate ? new Date(projectDetail.startDate).toISOString().split('T')[0] : '',
-          endDate: projectDetail.endDate ? new Date(projectDetail.endDate).toISOString().split('T')[0] : '',
+          // Safe date formatting
+          startDate: formatDateForInput(projectDetail.startDate),
+          endDate: formatDateForInput(projectDetail.endDate),
+          start_date: formatDateForInput(projectDetail.startDate), // Legacy field
+          end_date: formatDateForInput(projectDetail.endDate), // Legacy field
           // Ensure location is properly formatted
           location: typeof projectDetail.location === 'object' && projectDetail.location ? 
             (projectDetail.location as any)?.address || JSON.stringify(projectDetail.location) : 
             projectDetail.location || '',
-          // Ensure status is mapped correctly
-          status: projectDetail.status || 'planning'
+          // Map status from database format to form format
+          status: mapStatusFromDB(projectDetail.status || 'en attente'),
+          // Ensure budget is a number
+          budget: typeof projectDetail.budget === 'number' ? projectDetail.budget : Number(projectDetail.budget) || 0
         };
         
         console.log('✅ Formatted project data:', formattedData);
@@ -192,12 +257,12 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         return { managers, team, suppliers };
       })();
 
-      // Format phases data with all related information
+      // Format phases data with all related information using safe date formatting
       const formattedPhases = phasesData.map((phase: any) => ({
         ...phase,
-        // Ensure dates are in correct format
-        startDate: phase.startDate ? new Date(phase.startDate).toISOString().split('T')[0] : '',
-        endDate: phase.endDate ? new Date(phase.endDate).toISOString().split('T')[0] : '',
+        // Use safe date formatting
+        startDate: formatDateForInput(phase.startDate),
+        endDate: formatDateForInput(phase.endDate),
         // Ensure all arrays exist
         materials: phase.materials || [],
         humanResources: phase.humanResources || [],
@@ -315,9 +380,12 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
           title: formData.title,
           description: formData.description,
           budget: typeof formData.budget === 'number' ? formData.budget : Number(formData.budget) || 0,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          location: typeof formData.location === 'string' ? formData.location : (formData.location?.address || '')
+          // Only include dates if they have valid values
+          ...(formData.startDate && { startDate: formData.startDate }),
+          ...(formData.endDate && { endDate: formData.endDate }),
+          location: typeof formData.location === 'string' ? formData.location : (formData.location?.address || ''),
+          // Map status to database format
+          status: mapStatusToDB(formData.status || 'planning')
         };
         await projectService.updateProject(projectId, partial);
         setOriginalFormData((prev: any) => ({ ...prev, ...partial }));
@@ -390,7 +458,11 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     if (!projectId) return;
     try {
       setIsSaving(true);
-      await projectService.updateProject(projectId, { ...formData, status: newStatus });
+      // Map status to database format before saving
+      const dbStatus = mapStatusToDB(newStatus);
+      await projectService.updateProject(projectId, { ...formData, status: dbStatus });
+      // Update form data with the new status
+      updateFormData({ status: newStatus });
       toast({
         title: "Statut mis à jour",
         description: `Le statut du projet a été changé vers: ${newStatus}`,
