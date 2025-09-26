@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { 
   MapPin, Users, Building2, Calendar, DollarSign, FileText, 
   Plus, Edit3, Trash2, CheckCircle, Clock, AlertTriangle,
-  UserPlus, Settings, Bell, Eye, PlusCircle, Target
+  UserPlus, Settings, Bell, Eye, PlusCircle, Target, Building,
+  UserCheck, Shield, Layers, Menu, Save, ArrowLeft, ArrowRight,
+  Package, Wrench, Calendar as CalendarIcon, Upload
 } from 'lucide-react';
 
 import ProjectFormWithMap from './ProjectFormWithMap';
@@ -21,6 +24,7 @@ import OrganizationalHierarchyManager from '../admin/OrganizationalHierarchyMana
 import MaterialFormSection from '../MaterialFormSection';
 import EmployeeSelector from '../selectors/EmployeeSelector';
 import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
+import UserSelector from '../selectors/UserSelector';
 
 interface TaskResource {
   id?: string;
@@ -31,12 +35,63 @@ interface TaskResource {
   estimatedCost?: number;
 }
 
+interface TaskDocument {
+  id?: string;
+  title: string;
+  type: 'required' | 'optional';
+  status: 'pending' | 'uploaded' | 'validated';
+  deadline?: string;
+  fileUrl?: string;
+}
+
+interface PhaseStep {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
+  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  materials: TaskResource[];
+  tasks: PhaseTask[];
+  documents: TaskDocument[];
+  inspections: {
+    id?: string;
+    type: string;
+    scheduledDate?: string;
+    status: 'pending' | 'scheduled' | 'completed';
+    inspector?: string;
+  }[];
+  payments: {
+    id?: string;
+    percentage: number;
+    amount: number;
+    status: 'pending' | 'approved' | 'paid';
+    dueDate?: string;
+  }[];
+  notifications: {
+    type: 'email' | 'sms' | 'app';
+    enabled: boolean;
+    frequency: 'daily' | 'weekly' | 'milestone';
+  }[];
+}
+
+interface ProjectPhase {
+  id: string;
+  title: string;
+  description?: string;
+  order: number;
+  status: 'pending' | 'in_progress' | 'completed';
+  startDate?: string;
+  endDate?: string;
+  steps: PhaseStep[];
+}
+
 interface PhaseTask {
   id?: string;
   title: string;
   description?: string;
   phase_id: string;
   phase_name: string;
+  step_id?: string;
   estimated_duration_days: number;
   status: 'pending' | 'in_progress' | 'completed' | 'delayed';
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -67,12 +122,13 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
 }) => {
   const [formData, setFormData] = useState(initialData || {});
   const [activeTab, setActiveTab] = useState('basic');
+  const [activePhaseId, setActivePhaseId] = useState<string>('');
+  const [activeStepId, setActiveStepId] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [phaseTasks, setPhaseTasks] = useState<PhaseTask[]>([]);
-  const [editingTask, setEditingTask] = useState<PhaseTask | null>(null);
-  const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [showResourceDialog, setShowResourceDialog] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [projectPhases, setProjectPhases] = useState<ProjectPhase[]>([]);
+  const [showStepDialog, setShowStepDialog] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('fr'); // fr, ar, en
 
   const updateFormData = useCallback((updates: any) => {
     setFormData((prev: any) => ({ ...prev, ...updates }));
@@ -95,632 +151,879 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
     return () => clearInterval(interval);
   }, [handleAutoSave]);
 
-  const createNewTask = () => {
-    const newTask: PhaseTask = {
-      id: `task_${Date.now()}`,
+  // Workflow steps matching create workflow
+  const workflowSteps = [
+    {
+      id: 'basic',
+      title: 'Informations Générales',
+      icon: Building,
+      description: 'Données de base du projet',
+      color: 'bg-blue-500'
+    },
+    {
+      id: 'stakeholders',
+      title: 'Parties Prenantes',
+      icon: Users,
+      description: 'Configuration des acteurs',
+      color: 'bg-green-500'
+    },
+    {
+      id: 'team',
+      title: 'Équipe & Contractants',
+      icon: UserCheck,
+      description: 'Ressources humaines',
+      color: 'bg-orange-500'
+    },
+    {
+      id: 'phases',
+      title: 'Phases & Planification',
+      icon: Layers,
+      description: 'Structure et chronologie',
+      color: 'bg-indigo-500'
+    },
+    {
+      id: 'geolocation',
+      title: 'Géolocalisation',
+      icon: MapPin,
+      description: 'Localisation précise',
+      color: 'bg-cyan-500'
+    },
+    {
+      id: 'resources',
+      title: 'Ressources & Matériaux',
+      icon: Shield,
+      description: 'Matériaux et équipements',
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'risks',
+      title: 'Gestion des Risques',
+      icon: AlertTriangle,
+      description: 'Analyse des risques',
+      color: 'bg-red-500'
+    },
+    {
+      id: 'compliance',
+      title: 'Conformités',
+      icon: FileText,
+      description: 'Validation finale',
+      color: 'bg-teal-500'
+    }
+  ];
+
+  const createNewPhase = () => {
+    const newPhase: ProjectPhase = {
+      id: `phase_${Date.now()}`,
       title: '',
       description: '',
-      phase_id: '',
-      phase_name: '',
-      estimated_duration_days: 1,
+      order: projectPhases.length + 1,
       status: 'pending',
-      priority: 'medium',
-      resources: [],
-      documents_required: [],
-      inspection_required: false,
-      payment_milestone: false,
-      dependencies: []
+      steps: []
     };
-    setEditingTask(newTask);
-    setShowTaskDialog(true);
+    setProjectPhases(prev => [...prev, newPhase]);
+    setActivePhaseId(newPhase.id);
   };
 
-  const saveTask = (task: PhaseTask) => {
-    if (task.id && phaseTasks.find(t => t.id === task.id)) {
-      setPhaseTasks(prev => prev.map(t => t.id === task.id ? task : t));
-    } else {
-      task.id = task.id || `task_${Date.now()}`;
-      setPhaseTasks(prev => [...prev, task]);
-    }
-    setShowTaskDialog(false);
-    setEditingTask(null);
-    updateFormData({ tasks: [...phaseTasks, task] });
-  };
+  const createNewStep = (phaseId: string) => {
+    const phase = projectPhases.find(p => p.id === phaseId);
+    if (!phase) return;
 
-  const deleteTask = (taskId: string) => {
-    setPhaseTasks(prev => prev.filter(t => t.id !== taskId));
-    updateFormData({ tasks: phaseTasks.filter(t => t.id !== taskId) });
-  };
+    const newStep: PhaseStep = {
+      id: `step_${Date.now()}`,
+      title: '',
+      description: '',
+      order: phase.steps.length + 1,
+      status: 'pending',
+      materials: [],
+      tasks: [],
+      documents: [],
+      inspections: [],
+      payments: [],
+      notifications: [
+        { type: 'email', enabled: true, frequency: 'milestone' },
+        { type: 'app', enabled: true, frequency: 'daily' }
+      ]
+    };
 
-  const addResourceToTask = (taskId: string, resource: TaskResource) => {
-    setPhaseTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, resources: [...task.resources, { ...resource, id: `res_${Date.now()}` }] }
-        : task
+    setProjectPhases(prev => prev.map(p => 
+      p.id === phaseId 
+        ? { ...p, steps: [...p.steps, newStep] }
+        : p
     ));
+    setActiveStepId(newStep.id);
+    setShowStepDialog(true);
   };
 
-  const scheduleInspection = (taskId: string, date: string) => {
-    setPhaseTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, inspection_required: true, inspection_scheduled_date: date }
-        : task
+  const updateStep = (phaseId: string, stepId: string, updates: Partial<PhaseStep>) => {
+    setProjectPhases(prev => prev.map(phase => 
+      phase.id === phaseId 
+        ? {
+            ...phase,
+            steps: phase.steps.map(step =>
+              step.id === stepId ? { ...step, ...updates } : step
+            )
+          }
+        : phase
     ));
-    
-    toast({
-      title: "Inspection programmée",
-      description: `Inspection programmée pour le ${new Date(date).toLocaleDateString('fr-FR')}`,
+    setHasUnsavedChanges(true);
+  };
+
+  const addMaterialToStep = (phaseId: string, stepId: string, material: TaskResource) => {
+    updateStep(phaseId, stepId, {
+      materials: [
+        ...projectPhases.find(p => p.id === phaseId)?.steps.find(s => s.id === stepId)?.materials || [],
+        { ...material, id: `mat_${Date.now()}` }
+      ]
     });
   };
 
-  const tabs = [
-    { id: 'basic', label: 'Informations de Base', icon: FileText },
-    { id: 'phases', label: 'Phases & Tâches', icon: Target },
-    { id: 'resources', label: 'Ressources & Matériaux', icon: Building2 },
-    { id: 'stakeholders', label: 'Parties Prenantes', icon: Users },
-    { id: 'monitoring', label: 'Suivi & Notifications', icon: Bell },
-    { id: 'documents', label: 'Documents & Conformité', icon: FileText }
-  ];
+  const scheduleInspectionForStep = (phaseId: string, stepId: string, inspection: any) => {
+    const currentStep = projectPhases.find(p => p.id === phaseId)?.steps.find(s => s.id === stepId);
+    if (!currentStep) return;
+
+    updateStep(phaseId, stepId, {
+      inspections: [...currentStep.inspections, { ...inspection, id: `insp_${Date.now()}` }]
+    });
+
+    toast({
+      title: "Inspection programmée",
+      description: `Inspection ${inspection.type} programmée`,
+    });
+  };
+
+  const addPaymentMilestone = (phaseId: string, stepId: string, payment: any) => {
+    const currentStep = projectPhases.find(p => p.id === phaseId)?.steps.find(s => s.id === stepId);
+    if (!currentStep) return;
+
+    updateStep(phaseId, stepId, {
+      payments: [...currentStep.payments, { ...payment, id: `pay_${Date.now()}` }]
+    });
+  };
+
+  const isRTL = currentLanguage === 'ar';
 
   return (
-    <div className={`max-w-7xl mx-auto p-6 space-y-6 ${className}`}>
-      {/* Header with Save/Preview Actions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold text-primary">
-                {formData.title || 'Nouveau Projet'}
-              </CardTitle>
-              <div className="flex items-center gap-4 mt-2">
-                <Badge variant={formData.status === 'en cours' ? 'default' : 'secondary'}>
-                  {formData.status || 'En attente'}
-                </Badge>
-                <div className="text-sm text-muted-foreground">
-                  Progression: {formData.progress || 0}%
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {hasUnsavedChanges && (
-                <Badge variant="outline" className="text-amber-600">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Non sauvegardé
-                </Badge>
+    <div className={`min-h-screen ${isRTL ? 'rtl' : 'ltr'} ${className}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex">
+        {/* Sidebar for Steps Navigation */}
+        <motion.div
+          initial={false}
+          animate={{ width: sidebarCollapsed ? '60px' : '320px' }}
+          className={`fixed ${isRTL ? 'right-0' : 'left-0'} top-0 h-full bg-card border-r border-border z-40 overflow-hidden`}
+        >
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              {!sidebarCollapsed && (
+                <h2 className="font-semibold text-lg">Étapes du Projet</h2>
               )}
-              <Button variant="outline" onClick={handleAutoSave}>
-                <Eye className="h-4 w-4 mr-2" />
-                Aperçu
-              </Button>
-              <Button onClick={() => onSubmit(formData)}>
-                Sauvegarder
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                <Menu className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        </CardHeader>
-      </Card>
 
-      {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
-              <tab.icon className="h-4 w-4" />
-              <span className="hidden md:inline">{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+          {/* Steps Navigation */}
+          <div className="p-2 space-y-2">
+            {workflowSteps.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = activeTab === step.id;
+              
+              return (
+                <motion.div
+                  key={step.id}
+                  whileHover={{ scale: sidebarCollapsed ? 1.05 : 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    className={`w-full ${sidebarCollapsed ? 'px-3' : 'justify-start'} ${
+                      isActive ? 'bg-primary text-primary-foreground' : ''
+                    }`}
+                    onClick={() => setActiveTab(step.id)}
+                  >
+                    <div className={`p-2 rounded ${step.color} text-white mr-2`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    {!sidebarCollapsed && (
+                      <div className="flex-1 text-left">
+                        <div className="font-medium">{step.title}</div>
+                        <div className="text-xs opacity-70">{step.description}</div>
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
+              );
+            })}
+          </div>
 
-        {/* Basic Information */}
-        <TabsContent value="basic">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations de Base</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProjectFormWithMap
-                initialData={formData}
-                onSubmit={updateFormData}
+          {/* Progress Indicator */}
+          {!sidebarCollapsed && (
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="text-xs text-muted-foreground mb-2">
+                Progression globale: {Math.round((projectPhases.filter(p => p.status === 'completed').length / Math.max(projectPhases.length, 1)) * 100)}%
+              </div>
+              <Progress 
+                value={(projectPhases.filter(p => p.status === 'completed').length / Math.max(projectPhases.length, 1)) * 100} 
+                className="h-2"
               />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          )}
+        </motion.div>
 
-        {/* Phases & Tasks */}
-        <TabsContent value="phases">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Phases & Tâches du Projet</CardTitle>
-                <Button onClick={createNewTask}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle Tâche
+        {/* Main Content */}
+        <div className={`flex-1 ${isRTL ? 'mr-80' : 'ml-80'} ${sidebarCollapsed ? (isRTL ? 'mr-16' : 'ml-16') : ''} transition-all duration-300`}>
+          {/* Header */}
+          <div className="sticky top-0 z-30 bg-background border-b border-border p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-primary">
+                  {formData.title || 'Édition du Projet'}
+                </h1>
+                <div className="flex items-center gap-4 mt-2">
+                  <Badge variant={formData.status === 'en cours' ? 'default' : 'secondary'}>
+                    {formData.status || 'En attente'}
+                  </Badge>
+                  <div className="text-sm text-muted-foreground">
+                    Progression: {formData.progress || 0}%
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {hasUnsavedChanges && (
+                  <Badge variant="outline" className="text-amber-600">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Non sauvegardé
+                  </Badge>
+                )}
+                <Button variant="outline" onClick={handleAutoSave}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Sauvegarde auto
+                </Button>
+                <Button onClick={() => onSubmit(formData)}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Valider
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {phaseTasks.map((task) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="border rounded-lg p-4 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge variant={
-                          task.status === 'completed' ? 'default' :
-                          task.status === 'in_progress' ? 'secondary' :
-                          task.status === 'delayed' ? 'destructive' : 'outline'
-                        }>
-                          {task.status}
-                        </Badge>
-                        <h4 className="font-semibold">{task.title}</h4>
-                        <Badge variant="outline" className={
-                          task.priority === 'critical' ? 'border-red-500 text-red-600' :
-                          task.priority === 'high' ? 'border-orange-500 text-orange-600' :
-                          'border-gray-400'
-                        }>
-                          {task.priority}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingTask(task);
-                            setShowTaskDialog(true);
-                          }}
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteTask(task.id!)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
+            </div>
+          </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium">Phase:</span> {task.phase_name}
-                      </div>
-                      <div>
-                        <span className="font-medium">Durée:</span> {task.estimated_duration_days} jours
-                      </div>
-                      <div>
-                        <span className="font-medium">Ressources:</span> {task.resources.length}
-                      </div>
-                    </div>
+          {/* Content Area */}
+          <div className="p-6 space-y-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Basic Information */}
+                {activeTab === 'basic' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building className="h-5 w-5 text-blue-500" />
+                        Informations Générales du Projet
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ProjectFormWithMap
+                        initialData={formData}
+                        onSubmit={updateFormData}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground">{task.description}</p>
-                    )}
+                {/* Phases & Detailed Step Management */}
+                {activeTab === 'phases' && (
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <Layers className="h-5 w-5 text-indigo-500" />
+                            Phases & Planification Détaillée
+                          </CardTitle>
+                          <Button onClick={createNewPhase}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Nouvelle Phase
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {projectPhases.map((phase) => (
+                          <motion.div
+                            key={phase.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="border rounded-lg p-4 mb-4"
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <Badge variant={phase.status === 'completed' ? 'default' : 'outline'}>
+                                  Phase {phase.order}
+                                </Badge>
+                                <h3 className="font-semibold text-lg">
+                                  {phase.title || `Phase ${phase.order}`}
+                                </h3>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => createNewStep(phase.id)}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Nouvelle Étape
+                              </Button>
+                            </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {task.inspection_required && (
-                        <Badge variant="outline" className="text-blue-600">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Inspection requise
-                        </Badge>
-                      )}
-                      {task.payment_milestone && (
-                        <Badge variant="outline" className="text-green-600">
-                          <DollarSign className="h-3 w-3 mr-1" />
-                          Étape de paiement ({task.payment_percentage}%)
-                        </Badge>
-                      )}
-                      {task.documents_required.length > 0 && (
-                        <Badge variant="outline">
-                          <FileText className="h-3 w-3 mr-1" />
-                          {task.documents_required.length} documents
-                        </Badge>
-                      )}
-                    </div>
+                            {/* Phase Steps */}
+                            <div className="space-y-4 ml-4">
+                              {phase.steps.map((step) => (
+                                <div key={step.id} className="border-l-2 border-primary/20 pl-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h4 className="font-medium">
+                                      {step.title || `Étape ${step.order}`}
+                                    </h4>
+                                    <Badge variant={step.status === 'completed' ? 'default' : 'outline'}>
+                                      {step.status}
+                                    </Badge>
+                                  </div>
 
-                    {/* Quick Actions */}
-                    <div className="flex items-center gap-2 pt-2 border-t">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedTaskId(task.id!);
-                          setShowResourceDialog(true);
-                        }}
-                      >
-                        <UserPlus className="h-3 w-3 mr-1" />
-                        Ressources
-                      </Button>
-                      {task.inspection_required && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const date = prompt('Date d\'inspection (YYYY-MM-DD):');
-                            if (date) scheduleInspection(task.id!, date);
-                          }}
-                        >
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Programmer Inspection
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                                  {/* Step Details Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                    {/* Materials Management */}
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Package className="h-4 w-4 text-purple-500" />
+                                        <span className="font-medium text-sm">Matériaux</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.materials.map((material) => (
+                                          <div key={material.id} className="text-xs bg-muted p-2 rounded">
+                                            {material.resourceName} (Qty: {material.quantity})
+                                          </div>
+                                        ))}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            const materialName = prompt('Nom du matériau:');
+                                            const quantity = prompt('Quantité:');
+                                            if (materialName && quantity) {
+                                              addMaterialToStep(phase.id, step.id, {
+                                                type: 'material',
+                                                resourceId: `mat_${Date.now()}`,
+                                                resourceName: materialName,
+                                                quantity: parseInt(quantity)
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Ajouter
+                                        </Button>
+                                      </div>
+                                    </Card>
 
-                {phaseTasks.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucune tâche définie. Commencez par créer votre première tâche.</p>
+                                    {/* Task Management */}
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Target className="h-4 w-4 text-blue-500" />
+                                        <span className="font-medium text-sm">Tâches</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.tasks.map((task) => (
+                                          <div key={task.id} className="text-xs bg-muted p-2 rounded">
+                                            {task.title}
+                                          </div>
+                                        ))}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            const taskTitle = prompt('Titre de la tâche:');
+                                            if (taskTitle) {
+                                              const newTask: PhaseTask = {
+                                                id: `task_${Date.now()}`,
+                                                title: taskTitle,
+                                                phase_id: phase.id,
+                                                phase_name: phase.title,
+                                                step_id: step.id,
+                                                estimated_duration_days: 1,
+                                                status: 'pending',
+                                                priority: 'medium',
+                                                resources: [],
+                                                documents_required: [],
+                                                inspection_required: false,
+                                                payment_milestone: false
+                                              };
+                                              updateStep(phase.id, step.id, {
+                                                tasks: [...step.tasks, newTask]
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Ajouter
+                                        </Button>
+                                      </div>
+                                    </Card>
+
+                                    {/* Inspections */}
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                        <span className="font-medium text-sm">Inspections</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.inspections.map((inspection) => (
+                                          <div key={inspection.id} className="text-xs bg-muted p-2 rounded">
+                                            {inspection.type}
+                                            {inspection.scheduledDate && (
+                                              <div className="text-muted-foreground">
+                                                {new Date(inspection.scheduledDate).toLocaleDateString('fr-FR')}
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            const type = prompt('Type d\'inspection:');
+                                            const date = prompt('Date (YYYY-MM-DD):');
+                                            if (type) {
+                                              scheduleInspectionForStep(phase.id, step.id, {
+                                                type,
+                                                scheduledDate: date,
+                                                status: 'scheduled'
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <CalendarIcon className="h-3 w-3 mr-1" />
+                                          Programmer
+                                        </Button>
+                                      </div>
+                                    </Card>
+
+                                    {/* Payments */}
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <DollarSign className="h-4 w-4 text-green-500" />
+                                        <span className="font-medium text-sm">Paiements</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.payments.map((payment) => (
+                                          <div key={payment.id} className="text-xs bg-muted p-2 rounded">
+                                            {payment.percentage}% - {payment.amount} MRU
+                                          </div>
+                                        ))}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            const percentage = prompt('Pourcentage (%):');
+                                            const amount = prompt('Montant (MRU):');
+                                            if (percentage && amount) {
+                                              addPaymentMilestone(phase.id, step.id, {
+                                                percentage: parseFloat(percentage),
+                                                amount: parseFloat(amount),
+                                                status: 'pending'
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Ajouter
+                                        </Button>
+                                      </div>
+                                    </Card>
+                                  </div>
+
+                                  {/* Documents & Notifications */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Upload className="h-4 w-4 text-orange-500" />
+                                        <span className="font-medium text-sm">Documents requis</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.documents.map((doc) => (
+                                          <div key={doc.id} className="text-xs bg-muted p-2 rounded flex items-center justify-between">
+                                            <span>{doc.title}</span>
+                                            <Badge variant={doc.status === 'validated' ? 'default' : 'outline'} className="text-xs">
+                                              {doc.status}
+                                            </Badge>
+                                          </div>
+                                        ))}
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            const title = prompt('Titre du document:');
+                                            const type = confirm('Document obligatoire ?') ? 'required' : 'optional';
+                                            if (title) {
+                                              updateStep(phase.id, step.id, {
+                                                documents: [...step.documents, {
+                                                  id: `doc_${Date.now()}`,
+                                                  title,
+                                                  type,
+                                                  status: 'pending'
+                                                }]
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          <Plus className="h-3 w-3 mr-1" />
+                                          Ajouter
+                                        </Button>
+                                      </div>
+                                    </Card>
+
+                                    <Card className="p-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Bell className="h-4 w-4 text-blue-500" />
+                                        <span className="font-medium text-sm">Notifications</span>
+                                      </div>
+                                      <div className="space-y-2">
+                                        {step.notifications.map((notif, index) => (
+                                          <div key={index} className="flex items-center justify-between text-xs">
+                                            <span>{notif.type}</span>
+                                            <Checkbox
+                                              checked={notif.enabled}
+                                              onCheckedChange={(checked) => {
+                                                updateStep(phase.id, step.id, {
+                                                  notifications: step.notifications.map((n, i) =>
+                                                    i === index ? { ...n, enabled: !!checked } : n
+                                                  )
+                                                });
+                                              }}
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </Card>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ))}
+
+                        {projectPhases.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Aucune phase définie. Commencez par créer votre première phase.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Resources & Materials */}
-        <TabsContent value="resources">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ressources & Matériaux</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MaterialFormSection
-                selectedMaterials={formData.materials || []}
-                onChange={(materials) => updateFormData({ materials })}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+                {/* Resources & Materials */}
+                {activeTab === 'resources' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-purple-500" />
+                        Ressources & Matériaux
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <MaterialFormSection
+                        selectedMaterials={formData.materials || []}
+                        onChange={(materials) => updateFormData({ materials })}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
-        {/* Stakeholders */}
-        <TabsContent value="stakeholders">
-          <Card>
-            <CardHeader>
-              <CardTitle>Parties Prenantes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OrganizationalHierarchyManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Monitoring & Notifications */}
-        <TabsContent value="monitoring">
-          <Card>
-            <CardHeader>
-              <CardTitle>Suivi & Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-3">Paramètres de Notification</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Notifications par Email</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Fréquence" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Quotidienne</SelectItem>
-                          <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                          <SelectItem value="milestone">Étapes importantes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Alertes de Retard</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seuil d'alerte" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 jour</SelectItem>
-                          <SelectItem value="3">3 jours</SelectItem>
-                          <SelectItem value="7">7 jours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-3">Inspections Programmées</h4>
-                  <div className="space-y-2">
-                    {phaseTasks
-                      .filter(task => task.inspection_required && task.inspection_scheduled_date)
-                      .map(task => (
-                        <div key={task.id} className="flex items-center justify-between p-3 border rounded">
+                {/* Stakeholders */}
+                {activeTab === 'stakeholders' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-green-500" />
+                        Parties Prenantes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <span className="font-medium">{task.title}</span>
-                            <div className="text-sm text-muted-foreground">
-                              {task.inspection_scheduled_date && 
-                                new Date(task.inspection_scheduled_date).toLocaleDateString('fr-FR')
-                              }
-                            </div>
+                            <Label className="text-base font-medium mb-3 block">Équipe du Projet</Label>
+                            <EmployeeSelector
+                              value={formData.projectManager || ''}
+                              onChange={(value) => updateFormData({ projectManager: value })}
+                              placeholder="Sélectionner le chef de projet"
+                            />
                           </div>
-                          <Badge variant="outline">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Programmée
-                          </Badge>
+                          <div>
+                            <Label className="text-base font-medium mb-3 block">Fournisseurs</Label>
+                            <SimpleSupplierSelector
+                              value={formData.mainSupplier || ''}
+                              onChange={(value) => updateFormData({ mainSupplier: value })}
+                              placeholder="Sélectionner le fournisseur principal"
+                            />
+                          </div>
                         </div>
-                      ))
-                    }
-                  </div>
+                        <OrganizationalHierarchyManager />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Team & Contractors */}
+                {activeTab === 'team' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UserCheck className="h-5 w-5 text-orange-500" />
+                        Équipe & Contractants
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <Label className="text-base font-medium mb-3 block">Chef de Projet</Label>
+                            <UserSelector
+                              value={formData.projectManager || ''}
+                              onChange={(value) => updateFormData({ projectManager: value })}
+                              placeholder="Assigner un chef de projet"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-base font-medium mb-3 block">Responsable Technique</Label>
+                            <EmployeeSelector
+                              value={formData.technicalManager || ''}
+                              onChange={(value) => updateFormData({ technicalManager: value })}
+                              placeholder="Assigner un responsable technique"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <Label className="text-base font-medium mb-3 block">Superviseur</Label>
+                            <EmployeeSelector
+                              value={formData.supervisor || ''}
+                              onChange={(value) => updateFormData({ supervisor: value })}
+                              placeholder="Assigner un superviseur"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-base font-medium mb-3 block">Client</Label>
+                            <Input
+                              value={formData.client || ''}
+                              onChange={(e) => updateFormData({ client: e.target.value })}
+                              placeholder="Nom du client"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Geolocation */}
+                {activeTab === 'geolocation' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-cyan-500" />
+                        Géolocalisation & Cartographie
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Adresse du Projet</Label>
+                            <Input
+                              value={formData.location || ''}
+                              onChange={(e) => updateFormData({ location: e.target.value })}
+                              placeholder="Adresse complète du projet"
+                            />
+                          </div>
+                          <div>
+                            <Label>Référence Parcellaire</Label>
+                            <Input
+                              value={formData.parcelReference || ''}
+                              onChange={(e) => updateFormData({ parcelReference: e.target.value })}
+                              placeholder="Référence de la parcelle"
+                            />
+                          </div>
+                        </div>
+                        <div className="h-96 border rounded-lg">
+                          <div className="h-full flex items-center justify-center text-muted-foreground">
+                            Carte interactive (à implémenter)
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Risk Management */}
+                {activeTab === 'risks' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                        Gestion des Risques
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <Button onClick={() => {
+                          const risk = prompt('Description du risque:');
+                          if (risk) {
+                            updateFormData({
+                              risks: [...(formData.risks || []), {
+                                id: Date.now(),
+                                description: risk,
+                                severity: 'medium',
+                                mitigation: '',
+                                status: 'identified'
+                              }]
+                            });
+                          }
+                        }}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter un Risque
+                        </Button>
+
+                        <div className="space-y-2">
+                          {(formData.risks || []).map((risk: any) => (
+                            <div key={risk.id} className="border rounded-lg p-3">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">{risk.description}</span>
+                                <Badge variant={risk.severity === 'high' ? 'destructive' : 'outline'}>
+                                  {risk.severity}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Compliance */}
+                {activeTab === 'compliance' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-teal-500" />
+                        Conformités & Validation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        <div>
+                          <Label className="text-base font-medium mb-3 block">Documents de Conformité</Label>
+                          <div className="space-y-2">
+                            {['Permis de construire', 'Étude d\'impact', 'Validation technique'].map((doc) => (
+                              <div key={doc} className="flex items-center space-x-2">
+                                <Checkbox />
+                                <span>{doc}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Notes de Validation</Label>
+                          <Textarea
+                            value={formData.validationNotes || ''}
+                            onChange={(e) => updateFormData({ validationNotes: e.target.value })}
+                            placeholder="Notes et commentaires de validation..."
+                            rows={4}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation Footer */}
+            <div className="fixed bottom-4 right-4 flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const currentIndex = workflowSteps.findIndex(step => step.id === activeTab);
+                  if (currentIndex > 0) {
+                    setActiveTab(workflowSteps[currentIndex - 1].id);
+                  }
+                }}
+                disabled={workflowSteps.findIndex(step => step.id === activeTab) === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Précédent
+              </Button>
+              <Button
+                onClick={() => {
+                  const currentIndex = workflowSteps.findIndex(step => step.id === activeTab);
+                  if (currentIndex < workflowSteps.length - 1) {
+                    setActiveTab(workflowSteps[currentIndex + 1].id);
+                  }
+                }}
+                disabled={workflowSteps.findIndex(step => step.id === activeTab) === workflowSteps.length - 1}
+              >
+                Suivant
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Step Configuration Dialog */}
+        <Dialog open={showStepDialog} onOpenChange={setShowStepDialog}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Configuration Détaillée de l'Étape</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Titre de l'Étape</Label>
+                  <Input placeholder="Nom de l'étape" />
+                </div>
+                <div>
+                  <Label>Statut</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">En attente</SelectItem>
+                      <SelectItem value="in_progress">En cours</SelectItem>
+                      <SelectItem value="completed">Terminé</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Documents */}
-        <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documents & Conformité</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-semibold">Documents Requis par Tâche</h4>
-                {phaseTasks.map(task => (
-                  task.documents_required.length > 0 && (
-                    <div key={task.id} className="border rounded p-3">
-                      <h5 className="font-medium mb-2">{task.title}</h5>
-                      <div className="space-y-1">
-                        {task.documents_required.map((doc, index) => (
-                          <div key={index} className="flex items-center justify-between text-sm">
-                            <span>{doc}</span>
-                            <Badge variant="outline">Requis</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Task Edit Dialog */}
-      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingTask?.id ? 'Modifier la Tâche' : 'Nouvelle Tâche'}
-            </DialogTitle>
-          </DialogHeader>
-          {editingTask && (
-            <TaskEditForm
-              task={editingTask}
-              onSave={saveTask}
-              onCancel={() => setShowTaskDialog(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Resource Add Dialog */}
-      <Dialog open={showResourceDialog} onOpenChange={setShowResourceDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajouter une Ressource</DialogTitle>
-          </DialogHeader>
-          <ResourceAddForm
-            onAdd={(resource) => {
-              addResourceToTask(selectedTaskId, resource);
-              setShowResourceDialog(false);
-            }}
-            onCancel={() => setShowResourceDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-// Task Edit Form Component
-const TaskEditForm: React.FC<{
-  task: PhaseTask;
-  onSave: (task: PhaseTask) => void;
-  onCancel: () => void;
-}> = ({ task, onSave, onCancel }) => {
-  const [formData, setFormData] = useState(task);
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Titre de la Tâche</Label>
-          <Input
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Nom de la tâche"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Phase</Label>
-          <Select
-            value={formData.phase_id}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, phase_id: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une phase" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="foundation">Fondation</SelectItem>
-              <SelectItem value="structure">Structure</SelectItem>
-              <SelectItem value="finishing">Finition</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Description</Label>
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Description détaillée de la tâche"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Durée Estimée (jours)</Label>
-          <Input
-            type="number"
-            value={formData.estimated_duration_days}
-            onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration_days: parseInt(e.target.value) || 1 }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Priorité</Label>
-          <Select
-            value={formData.priority}
-            onValueChange={(value: any) => setFormData(prev => ({ ...prev, priority: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Faible</SelectItem>
-              <SelectItem value="medium">Moyenne</SelectItem>
-              <SelectItem value="high">Élevée</SelectItem>
-              <SelectItem value="critical">Critique</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Statut</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="in_progress">En cours</SelectItem>
-              <SelectItem value="completed">Terminée</SelectItem>
-              <SelectItem value="delayed">Retardée</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-4">
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={formData.inspection_required}
-            onChange={(e) => setFormData(prev => ({ ...prev, inspection_required: e.target.checked }))}
-          />
-          <span>Inspection requise</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={formData.payment_milestone}
-            onChange={(e) => setFormData(prev => ({ ...prev, payment_milestone: e.target.checked }))}
-          />
-          <span>Étape de paiement</span>
-        </label>
-      </div>
-
-      {formData.payment_milestone && (
-        <div className="space-y-2">
-          <Label>Pourcentage de Paiement (%)</Label>
-          <Input
-            type="number"
-            min="0"
-            max="100"
-            value={formData.payment_percentage || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, payment_percentage: parseFloat(e.target.value) || 0 }))}
-          />
-        </div>
-      )}
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={() => onSave(formData)}>Sauvegarder</Button>
-      </div>
-    </div>
-  );
-};
-
-// Resource Add Form Component
-const ResourceAddForm: React.FC<{
-  onAdd: (resource: TaskResource) => void;
-  onCancel: () => void;
-}> = ({ onAdd, onCancel }) => {
-  const [formData, setFormData] = useState<TaskResource>({
-    type: 'employee',
-    resourceId: '',
-    resourceName: '',
-    quantity: 1,
-    estimatedCost: 0
-  });
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>Type de Ressource</Label>
-        <Select
-          value={formData.type}
-          onValueChange={(value: any) => setFormData(prev => ({ ...prev, type: value }))}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="employee">Employé</SelectItem>
-            <SelectItem value="material">Matériau</SelectItem>
-            <SelectItem value="equipment">Équipement</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Nom de la Ressource</Label>
-        <Input
-          value={formData.resourceName}
-          onChange={(e) => setFormData(prev => ({ ...prev, resourceName: e.target.value }))}
-          placeholder="Nom de la ressource"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Quantité</Label>
-          <Input
-            type="number"
-            value={formData.quantity}
-            onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Coût Estimé</Label>
-          <Input
-            type="number"
-            value={formData.estimatedCost}
-            onChange={(e) => setFormData(prev => ({ ...prev, estimatedCost: parseFloat(e.target.value) || 0 }))}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button onClick={() => onAdd(formData)}>Ajouter</Button>
+              <Textarea placeholder="Description de l'étape..." />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
