@@ -168,34 +168,53 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const isStepCompleted = (stepId: string) => completedSteps.includes(stepId);
 
-  // Validation functions for each step
+  // Validation functions for each step - made more flexible for initial creation
   const validateBasicInfo = () => {
+    // Only require essential fields for initial creation
     return basicInfo.title.trim() !== '' && 
            basicInfo.description.trim() !== '' && 
-           basicInfo.budget !== '' && 
-           basicInfo.estimatedDays !== '' &&
-           basicInfo.startDate !== '' && 
-           basicInfo.endDate !== '';
+           basicInfo.budget !== '';
+    // estimatedDays, startDate, endDate are optional during creation
   };
 
   const validateStakeholders = () => {
-    return stakeholders.length > 0;
+    // Stakeholders are optional during initial creation
+    return true; // Allow proceeding without stakeholders
   };
 
   const validateTeam = () => {
-    return delegation.projectManager && delegation.technicalManager;
+    // Team assignment is optional during initial creation, only require project manager if provided
+    return !delegation.projectManager || delegation.projectManager !== '';
   };
 
   const validatePhases = () => {
-    return phases.length > 0;
+    // Phases are optional during initial creation
+    return true;
   };
 
   const validateGeolocation = () => {
-    return shapeData?.address || (shapeData?.coordinates?.lat && shapeData?.coordinates?.lng);
+    // Geolocation is optional during initial creation
+    return true;
   };
 
   const validateResources = () => {
-    return selectedMaterials.length > 0;
+    // Resources are optional during initial creation
+    return true;
+  };
+
+  // Check which optional fields are missing for user notification
+  const getMissingOptionalFields = (): string[] => {
+    const missing: string[] = [];
+    if (!basicInfo.estimatedDays) missing.push('Durée estimée');
+    if (!basicInfo.startDate) missing.push('Date de début');
+    if (!basicInfo.endDate) missing.push('Date de fin');
+    if (stakeholders.length === 0) missing.push('Parties prenantes');
+    if (!delegation.projectManager) missing.push('Chef de projet');
+    if (!delegation.technicalManager) missing.push('Responsable technique');
+    if (phases.length === 0) missing.push('Phases de construction');
+    if (!shapeData?.address && !shapeData?.coordinates?.lat) missing.push('Localisation géographique');
+    if (selectedMaterials.length === 0) missing.push('Matériaux');
+    return missing;
   };
 
   const canProceedToNext = (stepId: string) => {
@@ -525,14 +544,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     Précédent
                   </Button>
                   <Button 
-                    onClick={() => {
-                      if (validateBasicInfo()) {
-                        handleStepComplete('basic');
-                        setActiveTab('stakeholders');
-                      } else {
-                        alert('Veuillez remplir tous les champs obligatoires avant de continuer.');
-                      }
-                    }}
+                     onClick={() => {
+                       if (validateBasicInfo()) {
+                         handleStepComplete('basic');
+                         setActiveTab('stakeholders');
+                       } else {
+                         alert('Veuillez remplir les champs obligatoires : Titre, Description et Budget.');
+                       }
+                     }}
                     disabled={!canProceedToNext('basic')}
                   >
                     Suivant: Parties Prenantes
@@ -665,14 +684,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     Précédent: Informations Générales
                   </Button>
                   <Button 
-                    onClick={() => {
-                      if (validateStakeholders()) {
-                        handleStepComplete('stakeholders');
-                        setActiveTab('team');
-                      } else {
-                        alert('Veuillez sélectionner au moins une partie prenante avant de continuer.');
-                      }
-                    }}
+                     onClick={() => {
+                       handleStepComplete('stakeholders');
+                       setActiveTab('team');
+                     }}
                     disabled={!canProceedToNext('stakeholders')}
                   >
                     Suivant: Équipe & Contractants
@@ -814,14 +829,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     Précédent: Parties Prenantes
                   </Button>
                   <Button 
-                    onClick={() => {
-                      if (validateTeam()) {
-                        handleStepComplete('team');
-                        setActiveTab('phases');
-                      } else {
-                        alert('Veuillez assigner au moins un membre à l\'équipe avant de continuer.');
-                      }
-                    }}
+                     onClick={() => {
+                       handleStepComplete('team');
+                       setActiveTab('phases');
+                     }}
                     disabled={!canProceedToNext('team')}
                   >
                     Suivant: Phases & Planification
@@ -1265,29 +1276,55 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       Sauvegarder comme Brouillon
                     </Button>
                   </div>
-                  <Button 
+                   <Button 
                      onClick={() => {
-                       handleStepComplete('compliance');
-                       onSubmit({
-                         // Basic project information
-                         ...basicInfo,
-                         // All collected data from workflow steps
-                         stakeholders,
-                         delegation,
-                         phases,
-                         risks,
-                         compliance,
-                         selectedMaterials,
-                         shapeData,
-                         // Metadata
-                         completedSteps: [...completedSteps, 'compliance'],
-                         createdAt: new Date().toISOString()
-                       });
+                       const missingFields = getMissingOptionalFields();
+                       
+                       if (missingFields.length > 0) {
+                         const confirmMessage = `Le projet sera créé avec succès, mais certains champs optionnels ne sont pas renseignés :\n\n${missingFields.join(', ')}\n\nVous pourrez les compléter en éditant le projet plus tard. Continuer ?`;
+                         
+                         if (window.confirm(confirmMessage)) {
+                           handleStepComplete('compliance');
+                           onSubmit({
+                             // Basic project information
+                             ...basicInfo,
+                             // All collected data from workflow steps
+                             stakeholders,
+                             delegation,
+                             phases,
+                             risks,
+                             compliance,
+                             selectedMaterials,
+                             shapeData,
+                             // Metadata
+                             completedSteps: [...completedSteps, 'compliance'],
+                             createdAt: new Date().toISOString(),
+                             missingOptionalFields: missingFields
+                           });
+                         }
+                       } else {
+                         handleStepComplete('compliance');
+                         onSubmit({
+                           // Basic project information
+                           ...basicInfo,
+                           // All collected data from workflow steps
+                           stakeholders,
+                           delegation,
+                           phases,
+                           risks,
+                           compliance,
+                           selectedMaterials,
+                           shapeData,
+                           // Metadata
+                           completedSteps: [...completedSteps, 'compliance'],
+                           createdAt: new Date().toISOString()
+                         });
+                       }
                      }}
                     className="bg-green-600 hover:bg-green-700"
-                  >
-                    Créer le Projet
-                  </Button>
+                   >
+                     Créer le Projet
+                   </Button>
                 </div>
               </div>
             </CardContent>

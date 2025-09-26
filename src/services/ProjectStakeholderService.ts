@@ -20,38 +20,42 @@ export class ProjectStakeholderService {
    */
   static async createProjectStakeholders(
     projectId: string, 
-    stakeholders: any[], 
-    delegation: any
+    stakeholders: any[] = [], 
+    delegation: any = {}
   ): Promise<void> {
     const stakeholderRecords: ProjectStakeholder[] = [];
 
-    // Add external stakeholders (suppliers)
-    stakeholders.forEach((stakeholder) => {
-      stakeholderRecords.push({
-        project_id: projectId,
-        stakeholder_type: stakeholder.type,
-        stakeholder_entity_type: 'supplier',
-        stakeholder_id: stakeholder.id,
-        role_description: stakeholder.role_description,
-        is_primary: stakeholder.is_primary || false
-      });
-    });
-
-    // Add internal team (employees)
-    Object.entries(delegation).forEach(([role, employeeId]) => {
-      if (employeeId) {
-        const stakeholderType = this.mapRoleToStakeholderType(role);
+    // Add external stakeholders (suppliers) - only if they exist
+    if (stakeholders && stakeholders.length > 0) {
+      stakeholders.forEach((stakeholder) => {
         stakeholderRecords.push({
           project_id: projectId,
-          stakeholder_type: stakeholderType,
-          stakeholder_entity_type: 'employee',
-          stakeholder_id: employeeId as string,
-          is_primary: role === 'projectManager'
+          stakeholder_type: stakeholder.type,
+          stakeholder_entity_type: 'supplier',
+          stakeholder_id: stakeholder.id,
+          role_description: stakeholder.role_description,
+          is_primary: stakeholder.is_primary || false
         });
-      }
-    });
+      });
+    }
 
-    // Insert all stakeholder records
+    // Add internal team (employees) - only if delegation is provided
+    if (delegation && typeof delegation === 'object') {
+      Object.entries(delegation).forEach(([role, employeeId]) => {
+        if (employeeId && typeof employeeId === 'string') {
+          const stakeholderType = this.mapRoleToStakeholderType(role);
+          stakeholderRecords.push({
+            project_id: projectId,
+            stakeholder_type: stakeholderType,
+            stakeholder_entity_type: 'employee',
+            stakeholder_id: employeeId,
+            is_primary: role === 'projectManager'
+          });
+        }
+      });
+    }
+
+    // Insert all stakeholder records only if there are any
     if (stakeholderRecords.length > 0) {
       const { error } = await supabase
         .from('project_stakeholders')

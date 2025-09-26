@@ -145,10 +145,19 @@ const ProjectCreate = () => {
         }
       }
       
-      toast({
-        title: t("project_create.toast.created"),
-        description: t("project_create.toast.created_desc") + data.title,
-      });
+      // Show appropriate success message based on completion
+      if (data.missingOptionalFields && data.missingOptionalFields.length > 0) {
+        toast({
+          title: "Projet créé avec succès",
+          description: `${data.title} a été créé. N'oubliez pas de compléter : ${data.missingOptionalFields.slice(0, 2).join(', ')}${data.missingOptionalFields.length > 2 ? '...' : ''} en éditant le projet.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: t("project_create.toast.created"),
+          description: t("project_create.toast.created_desc") + data.title,
+        });
+      }
       
       navigate('/projects');
     } catch (error) {
