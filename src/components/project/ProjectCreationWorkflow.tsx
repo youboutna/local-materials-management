@@ -63,6 +63,27 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  
+  // Form data state for each step
+  const [basicInfo, setBasicInfo] = useState({
+    title: '',
+    reference: '',
+    description: '',
+    budget: '',
+    currency: 'MRU',
+    status: 'planning',
+    startDate: '',
+    endDate: '',
+    paymentMode: 'progressive',
+    paymentFrequency: 'monthly',
+    initialAdvance: 20,
+    retentionPercentage: 5,
+    priority: 'medium',
+    projectType: 'construction',
+    sector: '',
+    permitNumber: ''
+  });
+  
   const [stakeholders, setStakeholders] = useState<any[]>([]);
   const [delegation, setDelegation] = useState<any>({});
   const [risks, setRisks] = useState<any[]>([]);
@@ -141,6 +162,47 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const isStepCompleted = (stepId: string) => completedSteps.includes(stepId);
 
+  // Validation functions for each step
+  const validateBasicInfo = () => {
+    return basicInfo.title.trim() !== '' && 
+           basicInfo.description.trim() !== '' && 
+           basicInfo.budget !== '' && 
+           basicInfo.startDate !== '' && 
+           basicInfo.endDate !== '';
+  };
+
+  const validateStakeholders = () => {
+    return stakeholders.length > 0;
+  };
+
+  const validateTeam = () => {
+    return Object.keys(delegation).length > 0;
+  };
+
+  const validatePhases = () => {
+    return phases.length > 0;
+  };
+
+  const validateGeolocation = () => {
+    return shapeData?.address || (shapeData?.coordinates?.lat && shapeData?.coordinates?.lng);
+  };
+
+  const validateResources = () => {
+    return selectedMaterials.length > 0;
+  };
+
+  const canProceedToNext = (stepId: string) => {
+    switch (stepId) {
+      case 'basic': return validateBasicInfo();
+      case 'stakeholders': return validateStakeholders();
+      case 'team': return validateTeam();
+      case 'phases': return validatePhases();
+      case 'geolocation': return validateGeolocation();
+      case 'resources': return validateResources();
+      default: return true;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Progress Overview */}
@@ -218,6 +280,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Nom du projet de construction"
                       required
+                      value={basicInfo.title}
+                      onChange={(e) => setBasicInfo({...basicInfo, title: e.target.value})}
                     />
                   </div>
                   <div>
@@ -226,6 +290,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       type="text" 
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="REF-2025-001"
+                      value={basicInfo.reference}
+                      onChange={(e) => setBasicInfo({...basicInfo, reference: e.target.value})}
                     />
                   </div>
                 </div>
@@ -236,6 +302,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
                     placeholder="Description complète du projet, objectifs et spécifications techniques"
                     required
+                    value={basicInfo.description}
+                    onChange={(e) => setBasicInfo({...basicInfo, description: e.target.value})}
                   />
                 </div>
 
@@ -247,11 +315,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="1000000"
                       required
+                      value={basicInfo.budget}
+                      onChange={(e) => setBasicInfo({...basicInfo, budget: e.target.value})}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Devise *</label>
-                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <select 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={basicInfo.currency}
+                      onChange={(e) => setBasicInfo({...basicInfo, currency: e.target.value})}
+                    >
                       <option value="MRU">MRU (Ouguiya)</option>
                       <option value="EUR">EUR (Euro)</option>
                       <option value="USD">USD (Dollar)</option>
@@ -259,7 +333,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Statut initial</label>
-                    <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <select 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={basicInfo.status}
+                      onChange={(e) => setBasicInfo({...basicInfo, status: e.target.value})}
+                    >
                       <option value="planning">Planification</option>
                       <option value="pending">En attente</option>
                       <option value="approved">Approuvé</option>
@@ -280,6 +358,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         type="date" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         required
+                        value={basicInfo.startDate}
+                        onChange={(e) => setBasicInfo({...basicInfo, startDate: e.target.value})}
                       />
                     </div>
                     <div>
@@ -288,6 +368,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         type="date" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         required
+                        value={basicInfo.endDate}
+                        onChange={(e) => setBasicInfo({...basicInfo, endDate: e.target.value})}
                       />
                     </div>
                     <div>
@@ -297,6 +379,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="365"
                         readOnly
+                        value={basicInfo.startDate && basicInfo.endDate ? 
+                          Math.ceil((new Date(basicInfo.endDate).getTime() - new Date(basicInfo.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 
+                          ''
+                        }
                       />
                     </div>
                   </div>
@@ -311,7 +397,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Mode de paiement principal</label>
-                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <select 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        value={basicInfo.paymentMode}
+                        onChange={(e) => setBasicInfo({...basicInfo, paymentMode: e.target.value})}
+                      >
                         <option value="progressive">Paiement progressif</option>
                         <option value="milestone">Par jalons</option>
                         <option value="completion">À l'achèvement</option>
@@ -320,7 +410,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">Fréquence des paiements</label>
-                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <select 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        value={basicInfo.paymentFrequency}
+                        onChange={(e) => setBasicInfo({...basicInfo, paymentFrequency: e.target.value})}
+                      >
                         <option value="monthly">Mensuelle</option>
                         <option value="quarterly">Trimestrielle</option>
                         <option value="phase">Par phase</option>
@@ -335,6 +429,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         max="100" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="20"
+                        value={basicInfo.initialAdvance}
+                        onChange={(e) => setBasicInfo({...basicInfo, initialAdvance: parseInt(e.target.value) || 0})}
                       />
                     </div>
                     <div>
@@ -345,6 +441,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         max="20" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="5"
+                        value={basicInfo.retentionPercentage}
+                        onChange={(e) => setBasicInfo({...basicInfo, retentionPercentage: parseInt(e.target.value) || 0})}
                       />
                     </div>
                   </div>
@@ -356,7 +454,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Priorité du projet</label>
-                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <select 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        value={basicInfo.priority}
+                        onChange={(e) => setBasicInfo({...basicInfo, priority: e.target.value})}
+                      >
                         <option value="low">Basse</option>
                         <option value="medium">Moyenne</option>
                         <option value="high">Haute</option>
@@ -365,7 +467,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">Type de projet</label>
-                      <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <select 
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        value={basicInfo.projectType}
+                        onChange={(e) => setBasicInfo({...basicInfo, projectType: e.target.value})}
+                      >
                         <option value="construction">Construction</option>
                         <option value="renovation">Rénovation</option>
                         <option value="infrastructure">Infrastructure</option>
@@ -378,6 +484,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         type="text" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="Bâtiment, Routes, Ponts..."
+                        value={basicInfo.sector}
+                        onChange={(e) => setBasicInfo({...basicInfo, sector: e.target.value})}
                       />
                     </div>
                     <div>
@@ -386,6 +494,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         type="text" 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         placeholder="PERM-2025-001"
+                        value={basicInfo.permitNumber}
+                        onChange={(e) => setBasicInfo({...basicInfo, permitNumber: e.target.value})}
                       />
                     </div>
                   </div>
@@ -395,10 +505,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <Button variant="outline" disabled>
                     Précédent
                   </Button>
-                  <Button onClick={() => {
-                    handleStepComplete('basic');
-                    setActiveTab('stakeholders');
-                  }}>
+                  <Button 
+                    onClick={() => {
+                      if (validateBasicInfo()) {
+                        handleStepComplete('basic');
+                        setActiveTab('stakeholders');
+                      } else {
+                        alert('Veuillez remplir tous les champs obligatoires avant de continuer.');
+                      }
+                    }}
+                    disabled={!canProceedToNext('basic')}
+                  >
                     Suivant: Parties Prenantes
                   </Button>
                 </div>
@@ -528,10 +645,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <Button variant="outline" onClick={() => setActiveTab('basic')}>
                     Précédent: Informations Générales
                   </Button>
-                  <Button onClick={() => {
-                    handleStepComplete('stakeholders');
-                    setActiveTab('team');
-                  }}>
+                  <Button 
+                    onClick={() => {
+                      if (validateStakeholders()) {
+                        handleStepComplete('stakeholders');
+                        setActiveTab('team');
+                      } else {
+                        alert('Veuillez sélectionner au moins une partie prenante avant de continuer.');
+                      }
+                    }}
+                    disabled={!canProceedToNext('stakeholders')}
+                  >
                     Suivant: Équipe & Contractants
                   </Button>
                 </div>
@@ -668,10 +792,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <Button variant="outline" onClick={() => setActiveTab('stakeholders')}>
                     Précédent: Parties Prenantes
                   </Button>
-                  <Button onClick={() => {
-                    handleStepComplete('team');
-                    setActiveTab('phases');
-                  }}>
+                  <Button 
+                    onClick={() => {
+                      if (validateTeam()) {
+                        handleStepComplete('team');
+                        setActiveTab('phases');
+                      } else {
+                        alert('Veuillez assigner au moins un membre à l\'équipe avant de continuer.');
+                      }
+                    }}
+                    disabled={!canProceedToNext('team')}
+                  >
                     Suivant: Phases & Planification
                   </Button>
                 </div>
@@ -1092,8 +1223,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       variant="outline"
                       onClick={() => {
                         console.log('Sauvegarde en brouillon...');
-                        // TODO: Implement draft save functionality
                         onSubmit({
+                          // Basic project information
+                          ...basicInfo,
+                          // All collected data from workflow steps
                           stakeholders,
                           delegation,
                           phases,
@@ -1101,7 +1234,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                           compliance,
                           selectedMaterials,
                           shapeData,
-                          isDraft: true
+                          // Metadata
+                          isDraft: true,
+                          completedSteps,
+                          createdAt: new Date().toISOString()
                         });
                       }}
                     >
@@ -1109,18 +1245,24 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </Button>
                   </div>
                   <Button 
-                    onClick={() => {
-                      handleStepComplete('compliance');
-                      onSubmit({
-                        stakeholders,
-                        delegation,
-                        phases,
-                        risks,
-                        compliance,
-                        selectedMaterials,
-                        shapeData
-                      });
-                    }}
+                     onClick={() => {
+                       handleStepComplete('compliance');
+                       onSubmit({
+                         // Basic project information
+                         ...basicInfo,
+                         // All collected data from workflow steps
+                         stakeholders,
+                         delegation,
+                         phases,
+                         risks,
+                         compliance,
+                         selectedMaterials,
+                         shapeData,
+                         // Metadata
+                         completedSteps: [...completedSteps, 'compliance'],
+                         createdAt: new Date().toISOString()
+                       });
+                     }}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Créer le Projet
