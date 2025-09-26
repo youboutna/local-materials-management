@@ -1,6 +1,6 @@
 import { ProjectService } from './ProjectService';
 import { ProjectStakeholderService } from './ProjectStakeholderService';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 
 export interface ProjectFormData {
   title?: string;
