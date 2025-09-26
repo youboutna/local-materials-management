@@ -12,15 +12,23 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import {
   Building, Users, UserCheck, Layers, MapPin, Package, 
-  Clock, DollarSign, CheckCircle, Target, Edit2, Save
+  Clock, DollarSign, CheckCircle, Target, Edit2, Save,
+  AlertTriangle, FileCheck
 } from 'lucide-react';
 
-// Import existing components
+// Import existing components and factorized steps
 import EmployeeSelector from '@/components/selectors/EmployeeSelector';
 import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
 import LocationSelector from '@/components/location/LocationSelector';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import EnhancedWorkflowPhaseManager from './EnhancedWorkflowPhaseManager';
+
+// Import factorized steps
+import StakeholdersStep from './steps/StakeholdersStep';
+import TeamContractorsStep from './steps/TeamContractorsStep';
+import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
+import RiskAnalysisStep from './steps/RiskAnalysisStep';
+import ComplianceStep from './steps/ComplianceStep';
 
 interface EnhancedProjectEditFormProps {
   initialData?: any;
@@ -243,7 +251,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Step configuration - similar to ProjectCreationWorkflow
+  // Step configuration - similar to ProjectCreationWorkflow with additional steps
   const steps = [
     {
       id: 1,
@@ -292,6 +300,22 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       description: 'Sélection des matériaux et organisation',
       color: 'bg-purple-500',
       isCompleted: () => !!(selectedMaterials?.length > 0)
+    },
+    {
+      id: 7,
+      title: 'Analyse des Risques',
+      icon: AlertTriangle,
+      description: 'Analyse et mitigation des risques projet',
+      color: 'bg-red-500',
+      isCompleted: () => !!(formData.risks?.length > 0)
+    },
+    {
+      id: 8,
+      title: 'Conformités & Validation',
+      icon: FileCheck,
+      description: 'Respect des normes et validation finale',
+      color: 'bg-teal-500',
+      isCompleted: () => !!(formData.compliance?.length > 0)
     }
   ];
 
@@ -481,36 +505,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
       case 2:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-500" />
-                Parties Prenantes & Responsabilités
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Chef de projet</label>
-                  <EmployeeSelector
-                    value={formData.project_responsable_id || ''}
-                    onChange={(employeeId) => updateFormData({ project_responsable_id: employeeId })}
-                    placeholder="Sélectionner un chef de projet"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Maître d'ouvrage</label>
-                  <input 
-                    type="text" 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Nom du maître d'ouvrage"
-                    value={formData.client || ''}
-                    onChange={(e) => updateFormData({ client: e.target.value })}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StakeholdersStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
         );
 
       case 3:
@@ -610,23 +609,31 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
       case 6:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-purple-500" />
-                Ressources & Matériaux
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MaterialFormSection
-                selectedMaterials={selectedMaterials}
-                onChange={setSelectedMaterials}
-                projectBudget={formData.budget}
-                projectId={projectId}
-                showMetreCalculator={true}
-              />
-            </CardContent>
-          </Card>
+          <ResourcesMaterialsStep
+            selectedMaterials={selectedMaterials}
+            onMaterialsChange={setSelectedMaterials}
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
+        );
+
+      case 7:
+        return (
+          <RiskAnalysisStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
+        );
+
+      case 8:
+        return (
+          <ComplianceStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
         );
 
       default:

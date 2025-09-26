@@ -29,6 +29,13 @@ import WarehouseShapeTracer from '../materials/WarehouseShapeTracer';
 import InteractiveMapGIS from '../materials/InteractiveMapGIS';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
 
+// Import factorized steps
+import StakeholdersStep from './steps/StakeholdersStep';
+import TeamContractorsStep from './steps/TeamContractorsStep';
+import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
+import RiskAnalysisStep from './steps/RiskAnalysisStep';
+import ComplianceStep from './steps/ComplianceStep';
+
 // Helper function to calculate polygon area in square meters
 const calculatePolygonArea = (coordinates: Array<{lat: number, lng: number}>): number => {
   if (coordinates.length < 3) return 0;
