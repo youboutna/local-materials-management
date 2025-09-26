@@ -2864,6 +2864,50 @@ export type Database = {
           },
         ]
       }
+      project_stakeholders: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          project_id: string
+          role_description: string | null
+          stakeholder_entity_type: string
+          stakeholder_id: string
+          stakeholder_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          project_id: string
+          role_description?: string | null
+          stakeholder_entity_type: string
+          stakeholder_id: string
+          stakeholder_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          project_id?: string
+          role_description?: string | null
+          stakeholder_entity_type?: string
+          stakeholder_id?: string
+          stakeholder_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_stakeholders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           adresse: Json | null
@@ -2876,23 +2920,34 @@ export type Database = {
           coordinates_longitude: number | null
           created_at: string
           created_by: string | null
+          currency: string | null
           current_phase: string | null
           current_stage: string | null
           description: string
           end_date: string | null
+          estimated_days: number | null
           financing_source: string | null
           forme: string | null
           id: string
+          initial_advance_percentage: number | null
           initial_payment_percentage: number | null
           launch_date: string | null
           localisation: Json | null
           location: string
           main_contractor: string | null
           market_type: string | null
+          payment_frequency: string | null
+          payment_mode: string | null
+          permit_number: string | null
+          priority: string | null
           progress: number
           project_order: number | null
           project_reference: string | null
+          project_reference_number: string | null
           project_responsable_id: string | null
+          project_type: string | null
+          retention_percentage: number | null
+          sector: string | null
           selection_mode: string | null
           start_date: string
           status: string
@@ -2912,23 +2967,34 @@ export type Database = {
           coordinates_longitude?: number | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           current_phase?: string | null
           current_stage?: string | null
           description: string
           end_date?: string | null
+          estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
           id?: string
+          initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
           launch_date?: string | null
           localisation?: Json | null
           location: string
           main_contractor?: string | null
           market_type?: string | null
+          payment_frequency?: string | null
+          payment_mode?: string | null
+          permit_number?: string | null
+          priority?: string | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
+          project_reference_number?: string | null
           project_responsable_id?: string | null
+          project_type?: string | null
+          retention_percentage?: number | null
+          sector?: string | null
           selection_mode?: string | null
           start_date: string
           status: string
@@ -2948,23 +3014,34 @@ export type Database = {
           coordinates_longitude?: number | null
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           current_phase?: string | null
           current_stage?: string | null
           description?: string
           end_date?: string | null
+          estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
           id?: string
+          initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
           launch_date?: string | null
           localisation?: Json | null
           location?: string
           main_contractor?: string | null
           market_type?: string | null
+          payment_frequency?: string | null
+          payment_mode?: string | null
+          permit_number?: string | null
+          priority?: string | null
           progress?: number
           project_order?: number | null
           project_reference?: string | null
+          project_reference_number?: string | null
           project_responsable_id?: string | null
+          project_type?: string | null
+          retention_percentage?: number | null
+          sector?: string | null
           selection_mode?: string | null
           start_date?: string
           status?: string

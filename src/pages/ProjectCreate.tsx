@@ -12,6 +12,7 @@ import { useProjects } from '@/hooks/projects/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectCreationWorkflow from '@/components/project/ProjectCreationWorkflow';
 import { PhaseService } from '@/services/phaseService';
+import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 
 interface SelectedMaterial {
   materialId: string;
@@ -58,22 +59,32 @@ const ProjectCreate = () => {
       const projectData = {
         title: data.title,
         description: data.description,
-        location: data.location,
+        location: data.shapeData?.address || data.location || 'Non spécifié',
         status: mappedStatus as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
         progress: 0,
-        budget: data.budget,
-        startDate: data.start_date,
-        endDate: data.end_date,
+        budget: parseFloat(data.budget) || 0,
+        estimated_days: parseInt(data.estimatedDays) || null,
+        currency: data.currency || 'MRU',
+        payment_mode: data.paymentMode || 'progressive',
+        payment_frequency: data.paymentFrequency || 'monthly',
+        initial_advance_percentage: data.initialAdvance || 20,
+        retention_percentage: data.retentionPercentage || 5,
+        priority: data.priority || 'medium',
+        project_type: data.projectType || 'construction',
+        sector: data.sector,
+        permit_number: data.permitNumber,
+        startDate: data.startDate,
+        endDate: data.endDate,
         thumbnail: '/img/project-placeholder.jpg',
-        teamSize: data.team_size,
+        teamSize: data.team_size || 1,
         coordinates: projectCoordinates,
         financingSource: data.financing_source,
         marketType: data.market_type,
         selectionMode: data.selection_mode,
-        projectResponsableId: data.project_responsable_id,
+        projectResponsableId: data.delegation?.projectManager,
         mainContractor: data.main_contractor,
         engineeringConsultant: data.engineering_consultant,
-        projectReference: data.project_reference,
+        projectReference: data.reference,
         allowsInitialPayment: data.allows_initial_payment,
         initialPaymentPercentage: data.initial_payment_percentage,
         // Construction workflow fields - ensuring proper type casting
@@ -82,32 +93,56 @@ const ProjectCreate = () => {
         // Localization fields
         localisation: localizationData,
         forme: shapeType,
-        adresse: addressData
+        adresse: data.shapeData?.address
       };
 
       const projectResult = await createProject(projectData);
       
-      // Save construction phases if any are defined
-      if (data.phases && data.phases.length > 0 && projectResult?.id) {
-        try {
-          await PhaseService.saveProjectPhases(projectResult.id, data.phases);
-          toast({
-            title: "Phases sauvegardées",
-            description: `${data.phases.length} phase(s) de construction sauvegardée(s).`,
-          });
-        } catch (phaseError) {
-          console.error('Error saving phases:', phaseError);
-          toast({
-            title: "Avertissement",
-            description: `Projet créé mais erreur lors de la sauvegarde des phases: ${phaseError instanceof Error ? phaseError.message : 'Erreur inconnue'}`,
-            variant: "destructive",
-          });
+      if (projectResult?.id) {
+        // Save project stakeholders
+        if (data.stakeholders || data.delegation) {
+          try {
+            await ProjectStakeholderService.createProjectStakeholders(
+              projectResult.id,
+              data.stakeholders || [],
+              data.delegation || {}
+            );
+            toast({
+              title: "Parties prenantes sauvegardées",
+              description: "Les parties prenantes du projet ont été configurées.",
+            });
+          } catch (stakeholderError) {
+            console.error('Error saving stakeholders:', stakeholderError);
+            toast({
+              title: "Avertissement",
+              description: "Projet créé mais erreur lors de la sauvegarde des parties prenantes.",
+              variant: "destructive",
+            });
+          }
         }
-      }
-      
-      // Add materials to the project if any are selected
-      if (selectedMaterials.length > 0 && projectResult?.id) {
-        await addMaterialsToProject(projectResult.id, selectedMaterials);
+
+        // Save construction phases if any are defined
+        if (data.phases && data.phases.length > 0) {
+          try {
+            await PhaseService.saveProjectPhases(projectResult.id, data.phases);
+            toast({
+              title: "Phases sauvegardées",
+              description: `${data.phases.length} phase(s) de construction sauvegardée(s).`,
+            });
+          } catch (phaseError) {
+            console.error('Error saving phases:', phaseError);
+            toast({
+              title: "Avertissement",
+              description: `Projet créé mais erreur lors de la sauvegarde des phases: ${phaseError instanceof Error ? phaseError.message : 'Erreur inconnue'}`,
+              variant: "destructive",
+            });
+          }
+        }
+        
+        // Add materials to the project if any are selected
+        if (selectedMaterials.length > 0) {
+          await addMaterialsToProject(projectResult.id, selectedMaterials);
+        }
       }
       
       toast({

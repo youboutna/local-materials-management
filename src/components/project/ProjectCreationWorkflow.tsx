@@ -70,6 +70,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     reference: '',
     description: '',
     budget: '',
+    estimatedDays: '', // Added estimated days field
     currency: 'MRU',
     status: 'planning',
     startDate: '',
@@ -85,7 +86,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   });
   
   const [stakeholders, setStakeholders] = useState<any[]>([]);
-  const [delegation, setDelegation] = useState<any>({});
+  const [delegation, setDelegation] = useState<any>({
+    projectManager: '',
+    technicalManager: '',
+    supervisor: '',
+    client: ''
+  });
   const [risks, setRisks] = useState<any[]>([]);
   const [compliance, setCompliance] = useState<any[]>([]);
   const [phases, setPhases] = useState<any[]>([]);
@@ -167,6 +173,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     return basicInfo.title.trim() !== '' && 
            basicInfo.description.trim() !== '' && 
            basicInfo.budget !== '' && 
+           basicInfo.estimatedDays !== '' &&
            basicInfo.startDate !== '' && 
            basicInfo.endDate !== '';
   };
@@ -176,7 +183,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   };
 
   const validateTeam = () => {
-    return Object.keys(delegation).length > 0;
+    return delegation.projectManager && delegation.technicalManager;
   };
 
   const validatePhases = () => {
@@ -307,7 +314,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Budget total *</label>
                     <input 
@@ -317,6 +324,18 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       required
                       value={basicInfo.budget}
                       onChange={(e) => setBasicInfo({...basicInfo, budget: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Durée estimée (jours) *</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="365"
+                      required
+                      value={basicInfo.estimatedDays}
+                      onChange={(e) => setBasicInfo({...basicInfo, estimatedDays: e.target.value})}
                     />
                   </div>
                   <div>
@@ -690,39 +709,41 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     </h3>
                     
                      <div className="space-y-4">
-                       <EmployeeSelector
-                         value={delegation.maitre_oeuvre || ""}
-                         onChange={(employeeId) => setDelegation(prev => ({...prev, maitre_oeuvre: employeeId}))}
-                         label="Maître d'Œuvre *"
-                         placeholder="Sélectionner le maître d'œuvre"
-                         positionFilter={['Manager', 'Director', 'Engineer', 'Project Manager']}
-                         required
-                       />
+                       <div>
+                         <label className="block text-sm font-medium mb-2">Chef de Projet *</label>
+                         <EmployeeSelector
+                           value={delegation.projectManager || ""}
+                           onChange={(employeeId) => setDelegation(prev => ({...prev, projectManager: employeeId}))}
+                           placeholder="Sélectionner le chef de projet"
+                         />
+                       </div>
                        
-                       <EmployeeSelector
-                         value={delegation.chef_projet || ""}
-                         onChange={(employeeId) => setDelegation(prev => ({...prev, chef_projet: employeeId}))}
-                         label="Chef de Projet *"
-                         placeholder="Sélectionner le chef de projet"
-                         positionFilter={['Project Manager', 'Engineer', 'Team Lead']}
-                         required
-                       />
+                       <div>
+                         <label className="block text-sm font-medium mb-2">Responsable Technique *</label>
+                         <EmployeeSelector
+                           value={delegation.technicalManager || ""}
+                           onChange={(employeeId) => setDelegation(prev => ({...prev, technicalManager: employeeId}))}
+                           placeholder="Sélectionner le responsable technique"
+                         />
+                       </div>
                        
-                       <EmployeeSelector
-                         value={delegation.responsable_qualite || ""}
-                         onChange={(employeeId) => setDelegation(prev => ({...prev, responsable_qualite: employeeId}))}
-                         label="Responsable Qualité"
-                         placeholder="Sélectionner le responsable qualité"
-                         positionFilter={['Quality Manager', 'Inspector', 'Engineer']}
-                       />
+                       <div>
+                         <label className="block text-sm font-medium mb-2">Superviseur</label>
+                         <EmployeeSelector
+                           value={delegation.supervisor || ""}
+                           onChange={(employeeId) => setDelegation(prev => ({...prev, supervisor: employeeId}))}
+                           placeholder="Sélectionner le superviseur"
+                         />
+                       </div>
                        
-                       <EmployeeSelector
-                         value={delegation.coordinateur_hse || ""}
-                         onChange={(employeeId) => setDelegation(prev => ({...prev, coordinateur_hse: employeeId}))}
-                         label="Coordinateur HSE"
-                         placeholder="Sélectionner le coordinateur HSE"
-                         positionFilter={['HSE Coordinator', 'Safety Manager', 'Inspector']}
-                       />
+                       <div>
+                         <label className="block text-sm font-medium mb-2">Représentant Client</label>
+                         <EmployeeSelector
+                           value={delegation.client || ""}
+                           onChange={(employeeId) => setDelegation(prev => ({...prev, client: employeeId}))}
+                           placeholder="Sélectionner le représentant client"
+                         />
+                       </div>
                      </div>
                   </div>
                   
