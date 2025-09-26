@@ -168,18 +168,14 @@ export class ProjectFormService {
       case 1:
         return !!(formData.title && formData.description && formData.budget);
       case 2:
-        return !!(formData.stakeholders?.length || formData.project_responsable_id);
+        return !!(formData.stakeholders?.length || formData.project_responsable_id || formData.main_contractor);
       case 3:
-        return !!(formData.main_contractor || formData.engineering_consultant);
-      case 4:
         return !!(formData.phases?.length);
-      case 5:
+      case 4:
         return !!(formData.facilitiesLocation?.center || formData.location);
-      case 6:
-        return !!(formData.materials?.length);
-      case 7:
+      case 5:
         return !!(formData.risks?.length);
-      case 8:
+      case 6:
         return !!(formData.compliance?.length);
       default:
         return false;

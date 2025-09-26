@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { useToast } from '../../hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
+import { cn } from '../../lib/utils';
 import {
   Building, Users, UserCheck, Layers, MapPin, Package, 
   Clock, DollarSign, CheckCircle, Target, Edit2, Save,
@@ -14,12 +14,11 @@ import {
 } from 'lucide-react';
 
 // Import services
-import { ProjectFormService, ProjectFormData, SaveContext } from '@/services/ProjectFormService';
+import { ProjectFormService, ProjectFormData, SaveContext } from '../../services/ProjectFormService';
 
 // Import step components
 import ProjectInfoStep from './steps/ProjectInfoStep';
-import StakeholdersStep from './steps/StakeholdersStep';
-import TeamContractorsStep from './steps/TeamContractorsStep';
+import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
 import PhasePlanificationStep from './steps/PhasePlanificationStep';
 import LocationStep from './steps/LocationStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
@@ -243,7 +242,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Step configuration with proper separation of concerns
+  // Step configuration with merged stakeholders and team
   const steps = [
     {
       id: 1,
@@ -255,51 +254,43 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     },
     {
       id: 2,
-      title: 'Parties Prenantes',
+      title: 'Parties Prenantes & Équipe',
       icon: Users,
-      description: 'Configuration des acteurs et responsabilités',
+      description: 'Acteurs, responsabilités, équipe interne et contractants',
       color: 'bg-green-500',
       isCompleted: () => formService.validateStep(2, formData)
     },
     {
       id: 3,
-      title: 'Équipe & Contractants',
-      icon: UserCheck,
-      description: 'Assignment des ressources humaines et fournisseurs',
-      color: 'bg-orange-500',
-      isCompleted: () => formService.validateStep(3, formData)
-    },
-    {
-      id: 4,
       title: 'Phases & Planification',
       icon: Layers,
       description: 'Structure des phases, chronologie et matériaux',
       color: 'bg-indigo-500',
-      isCompleted: () => formService.validateStep(4, formData) && selectedMaterials.length > 0
+      isCompleted: () => formService.validateStep(3, formData) && selectedMaterials.length > 0
     },
     {
-      id: 5,
+      id: 4,
       title: 'Géolocalisation',
       icon: MapPin,
       description: 'Localisation précise et délimitation des zones',
       color: 'bg-cyan-500',
-      isCompleted: () => formService.validateStep(5, formData)
+      isCompleted: () => formService.validateStep(4, formData)
     },
     {
-      id: 6,
+      id: 5,
       title: 'Analyse des Risques',
       icon: AlertTriangle,
       description: 'Analyse et mitigation des risques projet',
       color: 'bg-red-500',
-      isCompleted: () => formService.validateStep(6, formData)
+      isCompleted: () => formService.validateStep(5, formData)
     },
     {
-      id: 7,
+      id: 6,
       title: 'Conformités & Validation',
       icon: FileCheck,
       description: 'Respect des normes et validation finale',
       color: 'bg-teal-500',
-      isCompleted: () => formService.validateStep(7, formData)
+      isCompleted: () => formService.validateStep(6, formData)
     }
   ];
 
@@ -315,21 +306,13 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         );
       case 2:
         return (
-          <StakeholdersStep
+          <StakeholdersTeamStep
             formData={formData}
             onUpdate={updateFormData}
             isEditing={true}
           />
         );
       case 3:
-        return (
-          <TeamContractorsStep
-            formData={formData}
-            onUpdate={updateFormData}
-            isEditing={true}
-          />
-        );
-      case 4:
         return (
           <PhasePlanificationStep
             formData={formData}
@@ -339,7 +322,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-      case 5:
+      case 4:
         return (
           <LocationStep
             formData={formData}
@@ -347,7 +330,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-      case 6:
+      case 5:
         return (
           <RiskAnalysisStep
             formData={formData}
@@ -355,7 +338,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-      case 7:
+      case 6:
         return (
           <ComplianceStep
             formData={formData}
