@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { ProjectService } from '@/services/ProjectService';
 import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 import { PhaseService, PhaseData } from '@/services/phaseService';
@@ -69,13 +70,34 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Initialize ProjectService
   const projectService = useMemo(() => new ProjectService(), []);
 
+  // Debug: Test basic database connection
+  useEffect(() => {
+    const testDatabaseConnection = async () => {
+      try {
+        console.log('🔍 Testing database connection...');
+        const { data, error } = await supabase.from('projects').select('id, title').limit(1);
+        if (error) {
+          console.error('❌ Database connection error:', error);
+        } else {
+          console.log('✅ Database connection OK, sample project:', data?.[0]);
+        }
+      } catch (err) {
+        console.error('❌ Database test failed:', err);
+      }
+    };
+    testDatabaseConnection();
+  }, []);
+
   // Load project data from database (merge into existing formData, do not wipe)
   const loadProjectData = useCallback(async () => {
     if (!projectId) return;
 
     setIsLoading(true);
     try {
+      console.log('🔍 Loading project data for ID:', projectId);
       const projectDetail = await projectService.getProjectDetail(projectId);
+      console.log('✅ Project detail loaded:', projectDetail);
+      
       if (projectDetail) {
         // Map the project detail data to form format
         const formattedData = {
@@ -91,15 +113,18 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
           status: projectDetail.status || 'planning'
         };
         
+        console.log('✅ Formatted project data:', formattedData);
         setFormData((prev: any) => ({ ...prev, ...formattedData }));
         setOriginalFormData((prev: any) => ({ ...prev, ...formattedData }));
         onFormDataChange?.(formattedData);
+      } else {
+        console.warn('⚠️ No project detail found for ID:', projectId);
       }
     } catch (error) {
-      console.error('Error loading project data:', error);
+      console.error('❌ Error loading project data:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données du projet.",
+        description: `Impossible de charger les données du projet: ${(error as any)?.message || 'Erreur inconnue'}`,
         variant: "destructive",
       });
     } finally {
@@ -110,11 +135,23 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Load stakeholders and phases from database and merge into form
   const loadRelatedData = useCallback(async () => {
     if (!projectId) return;
+    
     try {
+      console.log('🔍 Loading related data for project ID:', projectId);
+      
       const [stakeholdersData, phasesData] = await Promise.all([
-        ProjectStakeholderService.getProjectStakeholders(projectId),
-        PhaseService.loadProjectPhases(projectId)
+        ProjectStakeholderService.getProjectStakeholders(projectId).catch(err => {
+          console.error('❌ Error loading stakeholders:', err);
+          return [];
+        }),
+        PhaseService.loadProjectPhases(projectId).catch(err => {
+          console.error('❌ Error loading phases:', err);
+          return [];
+        })
       ]);
+
+      console.log('✅ Stakeholders loaded:', stakeholdersData);
+      console.log('✅ Phases loaded:', phasesData);
 
       const mappedStakeholders = (() => {
         const managers: any[] = [];
@@ -167,16 +204,20 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         suppliers: phase.suppliers || []
       }));
 
+      console.log('✅ Mapped stakeholders:', mappedStakeholders);
+      console.log('✅ Formatted phases:', formattedPhases);
+
       setFormData((prev: any) => ({
         ...prev,
         stakeholders: mappedStakeholders,
         phases: formattedPhases
       }));
+      
     } catch (err) {
-      console.error('Error loading related data:', err);
+      console.error('❌ Error loading related data:', err);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données liées au projet.",
+        description: `Impossible de charger les données liées au projet: ${(err as any)?.message || 'Erreur inconnue'}`,
         variant: "destructive",
       });
     }
@@ -185,10 +226,16 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Load data on mount and when projectId changes
   useEffect(() => {
     if (!projectId) return;
-    if (!initialData) {
-      // Load project core + related in parallel
+    
+    console.log('🔍 useEffect triggered with projectId:', projectId, 'initialData:', !!initialData);
+    
+    if (!initialData || Object.keys(initialData).length === 0) {
+      // Load project core + related in parallel if no initial data provided
+      console.log('📥 Loading fresh data from database...');
       Promise.all([loadProjectData(), loadRelatedData()]);
     } else {
+      // Use provided initial data but still load related data
+      console.log('📋 Using provided initial data, loading related data...');
       setFormData((prev: any) => ({ ...prev, ...initialData }));
       setOriginalFormData((prev: any) => ({ ...prev, ...initialData }));
       loadRelatedData();

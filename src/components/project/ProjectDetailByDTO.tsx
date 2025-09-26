@@ -163,7 +163,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         .from('project_phases')
         .select('*')
         .eq('project_id', projectId)
-        .order('phase_order', { ascending: true });
+        .order('created_at', { ascending: true });
       if (error) return [];
       return data || [];
     },
