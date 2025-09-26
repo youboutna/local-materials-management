@@ -39,6 +39,7 @@ import PhaseMaterials from './PhaseMaterials';
 import PhaseTasks from './PhaseTasks';
 import PhasePayments from './PhasePayments';
 import PhaseDocuments from './PhaseDocuments';
+import EnhancedWorkflowPhaseManager from './EnhancedWorkflowPhaseManager';
 
 interface EnhancedProjectEditFormProps {
   initialData?: any;
@@ -931,148 +932,17 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
         return (
           <div className="space-y-6">
             <div>
-              <Label className="text-base font-medium">Phases du Projet</Label>
+              <Label className="text-base font-medium">Gestion des Phases et Workflow</Label>
               <p className="text-sm text-muted-foreground mb-4">
-                Structure des phases et chronologie du projet
+                Structure des phases, documents, tâches, paiements et inspections du projet
               </p>
             </div>
             
-            {/* Display existing phases */}
-            <div className="space-y-4">
-              {(formData.phases || []).length > 0 ? (
-                formData.phases.map((phase: any, index: number) => (
-                  <Card key={phase.id || index} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-lg">{phase.title}</h3>
-                        <p className="text-muted-foreground text-sm mt-1">{phase.description}</p>
-                        
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Date de début</Label>
-                            <p className="text-sm font-medium">{phase.startDate || 'Non définie'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Date de fin</Label>
-                            <p className="text-sm font-medium">{phase.endDate || 'Non définie'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Budget</Label>
-                            <p className="text-sm font-medium">{phase.budget ? `${phase.budget.toLocaleString()} €` : 'Non défini'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground">Statut</Label>
-                            <Badge variant={
-                              phase.status === 'completed' ? 'default' :
-                              phase.status === 'in_progress' ? 'secondary' :
-                              phase.status === 'delayed' ? 'destructive' : 'outline'
-                            }>
-                              {phase.status === 'completed' ? 'Terminé' :
-                               phase.status === 'in_progress' ? 'En cours' :
-                               phase.status === 'delayed' ? 'Retard' : 'Non commencé'}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        {/* Progress bar */}
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-1">
-                            <Label className="text-xs text-muted-foreground">Progression</Label>
-                            <span className="text-xs text-muted-foreground">{phase.progress || 0}%</span>
-                          </div>
-                          <Progress value={phase.progress || 0} className="h-2" />
-                        </div>
-                        
-                        {/* Resources summary */}
-                        <div className="grid grid-cols-3 gap-4 mt-4">
-                          <div className="text-center p-2 bg-muted/50 rounded">
-                            <p className="text-xs text-muted-foreground">Matériaux</p>
-                            <p className="text-sm font-medium">{(phase.materials || []).length}</p>
-                          </div>
-                          <div className="text-center p-2 bg-muted/50 rounded">
-                            <p className="text-xs text-muted-foreground">Ressources</p>
-                            <p className="text-sm font-medium">{(phase.humanResources || []).length}</p>
-                          </div>
-                          <div className="text-center p-2 bg-muted/50 rounded">
-                            <p className="text-xs text-muted-foreground">Fournisseurs</p>
-                            <p className="text-sm font-medium">{(phase.suppliers || []).length}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedPhaseId(phase.id)}
-                        >
-                          <Edit2 className="h-4 w-4 mr-1" />
-                          Détails & CRUD
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              ) : (
-                <Card className="p-8 text-center">
-                  <div className="text-muted-foreground">
-                    <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucune phase configurée pour ce projet</p>
-                    <p className="text-sm mt-1">Les phases seront créées lors de la planification détaillée</p>
-                  </div>
-                </Card>
-              )}
-            </div>
-            
-            {/* Phase Details Dialog */}
-            {selectedPhaseId && (
-              <Dialog open={!!selectedPhaseId} onOpenChange={() => setSelectedPhaseId(null)}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      Gestion de la Phase: {formData.phases?.find((p: any) => p.id === selectedPhaseId)?.title}
-                    </DialogTitle>
-                  </DialogHeader>
-                  
-                  <div className="space-y-6">
-                    {/* Tabs for different aspects of phase management */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <Card className="p-4">
-                        <h4 className="font-medium mb-2 text-sm">Matériaux</h4>
-                        <PhaseMaterials
-                          phaseId={selectedPhaseId}
-                          projectId={projectId || ''}
-                        />
-                      </Card>
-                      
-                      <Card className="p-4">
-                        <h4 className="font-medium mb-2 text-sm">Tâches & Inspections</h4>
-                        <PhaseTasks
-                          phaseId={selectedPhaseId}
-                          projectId={projectId || ''}
-                        />
-                      </Card>
-                      
-                      <Card className="p-4">
-                        <h4 className="font-medium mb-2 text-sm">Paiements</h4>
-                        <PhasePayments
-                          phaseId={selectedPhaseId}
-                          projectId={projectId || ''}
-                        />
-                      </Card>
-                      
-                      <Card className="p-4">
-                        <h4 className="font-medium mb-2 text-sm">Documents</h4>
-                        <PhaseDocuments
-                          phaseId={selectedPhaseId}
-                          projectId={projectId || ''}
-                        />
-                      </Card>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+            {/* Enhanced Workflow Phase Manager with integrated CRUD components */}
+            <EnhancedWorkflowPhaseManager 
+              projectId={projectId || ''} 
+              readonly={false}
+            />
           </div>
         );
 
