@@ -77,21 +77,30 @@ export class ProjectService {
   }
 
   async updateProject(id: string, formData: Partial<ProjectFormDTO>): Promise<ProjectDTO> {
-    const entityData = EntityToDTOMapper.projectDTOToEntity({
-      id,
-      status: 'en cours',
-      progress: 0,
-      thumbnail: '/img/project-placeholder.jpg',
-      title: '',
-      description: '',
-      location: '',
-      budget: 0,
-      startDate: '',
-      teamSize: 0,
-      ...formData
-    });
+    // Map only provided fields to entity shape to avoid overwriting status or other fields
+    const partialEntity: any = {
+      ...(formData.title !== undefined && { title: formData.title }),
+      ...(formData.description !== undefined && { description: formData.description }),
+      ...(formData.location !== undefined && { location: formData.location }),
+      ...(formData.budget !== undefined && { budget: formData.budget }),
+      ...(formData.startDate !== undefined && { start_date: formData.startDate }),
+      ...(formData.endDate !== undefined && { end_date: formData.endDate }),
+      ...(formData.teamSize !== undefined && { team_size: formData.teamSize }),
+      ...(formData.coordinates?.latitude !== undefined && { coordinates_latitude: formData.coordinates.latitude }),
+      ...(formData.coordinates?.longitude !== undefined && { coordinates_longitude: formData.coordinates.longitude }),
+      ...(formData.financingSource !== undefined && { financing_source: formData.financingSource }),
+      ...(formData.marketType !== undefined && { market_type: formData.marketType }),
+      ...(formData.selectionMode !== undefined && { selection_mode: formData.selectionMode }),
+      ...(formData.launchDate !== undefined && { launch_date: formData.launchDate }),
+      ...(formData.attributionDate !== undefined && { attribution_date: formData.attributionDate }),
+      ...(formData.projectResponsableId !== undefined && { project_responsable_id: formData.projectResponsableId }),
+      ...(formData.mainContractor !== undefined && { main_contractor: formData.mainContractor }),
+      ...(formData.projectReference !== undefined && { project_reference: formData.projectReference }),
+      ...(formData.allowsInitialPayment !== undefined && { allows_initial_payment: formData.allowsInitialPayment }),
+      ...(formData.initialPaymentPercentage !== undefined && { initial_payment_percentage: formData.initialPaymentPercentage }),
+    };
 
-    const updatedEntity = await this.repository.update(id, entityData);
+    const updatedEntity = await this.repository.update(id, partialEntity);
     return EntityToDTOMapper.projectEntityToDTO(updatedEntity);
   }
 
