@@ -941,7 +941,6 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
             {/* Enhanced Workflow Phase Manager with integrated CRUD components */}
             <EnhancedWorkflowPhaseManager 
               projectId={projectId || ''} 
-              readonly={false}
             />
           </div>
         );
