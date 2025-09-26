@@ -225,8 +225,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     updateFormData({ status: newStatus });
   };
 
-  // Save step data
-  const handleSaveStep = async () => {
+  // Save step data only
+  const handleSaveStepOnly = async () => {
     if (!onSubmit) return;
     
     setIsSaving(true);
@@ -235,17 +235,18 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         ...formData,
         materials: selectedMaterials,
         currentStep: currentStep,
-        isDraft: true
+        isDraft: true,
+        saveType: 'step_only'
       });
       toast({
         title: 'Étape sauvegardée',
-        description: 'Les données ont été sauvegardées avec succès.',
+        description: 'Les données de cette étape ont été sauvegardées.',
       });
     } catch (error) {
       console.error('Error saving step:', error);
       toast({
         title: 'Erreur',
-        description: 'Erreur lors de la sauvegarde.',
+        description: 'Erreur lors de la sauvegarde de l\'étape.',
         variant: 'destructive',
       });
     } finally {
@@ -263,7 +264,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         ...formData,
         materials: selectedMaterials,
         currentStep: currentStep,
-        isDraft: true
+        isDraft: true,
+        saveType: 'save_and_next'
       });
       
       // Move to next step if not at the end
@@ -298,7 +300,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         materials: selectedMaterials,
         currentStep: currentStep,
         isDraft: false,
-        isComplete: true
+        isComplete: true,
+        saveType: 'global_and_close'
       });
       
       toast({
@@ -449,6 +452,51 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                     />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-2">Type de marché *</label>
+                    <select 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.market_type || ''}
+                      onChange={(e) => updateFormData({ market_type: e.target.value })}
+                    >
+                      <option value="">Sélectionner le type de marché</option>
+                      <option value="public">Marché public</option>
+                      <option value="private">Marché privé</option>
+                      <option value="ppp">Partenariat public-privé (PPP)</option>
+                      <option value="concession">Concession</option>
+                      <option value="delegation">Délégation de service public</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Mode de sélection</label>
+                    <select 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.selection_mode || ''}
+                      onChange={(e) => updateFormData({ selection_mode: e.target.value })}
+                    >
+                      <option value="">Sélectionner le mode</option>
+                      <option value="appel_offres">Appel d'offres</option>
+                      <option value="consultation">Consultation</option>
+                      <option value="gre_gre">Gré à gré</option>
+                      <option value="concours">Concours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Source de financement</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Budget de l'État, Partenaire..."
+                      value={formData.financing_source || ''}
+                      onChange={(e) => updateFormData({ financing_source: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <label className="block text-sm font-medium mb-2">Statut</label>
                     <select 
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -461,6 +509,19 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                       <option value="suspendu">Suspendu</option>
                       <option value="terminé">Terminé</option>
                       <option value="annulé">Annulé</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Priorité</label>
+                    <select 
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.priority || 'medium'}
+                      onChange={(e) => updateFormData({ priority: e.target.value })}
+                    >
+                      <option value="low">Faible</option>
+                      <option value="medium">Moyenne</option>
+                      <option value="high">Élevée</option>
+                      <option value="urgent">Urgente</option>
                     </select>
                   </div>
                 </div>
@@ -524,16 +585,17 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Type de marché</label>
+                      <label className="block text-sm font-medium mb-2">Mode de sélection</label>
                       <select 
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={formData.market_type || ''}
-                        onChange={(e) => updateFormData({ market_type: e.target.value })}
+                        value={formData.selection_mode || ''}
+                        onChange={(e) => updateFormData({ selection_mode: e.target.value })}
                       >
-                        <option value="">Sélectionner le type</option>
-                        <option value="public">Public</option>
-                        <option value="privé">Privé</option>
-                        <option value="mixte">Mixte</option>
+                        <option value="">Sélectionner le mode</option>
+                        <option value="appel_offres">Appel d'offres</option>
+                        <option value="consultation">Consultation</option>
+                        <option value="gre_gre">Gré à gré</option>
+                        <option value="concours">Concours</option>
                       </select>
                     </div>
                   </div>
@@ -824,7 +886,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
               {/* Save buttons */}
               <div className="space-y-2">
                 <Button
-                  onClick={handleSaveStep}
+                  onClick={handleSaveStepOnly}
                   disabled={isSaving}
                   className="w-full"
                   variant="outline"
