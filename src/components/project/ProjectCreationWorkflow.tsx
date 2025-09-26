@@ -524,9 +524,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                 )}
                 
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('stakeholders')}>
-                    Valider les Parties Prenantes
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setActiveTab('basic')}>
+                    Précédent: Informations Générales
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('stakeholders');
+                    setActiveTab('team');
+                  }}>
+                    Suivant: Équipe & Contractants
                   </Button>
                 </div>
               </div>
@@ -658,9 +664,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                 )}
                 
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('team')}>
-                    Valider l'Équipe & Délégation
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setActiveTab('stakeholders')}>
+                    Précédent: Parties Prenantes
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('team');
+                    setActiveTab('phases');
+                  }}>
+                    Suivant: Phases & Planification
                   </Button>
                 </div>
               </div>
@@ -705,9 +717,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   />
                 </div>
                 
-                <div className="flex justify-end">
-                  <Button onClick={() => handleStepComplete('phases')}>
-                    Valider les Phases & Planification
+                <div className="flex justify-between pt-6">
+                  <Button variant="outline" onClick={() => setActiveTab('team')}>
+                    Précédent: Équipe & Contractants
+                  </Button>
+                  <Button onClick={() => {
+                    handleStepComplete('phases');
+                    setActiveTab('geolocation');
+                  }}>
+                    Suivant: Géolocalisation & Cartographie
                   </Button>
                 </div>
               </div>
@@ -1070,7 +1088,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <Button variant="outline" onClick={() => setActiveTab('risks')}>
                       Précédent: Risques
                     </Button>
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        console.log('Sauvegarde en brouillon...');
+                        // TODO: Implement draft save functionality
+                        onSubmit({
+                          stakeholders,
+                          delegation,
+                          phases,
+                          risks,
+                          compliance,
+                          selectedMaterials,
+                          shapeData,
+                          isDraft: true
+                        });
+                      }}
+                    >
                       Sauvegarder comme Brouillon
                     </Button>
                   </div>
