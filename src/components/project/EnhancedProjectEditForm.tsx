@@ -1,1366 +1,816 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { 
   Building, 
+  Calendar, 
+  MapPin, 
   Users, 
-  UserCheck, 
-  Shield, 
-  MapPin,
-  AlertTriangle,
-  FileCheck,
-  Layers,
+  DollarSign, 
+  Settings, 
+  FileText,
+  CreditCard,
+  Save,
+  Loader2,
+  Edit3,
   CheckCircle,
   Clock,
-  DollarSign,
-  Target,
-  Plus,
-  Edit3,
-  Trash2,
-  Save,
-  RotateCcw,
-  Eye,
-  Calendar,
-  TrendingUp,
-  Settings
+  AlertTriangle,
+  Layers
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import MaterialFormSection from '../MaterialFormSection';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import EnhancedWorkflowPhaseManager from './EnhancedWorkflowPhaseManager';
 import EmployeeSelector from '../selectors/EmployeeSelector';
 import SimpleSupplierSelector from '../selectors/SimpleSupplierSelector';
-import InteractiveMapGIS from '../materials/InteractiveMapGIS';
-import ConstructionPhaseManager from './ConstructionPhaseManager';
+import { ProjectData, ConstructionPhase, ConstructionStage } from '@/types/project';
 
-interface SubEmployee {
+interface Employee {
   id: string;
-  name: string;
-  role: string;
-  dailyRate?: number;
-  assignedPhases: string[];
-}
-
-interface SubSupplier {
-  id: string;
-  name: string;
-  category: string;
-  contactInfo: string;
-  estimatedBudget?: number;
-  assignedMaterials: string[];
-}
-
-interface SubPhase {
-  id: string;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  estimatedDuration: number;
-  budget: number;
-  actualCost: number;
-  progress: number;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
-  materials: Array<{ materialId: string; quantity: number; name?: string }>;
-  humanResources: Array<{ roleId: string; quantity: number; role?: string }>;
-  suppliers: Array<{ supplierId: string; name?: string; contact?: string }>;
-  location: string;
-  notes: string;
-}
-
-interface SubRisk {
-  id: string;
-  category: string;
-  description: string;
-  impact: 'low' | 'medium' | 'high' | 'critical';
-  probability: 'low' | 'medium' | 'high';
-  mitigation: string;
-  status: 'identified' | 'mitigated' | 'resolved';
+  full_name: string;
+  position?: string | null;
+  department?: string | null;
 }
 
 interface ProjectEditData {
-  // Basic Info
+  id: string;
   title: string;
   description: string;
-  budget: number;
-  currency: string;
+  location: string;
   status: string;
-  startDate: string;
-  endDate: string;
-  priority: string;
-  projectType: string;
-  projectReference?: string;
-  
-  // Timeline & Payment
-  paymentMode: string;
-  paymentFrequency: string;
-  initialAdvance: number;
-  warrantyRetention: number;
-  
-  // Geolocation
-  address: string;
-  coordinates: { lat: number; lng: number } | null;
-  surface: number;
-  shapeData: any;
-  
-  // Sub-objects
-  employees: SubEmployee[];
-  suppliers: SubSupplier[];
-  phases: SubPhase[];
-  risks: SubRisk[];
-  materials: Array<{ materialId: string; quantity: number }>;
+  budget: number;
+  start_date: string;
+  end_date: string;
+  team_size: number;
+  financing_source?: string;
+  market_type?: string;
+  selection_mode?: string;
+  project_reference?: string;
+  project_responsable_id?: string;
+  main_contractor?: string;
+  engineering_consultant?: string;
+  current_phase?: ConstructionPhase;
+  current_stage?: ConstructionStage;
+  progress: number;
+  thumbnail?: string;
+  allows_initial_payment?: boolean;
+  initial_payment_percentage?: number;
+  facilitiesLocation?: {
+    center?: { lat: number; lng: number };
+    polygon?: { lat: number; lng: number }[];
+    address?: string;
+    shapeType?: string;
+  };
 }
 
 interface EnhancedProjectEditFormProps {
-  initialData?: Partial<ProjectEditData>;
-  onSubmit: (data: ProjectEditData) => void;
-  onSave?: (data: ProjectEditData) => void;
-  className?: string;
+  projectId: string;
+  onSave: (data: ProjectEditData) => Promise<void>;
+  onCancel: () => void;
 }
 
-const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
-  initialData = {},
-  onSubmit,
-  onSave,
-  className = ""
-}) => {
+export function EnhancedProjectEditForm({ projectId, onSave, onCancel }: EnhancedProjectEditFormProps) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  
   const [formData, setFormData] = useState<ProjectEditData>({
+    id: projectId,
     title: '',
     description: '',
+    location: '',
+    status: 'Planning',
     budget: 0,
-    currency: 'MRU',
-    status: 'planning',
-    startDate: '',
-    endDate: '',
-    priority: 'medium',
-    projectType: 'construction',
-    paymentMode: 'progressive',
-    paymentFrequency: 'monthly',
-    initialAdvance: 20,
-    warrantyRetention: 5,
-    address: '',
-    coordinates: null,
-    surface: 0,
-    shapeData: null,
-    employees: [],
-    suppliers: [],
-    phases: [],
-    risks: [],
-    materials: [],
-    ...initialData
+    start_date: '',
+    end_date: '',
+    team_size: 1,
+    financing_source: '',
+    market_type: '',
+    selection_mode: '',
+    project_reference: '',
+    project_responsable_id: '',
+    main_contractor: '',
+    engineering_consultant: '',
+    current_phase: 'pre_construction',
+    current_stage: 'planning_design',
+    progress: 0,
+    allows_initial_payment: false,
+    initial_payment_percentage: 0,
+    facilitiesLocation: {
+      center: undefined,
+      polygon: [],
+      address: '',
+      shapeType: undefined
+    }
   });
 
-  const [editDialogs, setEditDialogs] = useState({
-    employee: false,
-    supplier: false,
-    phase: false,
-    risk: false
+  const [contractorSupplier, setContractorSupplier] = useState<{
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }>({
+    name: '',
+    contact: '',
+    leadTime: 7
   });
 
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [engineeringConsultant, setEngineeringConsultant] = useState<{
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }>({
+    name: '',
+    contact: '',
+    leadTime: 7
+  });
 
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Load project data on mount
   useEffect(() => {
-    setHasUnsavedChanges(true);
-  }, [formData]);
+    const loadProjectData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load project basic data
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .single();
 
-  const updateFormData = (field: keyof ProjectEditData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+        if (projectError) throw projectError;
+
+        // Load employees for selection
+        const { data: employeesData, error: employeesError } = await supabase
+          .from('employees')
+          .select('id, full_name, position, department')
+          .eq('is_active', true)
+          .order('full_name');
+
+        if (employeesError) throw employeesError;
+
+        setEmployees(employeesData || []);
+
+        // Transform project data to form format
+        const transformedData: ProjectEditData = {
+          id: project.id,
+          title: project.title || '',
+          description: project.description || '',
+          location: project.location || '',
+          status: project.status || 'Planning',
+          budget: project.budget || 0,
+          start_date: project.start_date ? format(new Date(project.start_date), 'yyyy-MM-dd') : '',
+          end_date: project.end_date ? format(new Date(project.end_date), 'yyyy-MM-dd') : '',
+          team_size: project.team_size || 1,
+          financing_source: project.financing_source || '',
+          market_type: project.market_type || '',
+          selection_mode: project.selection_mode || '',
+          project_reference: project.project_reference || '',
+          project_responsable_id: project.project_responsable_id || '',
+          main_contractor: project.main_contractor || '',
+          engineering_consultant: '',
+          current_phase: 'pre_construction' as ConstructionPhase,
+          current_stage: 'planning_design' as ConstructionStage,
+          progress: project.progress || 0,
+          thumbnail: project.thumbnail || '',
+          allows_initial_payment: project.allows_initial_payment || false,
+          initial_payment_percentage: project.initial_payment_percentage || 0,
+          facilitiesLocation: {
+            center: undefined,
+            polygon: [],
+            address: '',
+            shapeType: undefined
+          }
+        };
+
+        setFormData(transformedData);
+
+        // Set contractor and consultant data
+        setContractorSupplier({
+          name: project.main_contractor || '',
+          contact: '',
+          leadTime: 7
+        });
+
+        setEngineeringConsultant({
+          name: '',
+          contact: '',
+          leadTime: 7
+        });
+
+        toast({
+          title: 'Données chargées',
+          description: 'Les informations du projet ont été chargées avec succès'
+        });
+
+      } catch (error) {
+        console.error('Error loading project data:', error);
+        toast({
+          title: 'Erreur de chargement',
+          description: 'Impossible de charger les données du projet',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      loadProjectData();
+    }
+  }, [projectId, toast]);
+
+  const handleChange = (field: keyof ProjectEditData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear validation errors when user starts typing
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+    }
   };
 
-  const handleAutoSave = () => {
-    if (onSave && hasUnsavedChanges) {
-      onSave(formData);
-      setHasUnsavedChanges(false);
+  const handleMapDataChange = (data: any) => {
+    const mappedData = {
+      center: data.coordinates ? data.coordinates : data.center,
+      polygon: data.shape || data.polygon || [],
+      address: data.address || '',
+      shapeType: data.shapeType
+    };
+    
+    handleChange('facilitiesLocation', mappedData);
+  };
+
+  const handleContractorChange = (supplier: {
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }) => {
+    setContractorSupplier(supplier);
+    handleChange('main_contractor', supplier.name);
+  };
+
+  const handleEngineeringConsultantChange = (supplier: {
+    id?: string;
+    name: string;
+    contact: string;
+    leadTime: number;
+  }) => {
+    setEngineeringConsultant(supplier);
+    handleChange('engineering_consultant', supplier.name);
+  };
+
+  const validateForm = (): string[] => {
+    const errors: string[] = [];
+    
+    if (!formData.title?.trim()) {
+      errors.push('Le titre du projet est obligatoire');
+    }
+    
+    if (!formData.description?.trim()) {
+      errors.push('La description du projet est obligatoire');
+    }
+    
+    if (!formData.location?.trim()) {
+      errors.push('La localisation du projet est obligatoire');
+    }
+    
+    if (!formData.budget || formData.budget <= 0) {
+      errors.push('Le budget doit être supérieur à 0');
+    }
+
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      if (startDate >= endDate) {
+        errors.push('La date de fin doit être postérieure à la date de début');
+      }
+    }
+
+    if ((formData.initial_payment_percentage || 0) < 0 || (formData.initial_payment_percentage || 0) > 100) {
+      errors.push('Le pourcentage de paiement initial doit être entre 0 et 100');
+    }
+    
+    return errors;
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      const errors = validateForm();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        toast({
+          title: 'Erreurs de validation',
+          description: errors.join(', '),
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      await onSave(formData);
+      
       toast({
-        title: "Sauvegarde automatique",
-        description: "Vos modifications ont été sauvegardées",
+        title: 'Projet mis à jour',
+        description: 'Les modifications ont été sauvegardées avec succès'
       });
+
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: 'Erreur de sauvegarde',
+        description: 'Impossible de sauvegarder les modifications',
+        variant: 'destructive'
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Auto-save every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(handleAutoSave, 30000);
-    return () => clearInterval(interval);
-  }, [formData, hasUnsavedChanges]);
+  const getTabCompletion = (tabId: string): number => {
+    switch (tabId) {
+      case 'basic':
+        const basicRequired = ['title', 'description', 'location'];
+        const basicCompleted = basicRequired.filter(field => 
+          formData[field as keyof ProjectEditData]?.toString().trim()
+        ).length;
+        return (basicCompleted / basicRequired.length) * 100;
 
-  // Sub-object management functions
-  const addSubObject = (type: 'employee' | 'supplier' | 'phase' | 'risk', data: any) => {
-    const newItem = { ...data, id: `${type}_${Date.now()}` };
-    setFormData(prev => ({
-      ...prev,
-      [`${type}s`]: [...prev[`${type}s` as keyof ProjectEditData] as any[], newItem]
-    }));
-    setEditDialogs(prev => ({ ...prev, [type]: false }));
-    toast({
-      title: "Ajouté avec succès",
-      description: `${type} ajouté au projet`,
-    });
-  };
+      case 'team':
+        const teamFields = ['project_responsable_id', 'main_contractor', 'engineering_consultant'];
+        const teamCompleted = teamFields.filter(field => 
+          formData[field as keyof ProjectEditData]?.toString().trim()
+        ).length;
+        return (teamCompleted / teamFields.length) * 100;
 
-  const updateSubObject = (type: 'employee' | 'supplier' | 'phase' | 'risk', id: string, data: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [`${type}s`]: (prev[`${type}s` as keyof ProjectEditData] as any[]).map(item =>
-        item.id === id ? { ...item, ...data } : item
-      )
-    }));
-    setEditingItem(null);
-    toast({
-      title: "Modifié avec succès",
-      description: `${type} mis à jour`,
-    });
-  };
+      case 'timeline':
+        const timelineFields = ['start_date', 'end_date'];
+        const timelineCompleted = timelineFields.filter(field => 
+          formData[field as keyof ProjectEditData]?.toString().trim()
+        ).length;
+        return (timelineCompleted / timelineFields.length) * 100;
 
-  const removeSubObject = (type: 'employee' | 'supplier' | 'phase' | 'risk', id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [`${type}s`]: (prev[`${type}s` as keyof ProjectEditData] as any[]).filter(item => item.id !== id)
-    }));
-    toast({
-      title: "Supprimé",
-      description: `${type} retiré du projet`,
-      variant: "destructive"
-    });
-  };
+      case 'location':
+        return formData.facilitiesLocation?.address ? 100 : 0;
 
-  const calculateProjectProgress = () => {
-    if (formData.phases.length === 0) return 0;
-    const totalProgress = formData.phases.reduce((sum, phase) => sum + phase.progress, 0);
-    return Math.round(totalProgress / formData.phases.length);
-  };
-
-  const calculateTotalBudget = () => {
-    const phaseBudget = formData.phases.reduce((sum, phase) => sum + phase.budget, 0);
-    const supplierBudget = formData.suppliers.reduce((sum, supplier) => sum + (supplier.estimatedBudget || 0), 0);
-    return phaseBudget + supplierBudget;
-  };
-
-  const tabs = [
-    {
-      id: 'basic',
-      title: 'Informations Générales',
-      icon: Building,
-      description: 'Données de base du projet (titre, description, budget)',
-      color: 'bg-blue-500'
-    },
-    {
-      id: 'stakeholders',
-      title: 'Parties Prenantes',
-      icon: Users,
-      description: 'Configuration des acteurs et responsabilités',
-      color: 'bg-green-500'
-    },
-    {
-      id: 'team',
-      title: 'Équipe & Contractants',
-      icon: UserCheck,
-      description: 'Assignment des ressources humaines et fournisseurs',
-      color: 'bg-orange-500'
-    },
-    {
-      id: 'phases',
-      title: 'Phases & Planification',
-      icon: Layers,
-      description: 'Structure des phases et chronologie',
-      color: 'bg-indigo-500'
-    },
-    {
-      id: 'geolocation',
-      title: 'Géolocalisation & Cartographie',
-      icon: MapPin,
-      description: 'Localisation précise et délimitation des zones',
-      color: 'bg-cyan-500'
-    },
-    {
-      id: 'materials',
-      title: 'Ressources & Matériaux',
-      icon: Shield,
-      description: 'Sélection des matériaux et organisation',
-      color: 'bg-purple-500'
-    },
-    {
-      id: 'risks',
-      title: 'Gestion des Risques',
-      icon: AlertTriangle,
-      description: 'Analyse et mitigation des risques projet',
-      color: 'bg-red-500'
-    },
-    {
-      id: 'compliance',
-      title: 'Conformités & Validation',
-      icon: FileCheck,
-      description: 'Respect des normes et validation finale',
-      color: 'bg-teal-500'
+      default:
+        return 0;
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Chargement des données du projet...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header with project overview */}
-      <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-serif text-primary">
-                {formData.title || 'Projet sans titre'}
-              </CardTitle>
-              <div className="flex items-center gap-4 mt-2">
-                <Badge variant="outline">{formData.status}</Badge>
-                <Badge variant="secondary">{formData.priority}</Badge>
-                <span className="text-sm text-muted-foreground">
-                  Progression: {calculateProjectProgress()}%
-                </span>
-                {hasUnsavedChanges && (
-                  <Badge variant="destructive" className="animate-pulse">
-                    Modifications non sauvegardées
-                  </Badge>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleAutoSave}>
-                <Save className="h-4 w-4 mr-1" />
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Edit3 className="h-8 w-8 text-primary" />
+            Édition du projet
+          </h1>
+          <p className="text-muted-foreground">
+            {formData.project_reference && `${formData.project_reference} - `}
+            {formData.title}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={onCancel} variant="outline" disabled={saving}>
+            Annuler
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Sauvegarde...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
                 Sauvegarder
-              </Button>
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-1" />
-                Aperçu
-              </Button>
-            </div>
-          </div>
-          {formData.phases.length > 0 && (
-            <Progress value={calculateProjectProgress()} className="h-2 mt-4" />
-          )}
-        </CardHeader>
-      </Card>
-
-      {/* Workflow Steps Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          
-          return (
-            <motion.div
-              key={tab.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Card 
-                className={`cursor-pointer transition-all duration-200 ${
-                  isActive ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
-                }`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex flex-col items-center text-center space-y-2">
-                    <div className={`p-3 rounded-full ${tab.color} text-white relative`}>
-                      <Icon className="h-5 w-5" />
-                      {hasUnsavedChanges && isActive && (
-                        <div className="absolute -top-1 -right-1 h-3 w-3 bg-yellow-500 rounded-full animate-pulse" />
-                      )}
-                    </div>
-                    <h3 className="font-medium text-sm">{tab.title}</h3>
-                    <p className="text-xs text-muted-foreground">{tab.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-8 bg-muted/50 p-1 rounded-xl">
-          {tabs.map((tab) => {
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Erreurs de validation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index} className="text-sm text-destructive">{error}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-1 h-auto p-1 bg-muted/50 rounded-lg">
+          {[
+            { id: 'basic', label: 'Informations', icon: Building },
+            { id: 'phases', label: 'Phases', icon: Layers },
+            { id: 'team', label: 'Équipe', icon: Users },
+            { id: 'timeline', label: 'Chronologie', icon: Calendar },
+            { id: 'payment', label: 'Paiement', icon: CreditCard },
+            { id: 'location', label: 'Localisation', icon: MapPin }
+          ].map(tab => {
             const Icon = tab.icon;
+            const completion = getTabCompletion(tab.id);
             return (
               <TabsTrigger 
                 key={tab.id}
                 value={tab.id} 
-                className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md"
               >
-                <Icon className="h-4 w-4" />
-                <span className="hidden lg:inline">{tab.title}</span>
+                <div className="relative">
+                  <Icon className="h-4 w-4" />
+                  {completion === 100 && (
+                    <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 text-green-500 bg-background rounded-full" />
+                  )}
+                </div>
+                <span className="font-medium">{tab.label}</span>
+                <div className="w-full bg-muted rounded-full h-1">
+                  <div 
+                    className="bg-primary h-1 rounded-full transition-all duration-300"
+                    style={{ width: `${completion}%` }}
+                  />
+                </div>
               </TabsTrigger>
             );
           })}
         </TabsList>
 
-        {/* Basic Information */}
+        {/* Basic Information Tab */}
         <TabsContent value="basic" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5 text-blue-500" />
-                Informations Générales du Projet
+                <Building className="h-5 w-5" />
+                Informations générales
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="title">Titre du projet *</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => updateFormData('title', e.target.value)}
-                      placeholder="Nom du projet"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="projectReference">Référence du projet</Label>
-                    <Input
-                      id="projectReference"
-                      value={formData.projectReference || ''}
-                      onChange={(e) => updateFormData('projectReference', e.target.value)}
-                      placeholder="REF-2025-001"
-                    />
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Titre du projet *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    placeholder="Entrez le titre du projet"
+                    required
+                  />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description détaillée *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => updateFormData('description', e.target.value)}
-                    placeholder="Description complète du projet, objectifs et spécifications techniques"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="budget">Budget total *</Label>
-                    <Input
-                      id="budget"
-                      type="number"
-                      value={formData.budget}
-                      onChange={(e) => updateFormData('budget', parseFloat(e.target.value) || 0)}
-                      placeholder="1000000"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="currency">Devise *</Label>
-                    <Select value={formData.currency} onValueChange={(value) => updateFormData('currency', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        <SelectItem value="MRU">MRU (Ouguiya)</SelectItem>
-                        <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                        <SelectItem value="USD">USD (Dollar)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Statut initial</Label>
-                    <Select value={formData.status} onValueChange={(value) => updateFormData('status', value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        <SelectItem value="planning">Planification</SelectItem>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="approved">Approuvé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Chronologie Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-blue-500" />
-                    Chronologie du Projet
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="startDate">Date de début prévue *</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => updateFormData('startDate', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="endDate">Date de fin prévue *</Label>
-                      <Input
-                        id="endDate"
-                        type="date"
-                        value={formData.endDate}
-                        onChange={(e) => updateFormData('endDate', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label>Durée estimée (jours)</Label>
-                      <Input
-                        type="number"
-                        value={formData.startDate && formData.endDate ? 
-                          Math.ceil((new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / (1000 * 60 * 60 * 24))
-                          : 0}
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Paramètres de paiement Section */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-500" />
-                    Paramètres de Paiement
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="paymentMode">Mode de paiement principal</Label>
-                      <Select value={formData.paymentMode} onValueChange={(value) => updateFormData('paymentMode', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="progressive">Paiement progressif</SelectItem>
-                          <SelectItem value="milestone">Par jalons</SelectItem>
-                          <SelectItem value="completion">À l'achèvement</SelectItem>
-                          <SelectItem value="mixed">Mixte</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="paymentFrequency">Fréquence des paiements</Label>
-                      <Select value={formData.paymentFrequency} onValueChange={(value) => updateFormData('paymentFrequency', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="monthly">Mensuelle</SelectItem>
-                          <SelectItem value="quarterly">Trimestrielle</SelectItem>
-                          <SelectItem value="phase">Par phase</SelectItem>
-                          <SelectItem value="custom">Personnalisée</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="initialAdvance">Avance initiale (%)</Label>
-                      <Input
-                        id="initialAdvance"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={formData.initialAdvance}
-                        onChange={(e) => updateFormData('initialAdvance', parseFloat(e.target.value) || 0)}
-                        placeholder="20"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="warrantyRetention">Retenue de garantie (%)</Label>
-                      <Input
-                        id="warrantyRetention"
-                        type="number"
-                        min="0"
-                        max="20"
-                        value={formData.warrantyRetention}
-                        onChange={(e) => updateFormData('warrantyRetention', parseFloat(e.target.value) || 0)}
-                        placeholder="5"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Informations administratives */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4">Informations Administratives</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="priority">Priorité du projet</Label>
-                      <Select value={formData.priority} onValueChange={(value) => updateFormData('priority', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="low">Basse</SelectItem>
-                          <SelectItem value="medium">Moyenne</SelectItem>
-                          <SelectItem value="high">Haute</SelectItem>
-                          <SelectItem value="critical">Critique</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="projectType">Type de projet</Label>
-                      <Select value={formData.projectType} onValueChange={(value) => updateFormData('projectType', value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50">
-                          <SelectItem value="construction">Construction</SelectItem>
-                          <SelectItem value="renovation">Rénovation</SelectItem>
-                          <SelectItem value="infrastructure">Infrastructure</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" disabled>
-                    Précédent
-                  </Button>
-                  <Button onClick={() => setActiveTab('stakeholders')}>
-                    Suivant: Parties Prenantes
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Stakeholders - Enhanced */}
-        <TabsContent value="stakeholders" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-500" />
-                Configuration des Parties Prenantes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-muted/30 to-accent/10 border border-border/50 p-4 rounded-xl">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
-                    Gestion avancée des parties prenantes externes
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-3 bg-background/50 rounded-lg">
-                      <h5 className="font-medium text-sm mb-2">Maître d'Ouvrage</h5>
-                      <Input placeholder="Nom de l'organisation" className="mb-2" />
-                      <Input placeholder="Contact principal" />
-                    </div>
-                    <div className="p-3 bg-background/50 rounded-lg">
-                      <h5 className="font-medium text-sm mb-2">Maître d'Œuvre</h5>
-                      <Input placeholder="Bureau d'études" className="mb-2" />
-                      <Input placeholder="Responsable technique" />
-                    </div>
-                    <div className="p-3 bg-background/50 rounded-lg">
-                      <h5 className="font-medium text-sm mb-2">Autorités</h5>
-                      <Input placeholder="Organisme de contrôle" className="mb-2" />
-                      <Input placeholder="Référent réglementaire" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t pt-6">
-                  <h4 className="font-medium mb-4">Responsabilités et Rôles</h4>
-                  <div className="space-y-3">
-                    {[
-                      { role: 'Coordination générale', responsible: '' },
-                      { role: 'Validation technique', responsible: '' },
-                      { role: 'Contrôle qualité', responsible: '' },
-                      { role: 'Gestion financière', responsible: '' }
-                    ].map((item, index) => (
-                      <div key={index} className="grid grid-cols-2 gap-4 items-center p-3 border rounded-lg">
-                        <span className="font-medium text-sm">{item.role}</span>
-                        <Input placeholder="Assigné à..." />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('basic')}>
-                    Précédent: Informations
-                  </Button>
-                  <Button onClick={() => setActiveTab('team')}>
-                    Suivant: Équipe
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Geolocation */}
-        <TabsContent value="geolocation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-cyan-500" />
-                Géolocalisation et Cartographie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="address">Adresse du projet</Label>
-                    <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => updateFormData('address', e.target.value)}
-                      placeholder="Adresse complète du site"
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Coordonnées GPS</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Latitude"
-                          value={formData.coordinates?.lat || ''}
-                          onChange={(e) => updateFormData('coordinates', {
-                            ...formData.coordinates,
-                            lat: parseFloat(e.target.value) || 0
-                          })}
-                          step="0.000001"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Longitude"
-                          value={formData.coordinates?.lng || ''}
-                          onChange={(e) => updateFormData('coordinates', {
-                            lat: formData.coordinates?.lat || 0,
-                            lng: parseFloat(e.target.value) || 0
-                          })}
-                          step="0.000001"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="surface">Surface (m²)</Label>
-                      <Input
-                        id="surface"
-                        type="number"
-                        value={formData.surface}
-                        onChange={(e) => updateFormData('surface', parseFloat(e.target.value) || 0)}
-                        placeholder="Surface totale"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="h-[500px] w-full">
-                  <InteractiveMapGIS
-                    title="Localisation du Projet"
-                    description="Modifiez la position et les zones délimitées"
-                    allowPolygon={true}
-                    value={{
-                      coordinates: formData.coordinates || undefined,
-                      address: formData.address,
-                      shape: formData.shapeData?.shape,
-                      shapeType: formData.shapeData?.shapeType
-                    }}
-                    onChange={(mapData) => {
-                      updateFormData('coordinates', mapData.coordinates);
-                      updateFormData('address', mapData.address || formData.address);
-                      updateFormData('shapeData', mapData);
-                    }}
-                    className="h-full"
+                  <Label htmlFor="project_reference">Référence du projet</Label>
+                  <Input
+                    id="project_reference"
+                    value={formData.project_reference}
+                    onChange={(e) => handleChange('project_reference', e.target.value)}
+                    placeholder="Ex: PRJ-2024-001"
                   />
                 </div>
               </div>
+
+              <div>
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  placeholder="Décrivez le projet"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="location">Localisation *</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleChange('location', e.target.value)}
+                    placeholder="Ville, Région"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="budget">Budget (MRU) *</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={formData.budget}
+                    onChange={(e) => handleChange('budget', Number(e.target.value))}
+                    placeholder="0"
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="team_size">Taille de l'équipe</Label>
+                  <Input
+                    id="team_size"
+                    type="number"
+                    value={formData.team_size}
+                    onChange={(e) => handleChange('team_size', Number(e.target.value))}
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="status">Statut</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Planning">Planification</SelectItem>
+                      <SelectItem value="InProgress">En cours</SelectItem>
+                      <SelectItem value="Pending">En attente</SelectItem>
+                      <SelectItem value="OnHold">En pause</SelectItem>
+                      <SelectItem value="Completed">Terminé</SelectItem>
+                      <SelectItem value="Cancelled">Annulé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="market_type">Type de marché</Label>
+                  <Select value={formData.market_type || ''} onValueChange={(value) => handleChange('market_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Privé</SelectItem>
+                      <SelectItem value="mixed">Mixte</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="selection_mode">Mode de sélection</Label>
+                  <Select value={formData.selection_mode || ''} onValueChange={(value) => handleChange('selection_mode', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tender">Appel d'offres</SelectItem>
+                      <SelectItem value="direct">Attribution directe</SelectItem>
+                      <SelectItem value="negotiated">Procédure négociée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="financing_source">Source de financement</Label>
+                <Input
+                  id="financing_source"
+                  value={formData.financing_source}
+                  onChange={(e) => handleChange('financing_source', e.target.value)}
+                  placeholder="Budget national, privé, international..."
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Team & Suppliers - Enhanced with sub-object management */}
-        <TabsContent value="team" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Employees Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="h-5 w-5 text-orange-500" />
-                    Équipe Interne (Employés)
-                  </div>
-                  <Dialog open={editDialogs.employee} onOpenChange={(open) => setEditDialogs(prev => ({ ...prev, employee: open }))}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <Plus className="h-4 w-4 mr-1" />
-                        Ajouter
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-background border shadow-lg z-50">
-                      <DialogHeader>
-                        <DialogTitle>Ajouter un Employé</DialogTitle>
-                      </DialogHeader>
-                      <div className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Sélection d'employés depuis la base de données
-                        </p>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <AnimatePresence>
-                    {formData.employees.map((employee) => (
-                      <motion.div
-                        key={employee.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="flex items-center justify-between p-3 border rounded-lg bg-background/50"
-                      >
-                        <div>
-                          <div className="font-medium">{employee.name}</div>
-                          <div className="text-sm text-muted-foreground">{employee.role}</div>
-                          {employee.dailyRate && (
-                            <div className="text-xs text-green-600">
-                              {employee.dailyRate} {formData.currency}/jour
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingItem(employee)}
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeSubObject('employee', employee.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  {formData.employees.length === 0 && (
-                    <div className="text-center py-6 text-muted-foreground">
-                      Aucun employé assigné
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Suppliers Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-500" />
-                    Fournisseurs & Contractants
-                  </div>
-                  <Dialog open={editDialogs.supplier} onOpenChange={(open) => setEditDialogs(prev => ({ ...prev, supplier: open }))}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <Plus className="h-4 w-4 mr-1" />
-                        Ajouter
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-background border shadow-lg z-50">
-                      <DialogHeader>
-                        <DialogTitle>Ajouter un Fournisseur</DialogTitle>
-                      </DialogHeader>
-                      <div className="p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Sélection de fournisseurs depuis la base de données
-                        </p>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <AnimatePresence>
-                    {formData.suppliers.map((supplier) => (
-                      <motion.div
-                        key={supplier.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="flex items-center justify-between p-3 border rounded-lg bg-background/50"
-                      >
-                        <div>
-                          <div className="font-medium">{supplier.name}</div>
-                          <div className="text-sm text-muted-foreground">{supplier.category}</div>
-                          {supplier.estimatedBudget && (
-                            <div className="text-xs text-green-600">
-                              Budget estimé: {supplier.estimatedBudget} {formData.currency}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingItem(supplier)}
-                          >
-                            <Edit3 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeSubObject('supplier', supplier.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  {formData.suppliers.length === 0 && (
-                    <div className="text-center py-6 text-muted-foreground">
-                      Aucun fournisseur assigné
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="flex justify-between pt-6">
-            <Button variant="outline" onClick={() => setActiveTab('stakeholders')}>
-              Précédent: Parties Prenantes
-            </Button>
-            <Button onClick={() => setActiveTab('phases')}>
-              Suivant: Phases & Planification
-            </Button>
-          </div>
-        </TabsContent>
-
-        {/* Phases & Planning */}
+        {/* Enhanced Phases Tab */}
         <TabsContent value="phases" className="space-y-6">
+          <EnhancedWorkflowPhaseManager
+            projectId={projectId}
+          />
+        </TabsContent>
+
+        {/* Team & Contractors Tab */}
+        <TabsContent value="team" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-500" />
-                Phases & Planification du Projet
+                <Users className="h-5 w-5" />
+                Équipe et contractants
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-muted/30 to-accent/10 border border-border/50 p-4 rounded-xl">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
-                    Méthodologies de Construction & Phases
-                  </h4>
-                  <ConstructionPhaseManager
-                    phases={formData.phases}
-                    onChange={(phases) => updateFormData('phases', phases)}
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="project_responsable_id">Chef de projet / Manager</Label>
+                <Select 
+                  value={formData.project_responsable_id || 'no-selection'} 
+                  onValueChange={(value) => handleChange('project_responsable_id', value === 'no-selection' ? '' : value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un manager" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no-selection">Aucun manager assigné</SelectItem>
+                    {employees.filter(emp => 
+                      emp.position?.toLowerCase().includes('manager') || 
+                      emp.position?.toLowerCase().includes('chef') ||
+                      emp.position?.toLowerCase().includes('directeur') ||
+                      emp.department?.toLowerCase().includes('management')
+                    ).map(emp => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {emp.full_name} {emp.position && `- ${emp.position}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Contractant principal</Label>
+                <SimpleSupplierSelector
+                  value={contractorSupplier.name}
+                  onChange={(supplierId) => {
+                    // Find supplier by ID and update contractor data
+                    handleChange('main_contractor', supplierId);
+                  }}
+                  placeholder="Sélectionner le contractant principal"
+                />
+              </div>
+
+              <div>
+                <Label>Consultant en ingénierie</Label>
+                <SimpleSupplierSelector
+                  value={engineeringConsultant.name}
+                  onChange={(supplierId) => {
+                    // Find supplier by ID and update consultant data
+                    handleChange('engineering_consultant', supplierId);
+                  }}
+                  placeholder="Sélectionner le consultant en ingénierie"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Timeline Tab */}
+        <TabsContent value="timeline" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Chronologie du projet
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="start_date">Date de début</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => handleChange('start_date', e.target.value)}
                   />
                 </div>
 
-                {formData.phases.length > 0 && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-lg">
-                    <h5 className="font-medium text-blue-800 mb-2">Résumé de la Planification</h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="font-medium text-blue-700">Nombre de phases:</span>
-                        <div className="font-mono text-blue-600">{formData.phases.length}</div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-blue-700">Budget total phases:</span>
-                        <div className="font-mono text-blue-600">
-                          {formData.phases.reduce((sum, phase) => sum + phase.budget, 0).toLocaleString()} {formData.currency}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-medium text-blue-700">Progression moyenne:</span>
-                        <div className="font-mono text-blue-600">
-                          {Math.round(formData.phases.reduce((sum, phase) => sum + phase.progress, 0) / formData.phases.length || 0)}%
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('team')}>
-                    Précédent: Équipe
-                  </Button>
-                  <Button onClick={() => setActiveTab('geolocation')}>
-                    Suivant: Géolocalisation
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Geolocation */}
-        <TabsContent value="geolocation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-cyan-500" />
-                Géolocalisation et Cartographie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="address">Adresse du projet</Label>
-                    <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => updateFormData('address', e.target.value)}
-                      placeholder="Adresse complète du site"
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <Label>Coordonnées GPS</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Latitude"
-                          value={formData.coordinates?.lat || ''}
-                          onChange={(e) => updateFormData('coordinates', {
-                            ...formData.coordinates,
-                            lat: parseFloat(e.target.value) || 0
-                          })}
-                          step="0.000001"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Longitude"
-                          value={formData.coordinates?.lng || ''}
-                          onChange={(e) => updateFormData('coordinates', {
-                            lat: formData.coordinates?.lat || 0,
-                            lng: parseFloat(e.target.value) || 0
-                          })}
-                          step="0.000001"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="surface">Surface (m²)</Label>
-                      <Input
-                        id="surface"
-                        type="number"
-                        value={formData.surface}
-                        onChange={(e) => updateFormData('surface', parseFloat(e.target.value) || 0)}
-                        placeholder="Surface totale"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="h-[500px] w-full">
-                  <InteractiveMapGIS
-                    title="Localisation du Projet"
-                    description="Modifiez la position et les zones délimitées"
-                    allowPolygon={true}
-                    value={{
-                      coordinates: formData.coordinates || undefined,
-                      address: formData.address,
-                      shape: formData.shapeData?.shape,
-                      shapeType: formData.shapeData?.shapeType
-                    }}
-                    onChange={(mapData) => {
-                      updateFormData('coordinates', mapData.coordinates);
-                      updateFormData('address', mapData.address || formData.address);
-                      updateFormData('shapeData', mapData);
-                    }}
-                    className="h-full"
+                <div>
+                  <Label htmlFor="end_date">Date de fin prévue</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => handleChange('end_date', e.target.value)}
                   />
                 </div>
-                
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('phases')}>
-                    Précédent: Phases
-                  </Button>
-                  <Button onClick={() => setActiveTab('materials')}>
-                    Suivant: Matériaux
-                  </Button>
-                </div>
               </div>
+
+              {formData.start_date && formData.end_date && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Durée totale</span>
+                    <Badge variant="outline">
+                      {Math.ceil((new Date(formData.end_date).getTime() - new Date(formData.start_date).getTime()) / (1000 * 60 * 60 * 24))} jours
+                    </Badge>
+                  </div>
+                  <Progress value={formData.progress} className="mt-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Progression: {formData.progress}%</span>
+                    <span>
+                      <Clock className="h-3 w-3 inline mr-1" />
+                      {formData.progress < 100 ? 'En cours' : 'Terminé'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Materials */}
-        <TabsContent value="materials" className="space-y-6">
+        {/* Payment Tab */}
+        <TabsContent value="payment" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-purple-500" />
-                Ressources & Matériaux
+                <CreditCard className="h-5 w-5" />
+                Configuration des paiements
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Sélection des Matériaux</h3>
-                    <MaterialFormSection
-                      selectedMaterials={formData.materials}
-                      onChange={(materials) => updateFormData('materials', materials)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Organisation des Ressources</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Entrepôt Principal</Label>
-                        <Input 
-                          placeholder="Adresse de l'entrepôt"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label>Capacité de Stockage (m³)</Label>
-                        <Input 
-                          type="number"
-                          placeholder="1000"
-                          min="0"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label>Équipements Disponibles</Label>
-                        <Textarea 
-                          rows={3}
-                          placeholder="Liste des équipements disponibles..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('geolocation')}>
-                    Précédent: Géolocalisation
-                  </Button>
-                  <Button onClick={() => setActiveTab('risks')}>
-                    Suivant: Gestion des Risques
-                  </Button>
-                </div>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="allows_initial_payment"
+                  checked={formData.allows_initial_payment}
+                  onCheckedChange={(checked) => handleChange('allows_initial_payment', checked)}
+                />
+                <Label htmlFor="allows_initial_payment">Autoriser le paiement initial</Label>
               </div>
+
+              {formData.allows_initial_payment && (
+                <div>
+                  <Label htmlFor="initial_payment_percentage">Pourcentage du paiement initial (%)</Label>
+                  <Input
+                    id="initial_payment_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.initial_payment_percentage}
+                    onChange={(e) => handleChange('initial_payment_percentage', Number(e.target.value))}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Montant: {((formData.budget * (formData.initial_payment_percentage || 0)) / 100).toLocaleString()} MRU
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Risk Management */}
-        <TabsContent value="risks" className="space-y-6">
+        {/* Location Tab */}
+        <TabsContent value="location" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-                Gestion des Risques
+                <MapPin className="h-5 w-5" />
+                Géolocalisation et cartographie
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Identification des Risques</h3>
-                    
-                    <div className="space-y-3">
-                      {['Technique', 'Financier', 'Climatique', 'Sécurité', 'Réglementaire'].map((category) => (
-                        <div key={category} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{category}</span>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => addSubObject('risk', {
-                                category,
-                                description: '',
-                                impact: 'medium',
-                                probability: 'medium',
-                                mitigation: '',
-                                status: 'identified'
-                              })}
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Ajouter
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Risques Identifiés</h3>
-                    
-                    <div className="space-y-3 max-h-80 overflow-y-auto">
-                      <AnimatePresence>
-                        {formData.risks.map((risk) => (
-                          <motion.div
-                            key={risk.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="p-3 border rounded-lg bg-background/50"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{risk.category}</div>
-                                <div className="text-xs text-muted-foreground">{risk.description}</div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant={risk.impact === 'critical' ? 'destructive' : 'secondary'} className="text-xs">
-                                    {risk.impact}
-                                  </Badge>
-                                  <Badge variant="outline" className="text-xs">
-                                    {risk.status}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => removeSubObject('risk', risk.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                      {formData.risks.length === 0 && (
-                        <div className="text-center py-6 text-muted-foreground text-sm">
-                          Aucun risque identifié
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('materials')}>
-                    Précédent: Matériaux
-                  </Button>
-                  <Button onClick={() => setActiveTab('compliance')}>
-                    Suivant: Conformités
-                  </Button>
-                </div>
+              <div className="h-96">
+                <InteractiveMapGIS
+                  allowPolygon={true}
+                  value={{
+                    coordinates: formData.facilitiesLocation?.center,
+                    address: formData.facilitiesLocation?.address,
+                    shape: formData.facilitiesLocation?.polygon,
+                    shapeType: formData.facilitiesLocation?.shapeType as any
+                  }}
+                  onChange={handleMapDataChange}
+                />
               </div>
+              {formData.facilitiesLocation?.address && (
+                <div className="mt-4 p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">Adresse sélectionnée:</p>
+                  <p className="text-sm text-muted-foreground">{formData.facilitiesLocation.address}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Compliance & Validation */}
-        <TabsContent value="compliance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileCheck className="h-5 w-5 text-teal-500" />
-                Conformités & Validation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Conformités Réglementaires</h3>
-                    
-                    <div className="space-y-3">
-                      {[
-                        'Permis de construire',
-                        'Étude d\'impact environnemental',
-                        'Normes de sécurité',
-                        'Normes mauritaniennes',
-                        'Certification qualité'
-                      ].map((item) => (
-                        <div key={item} className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded" />
-                          <label className="text-sm">{item}</label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Validation Finale</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Notes de Validation</Label>
-                        <Textarea 
-                          rows={4}
-                          placeholder="Notes et observations finales..."
-                        />
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" className="rounded" />
-                        <label className="text-sm">
-                          Je confirme que toutes les informations sont exactes et complètes
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab('risks')}>
-                    Précédent: Risques
-                  </Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleAutoSave}>
-                      <Save className="h-4 w-4 mr-1" />
-                      Sauvegarder comme Brouillon
-                    </Button>
-                    <Button 
-                      onClick={() => onSubmit(formData)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Enregistrer les Modifications
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
       </Tabs>
-
-      {/* Footer Actions */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => window.history.back()}>
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Annuler
-              </Button>
-              <Button variant="outline" onClick={handleAutoSave} disabled={!hasUnsavedChanges}>
-                <Save className="h-4 w-4 mr-1" />
-                Sauvegarder
-              </Button>
-            </div>
-            <Button onClick={() => onSubmit(formData)} className="bg-green-600 hover:bg-green-700">
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Enregistrer les Modifications
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
-};
-
-export default EnhancedProjectEditForm;
+}
