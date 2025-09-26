@@ -16,6 +16,7 @@ import Footer from '@/components/Footer';
 import { PhaseService } from '@/services/phaseService';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 import { Building, Users, UserCheck, Shield } from 'lucide-react';
+import EnhancedProjectEditFormWithTasks from '../components/project/EnhancedProjectEditFormWithTasks';
 
 
 // Add interface for selected materials
@@ -352,114 +353,14 @@ const ProjectEdit = () => {
             <div className="bg-white rounded-xl shadow-mobile card-responsive">
               <h1 className="heading-responsive font-serif text-adrar-800 mb-4 sm:mb-6">{t("projects.edit.title")}</h1>
               
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-8">
-                  <TabsTrigger value="basic" className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Projet & GIS
-                  </TabsTrigger>
-                  <TabsTrigger value="stakeholders" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Parties Prenantes
-                  </TabsTrigger>
-                  <TabsTrigger value="delegation" className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
-                    Délégation
-                  </TabsTrigger>
-                  <TabsTrigger value="organization" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Organisation
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="basic">
-                  <ProjectFormWithMap 
-                    onSubmit={handleFormSubmit}
-                    initialData={initialData}
-                  />
-                </TabsContent>
-
-                <TabsContent value="stakeholders">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-responsive sm:text-lg lg:text-xl font-serif text-adrar-800">
-                        Parties Prenantes du Projet
-                      </CardTitle>
-                      <p className="text-mobile-sm text-gray-600">
-                        Gérez les parties prenantes principales du projet.
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="text-sm text-gray-500">
-                          Gestion des parties prenantes (à implémenter)
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="delegation">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-responsive sm:text-lg lg:text-xl font-serif text-adrar-800">
-                        Délégation de Réalisation du Projet
-                      </CardTitle>
-                      <p className="text-mobile-sm text-gray-600">
-                        Modifiez la délégation selon les trois profils principaux.
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Employés (Personnel Interne)</h4>
-                            <p className="text-sm text-gray-600">
-                              Responsables du suivi et inspection pour assurer la conformité.
-                            </p>
-                          </div>
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Bureaux d'Études</h4>
-                            <p className="text-sm text-gray-600">
-                              Conseil, contrôle, études de faisabilité et assistance technique.
-                            </p>
-                          </div>
-                          <div className="p-4 border rounded-lg">
-                            <h4 className="font-semibold mb-2">Entreprises de Construction</h4>
-                            <p className="text-sm text-gray-600">
-                              Réalisation physique des travaux et infrastructures.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="organization">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-responsive sm:text-lg lg:text-xl font-serif text-adrar-800">
-                        Hiérarchie Organisationnelle & Matériaux
-                      </CardTitle>
-                      <p className="text-mobile-sm text-gray-600">
-                        Gérez la structure hiérarchique et les matériaux du projet.
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <OrganizationalHierarchyManager />
-                      
-                      <div className="border-t pt-6">
-                        <h3 className="text-lg font-semibold mb-4">Sélection des matériaux</h3>
-                        <MaterialFormSection
-                          selectedMaterials={selectedMaterials}
-                          onChange={setSelectedMaterials}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              <EnhancedProjectEditFormWithTasks 
+                initialData={{
+                  ...initialData,
+                  materials: selectedMaterials
+                }}
+                onSubmit={handleFormSubmit}
+                onSave={handleFormSubmit}
+              />
             </div>
           </motion.div>
         </div>

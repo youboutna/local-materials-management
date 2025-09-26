@@ -1136,11 +1136,36 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     <h3 className="text-lg font-semibold">Identification des Risques</h3>
                     
                     <div className="space-y-3">
+                      {risks.map((risk, index) => (
+                        <div key={index} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">{risk.category}</span>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setRisks(risks.filter((_, i) => i !== index))}
+                            >
+                              Supprimer
+                            </Button>
+                          </div>
+                          <div className="text-sm text-muted-foreground">{risk.description}</div>
+                        </div>
+                      ))}
+                      
                       {['Technique', 'Financier', 'Climatique', 'Sécurité', 'Réglementaire'].map((category) => (
                         <div key={category} className="p-3 border rounded-lg">
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{category}</span>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                const description = prompt(`Décrivez le risque ${category.toLowerCase()}:`);
+                                if (description) {
+                                  setRisks([...risks, { category, description, mitigation: '', probability: 'medium', impact: 'medium' }]);
+                                }
+                              }}
+                            >
                               Ajouter Risque
                             </Button>
                           </div>
