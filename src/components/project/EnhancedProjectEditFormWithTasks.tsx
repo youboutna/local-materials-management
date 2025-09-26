@@ -458,6 +458,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
   // Handle status change with re-entrancy guard and dedupe
   const handleStatusChange = useCallback(async (newStatus: string) => {
     if (!projectId) return;
+    if (newStatus === formData.status || newStatus === lastStatusRef.current || isStatusSavingRef.current) return;
     // Ignore if unchanged or a save is in progress
     if (newStatus === formData.status || isStatusSavingRef.current) return;
 
@@ -561,7 +562,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                     value={formData.status || ''}
                     onValueChange={handleStatusChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger disabled={isSaving}>
                       <SelectValue placeholder="Sélectionner le statut" />
                     </SelectTrigger>
                     <SelectContent className="z-[60] bg-background shadow-lg">
@@ -569,6 +570,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                       <SelectItem value="active">En cours</SelectItem>
                       <SelectItem value="on_hold">En attente</SelectItem>
                       <SelectItem value="completed">Terminé</SelectItem>
+                      <SelectItem value="cancelled">Annulé</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
