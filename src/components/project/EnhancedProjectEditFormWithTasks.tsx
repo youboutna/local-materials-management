@@ -482,12 +482,14 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
                     onChange={(location) => updateFormData({ location })}
                   />
                   <WarehouseShapeTracer
-                    onShapeComplete={(shape) => updateFormData({ shapes: [...(formData.shapes || []), shape] })}
+                    value={formData.shapes || []}
+                    onChange={(shapes) => updateFormData({ shapes })}
                   />
-                  <MaterialLocationMap
-                    materials={formData.materials || []}
-                    onMaterialUpdate={(materials) => updateFormData({ materials })}
-                  />
+                  {formData.selectedMaterial && (
+                    <MaterialLocationMap
+                      material={formData.selectedMaterial}
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -505,8 +507,7 @@ const EnhancedProjectEditFormWithTasks: React.FC<EnhancedProjectEditFormProps> =
               <CardContent>
                 <PhaseMaterials
                   phaseId={selectedPhaseId || 'default'}
-                  materials={formData.materials || []}
-                  onMaterialsChange={(materials) => updateFormData({ materials })}
+                  projectId={formData.id || 'default'}
                 />
               </CardContent>
             </Card>
