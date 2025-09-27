@@ -170,17 +170,6 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const handleSaveAndNext = async () => {
     if (!onSubmit) return;
     
-    // Validate current step before proceeding
-    const isValid = formService.validateStep(currentStep, formData);
-    if (!isValid) {
-      toast({
-        title: 'Validation échouée',
-        description: 'Veuillez compléter les champs requis avant de continuer.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
     setIsSaving(true);
     try {
       const context: SaveContext = {
@@ -199,12 +188,16 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       // Move to next step if not at the end
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
+        toast({
+          title: 'Étape sauvegardée',
+          description: `Passage à l'étape ${currentStep + 1}: ${steps[currentStep]?.title}`,
+        });
+      } else {
+        toast({
+          title: 'Toutes les étapes complétées',
+          description: 'Vous avez terminé toutes les étapes du projet.',
+        });
       }
-      
-      toast({
-        title: 'Étape sauvegardée',
-        description: 'Passage à l\'étape suivante.',
-      });
     } catch (error) {
       console.error('Error saving step:', error);
       toast({
