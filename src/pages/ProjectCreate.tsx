@@ -159,7 +159,11 @@ const ProjectCreate = () => {
         });
       }
       
-      navigate('/projects');
+      if (data.saveType === 'global_and_close' || !data.saveType) {
+      if (data.saveType === 'global_and_close' || !data.saveType) {
+        navigate('/projects');
+      }
+      }
     } catch (error) {
       console.error('Error creating project:', error);
       toast({

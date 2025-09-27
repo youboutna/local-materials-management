@@ -72,16 +72,16 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="1000000"
                 required
                 value={formData.budget || ''}
-                onChange={(e) => onUpdate({ budget: parseFloat(e.target.value) })}
+                onChange={(e) => onUpdate({ budget: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Type de marché *</label>
-              <Select value={formData.market_type || ''} onValueChange={(value) => onUpdate({ market_type: value })}>
+              <Select value={formData.market_type ?? undefined} onValueChange={(value) => onUpdate({ market_type: value })}>
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
                   <SelectItem value="public" className="cursor-pointer">Marché public</SelectItem>
                   <SelectItem value="private" className="cursor-pointer">Marché privé</SelectItem>
                   <SelectItem value="ppp" className="cursor-pointer">Partenariat public-privé (PPP)</SelectItem>
@@ -93,8 +93,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <div>
               <EmployeeSelector
                 label="Chef de projet"
-                value={formData.project_manager_id || ''}
-                onChange={(employeeId) => onUpdate({ project_manager_id: employeeId })}
+                value={formData.project_responsable_id || ''}
+                onChange={(employeeId) => onUpdate({ project_responsable_id: employeeId })}
                 placeholder="Sélectionner le chef de projet"
                 departmentFilter={['management', 'engineering']}
               />
@@ -104,11 +104,11 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Mode de sélection</label>
-              <Select value={formData.selection_mode || ''} onValueChange={(value) => onUpdate({ selection_mode: value })}>
+              <Select value={formData.selection_mode ?? undefined} onValueChange={(value) => onUpdate({ selection_mode: value })}>
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
                   <SelectItem value="open" className="cursor-pointer">Appel d'offres ouvert</SelectItem>
                   <SelectItem value="restricted" className="cursor-pointer">Appel d'offres restreint</SelectItem>
                   <SelectItem value="negotiated" className="cursor-pointer">Procédure négociée</SelectItem>
@@ -119,11 +119,11 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Source de financement</label>
-              <Select value={formData.financing_source || ''} onValueChange={(value) => onUpdate({ financing_source: value })}>
+              <Select value={formData.financing_source ?? undefined} onValueChange={(value) => onUpdate({ financing_source: value })}>
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
                   <SelectItem value="budget_state" className="cursor-pointer">Budget de l'État</SelectItem>
                   <SelectItem value="budget_local" className="cursor-pointer">Budget collectivité locale</SelectItem>
                   <SelectItem value="eu_funds" className="cursor-pointer">Fonds européens</SelectItem>
@@ -165,7 +165,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="10"
                 min="1"
                 value={formData.team_size || ''}
-                onChange={(e) => onUpdate({ team_size: parseInt(e.target.value) })}
+                onChange={(e) => onUpdate({ team_size: e.target.value === '' ? undefined : parseInt(e.target.value) })}
               />
             </div>
             <div>
@@ -208,7 +208,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 min="0"
                 max="100"
                 value={formData.initial_payment_percentage || ''}
-                onChange={(e) => onUpdate({ initial_payment_percentage: parseFloat(e.target.value) })}
+                onChange={(e) => onUpdate({ initial_payment_percentage: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
               />
             </div>
           )}

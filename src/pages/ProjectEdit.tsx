@@ -277,11 +277,18 @@ const ProjectEdit = () => {
           }
         }
 
-        toast({
-          title: t("projects.edit.saved"),
-          description: t("projects.edit.saved_desc"),
-        });
-        navigate(`/projects/${id}`);
+       // Context-aware toast
+       if (data.saveType === 'step_only') {
+         toast({ title: 'Étape sauvegardée', description: 'Les données de cette étape ont été enregistrées.' });
+       } else if (data.saveType === 'save_and_next') {
+         toast({ title: 'Étape sauvegardée', description: 'Poursuivez vers la prochaine étape.' });
+       } else {
+         toast({ title: t("projects.edit.saved"), description: t("projects.edit.saved_desc") });
+       }
+        // Navigate only when explicitly closing the workflow
+        if (data.saveType === 'global_and_close' || data.isComplete) {
+          navigate(`/projects/${id}`);
+        }
       } else {
         throw new Error("Failed to update project");
       }
