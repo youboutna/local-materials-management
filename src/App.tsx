@@ -46,6 +46,7 @@ import SupplierPasswordReset from './pages/SupplierPasswordReset';
 import TenderManagement from './pages/TenderManagement';
 import TenderImport from './pages/TenderImport';
 import PhaseDetail from './pages/PhaseDetail';
+import ProjectPhasesDetail from './pages/ProjectPhasesDetail';
 import Suppliers from './pages/Suppliers';
 import EnhancedDashboard from './pages/EnhancedDashboard';
 import BankGuaranteeMonitorPage from './pages/BankGuaranteeMonitor';
@@ -125,6 +126,11 @@ function App() {
 <Route path="/projects/:id/edit" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <ProjectEdit />
+  </RoleBasedRoute>
+} />
+<Route path="/projects/:id/edit/phases/detail" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <ProjectPhasesDetail />
   </RoleBasedRoute>
 } />
 <Route path="/projects/:projectId/phases/:phaseId" element={

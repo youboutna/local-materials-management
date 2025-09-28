@@ -81,7 +81,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le type de marché" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="public" className="cursor-pointer">Marché public</SelectItem>
                   <SelectItem value="private" className="cursor-pointer">Marché privé</SelectItem>
                   <SelectItem value="ppp" className="cursor-pointer">Partenariat public-privé (PPP)</SelectItem>
@@ -108,7 +108,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le mode" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="open" className="cursor-pointer">Appel d'offres ouvert</SelectItem>
                   <SelectItem value="restricted" className="cursor-pointer">Appel d'offres restreint</SelectItem>
                   <SelectItem value="negotiated" className="cursor-pointer">Procédure négociée</SelectItem>
@@ -123,7 +123,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner la source" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-popover-foreground border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="budget_state" className="cursor-pointer">Budget de l'État</SelectItem>
                   <SelectItem value="budget_local" className="cursor-pointer">Budget collectivité locale</SelectItem>
                   <SelectItem value="eu_funds" className="cursor-pointer">Fonds européens</SelectItem>
@@ -174,7 +174,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 shadow-xl z-[9999] max-h-60 overflow-y-auto rounded-lg" side="bottom" align="start">
+                <SelectContent side="bottom" align="start">
                   <SelectItem value="planning" className="cursor-pointer">En planification</SelectItem>
                   <SelectItem value="en cours" className="cursor-pointer">En cours</SelectItem>
                   <SelectItem value="suspendu" className="cursor-pointer">Suspendu</SelectItem>
