@@ -12,6 +12,8 @@ import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhaseTasks from '@/components/project/PhaseTasks';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
+import PhaseCompliance from '@/components/project/PhaseCompliance';
+import PhaseMilestones from '@/components/project/PhaseMilestones';
 import { ArrowLeft, Layers, ClipboardList, FileText, ShieldCheck, TriangleAlert, CalendarClock } from 'lucide-react';
 
 interface PhaseOption { id: string; name: string; }
@@ -123,15 +125,30 @@ const ProjectPhasesDetail: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="compliance">
-              <div className="text-sm text-muted-foreground">Section Conformité à finaliser selon vos règles (placeholder).</div>
+              {selectedPhaseId ? (
+                <PhaseCompliance phaseId={selectedPhaseId} projectId={id!} />
+              ) : (
+                <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
+              )}
             </TabsContent>
 
             <TabsContent value="gantt">
-              <div className="text-sm text-muted-foreground">Diagramme Gantt du projet à intégrer (placeholder).</div>
+              {selectedPhaseId ? (
+                <PhaseMilestones phaseId={selectedPhaseId} projectId={id!} />
+              ) : (
+                <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
+              )}
             </TabsContent>
 
             <TabsContent value="planning">
-              <div className="text-sm text-muted-foreground">Planning détaillé à venir (placeholder).</div>
+              {selectedPhaseId ? (
+                <div className="space-y-4">
+                  <PhaseMilestones phaseId={selectedPhaseId} projectId={id!} />
+                  <PhaseCompliance phaseId={selectedPhaseId} projectId={id!} />
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
