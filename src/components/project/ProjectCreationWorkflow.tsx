@@ -28,6 +28,7 @@ import StakeholdersStep from './steps/StakeholdersStep';
 import TeamContractorsStep from './steps/TeamContractorsStep';
 import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
+import ProjectDocumentUpload from './ProjectDocumentUpload';
 import ComplianceStep from './steps/ComplianceStep';
 
 interface ProjectCreationWorkflowProps {
@@ -145,8 +146,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     },
     {
       id: 7,
-      title: 'Conformité',
+      title: 'Documents',
       icon: FileCheck,
+      description: 'Documents du projet',
+      color: 'bg-amber-500',
+      isCompleted: (data: any) => true // Optional step
+    },
+    {
+      id: 8,
+      title: 'Conformité',
+      icon: CheckCircle,
       description: 'Validation et conformité',
       color: 'bg-teal-500',
       isCompleted: (data: any) => Boolean(compliance.length > 0)
@@ -391,7 +400,27 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           />
         );
       
-      case 6: // Compliance
+      case 6: // Documents
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5 text-amber-500" />
+                  Documents du Projet
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Téléchargez les documents nécessaires pour ce projet. Cette étape est optionnelle.
+                </p>
+                <ProjectDocumentUpload projectId={null} />
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 7: // Compliance
         return (
           <ComplianceStep
             formData={formData}

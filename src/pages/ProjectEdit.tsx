@@ -17,6 +17,7 @@ import { PhaseService } from '@/services/phaseService';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 import { Building, Users, UserCheck, Shield } from 'lucide-react';
 import EnhancedProjectEditForm from '../components/project/EnhancedProjectEditForm';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 
 
 // Add interface for selected materials
@@ -376,13 +377,20 @@ const ProjectEdit = () => {
             <div className="bg-white rounded-xl shadow-mobile card-responsive">
               <h1 className="heading-responsive font-serif text-adrar-800 mb-4 sm:mb-6">{t("projects.edit.title")}</h1>
               
-              <EnhancedProjectEditForm 
+              <EnhancedProjectEditForm
                 initialData={{
                   ...initialData,
                   materials: selectedMaterials
                 }}
                 onSubmit={handleFormSubmit}
               />
+              
+              {/* Documents Section */}
+              <div className="mt-8">
+                <ProjectDocumentUpload 
+                  projectId={id!}
+                />
+              </div>
             </div>
           </motion.div>
         </div>
