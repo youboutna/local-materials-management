@@ -1,10 +1,10 @@
+import { ExternalLink, Layers, Package } from 'lucide-react';
 import React from 'react';
-import { Layers, Package, ExternalLink } from 'lucide-react';
+import MaterialFormSection from '../../MaterialFormSection';
+import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-import { Button } from '../../ui/button';
 import EnhancedWorkflowPhaseManager from '../EnhancedWorkflowPhaseManager';
-import MaterialFormSection from '../../MaterialFormSection';
 
 interface PhasePlanificationStepProps {
   formData: any;
@@ -51,7 +51,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => window.open('/phases/detail', '_blank')}
+                  onClick={() => window.open(formData.id+'/phases/detail', '_blank')}
                   className="flex items-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
