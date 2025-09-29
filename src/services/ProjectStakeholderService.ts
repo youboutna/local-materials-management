@@ -5,7 +5,8 @@ export interface ProjectStakeholder {
   project_id: string;
   stakeholder_type: string;
   stakeholder_entity_type: 'employee' | 'supplier';
-  stakeholder_id: string;
+  employee_id?: string;
+  supplier_id?: string;
   role_description?: string;
   is_primary?: boolean;
 }
@@ -27,12 +28,12 @@ export class ProjectStakeholderService {
 
     // Add external stakeholders (suppliers) - only if they exist
     if (stakeholders && stakeholders.length > 0) {
-      stakeholders.forEach((stakeholder) => {
+        stakeholders.forEach((stakeholder) => {
         stakeholderRecords.push({
           project_id: projectId,
           stakeholder_type: stakeholder.type,
           stakeholder_entity_type: 'supplier',
-          stakeholder_id: stakeholder.id,
+          supplier_id: stakeholder.id,
           role_description: stakeholder.role_description,
           is_primary: stakeholder.is_primary || false
         });
@@ -48,7 +49,7 @@ export class ProjectStakeholderService {
             project_id: projectId,
             stakeholder_type: stakeholderType,
             stakeholder_entity_type: 'employee',
-            stakeholder_id: employeeId,
+            employee_id: employeeId,
             is_primary: role === 'projectManager'
           });
         }
@@ -77,8 +78,8 @@ export class ProjectStakeholderService {
       .from('project_stakeholders')
       .select(`
         *,
-        employee:employees(*),
-        supplier:suppliers(*)
+        employees!employee_id(*),
+        suppliers!supplier_id(*)
       `)
       .eq('project_id', projectId);
 

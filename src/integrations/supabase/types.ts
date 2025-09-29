@@ -2866,44 +2866,61 @@ export type Database = {
       }
       project_stakeholders: {
         Row: {
-          created_at: string | null
+          created_at: string
+          employee_id: string | null
           id: string
           is_primary: boolean | null
           project_id: string
           role_description: string | null
           stakeholder_entity_type: string
-          stakeholder_id: string
           stakeholder_type: string
-          updated_at: string | null
+          supplier_id: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
+          employee_id?: string | null
           id?: string
           is_primary?: boolean | null
           project_id: string
           role_description?: string | null
           stakeholder_entity_type: string
-          stakeholder_id: string
           stakeholder_type: string
-          updated_at?: string | null
+          supplier_id?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
+          employee_id?: string | null
           id?: string
           is_primary?: boolean | null
           project_id?: string
           role_description?: string | null
           stakeholder_entity_type?: string
-          stakeholder_id?: string
           stakeholder_type?: string
-          updated_at?: string | null
+          supplier_id?: string | null
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_stakeholders_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_stakeholders_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_stakeholders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]

@@ -3,29 +3,57 @@ import { ProjectStakeholderService } from './ProjectStakeholderService';
 import { supabase } from '../integrations/supabase/client';
 
 export interface ProjectFormData {
+  // Basic information matching database schema exactly
   title?: string;
+  project_reference?: string;
   description?: string;
-  location?: string;
+  budget?: string; // Keep as string for form inputs
+  estimated_duration_days?: string; // Keep as string for form inputs
+  currency?: string;
   status?: string;
-  budget?: number;
-  startDate?: string;
-  endDate?: string;
   start_date?: string;
   end_date?: string;
+  payment_mode?: string;
+  payment_frequency?: string;
+  initial_advance?: number;
+  retention_percentage?: number;
+  priority?: string;
+  project_type?: string;
+  sector?: string;
+  permit_number?: string;
+  // Location data
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  area_sqm?: number | null;
+  site_details?: string;
+  // Financial data
+  advance_percentage?: number;
+  // Additional fields
+  client_name?: string;
+  main_contractor?: string;
+  project_manager_id?: string | null;
+  technical_manager_id?: string | null;
+  supervisor_id?: string | null;
+  client_id?: string | null;
+  workspace_id?: string | null;
+  // Legacy fields for compatibility
+  location?: string;
+  startDate?: string;
+  endDate?: string;
   team_size?: number;
   financing_source?: string;
   market_type?: string;
   selection_mode?: string;
   project_responsable_id?: string;
-  main_contractor?: string;
   engineering_consultant?: string;
   general_contractor?: string;
-  project_reference?: string;
   allows_initial_payment?: boolean;
   initial_payment_percentage?: number;
   current_phase?: string;
   current_stage?: string;
   facilitiesLocation?: any;
+  // Related data
   stakeholders?: any[];
   teamMembers?: any[];
   contractors?: any[];
@@ -89,6 +117,76 @@ export class ProjectFormService {
     return mapping[status as keyof typeof mapping] || 'planning';
   };
 
+  mapFieldsFromDB(dbData: any): ProjectFormData {
+    return {
+      title: dbData.title || '',
+      project_reference: dbData.project_reference || '',
+      description: dbData.description || '',
+      budget: dbData.budget?.toString() || '',
+      estimated_duration_days: dbData.estimated_duration_days?.toString() || '',
+      currency: dbData.currency || 'MRU',
+      status: this.mapStatusFromDB(dbData.status || 'planning'),
+      start_date: this.formatDateForInput(dbData.start_date),
+      end_date: this.formatDateForInput(dbData.end_date),
+      payment_mode: dbData.payment_mode || 'progressive',
+      payment_frequency: dbData.payment_frequency || 'monthly',
+      initial_advance: dbData.initial_advance || 20,
+      retention_percentage: dbData.retention_percentage || 5,
+      priority: dbData.priority || 'medium',
+      project_type: dbData.project_type || 'construction',
+      sector: dbData.sector || '',
+      permit_number: dbData.permit_number || '',
+      address: dbData.address || '',
+      latitude: dbData.latitude,
+      longitude: dbData.longitude,
+      area_sqm: dbData.area_sqm,
+      site_details: dbData.site_details || '',
+      advance_percentage: dbData.advance_percentage || 20,
+      client_name: dbData.client_name || '',
+      main_contractor: dbData.main_contractor || '',
+      project_manager_id: dbData.project_manager_id,
+      technical_manager_id: dbData.technical_manager_id,
+      supervisor_id: dbData.supervisor_id,
+      client_id: dbData.client_id,
+      workspace_id: dbData.workspace_id
+    };
+  }
+
+  mapFieldsToDB(formData: ProjectFormData): any {
+    return {
+      title: formData.title,
+      project_reference: formData.project_reference,
+      description: formData.description,
+      budget: parseFloat(formData.budget || '0') || 0,
+      estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
+      currency: formData.currency,
+      status: formData.status,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
+      payment_mode: formData.payment_mode,
+      payment_frequency: formData.payment_frequency,
+      initial_advance: formData.initial_advance,
+      retention_percentage: formData.retention_percentage,
+      priority: formData.priority,
+      project_type: formData.project_type,
+      sector: formData.sector,
+      permit_number: formData.permit_number,
+      address: formData.address,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      area_sqm: formData.area_sqm,
+      site_details: formData.site_details,
+      advance_percentage: formData.advance_percentage,
+      client_name: formData.client_name,
+      main_contractor: formData.main_contractor,
+      project_manager_id: formData.project_manager_id,
+      technical_manager_id: formData.technical_manager_id,
+      supervisor_id: formData.supervisor_id,
+      client_id: formData.client_id,
+      workspace_id: formData.workspace_id
+    };
+  }
+
   // Load project data
   async loadProjectData(projectId: string): Promise<ProjectFormData | null> {
     try {
@@ -100,7 +198,7 @@ export class ProjectFormService {
         description: projectData.description,
         location: projectData.location,
         status: this.mapStatusFromDB(projectData.status || 'planning'),
-        budget: projectData.budget,
+        budget: projectData.budget?.toString() || '',
         startDate: this.formatDateForInput(projectData.startDate),
         endDate: this.formatDateForInput(projectData.endDate),
         start_date: this.formatDateForInput(projectData.startDate),
