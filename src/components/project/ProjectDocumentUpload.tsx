@@ -16,37 +16,95 @@ import type { DocumentType } from '@/types/document';
 
 interface ProjectDocumentUploadProps {
   projectId: string | null;
+  phaseId?: string | null;
+  inspectionId?: string | null;
+  stakeholderId?: string | null;
+  context?: 'project' | 'phase' | 'inspection' | 'stakeholder' | 'compliance' | 'task';
+  contextLabel?: string;
   onDocumentUploaded?: () => void;
 }
 
-const DOCUMENT_CATEGORIES = {
-  administrative: {
-    label: 'Documents Administratifs',
-    types: ['contract', 'administrative'] as DocumentType[]
-  },
-  technical: {
-    label: 'Documents Techniques', 
-    types: ['technical', 'specification', 'drawing'] as DocumentType[]
-  },
-  inspection: {
-    label: 'Rapports et Inspections',
-    types: ['inspection', 'report'] as DocumentType[]
-  },
-  payment: {
-    label: 'Documents Financiers',
-    types: ['payment', 'invoice', 'payment_receipt'] as DocumentType[]
-  },
-  delivery: {
-    label: 'Documents de Livraison',
-    types: ['delivery_note'] as DocumentType[]
-  },
-  photos: {
-    label: 'Photos et Médias',
-    types: ['photo'] as DocumentType[]
-  },
-  other: {
-    label: 'Autres',
-    types: ['other', 'supplier_upload', 'supplier_info'] as DocumentType[]
+// Context-aware document categories
+const getDocumentCategoriesByContext = (context: string) => {
+  const baseCategories = {
+    administrative: {
+      label: 'Documents Administratifs',
+      types: ['contract', 'administrative'] as DocumentType[]
+    },
+    technical: {
+      label: 'Documents Techniques', 
+      types: ['technical', 'specification', 'drawing'] as DocumentType[]
+    },
+    inspection: {
+      label: 'Rapports et Inspections',
+      types: ['inspection', 'report'] as DocumentType[]
+    },
+    payment: {
+      label: 'Documents Financiers',
+      types: ['payment', 'invoice', 'payment_receipt'] as DocumentType[]
+    },
+    delivery: {
+      label: 'Documents de Livraison',
+      types: ['delivery_note'] as DocumentType[]
+    },
+    photos: {
+      label: 'Photos et Médias',
+      types: ['photo'] as DocumentType[]
+    },
+    compliance: {
+      label: 'Conformité et Certification',
+      types: ['technical', 'administrative', 'inspection'] as DocumentType[]
+    },
+    stakeholder: {
+      label: 'Documents Parties Prenantes',
+      types: ['contract', 'administrative', 'supplier_info'] as DocumentType[]
+    },
+    other: {
+      label: 'Autres',
+      types: ['other', 'supplier_upload', 'supplier_info'] as DocumentType[]
+    }
+  };
+
+  // Filter categories based on context
+  switch (context) {
+    case 'inspection':
+      return {
+        inspection: baseCategories.inspection,
+        technical: baseCategories.technical,
+        photos: baseCategories.photos,
+        other: baseCategories.other
+      };
+    case 'phase':
+      return {
+        technical: baseCategories.technical,
+        inspection: baseCategories.inspection,
+        photos: baseCategories.photos,
+        delivery: baseCategories.delivery,
+        other: baseCategories.other
+      };
+    case 'stakeholder':
+      return {
+        stakeholder: baseCategories.stakeholder,
+        administrative: baseCategories.administrative,
+        other: baseCategories.other
+      };
+    case 'compliance':
+      return {
+        compliance: baseCategories.compliance,
+        administrative: baseCategories.administrative,
+        technical: baseCategories.technical,
+        other: baseCategories.other
+      };
+    case 'task':
+      return {
+        technical: baseCategories.technical,
+        photos: baseCategories.photos,
+        delivery: baseCategories.delivery,
+        payment: baseCategories.payment,
+        other: baseCategories.other
+      };
+    default:
+      return baseCategories;
   }
 };
 
@@ -68,8 +126,19 @@ const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'other': 'Autre'
 };
 
-const ProjectDocumentUpload = ({ projectId, onDocumentUploaded }: ProjectDocumentUploadProps) => {
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof DOCUMENT_CATEGORIES>('administrative');
+const ProjectDocumentUpload = ({ 
+  projectId, 
+  phaseId, 
+  inspectionId, 
+  stakeholderId, 
+  context = 'project', 
+  contextLabel,
+  onDocumentUploaded 
+}: ProjectDocumentUploadProps) => {
+  const DOCUMENT_CATEGORIES = getDocumentCategoriesByContext(context);
+  const [selectedCategory, setSelectedCategory] = useState<keyof typeof DOCUMENT_CATEGORIES>(
+    Object.keys(DOCUMENT_CATEGORIES)[0] as keyof typeof DOCUMENT_CATEGORIES
+  );
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -121,12 +190,19 @@ const ProjectDocumentUpload = ({ projectId, onDocumentUploaded }: ProjectDocumen
         description: uploadData.description,
         document_type: uploadData.document_type,
         project_id: projectId,
+        phase_id: phaseId,
+        inspection_id: inspectionId,
         status: uploadData.status,
         file_url: fileUrl,
         file_name: uploadedFileName,
         file_size: fileSize,
         mime_type: mimeType,
-        uploaded_by: user.id
+        uploaded_by: user.id,
+        metadata: {
+          context,
+          stakeholder_id: stakeholderId,
+          upload_context: contextLabel
+        }
       };
 
       const { data, error } = await supabase
@@ -204,7 +280,7 @@ const ProjectDocumentUpload = ({ projectId, onDocumentUploaded }: ProjectDocumen
     }
   };
 
-  const availableTypes = DOCUMENT_CATEGORIES[selectedCategory].types;
+  const availableTypes = DOCUMENT_CATEGORIES[selectedCategory]?.types || [];
 
   return (
     <Card>
@@ -212,7 +288,23 @@ const ProjectDocumentUpload = ({ projectId, onDocumentUploaded }: ProjectDocumen
         <CardTitle className="flex items-center">
           <Upload className="h-5 w-5 mr-2" />
           Télécharger un Document
+          {contextLabel && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              - {contextLabel}
+            </span>
+          )}
         </CardTitle>
+        {context !== 'project' && (
+          <p className="text-sm text-muted-foreground">
+            Document associé au contexte: {
+              context === 'phase' ? 'Phase du projet' :
+              context === 'inspection' ? 'Inspection' :
+              context === 'stakeholder' ? 'Partie prenante' :
+              context === 'compliance' ? 'Conformité' :
+              context === 'task' ? 'Tâche' : 'Contexte spécifique'
+            }
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">

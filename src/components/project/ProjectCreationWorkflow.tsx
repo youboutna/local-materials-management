@@ -414,7 +414,11 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 <p className="text-muted-foreground mb-4">
                   Téléchargez les documents nécessaires pour ce projet. Cette étape est optionnelle.
                 </p>
-                <ProjectDocumentUpload projectId={null} />
+                <ProjectDocumentUpload 
+                  projectId={null}
+                  context="project"
+                  contextLabel="Création de projet"
+                />
               </CardContent>
             </Card>
           </div>

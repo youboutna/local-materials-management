@@ -389,6 +389,8 @@ const ProjectEdit = () => {
               <div className="mt-8">
                 <ProjectDocumentUpload 
                   projectId={id!}
+                  context="project"
+                  contextLabel="Modification de projet"
                 />
               </div>
             </div>
