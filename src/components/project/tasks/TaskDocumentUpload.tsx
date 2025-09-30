@@ -4,6 +4,7 @@ import ProjectDocumentUpload from '../ProjectDocumentUpload';
 interface TaskDocumentUploadProps {
   projectId: string;
   phaseId?: string;
+  stepId?: string;
   taskId?: string;
   taskTitle?: string;
   onDocumentUploaded?: () => void;
@@ -12,6 +13,7 @@ interface TaskDocumentUploadProps {
 const TaskDocumentUpload = ({ 
   projectId, 
   phaseId, 
+  stepId,
   taskId, 
   taskTitle, 
   onDocumentUploaded 
@@ -20,6 +22,8 @@ const TaskDocumentUpload = ({
     <ProjectDocumentUpload
       projectId={projectId}
       phaseId={phaseId}
+      stepId={stepId}
+      taskId={taskId}
       context="task"
       contextLabel={taskTitle ? `Tâche: ${taskTitle}` : 'Documents de tâche'}
       onDocumentUploaded={onDocumentUploaded}

@@ -17,9 +17,11 @@ import type { DocumentType } from '@/types/document';
 interface ProjectDocumentUploadProps {
   projectId: string | null;
   phaseId?: string | null;
+  taskId?: string | null;
+  stepId?: string | null;
   inspectionId?: string | null;
   stakeholderId?: string | null;
-  context?: 'project' | 'phase' | 'inspection' | 'stakeholder' | 'compliance' | 'task';
+  context?: 'project' | 'phase' | 'step' | 'task' | 'inspection' | 'stakeholder' | 'compliance';
   contextLabel?: string;
   onDocumentUploaded?: () => void;
 }
@@ -42,6 +44,10 @@ const getDocumentCategoriesByContext = (context: string) => {
     payment: {
       label: 'Documents Financiers',
       types: ['payment', 'invoice', 'payment_receipt'] as DocumentType[]
+    },
+    invoice: {
+      label: 'Factures',
+      types: ['invoice'] as DocumentType[]
     },
     delivery: {
       label: 'Documents de Livraison',
@@ -80,6 +86,15 @@ const getDocumentCategoriesByContext = (context: string) => {
         inspection: baseCategories.inspection,
         photos: baseCategories.photos,
         delivery: baseCategories.delivery,
+        invoice: baseCategories.invoice,
+        other: baseCategories.other
+      };
+    case 'step':
+      return {
+        technical: baseCategories.technical,
+        photos: baseCategories.photos,
+        delivery: baseCategories.delivery,
+        invoice: baseCategories.invoice,
         other: baseCategories.other
       };
     case 'stakeholder':
@@ -101,6 +116,7 @@ const getDocumentCategoriesByContext = (context: string) => {
         photos: baseCategories.photos,
         delivery: baseCategories.delivery,
         payment: baseCategories.payment,
+        invoice: baseCategories.invoice,
         other: baseCategories.other
       };
     default:
@@ -129,6 +145,8 @@ const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 const ProjectDocumentUpload = ({ 
   projectId, 
   phaseId, 
+  taskId,
+  stepId,
   inspectionId, 
   stakeholderId, 
   context = 'project', 
@@ -201,6 +219,8 @@ const ProjectDocumentUpload = ({
         metadata: {
           context,
           stakeholder_id: stakeholderId,
+          task_id: taskId,
+          step_id: stepId,
           upload_context: contextLabel
         }
       };
@@ -298,10 +318,11 @@ const ProjectDocumentUpload = ({
           <p className="text-sm text-muted-foreground">
             Document associé au contexte: {
               context === 'phase' ? 'Phase du projet' :
+              context === 'step' ? 'Étape de phase' :
+              context === 'task' ? 'Tâche' :
               context === 'inspection' ? 'Inspection' :
               context === 'stakeholder' ? 'Partie prenante' :
-              context === 'compliance' ? 'Conformité' :
-              context === 'task' ? 'Tâche' : 'Contexte spécifique'
+              context === 'compliance' ? 'Conformité' : 'Contexte spécifique'
             }
           </p>
         )}

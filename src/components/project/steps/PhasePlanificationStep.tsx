@@ -1,10 +1,11 @@
-import { ExternalLink, Layers, Package } from 'lucide-react';
+import { ExternalLink, Layers, Package, FileText } from 'lucide-react';
 import React from 'react';
 import MaterialFormSection from '../../MaterialFormSection';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import EnhancedWorkflowPhaseManager from '../EnhancedWorkflowPhaseManager';
+import ProjectDocumentUpload from '../ProjectDocumentUpload';
 
 interface PhasePlanificationStepProps {
   formData: any;
@@ -33,7 +34,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="phases" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="phases" className="flex items-center gap-2">
               <Layers className="h-4 w-4" />
               Phases du Projet
@@ -41,6 +42,10 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
             <TabsTrigger value="materials" className="flex items-center gap-2">
               <Package className="h-4 w-4" />
               Ressources & Matériaux
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Documents de Phase
             </TabsTrigger>
           </TabsList>
           
@@ -156,6 +161,14 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
                 </div>
               )}
             </div>
+          </TabsContent>
+          
+          <TabsContent value="documents" className="space-y-4">
+            <ProjectDocumentUpload
+              projectId={formData?.id || null}
+              context="phase"
+              contextLabel="Documents de planification des phases"
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

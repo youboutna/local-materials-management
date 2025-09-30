@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Package, FileText } from 'lucide-react';
 import MaterialFormSection from '@/components/MaterialFormSection';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 
 interface ResourcesMaterialsStepProps {
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
@@ -9,6 +11,8 @@ interface ResourcesMaterialsStepProps {
   formData?: any;
   onUpdate?: (data: any) => void;
   isEditing?: boolean;
+  currentPhaseId?: string;
+  currentStepId?: string;
 }
 
 const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
@@ -16,7 +20,9 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
   onMaterialsChange,
   formData,
   onUpdate,
-  isEditing = false
+  isEditing = false,
+  currentPhaseId,
+  currentStepId
 }) => {
   return (
     <Card>
@@ -27,16 +33,28 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {/* Sélection des matériaux */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Matériaux du projet</label>
-            <MaterialFormSection
-              selectedMaterials={selectedMaterials}
-              onChange={onMaterialsChange}
-              projectId={formData?.id}
-            />
-          </div>
+        <Tabs defaultValue="materials" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="materials" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Matériaux & Ressources
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Documents Associés
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="materials" className="space-y-6">
+            {/* Sélection des matériaux */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Matériaux du projet</label>
+              <MaterialFormSection
+                selectedMaterials={selectedMaterials}
+                onChange={onMaterialsChange}
+                projectId={formData?.id}
+              />
+            </div>
 
           {/* Rattachement aux phases/tâches */}
           <div className="border-t pt-6">
@@ -108,21 +126,32 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
             </div>
           </div>
 
-          {/* Résumé des matériaux sélectionnés */}
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-medium mb-4">Résumé des matériaux</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <strong>{selectedMaterials.length}</strong> matériau(x) sélectionné(s)
-              </p>
-              {selectedMaterials.length > 0 && (
-                <div className="mt-2 text-xs text-gray-500">
-                  Quantité totale d'articles: {selectedMaterials.reduce((sum, m) => sum + m.quantity, 0)}
-                </div>
-              )}
+            {/* Résumé des matériaux sélectionnés */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Résumé des matériaux</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>{selectedMaterials.length}</strong> matériau(x) sélectionné(s)
+                </p>
+                {selectedMaterials.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    Quantité totale d'articles: {selectedMaterials.reduce((sum, m) => sum + m.quantity, 0)}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="documents" className="space-y-4">
+            <ProjectDocumentUpload
+              projectId={formData?.id || null}
+              phaseId={currentPhaseId || null}
+              stepId={currentStepId || null}
+              context="step"
+              contextLabel="Documents de ressources et matériaux"
+            />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
