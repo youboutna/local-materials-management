@@ -40,7 +40,11 @@ const ProjectPhasesDetail: React.FC = () => {
         if (error) throw error;
         const options = (data || []).map(p => ({ id: p.id, name: p.phase_name || 'Phase sans nom' }));
         setPhases(options);
-        setSelectedPhaseId(options[0]?.id);
+        
+        // Check for phase query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const phaseParam = urlParams.get('phase');
+        setSelectedPhaseId(phaseParam || options[0]?.id);
       } catch (err) {
         console.error(err);
         toast({ title: 'Erreur', description: "Impossible de charger les phases", variant: 'destructive' });
