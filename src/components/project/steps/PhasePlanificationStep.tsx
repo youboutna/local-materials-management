@@ -39,13 +39,13 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (formData.id) {
+    if (formData.id && formData.id !== 'new-project') {
       loadPhases();
     }
   }, [formData.id]);
 
   const loadPhases = async () => {
-    if (!formData.id) return;
+    if (!formData.id || formData.id === 'new-project') return;
     
     try {
       setLoading(true);
@@ -89,7 +89,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h4 className="text-lg font-medium">Gestion des phases du projet</h4>
-            {formData.id && (
+            {formData.id && formData.id !== 'new-project' && (
               <Button 
                 variant="outline" 
                 size="sm"
@@ -103,14 +103,23 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
           </div>
           
           {/* Phase Creation/Management */}
-          <div className="border rounded-lg p-4">
-            <EnhancedWorkflowPhaseManager
-              projectId={formData.id || 'new-project'}
-            />
-          </div>
+          {formData.id && formData.id !== 'new-project' ? (
+            <div className="border rounded-lg p-4">
+              <EnhancedWorkflowPhaseManager
+                projectId={formData.id}
+              />
+            </div>
+          ) : (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                <strong>Projet non encore créé.</strong> Veuillez d'abord créer le projet avant de gérer les phases.
+                Complétez les étapes précédentes et enregistrez le projet.
+              </p>
+            </div>
+          )}
 
           {/* Existing Phases List */}
-          {formData.id && phases.length > 0 && (
+          {formData.id && formData.id !== 'new-project' && phases.length > 0 && (
             <div className="space-y-3">
               <h4 className="text-md font-medium">Phases existantes - Cliquez pour gérer</h4>
               <div className="grid gap-3">
@@ -145,7 +154,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
             </div>
           )}
 
-          {formData.id && phases.length === 0 && !loading && (
+          {formData.id && formData.id !== 'new-project' && phases.length === 0 && !loading && (
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Aucune phase créée.</strong> Créez des phases ci-dessus pour commencer à planifier votre projet.

@@ -34,7 +34,10 @@ export const useProjectHierarchy = (projectId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || projectId === 'new-project') {
+      setLoading(false);
+      return;
+    }
 
     const loadProjectHierarchy = async () => {
       try {

@@ -131,7 +131,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
         team_delegation: (phase as any).team_delegation || {},
       })) || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && projectId !== 'new-project',
   });
 
   // Load stakeholders for the project
@@ -140,7 +140,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     queryFn: async () => {
       return await ProjectStakeholderService.getProjectStakeholders(projectId);
     },
-    enabled: !!projectId,
+    enabled: !!projectId && projectId !== 'new-project',
   });
 
   // Load employees for selectors
