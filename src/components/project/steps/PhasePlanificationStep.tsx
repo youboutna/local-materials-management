@@ -33,144 +33,34 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="phases" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="phases" className="flex items-center gap-2">
-              <Layers className="h-4 w-4" />
-              Phases du Projet
-            </TabsTrigger>
-            <TabsTrigger value="materials" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Ressources & Matériaux
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Documents de Phase
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-lg font-medium">Gestion des phases du projet</h4>
+            {formData.id && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open(`/projects/${formData.id}/phases/detail`, '_blank')}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Gérer les détails des phases
+              </Button>
+            )}
+          </div>
           
-          <TabsContent value="phases" className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-lg font-medium">Gestion des phases</h4>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(formData.id+'/phases/detail', '_blank')}
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Voir détails des phases
-                </Button>
-              </div>
-              <EnhancedWorkflowPhaseManager
-                projectId={formData.id || 'new-project'}
-              />
-            </div>
-          </TabsContent>
+          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Note:</strong> Les ressources, matériaux et documents de chaque phase peuvent être gérés 
+              dans la vue détaillée des phases. Cliquez sur "Gérer les détails des phases" pour accéder 
+              aux options avancées de chaque phase.
+            </p>
+          </div>
           
-          <TabsContent value="materials" className="space-y-4">
-            <div className="space-y-6">
-              <MaterialFormSection
-                selectedMaterials={selectedMaterials}
-                onChange={onMaterialsChange}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Budget matériaux estimé</label>
-                  <input 
-                    type="number" 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="500000"
-                    value={formData.materials_budget || ''}
-                    onChange={(e) => onUpdate({ materials_budget: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Délai d'approvisionnement (jours)</label>
-                  <input 
-                    type="number" 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="30"
-                    value={formData.procurement_lead_time || ''}
-                    onChange={(e) => onUpdate({ procurement_lead_time: parseInt(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-medium mb-3">Assignation des ressources</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <input 
-                      type="radio" 
-                      id="assignToPhases"
-                      name="resourceAssignment"
-                      value="phases"
-                      className="h-4 w-4 text-primary focus:ring-primary"
-                      checked={formData.resource_assignment === 'phases'}
-                      onChange={(e) => onUpdate({ resource_assignment: e.target.value })}
-                    />
-                    <label htmlFor="assignToPhases" className="text-sm">
-                      Assigner les matériaux aux phases du projet
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input 
-                      type="radio" 
-                      id="assignToTasks"
-                      name="resourceAssignment"
-                      value="tasks"
-                      className="h-4 w-4 text-primary focus:ring-primary"
-                      checked={formData.resource_assignment === 'tasks'}
-                      onChange={(e) => onUpdate({ resource_assignment: e.target.value })}
-                    />
-                    <label htmlFor="assignToTasks" className="text-sm">
-                      Assigner les matériaux aux tâches spécifiques
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input 
-                      type="radio" 
-                      id="globalPool"
-                      name="resourceAssignment"
-                      value="global"
-                      className="h-4 w-4 text-primary focus:ring-primary"
-                      checked={formData.resource_assignment === 'global'}
-                      onChange={(e) => onUpdate({ resource_assignment: e.target.value })}
-                    />
-                    <label htmlFor="globalPool" className="text-sm">
-                      Pool global de ressources (à répartir ultérieurement)
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {selectedMaterials.length > 0 && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-md font-medium mb-3">Résumé des matériaux sélectionnés</h4>
-                  <div className="grid gap-2">
-                    {selectedMaterials.map((material, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <span>Matériau #{material.materialId}</span>
-                        <span className="font-medium">Quantité: {material.quantity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="documents" className="space-y-4">
-            <ProjectDocumentUpload
-              projectId={formData?.id || null}
-              context="phase"
-              contextLabel="Documents de planification des phases"
-            />
-          </TabsContent>
-        </Tabs>
+          <EnhancedWorkflowPhaseManager
+            projectId={formData.id || 'new-project'}
+          />
+        </div>
       </CardContent>
     </Card>
   );

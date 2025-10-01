@@ -14,7 +14,9 @@ import PhaseTasks from '@/components/project/PhaseTasks';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
 import PhaseCompliance from '@/components/project/PhaseCompliance';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
-import { ArrowLeft, Layers, ClipboardList, FileText, ShieldCheck, TriangleAlert, CalendarClock } from 'lucide-react';
+import ResourcesMaterialsStep from '@/components/project/steps/ResourcesMaterialsStep';
+import StepDocumentUpload from '@/components/project/steps/StepDocumentUpload';
+import { ArrowLeft, Layers, ClipboardList, FileText, ShieldCheck, TriangleAlert, CalendarClock, Package } from 'lucide-react';
 
 interface PhaseOption { id: string; name: string; }
 
@@ -23,6 +25,7 @@ const ProjectPhasesDetail: React.FC = () => {
   const [phases, setPhases] = useState<PhaseOption[]>([]);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
 
   useEffect(() => {
     const loadPhases = async () => {
@@ -79,20 +82,20 @@ const ProjectPhasesDetail: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="resources" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="resources" className="flex items-center gap-2"><ClipboardList className="h-4 w-4"/>Ressources</TabsTrigger>
+              <TabsTrigger value="materials" className="flex items-center gap-2"><Package className="h-4 w-4"/>Matériaux</TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2"><FileText className="h-4 w-4"/>Documents</TabsTrigger>
               <TabsTrigger value="tasks" className="flex items-center gap-2"><ClipboardList className="h-4 w-4"/>Tâches</TabsTrigger>
               <TabsTrigger value="risks" className="flex items-center gap-2"><TriangleAlert className="h-4 w-4"/>Risques</TabsTrigger>
               <TabsTrigger value="compliance" className="flex items-center gap-2"><ShieldCheck className="h-4 w-4"/>Conformité</TabsTrigger>
-              <TabsTrigger value="gantt" className="flex items-center gap-2"><CalendarClock className="h-4 w-4"/>Diagramme Gantt</TabsTrigger>
+              <TabsTrigger value="gantt" className="flex items-center gap-2"><CalendarClock className="h-4 w-4"/>Gantt</TabsTrigger>
               <TabsTrigger value="planning" className="flex items-center gap-2"><CalendarClock className="h-4 w-4"/>Planning</TabsTrigger>
             </TabsList>
 
             <TabsContent value="resources">
               {selectedPhaseId ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <PhaseMaterials phaseId={selectedPhaseId} projectId={id!} />
                   <PhaseEmployees phaseId={selectedPhaseId} />
                 </div>
               ) : (
@@ -100,9 +103,31 @@ const ProjectPhasesDetail: React.FC = () => {
               )}
             </TabsContent>
 
+            <TabsContent value="materials">
+              {selectedPhaseId ? (
+                <ResourcesMaterialsStep
+                  selectedMaterials={selectedMaterials}
+                  onMaterialsChange={setSelectedMaterials}
+                  formData={{ id }}
+                  currentPhaseId={selectedPhaseId}
+                  isEditing={true}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
+              )}
+            </TabsContent>
+
             <TabsContent value="documents">
               {selectedPhaseId ? (
-                <PhaseDocuments phaseId={selectedPhaseId} projectId={id!} />
+                <div className="space-y-4">
+                  <PhaseDocuments phaseId={selectedPhaseId} projectId={id!} />
+                  <StepDocumentUpload
+                    projectId={id!}
+                    phaseId={selectedPhaseId}
+                    stepId=""
+                    stepTitle="Documents de phase"
+                  />
+                </div>
               ) : (
                 <div className="text-sm text-muted-foreground">Veuillez sélectionner une phase.</div>
               )}
