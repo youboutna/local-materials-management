@@ -124,6 +124,63 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
+  // Fetch documents
+  const { data: documentsData = [] } = useQuery({
+    queryKey: ['project-documents', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('project_id', projectId);
+      if (error) {
+        console.error('Error fetching documents:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  // Fetch bank guarantees for compliance
+  const { data: bankGuaranteesData = [] } = useQuery({
+    queryKey: ['project-bank-guarantees', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', projectId);
+      if (error) {
+        console.error('Error fetching bank guarantees:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  // Fetch insurance certificates for compliance
+  const { data: insuranceCertificatesData = [] } = useQuery({
+    queryKey: ['project-insurance-certificates', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('insurance_certificates')
+        .select('*')
+        .eq('project_id', projectId);
+      if (error) {
+        console.error('Error fetching insurance certificates:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
   // Fetch task assignments for this project
   const { data: taskAssignmentsData = [] } = useQuery({
     queryKey: ['project-task-assignments', projectId],
@@ -638,7 +695,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <FileText className="h-8 w-8 text-orange-600" />
                   <div>
                     <p className="text-sm font-medium">Documents</p>
-                    <p className="text-lg font-bold">0</p>
+                    <p className="text-lg font-bold">{documentsData.length}</p>
                   </div>
                 </div>
               </CardContent>
@@ -808,109 +865,189 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         <TabsContent value="compliance" className="mt-6">
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Conformité réglementaire
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Permis de construire</h4>
-                        <p className="text-sm text-muted-foreground">Ministère Habitat</p>
-                        <p className="text-sm text-muted-foreground">Émis le: 10/05/2021</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Valide</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Audit environnemental</h4>
-                        <p className="text-sm text-muted-foreground">Agence Environnement</p>
-                        <p className="text-sm text-muted-foreground">Complété le: 12/11/2022</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Complété</Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Bank Guarantees */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Plans HSE
+                  Garanties bancaires
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Plan prévention accidents</h4>
-                        <p className="text-sm text-muted-foreground">Dernière révision: 01/08/2023</p>
+                {bankGuaranteesData.length > 0 ? (
+                  <div className="space-y-4">
+                    {bankGuaranteesData.map((guarantee: any) => (
+                      <div key={guarantee.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{guarantee.guarantee_type}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Banque: {guarantee.bank_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Montant: {guarantee.guarantee_amount?.toLocaleString()} MRU
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Émission: {new Date(guarantee.issue_date).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Échéance: {new Date(guarantee.expiry_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge 
+                            className={guarantee.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                            }
+                          >
+                            {guarantee.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                    </div>
+                    ))}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Plan gestion déchets chantier</h4>
-                        <p className="text-sm text-muted-foreground">Dernière révision: 01/08/2023</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Actif</Badge>
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Aucune garantie bancaire enregistrée
+                  </p>
+                )}
               </CardContent>
             </Card>
 
+            {/* Insurance Certificates */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Parties prenantes
+                  <Shield className="h-5 w-5" />
+                  Assurances
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Ministère de l'Énergie</h4>
-                        <p className="text-sm text-muted-foreground">Autorité contractante</p>
+                {insuranceCertificatesData.length > 0 ? (
+                  <div className="space-y-4">
+                    {insuranceCertificatesData.map((cert: any) => (
+                      <div key={cert.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{cert.coverage_type}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Assureur: {cert.insurance_company}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Police: {cert.policy_number}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Couverture: {cert.coverage_amount?.toLocaleString()} MRU
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Validité: {new Date(cert.valid_from).toLocaleDateString()} - {new Date(cert.valid_until).toLocaleDateString()}
+                            </p>
+                            {cert.notes && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Notes: {cert.notes}
+                              </p>
+                            )}
+                          </div>
+                          <Badge 
+                            className={cert.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                            }
+                          >
+                            {cert.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <Badge variant="destructive">Haute influence</Badge>
-                    </div>
+                    ))}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">Communes locales</h4>
-                        <p className="text-sm text-muted-foreground">Population impactée</p>
-                      </div>
-                      <Badge className="bg-yellow-100 text-yellow-800">Influence moyenne</Badge>
-                    </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Aucune assurance enregistrée
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Compliance Documents */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Documents de conformité
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {documentsData.filter((doc: any) => 
+                  ['contract', 'project_report', 'tender'].includes(doc.document_type)
+                ).length > 0 ? (
+                  <div className="space-y-4">
+                    {documentsData
+                      .filter((doc: any) => ['contract', 'project_report', 'tender'].includes(doc.document_type))
+                      .map((doc: any) => (
+                        <div key={doc.id} className="p-4 border rounded-lg">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium">{doc.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Type: {doc.document_type}
+                              </p>
+                              {doc.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {doc.description}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground">
+                                Créé le: {new Date(doc.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Badge 
+                              className={
+                                doc.status === 'approved' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : doc.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }
+                            >
+                              {doc.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">ONG environnementale</h4>
-                        <p className="text-sm text-muted-foreground">Observateur</p>
-                      </div>
-                      <Badge variant="outline">Faible influence</Badge>
-                    </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Aucun document de conformité
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Résumé de conformité
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold">{bankGuaranteesData.length}</p>
+                    <p className="text-sm text-muted-foreground">Garanties bancaires</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold">{insuranceCertificatesData.length}</p>
+                    <p className="text-sm text-muted-foreground">Assurances</p>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <p className="text-2xl font-bold">
+                      {documentsData.filter((d: any) => 
+                        ['contract', 'project_report', 'tender'].includes(d.document_type)
+                      ).length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Documents</p>
                   </div>
                 </div>
               </CardContent>
