@@ -41,19 +41,20 @@ const ComplianceStep: React.FC<ComplianceStepProps> = ({
 
   // Load compliance data from database
   useEffect(() => {
-    if (formData.projectId) {
+    if (formData.id && formData.id !== 'new-project') {
       loadBankGuarantees();
       loadInsurancePolicies();
       loadDocuments();
     }
-  }, [formData.projectId]);
+  }, [formData.id]);
 
   const loadBankGuarantees = async () => {
+    if (!formData.id || formData.id === 'new-project') return;
     try {
       const { data, error } = await supabase
         .from('bank_guarantees')
         .select('*')
-        .eq('project_id', formData.projectId);
+        .eq('project_id', formData.id);
       
       if (error) throw error;
       setBankGuarantees(data || []);
@@ -63,11 +64,12 @@ const ComplianceStep: React.FC<ComplianceStepProps> = ({
   };
 
   const loadInsurancePolicies = async () => {
+    if (!formData.id || formData.id === 'new-project') return;
     try {
       const { data, error } = await supabase
         .from('insurance_certificates')
         .select('*')
-        .eq('project_id', formData.projectId);
+        .eq('project_id', formData.id);
       
       if (error) throw error;
       setInsurancePolicies(data || []);
@@ -77,11 +79,12 @@ const ComplianceStep: React.FC<ComplianceStepProps> = ({
   };
 
   const loadDocuments = async () => {
+    if (!formData.id || formData.id === 'new-project') return;
     try {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('project_id', formData.projectId)
+        .eq('project_id', formData.id)
         .in('document_type', ['contract', 'project_report', 'tender']);
       
       if (error) throw error;

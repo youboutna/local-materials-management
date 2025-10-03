@@ -41,6 +41,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const [formData, setFormData] = useState<ProjectFormData>(() => initialData || {});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
   const [baseData, setBaseData] = useState<any>({});
 
@@ -49,13 +50,14 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
   // Load project data from database if no initialData
   const loadProjectData = useCallback(async () => {
-    if (!projectId || (initialData && Object.keys(initialData).length > 0)) return;
+    if (!projectId || hasLoadedData || (initialData && Object.keys(initialData).length > 0)) return;
     
     setIsLoading(true);
     try {
       const projectData = await formService.loadProjectData(projectId);
       if (projectData) {
         setFormData(projectData);
+        setHasLoadedData(true);
       }
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -67,11 +69,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, initialData, formService, toast]);
+  }, [projectId, hasLoadedData, initialData, formService, toast]);
 
   // Load related data (stakeholders, phases, etc.)
   const loadRelatedData = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId || hasLoadedData) return;
     
     try {
       const relatedData = await formService.loadRelatedData(projectId);
@@ -83,7 +85,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     } catch (error) {
       console.error('Error loading related data:', error);
     }
-  }, [projectId, formService]);
+  }, [projectId, hasLoadedData, formService]);
 
   // Load base data for dropdowns
   const loadBaseData = useCallback(async () => {
@@ -95,8 +97,10 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   }, [formService]);
 
-  // Update form data when initialData changes
+  // Update form data when initialData changes - ONLY ONCE
   useEffect(() => {
+    if (hasLoadedData) return; // Prevent reloading
+    
     if (initialData && Object.keys(initialData).length > 0) {
       const processedData = {
         ...initialData,
@@ -112,16 +116,19 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       if (initialData.materials) {
         setSelectedMaterials(initialData.materials);
       }
-    } else {
+      setHasLoadedData(true);
+    } else if (!hasLoadedData) {
       loadProjectData();
     }
-  }, [initialData, loadProjectData, formService]);
+  }, [initialData, hasLoadedData, loadProjectData, formService]);
 
-  // Load related data and base data on mount
+  // Load related data and base data on mount - ONLY ONCE
   useEffect(() => {
-    loadRelatedData();
-    loadBaseData();
-  }, [loadRelatedData, loadBaseData]);
+    if (!hasLoadedData) {
+      loadRelatedData();
+      loadBaseData();
+    }
+  }, [hasLoadedData, loadRelatedData, loadBaseData]);
 
   // Update form data helper
   const updateFormData = (updates: any) => {

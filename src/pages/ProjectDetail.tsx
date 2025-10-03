@@ -23,11 +23,11 @@ const ProjectDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      {/* Navbar removed - already in App.tsx */}
       <div className="container mx-auto px-4 py-8">
         <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
       </div>
-      <Footer />
+      {/* Footer removed - already in App.tsx */}
     </div>
   );
 };

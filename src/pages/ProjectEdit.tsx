@@ -340,7 +340,7 @@ const ProjectEdit = () => {
   if (loading || !initialData) {
     return (
       <div className="layout-main bg-gray-50">
-        <Navbar />
+        {/* Navbar removed - already in App.tsx */}
         <main className="layout-content">
           <div className="container-responsive">
             <div className="flex justify-center items-center h-64 sm:h-96">
@@ -348,14 +348,14 @@ const ProjectEdit = () => {
             </div>
           </div>
         </main>
-        <Footer />
+        {/* Footer removed - already in App.tsx */}
       </div>
     );
   }
 
   return (
     <div className="layout-main bg-gray-50">
-      <Navbar />
+      {/* Navbar removed - already in App.tsx */}
       
       <main className="layout-content">
         <div className="container-responsive">
@@ -398,7 +398,7 @@ const ProjectEdit = () => {
         </div>
       </main>
       
-      <Footer />
+      {/* Footer removed - already in App.tsx */}
     </div>
   );
 };
