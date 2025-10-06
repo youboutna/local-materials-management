@@ -263,12 +263,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [risks, setRisks] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
 
-  // Transform project data when loaded and fetch additional data
+  // Transform project data when loaded and fetch additional data - ONLY RUN ONCE or when key data changes
   useEffect(() => {
     if (project && projectId) {
       fetchAdditionalData();
     }
-  }, [project, projectId, phasesData, risksData, projectDetail, taskAssignmentsData, employeesData]);
+  }, [project?.id, projectId]); // Only depend on project.id and projectId - not on all data
 
   const fetchAdditionalData = async () => {
     if (!project || !projectId) return;

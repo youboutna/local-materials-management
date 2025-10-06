@@ -124,11 +124,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
 
   // Load related data and base data on mount - ONLY ONCE
   useEffect(() => {
-    if (!hasLoadedData) {
+    if (!hasLoadedData && projectId) {
       loadRelatedData();
       loadBaseData();
     }
-  }, [hasLoadedData, loadRelatedData, loadBaseData]);
+  }, [projectId]); // Only trigger when projectId changes, not on function changes
 
   // Update form data helper
   const updateFormData = (updates: any) => {
