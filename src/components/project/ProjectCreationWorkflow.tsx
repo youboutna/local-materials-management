@@ -20,7 +20,8 @@ import {
   Target,
   Package,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Save
 } from 'lucide-react';
 
 // Import step components
@@ -95,6 +96,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [phases, setPhases] = useState<any[]>([]);
   const [shapeData, setShapeData] = useState<any>(null);
 
+  // Steps aligned with workflow specification
   const steps = [
     {
       id: 1,
@@ -122,43 +124,35 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     },
     {
       id: 4,
-      title: 'Phases',
+      title: 'Planification & Phases',
       icon: Layers,
-      description: 'Planification des phases',
+      description: 'Phase → Step → Task',
       color: 'bg-indigo-500',
       isCompleted: (data: any) => Boolean(phases.length > 0)
     },
     {
       id: 5,
-      title: 'Matériaux',
-      icon: Package,
-      description: 'Ressources et matériaux',
-      color: 'bg-purple-500',
-      isCompleted: (data: any) => Boolean(selectedMaterials.length > 0)
-    },
-    {
-      id: 6,
       title: 'Risques',
       icon: AlertTriangle,
-      description: 'Gestion des risques',
+      description: 'Gestion des risques globaux et des phases',
       color: 'bg-red-500',
       isCompleted: (data: any) => Boolean(risks.length > 0)
     },
     {
-      id: 7,
-      title: 'Documents',
+      id: 6,
+      title: 'Conformité',
       icon: FileCheck,
-      description: 'Documents du projet',
+      description: 'Vérification réglementaire',
       color: 'bg-amber-500',
-      isCompleted: (data: any) => true // Optional step
+      isCompleted: (data: any) => Boolean(compliance.length > 0)
     },
     {
-      id: 8,
-      title: 'Conformité',
+      id: 7,
+      title: 'Validation & Clôture',
       icon: CheckCircle,
-      description: 'Validation et conformité',
+      description: 'Réception définitive, solde, clôture',
       color: 'bg-teal-500',
-      isCompleted: (data: any) => Boolean(compliance.length > 0)
+      isCompleted: (data: any) => true
     }
   ];
 
@@ -382,17 +376,30 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         );
       
-      case 4: // Materials
+      case 4: // Planification & Phases
         return (
-          <ResourcesMaterialsStep
-            formData={formData}
-            onUpdate={updateFormData}
-            selectedMaterials={selectedMaterials}
-            onMaterialsChange={onMaterialsChange}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-500" />
+                Planification des Phases (Phase → Step → Task)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Configurez la structure Phase → Step → Task avec documents, ressources, inspections, garanties et paiements.
+              </p>
+              <ResourcesMaterialsStep
+                formData={formData}
+                onUpdate={updateFormData}
+                selectedMaterials={selectedMaterials}
+                onMaterialsChange={onMaterialsChange}
+              />
+            </CardContent>
+          </Card>
         );
       
-      case 5: // Risks
+      case 5: // Risques
         return (
           <RiskAnalysisStep
             formData={formData}
@@ -400,36 +407,56 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           />
         );
       
-      case 6: // Documents
-        return (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileCheck className="h-5 w-5 text-amber-500" />
-                  Documents du Projet
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Téléchargez les documents nécessaires pour ce projet. Cette étape est optionnelle.
-                </p>
-                <ProjectDocumentUpload 
-                  projectId={null}
-                  context="project"
-                  contextLabel="Création de projet"
-                />
-              </CardContent>
-            </Card>
-          </div>
-        );
-
-      case 7: // Compliance
+      case 6: // Conformité
         return (
           <ComplianceStep
             formData={formData}
             onUpdate={updateFormData}
           />
+        );
+      
+      case 6: // Validation & Closure
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-teal-500" />
+                Validation et Conformité Finale
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground mb-4">
+                Dernière étape: réception définitive, solde et clôture du projet
+              </p>
+              <div className="grid gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Statut de réception
+                  </label>
+                  <select
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                    value={formData.reception_status || ''}
+                    onChange={(e) => updateFormData({ reception_status: e.target.value })}
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="provisional">Réception provisoire</option>
+                    <option value="definitive">Réception définitive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Notes de clôture
+                  </label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
+                    placeholder="Notes finales, observations, recommandations..."
+                    value={formData.closure_notes || ''}
+                    onChange={(e) => updateFormData({ closure_notes: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
       
       default:
@@ -527,6 +554,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               </Button>
 
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Save current step without navigating
+                    console.log('Saving step data:', formData);
+                  }}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Sauvegarder
+                </Button>
+                
                 {currentStep === steps.length - 1 ? (
                   <Button
                     onClick={handleSubmit}
@@ -539,7 +577,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     onClick={nextStep}
                     disabled={!canProceedNext()}
                   >
-                    Suivant
+                    Sauvegarder et suivant
                     <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 )}

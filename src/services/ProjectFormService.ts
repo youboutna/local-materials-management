@@ -76,6 +76,9 @@ export interface ProjectFormData {
   documents?: any[];
   employees?: any[];
   suppliers?: any[];
+  // Validation & Closure fields (Step 7)
+  reception_status?: string;
+  closure_notes?: string;
 }
 
 export interface SaveContext {

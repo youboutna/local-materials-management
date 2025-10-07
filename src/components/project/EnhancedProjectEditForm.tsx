@@ -255,61 +255,69 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   };
 
-  // Step configuration with merged stakeholders and team
+  // Step configuration aligned with workflow spec (7 steps)
   const steps = [
     {
       id: 1,
-      title: 'Informations Générales',
+      title: 'Informations du projet',
       icon: Building,
-      description: 'Données de base du projet (titre, description, budget)',
+      description: 'Données de base du projet',
       color: 'bg-blue-500',
       isCompleted: () => formService.validateStep(1, formData)
     },
     {
       id: 2,
-      title: 'Parties Prenantes & Équipe',
+      title: 'Parties prenantes',
       icon: Users,
-      description: 'Acteurs, responsabilités, équipe interne et contractants',
+      description: 'Configuration des acteurs',
       color: 'bg-green-500',
       isCompleted: () => formService.validateStep(2, formData)
     },
     {
       id: 3,
-      title: 'Phases & Planification',
-      icon: Layers,
-      description: 'Structure des phases, chronologie et matériaux',
-      color: 'bg-indigo-500',
-      isCompleted: () => formService.validateStep(3, formData) && selectedMaterials.length > 0
+      title: 'Localisation',
+      icon: MapPin,
+      description: 'Géolocalisation et cartographie',
+      color: 'bg-cyan-500',
+      isCompleted: () => formService.validateStep(3, formData)
     },
     {
       id: 4,
-      title: 'Géolocalisation',
-      icon: MapPin,
-      description: 'Localisation précise et délimitation des zones',
-      color: 'bg-cyan-500',
+      title: 'Planification & Phases',
+      icon: Layers,
+      description: 'Phase → Step → Task (documents, ressources, inspections, garanties, paiements)',
+      color: 'bg-indigo-500',
       isCompleted: () => formService.validateStep(4, formData)
     },
     {
       id: 5,
-      title: 'Analyse des Risques',
+      title: 'Risques',
       icon: AlertTriangle,
-      description: 'Analyse et mitigation des risques projet',
+      description: 'Gestion des risques globaux et des phases',
       color: 'bg-red-500',
       isCompleted: () => formService.validateStep(5, formData)
     },
     {
       id: 6,
-      title: 'Conformités & Validation',
+      title: 'Conformité',
       icon: FileCheck,
-      description: 'Respect des normes et validation finale',
-      color: 'bg-teal-500',
+      description: 'Vérification réglementaire et normes',
+      color: 'bg-amber-500',
       isCompleted: () => formService.validateStep(6, formData)
+    },
+    {
+      id: 7,
+      title: 'Validation & Clôture',
+      icon: CheckCircle,
+      description: 'Réception définitive, solde, clôture',
+      color: 'bg-teal-500',
+      isCompleted: () => formService.validateStep(7, formData)
     }
   ];
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1:
+      case 1: // Informations du projet
         return (
           <ProjectInfoStep
             formData={formData}
@@ -318,7 +326,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             baseData={baseData}
           />
         );
-      case 2:
+      case 2: // Parties prenantes
         return (
           <StakeholdersTeamStep
             formData={formData}
@@ -327,7 +335,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             baseData={baseData}
           />
         );
-      case 3:
+      case 3: // Localisation
+        return (
+          <LocationStep
+            formData={formData}
+            onUpdate={updateFormData}
+            isEditing={true}
+          />
+        );
+      case 4: // Planification & Phases (Phase → Step → Task)
         return (
           <PhasePlanificationStep
             formData={formData}
@@ -338,15 +354,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             baseData={baseData}
           />
         );
-      case 4:
-        return (
-          <LocationStep
-            formData={formData}
-            onUpdate={updateFormData}
-            isEditing={true}
-          />
-        );
-      case 5:
+      case 5: // Risques
         return (
           <RiskAnalysisStep
             formData={formData}
@@ -354,13 +362,56 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
             isEditing={true}
           />
         );
-      case 6:
+      case 6: // Conformité
         return (
           <ComplianceStep
             formData={formData}
             onUpdate={updateFormData}
             isEditing={true}
           />
+        );
+      case 7: // Validation & Clôture
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-teal-500" />
+                Validation et Conformité Finale
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                Dernière étape: réception définitive, solde et clôture du projet
+              </p>
+              <div className="grid gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Statut de réception
+                  </label>
+                  <select
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                    value={formData.reception_status || ''}
+                    onChange={(e) => updateFormData({ reception_status: e.target.value })}
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="provisional">Réception provisoire</option>
+                    <option value="definitive">Réception définitive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Notes de clôture
+                  </label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
+                    placeholder="Notes finales, observations, recommandations..."
+                    value={formData.closure_notes || ''}
+                    onChange={(e) => updateFormData({ closure_notes: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
       default:
         return null;
@@ -482,26 +533,31 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                    disabled={currentStep === 1}
+                    disabled={currentStep === 1 || isSaving}
                   >
                     Précédent
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleSaveStepOnly}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder cette étape'}
                   </Button>
                 </div>
 
                 <div className="flex gap-2">
                   <Button
-                    onClick={handleSaveAndNext}
-                    disabled={isSaving || currentStep === steps.length}
+                    variant="outline"
+                    onClick={handleSaveStepOnly}
+                    disabled={isSaving}
                   >
-                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder et suivant'}
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                   </Button>
+                  
+                  {currentStep < steps.length && (
+                    <Button
+                      onClick={handleSaveAndNext}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Sauvegarde...' : 'Sauvegarder et suivant'}
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="default"
                     onClick={handleSaveGlobalAndClose}
