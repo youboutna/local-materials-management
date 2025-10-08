@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Badge } from '../../ui/badge';
-import { Users, Plus, X, User, Building2, UserCheck, Briefcase } from 'lucide-react';
+import { Users, Plus, X, User, Building2, UserCheck, Briefcase, FileText, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import EmployeeSelector from '../../selectors/EmployeeSelector';
@@ -93,17 +93,29 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   };
 
   // Predefined roles and positions
-  const stakeholderRoles = [
-    'Maître d\'ouvrage',
-    'Maître d\'œuvre',
+  const internalStakeholderRoles = [
+    'Responsable financier',
+    'Responsable achats',
+    'Responsable logistique',
+    'Responsable HSE',
     'Coordonnateur sécurité',
+    'Gestionnaire contrats',
+    'Contrôleur de gestion',
+    'Autres'
+  ];
+
+  const externalStakeholderRoles = [
+    'Ingénieur conseil',
+    'Fournisseur matériaux',
+    'Entrepreneur / Contractant',
     'Bureau de contrôle',
     'Architecte',
-    'Ingénieur structure',
-    'Consultant spécialisé',
-    'Représentant client',
-    'Gestionnaire projet',
-    'Responsable qualité'
+    'Bureau d\'études',
+    'Ministère (tutelle)',
+    'Banque / Bailleur de fonds',
+    'Assureur',
+    'Organisme certification',
+    'Autres'
   ];
 
   const teamPositions = [
@@ -194,11 +206,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="principals" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="principals">Principaux</TabsTrigger>
             <TabsTrigger value="stakeholders">Parties Prenantes</TabsTrigger>
             <TabsTrigger value="team">Équipe</TabsTrigger>
             <TabsTrigger value="contractors">Contractants</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
 
           <TabsContent value="principals" className="space-y-6">
@@ -319,113 +332,181 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
           </TabsContent>
 
           <TabsContent value="stakeholders" className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Autres Parties Prenantes</h3>
-              <p className="text-sm text-muted-foreground">
-                Ajoutez les bureaux de contrôle, architectes, consultants et autres acteurs du projet
-              </p>
-              
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-4">Ajouter une partie prenante</h4>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Type</Label>
-                      <Select 
-                        value={newStakeholder.type || ''} 
-                        onValueChange={(value: 'employee' | 'external') => setNewStakeholder({...newStakeholder, type: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Type de partie prenante" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                          <SelectItem value="employee">Employé interne SOMELEC</SelectItem>
-                          <SelectItem value="external">Organisation externe</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Entité</Label>
-                      {newStakeholder.type === 'employee' ? (
-                        <EmployeeSelector
-                          value={newStakeholder.entityId || ''}
-                          onChange={(value) => setNewStakeholder({...newStakeholder, entityId: value})}
-                          placeholder="Sélectionner un employé"
-                        />
-                      ) : newStakeholder.type === 'external' ? (
-                        <SimpleSupplierSelector
-                          value={newStakeholder.entityId || ''}
-                          onChange={(value) => setNewStakeholder({...newStakeholder, entityId: value})}
-                          placeholder="Sélectionner une organisation"
-                        />
-                      ) : (
-                        <Select disabled>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner d'abord le type" />
-                          </SelectTrigger>
-                        </Select>
-                      )}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Rôle dans le projet</Label>
-                      <Select 
-                        value={newStakeholder.role || ''} 
-                        onValueChange={(value) => setNewStakeholder({...newStakeholder, role: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Rôle" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
-                          {stakeholderRoles.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {role}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end">
-                      <Button onClick={addStakeholder} className="w-full">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter partie prenante
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Autres Parties Prenantes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configuration des acteurs internes SOMELEC et parties externes (fournisseurs, ministères, banques, etc.)
+                </p>
               </div>
+              
+              <Tabs defaultValue="internal" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="internal">
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Parties Internes
+                  </TabsTrigger>
+                  <TabsTrigger value="external">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Parties Externes
+                  </TabsTrigger>
+                </TabsList>
 
-              {stakeholders.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Parties prenantes du projet ({stakeholders.length})</h4>
-                  {stakeholders.map((stakeholder) => (
-                    <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                      <div className="flex items-center gap-3">
-                        {stakeholder.type === 'employee' ? (
-                          <User className="h-4 w-4 text-blue-500" />
-                        ) : (
-                          <Building2 className="h-4 w-4 text-orange-500" />
-                        )}
+                {/* Internal Stakeholders */}
+                <TabsContent value="internal" className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <UserCheck className="h-4 w-4" />
+                      Ajouter un employé SOMELEC
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <div className="font-medium">{getEntityName(stakeholder)}</div>
-                          <div className="text-sm text-muted-foreground">{stakeholder.role}</div>
+                          <EmployeeSelector
+                            label="Employé"
+                            value={newStakeholder.entityId || ''}
+                            onChange={(value) => setNewStakeholder({...newStakeholder, type: 'employee', entityId: value})}
+                            placeholder="Sélectionner un employé"
+                          />
                         </div>
-                        {stakeholder.isPrimary && (
-                          <Badge variant="default" className="text-xs">Principal</Badge>
-                        )}
+                        <div>
+                          <Label>Rôle / Responsabilité</Label>
+                          <Select 
+                            value={newStakeholder.role || ''} 
+                            onValueChange={(value) => setNewStakeholder({...newStakeholder, role: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner le rôle" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
+                              {internalStakeholderRoles.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeStakeholder(stakeholder.id)}
+                      <Button 
+                        onClick={addStakeholder} 
+                        className="w-full"
+                        disabled={!newStakeholder.entityId || !newStakeholder.role}
                       >
-                        <X className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter l'employé comme partie prenante
                       </Button>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+
+                  {/* List of internal stakeholders */}
+                  {stakeholders.filter(s => s.type === 'employee').length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">
+                        Employés SOMELEC ({stakeholders.filter(s => s.type === 'employee').length})
+                      </h5>
+                      {stakeholders.filter(s => s.type === 'employee').map((stakeholder) => (
+                        <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <User className="h-4 w-4 text-blue-500" />
+                            <div>
+                              <div className="font-medium">{getEntityName(stakeholder)}</div>
+                              <div className="text-sm text-muted-foreground">{stakeholder.role}</div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeStakeholder(stakeholder.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* External Stakeholders */}
+                <TabsContent value="external" className="space-y-4">
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Ajouter une organisation externe
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Ingénieur conseil, fournisseurs, contractants, ministères, banques, bailleurs de fonds
+                    </p>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <SimpleSupplierSelector
+                            label="Organisation / Fournisseur"
+                            value={newStakeholder.entityId || ''}
+                            onChange={(value) => setNewStakeholder({...newStakeholder, type: 'external', entityId: value})}
+                            placeholder="Sélectionner une organisation"
+                          />
+                        </div>
+                        <div>
+                          <Label>Rôle / Type</Label>
+                          <Select 
+                            value={newStakeholder.role || ''} 
+                            onValueChange={(value) => setNewStakeholder({...newStakeholder, role: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner le rôle" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border shadow-lg z-50 max-h-60 overflow-y-auto">
+                              {externalStakeholderRoles.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={addStakeholder} 
+                        className="w-full"
+                        disabled={!newStakeholder.entityId || !newStakeholder.role}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter l'organisation comme partie prenante
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* List of external stakeholders */}
+                  {stakeholders.filter(s => s.type === 'external').length > 0 && (
+                    <div className="space-y-2">
+                      <h5 className="font-medium text-sm">
+                        Organisations externes ({stakeholders.filter(s => s.type === 'external').length})
+                      </h5>
+                      {stakeholders.filter(s => s.type === 'external').map((stakeholder) => (
+                        <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <Building2 className="h-4 w-4 text-orange-500" />
+                            <div>
+                              <div className="font-medium">{getEntityName(stakeholder)}</div>
+                              <Badge variant="outline" className="text-xs mt-1">
+                                {stakeholder.role}
+                              </Badge>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeStakeholder(stakeholder.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
 
@@ -598,6 +679,71 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <p className="text-sm text-blue-700 mt-1">
                       Les contractants sélectionnés seront automatiquement liés aux garanties bancaires, 
                       certificats d'assurance et autres documents contractuels du projet.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Documents des Parties Prenantes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Conventions, contrats, documents de référence associés aux acteurs du projet
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 border-dashed">
+                  <div className="flex flex-col items-center justify-center text-center space-y-3">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <h4 className="font-medium">Conventions & Contrats</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Contrats entrepreneurs, conventions ingénieur conseil
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Joindre documents
+                    </Button>
+                  </div>
+                </Card>
+
+                <Card className="p-4 border-dashed">
+                  <div className="flex flex-col items-center justify-center text-center space-y-3">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <h4 className="font-medium">Documents de référence</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Accords cadres, protocoles, notes de service
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="mt-2">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Joindre documents
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <div className="flex items-start gap-3">
+                  <FileText className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-amber-800">Documents requis</h4>
+                    <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc list-inside">
+                      <li>Contrat avec entrepreneur principal</li>
+                      <li>Convention avec ingénieur conseil</li>
+                      <li>Accords avec fournisseurs clés</li>
+                      <li>Conventions avec ministères (si applicable)</li>
+                      <li>Accords de financement (banques/bailleurs)</li>
+                      <li>Protocoles inter-organisationnels</li>
+                    </ul>
+                    <p className="text-xs text-amber-600 mt-3">
+                      Ces documents seront également accessibles dans la section Documents du projet.
                     </p>
                   </div>
                 </div>
