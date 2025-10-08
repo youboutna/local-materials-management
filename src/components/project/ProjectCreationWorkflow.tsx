@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 // Import step components
-import StakeholdersStep from './steps/StakeholdersStep';
+import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
 import TeamContractorsStep from './steps/TeamContractorsStep';
 import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
@@ -297,7 +297,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       
       case 1: // Stakeholders
         return (
-          <StakeholdersStep
+          <StakeholdersTeamStep
             formData={formData}
             onUpdate={updateFormData}
           />

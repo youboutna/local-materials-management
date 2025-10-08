@@ -100,12 +100,25 @@ const ProjectCreate = () => {
       
       if (projectResult?.id) {
         // Save project stakeholders
-        if (data.stakeholders || data.delegation) {
+        if (data.stakeholders || data.delegation || data.principals || data.internalStakeholders || data.externalStakeholders || data.teamMembers) {
           try {
+            // Combine all stakeholder data
+            const allStakeholders = [
+              ...(data.stakeholders || []),
+              ...(data.internalStakeholders || []),
+              ...(data.externalStakeholders || []),
+            ];
+
+            // Combine all delegation data (principals + other roles)
+            const allDelegation = {
+              ...(data.delegation || {}),
+              ...(data.principals || {}),
+            };
+
             await ProjectStakeholderService.createProjectStakeholders(
               projectResult.id,
-              data.stakeholders || [],
-              data.delegation || {}
+              allStakeholders,
+              allDelegation
             );
             toast({
               title: "Parties prenantes sauvegardées",

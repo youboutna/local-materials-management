@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { PhaseService } from '@/services/phaseService';
+import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
 import { Building, Users, UserCheck, Shield } from 'lucide-react';
 import EnhancedProjectEditForm from '../components/project/EnhancedProjectEditForm';
@@ -259,6 +260,41 @@ const ProjectEdit = () => {
       if (updatedProject) {
         // Update materials
         await updateProjectMaterials(id, selectedMaterials);
+
+        // Save project stakeholders
+        if (data.stakeholders || data.delegation || data.principals || data.internalStakeholders || data.externalStakeholders || data.teamMembers) {
+          try {
+            // Combine all stakeholder data
+            const allStakeholders = [
+              ...(data.stakeholders || []),
+              ...(data.internalStakeholders || []),
+              ...(data.externalStakeholders || []),
+            ];
+
+            // Combine all delegation data (principals + other roles)
+            const allDelegation = {
+              ...(data.delegation || {}),
+              ...(data.principals || {}),
+            };
+
+            await ProjectStakeholderService.updateProjectStakeholders(
+              id,
+              allStakeholders,
+              allDelegation
+            );
+            toast({
+              title: "Parties prenantes sauvegardées",
+              description: "Les parties prenantes du projet ont été mises à jour.",
+            });
+          } catch (stakeholderError) {
+            console.error('Error saving stakeholders:', stakeholderError);
+            toast({
+              title: "Avertissement",
+              description: "Erreur lors de la sauvegarde des parties prenantes.",
+              variant: "destructive",
+            });
+          }
+        }
 
         // Save construction phases if any are defined
         if (data.phases && data.phases.length > 0) {
