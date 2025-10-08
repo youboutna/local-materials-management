@@ -650,7 +650,7 @@ export const detectElementType = (designation: string): ElementType => {
  * @param desc 
  * @returns 
  */
-export const mapToElementType = (desc: string, isSomElecFormat: boolean = false) => {
+export const mapToElementType = (desc: string, isConfigCompanyFormat: boolean = false) => {
   const d = desc.toLowerCase();
   
   // Check for unit patterns
@@ -667,8 +667,8 @@ export const mapToElementType = (desc: string, isSomElecFormat: boolean = false)
   if (d.includes("faitage") && unit === "ml") return "zinc_ridge";
 
   
-  // Special handling for SomElec format items
-  if (isSomElecFormat) {
+  // Special handling for ConfigCompany format items
+  if (isConfigCompanyFormat) {
     if (d.includes("fouilles en puits")) return "deep_excavation";
     if (d.includes("béton de propreté")) return "lean_concrete";
     if (d.includes("dallage en fer")) return "reinforced_slab";

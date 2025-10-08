@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Button } from '../../ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
-import { Badge } from '../../ui/badge';
-import { Users, Plus, X, User, Building2, UserCheck, Briefcase, FileText, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Briefcase, Building2, FileText, Plus, Upload, User, UserCheck, Users, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import EmployeeSelector from '../../selectors/EmployeeSelector';
 import SimpleSupplierSelector from '../../selectors/SimpleSupplierSelector';
+import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
 interface StakeholdersTeamStepProps {
   formData: any;
@@ -201,7 +201,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
           Parties Prenantes du Projet
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Configuration des acteurs: Organigramme, RH, Liste acteurs selon le workflow SOMELEC
+          Configuration des acteurs: Organigramme, RH, Liste acteurs selon le workflow CONFIGCOMPANY
         </p>
       </CardHeader>
       <CardContent>
@@ -322,7 +322,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div>
                   <Label>Maître d'ouvrage</Label>
                   <Input
-                    placeholder="SOMELEC ou autre"
+                    placeholder="CONFIGCOMPANY ou autre"
                     value={formData.project_owner || ''}
                     onChange={(e) => onUpdate({ project_owner: e.target.value })}
                   />
@@ -336,7 +336,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
               <div>
                 <h3 className="text-lg font-semibold">Autres Parties Prenantes</h3>
                 <p className="text-sm text-muted-foreground">
-                  Configuration des acteurs internes SOMELEC et parties externes (fournisseurs, ministères, banques, etc.)
+                  Configuration des acteurs internes CONFIGCOMPANY et parties externes (fournisseurs, ministères, banques, etc.)
                 </p>
               </div>
               
@@ -357,7 +357,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   <div className="border rounded-lg p-4 bg-muted/30">
                     <h4 className="font-medium mb-3 flex items-center gap-2">
                       <UserCheck className="h-4 w-4" />
-                      Ajouter un employé SOMELEC
+                      Ajouter un employé CONFIGCOMPANY
                     </h4>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,7 +403,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   {stakeholders.filter(s => s.type === 'employee').length > 0 && (
                     <div className="space-y-2">
                       <h5 className="font-medium text-sm">
-                        Employés SOMELEC ({stakeholders.filter(s => s.type === 'employee').length})
+                        Employés CONFIGCOMPANY ({stakeholders.filter(s => s.type === 'employee').length})
                       </h5>
                       {stakeholders.filter(s => s.type === 'employee').map((stakeholder) => (
                         <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
