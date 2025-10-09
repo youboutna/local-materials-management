@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
+import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
 
 interface PaymentRequest {
   id: string;
@@ -354,13 +356,22 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Demandes de Paiement</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle Demande
-            </Button>
-          </DialogTrigger>
+      </div>
+
+      <Tabs defaultValue="simple" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="simple">Demande Simple</TabsTrigger>
+          <TabsTrigger value="progress">Facture d'Avancement</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="simple">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle Demande
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Nouvelle Demande de Paiement</DialogTitle>
@@ -472,9 +483,8 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
             </div>
           </DialogContent>
         </Dialog>
-      </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
@@ -524,10 +534,19 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+        </TabsContent>
+
+        <TabsContent value="progress">
+          <ProgressInvoiceForm 
+            supplierId={supplierId}
+            onSuccess={() => fetchPaymentRequests()}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
