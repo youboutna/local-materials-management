@@ -62,7 +62,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     initial_advance: 20,
     retention_percentage: 5,
     priority: 'medium',
-    project_type: 'construction',
+    // Project type: infrastructure | fourniture | distribution_rurale
+    project_type: 'infrastructure',
     sector: '',
     permit_number: '',
     // Location data
@@ -76,11 +77,18 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     // Additional fields to match database
     client_name: '',
     main_contractor: '',
+    engineering_consultant: '',
     project_manager_id: null,
     technical_manager_id: null,
     supervisor_id: null,
     client_id: null,
     workspace_id: null,
+    // Funding source fields (Bailleurs de fonds)
+    financing_source: '',
+    donor_organization: '',
+    // Market type (Mauritania procurement)
+    market_type: 'appel_offre_international',
+    selection_mode: 'qualite_cout',
     ...initialData
   });
 
@@ -96,61 +104,72 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [phases, setPhases] = useState<any[]>([]);
   const [shapeData, setShapeData] = useState<any>(null);
 
-  // Steps aligned with workflow specification
+  // Steps aligned with workflow specification (7 étapes critiques)
   const steps = [
     {
       id: 1,
       title: 'Informations du projet',
       icon: Building,
-      description: 'Données de base du projet',
+      description: 'Type, budget, dates, référence',
       color: 'bg-blue-500',
-      isCompleted: (data: any) => Boolean(data.title && data.description && data.budget)
+      isCompleted: (data: any) => Boolean(
+        data.title && 
+        data.description && 
+        data.budget && 
+        data.project_type &&
+        data.start_date
+      )
     },
     {
       id: 2,
       title: 'Parties prenantes',
       icon: Users,
-      description: 'Configuration des acteurs',
+      description: 'Bailleurs, Ministères, Entreprises, Banques, Bureau conseil',
       color: 'bg-green-500',
-      isCompleted: (data: any) => Boolean(data.project_manager_id || data.client_id)
+      isCompleted: (data: any) => Boolean(
+        data.project_manager_id || 
+        data.client_id ||
+        data.engineering_consultant ||
+        data.main_contractor
+      )
     },
     {
       id: 3,
       title: 'Localisation',
       icon: MapPin,
-      description: 'Géolocalisation et cartographie',
+      description: 'Géolocalisation interactive (Maps/Leaflet)',
       color: 'bg-cyan-500',
-      isCompleted: (data: any) => Boolean(data.address)
+      isCompleted: (data: any) => Boolean(data.address && (data.latitude || data.longitude))
     },
     {
       id: 4,
-      title: 'Planification & Phases',
+      title: 'Planification WBS',
       icon: Layers,
-      description: 'Phase → Step → Task',
+      description: 'Phase → Step → Task avec documents, ressources, inspections',
       color: 'bg-indigo-500',
-      isCompleted: (data: any) => Boolean(phases.length > 0)
+      isCompleted: (data: any) => Boolean(phases && phases.length > 0)
     },
     {
       id: 5,
       title: 'Risques',
       icon: AlertTriangle,
-      description: 'Gestion des risques globaux et des phases',
+      description: 'Analyse et gestion des risques',
       color: 'bg-red-500',
-      isCompleted: (data: any) => Boolean(risks.length > 0)
+      isCompleted: (data: any) => Boolean(risks && risks.length >= 0)
     },
     {
       id: 6,
       title: 'Conformité',
       icon: FileCheck,
-      description: 'Vérification réglementaire',
+      description: 'Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)',
       color: 'bg-amber-500',
-      isCompleted: (data: any) => Boolean(compliance.length > 0)
+      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0)
     },
     {
       id: 7,
-      title: 'Validation & Clôture',
+      title: 'Validation',
       icon: CheckCircle,
-      description: 'Réception définitive, solde, clôture',
+      description: 'Réception définitive et clôture',
       color: 'bg-teal-500',
       isCompleted: (data: any) => true
     }
@@ -245,9 +264,22 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Budget total *</label>
+                    <label className="block text-sm font-medium mb-2">Type de projet *</label>
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                      value={formData.project_type}
+                      onChange={(e) => updateFormData({ project_type: e.target.value })}
+                    >
+                      <option value="infrastructure">Infrastructure (HT, Postes, Centrales)</option>
+                      <option value="fourniture">Fourniture (Équipements, Kits solaires)</option>
+                      <option value="distribution_rurale">Distribution Rurale</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Budget total (MRU) *</label>
                     <input 
                       type="number" 
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -267,6 +299,41 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       value={formData.estimated_duration_days}
                       onChange={(e) => updateFormData({ estimated_duration_days: e.target.value })}
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Source de financement</label>
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.financing_source}
+                      onChange={(e) => updateFormData({ financing_source: e.target.value })}
+                    >
+                      <option value="">Sélectionner</option>
+                      <option value="banque_mondiale">Banque Mondiale</option>
+                      <option value="bad">BAD</option>
+                      <option value="bid">BID</option>
+                      <option value="afd">AFD</option>
+                      <option value="fmi">FMI</option>
+                      <option value="fades">FADES</option>
+                      <option value="bei">Banque Européenne d'Investissement</option>
+                      <option value="etat_mauritanien">État Mauritanien</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Type de marché</label>
+                    <select
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      value={formData.market_type}
+                      onChange={(e) => updateFormData({ market_type: e.target.value })}
+                    >
+                      <option value="appel_offre_international">Appel d'offre international</option>
+                      <option value="appel_offre_national">Appel d'offre national</option>
+                      <option value="consultation_restreinte">Consultation restreinte</option>
+                      <option value="gre_a_gre">Gré à gré</option>
+                    </select>
                   </div>
                 </div>
 
