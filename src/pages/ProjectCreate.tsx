@@ -1,18 +1,16 @@
 
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { toast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { useProjects } from '@/hooks/projects/useProjects';
-import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectCreationWorkflow from '@/components/project/ProjectCreationWorkflow';
+import { Button } from "@/components/ui/button";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useProjects } from '@/hooks/projects/useProjects';
+import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/services/phaseService';
 import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
+import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SelectedMaterial {
   materialId: string;
@@ -278,7 +276,6 @@ const ProjectCreate = () => {
         </div>
       </main>
       
-      <Footer />
     </div>
   );
 };
