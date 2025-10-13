@@ -19,10 +19,10 @@ import { ProjectFormService, ProjectFormData, SaveContext } from '../../services
 // Import step components
 import ProjectInfoStep from './steps/ProjectInfoStep';
 import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
-import PhasePlanificationStep from './steps/PhasePlanificationStep';
 import LocationStep from './steps/LocationStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
 import ComplianceStep from './steps/ComplianceStep';
+import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface EnhancedProjectEditFormProps {
   initialData?: any;
@@ -44,6 +44,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{ materialId: string; quantity: number }>>([]);
   const [baseData, setBaseData] = useState<any>({});
+  const [phasesData, setPhasesData] = useState<any[]>([]);
 
   // Initialize ProjectFormService
   const formService = new ProjectFormService();
@@ -345,13 +346,10 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         );
       case 4: // Planification & Phases (Phase → Step → Task)
         return (
-          <PhasePlanificationStep
-            formData={formData}
-            onUpdate={updateFormData}
-            selectedMaterials={selectedMaterials}
-            onMaterialsChange={setSelectedMaterials}
-            isEditing={true}
-            baseData={baseData}
+          <ConstructionPhaseManager
+            phases={phasesData}
+            onChange={setPhasesData}
+            projectBudget={formData.estimatedBudget || formData.estimated_budget || 0}
           />
         );
       case 5: // Risques

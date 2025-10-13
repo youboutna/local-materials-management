@@ -31,6 +31,7 @@ import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
 import ProjectDocumentUpload from './ProjectDocumentUpload';
 import ComplianceStep from './steps/ComplianceStep';
+import ConstructionPhaseManager from './ConstructionPhaseManager';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -103,6 +104,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [compliance, setCompliance] = useState<any[]>([]);
   const [phases, setPhases] = useState<any[]>([]);
   const [shapeData, setShapeData] = useState<any>(null);
+  const [phasesData, setPhasesData] = useState<any[]>([]);
 
   // Steps aligned with workflow specification (7 étapes critiques)
   const steps = [
@@ -444,6 +446,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
         );
       
       case 4: // Planification & Phases
+        return (
+          <ConstructionPhaseManager
+            phases={phases}
+            onChange={setPhases}
+            projectBudget={parseFloat(formData.budget) || 0}
+          />
+        );
+      
+      case 5: // Risks - OLD PLACEHOLDER
         return (
           <Card>
             <CardHeader>

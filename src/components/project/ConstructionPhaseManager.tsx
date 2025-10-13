@@ -28,6 +28,7 @@ import { ConstructionPhase, ConstructionStage } from '@/types/project';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
+import { referentialService, ReferentialType } from '@/config/referentials';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -191,19 +192,25 @@ interface ConstructionPhaseManagerProps {
   phases: PhaseData[];
   onChange: (phases: PhaseData[]) => void;
   projectBudget?: number;
+  projectId?: string;
+  referentialType?: ReferentialType;
 }
 
 const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   phases,
   onChange,
-  projectBudget = 0
+  projectBudget = 0,
+  projectId: propProjectId,
+  referentialType
 }) => {
   const navigate = useNavigate();
-  const { id: projectId } = useParams<{ id: string }>();
+  const { id: paramProjectId } = useParams<{ id: string }>();
+  const projectId = propProjectId || paramProjectId;
   const { user, loading: authLoading } = useAuth();
   const [isAddingPhase, setIsAddingPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
   const [phaseType, setPhaseType] = useState<'standard' | 'custom' | 'procurement'>('standard');
+  const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(referentialType || null);
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
@@ -357,54 +364,120 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     }
   };
 
+  // Generate phases from referential template
+  const handleGeneratePhasesFromReferential = () => {
+    if (!selectedReferential) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un référentiel",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    checkAuthenticationAndProceed(() => {
+      const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
+      
+      const newPhases: PhaseData[] = referentialPhases.map((refPhase, index) => ({
+        id: `ref-${Date.now()}-${index}`,
+        title: refPhase.label,
+        description: refPhase.description || '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        estimatedDuration: 30,
+        status: 'not_started' as const,
+        budget: Math.floor(projectBudget / referentialPhases.length),
+        actualCost: 0,
+        progress: 0,
+        materials: [],
+        humanResources: [],
+        suppliers: [],
+        location: '',
+        notes: ''
+      }));
+
+      onChange(newPhases);
+      toast({
+        title: "Phases générées",
+        description: `${newPhases.length} phases générées depuis le référentiel ${selectedReferential}`,
+      });
+    }, 'générer les phases');
+  };
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Gestion des phases de construction
-          </CardTitle>
-          <Dialog open={isAddingPhase} onOpenChange={setIsAddingPhase}>
-            <DialogTrigger asChild>
-              <Button disabled={!user && !DEV_MODE}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une phase
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Ajouter une nouvelle phase</DialogTitle>
-              </DialogHeader>
-              
-              <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom' | 'procurement')}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="standard">Phases standards</TabsTrigger>
-                  <TabsTrigger value="procurement">Marchés publics</TabsTrigger>
-                  <TabsTrigger value="custom">Phase personnalisée</TabsTrigger>
-                </TabsList>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Gestion des phases de construction
+            </CardTitle>
+            <Dialog open={isAddingPhase} onOpenChange={setIsAddingPhase}>
+              <DialogTrigger asChild>
+                <Button disabled={!user && !DEV_MODE}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une phase
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Ajouter une nouvelle phase</DialogTitle>
+                </DialogHeader>
                 
-                <TabsContent value="standard" className="space-y-4">
-                  <StandardPhaseCreator onCreatePhase={createStandardPhase} />
-                </TabsContent>
-                
-                <TabsContent value="procurement" className="space-y-4">
-                  <ProcurementPhaseCreator 
-                    onCreatePhase={createProcurementPhase}
-                    projectBudget={projectBudget}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="custom" className="space-y-4">
-                  <CustomPhaseCreator 
-                    onCreatePhase={createCustomPhase}
-                    existingPhases={phases}
-                    projectBudget={projectBudget}
-                  />
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+                <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom' | 'procurement')}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="standard">Phases standards</TabsTrigger>
+                    <TabsTrigger value="procurement">Marchés publics</TabsTrigger>
+                    <TabsTrigger value="custom">Phase personnalisée</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="standard" className="space-y-4">
+                    <StandardPhaseCreator onCreatePhase={createStandardPhase} />
+                  </TabsContent>
+                  
+                  <TabsContent value="procurement" className="space-y-4">
+                    <ProcurementPhaseCreator 
+                      onCreatePhase={createProcurementPhase}
+                      projectBudget={projectBudget}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="custom" className="space-y-4">
+                    <CustomPhaseCreator 
+                      onCreatePhase={createCustomPhase}
+                      existingPhases={phases}
+                      projectBudget={projectBudget}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {/* Referential selector */}
+          <div className="flex items-center gap-4">
+            <Label>Référentiel du projet:</Label>
+            <Select value={selectedReferential || ''} onValueChange={(value) => setSelectedReferential(value as ReferentialType)}>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue placeholder="Sélectionner un référentiel" />
+              </SelectTrigger>
+              <SelectContent>
+                {referentialService.getReferentialOptions().map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              onClick={handleGeneratePhasesFromReferential}
+              disabled={!selectedReferential || (!user && !DEV_MODE)}
+              variant="outline"
+            >
+              Générer les phases
+            </Button>
+          </div>
         </div>
       </CardHeader>
       

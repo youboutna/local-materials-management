@@ -48,6 +48,8 @@ export interface ProjectFormData {
   project_responsable_id?: string;
   engineering_consultant?: string;
   general_contractor?: string;
+  estimatedBudget?: number;
+  estimated_budget?: number;
   allows_initial_payment?: boolean;
   initial_payment_percentage?: number;
   current_phase?: string;

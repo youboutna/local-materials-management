@@ -90,3 +90,8 @@ export const getPhasesForReferential = (referentialCode: ReferentialType, langua
  */
 export type { ProjectReferential, MultiLanguageLabel };
 export { somelecReferential, mauritanianPublicProcurementReferential, customStandardReferential, distributionRuraleReferential };
+
+/**
+ * Re-export the ReferentialService
+ */
+export { ReferentialService, referentialService } from '@/services/ReferentialService';
