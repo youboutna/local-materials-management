@@ -566,7 +566,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                       <Package className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-xs text-gray-500">Matériaux</p>
-                        <p className="text-sm">{phase.materials.length} éléments</p>
+                        <p className="text-sm">{(phase.materials || []).length} éléments</p>
                       </div>
                     </div>
                     
@@ -574,7 +574,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                       <Users className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-xs text-gray-500">Ressources</p>
-                        <p className="text-sm">{phase.humanResources.length} rôles</p>
+                        <p className="text-sm">{(phase.humanResources || []).length} rôles</p>
                       </div>
                     </div>
                   </div>
