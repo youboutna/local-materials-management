@@ -558,7 +558,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                       <DollarSign className="h-4 w-4 text-gray-500" />
                       <div>
                         <p className="text-xs text-gray-500">Budget</p>
-                        <p className="text-sm">{phase.budget.toLocaleString()} MRU</p>
+                        <p className="text-sm">{(phase.budget || 0).toLocaleString()} MRU</p>
                       </div>
                     </div>
                     
