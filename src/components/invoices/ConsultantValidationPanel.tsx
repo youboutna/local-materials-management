@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, XCircle, Eye, FileText, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 interface ProgressInvoice {
   id: string;
@@ -38,6 +39,11 @@ export function ConsultantValidationPanel() {
   const [comments, setComments] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
+  const { hasAnyRole, hasRole } = useCurrentUserRoles();
+
+  // Check consultant permissions
+  const isConsultant = hasAnyRole(['admin', 'consultant', 'manager']);
+  const canValidateInfrastructure = hasRole('admin') || hasRole('consultant');
 
   useEffect(() => {
     loadPendingInvoices();
@@ -202,6 +208,21 @@ export function ConsultantValidationPanel() {
     return <Badge className={cfg.color}>{cfg.label}</Badge>;
   };
 
+  if (!isConsultant) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Accès restreint. Seuls les ingénieurs conseils peuvent valider les factures d'avancement.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (loading) {
     return (
       <Card>
@@ -276,20 +297,25 @@ export function ConsultantValidationPanel() {
                   </TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedInvoice(invoice);
-                            setComments('');
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Valider
-                        </Button>
-                      </DialogTrigger>
+                    {invoice.projects?.project_type === 'infrastructure' && !canValidateInfrastructure ? (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        Accès limité
+                      </Badge>
+                    ) : (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setComments('');
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Valider
+                          </Button>
+                        </DialogTrigger>
                       <DialogContent className="max-w-3xl">
                         <DialogHeader>
                           <DialogTitle>Validation de la facture {invoice.invoice_number}</DialogTitle>
@@ -381,6 +407,7 @@ export function ConsultantValidationPanel() {
                         </div>
                       </DialogContent>
                     </Dialog>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

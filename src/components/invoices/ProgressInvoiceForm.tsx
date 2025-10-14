@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),
@@ -37,7 +38,13 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
   const [inspections, setInspections] = useState<any[]>([]);
   const [previousProgress, setPreviousProgress] = useState(0);
   const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
+  const [workflowRequirements, setWorkflowRequirements] = useState({
+    requiresConsultant: false,
+    requiresMinistry: false,
+    requiresDonor: false
+  });
   const { toast } = useToast();
+  const { hasRole } = useCurrentUserRoles();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -73,6 +80,16 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
 
       if (error) throw error;
       setProjectData(data);
+
+      // Determine workflow requirements based on project type and funding
+      const projectType = data.project_type?.toLowerCase() || '';
+      const fundingSource = (data as any).funding_source?.toLowerCase() || '';
+      
+      setWorkflowRequirements({
+        requiresConsultant: projectType === 'infrastructure' || projectType === 'construction',
+        requiresMinistry: fundingSource.includes('ministère') || fundingSource.includes('ministry'),
+        requiresDonor: fundingSource.includes('bailleur') || fundingSource.includes('donor') || fundingSource.includes('banque mondiale')
+      });
     } catch (error) {
       console.error('Error loading project:', error);
     }
@@ -214,9 +231,19 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong>
-                {projectData.requires_consultant_validation && ' • Validation consultant requise'}
-                {projectData.requires_ministry_approval && ' • Approbation ministère requise'}
+                <div className="space-y-1">
+                  <div>Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong></div>
+                  <div>Source de financement: <strong>{(projectData as any).funding_source || 'N/A'}</strong></div>
+                  {workflowRequirements.requiresConsultant && (
+                    <div className="text-orange-600">✓ Validation ingénieur conseil requise</div>
+                  )}
+                  {workflowRequirements.requiresMinistry && (
+                    <div className="text-orange-600">✓ Approbation ministère requise</div>
+                  )}
+                  {workflowRequirements.requiresDonor && (
+                    <div className="text-orange-600">✓ Approbation bailleur de fonds requise</div>
+                  )}
+                </div>
               </AlertDescription>
             </Alert>
           )}

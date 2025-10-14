@@ -23,6 +23,7 @@ import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvi
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 interface NotificationData {
   id: string;
@@ -103,6 +104,10 @@ const PaymentControlContent = () => {
   const [loading, setLoading] = useState(true);
   const { unreadCount } = useNotifications();
   const { toast } = useToast();
+  const { hasAnyRole } = useCurrentUserRoles();
+
+  // Check if user has permission to access payment control
+  const canAccessPaymentControl = hasAnyRole(['admin', 'director', 'manager', 'agent']);
 
   useEffect(() => {
     fetchPaymentNotifications();
@@ -199,6 +204,19 @@ const PaymentControlContent = () => {
         return 'bg-blue-100 text-blue-800 border-blue-200';
     }
   };
+
+  if (!canAccessPaymentControl) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Alert className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Accès restreint. Vous n'avez pas les permissions nécessaires pour accéder au contrôle des paiements.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
