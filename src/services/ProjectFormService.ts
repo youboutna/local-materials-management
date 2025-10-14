@@ -183,12 +183,12 @@ export class ProjectFormService {
       site_details: formData.site_details,
       advance_percentage: formData.advance_percentage,
       client_name: formData.client_name,
-      main_contractor: formData.main_contractor,
-      project_manager_id: formData.project_manager_id,
-      technical_manager_id: formData.technical_manager_id,
-      supervisor_id: formData.supervisor_id,
-      client_id: formData.client_id,
-      workspace_id: formData.workspace_id
+      main_contractor: formData.main_contractor || null,
+      project_manager_id: formData.project_manager_id || null,
+      technical_manager_id: formData.technical_manager_id || null,
+      supervisor_id: formData.supervisor_id || null,
+      client_id: formData.client_id || null,
+      workspace_id: formData.workspace_id || null
     };
   }
 
@@ -212,9 +212,9 @@ export class ProjectFormService {
         financing_source: projectData.financingSource || '',
         market_type: projectData.marketType || '',
         selection_mode: projectData.selectionMode || '',
-        project_responsable_id: projectData.projectResponsableId || '',
-        main_contractor: projectData.mainContractor || '',
-        engineering_consultant: (projectData as any).engineeringConsultant || '',
+        project_responsable_id: projectData.projectResponsableId || undefined,
+        main_contractor: projectData.mainContractor || undefined,
+        engineering_consultant: (projectData as any).engineeringConsultant || undefined,
         project_reference: projectData.projectReference || '',
         allows_initial_payment: projectData.allowsInitialPayment || false,
         initial_payment_percentage: projectData.initialPaymentPercentage || 0,
