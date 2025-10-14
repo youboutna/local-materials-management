@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, Eye, FileText, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
@@ -37,6 +39,7 @@ export function ConsultantValidationPanel() {
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<ProgressInvoice | null>(null);
   const [comments, setComments] = useState('');
+  const [serviceFaitFile, setServiceFaitFile] = useState<File | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
   const { hasAnyRole, hasRole } = useCurrentUserRoles();
@@ -110,6 +113,16 @@ export function ConsultantValidationPanel() {
   };
 
   const handleValidate = async (invoiceId: string, approved: boolean) => {
+    // Validation: document "service fait" required for approval
+    if (approved && !serviceFaitFile) {
+      toast({
+        title: 'Document requis',
+        description: 'Le document "service fait" signé est obligatoire pour approuver la facture',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setActionLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -123,6 +136,55 @@ export function ConsultantValidationPanel() {
         .single();
 
       if (!employee) throw new Error('Employé non trouvé');
+
+      let serviceFaitDocumentId: string | null = null;
+
+      // Upload "service fait" document if approving
+      if (approved && serviceFaitFile) {
+        const invoice = invoices.find(inv => inv.id === invoiceId);
+        if (!invoice) throw new Error('Facture non trouvée');
+
+        // Upload file to storage
+        const fileExt = serviceFaitFile.name.split('.').pop();
+        const fileName = `service-fait-${invoiceId}-${Date.now()}.${fileExt}`;
+        const filePath = `progress-invoices/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, serviceFaitFile);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+
+        // Create document record
+        const { data: documentData, error: docError } = await supabase
+          .from('documents')
+          .insert({
+            title: `Service Fait - ${invoice.invoice_number}`,
+            description: 'Document service fait signé par le consultant',
+            document_type: 'administrative',
+            file_url: publicUrl,
+            file_name: serviceFaitFile.name,
+            file_size: serviceFaitFile.size,
+            mime_type: serviceFaitFile.type,
+            project_id: invoice.project_id,
+            uploaded_by: user.id,
+            metadata: {
+              invoice_id: invoiceId,
+              invoice_number: invoice.invoice_number,
+              document_category: 'service_fait',
+            },
+          })
+          .select()
+          .single();
+
+        if (docError) throw docError;
+        serviceFaitDocumentId = documentData.id;
+      }
 
       // Get current workflow history
       const { data: currentInvoice } = await (supabase as any)
@@ -144,16 +206,23 @@ export function ConsultantValidationPanel() {
       // Update invoice status and consultant validation
       const newStatus = approved ? 'consultant_approved' : 'consultant_rejected';
       
+      const updateData: any = {
+        status: newStatus,
+        consultant_id: employee.id,
+        consultant_validated_at: new Date().toISOString(),
+        consultant_comments: comments,
+        consultant_approval_status: approved ? 'approved' : 'rejected',
+        workflow_history: [...workflowHistory, newWorkflowEntry],
+      };
+
+      // Add service fait document ID if available
+      if (serviceFaitDocumentId) {
+        updateData.service_fait_document_id = serviceFaitDocumentId;
+      }
+
       const { error: updateError } = await (supabase as any)
         .from('progress_invoices')
-        .update({
-          status: newStatus,
-          consultant_id: employee.id,
-          consultant_validated_at: new Date().toISOString(),
-          consultant_comments: comments,
-          consultant_approval_status: approved ? 'approved' : 'rejected',
-          workflow_history: [...workflowHistory, newWorkflowEntry],
-        })
+        .update(updateData)
         .eq('id', invoiceId);
 
       if (updateError) throw updateError;
@@ -183,6 +252,7 @@ export function ConsultantValidationPanel() {
 
       setSelectedInvoice(null);
       setComments('');
+      setServiceFaitFile(null);
       loadPendingInvoices();
     } catch (error: any) {
       console.error('Error validating invoice:', error);
@@ -310,6 +380,7 @@ export function ConsultantValidationPanel() {
                             onClick={() => {
                               setSelectedInvoice(invoice);
                               setComments('');
+                              setServiceFaitFile(null);
                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
@@ -377,7 +448,7 @@ export function ConsultantValidationPanel() {
                             </div>
                           )}
 
-                          <div>
+                           <div>
                             <p className="text-sm font-medium mb-2">Commentaires</p>
                             <Textarea
                               value={comments}
@@ -385,6 +456,36 @@ export function ConsultantValidationPanel() {
                               placeholder="Ajoutez vos commentaires sur cette facture..."
                               rows={3}
                             />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="service-fait" className="flex items-center gap-2">
+                              <Upload className="h-4 w-4" />
+                              Document "Service Fait" signé <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id="service-fait"
+                              type="file"
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setServiceFaitFile(file);
+                                }
+                              }}
+                              className="cursor-pointer"
+                            />
+                            {serviceFaitFile && (
+                              <p className="text-sm text-muted-foreground">
+                                Fichier sélectionné: {serviceFaitFile.name}
+                              </p>
+                            )}
+                            <Alert>
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertDescription className="text-xs">
+                                Le document "service fait" signé est obligatoire pour approuver la facture
+                              </AlertDescription>
+                            </Alert>
                           </div>
 
                           <div className="flex justify-end space-x-2">
@@ -398,7 +499,7 @@ export function ConsultantValidationPanel() {
                             </Button>
                             <Button
                               onClick={() => handleValidate(invoice.id, true)}
-                              disabled={actionLoading}
+                              disabled={actionLoading || !serviceFaitFile}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Approuver
