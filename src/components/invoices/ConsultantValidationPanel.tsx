@@ -163,10 +163,10 @@ export function ConsultantValidationPanel() {
         // Create document record
         const { data: documentData, error: docError } = await supabase
           .from('documents')
-          .insert({
+          .insert([{
             title: `Service Fait - ${invoice.invoice_number}`,
             description: 'Document service fait signé par le consultant',
-            document_type: 'administrative',
+            document_type: 'administrative' as any,
             file_url: publicUrl,
             file_name: serviceFaitFile.name,
             file_size: serviceFaitFile.size,
@@ -178,7 +178,7 @@ export function ConsultantValidationPanel() {
               invoice_number: invoice.invoice_number,
               document_category: 'service_fait',
             },
-          })
+          }] as any)
           .select()
           .single();
 

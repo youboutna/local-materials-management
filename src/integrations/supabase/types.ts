@@ -2339,6 +2339,156 @@ export type Database = {
           },
         ]
       }
+      progress_invoices: {
+        Row: {
+          consultant_approval_status: string | null
+          consultant_comments: string | null
+          consultant_id: string | null
+          consultant_validated_at: string | null
+          created_at: string | null
+          cumulative_paid: number | null
+          donor_approval_required: boolean | null
+          donor_approved_at: string | null
+          donor_comments: string | null
+          id: string
+          inspection_id: string | null
+          inspection_report_url: string | null
+          invoice_amount: number
+          invoice_number: string
+          invoice_type: string
+          lot_details: Json | null
+          ministry_comments: string | null
+          ministry_reviewer_id: string | null
+          ministry_validated_at: string | null
+          paid_at: string | null
+          previous_progress: number | null
+          progress_increment: number | null
+          progress_percentage: number
+          project_id: string
+          quantities_executed: Json | null
+          retention_amount: number | null
+          service_fait_document_id: string | null
+          status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          supporting_documents: Json | null
+          total_contract_amount: number
+          updated_at: string | null
+          work_description: string | null
+          workflow_history: Json | null
+        }
+        Insert: {
+          consultant_approval_status?: string | null
+          consultant_comments?: string | null
+          consultant_id?: string | null
+          consultant_validated_at?: string | null
+          created_at?: string | null
+          cumulative_paid?: number | null
+          donor_approval_required?: boolean | null
+          donor_approved_at?: string | null
+          donor_comments?: string | null
+          id?: string
+          inspection_id?: string | null
+          inspection_report_url?: string | null
+          invoice_amount: number
+          invoice_number: string
+          invoice_type?: string
+          lot_details?: Json | null
+          ministry_comments?: string | null
+          ministry_reviewer_id?: string | null
+          ministry_validated_at?: string | null
+          paid_at?: string | null
+          previous_progress?: number | null
+          progress_increment?: number | null
+          progress_percentage: number
+          project_id: string
+          quantities_executed?: Json | null
+          retention_amount?: number | null
+          service_fait_document_id?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          supporting_documents?: Json | null
+          total_contract_amount: number
+          updated_at?: string | null
+          work_description?: string | null
+          workflow_history?: Json | null
+        }
+        Update: {
+          consultant_approval_status?: string | null
+          consultant_comments?: string | null
+          consultant_id?: string | null
+          consultant_validated_at?: string | null
+          created_at?: string | null
+          cumulative_paid?: number | null
+          donor_approval_required?: boolean | null
+          donor_approved_at?: string | null
+          donor_comments?: string | null
+          id?: string
+          inspection_id?: string | null
+          inspection_report_url?: string | null
+          invoice_amount?: number
+          invoice_number?: string
+          invoice_type?: string
+          lot_details?: Json | null
+          ministry_comments?: string | null
+          ministry_reviewer_id?: string | null
+          ministry_validated_at?: string | null
+          paid_at?: string | null
+          previous_progress?: number | null
+          progress_increment?: number | null
+          progress_percentage?: number
+          project_id?: string
+          quantities_executed?: Json | null
+          retention_amount?: number | null
+          service_fait_document_id?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          supporting_documents?: Json | null
+          total_contract_amount?: number
+          updated_at?: string | null
+          work_description?: string | null
+          workflow_history?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_invoices_consultant_id_fkey"
+            columns: ["consultant_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_invoices_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_invoices_service_fait_document_id_fkey"
+            columns: ["service_fait_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_invoices_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       project_alerts: {
         Row: {
           acknowledged: boolean | null
@@ -2945,6 +3095,7 @@ export type Database = {
           estimated_days: number | null
           financing_source: string | null
           forme: string | null
+          funding_source: string | null
           id: string
           initial_advance_percentage: number | null
           initial_payment_percentage: number | null
@@ -2955,6 +3106,7 @@ export type Database = {
           market_type: string | null
           payment_frequency: string | null
           payment_mode: string | null
+          payment_workflow_config: Json | null
           permit_number: string | null
           priority: string | null
           progress: number
@@ -2963,6 +3115,8 @@ export type Database = {
           project_reference_number: string | null
           project_responsable_id: string | null
           project_type: string | null
+          requires_consultant_validation: boolean | null
+          requires_ministry_approval: boolean | null
           retention_percentage: number | null
           sector: string | null
           selection_mode: string | null
@@ -2992,6 +3146,7 @@ export type Database = {
           estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
+          funding_source?: string | null
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
@@ -3002,6 +3157,7 @@ export type Database = {
           market_type?: string | null
           payment_frequency?: string | null
           payment_mode?: string | null
+          payment_workflow_config?: Json | null
           permit_number?: string | null
           priority?: string | null
           progress?: number
@@ -3010,6 +3166,8 @@ export type Database = {
           project_reference_number?: string | null
           project_responsable_id?: string | null
           project_type?: string | null
+          requires_consultant_validation?: boolean | null
+          requires_ministry_approval?: boolean | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
@@ -3039,6 +3197,7 @@ export type Database = {
           estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
+          funding_source?: string | null
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
@@ -3049,6 +3208,7 @@ export type Database = {
           market_type?: string | null
           payment_frequency?: string | null
           payment_mode?: string | null
+          payment_workflow_config?: Json | null
           permit_number?: string | null
           priority?: string | null
           progress?: number
@@ -3057,6 +3217,8 @@ export type Database = {
           project_reference_number?: string | null
           project_responsable_id?: string | null
           project_type?: string | null
+          requires_consultant_validation?: boolean | null
+          requires_ministry_approval?: boolean | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
@@ -5060,6 +5222,54 @@ export type Database = {
       assign_user_role: {
         Args: { role_name: string; target_user_id: string }
         Returns: undefined
+      }
+      create_progress_invoice: {
+        Args: {
+          p_inspection_id: string
+          p_invoice_amount: number
+          p_lot_details?: Json
+          p_progress_percentage: number
+          p_project_id: string
+          p_quantities_executed?: Json
+          p_work_description: string
+        }
+        Returns: {
+          consultant_approval_status: string | null
+          consultant_comments: string | null
+          consultant_id: string | null
+          consultant_validated_at: string | null
+          created_at: string | null
+          cumulative_paid: number | null
+          donor_approval_required: boolean | null
+          donor_approved_at: string | null
+          donor_comments: string | null
+          id: string
+          inspection_id: string | null
+          inspection_report_url: string | null
+          invoice_amount: number
+          invoice_number: string
+          invoice_type: string
+          lot_details: Json | null
+          ministry_comments: string | null
+          ministry_reviewer_id: string | null
+          ministry_validated_at: string | null
+          paid_at: string | null
+          previous_progress: number | null
+          progress_increment: number | null
+          progress_percentage: number
+          project_id: string
+          quantities_executed: Json | null
+          retention_amount: number | null
+          service_fait_document_id: string | null
+          status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          supporting_documents: Json | null
+          total_contract_amount: number
+          updated_at: string | null
+          work_description: string | null
+          workflow_history: Json | null
+        }
       }
       create_supplier_payment_request: {
         Args: {
