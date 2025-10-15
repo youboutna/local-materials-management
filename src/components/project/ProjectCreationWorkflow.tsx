@@ -32,6 +32,7 @@ import RiskAnalysisStep from './steps/RiskAnalysisStep';
 import ProjectDocumentUpload from './ProjectDocumentUpload';
 import ComplianceStep from './steps/ComplianceStep';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
+import InteractiveMapGIS from '../materials/InteractiveMapGIS';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -393,40 +394,32 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Adresse</label>
-                  <input 
-                    type="text" 
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Adresse du projet"
-                    value={formData.address}
-                    onChange={(e) => updateFormData({ address: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Latitude</label>
-                    <input 
-                      type="number" 
-                      step="any"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="18.0735"
-                      value={formData.latitude || ''}
-                      onChange={(e) => updateFormData({ latitude: parseFloat(e.target.value) || null })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Longitude</label>
-                    <input 
-                      type="number" 
-                      step="any"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="-15.9582"
-                      value={formData.longitude || ''}
-                      onChange={(e) => updateFormData({ longitude: parseFloat(e.target.value) || null })}
-                    />
-                  </div>
-                </div>
+                <InteractiveMapGIS
+                  title="Géolocalisation du Projet"
+                  description="Sélectionnez l'emplacement et tracez la zone de travail"
+                  allowPolygon={true}
+                  value={{
+                    coordinates: formData.latitude && formData.longitude 
+                      ? { lat: formData.latitude, lng: formData.longitude }
+                      : undefined,
+                    address: formData.address,
+                    shape: shapeData?.shape,
+                    shapeType: shapeData?.shapeType
+                  }}
+                  onChange={(locationData) => {
+                    // Update formData with location info
+                    updateFormData({
+                      address: locationData.address || formData.address,
+                      latitude: locationData.coordinates?.lat || formData.latitude,
+                      longitude: locationData.coordinates?.lng || formData.longitude,
+                    });
+                    // Store shape data separately
+                    setShapeData({
+                      shape: locationData.shape,
+                      shapeType: locationData.shapeType
+                    });
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
