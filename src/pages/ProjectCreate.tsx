@@ -189,12 +189,12 @@ const ProjectCreate = () => {
 
   // This function is now handled by PhaseService
 
-  // Add materials to project and create automatic quantity takeoffs
+  // Add materials to project - isolated Supabase dependency
   const addMaterialsToProject = async (projectId: string, materials: SelectedMaterial[]) => {
     try {
+      // Import Supabase only when needed (lazy loading)
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Add materials to project_materials table
       const materialsToAdd = materials.map(material => ({
         project_id: projectId,
         material_id: material.materialId,
@@ -207,12 +207,11 @@ const ProjectCreate = () => {
 
       if (materialsError) throw materialsError;
 
-      // Automatically create quantity takeoffs for each material
       const takeoffsToCreate = materials.map(material => ({
         project_id: projectId,
         material_id: material.materialId,
         element_type: 'Standard Element',
-        unit: 'unité', // Default unit
+        unit: 'unité',
         length: material.quantity,
         width: null,
         height: null,
