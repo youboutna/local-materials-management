@@ -56,8 +56,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     estimated_duration_days: '',
     currency: 'MRU',
     status: 'planning',
-    start_date: '',
+    start_date: new Date().toISOString().split('T')[0], // Default to today
+    startDate: new Date().toISOString().split('T')[0],
     end_date: '',
+    endDate: '',
     payment_mode: 'progressive',
     payment_frequency: 'monthly',
     initial_advance: 20,
