@@ -209,6 +209,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     // Prepare data for submission with correct field mappings
     const submitData = {
       ...formData,
+      // Ensure both naming conventions are present
+      startDate: formData.start_date || formData.startDate,
+      endDate: formData.end_date || formData.endDate,
+      start_date: formData.start_date || formData.startDate,
+      end_date: formData.end_date || formData.endDate,
+      // Include all related data
       stakeholders,
       delegation,
       phases,
@@ -217,6 +223,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       compliance,
       shapeData
     };
+    
+    console.log('Submitting project data:', submitData);
     onSubmit(submitData);
   };
 
