@@ -9,7 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectService } from '@/services/ProjectService';
-import { ProjectSummaryDTO } from '@/types/dto';
+import { ProjectAnalyticsService } from '@/services/ProjectAnalyticsService';
+import { ProjectSummaryDTO, ProjectDetailDTO } from '@/types/dto';
 import { ReportManager } from '@/components/reports/ReportManager';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
@@ -77,8 +78,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch detailed project data (includes plannedPhases, tasks, etc.)
-  const { data: projectDetail } = useQuery({
+  // Fetch detailed project data (includes plannedPhases, tasks, risks, inspections, etc.)
+  const { data: projectDetail, isLoading: detailLoading } = useQuery<ProjectDetailDTO | null>({
     queryKey: ['project-detail', projectId],
     queryFn: async () => {
       if (!projectId) return null;
@@ -88,154 +89,40 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch payments data via lazy import
-  const { data: payments = [] } = useQuery({
-    queryKey: ['project-payments', projectId],
+  // Analytics from ProjectService
+  const { data: analytics } = useQuery({
+    queryKey: ['project-analytics', projectId],
     queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('project_id', projectId);
-      
-      if (error) {
-        console.error('Error fetching payments:', error);
-        return [];
-      }
-      return data || [];
+      if (!projectId || !projectDetail) return null;
+      return await ProjectAnalyticsService.getComprehensiveAnalytics(projectDetail);
     },
-    enabled: !!projectId,
-  });
-
-  // Fetch risks data via lazy import
-  const { data: risksData = [] } = useQuery({
-    queryKey: ['project-risks', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('project_risks')
-        .select('*')
-        .eq('project_id', projectId);
-      if (error) return [];
-      return data || [];
-    },
-    enabled: !!projectId,
+    enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
   });
 
-  // Fetch documents via lazy import
-  const { data: documentsData = [] } = useQuery({
-    queryKey: ['project-documents', projectId],
+  // KPIs from ProjectAnalyticsService
+  const { data: kpiMetrics } = useQuery({
+    queryKey: ['project-kpis', projectId],
     queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('project_id', projectId);
-      if (error) {
-        console.error('Error fetching documents:', error);
-        return [];
-      }
-      return data || [];
+      if (!projectId || !projectDetail) return null;
+      return await ProjectAnalyticsService.getKPIMetrics(projectDetail);
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !!projectDetail && activeTab === 'kpis',
     staleTime: 30_000,
   });
 
-  // Fetch bank guarantees via lazy import
-  const { data: bankGuaranteesData = [] } = useQuery({
-    queryKey: ['project-bank-guarantees', projectId],
+  // Compliance data
+  const { data: complianceData } = useQuery({
+    queryKey: ['project-compliance', projectId],
     queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .eq('project_id', projectId);
-      if (error) {
-        console.error('Error fetching bank guarantees:', error);
-        return [];
-      }
-      return data || [];
+      if (!projectId || !projectDetail) return null;
+      return await ProjectAnalyticsService.getComplianceData(projectDetail);
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !!projectDetail && activeTab === 'compliance',
     staleTime: 30_000,
   });
 
-  // Fetch insurance certificates via lazy import
-  const { data: insuranceCertificatesData = [] } = useQuery({
-    queryKey: ['project-insurance-certificates', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .eq('project_id', projectId);
-      if (error) {
-        console.error('Error fetching insurance certificates:', error);
-        return [];
-      }
-      return data || [];
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
-
-  // Fetch task assignments via lazy import
-  const { data: taskAssignmentsData = [] } = useQuery({
-    queryKey: ['project-task-assignments', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('project_id', projectId);
-      if (error) return [];
-      return data || [];
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
-
-  // Fetch employees via lazy import
-  const { data: employeesData = [] } = useQuery({
-    queryKey: ['employees-active'],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name, position')
-        .eq('is_active', true);
-      if (error) return [];
-      return data || [];
-    },
-    staleTime: 60_000,
-  });
-
-  // Fetch phases data via lazy import
-  const { data: phasesData = [] } = useQuery({
-    queryKey: ['project-phases', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-      if (error) return [];
-      return data || [];
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  });
-
-  // Calculations (PERT, Gantt)
+  // Calculations (PERT, Gantt) from ProjectService
   const { data: calculations } = useQuery({
     queryKey: ['project-calculations', projectId],
     queryFn: async () => {
@@ -246,8 +133,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Consolidated phases source from detail DTO or direct query
-  const phasesSource: any[] = (projectDetail?.plannedPhases as any[]) || (phasesData as any[]) || [];
+  // Use data from ProjectDetailDTO
+  const phasesSource: any[] = projectDetail?.plannedPhases || [];
+  const tasksSource = projectDetail?.tasks || [];
+  const risksSource = projectDetail?.risks || [];
+  const inspectionsSource = projectDetail?.inspections || [];
+  const paymentsSource = projectDetail?.inspections || []; // TODO: Add payments to DTO
 
   // Normalized phases for UI
   const computedPhases = useMemo(() => {
@@ -265,164 +156,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [phasesSource]);
 
-  // Prepare data for components
+  // Compute derived data from DTO
+  const [resources, setResources] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [risks, setRisks] = useState<any[]>([]);
-  const [resources, setResources] = useState<any[]>([]);
 
-  // Transform project data when loaded and fetch additional data - ONLY RUN ONCE or when key data changes
   useEffect(() => {
-    if (project && projectId) {
-      fetchAdditionalData();
+    if (projectDetail) {
+      computeResources();
+      setTasks(tasksSource);
+      setRisks(risksSource);
     }
-  }, [project?.id, projectId]); // Only depend on project.id and projectId - not on all data
+  }, [projectDetail?.id]);
 
-  const fetchAdditionalData = async () => {
-    if (!project || !projectId) return;
-
-    try {
-      // Create tasks from phases data
-      const allTasks = (phasesSource || []).flatMap((phase: any) => {
-        const milestones = phase.milestones || {};
-        const stages = Array.isArray(phase.stages) && phase.stages.length > 0
-          ? phase.stages
-          : [
-              {
-                name: `${phase.phase_name || phase.phase || phase.construction_stage || 'Phase'} - ${phase.construction_stage || 'Étape'}`,
-                description: phase.description,
-                status: phase.status || 'not_started',
-                progress: phase.progress || 0,
-                startDate: phase.start_date || phase.startDate,
-                endDate: phase.end_date || phase.endDate,
-              },
-            ];
-
-        return stages.map((stage: any, index: number) => ({
-          id: `${phase.id}-task-${index}`,
-          name: stage.name,
-          description: stage.description,
-          status: stage.status || 'not_started',
-          progress: stage.progress || 0,
-          startDate: stage.startDate || phase.start_date,
-          endDate: stage.endDate || phase.end_date,
-          assignedTo: Array.isArray(stage.assignedTo) ? stage.assignedTo : [],
-          dependencies: Array.isArray(phase.dependencies) ? phase.dependencies : [],
-        }));
+  const computeResources = () => {
+    if (!projectDetail) return;
+    const allResources: any[] = [];
+    if (projectDetail.projectResponsableId) {
+      allResources.push({
+        id: `manager-${projectDetail.projectResponsableId}`,
+        name: 'Chef de projet',
+        type: 'human',
+        position: 'Chef de projet',
+        costPerHour: 0,
+        availability: 100,
       });
-      setTasks(allTasks);
-
-      // Use risks from database - transform to expected format
-      const transformedRisks = (risksData || []).map((risk: any) => ({
-        id: risk.id,
-        title: risk.risk_title || 'Risque non nommé',
-        description: risk.risk_description || '',
-        probability: parseInt(risk.probability) || 0,
-        impact: parseInt(risk.impact) || 0,
-        mitigationPlan: risk.mitigation_strategy || '',
-        status: risk.status || 'identified',
-        createdAt: risk.created_at,
-        created_at: risk.created_at,
-        relatedTasks: []
-      }));
-      setRisks(transformedRisks);
-
-      // Get project manager from project data
-      const projectManagerResources: any[] = [];
-      if (projectDetail?.projectResponsableId) {
-        const projectManager = employeesData?.find(emp => emp.id === projectDetail.projectResponsableId);
-        if (projectManager) {
-          projectManagerResources.push({
-            id: `manager-${projectManager.id}`,
-            name: projectManager.full_name,
-            type: 'human',
-            position: 'Chef de projet',
-            costPerHour: 0,
-            availability: 100,
-          });
-        }
-      }
-
-      // Get assigned employees from task assignments
-      const taskAssignedEmployees: any[] = [];
-      if (taskAssignmentsData && Array.isArray(taskAssignmentsData)) {
-        const assignedEmployeeIds = [...new Set(
-          taskAssignmentsData
-            .filter(task => task.project_id === projectId && task.assigned_to)
-            .map(task => task.assigned_to)
-        )];
-        
-        assignedEmployeeIds.forEach(employeeId => {
-          const employee = employeesData?.find(emp => emp.id === employeeId);
-          if (employee && !projectManagerResources.find(r => r.id === `manager-${employee.id}`)) {
-            taskAssignedEmployees.push({
-              id: `assigned-${employee.id}`,
-              name: employee.full_name,
-              type: 'human',
-              position: employee.position || 'Employé assigné',
-              costPerHour: 0,
-              availability: 100,
-            });
-          }
-        });
-      }
-
-      // Get contractors and consultants
-      const contractorResources: any[] = [];
-      if (projectDetail?.mainContractor) {
-        contractorResources.push({
-          id: `contractor-main`,
-          name: projectDetail.mainContractor,
-          type: 'human',
-          position: 'Contractant principal',
-          costPerHour: 0,
-          availability: 100,
-        });
-      }
-      if ((projectDetail as any)?.engineering_consultant) {
-        contractorResources.push({
-          id: `consultant-engineering`,
-          name: (projectDetail as any).engineering_consultant,
-          type: 'human',
-          position: 'Bureau d\'études',
-          costPerHour: 0,
-          availability: 100,
-        });
-      }
-
-      // Extract materials from phases
-      const materialResources = (phasesSource || []).flatMap((phase: any) => {
-        const milestones = phase.milestones || {};
-        const materials = milestones.materials || phase.materials || [];
-        
-        return (Array.isArray(materials) ? materials : []).map((material: any, index: number) => ({
-          id: `material-${phase.id}-${index}`,
-          name: material.name || material.materialId || `Matériau ${index + 1}`,
-          type: 'material',
-          costPerHour: material.pricePerUnit || material.costPerHour || 0,
-          availability: material.availability || 100,
-          quantity: material.quantity || 1,
-        }));
-      });
-
-      const allResources = [
-        ...projectManagerResources,
-        ...taskAssignedEmployees,
-        ...contractorResources,
-        ...materialResources,
-      ];
-
-      setResources(allResources);
-      console.debug('📊 ProjectDetailByDTO data:', {
-        phasesCount: (phasesSource || []).length,
-        tasksCount: allTasks.length,
-        resourcesCount: allResources.length,
-        risksCount: transformedRisks.length,
-        materialResourcesCount: materialResources.length,
-      });
-    } catch (error) {
-      console.error('Error fetching additional data:', error);
     }
+    if (projectDetail.mainContractor) {
+      allResources.push({
+        id: `contractor-main`,
+        name: projectDetail.mainContractor,
+        type: 'human',
+        position: 'Contractant principal',
+        costPerHour: 0,
+        availability: 100,
+      });
+    }
+    setResources(allResources);
   };
+
+  // Use data from DTO for all tabs
+  const payments = paymentsSource;
+  const documentsData: any[] = [];
+  const bankGuaranteesData: any[] = [];
+  const insuranceCertificatesData: any[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
