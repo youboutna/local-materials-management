@@ -17,7 +17,7 @@ import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaym
 import PaymentCrud from '@/components/payments/PaymentCrud';
 import PaymentControlActions from '@/components/payments/PaymentControlActions';
 import { useNotifications } from '@/hooks/useNotifications';
-import { supabase } from '@/integrations/supabase/client';
+
 import { useToast } from '@/hooks/use-toast';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
@@ -43,6 +43,7 @@ const PaymentControlActionsContainer = () => {
   useEffect(() => {
     const loadPendingPayments = async () => {
       try {
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: payments } = await supabase
           .from('payment_blocks')
           .select(`
@@ -100,6 +101,7 @@ const PaymentControlActionsContainer = () => {
 
 // Main content component
 const PaymentControlContent = () => {
+  const [supabaseClient, setSupabaseClient] = useState<any>(null);
   const [paymentNotifications, setPaymentNotifications] = useState<NotificationData[]>([]);
   const [loading, setLoading] = useState(true);
   const { unreadCount } = useNotifications();
@@ -110,9 +112,19 @@ const PaymentControlContent = () => {
   const canAccessPaymentControl = hasAnyRole(['admin', 'director', 'manager', 'agent']);
 
   useEffect(() => {
+    const initSupabase = async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
+      setSupabaseClient(supabase);
+    };
+    initSupabase();
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseClient) return;
+    
     fetchPaymentNotifications();
     // Set up real-time listener for payment notifications
-    const channel = supabase
+    const channel = supabaseClient
       .channel('payment-notifications')
       .on(
         'postgres_changes',
@@ -129,14 +141,16 @@ const PaymentControlContent = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabaseClient.removeChannel(channel);
     };
-  }, []);
+  }, [supabaseClient]);
 
   const fetchPaymentNotifications = async () => {
+    if (!supabaseClient) return;
+    
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('notifications')
         .select('*')
         .in('type', ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'])
@@ -158,8 +172,10 @@ const PaymentControlContent = () => {
   };
 
   const markAsRead = async (notificationId: string) => {
+    if (!supabaseClient) return;
+    
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
@@ -345,6 +361,7 @@ const PaymentControlPage = () => {
     // Load a default project for monitoring with its hierarchy
     const loadDefaultProject = async () => {
       try {
+        const { supabase } = await import('@/integrations/supabase/client');
         const { data: projects } = await supabase
           .from('projects')
           .select('*')

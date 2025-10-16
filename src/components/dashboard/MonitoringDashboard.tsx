@@ -6,7 +6,7 @@ import HttpMonitor from '@/components/monitoring/HttpMonitor';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
 import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
-import { supabase } from '@/integrations/supabase/client';
+
 
 const MonitoringDashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -18,6 +18,8 @@ const MonitoringDashboard: React.FC = () => {
   useEffect(() => {
     const loadStats = async () => {
       try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        
         // Load guarantees about to expire (next 30 days)
         const { data: guarantees } = await supabase
           .from('bank_guarantees')
