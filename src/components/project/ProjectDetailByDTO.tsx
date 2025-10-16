@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { ProjectService } from '@/services/ProjectService';
 import { ProjectSummaryDTO } from '@/types/dto';
 import { ReportManager } from '@/components/reports/ReportManager';
@@ -89,11 +88,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch payments data
+  // Fetch payments data via lazy import
   const { data: payments = [] } = useQuery({
     queryKey: ['project-payments', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('payments')
         .select('*')
@@ -108,11 +108,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     enabled: !!projectId,
   });
 
-  // Fetch risks data (DB entity), used for risks tab and overview
+  // Fetch risks data via lazy import
   const { data: risksData = [] } = useQuery({
     queryKey: ['project-risks', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('project_risks')
         .select('*')
@@ -124,11 +125,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch documents
+  // Fetch documents via lazy import
   const { data: documentsData = [] } = useQuery({
     queryKey: ['project-documents', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -143,11 +145,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch bank guarantees for compliance
+  // Fetch bank guarantees via lazy import
   const { data: bankGuaranteesData = [] } = useQuery({
     queryKey: ['project-bank-guarantees', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('bank_guarantees')
         .select('*')
@@ -162,11 +165,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch insurance certificates for compliance
+  // Fetch insurance certificates via lazy import
   const { data: insuranceCertificatesData = [] } = useQuery({
     queryKey: ['project-insurance-certificates', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('insurance_certificates')
         .select('*')
@@ -181,11 +185,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch task assignments for this project
+  // Fetch task assignments via lazy import
   const { data: taskAssignmentsData = [] } = useQuery({
     queryKey: ['project-task-assignments', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('task_assignments')
         .select('*')
@@ -197,10 +202,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 30_000,
   });
 
-  // Fetch employees for resource mapping
+  // Fetch employees via lazy import
   const { data: employeesData = [] } = useQuery({
     queryKey: ['employees-active'],
     queryFn: async () => {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('employees')
         .select('id, full_name, position')
@@ -211,11 +217,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 60_000,
   });
 
-  // Fetch phases data (used for counts and phases tab)
+  // Fetch phases data via lazy import
   const { data: phasesData = [] } = useQuery({
     queryKey: ['project-phases', projectId],
     queryFn: async () => {
       if (!projectId) return [];
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('project_phases')
         .select('*')

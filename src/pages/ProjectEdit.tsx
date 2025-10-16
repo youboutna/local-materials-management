@@ -10,9 +10,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
 import MaterialFormSection from '@/components/MaterialFormSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { PhaseService } from '@/services/phaseService';
 import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
@@ -37,14 +34,16 @@ const ProjectEdit = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // Load project data
+  // Load project data using ProjectService
   useEffect(() => {
     const fetchProject = async () => {
       if (!id) return;
       
       try {
-        const projectData = await getProject(id);
-        if (projectData) {
+        const projectService = new (await import('@/services/ProjectService')).ProjectService();
+        const projectDetail = await projectService.getProjectDetail(id);
+        
+        if (projectDetail) {
           // Map status to form format
           const statusMapping = {
             'en attente': 'Planning',
@@ -54,9 +53,6 @@ const ProjectEdit = () => {
             'annulé': 'Cancelled'
           } as const;
 
-          // Load project phases first
-          const phases = await loadProjectPhases(id);
-          
           // Safe date formatting helper
           const formatDateForInput = (dateString: any) => {
             if (!dateString) return '';
@@ -70,52 +66,80 @@ const ProjectEdit = () => {
             }
           };
 
-          // Prepare initial data for the form including phases
+          // Materials will be loaded separately via Supabase since not in DTO
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: materialsData } = await supabase
+            .from('project_materials')
+            .select('material_id, quantity')
+            .eq('project_id', id);
+          
+          const materials = materialsData?.map(item => ({
+            materialId: item.material_id,
+            quantity: item.quantity
+          })) || [];
+
+          // Map phases from detail DTO
+          const phases = projectDetail.plannedPhases?.map((phase: any) => ({
+            id: phase.id,
+            title: phase.phase_name || phase.phase,
+            description: phase.description || '',
+            startDate: phase.start_date || phase.startDate,
+            endDate: phase.end_date || phase.endDate,
+            estimatedDuration: phase.estimated_duration || 30,
+            status: phase.status,
+            budget: phase.estimated_cost || phase.budget || 0,
+            actualCost: phase.actual_cost || 0,
+            progress: phase.progress || 0,
+            materials: Array.isArray(phase.materials) ? phase.materials : [],
+            humanResources: Array.isArray(phase.human_resources) ? phase.human_resources : [],
+            suppliers: Array.isArray(phase.suppliers) ? phase.suppliers : [],
+            location: phase.location || '',
+            notes: phase.notes || ''
+          })) || [];
+
+          // Prepare initial data for the form including phases and materials
           const formInitialData = {
-            title: projectData.title,
-            description: projectData.description,
-            location: projectData.location,
-            status: statusMapping[projectData.status as keyof typeof statusMapping] || 'Planning',
-            budget: projectData.budget,
-            // Use safe date formatting for both legacy and new field names
-            startDate: formatDateForInput(projectData.startDate),
-            endDate: formatDateForInput(projectData.endDate),
-            start_date: formatDateForInput(projectData.startDate),
-            end_date: formatDateForInput(projectData.endDate),
-            team_size: projectData.teamSize || 1, // Default to 1 instead of 0
-            financing_source: projectData.financingSource || '',
-            market_type: projectData.marketType || '',
-            selection_mode: projectData.selectionMode || '',
-            project_responsable_id: projectData.projectResponsableId || '',
-            main_contractor: projectData.mainContractor || '',
-            engineering_consultant: (projectData as any).engineeringConsultant || '',
-            project_reference: projectData.projectReference || '',
-            allows_initial_payment: projectData.allowsInitialPayment || false,
-            initial_payment_percentage: projectData.initialPaymentPercentage || 0,
-            current_phase: (projectData as any).currentPhase || '',
-            current_stage: (projectData as any).currentStage || '',
-            phases: phases || [], // Include phases from the start
-            facilitiesLocation: projectData.coordinates ? {
+            title: projectDetail.title,
+            description: projectDetail.description,
+            location: projectDetail.location,
+            status: statusMapping[projectDetail.status as keyof typeof statusMapping] || 'Planning',
+            budget: projectDetail.budget,
+            startDate: formatDateForInput(projectDetail.startDate),
+            endDate: formatDateForInput(projectDetail.endDate),
+            start_date: formatDateForInput(projectDetail.startDate),
+            end_date: formatDateForInput(projectDetail.endDate),
+            team_size: projectDetail.teamSize || 1,
+            financing_source: projectDetail.financingSource || '',
+            market_type: projectDetail.marketType || '',
+            selection_mode: projectDetail.selectionMode || '',
+            project_responsable_id: projectDetail.projectResponsableId || '',
+            main_contractor: projectDetail.mainContractor || '',
+            engineering_consultant: (projectDetail as any).engineeringConsultant || '',
+            project_reference: projectDetail.projectReference || '',
+            allows_initial_payment: projectDetail.allowsInitialPayment || false,
+            initial_payment_percentage: projectDetail.initialPaymentPercentage || 0,
+            current_phase: projectDetail.currentPhase || '',
+            current_stage: projectDetail.currentStage || '',
+            phases: phases,
+            facilitiesLocation: projectDetail.coordinates ? {
               center: {
-                lat: projectData.coordinates.latitude,
-                lng: projectData.coordinates.longitude
+                lat: projectDetail.coordinates.latitude,
+                lng: projectDetail.coordinates.longitude
               },
-              polygon: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
-              warehouseShape: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
-              address: typeof (projectData as any).adresse === 'string' ? (projectData as any).adresse : ((projectData as any).adresse?.address || ''),
-              shapeType: (projectData as any).forme || undefined
+              polygon: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+              warehouseShape: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+              address: typeof (projectDetail as any).adresse === 'string' ? (projectDetail as any).adresse : ((projectDetail as any).adresse?.address || ''),
+              shapeType: (projectDetail as any).forme || undefined
             } : {
-              polygon: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
-              warehouseShape: Array.isArray((projectData as any).localisation) ? (projectData as any).localisation : [],
-              address: typeof (projectData as any).adresse === 'string' ? (projectData as any).adresse : ((projectData as any).adresse?.address || ''),
-              shapeType: (projectData as any).forme || undefined
+              polygon: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+              warehouseShape: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+              address: typeof (projectDetail as any).adresse === 'string' ? (projectDetail as any).adresse : ((projectDetail as any).adresse?.address || ''),
+              shapeType: (projectDetail as any).forme || undefined
             }
           };
 
           setInitialData(formInitialData);
-
-          // Load project materials
-          await loadProjectMaterials(id);
+          setSelectedMaterials(materials);
         } else {
           toast({
             title: t("projects.edit.error"),
@@ -137,65 +161,9 @@ const ProjectEdit = () => {
     };
     
     fetchProject();
-  }, [id, getProject, navigate, t]);
+  }, [id, navigate, t]);
 
-  // Load existing materials when project loads
-  const loadProjectMaterials = async (projectId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('project_materials')
-        .select('material_id, quantity')
-        .eq('project_id', projectId);
-
-      if (error) throw error;
-
-      const materials: SelectedMaterial[] = data?.map(item => ({
-        materialId: item.material_id,
-        quantity: item.quantity
-      })) || [];
-
-      setSelectedMaterials(materials);
-    } catch (error) {
-      console.error('Error loading project materials:', error);
-    }
-  };
-
-  // Load existing phases when project loads
-  const loadProjectPhases = async (projectId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-
-      // Transform phases data for the form
-      const phases = data?.map(phase => ({
-        id: phase.id,
-        title: phase.phase_name,
-        description: phase.description || '',
-        startDate: phase.start_date,
-        endDate: phase.end_date,
-        estimatedDuration: phase.estimated_duration || 30,
-        status: phase.status,
-        budget: phase.estimated_cost || 0,
-        actualCost: phase.actual_cost || 0,
-        progress: phase.progress || 0,
-        materials: Array.isArray(phase.materials) ? phase.materials : [],
-        humanResources: Array.isArray(phase.human_resources) ? phase.human_resources : [],
-        suppliers: Array.isArray(phase.suppliers) ? phase.suppliers : [],
-        location: phase.location || '',
-        notes: phase.notes || ''
-      })) || [];
-
-      return phases;
-    } catch (error) {
-      console.error('Error loading project phases:', error);
-      return [];
-    }
-  };
+  // Materials and phases now loaded via ProjectService in useEffect above
 
 
   // Handle form submission
@@ -344,9 +312,11 @@ const ProjectEdit = () => {
 
   // This function is now handled by PhaseService
 
-  // Update materials in database
+  // Update materials in database with lazy Supabase import
   const updateProjectMaterials = async (projectId: string, materials: SelectedMaterial[]) => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
       // Delete existing materials
       await supabase
         .from('project_materials')
