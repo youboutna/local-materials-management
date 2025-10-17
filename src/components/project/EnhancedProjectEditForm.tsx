@@ -49,15 +49,81 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   // Initialize ProjectFormService
   const formService = new ProjectFormService();
 
-  // Load project data from database if no initialData
+  // Load project data using ProjectService
   const loadProjectData = useCallback(async () => {
     if (!projectId || hasLoadedData || (initialData && Object.keys(initialData).length > 0)) return;
     
     setIsLoading(true);
     try {
-      const projectData = await formService.loadProjectData(projectId);
-      if (projectData) {
-        setFormData(projectData);
+      const { ProjectService } = await import('@/services/ProjectService');
+      const projectService = new ProjectService();
+      
+      // Load complete project details
+      const projectDetail = await projectService.getProjectDetail(projectId);
+      
+      if (projectDetail) {
+        // Convert to form format
+        const formattedData: any = {
+          id: projectDetail.id,
+          title: projectDetail.title,
+          description: projectDetail.description,
+          location: projectDetail.location,
+          status: projectDetail.status,
+          budget: String(projectDetail.budget),
+          estimatedBudget: projectDetail.budget,
+          estimated_budget: projectDetail.budget,
+          startDate: formService.formatDateForInput(projectDetail.startDate),
+          endDate: formService.formatDateForInput(projectDetail.endDate),
+          start_date: formService.formatDateForInput(projectDetail.startDate),
+          end_date: formService.formatDateForInput(projectDetail.endDate),
+          team_size: projectDetail.teamSize || 1,
+          financing_source: projectDetail.financingSource || '',
+          market_type: projectDetail.marketType || '',
+          selection_mode: projectDetail.selectionMode || '',
+          project_responsable_id: projectDetail.projectResponsableId || '',
+          main_contractor: projectDetail.mainContractor || '',
+          engineering_consultant: (projectDetail as any).engineeringConsultant || '',
+          project_reference: projectDetail.projectReference || '',
+          allows_initial_payment: projectDetail.allowsInitialPayment || false,
+          initial_payment_percentage: projectDetail.initialPaymentPercentage || 0,
+          current_phase: projectDetail.currentPhase || '',
+          current_stage: projectDetail.currentStage || '',
+          stakeholders: (projectDetail as any).stakeholders || [],
+          phases: projectDetail.plannedPhases || [],
+          risks: projectDetail.risks || [],
+          tasks: projectDetail.tasks || [],
+          inspections: projectDetail.inspections || [],
+          materials: (projectDetail as any).materials || [],
+          facilitiesLocation: projectDetail.coordinates ? {
+            center: {
+              lat: projectDetail.coordinates.latitude,
+              lng: projectDetail.coordinates.longitude
+            },
+            polygon: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+            warehouseShape: Array.isArray((projectDetail as any).localisation) ? (projectDetail as any).localisation : [],
+            address: typeof (projectDetail as any).adresse === 'string' ? (projectDetail as any).adresse : ((projectDetail as any).adresse?.address || ''),
+            shapeType: (projectDetail as any).forme || undefined
+          } : undefined
+        };
+        
+        setFormData(formattedData);
+        setPhasesData(projectDetail.plannedPhases || []);
+        
+        // Load materials separately from Supabase
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: materialsData } = await supabase
+          .from('project_materials')
+          .select('material_id, quantity')
+          .eq('project_id', projectId);
+        
+        if (materialsData) {
+          const materials = materialsData.map(item => ({
+            materialId: item.material_id,
+            quantity: item.quantity
+          }));
+          setSelectedMaterials(materials);
+        }
+        
         setHasLoadedData(true);
       }
     } catch (error) {
@@ -72,21 +138,11 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     }
   }, [projectId, hasLoadedData, initialData, formService, toast]);
 
-  // Load related data (stakeholders, phases, etc.)
+  // Load related data - now handled by ProjectService above
   const loadRelatedData = useCallback(async () => {
-    if (!projectId || hasLoadedData) return;
-    
-    try {
-      const relatedData = await formService.loadRelatedData(projectId);
-      setFormData(prev => ({ ...prev, ...relatedData }));
-      
-      if (relatedData.materials) {
-        setSelectedMaterials(relatedData.materials);
-      }
-    } catch (error) {
-      console.error('Error loading related data:', error);
-    }
-  }, [projectId, hasLoadedData, formService]);
+    // Data is now loaded in loadProjectData via ProjectService
+    return;
+  }, []);
 
   // Load base data for dropdowns
   const loadBaseData = useCallback(async () => {
@@ -109,13 +165,18 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         endDate: formService.formatDateForInput(initialData.endDate || initialData.end_date),
         start_date: formService.formatDateForInput(initialData.startDate || initialData.start_date),
         end_date: formService.formatDateForInput(initialData.endDate || initialData.end_date),
-        status: initialData.status ? formService.mapStatusFromDB(initialData.status) : 'planning'
+        status: initialData.status ? formService.mapStatusFromDB(initialData.status) : 'planning',
+        estimatedBudget: initialData.budget || initialData.estimatedBudget || initialData.estimated_budget || 0,
+        estimated_budget: initialData.budget || initialData.estimatedBudget || initialData.estimated_budget || 0
       };
       setFormData(processedData);
       
-      // Extract materials if provided
+      // Extract materials and phases if provided
       if (initialData.materials) {
         setSelectedMaterials(initialData.materials);
+      }
+      if (initialData.phases) {
+        setPhasesData(initialData.phases);
       }
       setHasLoadedData(true);
     } else if (!hasLoadedData) {
@@ -154,7 +215,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       
       const processedData = formService.processFormDataForSave({
         ...formData,
-        materials: selectedMaterials
+        materials: selectedMaterials,
+        phases: phasesData
       }, context);
       
       await onSubmit(processedData);
@@ -188,7 +250,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       
       const processedData = formService.processFormDataForSave({
         ...formData,
-        materials: selectedMaterials
+        materials: selectedMaterials,
+        phases: phasesData
       }, context);
       
       await onSubmit(processedData);
@@ -232,7 +295,8 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       
       const processedData = formService.processFormDataForSave({
         ...formData,
-        materials: selectedMaterials
+        materials: selectedMaterials,
+        phases: phasesData
       }, context);
       
       await onSubmit(processedData);
