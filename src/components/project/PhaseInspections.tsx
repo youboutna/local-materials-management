@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ClipboardCheck, Trash2, Calendar, User } from 'lucide-react';
+import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink } from 'lucide-react';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface PhaseInspectionsProps {
   phaseId: string;
@@ -26,6 +28,7 @@ interface InspectionFormData {
 }
 
 const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId }) => {
+  const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<InspectionFormData>({
     inspector: '',
@@ -37,6 +40,8 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['phase-inspections', phaseId],
@@ -137,6 +142,10 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const averageProgress = inspections && inspections.length > 0 
     ? inspections.reduce((sum, inspection) => sum + inspection.progress_at_inspection, 0) / inspections.length
     : 0;
+    
+  const totalPages = Math.ceil((inspections?.length || 0) / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedInspections = inspections?.slice(startIndex, startIndex + pageSize) || [];
 
   return (
     <Card>
@@ -146,14 +155,22 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
             <ClipboardCheck className="h-5 w-5" />
             Inspections de la phase ({inspections?.length || 0})
           </CardTitle>
-          <Dialog open={isAdding} onOpenChange={setIsAdding}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une inspection
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/inspection-monitoring')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Voir toutes les inspections
+            </Button>
+            <Dialog open={isAdding} onOpenChange={setIsAdding}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter une inspection
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Nouvelle inspection</DialogTitle>
               </DialogHeader>
@@ -230,21 +247,29 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {inspections && inspections.length > 0 ? (
           <div className="space-y-4">
             {averageProgress > 0 && (
-              <div className="p-3 bg-muted rounded-lg">
+              <div className="p-3 bg-muted rounded-lg flex justify-between items-center">
                 <p className="text-sm font-medium">
                   Progression moyenne observée: {Math.round(averageProgress)}%
                 </p>
+                <Button 
+                  size="sm"
+                  onClick={() => navigate('/inspection-monitoring?tab=new')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle inspection
+                </Button>
               </div>
             )}
             
-            {inspections.map((inspection) => (
+            {paginatedInspections.map((inspection) => (
               <div key={inspection.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -283,9 +308,29 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
               </div>
             ))}
+            
+            {inspections && inspections.length > pageSize && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={inspections.length}
+                itemsPerPage={pageSize}
+                onPageChange={setCurrentPage}
+                showItemsPerPage={false}
+              />
+            )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucune inspection enregistrée pour cette phase.</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground mb-4">Aucune inspection enregistrée pour cette phase.</p>
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/inspection-monitoring?tab=new')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Créer une nouvelle inspection
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

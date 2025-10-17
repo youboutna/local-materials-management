@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, DollarSign, Trash2, Calendar } from 'lucide-react';
+import { Plus, DollarSign, Trash2, Calendar, ExternalLink } from 'lucide-react';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface PhasePaymentsProps {
   phaseId: string;
@@ -27,6 +29,7 @@ interface PaymentFormData {
 }
 
 const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => {
+  const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<PaymentFormData>({
     amount: '',
@@ -40,6 +43,8 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ['phase-payments', phaseId],
@@ -132,6 +137,9 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
   }
 
   const totalAmount = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+  const totalPages = Math.ceil((payments?.length || 0) / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedPayments = payments?.slice(startIndex, startIndex + pageSize) || [];
 
   return (
     <Card>
@@ -141,14 +149,22 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
             <DollarSign className="h-5 w-5" />
             Paiements de la phase ({payments?.length || 0})
           </CardTitle>
-          <Dialog open={isAdding} onOpenChange={setIsAdding}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un paiement
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/payment-control')}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Voir tous les paiements
+            </Button>
+            <Dialog open={isAdding} onOpenChange={setIsAdding}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un paiement
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Enregistrer un paiement</DialogTitle>
               </DialogHeader>
@@ -248,19 +264,27 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {payments && payments.length > 0 ? (
           <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg">
+            <div className="p-3 bg-muted rounded-lg flex justify-between items-center">
               <p className="text-sm font-medium">
                 Total des paiements: {totalAmount.toLocaleString()} MRU
               </p>
+              <Button 
+                size="sm"
+                onClick={() => navigate('/payment-control?tab=new')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau paiement
+              </Button>
             </div>
             
-            {payments.map((payment) => (
+            {paginatedPayments.map((payment) => (
               <div key={payment.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -302,9 +326,29 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 </p>
               </div>
             ))}
+            
+            {payments && payments.length > pageSize && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={payments.length}
+                itemsPerPage={pageSize}
+                onPageChange={setCurrentPage}
+                showItemsPerPage={false}
+              />
+            )}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucun paiement enregistré pour cette phase.</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground mb-4">Aucun paiement enregistré pour cette phase.</p>
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/payment-control?tab=new')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Créer un nouveau paiement
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
