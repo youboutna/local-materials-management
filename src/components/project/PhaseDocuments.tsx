@@ -3,37 +3,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, FileText, Upload, Download, Eye, Trash2 } from 'lucide-react';
+import { Plus, FileText, Download, Eye, Trash2 } from 'lucide-react';
+import PhaseDocumentUpload from './phases/PhaseDocumentUpload';
 
 interface PhaseDocumentsProps {
   phaseId: string;
   projectId: string;
+  phaseName?: string;
 }
 
-interface DocumentFormData {
-  title: string;
-  description: string;
-  document_type: string;
-  file_url: string;
-  file_name: string;
-}
-
-const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId }) => {
+const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, phaseName }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState<DocumentFormData>({
-    title: '',
-    description: '',
-    document_type: 'plan',
-    file_url: '',
-    file_name: '',
-  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -52,36 +35,6 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId }) =
     },
   });
 
-  const addDocumentMutation = useMutation({
-    mutationFn: async (docData: DocumentFormData) => {
-      const user = await supabase.auth.getUser();
-      const { data, error } = await supabase
-        .from('documents')
-        .insert({
-          title: docData.title,
-          description: docData.description,
-          document_type: docData.document_type as any,
-          file_url: docData.file_url,
-          file_name: docData.file_name,
-          project_id: projectId,
-          phase_id: phaseId,
-          uploaded_by: user.data.user?.id,
-          status: 'draft' as any,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-documents', phaseId] });
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Document ajouté avec succès' });
-    },
-  });
-
   const deleteDocumentMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -97,19 +50,9 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId }) =
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      document_type: 'plan',
-      file_url: '',
-      file_name: '',
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addDocumentMutation.mutate(formData);
+  const handleDocumentUploaded = () => {
+    queryClient.invalidateQueries({ queryKey: ['phase-documents', phaseId] });
+    setIsAdding(false);
   };
 
   const getDocumentTypeLabel = (type: string) => {
@@ -152,87 +95,21 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId }) =
           </CardTitle>
           <Dialog open={isAdding} onOpenChange={setIsAdding}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter un document
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Ajouter un document à la phase</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="title">Titre du document *</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="document_type">Type de document</Label>
-                    <Select
-                      value={formData.document_type}
-                      onValueChange={(value) => setFormData({ ...formData, document_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="plan">Plan</SelectItem>
-                        <SelectItem value="contract">Contrat</SelectItem>
-                        <SelectItem value="inspection_report">Rapport d'inspection</SelectItem>
-                        <SelectItem value="invoice">Facture</SelectItem>
-                        <SelectItem value="permit">Permis</SelectItem>
-                        <SelectItem value="photo">Photo</SelectItem>
-                        <SelectItem value="other">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Décrivez le contenu du document..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="file_url">URL du fichier</Label>
-                    <Input
-                      id="file_url"
-                      type="url"
-                      value={formData.file_url}
-                      onChange={(e) => setFormData({ ...formData, file_url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="file_name">Nom du fichier</Label>
-                    <Input
-                      id="file_name"
-                      value={formData.file_name}
-                      onChange={(e) => setFormData({ ...formData, file_name: e.target.value })}
-                      placeholder="document.pdf"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit">Ajouter</Button>
-                </div>
-              </form>
+              <PhaseDocumentUpload
+                projectId={projectId}
+                phaseId={phaseId}
+                phaseName={phaseName}
+                onDocumentUploaded={handleDocumentUploaded}
+              />
             </DialogContent>
           </Dialog>
         </div>
