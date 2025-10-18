@@ -158,37 +158,43 @@ export class ProjectFormService {
   }
 
   mapFieldsToDB(formData: ProjectFormData): any {
+    // Helper to convert empty string to null for UUID fields
+    const nullIfEmpty = (value: any) => {
+      if (value === '' || value === undefined) return null;
+      return value;
+    };
+
     return {
       title: formData.title,
-      project_reference: formData.project_reference,
+      project_reference: formData.project_reference || null,
       description: formData.description,
       budget: parseFloat(formData.budget || '0') || 0,
       estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
-      currency: formData.currency,
+      currency: formData.currency || 'MRU',
       status: formData.status,
       start_date: formData.start_date || null,
       end_date: formData.end_date || null,
-      payment_mode: formData.payment_mode,
-      payment_frequency: formData.payment_frequency,
-      initial_advance: formData.initial_advance,
-      retention_percentage: formData.retention_percentage,
-      priority: formData.priority,
-      project_type: formData.project_type,
-      sector: formData.sector,
-      permit_number: formData.permit_number,
-      address: formData.address,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-      area_sqm: formData.area_sqm,
-      site_details: formData.site_details,
-      advance_percentage: formData.advance_percentage,
-      client_name: formData.client_name,
-      main_contractor: formData.main_contractor || null,
-      project_manager_id: formData.project_manager_id || null,
-      technical_manager_id: formData.technical_manager_id || null,
-      supervisor_id: formData.supervisor_id || null,
-      client_id: formData.client_id || null,
-      workspace_id: formData.workspace_id || null
+      payment_mode: formData.payment_mode || 'progressive',
+      payment_frequency: formData.payment_frequency || 'monthly',
+      initial_advance: formData.initial_advance || 20,
+      retention_percentage: formData.retention_percentage || 5,
+      priority: formData.priority || 'medium',
+      project_type: formData.project_type || 'construction',
+      sector: formData.sector || null,
+      permit_number: formData.permit_number || null,
+      address: formData.address || null,
+      latitude: formData.latitude || null,
+      longitude: formData.longitude || null,
+      area_sqm: formData.area_sqm || null,
+      site_details: formData.site_details || null,
+      advance_percentage: formData.advance_percentage || 20,
+      client_name: formData.client_name || null,
+      main_contractor: nullIfEmpty(formData.main_contractor),
+      project_manager_id: nullIfEmpty(formData.project_manager_id),
+      technical_manager_id: nullIfEmpty(formData.technical_manager_id),
+      supervisor_id: nullIfEmpty(formData.supervisor_id),
+      client_id: nullIfEmpty(formData.client_id),
+      workspace_id: nullIfEmpty(formData.workspace_id)
     };
   }
 

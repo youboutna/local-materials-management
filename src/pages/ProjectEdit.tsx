@@ -196,6 +196,12 @@ const ProjectEdit = () => {
       // Map the status from form to database value
       const mappedStatus = statusMapping[data.status as keyof typeof statusMapping] || 'en attente';
       
+      // Helper to convert empty strings to null for UUIDs
+      const nullIfEmpty = (value: any) => {
+        if (value === '' || value === undefined) return null;
+        return value;
+      };
+
       // Update the project with all the form data
       const projectDataToUpdate = {
         title: data.title,
@@ -203,21 +209,21 @@ const ProjectEdit = () => {
         location: data.location,
         status: mappedStatus as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
         budget: data.budget,
-        startDate: data.start_date,
-        endDate: data.end_date,
-        teamSize: data.team_size,
+        startDate: data.start_date || null,
+        endDate: data.end_date || null,
+        teamSize: data.team_size || 1,
         coordinates: projectCoordinates,
-        financingSource: data.financing_source,
-        marketType: data.market_type,
-        selectionMode: data.selection_mode,
-        projectResponsableId: data.project_responsable_id,
-        mainContractor: data.main_contractor,
-        engineeringConsultant: data.engineering_consultant,
-        projectReference: data.project_reference,
-        allowsInitialPayment: data.allows_initial_payment,
-        initialPaymentPercentage: data.initial_payment_percentage,
-        currentPhase: data.current_phase,
-        currentStage: data.current_stage,
+        financingSource: nullIfEmpty(data.financing_source),
+        marketType: nullIfEmpty(data.market_type),
+        selectionMode: nullIfEmpty(data.selection_mode),
+        projectResponsableId: nullIfEmpty(data.project_responsable_id),
+        mainContractor: nullIfEmpty(data.main_contractor),
+        engineeringConsultant: nullIfEmpty(data.engineering_consultant),
+        projectReference: nullIfEmpty(data.project_reference),
+        allowsInitialPayment: data.allows_initial_payment || false,
+        initialPaymentPercentage: data.initial_payment_percentage || 0,
+        currentPhase: nullIfEmpty(data.current_phase),
+        currentStage: nullIfEmpty(data.current_stage),
         // Localization fields
         localisation: localizationData,
         forme: shapeType,
