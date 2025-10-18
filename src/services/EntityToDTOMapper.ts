@@ -23,6 +23,10 @@ export class EntityToDTOMapper {
         latitude: entity.coordinates_latitude,
         longitude: entity.coordinates_longitude
       } : undefined,
+      // Add localization fields
+      localisation: (entity as any).localisation || [],
+      forme: (entity as any).forme,
+      adresse: (entity as any).adresse,
       financingSource: entity.financing_source,
       marketType: entity.market_type,
       selectionMode: entity.selection_mode,

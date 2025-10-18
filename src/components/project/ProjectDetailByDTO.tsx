@@ -846,11 +846,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             allowPolygon={true}
             value={{
               coordinates: project.coordinates ? {
-                lat: (project.coordinates as any).latitude || (project.coordinates as any).lat,
-                lng: (project.coordinates as any).longitude || (project.coordinates as any).lng
+                lat: project.coordinates.latitude,
+                lng: project.coordinates.longitude
               } : undefined,
-              address: project.location,
-              shape: (project as any).shape
+              polygon: Array.isArray((project as any).localisation) ? (project as any).localisation : [],
+              warehouseShape: Array.isArray((project as any).localisation) ? (project as any).localisation : [],
+              address: typeof (project as any).adresse === 'string' ? (project as any).adresse : ((project as any).adresse?.address || project.location || ''),
+              shapeType: (project as any).forme
             }}
             onChange={(data) => {
               console.log('Map data changed:', data);

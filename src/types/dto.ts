@@ -17,6 +17,10 @@ export interface ProjectDTO {
     latitude: number;
     longitude: number;
   };
+  // Localization fields
+  localisation?: any[];
+  forme?: string;
+  adresse?: string | any;
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;

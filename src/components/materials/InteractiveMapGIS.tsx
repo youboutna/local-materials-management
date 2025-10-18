@@ -34,6 +34,8 @@ interface MapData {
   address?: string;
   shape?: Coordinate[];
   shapeType?: 'polygon' | 'rectangle' | 'circle' |'diamond';
+  polygon?: Coordinate[];
+  warehouseShape?: Coordinate[];
 }
 
 interface InteractiveMapGISProps {

@@ -88,6 +88,10 @@ export class ProjectService {
       ...(formData.teamSize !== undefined && { team_size: formData.teamSize }),
       ...(formData.coordinates?.latitude !== undefined && { coordinates_latitude: formData.coordinates.latitude }),
       ...(formData.coordinates?.longitude !== undefined && { coordinates_longitude: formData.coordinates.longitude }),
+      // Add localization fields mapping
+      ...((formData as any).localisation !== undefined && { localisation: (formData as any).localisation }),
+      ...((formData as any).forme !== undefined && { forme: (formData as any).forme }),
+      ...((formData as any).adresse !== undefined && { adresse: (formData as any).adresse }),
       ...(formData.financingSource !== undefined && { financing_source: formData.financingSource }),
       ...(formData.marketType !== undefined && { market_type: formData.marketType }),
       ...(formData.selectionMode !== undefined && { selection_mode: formData.selectionMode }),
