@@ -234,6 +234,22 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     },
   });
 
+  // Fetch main contractor from project
+  const { data: projectData } = useQuery({
+    queryKey: ['project-contractor', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('main_contractor')
+        .eq('id', projectId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: Partial<TaskAssignmentExtended>) => {
@@ -750,8 +766,23 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="employees">Employees (Internal Staff)</SelectItem>
+                      {employees.map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.full_name} {emp.position ? `(${emp.position})` : ''}
+                        </SelectItem>
+                      ))}
                       <SelectItem value="consulting_firms">Consulting Firms</SelectItem>
+                      {suppliers.filter(s => s.type === 'consulting').map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name} {supplier.contact_person ? `- ${supplier.contact_person}` : ''}
+                        </SelectItem>
+                      ))}
                       <SelectItem value="main_contractor">Main Contractor</SelectItem>
+                      {projectData?.main_contractor && (
+                        <SelectItem value={projectData.main_contractor}>
+                          {projectData.main_contractor}
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

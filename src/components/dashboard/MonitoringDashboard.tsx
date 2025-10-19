@@ -21,24 +21,36 @@ const MonitoringDashboard: React.FC = () => {
         const { supabase } = await import('@/integrations/supabase/client');
         
         // Load guarantees about to expire (next 30 days)
-        const { data: guarantees } = await supabase
+        const { data: guarantees, error: guaranteesError } = await supabase
           .from('bank_guarantees')
           .select('*')
           .eq('status', 'active')
           .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
 
+        if (guaranteesError) {
+          console.error('Error loading guarantees:', guaranteesError);
+        }
+
         // Load blocked payments
-        const { data: blockedPayments } = await supabase
+        const { data: blockedPayments, error: paymentsError } = await supabase
           .from('payment_blocks')
           .select('*')
           .is('resolved_at', null);
 
+        if (paymentsError) {
+          console.error('Error loading blocked payments:', paymentsError);
+        }
+
         // Load delayed inspections
-        const { data: inspections } = await supabase
+        const { data: inspections, error: inspectionsError } = await supabase
           .from('inspections')
           .select('*')
           .eq('status', 'scheduled')
           .lt('date', new Date().toISOString());
+
+        if (inspectionsError) {
+          console.error('Error loading inspections:', inspectionsError);
+        }
 
         setStats({
           guarantees: { 
