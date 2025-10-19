@@ -97,6 +97,38 @@ const ProjectEdit = () => {
             notes: phase.notes || ''
           })) || [];
 
+          // Load stakeholders from database
+          const { ProjectStakeholderService } = await import('@/services/ProjectStakeholderService');
+          const stakeholdersData = await ProjectStakeholderService.getProjectStakeholders(id);
+          
+          // Map stakeholders to form format
+          const delegation: any = {};
+          const externalStakeholders: any[] = [];
+          
+          stakeholdersData?.forEach((sh: any) => {
+            if (sh.stakeholder_entity_type === 'employee' && sh.employee_id) {
+              // Map employees to delegation
+              if (sh.stakeholder_type === 'project_manager') {
+                delegation.projectManager = sh.employee_id;
+              } else if (sh.stakeholder_type === 'technical_manager') {
+                delegation.technicalManager = sh.employee_id;
+              } else if (sh.stakeholder_type === 'supervisor') {
+                delegation.supervisor = sh.employee_id;
+              } else if (sh.stakeholder_type === 'client') {
+                delegation.client = sh.employee_id;
+              }
+            } else if (sh.stakeholder_entity_type === 'supplier' && sh.supplier_id) {
+              // Map suppliers to external stakeholders
+              externalStakeholders.push({
+                id: sh.id,
+                type: 'external',
+                entityId: sh.supplier_id,
+                role: sh.stakeholder_type,
+                isPrimary: sh.is_primary || false
+              });
+            }
+          });
+
           // Prepare initial data for the form including phases and materials
           const formInitialData = {
             title: projectDetail.title,
@@ -113,6 +145,9 @@ const ProjectEdit = () => {
             market_type: projectDetail.marketType || '',
             selection_mode: projectDetail.selectionMode || '',
             project_responsable_id: projectDetail.projectResponsableId || '',
+            project_manager_id: delegation.projectManager || projectDetail.projectResponsableId || '',
+            technical_manager_id: delegation.technicalManager || '',
+            supervisor_id: delegation.supervisor || '',
             main_contractor: projectDetail.mainContractor || '',
             engineering_consultant: (projectDetail as any).engineeringConsultant || '',
             project_reference: projectDetail.projectReference || '',
@@ -121,6 +156,8 @@ const ProjectEdit = () => {
             current_phase: projectDetail.currentPhase || '',
             current_stage: projectDetail.currentStage || '',
             phases: phases,
+            delegation: delegation,
+            stakeholders: externalStakeholders,
             facilitiesLocation: projectDetail.coordinates ? {
               center: {
                 lat: projectDetail.coordinates.latitude,
