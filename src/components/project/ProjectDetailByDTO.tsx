@@ -107,7 +107,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (!projectId || !projectDetail) return null;
       return await ProjectAnalyticsService.getKPIMetrics(projectDetail);
     },
-    enabled: !!projectId && !!projectDetail && activeTab === 'kpis',
+    enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
   });
 
@@ -118,18 +118,31 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       if (!projectId || !projectDetail) return null;
       return await ProjectAnalyticsService.getComplianceData(projectDetail);
     },
-    enabled: !!projectId && !!projectDetail && activeTab === 'compliance',
+    enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
   });
 
-  // Calculations (PERT, Gantt) from ProjectService
-  const { data: calculations } = useQuery({
-    queryKey: ['project-calculations', projectId],
+  // PERT Analysis
+  const { data: pertAnalysis } = useQuery({
+    queryKey: ['project-pert', projectId],
     queryFn: async () => {
-      if (!projectId) return null;
-      return await projectService.getProjectCalculations(projectId);
+      if (!projectId || !projectDetail) return null;
+      const { ProjectCalculationService } = await import('@/services/ProjectCalculationService');
+      return ProjectCalculationService.calculatePERTAnalysis(projectDetail);
     },
-    enabled: !!projectId && (activeTab === 'gantt' || activeTab === 'pert'),
+    enabled: !!projectId && !!projectDetail,
+    staleTime: 30_000,
+  });
+
+  // Gantt Chart
+  const { data: ganttChart } = useQuery({
+    queryKey: ['project-gantt', projectId],
+    queryFn: async () => {
+      if (!projectId || !projectDetail) return null;
+      const { ProjectCalculationService } = await import('@/services/ProjectCalculationService');
+      return ProjectCalculationService.generateGanttChart(projectDetail);
+    },
+    enabled: !!projectId && !!projectDetail,
     staleTime: 30_000,
   });
 
@@ -606,67 +619,186 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="kpis" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Indice Performance Coût</p>
-                    <p className="text-2xl font-bold">0.95</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-blue-600" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  CPI (Cost Performance Index)
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Indice Performance Planning</p>
-                    <p className="text-2xl font-bold">0.92</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-orange-600" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  SPI (Schedule Performance Index)
-                </p>
-              </CardContent>
-            </Card>
+          {kpiMetrics ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Progress KPIs */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Progression</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.overallProgress}%</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.completedTasks} tâches terminées / {kpiMetrics.delayedTasks} en retard
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Incidents Sécurité</p>
-                    <p className="text-2xl font-bold">2</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-red-600" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Total incidents HSE
-                </p>
-              </CardContent>
-            </Card>
+                {/* Budget KPIs */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Utilisation Budget</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.budgetUtilization.toFixed(1)}%</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-green-600" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Reste: {kpiMetrics.remainingBudget.toLocaleString()} MRU
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Émissions CO2</p>
-                    <p className="text-2xl font-bold">12.5k</p>
-                  </div>
-                  <Target className="h-8 w-8 text-green-600" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Tonnes CO2 équivalent
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                {/* EVM - CPI */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">CPI (Coût)</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.cpi.toFixed(2)}</p>
+                      </div>
+                      <TrendingUp className={`h-8 w-8 ${kpiMetrics.cpi >= 1 ? 'text-green-600' : 'text-red-600'}`} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.cpi >= 1 ? 'En dessous du budget' : 'Au-dessus du budget'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* EVM - SPI */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">SPI (Planning)</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.spi.toFixed(2)}</p>
+                      </div>
+                      <Calendar className={`h-8 w-8 ${kpiMetrics.spi >= 1 ? 'text-green-600' : 'text-orange-600'}`} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.spi >= 1 ? 'En avance' : 'En retard'}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Quality */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Qualité</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.inspectionPassRate.toFixed(0)}%</p>
+                      </div>
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.criticalIssues} incidents critiques
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Risks */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Risques</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.totalRisks}</p>
+                      </div>
+                      <AlertTriangle className="h-8 w-8 text-red-600" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.highRisks} risques élevés
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Health Score */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Santé Globale</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.healthScore}</p>
+                      </div>
+                      <Target className={`h-8 w-8 ${kpiMetrics.healthScore >= 80 ? 'text-green-600' : kpiMetrics.healthScore >= 60 ? 'text-orange-600' : 'text-red-600'}`} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Score sur 100
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Timeline */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Délai</p>
+                        <p className="text-2xl font-bold">{kpiMetrics.remainingDays}j</p>
+                      </div>
+                      <Clock className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {kpiMetrics.elapsedDays}j écoulés
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Detailed KPI Metrics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Budget</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Valeur acquise</span>
+                        <span className="font-semibold">{kpiMetrics.earnedValue.toLocaleString()} MRU</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Variance coût</span>
+                        <span className={`font-semibold ${kpiMetrics.costVariance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {kpiMetrics.costVariance.toLocaleString()} MRU
+                        </span>
+                      </div>
+                      <Progress value={kpiMetrics.budgetUtilization} className="mt-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Planning</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Variance planning</span>
+                        <span className={`font-semibold ${kpiMetrics.scheduleVariance >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                          {kpiMetrics.scheduleVariance.toFixed(1)} jours
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Tâches en retard</span>
+                        <span className="font-semibold text-red-600">{kpiMetrics.delayedTasks}</span>
+                      </div>
+                      <Progress value={kpiMetrics.overallProgress} className="mt-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Chargement des KPIs...</p>
+          )}
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-6">
@@ -903,27 +1035,65 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardTitle>Analyse PERT</CardTitle>
             </CardHeader>
             <CardContent>
-              {calculations?.pertAnalysis ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Durée attendue totale</p>
-                    <p className="text-2xl font-bold">{calculations.pertAnalysis.totalExpectedDuration.toFixed(1)} j</p>
+              {pertAnalysis ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Durée attendue totale</p>
+                      <p className="text-2xl font-bold">{pertAnalysis.totalExpectedDuration.toFixed(1)} jours</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Écart-type total</p>
+                      <p className="text-2xl font-bold">
+                        {pertAnalysis.variances 
+                          ? Math.sqrt(Object.values(pertAnalysis.variances).reduce((sum: number, variance: number) => sum + variance, 0)).toFixed(1)
+                          : '0.0'} jours
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
+                      <p className="text-2xl font-bold">{pertAnalysis.criticalPath?.length || 0}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Écart-type total</p>
-                    <p className="text-2xl font-bold">
-                      {calculations.pertAnalysis.variances 
-                        ? Math.sqrt(Object.values(calculations.pertAnalysis.variances).reduce((sum, variance) => sum + variance, 0)).toFixed(1)
-                        : '0.0'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tâches sur chemin critique</p>
-                    <p className="text-2xl font-bold">{calculations.pertAnalysis.criticalPath?.length || 0}</p>
+
+                  {/* Activities Table */}
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-4">Activités PERT</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Activité</th>
+                            <th className="text-right p-2">Optimiste</th>
+                            <th className="text-right p-2">Probable</th>
+                            <th className="text-right p-2">Pessimiste</th>
+                            <th className="text-right p-2">Estimation PERT</th>
+                            <th className="text-right p-2">Écart-type</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pertAnalysis.activities.slice(0, 10).map((activity, index) => (
+                            <tr key={index} className="border-b hover:bg-muted/50">
+                              <td className="p-2 font-medium">{activity.name}</td>
+                              <td className="p-2 text-right">{activity.optimistic.toFixed(1)}j</td>
+                              <td className="p-2 text-right">{activity.mostLikely.toFixed(1)}j</td>
+                              <td className="p-2 text-right">{activity.pessimistic.toFixed(1)}j</td>
+                              <td className="p-2 text-right font-semibold">{activity.pertEstimate.toFixed(1)}j</td>
+                              <td className="p-2 text-right">{activity.standardDeviation.toFixed(2)}j</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {pertAnalysis.activities.length > 10 && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Affichage de 10 activités sur {pertAnalysis.activities.length}
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">Sélectionnez l'onglet PERT pour charger l'analyse.</p>
+                <p className="text-muted-foreground">Chargement de l'analyse PERT...</p>
               )}
             </CardContent>
           </Card>
