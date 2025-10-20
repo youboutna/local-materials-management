@@ -235,11 +235,11 @@ const SupplierPortal = () => {
   const fetchAssignedTasks = async () => {
     if (!user || !supplierProfile) return;
 
-    // Fetch tasks from task_assignments table where assigned_supplier_id matches
+    // Fetch tasks from task_assignments table assigned to this user (supplier account)
     const { data: taskData, error: taskError } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assigned_to', supplierProfile.id)
+      .eq('assigned_to', user.id)
       .order('created_at', { ascending: false });
 
     // Also fetch old-style supplier notifications for backward compatibility
@@ -265,14 +265,29 @@ const SupplierPortal = () => {
   const fetchInspections = async () => {
     if (!user || !supplierProfile) return;
 
-    // Query inspections where inspector matches supplier name, contact_person, or email prefix
+    // Query inspections for projects where this supplier is involved
+    // First get supplier's projects
+    const { data: projectsData } = await supabase
+      .from('project_stakeholders')
+      .select('project_id')
+      .eq('stakeholder_id', supplierProfile.id)
+      .eq('stakeholder_type', 'supplier');
+
+    const projectIds = projectsData?.map(p => p.project_id) || [];
+
+    if (projectIds.length === 0) {
+      setInspections([]);
+      return;
+    }
+
+    // Then get inspections for those projects
     const { data, error } = await supabase
       .from('inspections')
       .select(`
         *,
         projects (title, status)
       `)
-      .or(`inspector.eq.${supplierProfile.name},inspector.eq.${supplierProfile.contact_person},inspector.ilike.%${supplierProfile.email?.split('@')[0]}%`)
+      .in('project_id', projectIds)
       .order('date', { ascending: false });
 
     if (error) {
@@ -286,7 +301,7 @@ const SupplierPortal = () => {
   const fetchNotifications = async () => {
     if (!user || !supplierProfile) return;
 
-    // Fetch from supplier_notifications table AND general notifications
+    // Fetch from supplier_notifications table AND general notifications for this user
     const { data: supplierNotifs, error: supplierError } = await supabase
       .from('supplier_notifications')
       .select('*')
@@ -296,7 +311,7 @@ const SupplierPortal = () => {
     const { data: generalNotifs, error: generalError } = await supabase
       .from('notifications')
       .select('*')
-      .or(`recipient_id.eq.${user.id},metadata->>supplier_id.eq.${supplierProfile.id}`)
+      .eq('recipient_id', user.id)
       .order('created_at', { ascending: false });
 
     if (supplierError) {
