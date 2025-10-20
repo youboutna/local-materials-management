@@ -28,13 +28,22 @@ export class ProjectStakeholderService {
 
     // Add external stakeholders (suppliers) - only if they exist
     if (stakeholders && stakeholders.length > 0) {
-        stakeholders.forEach((stakeholder) => {
+      stakeholders.forEach((stakeholder) => {
+        // Use entityId instead of id for the actual supplier/entity reference
+        const entityId = stakeholder.entityId || stakeholder.supplier_id || stakeholder.id;
+        
+        // Skip if entityId is not a valid UUID (e.g., timestamp)
+        if (!entityId || entityId.length < 30) {
+          console.warn('Skipping stakeholder with invalid entityId:', stakeholder);
+          return;
+        }
+        
         stakeholderRecords.push({
           project_id: projectId,
-          stakeholder_type: stakeholder.type,
+          stakeholder_type: stakeholder.type || stakeholder.role || 'external',
           stakeholder_entity_type: 'supplier',
-          supplier_id: stakeholder.id,
-          role_description: stakeholder.role_description,
+          supplier_id: entityId,
+          role_description: stakeholder.role_description || stakeholder.role,
           is_primary: stakeholder.is_primary || false
         });
       });
