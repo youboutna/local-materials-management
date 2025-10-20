@@ -231,25 +231,48 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
   const sendAlertToHierarchy = async (inspectionId: string, message: string) => {
     try {
-      // Send alerts to hierarchy (director, admin)
-      const hierarchyRoles = ['director', 'admin'];
-      
-      for (const role of hierarchyRoles) {
+      const inspection = inspections.find(i => i.id === inspectionId);
+      if (!inspection) {
+        toast({
+          title: "Erreur",
+          description: "Inspection introuvable",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Fetch escalation targets from organizational hierarchy
+      const escalationTargets = await OrganizationalHierarchyService.getEscalationTargets(
+        inspection.project_id,
+        'director'
+      );
+
+      if (!escalationTargets || escalationTargets.length === 0) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner au moins un destinataire dans la hiérarchie du projet",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Send notifications to hierarchy
+      for (const target of escalationTargets) {
         await supabase
           .from('notifications')
           .insert({
-            recipient_id: `${role}_user_id`, // Would be dynamic in real app
+            recipient_id: target.employee_id,
             title: 'Alerte inspection critique',
             message: message,
             type: 'inspection_alert',
             related_id: inspectionId,
-            metadata: { priority: 'urgent' }
+            metadata: { priority: 'urgent', escalation_level: 'director' }
           });
       }
 
       toast({
         title: "Succès",
-        description: "Alerte envoyée à la hiérarchie",
+        description: `Alerte envoyée à ${escalationTargets.length} personne(s) de la hiérarchie`,
       });
     } catch (error) {
       console.error('Error sending alert:', error);
@@ -532,7 +555,12 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                           </TableCell>
                            <TableCell>
                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                               <Button size="sm" variant="ghost" title="Voir les détails">
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 title="Voir les détails"
+                                 onClick={() => window.location.href = `/projects/${inspection.project_id}?tab=inspections&inspection=${inspection.id}`}
+                               >
                                  <Eye className="h-4 w-4" />
                                </Button>
                                {isProjectManager && inspection.status === 'failed' && (

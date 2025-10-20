@@ -31,7 +31,10 @@ const Suppliers = () => {
     phone: '',
     address: '',
     category: '',
-    rating: 0
+    rating: 0,
+    nif: '',
+    commerce_register_ref: '',
+    model_documents: [] as string[]
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -123,7 +126,10 @@ const Suppliers = () => {
       phone: '',
       address: '',
       category: '',
-      rating: 0
+      rating: 0,
+      nif: '',
+      commerce_register_ref: '',
+      model_documents: []
     });
     setIsCreating(false);
     setEditingId(null);
@@ -146,7 +152,10 @@ const Suppliers = () => {
       phone: supplier.phone || '',
       address: supplier.address || '',
       category: supplier.category || '',
-      rating: supplier.rating || 0
+      rating: supplier.rating || 0,
+      nif: (supplier as any).nif || '',
+      commerce_register_ref: (supplier as any).commerce_register_ref || '',
+      model_documents: (supplier as any).model_documents || []
     });
     setEditingId(supplier.id);
     setIsCreating(true);
@@ -311,6 +320,86 @@ const Suppliers = () => {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows={3}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">NIF (Numéro d'Identification Fiscale)</label>
+                  <Input
+                    value={formData.nif}
+                    onChange={(e) => setFormData({ ...formData, nif: e.target.value })}
+                    placeholder="Ex: 123456789"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Référence Registre de Commerce</label>
+                  <Input
+                    value={formData.commerce_register_ref}
+                    onChange={(e) => setFormData({ ...formData, commerce_register_ref: e.target.value })}
+                    placeholder="Ex: RC-2024-001"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Documents modèles</label>
+                <div className="text-xs text-muted-foreground mb-2">
+                  Téléversez les documents modèles pour ce fournisseur (catalogue, tarifs, etc.)
+                </div>
+                <Input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  onChange={async (e) => {
+                    const files = e.target.files;
+                    if (!files || files.length === 0) return;
+
+                    try {
+                      const uploadedUrls: string[] = [];
+                      
+                      for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const fileName = `supplier-docs/${Date.now()}-${file.name}`;
+                        
+                        const { data, error } = await supabase.storage
+                          .from('documents')
+                          .upload(fileName, file);
+
+                        if (error) throw error;
+
+                        const { data: { publicUrl } } = supabase.storage
+                          .from('documents')
+                          .getPublicUrl(fileName);
+
+                        uploadedUrls.push(publicUrl);
+                      }
+
+                      setFormData({ 
+                        ...formData, 
+                        model_documents: [...formData.model_documents, ...uploadedUrls] 
+                      });
+
+                      toast({
+                        title: "Succès",
+                        description: `${files.length} document(s) téléversé(s)`,
+                      });
+                    } catch (error: any) {
+                      console.error('Error uploading files:', error);
+                      toast({
+                        title: "Erreur",
+                        description: error.message,
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                />
+                {formData.model_documents.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      {formData.model_documents.length} document(s) téléversé(s)
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">
