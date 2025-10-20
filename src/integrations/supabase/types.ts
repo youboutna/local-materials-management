@@ -3838,12 +3838,14 @@ export type Database = {
         Row: {
           address: string | null
           category: string | null
+          commerce_register_ref: string | null
           contact_person: string | null
           created_at: string | null
           default_password_reset_required: boolean | null
           email: string | null
           id: string
           is_active: boolean | null
+          model_documents: string[] | null
           name: string
           nif: string | null
           phone: string | null
@@ -3854,12 +3856,14 @@ export type Database = {
         Insert: {
           address?: string | null
           category?: string | null
+          commerce_register_ref?: string | null
           contact_person?: string | null
           created_at?: string | null
           default_password_reset_required?: boolean | null
           email?: string | null
           id?: string
           is_active?: boolean | null
+          model_documents?: string[] | null
           name: string
           nif?: string | null
           phone?: string | null
@@ -3870,12 +3874,14 @@ export type Database = {
         Update: {
           address?: string | null
           category?: string | null
+          commerce_register_ref?: string | null
           contact_person?: string | null
           created_at?: string | null
           default_password_reset_required?: boolean | null
           email?: string | null
           id?: string
           is_active?: boolean | null
+          model_documents?: string[] | null
           name?: string
           nif?: string | null
           phone?: string | null
