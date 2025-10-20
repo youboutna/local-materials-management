@@ -32,6 +32,7 @@ const SupplierPortal = () => {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
+  const [inspections, setInspections] = useState<any[]>([]);
   const [taskComment, setTaskComment] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [shareTargetEmail, setShareTargetEmail] = useState('');
@@ -79,6 +80,7 @@ const SupplierPortal = () => {
       fetchSharedDocuments();
       fetchUploadedDocuments();
       fetchAssignedTasks();
+      fetchInspections();
     }
   }, [user]);
 
@@ -231,6 +233,25 @@ const SupplierPortal = () => {
       console.error('Error fetching assigned tasks:', error);
     } else {
       setAssignedTasks((data || []) as SupplierNotification[]);
+    }
+  };
+
+  const fetchInspections = async () => {
+    if (!user || !supplierProfile) return;
+
+    const { data, error } = await supabase
+      .from('inspections')
+      .select(`
+        *,
+        projects (title, status)
+      `)
+      .eq('inspector', supplierProfile.name)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching inspections:', error);
+    } else {
+      setInspections(data || []);
     }
   };
 
@@ -800,9 +821,10 @@ const SupplierPortal = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="shared" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="w-full">
             <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
             <TabsTrigger value="tasks">Mes Tâches</TabsTrigger>
+            <TabsTrigger value="inspections">Inspections</TabsTrigger>
             <TabsTrigger value="upload">Mes Documents</TabsTrigger>
             <TabsTrigger value="business">Documents Justificatifs</TabsTrigger>
             <TabsTrigger value="payments">Demandes de Paiement</TabsTrigger>
@@ -1007,6 +1029,73 @@ const SupplierPortal = () => {
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
                       Aucune tâche assignée pour le moment
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="inspections">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Résultats d'Inspection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {inspections.length > 0 ? (
+                    inspections.map((inspection) => (
+                      <div key={inspection.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-medium mb-2">
+                              Inspection - {inspection.projects?.title || 'Projet inconnu'}
+                            </h3>
+                            <div className="space-y-1 text-sm">
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Inspecteur:</span> {inspection.inspector}
+                              </p>
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Progrès:</span> {inspection.progress_at_inspection}%
+                              </p>
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Commentaires:</span> {inspection.comments || 'Aucun commentaire'}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {inspection.date ? new Date(inspection.date).toLocaleDateString('fr-FR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                }) : 'Date inconnue'}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={inspection.status === 'approved' ? 'default' : 'secondary'}
+                            className={
+                              inspection.status === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : inspection.status === 'rejected'
+                                ? 'bg-red-100 text-red-800'
+                                : inspection.status === 'in_progress'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }
+                          >
+                            {inspection.status === 'approved' ? 'Approuvée' : 
+                             inspection.status === 'rejected' ? 'Rejetée' : 
+                             inspection.status === 'in_progress' ? 'En cours' : 
+                             inspection.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucun résultat d'inspection pour le moment
                     </p>
                   )}
                 </div>
