@@ -283,6 +283,30 @@ export class ProjectRepository {
     if (error) throw error;
   }
 
+  // ============= Helper methods for progress sync =============
+
+  async findTaskById(id: string): Promise<TaskAssignmentEntity | null> {
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data as TaskAssignmentEntity | null;
+  }
+
+  async findInspectionById(id: string): Promise<InspectionEntity | null> {
+    const { data, error } = await supabase
+      .from('inspections')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data as InspectionEntity | null;
+  }
+
   // ============= Batch Operations =============
 
   async findProjectWithRelatedData(projectId: string) {

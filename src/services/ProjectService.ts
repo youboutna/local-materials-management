@@ -192,15 +192,34 @@ export class ProjectService {
       notes: taskData.notes
     };
 
-    return await this.repository.createTask(taskEntity);
+    const result = await this.repository.createTask(taskEntity);
+    
+    // Synchronize project progress
+    await this.synchronizeProjectProgress(projectId);
+    
+    return result;
   }
 
   async updateTask(taskId: string, taskData: any) {
-    return await this.repository.updateTask(taskId, taskData);
+    const result = await this.repository.updateTask(taskId, taskData);
+    
+    // Get project_id from task and synchronize progress
+    if (taskData.project_id) {
+      await this.synchronizeProjectProgress(taskData.project_id);
+    }
+    
+    return result;
   }
 
   async deleteTask(taskId: string) {
+    // Get task to find project_id before deletion
+    const task = await this.repository.findTaskById(taskId);
     await this.repository.deleteTask(taskId);
+    
+    // Synchronize project progress if task had project_id
+    if (task?.project_id) {
+      await this.synchronizeProjectProgress(task.project_id);
+    }
   }
 
   // ============= Risk Management =============
@@ -241,15 +260,34 @@ export class ProjectService {
       documents: inspectionData.documents
     };
 
-    return await this.repository.createInspection(inspectionEntity);
+    const result = await this.repository.createInspection(inspectionEntity);
+    
+    // Synchronize project progress
+    await this.synchronizeProjectProgress(projectId);
+    
+    return result;
   }
 
   async updateInspection(inspectionId: string, inspectionData: any) {
-    return await this.repository.updateInspection(inspectionId, inspectionData);
+    const result = await this.repository.updateInspection(inspectionId, inspectionData);
+    
+    // Get project_id from inspection and synchronize progress
+    if (inspectionData.project_id) {
+      await this.synchronizeProjectProgress(inspectionData.project_id);
+    }
+    
+    return result;
   }
 
   async deleteInspection(inspectionId: string) {
+    // Get inspection to find project_id before deletion
+    const inspection = await this.repository.findInspectionById(inspectionId);
     await this.repository.deleteInspection(inspectionId);
+    
+    // Synchronize project progress if inspection had project_id
+    if (inspection?.project_id) {
+      await this.synchronizeProjectProgress(inspection.project_id);
+    }
   }
 
   // ============= Payment Management =============
@@ -281,6 +319,31 @@ export class ProjectService {
 
   async deletePayment(paymentId: string) {
     await this.repository.deletePayment(paymentId);
+  }
+
+  // ============= Progress Synchronization =============
+
+  /**
+   * Recalculate and update project progress in database
+   * Based on phases, tasks, and inspections with realistic methodology
+   */
+  async synchronizeProjectProgress(projectId: string): Promise<number> {
+    const relatedData = await this.repository.findProjectWithRelatedData(projectId);
+    if (!relatedData.project) return 0;
+
+    // Calculate realistic progress
+    const { ProgressCalculationService } = await import('./ProgressCalculationService');
+    const calculatedProgress = ProgressCalculationService.calculateProjectProgress(
+      relatedData.phases || [],
+      relatedData.tasks || [],
+      relatedData.inspections || []
+    );
+
+    // Update progress in database
+    const roundedProgress = Math.round(calculatedProgress);
+    await this.repository.update(projectId, { progress: roundedProgress });
+
+    return roundedProgress;
   }
 
   // ============= Private Helper Methods =============
