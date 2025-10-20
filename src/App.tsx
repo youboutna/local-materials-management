@@ -26,6 +26,7 @@ import MaterialDetail from './pages/MaterialDetail';
 import MaterialEdit from './pages/MaterialEdit';
 import Documents from './pages/Documents';
 import Tasks from './pages/Tasks';
+import TaskDetail from './pages/TaskDetail';
 import Employees from './pages/Employees';
 import Users from './pages/Users';
 import Dashboard from './pages/Dashboard';
@@ -171,6 +172,11 @@ function App() {
 <Route path="/tasks" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <Tasks />
+  </RoleBasedRoute>
+} />
+<Route path="/tasks/:taskId" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <TaskDetail />
   </RoleBasedRoute>
 } />
 <Route path="/employees" element={

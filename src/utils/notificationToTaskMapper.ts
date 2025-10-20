@@ -79,6 +79,22 @@ export const createTaskFromNotification = async (params: CreateTaskFromNotificat
     return null;
   }
 
+  // Create a notification for the assigned user
+  await supabase
+    .from('notifications')
+    .insert({
+      recipient_id: recipientId,
+      title: `Nouvelle tâche: ${title}`,
+      message: description || `Vous avez été assigné à une nouvelle tâche`,
+      type: 'task_assignment',
+      related_id: task.id,
+      metadata: {
+        task_type: taskType,
+        related_project_id: metadata.related_project_id,
+        priority: priority,
+      } as any,
+    });
+
   console.log('Task created from notification:', task);
   return task;
 };
