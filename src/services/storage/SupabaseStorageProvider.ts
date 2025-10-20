@@ -14,11 +14,15 @@ export class SupabaseStorageProvider implements StorageProvider {
   async upload(file: File, path?: string): Promise<UploadResult> {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = path || `${Date.now()}.${fileExt}`;
+      const baseName = file.name.replace(`.${fileExt}`, '');
+      const uniqueId = crypto.randomUUID();
+      const fileName = path || `${baseName}-${uniqueId}.${fileExt}`;
       
       const { data, error } = await supabase.storage
         .from(this.bucket)
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: false // Prevent overwriting existing files
+        });
 
       if (error) {
         return { success: false, error: error.message };
