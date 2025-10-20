@@ -193,12 +193,13 @@ const SupplierPortal = () => {
         projects!documents_project_id_fkey (title, status),
         payments (amount, payment_date)
       `)
-      .or(`assigned_to.eq.${user.id},tags.cs.{${supplierProfile.name}}`)
+      .or(`assigned_to.eq.${user.id},supplier_id.eq.${supplierProfile.id},tags.cs.{${supplierProfile.name}}`)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching shared documents:', error);
     } else {
+      console.log('Fetched shared documents for supplier:', data);
       setSharedDocuments((data || []) as unknown as DocumentWithViewStatus[]);
     }
   };
@@ -239,18 +240,20 @@ const SupplierPortal = () => {
   const fetchInspections = async () => {
     if (!user || !supplierProfile) return;
 
+    // Query inspections by supplier name, contact_person, or email
     const { data, error } = await supabase
       .from('inspections')
       .select(`
         *,
         projects (title, status)
       `)
-      .eq('inspector', supplierProfile.name)
+      .or(`inspector.eq.${supplierProfile.name},inspector.eq.${supplierProfile.contact_person},inspector.ilike.%${supplierProfile.email?.split('@')[0]}%`)
       .order('date', { ascending: false });
 
     if (error) {
       console.error('Error fetching inspections:', error);
     } else {
+      console.log('Fetched inspections for supplier:', data);
       setInspections(data || []);
     }
   };
