@@ -368,21 +368,32 @@ const SupplierPortal = () => {
       // Mark task as viewed when commenting
       await markAsViewed(taskId, 'task');
       
+      // Update task_assignments with the new comment in notes field
+      const { data: existingTask } = await supabase
+        .from('task_assignments')
+        .select('notes')
+        .eq('id', taskId)
+        .single();
+
+      const existingNotes = existingTask?.notes || '';
+      const newNote = `[${new Date().toLocaleString('fr-FR')}] ${supplierProfile?.name || user.email}: ${taskComment}`;
+      const updatedNotes = existingNotes 
+        ? `${existingNotes}\n\n${newNote}`
+        : newNote;
+
       const { error } = await supabase
-        .from('supplier_notifications')
-        .insert({
-          supplier_id: supplierProfile?.id,
-          task_id: taskId,
-          notification_type: 'task_comment',
-          email: user.email || '',
-          metadata: { comment: taskComment, from_supplier: true }
-        });
+        .from('task_assignments')
+        .update({ 
+          notes: updatedNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
 
       if (error) throw error;
 
       toast({
         title: "Commentaire ajouté",
-        description: "Votre commentaire a été envoyé",
+        description: "Votre commentaire a été ajouté à la tâche",
       });
 
       setTaskComment('');
@@ -404,17 +415,41 @@ const SupplierPortal = () => {
       // Mark task as viewed when completing
       await markAsViewed(taskId, 'task');
       
-      const { error } = await supabase
-        .from('supplier_notifications')
-        .insert({
-          supplier_id: supplierProfile?.id,
-          task_id: taskId,
-          notification_type: 'task_completed',
-          email: user.email || '',
-          metadata: { status: 'completed', from_supplier: true }
-        });
+      // Update task_assignments status to completed
+      const { error: updateError } = await supabase
+        .from('task_assignments')
+        .update({ 
+          status: 'completed',
+          completion_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Create notification for project manager
+      const { data: task } = await supabase
+        .from('task_assignments')
+        .select('title, assigned_by')
+        .eq('id', taskId)
+        .single();
+
+      if (task?.assigned_by) {
+        await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: task.assigned_by,
+            title: "Tâche complétée",
+            message: `${supplierProfile?.name || user.email} a marqué la tâche "${task.title}" comme terminée`,
+            type: 'task_completed',
+            related_id: taskId,
+            metadata: {
+              task_id: taskId,
+              completed_by: user.id,
+              supplier_name: supplierProfile?.name
+            }
+          });
+      }
 
       toast({
         title: "Tâche marquée comme terminée",
