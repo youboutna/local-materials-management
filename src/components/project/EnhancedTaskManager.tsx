@@ -284,15 +284,19 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, ...data }: Partial<TaskAssignmentExtended> & { id: string }) => {
-      const updateData = {
-        ...data,
-        title: data.title || undefined
+      const { assigned_to, assigned_by, ...rest } = data as any;
+      const assigneeFields = typeof assigned_to === 'string' && assigned_to.length
+        ? mapAssigneeFields(assigned_to)
+        : {};
+      const updateData: any = {
+        ...rest,
+        ...assigneeFields,
+        title: data.title || undefined,
       };
       const { error } = await supabase
         .from('task_assignments')
         .update(updateData)
         .eq('id', id);
-      
       if (error) throw error;
     },
     onSuccess: () => {
@@ -404,6 +408,41 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     return { options, defaultType };
   };
 
+  // Map a selected assignee id to proper FK columns to avoid FK violations
+  const mapAssigneeFields = (id: string | null) => {
+    const fields: any = {
+      assigned_to: null,
+      assigned_employee_id: null,
+      assigned_supplier_id: null,
+      assigned_profile_id: null,
+      assignee_type: null as 'employee' | 'supplier' | 'user' | null,
+      assignee_name: null as string | null,
+    };
+    if (!id) return fields;
+
+    const emp = employees.find(e => e.id === id);
+    if (emp) {
+      fields.assigned_employee_id = id;
+      fields.assigned_to = id; // legacy compatibility
+      fields.assignee_type = 'employee';
+      fields.assignee_name = emp.full_name;
+      return fields;
+    }
+
+    const sup = suppliers.find(s => s.id === id);
+    if (sup) {
+      fields.assigned_supplier_id = id;
+      fields.assignee_type = 'supplier';
+      fields.assignee_name = sup.contact_person || sup.name;
+      return fields;
+    }
+
+    // Fallback: treat as profile id
+    fields.assigned_profile_id = id;
+    fields.assignee_type = 'user';
+    return fields;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -436,7 +475,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             description: formData.description || null,
             project_id: projectId,
             phase_id: phase.id,
-            assigned_to: formData.assigned_to || null,
+            ...mapAssigneeFields(formData.assigned_to || null),
             due_date: formData.due_date || null,
             priority: formData.priority,
             status: formData.status,
@@ -459,7 +498,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
           description: formData.description || null,
           project_id: projectId,
           phase_id: formData.phase_id,
-          assigned_to: formData.assigned_to || null,
+          ...mapAssigneeFields(formData.assigned_to || null),
           due_date: formData.due_date || null,
           priority: formData.priority,
           status: formData.status,
