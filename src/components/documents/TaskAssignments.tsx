@@ -150,8 +150,7 @@ const TaskAssignments = () => {
         query = query.eq("priority", filterPriority);
       }
       if (filterAssignee !== "all") {
-        // Filter by the appropriate FK based on assignee type stored in the row
-        query = query.or(`assigned_supplier_id.eq.${filterAssignee},assigned_employee_id.eq.${filterAssignee},assigned_profile_id.eq.${filterAssignee}`);
+        query = query.eq("assigned_to", filterAssignee);
       }
 
       const { data, error } = await query;
@@ -174,16 +173,14 @@ const TaskAssignments = () => {
 
   // Get unique assignees from tasks for filter
   const uniqueAssignees = tasks?.reduce((acc, task) => {
-    const assigneeId = task.assigned_supplier_id || task.assigned_employee_id || task.assigned_profile_id;
-    if (assigneeId && task.assignee_name) {
-      acc[assigneeId] = task.assignee_name;
+    if (task.assigned_to && task.assignee_name) {
+      acc[task.assigned_to] = task.assignee_name;
     }
     return acc;
   }, {} as Record<string, string>);
 
   const createMutation = useMutation({
     mutationFn: async (taskData: typeof formData) => {
-      // Determine which FK column to use based on assignee_type
       const insertData: any = {
         title: taskData.title,
         description: taskData.description,
@@ -191,23 +188,13 @@ const TaskAssignments = () => {
         assignee_type: taskData.assignee_type || null,
         assignee_name: taskData.assignee_name || null,
         assignee_email: taskData.assignee_email || null,
+        assigned_to: taskData.assigned_to || null,
         assigned_by: user?.id || null,
         due_date: taskData.due_date || null,
         priority: taskData.priority,
         status: taskData.status,
         notes: taskData.notes || null,
       };
-
-      // Set the appropriate FK based on assignee type
-      if (taskData.assigned_to && taskData.assignee_type) {
-        if (taskData.assignee_type === 'supplier') {
-          insertData.assigned_supplier_id = taskData.assigned_to;
-        } else if (taskData.assignee_type === 'employee') {
-          insertData.assigned_employee_id = taskData.assigned_to;
-        } else if (taskData.assignee_type === 'user') {
-          insertData.assigned_profile_id = taskData.assigned_to;
-        }
-      }
       
       const { data, error } = await supabase
         .from("task_assignments")
@@ -276,7 +263,6 @@ const TaskAssignments = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      // Determine which FK column to use based on assignee_type
       const updateData: any = {
         title: data.title,
         description: data.description,
@@ -284,26 +270,12 @@ const TaskAssignments = () => {
         assignee_type: data.assignee_type || null,
         assignee_name: data.assignee_name || null,
         assignee_email: data.assignee_email || null,
+        assigned_to: data.assigned_to || null,
         due_date: data.due_date || null,
         priority: data.priority,
         status: data.status,
         notes: data.notes || null,
-        // Clear all assignee FKs first
-        assigned_supplier_id: null,
-        assigned_employee_id: null,
-        assigned_profile_id: null,
       };
-
-      // Set the appropriate FK based on assignee type
-      if (data.assigned_to && data.assignee_type) {
-        if (data.assignee_type === 'supplier') {
-          updateData.assigned_supplier_id = data.assigned_to;
-        } else if (data.assignee_type === 'employee') {
-          updateData.assigned_employee_id = data.assigned_to;
-        } else if (data.assignee_type === 'user') {
-          updateData.assigned_profile_id = data.assigned_to;
-        }
-      }
 
       const { error } = await supabase
         .from("task_assignments")

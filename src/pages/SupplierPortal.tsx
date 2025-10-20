@@ -239,7 +239,7 @@ const SupplierPortal = () => {
     const { data: taskData, error: taskError } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assigned_supplier_id', supplierProfile.id)
+      .eq('assigned_to', supplierProfile.id)
       .order('created_at', { ascending: false });
 
     // Also fetch old-style supplier notifications for backward compatibility

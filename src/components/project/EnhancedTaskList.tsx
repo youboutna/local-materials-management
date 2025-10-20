@@ -119,7 +119,8 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
           description: taskData.description,
           project_id: projectId,
           phase_id: taskData.phase_id || null,
-          // Do not set assigned_to/assigned_by here to avoid FK violations
+          assigned_to: taskData.assigned_to || null,
+          assigned_by: user.id,
           due_date: taskData.due_date || null,
           priority: taskData.priority,
           status: taskData.status,
@@ -141,11 +142,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      // Exclude assigned_to from updates to prevent FK violations
-      const { assigned_to: _omitAssignedTo, assigned_by: _omitAssignedBy, ...safeData } = (data as any);
       const { error } = await supabase
         .from('task_assignments')
-        .update(safeData)
+        .update(data)
         .eq('id', id);
       
       if (error) throw error;

@@ -47,16 +47,14 @@ export const useEnhancedTaskAssignment = () => {
       if (!user) {
         throw new Error('User not authenticated');
       }
-
-      const userId = user.id;
       
       const { data, error } = await supabase
         .from('task_assignments')
         .insert({
           title: newAssignment.title || '',
           description: newAssignment.description || '',
-          assigned_to: newAssignment.assigned_to || '',
-          assigned_by: userId,
+          assigned_to: newAssignment.assigned_to || null,
+          assigned_by: user.id,
           completion_token: crypto.randomUUID(),
           completion_url: `${window.location.origin}/task-completion/${crypto.randomUUID()}`,
           priority: newAssignment.priority || 'medium',

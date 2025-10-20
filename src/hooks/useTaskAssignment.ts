@@ -68,8 +68,7 @@ export const useTaskAssignment = () => {
         }
       }
 
-      // Create the task assignment with proper assignee information
-      // Map to the correct foreign key columns to avoid FK violations
+      // Create the task assignment with assigned_to + assignee_type pattern
       const insertData: any = {
         title,
         description,
@@ -80,19 +79,9 @@ export const useTaskAssignment = () => {
         status: 'pending',
         due_date: dueDate,
         project_id: projectId,
-        // Avoid assigned_by FK violation (references employees.id); set null unless you map user to an employee
-        assigned_by: null,
+        assigned_to: assignedTo,
+        assigned_by: user?.id || null,
       };
-
-      if (assigneeType === 'employee') {
-        insertData.assigned_employee_id = assignedTo;
-        // Keep legacy column for compatibility; points to employees.id
-        insertData.assigned_to = assignedTo;
-      } else if (assigneeType === 'supplier') {
-        insertData.assigned_supplier_id = assignedTo;
-      } else if (assigneeType === 'user') {
-        insertData.assigned_profile_id = assignedTo;
-      }
 
       const { data: taskData, error: taskError } = await supabase
         .from('task_assignments')

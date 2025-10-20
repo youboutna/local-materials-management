@@ -4048,9 +4048,6 @@ export type Database = {
           actual_cost: number | null
           actual_duration: number | null
           assigned_by: string | null
-          assigned_employee_id: string | null
-          assigned_profile_id: string | null
-          assigned_supplier_id: string | null
           assigned_to: string | null
           assignee_email: string | null
           assignee_name: string | null
@@ -4084,9 +4081,6 @@ export type Database = {
           actual_cost?: number | null
           actual_duration?: number | null
           assigned_by?: string | null
-          assigned_employee_id?: string | null
-          assigned_profile_id?: string | null
-          assigned_supplier_id?: string | null
           assigned_to?: string | null
           assignee_email?: string | null
           assignee_name?: string | null
@@ -4120,9 +4114,6 @@ export type Database = {
           actual_cost?: number | null
           actual_duration?: number | null
           assigned_by?: string | null
-          assigned_employee_id?: string | null
-          assigned_profile_id?: string | null
-          assigned_supplier_id?: string | null
           assigned_to?: string | null
           assignee_email?: string | null
           assignee_name?: string | null
@@ -4153,41 +4144,6 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "task_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigned_employee_fkey"
-            columns: ["assigned_employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigned_profile_fkey"
-            columns: ["assigned_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigned_supplier_fkey"
-            columns: ["assigned_supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "task_assignments_phase_id_fkey"
             columns: ["phase_id"]

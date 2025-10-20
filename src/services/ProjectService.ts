@@ -5,6 +5,7 @@ import { ProjectCalculationService } from './ProjectCalculationService';
 import { ProjectDTO, ProjectDetailDTO, ProjectSummaryDTO, ProjectListItemDTO, ProjectFormDTO } from '@/types/dto';
 import { ProjectEntity } from '@/types/entities';
 import { EVMCalculations, ProgressAnalytics, BudgetAnalytics, TimelineAnalytics, QualityMetrics, RiskAnalytics, ProjectHealthScore } from '@/types/calculations';
+import { supabase } from '@/integrations/supabase/client';
 
 export class ProjectService {
   private repository: ProjectRepository;
@@ -181,11 +182,14 @@ export class ProjectService {
   // ============= Task Management =============
 
   async createTask(projectId: string, taskData: any) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const taskEntity = {
       project_id: projectId,
       title: taskData.title,
       description: taskData.description,
-      // Do not set assigned_to here to avoid FK violations; assignment handled elsewhere
+      assigned_to: taskData.assignedTo || undefined,
+      assigned_by: user?.id || undefined,
       status: 'pending',
       priority: taskData.priority || 'medium',
       due_date: taskData.dueDate,

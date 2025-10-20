@@ -284,13 +284,8 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, ...data }: Partial<TaskAssignmentExtended> & { id: string }) => {
-      const { assigned_to, assigned_by, ...rest } = data as any;
-      const assigneeFields = typeof assigned_to === 'string' && assigned_to.length
-        ? mapAssigneeFields(assigned_to)
-        : {};
       const updateData: any = {
-        ...rest,
-        ...assigneeFields,
+        ...data,
         title: data.title || undefined,
       };
       const { error } = await supabase
@@ -408,39 +403,34 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     return { options, defaultType };
   };
 
-  // Map a selected assignee id to proper FK columns to avoid FK violations
-  const mapAssigneeFields = (id: string | null) => {
-    const fields: any = {
-      assigned_to: null,
-      assigned_employee_id: null,
-      assigned_supplier_id: null,
-      assigned_profile_id: null,
-      assignee_type: null as 'employee' | 'supplier' | 'user' | null,
-      assignee_name: null as string | null,
-    };
-    if (!id) return fields;
+  // Determine assignee type and name from selected ID
+  const getAssigneeInfo = (id: string | null) => {
+    if (!id) return { assignee_type: null, assignee_name: null, assignee_email: null };
 
     const emp = employees.find(e => e.id === id);
     if (emp) {
-      fields.assigned_employee_id = id;
-      fields.assigned_to = id; // legacy compatibility
-      fields.assignee_type = 'employee';
-      fields.assignee_name = emp.full_name;
-      return fields;
+      return {
+        assignee_type: 'employee' as const,
+        assignee_name: emp.full_name,
+        assignee_email: null,
+      };
     }
 
     const sup = suppliers.find(s => s.id === id);
     if (sup) {
-      fields.assigned_supplier_id = id;
-      fields.assignee_type = 'supplier';
-      fields.assignee_name = sup.contact_person || sup.name;
-      return fields;
+      return {
+        assignee_type: 'supplier' as const,
+        assignee_name: sup.contact_person || sup.name,
+        assignee_email: null,
+      };
     }
 
-    // Fallback: treat as profile id
-    fields.assigned_profile_id = id;
-    fields.assignee_type = 'user';
-    return fields;
+    // Fallback: treat as profile/user
+    return {
+      assignee_type: 'user' as const,
+      assignee_name: null,
+      assignee_email: null,
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -470,12 +460,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       if (formData.applyToAllPhases) {
         // Create task for each phase
         currentPhases.forEach(phase => {
+          const assigneeInfo = getAssigneeInfo(formData.assigned_to || null);
           tasksToCreate.push({
             title: `${formData.title} - ${phase.phase_name}`,
             description: formData.description || null,
             project_id: projectId,
             phase_id: phase.id,
-            ...mapAssigneeFields(formData.assigned_to || null),
+            assigned_to: formData.assigned_to || null,
+            assigned_by: null,
+            ...assigneeInfo,
             due_date: formData.due_date || null,
             priority: formData.priority,
             status: formData.status,
@@ -493,12 +486,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         });
       } else {
         // Create single task for selected phase
+        const assigneeInfo = getAssigneeInfo(formData.assigned_to || null);
         tasksToCreate.push({
           title: formData.title,
           description: formData.description || null,
           project_id: projectId,
           phase_id: formData.phase_id,
-          ...mapAssigneeFields(formData.assigned_to || null),
+          assigned_to: formData.assigned_to || null,
+          assigned_by: null,
+          ...assigneeInfo,
           due_date: formData.due_date || null,
           priority: formData.priority,
           status: formData.status,
