@@ -60,7 +60,30 @@ export class ProjectService {
 
   async getAllProjects(): Promise<ProjectListItemDTO[]> {
     const entities = await this.repository.findAll();
-    return entities.map(entity => EntityToDTOMapper.projectEntityToListItemDTO(entity));
+    
+    // Calculate realistic progress for each project
+    const projectsWithProgress = await Promise.all(
+      entities.map(async (entity) => {
+        const relatedData = await this.repository.findProjectWithRelatedData(entity.id);
+        
+        // Calculate realistic progress
+        const { ProgressCalculationService } = await import('./ProgressCalculationService');
+        const calculatedProgress = ProgressCalculationService.calculateProjectProgress(
+          relatedData.phases || [],
+          relatedData.tasks || [],
+          relatedData.inspections || []
+        );
+        
+        // Create DTO with calculated progress
+        const dto = EntityToDTOMapper.projectEntityToListItemDTO(entity);
+        return {
+          ...dto,
+          progress: Math.round(calculatedProgress)
+        };
+      })
+    );
+    
+    return projectsWithProgress;
   }
 
   async createProject(formData: ProjectFormDTO): Promise<ProjectDTO> {
