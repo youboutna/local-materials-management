@@ -235,18 +235,32 @@ const SupplierPortal = () => {
   const fetchAssignedTasks = async () => {
     if (!user || !supplierProfile) return;
 
-    const { data, error } = await supabase
+    // Fetch tasks from task_assignments table where assignee_type is 'supplier'
+    const { data: taskData, error: taskError } = await supabase
+      .from('task_assignments')
+      .select('*')
+      .eq('assignee_type', 'supplier')
+      .eq('assigned_to', supplierProfile.id)
+      .order('created_at', { ascending: false });
+
+    // Also fetch old-style supplier notifications for backward compatibility
+    const { data: notifData, error: notifError } = await supabase
       .from('supplier_notifications')
       .select('*')
       .eq('supplier_id', supplierProfile.id)
       .in('notification_type', ['task_assignment', 'task_notification'])
       .order('sent_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching assigned tasks:', error);
-    } else {
-      setAssignedTasks((data || []) as SupplierNotification[]);
+    if (taskError) {
+      console.error('Error fetching task assignments:', taskError);
     }
+    if (notifError) {
+      console.error('Error fetching supplier notifications:', notifError);
+    }
+
+    // Combine both sources
+    const combinedTasks = [...(taskData || []), ...(notifData || [])];
+    setAssignedTasks(combinedTasks as SupplierNotification[]);
   };
 
   const fetchInspections = async () => {

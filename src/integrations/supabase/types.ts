@@ -4049,6 +4049,9 @@ export type Database = {
           actual_duration: number | null
           assigned_by: string | null
           assigned_to: string | null
+          assignee_email: string | null
+          assignee_name: string | null
+          assignee_type: string | null
           completion_date: string | null
           completion_token: string | null
           completion_url: string | null
@@ -4079,6 +4082,9 @@ export type Database = {
           actual_duration?: number | null
           assigned_by?: string | null
           assigned_to?: string | null
+          assignee_email?: string | null
+          assignee_name?: string | null
+          assignee_type?: string | null
           completion_date?: string | null
           completion_token?: string | null
           completion_url?: string | null
@@ -4109,6 +4115,9 @@ export type Database = {
           actual_duration?: number | null
           assigned_by?: string | null
           assigned_to?: string | null
+          assignee_email?: string | null
+          assignee_name?: string | null
+          assignee_type?: string | null
           completion_date?: string | null
           completion_token?: string | null
           completion_url?: string | null

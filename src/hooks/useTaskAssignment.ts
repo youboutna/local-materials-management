@@ -25,49 +25,69 @@ export const useTaskAssignment = () => {
 
     setLoading(true);
     try {
-      // Create the task assignment - assigned_to is nullable, so we can insert without FK constraint
-      const { data: taskData, error: taskError } = await supabase
-        .from('task_assignments')
-        .insert({
-          title,
-          description,
-          assigned_to: null, // Set to null to avoid FK constraint issues
-          assigned_by: null, // Set to null to avoid FK constraint issues
-          priority,
-          status: 'pending',
-          due_date: dueDate,
-          project_id: projectId,
-          notes: `Assigned to employee/user: ${assignedTo}`
-        } as any)
-        .select()
-        .single();
-
-      if (taskError) throw taskError;
-
-      // Try to get assignee name from employees or profiles
+      // Determine assignee type and fetch details
       let assigneeName = 'Utilisateur';
-      
-      // First try employees table
+      let assigneeEmail = '';
+      let assigneeType: 'supplier' | 'employee' | 'user' = 'user';
+
+      // Try employees first
       const { data: employeeData } = await supabase
         .from('employees')
-        .select('full_name')
+        .select('full_name, email')
         .eq('id', assignedTo)
         .maybeSingle();
       
       if (employeeData) {
         assigneeName = employeeData.full_name;
+        assigneeEmail = employeeData.email || '';
+        assigneeType = 'employee';
       } else {
-        // Then try profiles table
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name')
+        // Try suppliers
+        const { data: supplierData } = await supabase
+          .from('suppliers')
+          .select('name, email, contact_person')
           .eq('id', assignedTo)
           .maybeSingle();
         
-        if (profileData) {
-          assigneeName = profileData.full_name || 'Utilisateur';
+        if (supplierData) {
+          assigneeName = supplierData.contact_person || supplierData.name;
+          assigneeEmail = supplierData.email || '';
+          assigneeType = 'supplier';
+        } else {
+          // Try profiles (authenticated users)
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', assignedTo)
+            .maybeSingle();
+          
+          if (profileData) {
+            assigneeName = profileData.full_name || 'Utilisateur';
+            assigneeType = 'user';
+          }
         }
       }
+
+      // Create the task assignment with proper assignee information
+      const { data: taskData, error: taskError } = await supabase
+        .from('task_assignments')
+        .insert({
+          title,
+          description,
+          assigned_to: assignedTo,
+          assigned_by: user.id,
+          assignee_type: assigneeType,
+          assignee_name: assigneeName,
+          assignee_email: assigneeEmail,
+          priority,
+          status: 'pending',
+          due_date: dueDate,
+          project_id: projectId
+        } as any)
+        .select()
+        .single();
+
+      if (taskError) throw taskError;
 
       // Create notification metadata
       const metadata: NotificationMetadata = {
