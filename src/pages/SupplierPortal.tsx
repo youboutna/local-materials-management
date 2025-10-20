@@ -32,7 +32,10 @@ const SupplierPortal = () => {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [inspections, setInspections] = useState<any[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  const [parsedInvoices, setParsedInvoices] = useState<any[]>([]);
   const [taskComment, setTaskComment] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [shareTargetEmail, setShareTargetEmail] = useState('');
@@ -77,12 +80,21 @@ const SupplierPortal = () => {
   useEffect(() => {
     if (user) {
       fetchSupplierProfile();
+    }
+  }, [user]);
+
+  // Fetch all data when supplier profile is loaded
+  useEffect(() => {
+    if (user && supplierProfile) {
       fetchSharedDocuments();
       fetchUploadedDocuments();
       fetchAssignedTasks();
+      fetchNotifications();
       fetchInspections();
+      fetchPaymentRequests();
+      fetchParsedInvoices();
     }
-  }, [user]);
+  }, [user, supplierProfile]);
 
   const fetchSupplierProfile = async () => {
     if (!user) {
@@ -240,7 +252,7 @@ const SupplierPortal = () => {
   const fetchInspections = async () => {
     if (!user || !supplierProfile) return;
 
-    // Query inspections by supplier name, contact_person, or email
+    // Query inspections where inspector matches supplier name, contact_person, or email prefix
     const { data, error } = await supabase
       .from('inspections')
       .select(`
@@ -255,6 +267,69 @@ const SupplierPortal = () => {
     } else {
       console.log('Fetched inspections for supplier:', data);
       setInspections(data || []);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    if (!user || !supplierProfile) return;
+
+    // Fetch from supplier_notifications table AND general notifications
+    const { data: supplierNotifs, error: supplierError } = await supabase
+      .from('supplier_notifications')
+      .select('*')
+      .eq('supplier_id', supplierProfile.id)
+      .order('sent_at', { ascending: false });
+
+    const { data: generalNotifs, error: generalError } = await supabase
+      .from('notifications')
+      .select('*')
+      .or(`recipient_id.eq.${user.id},metadata->>supplier_id.eq.${supplierProfile.id}`)
+      .order('created_at', { ascending: false });
+
+    if (supplierError) {
+      console.error('Error fetching supplier notifications:', supplierError);
+    }
+    if (generalError) {
+      console.error('Error fetching general notifications:', generalError);
+    }
+
+    // Combine and deduplicate
+    const allNotifications = [...(supplierNotifs || []), ...(generalNotifs || [])];
+    setNotifications(allNotifications);
+  };
+
+  const fetchPaymentRequests = async () => {
+    if (!user || !supplierProfile) return;
+
+    const { data, error } = await supabase
+      .from('supplier_payment_requests')
+      .select('*')
+      .eq('supplier_id', supplierProfile.id)
+      .order('requested_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching payment requests:', error);
+    } else {
+      console.log('Fetched payment requests:', data);
+      setPaymentRequests(data || []);
+    }
+  };
+
+  const fetchParsedInvoices = async () => {
+    if (!user || !supplierProfile) return;
+
+    // Fetch invoices where supplier_info contains supplier name or email
+    const { data, error } = await supabase
+      .from('parsed_invoices')
+      .select('*')
+      .or(`supplier_info->>name.ilike.%${supplierProfile.name}%,supplier_info->>email.eq.${supplierProfile.email}`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching parsed invoices:', error);
+    } else {
+      console.log('Fetched parsed invoices:', data);
+      setParsedInvoices(data || []);
     }
   };
 
@@ -825,12 +900,14 @@ const SupplierPortal = () => {
         {/* Main Content */}
         <Tabs defaultValue="shared" className="space-y-6">
           <TabsList className="w-full">
-            <TabsTrigger value="shared">Documents Partagés</TabsTrigger>
-            <TabsTrigger value="tasks">Mes Tâches</TabsTrigger>
+            <TabsTrigger value="shared">Documents</TabsTrigger>
+            <TabsTrigger value="tasks">Tâches</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="inspections">Inspections</TabsTrigger>
+            <TabsTrigger value="payments">Paiements</TabsTrigger>
+            <TabsTrigger value="invoices">Factures</TabsTrigger>
             <TabsTrigger value="upload">Mes Documents</TabsTrigger>
             <TabsTrigger value="business">Documents Justificatifs</TabsTrigger>
-            <TabsTrigger value="payments">Demandes de Paiement</TabsTrigger>
           </TabsList>
 
           <TabsContent value="shared">
@@ -1099,6 +1176,206 @@ const SupplierPortal = () => {
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
                       Aucun résultat d'inspection pour le moment
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div 
+                        key={notification.id}
+                        className={`p-4 border rounded-lg ${
+                          notification.used_at || notification.read ? 'bg-muted/50' : 'bg-blue-50 border-blue-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-medium mb-1">
+                              {notification.title || notification.notification_type}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {notification.message || 
+                               (notification.metadata?.comment && String(notification.metadata.comment)) || 
+                               'Notification'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {notification.sent_at 
+                                ? new Date(notification.sent_at).toLocaleDateString('fr-FR')
+                                : notification.created_at
+                                ? new Date(notification.created_at).toLocaleDateString('fr-FR')
+                                : 'Date inconnue'}
+                            </p>
+                          </div>
+                          {!(notification.used_at || notification.read) && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                              Nouveau
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucune notification pour le moment
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Demandes de Paiement
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {paymentRequests.length > 0 ? (
+                    paymentRequests.map((payment) => (
+                      <div key={payment.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-medium mb-2">
+                              Demande de paiement - {payment.payment_reason}
+                            </h3>
+                            <div className="space-y-1 text-sm">
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Montant:</span> {payment.amount?.toLocaleString()} MRU
+                              </p>
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Description:</span> {payment.description || 'N/A'}
+                              </p>
+                              {payment.notes && (
+                                <p className="text-muted-foreground">
+                                  <span className="font-medium">Notes:</span> {payment.notes}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Demandé le: {payment.requested_date 
+                                  ? new Date(payment.requested_date).toLocaleDateString('fr-FR')
+                                  : 'Date inconnue'}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={payment.status === 'approved' ? 'default' : 'secondary'}
+                            className={
+                              payment.status === 'approved' 
+                                ? 'bg-green-100 text-green-800' 
+                                : payment.status === 'rejected'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }
+                          >
+                            {payment.status === 'approved' ? 'Approuvé' : 
+                             payment.status === 'rejected' ? 'Rejeté' : 
+                             payment.status === 'pending' ? 'En attente' :
+                             payment.status}
+                          </Badge>
+                        </div>
+                        {payment.rejection_reason && (
+                          <div className="mt-3 p-3 bg-red-50 rounded-md">
+                            <p className="text-sm text-red-800">
+                              <span className="font-medium">Raison du rejet:</span> {payment.rejection_reason}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucune demande de paiement pour le moment
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invoices">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Factures Analysées
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {parsedInvoices.length > 0 ? (
+                    parsedInvoices.map((invoice) => (
+                      <div key={invoice.id} className="p-4 border rounded-lg bg-card">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-medium mb-2">
+                              Facture #{invoice.invoice_number || 'N/A'}
+                            </h3>
+                            <div className="space-y-1 text-sm">
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Fichier:</span> {invoice.file_name}
+                              </p>
+                              {invoice.total_amount && (
+                                <p className="text-muted-foreground">
+                                  <span className="font-medium">Montant total:</span> {invoice.total_amount.toLocaleString()} MRU
+                                </p>
+                              )}
+                              {invoice.tax_amount && (
+                                <p className="text-muted-foreground">
+                                  <span className="font-medium">TVA:</span> {invoice.tax_amount.toLocaleString()} MRU
+                                </p>
+                              )}
+                              {invoice.invoice_date && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Date: {new Date(invoice.invoice_date).toLocaleDateString('fr-FR')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge 
+                            variant={invoice.parsing_status === 'completed' ? 'default' : 'secondary'}
+                            className={
+                              invoice.parsing_status === 'completed' 
+                                ? 'bg-green-100 text-green-800' 
+                                : invoice.parsing_status === 'failed'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }
+                          >
+                            {invoice.parsing_status === 'completed' ? 'Analysée' : 
+                             invoice.parsing_status === 'failed' ? 'Échec' : 
+                             invoice.parsing_status === 'pending' ? 'En cours' :
+                             invoice.parsing_status}
+                          </Badge>
+                        </div>
+                        {invoice.parsing_errors && (
+                          <div className="mt-3 p-3 bg-red-50 rounded-md">
+                            <p className="text-sm text-red-800">
+                              <span className="font-medium">Erreurs:</span> {invoice.parsing_errors}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Aucune facture analysée pour le moment
                     </p>
                   )}
                 </div>
