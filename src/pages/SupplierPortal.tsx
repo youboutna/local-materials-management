@@ -641,7 +641,7 @@ const SupplierPortal = () => {
         .insert({
           title: "Nouvelle demande de paiement",
           message: `Demande de paiement soumise par ${supplierProfile.name}: ${uploadTitle}`,
-          type: "payment_request",
+          type: "payment_pending",
           recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
           metadata: {
             supplier_id: supplierProfile.id,
@@ -789,7 +789,7 @@ const SupplierPortal = () => {
         .insert({
           title: "Nouveau document reçu du fournisseur",
           message: `Le fournisseur ${supplierProfile.name} a envoyé le document: ${documentTitle}`,
-          type: "document_received",
+          type: "document_uploaded",
           recipient_id: "00000000-0000-0000-0000-000000000000", // Admin notification
           metadata: {
             supplier_id: supplierProfile.id,
