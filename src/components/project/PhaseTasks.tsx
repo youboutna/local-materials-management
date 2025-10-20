@@ -59,14 +59,21 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: TaskFormData) => {
+      // Avoid FK violations: do not set assigned_to or assigned_by here
+      const insertData = {
+        title: taskData.title,
+        description: taskData.description,
+        project_id: projectId,
+        phase_id: phaseId,
+        due_date: taskData.due_date || null,
+        priority: taskData.priority,
+        status: taskData.status,
+        notes: taskData.notes || null,
+      } as const;
+
       const { data, error } = await supabase
         .from('task_assignments')
-        .insert({
-          ...taskData,
-          project_id: projectId,
-          phase_id: phaseId,
-          assigned_by: (await supabase.auth.getUser()).data.user?.id,
-        })
+        .insert(insertData)
         .select()
         .single();
       
@@ -83,9 +90,11 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
+      // Avoid FK violations: never update assigned_to/assigned_by directly
+      const { assigned_to: _omitAssignedTo, assigned_by: _omitAssignedBy, ...safeData } = (data as any);
       const { error } = await supabase
         .from('task_assignments')
-        .update(data)
+        .update(safeData)
         .eq('id', id);
       
       if (error) throw error;

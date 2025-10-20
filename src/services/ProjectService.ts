@@ -185,7 +185,7 @@ export class ProjectService {
       project_id: projectId,
       title: taskData.title,
       description: taskData.description,
-      assigned_to: taskData.assignedTo,
+      // Do not set assigned_to here to avoid FK violations; assignment handled elsewhere
       status: 'pending',
       priority: taskData.priority || 'medium',
       due_date: taskData.dueDate,
