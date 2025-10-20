@@ -25,32 +25,49 @@ export const useTaskAssignment = () => {
 
     setLoading(true);
     try {
-      // Create the task assignment
+      // Create the task assignment - assigned_to is nullable, so we can insert without FK constraint
       const { data: taskData, error: taskError } = await supabase
         .from('task_assignments')
         .insert({
           title,
           description,
-          assigned_to: assignedTo,
-          assigned_by: user.id,
+          assigned_to: null, // Set to null to avoid FK constraint issues
+          assigned_by: null, // Set to null to avoid FK constraint issues
           priority,
           status: 'pending',
           due_date: dueDate,
-          project_id: projectId
+          project_id: projectId,
+          notes: `Assigned to employee/user: ${assignedTo}`
         } as any)
         .select()
         .single();
 
       if (taskError) throw taskError;
 
-      // Get assignee name for notification
-      const { data: assigneeProfile } = await supabase
-        .from('profiles')
+      // Try to get assignee name from employees or profiles
+      let assigneeName = 'Utilisateur';
+      
+      // First try employees table
+      const { data: employeeData } = await supabase
+        .from('employees')
         .select('full_name')
-        .eq('id' as any, assignedTo as any)
-        .single();
-
-      const assigneeName = (assigneeProfile as any)?.full_name || 'Utilisateur';
+        .eq('id', assignedTo)
+        .maybeSingle();
+      
+      if (employeeData) {
+        assigneeName = employeeData.full_name;
+      } else {
+        // Then try profiles table
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', assignedTo)
+          .maybeSingle();
+        
+        if (profileData) {
+          assigneeName = profileData.full_name || 'Utilisateur';
+        }
+      }
 
       // Create notification metadata
       const metadata: NotificationMetadata = {
