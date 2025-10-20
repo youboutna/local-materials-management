@@ -8,6 +8,7 @@ export type DocumentType =
   | 'administrative'
   | 'supplier_upload'
   | 'supplier_info'
+  | 'supplier_catalog'
   | 'contract'
   | 'report'
   | 'specification'
@@ -35,6 +36,7 @@ export interface Document {
   project_id?: string;
   inspection_id?: string;
   phase_id?: string;
+  supplier_id?: string;
   uploaded_by?: string;
   assigned_to?: string;
   metadata?: Record<string, any>;
@@ -65,6 +67,7 @@ export interface DocumentUploadData {
   project_id?: string;
   phase_id?: string;
   inspection_id?: string;
+  supplier_id?: string;
   tags?: string[];
   metadata?: Record<string, any>;
 }

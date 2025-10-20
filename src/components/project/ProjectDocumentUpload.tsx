@@ -133,6 +133,7 @@ const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'technical': 'Document technique',
   'administrative': 'Document administratif',
   'supplier_upload': 'Upload fournisseur',
+  'supplier_catalog': 'Catalogue fournisseur',
   'supplier_info': 'Information fournisseur',
   'contract': 'Contrat',
   'report': 'Rapport',

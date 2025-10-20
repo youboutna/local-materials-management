@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star, Send, FileText, Mail, Share2 } from 'lucide-react';
 import { sendSupplierNotification, generateSupplierPasswordReset } from '@/services/supplierNotificationService';
 import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
+import SupplierDocumentUpload from '@/components/suppliers/SupplierDocumentUpload';
+import SupplierDocumentsList from '@/components/suppliers/SupplierDocumentsList';
 import type { Database } from '@/integrations/supabase/types';
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
@@ -24,6 +26,7 @@ const Suppliers = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -33,8 +36,7 @@ const Suppliers = () => {
     category: '',
     rating: 0,
     nif: '',
-    commerce_register_ref: '',
-    model_documents: [] as string[]
+    commerce_register_ref: ''
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -128,8 +130,7 @@ const Suppliers = () => {
       category: '',
       rating: 0,
       nif: '',
-      commerce_register_ref: '',
-      model_documents: []
+      commerce_register_ref: ''
     });
     setIsCreating(false);
     setEditingId(null);
@@ -154,8 +155,7 @@ const Suppliers = () => {
       category: supplier.category || '',
       rating: supplier.rating || 0,
       nif: (supplier as any).nif || '',
-      commerce_register_ref: (supplier as any).commerce_register_ref || '',
-      model_documents: (supplier as any).model_documents || []
+      commerce_register_ref: (supplier as any).commerce_register_ref || ''
     });
     setEditingId(supplier.id);
     setIsCreating(true);
@@ -206,6 +206,11 @@ const Suppliers = () => {
   const handleOpenEnhancedDocumentSharing = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setEnhancedDocumentSharingOpen(true);
+  };
+
+  const handleOpenDocuments = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setDocumentsOpen(true);
   };
 
   const renderStars = (rating: number) => {
@@ -341,67 +346,6 @@ const Suppliers = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium">Documents modèles</label>
-                <div className="text-xs text-muted-foreground mb-2">
-                  Téléversez les documents modèles pour ce fournisseur (catalogue, tarifs, etc.)
-                </div>
-                <Input
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx"
-                  onChange={async (e) => {
-                    const files = e.target.files;
-                    if (!files || files.length === 0) return;
-
-                    try {
-                      const uploadedUrls: string[] = [];
-                      
-                      for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        const fileName = `supplier-docs/${Date.now()}-${file.name}`;
-                        
-                        const { data, error } = await supabase.storage
-                          .from('documents')
-                          .upload(fileName, file);
-
-                        if (error) throw error;
-
-                        const { data: { publicUrl } } = supabase.storage
-                          .from('documents')
-                          .getPublicUrl(fileName);
-
-                        uploadedUrls.push(publicUrl);
-                      }
-
-                      setFormData({ 
-                        ...formData, 
-                        model_documents: [...formData.model_documents, ...uploadedUrls] 
-                      });
-
-                      toast({
-                        title: "Succès",
-                        description: `${files.length} document(s) téléversé(s)`,
-                      });
-                    } catch (error: any) {
-                      console.error('Error uploading files:', error);
-                      toast({
-                        title: "Erreur",
-                        description: error.message,
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                />
-                {formData.model_documents.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      {formData.model_documents.length} document(s) téléversé(s)
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <div className="flex space-x-2">
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                   {editingId ? 'Mettre à jour' : 'Créer'}
@@ -531,6 +475,14 @@ const Suppliers = () => {
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenDocuments(supplier)}
+                  title="Documents"
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -544,6 +496,36 @@ const Suppliers = () => {
           isOpen={enhancedDocumentSharingOpen}
           onOpenChange={setEnhancedDocumentSharingOpen}
         />
+      )}
+
+      {/* Supplier Documents Dialog */}
+      {selectedSupplier && (
+        <Dialog open={documentsOpen} onOpenChange={setDocumentsOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Documents - {selectedSupplier.name}</DialogTitle>
+            </DialogHeader>
+            <Tabs defaultValue="list" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="list">Liste des documents</TabsTrigger>
+                <TabsTrigger value="upload">Téléverser</TabsTrigger>
+              </TabsList>
+              <TabsContent value="list" className="space-y-4">
+                <SupplierDocumentsList supplier={selectedSupplier} />
+              </TabsContent>
+              <TabsContent value="upload" className="space-y-4">
+                <SupplierDocumentUpload 
+                  supplier={selectedSupplier}
+                  onSuccess={() => {
+                    // Switch to list tab after successful upload
+                    const listTab = document.querySelector('[value="list"]') as HTMLElement;
+                    listTab?.click();
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
       )}
 
       {suppliers?.length === 0 && (

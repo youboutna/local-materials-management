@@ -523,6 +523,7 @@ export type Database = {
           project_id: string | null
           shared_date: string | null
           status: Database["public"]["Enums"]["document_status"] | null
+          supplier_id: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -547,6 +548,7 @@ export type Database = {
           project_id?: string | null
           shared_date?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
+          supplier_id?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -571,6 +573,7 @@ export type Database = {
           project_id?: string | null
           shared_date?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
+          supplier_id?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
@@ -603,6 +606,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -3845,7 +3855,6 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean | null
-          model_documents: string[] | null
           name: string
           nif: string | null
           phone: string | null
@@ -3863,7 +3872,6 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
-          model_documents?: string[] | null
           name: string
           nif?: string | null
           phone?: string | null
@@ -3881,7 +3889,6 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean | null
-          model_documents?: string[] | null
           name?: string
           nif?: string | null
           phone?: string | null
@@ -5423,6 +5430,7 @@ export type Database = {
         | "task_assignment"
         | "employee_record"
         | "tender"
+        | "supplier_catalog"
       mission_status: "planned" | "in_progress" | "completed" | "cancelled"
       supply_request_status: "pending" | "approved" | "rejected" | "completed"
       tender_document_category: "administrative" | "technical" | "financial"
@@ -5654,6 +5662,7 @@ export const Constants = {
         "task_assignment",
         "employee_record",
         "tender",
+        "supplier_catalog",
       ],
       mission_status: ["planned", "in_progress", "completed", "cancelled"],
       supply_request_status: ["pending", "approved", "rejected", "completed"],
