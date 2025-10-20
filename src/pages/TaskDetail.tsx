@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { getPriorityColor } from '@/utils/notificationUtils';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 interface TaskAssignment {
   id: string;
@@ -29,21 +30,23 @@ const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser, hasAnyRole } = useCurrentUserRoles();
   const [task, setTask] = useState<TaskAssignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [newNote, setNewNote] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    if (taskId && taskId !== 'list') {
+    if (taskId && taskId !== 'list' && currentUser) {
       fetchTask();
-    } else {
+    } else if (!taskId || taskId === 'list') {
       navigate('/dashboard');
     }
-  }, [taskId]);
+  }, [taskId, currentUser]);
 
   const fetchTask = async () => {
-    if (!taskId) return;
+    if (!taskId || !currentUser) return;
 
     try {
       const { data, error } = await supabase
@@ -53,7 +56,18 @@ const TaskDetail = () => {
         .single();
 
       if (error) throw error;
+
+      // Check if user has access (assigned to them or admin/director)
+      const isAssigned = data.assigned_to === currentUser.id;
+      const isAdmin = hasAnyRole(['admin', 'director']);
       
+      if (!isAssigned && !isAdmin) {
+        setHasAccess(false);
+        setLoading(false);
+        return;
+      }
+
+      setHasAccess(true);
       setTask({
         ...data,
         description: data.description || undefined,
@@ -173,6 +187,25 @@ const TaskDetail = () => {
     return (
       <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6 text-center space-y-4">
+            <h2 className="text-xl font-bold text-destructive">Accès refusé</h2>
+            <p className="text-muted-foreground">
+              Vous n'avez pas les permissions nécessaires pour accéder à cette tâche.
+            </p>
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

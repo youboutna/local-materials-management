@@ -174,11 +174,7 @@ function App() {
     <Tasks />
   </RoleBasedRoute>
 } />
-<Route path="/tasks/:taskId" element={
-  <RoleBasedRoute disallowedRoles={['supplier']}>
-    <TaskDetail />
-  </RoleBasedRoute>
-} />
+<Route path="/tasks/:taskId" element={<TaskDetail />} />
 <Route path="/employees" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <Employees />
