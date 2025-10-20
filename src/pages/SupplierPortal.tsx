@@ -235,12 +235,11 @@ const SupplierPortal = () => {
   const fetchAssignedTasks = async () => {
     if (!user || !supplierProfile) return;
 
-    // Fetch tasks from task_assignments table where assignee_type is 'supplier'
+    // Fetch tasks from task_assignments table where assigned_supplier_id matches
     const { data: taskData, error: taskError } = await supabase
       .from('task_assignments')
       .select('*')
-      .eq('assignee_type', 'supplier')
-      .eq('assigned_to', supplierProfile.id)
+      .eq('assigned_supplier_id', supplierProfile.id)
       .order('created_at', { ascending: false });
 
     // Also fetch old-style supplier notifications for backward compatibility
