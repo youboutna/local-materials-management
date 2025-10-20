@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNotifications } from '@/hooks/useNotifications';
-import { getTaskLink, getPriorityColor } from '@/utils/notificationUtils';
+import { getTaskLink, getPriorityColor, getNotificationLink } from '@/utils/notificationUtils';
+import { NotificationType } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,16 +64,23 @@ export function NotificationDropdown() {
           </div>
         ) : (
           <ScrollArea className="h-96">
-            {recentNotifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification.id}
-                className={`p-3 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
-                asChild
-              >
-                <Link
-                  to={getTaskLink(notification.metadata || {})}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
+            {recentNotifications.map((notification) => {
+              const notificationLink = getNotificationLink(
+                notification.type as NotificationType,
+                notification.metadata || {},
+                notification.related_id || undefined
+              );
+              
+              return (
+                <DropdownMenuItem
+                  key={notification.id}
+                  className={`p-3 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
+                  asChild
                 >
+                  <Link
+                    to={notificationLink}
+                    onClick={() => !notification.read && markAsRead(notification.id)}
+                  >
                   <div className="w-full">
                     <div className="flex items-center justify-between mb-1">
                       <h4 className="text-sm font-medium truncate flex-1">
@@ -109,9 +117,10 @@ export function NotificationDropdown() {
                       )}
                     </div>
                   </div>
-                </Link>
-              </DropdownMenuItem>
-            ))}
+                  </Link>
+                </DropdownMenuItem>
+              );
+            })}
           </ScrollArea>
         )}
         

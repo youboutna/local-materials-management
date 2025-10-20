@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,11 +8,26 @@ import { Bell, Eye, EyeOff, Clock, AlertTriangle, DollarSign, FileText, Users } 
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { NotificationType } from '@/types/notification';
+import { getNotificationLink } from '@/utils/notificationUtils';
 
 const RoleBasedNotificationCenter: React.FC = () => {
+  const navigate = useNavigate();
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { userRoles, hasRole } = useCurrentUserRoles();
   const [selectedFilter, setSelectedFilter] = useState<NotificationType | 'all'>('all');
+
+  const handleNotificationClick = async (notification: any) => {
+    // Mark as read
+    await markAsRead(notification.id);
+    
+    // Navigate to the relevant page
+    const link = getNotificationLink(
+      notification.type as NotificationType,
+      notification.metadata || {},
+      notification.related_id
+    );
+    navigate(link);
+  };
 
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
@@ -207,10 +223,10 @@ const RoleBasedNotificationCenter: React.FC = () => {
                 return (
                   <Card 
                     key={notification.id}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer transition-colors hover:shadow-md ${
                       !notification.read ? 'border-l-4 border-l-primary bg-primary/5' : ''
                     }`}
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
