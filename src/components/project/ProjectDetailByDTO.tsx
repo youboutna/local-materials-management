@@ -195,6 +195,24 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     setResources(allResources);
   };
 
+  // Calculate realistic progress
+  const [calculatedProgress, setCalculatedProgress] = useState<number>(0);
+  
+  useEffect(() => {
+    const calculateProgress = async () => {
+      if (projectDetail) {
+        const { ProgressCalculationService } = await import('@/services/ProgressCalculationService');
+        const progress = ProgressCalculationService.calculateProjectProgress(
+          projectDetail.plannedPhases || [],
+          projectDetail.tasks || [],
+          projectDetail.inspections || []
+        );
+        setCalculatedProgress(progress);
+      }
+    };
+    calculateProgress();
+  }, [projectDetail?.id, projectDetail?.plannedPhases, projectDetail?.tasks, projectDetail?.inspections]);
+
   // Use data from DTO for all tabs
   const payments = paymentsSource;
   const documentsData: any[] = [];
@@ -315,11 +333,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Progression</p>
-                <p className="text-2xl font-bold">{project.progress}%</p>
+                <p className="text-2xl font-bold">{calculatedProgress}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Calculée: Phases + Tâches + Inspections</p>
               </div>
               <TrendingUp className="h-8 w-8 text-primary" />
             </div>
-            <Progress value={project.progress} className="mt-2" />
+            <Progress value={calculatedProgress} className="mt-2" />
           </CardContent>
         </Card>
 
@@ -433,9 +452,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <span className="text-sm font-medium">Méthodologie</span>
                   <Badge variant="outline">Standard</Badge>
                 </div>
-                <Progress value={project.progress} className="mt-4" />
+                <Progress value={calculatedProgress} className="mt-4" />
                 <p className="text-xs text-center text-muted-foreground">
-                  Progression globale: {project.progress}%
+                  Progression globale calculée: {calculatedProgress}%
+                </p>
+                <p className="text-xs text-center text-muted-foreground mt-1">
+                  Basée sur: {computedPhases.length} phases, {tasksSource.length} tâches, {inspectionsSource.length} inspections
                 </p>
               </CardContent>
             </Card>

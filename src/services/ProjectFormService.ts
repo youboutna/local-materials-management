@@ -63,6 +63,9 @@ export interface ProjectFormData {
   materials?: any[];
   risks?: any[];
   compliance?: any[];
+  tasks?: any[];
+  inspections?: any[];
+  progress?: number;
   // Financial instruments
   bank_guarantee_required?: boolean;
   bank_guarantee_amount?: number;

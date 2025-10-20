@@ -322,6 +322,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
     
     setIsSaving(true);
     try {
+      // Calculer la progression globale avant sauvegarde
+      const { ProgressCalculationService } = await import('@/services/ProgressCalculationService');
+      
+      const calculatedProgress = ProgressCalculationService.calculateProjectProgress(
+        phasesData,
+        formData.tasks || [],
+        formData.inspections || []
+      );
+
       const context: SaveContext = {
         currentStep,
         saveType: 'global_and_close',
@@ -331,6 +340,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       
       const processedData = formService.processFormDataForSave({
         ...formData,
+        progress: calculatedProgress,
         materials: selectedMaterials,
         phases: phasesData
       }, context);

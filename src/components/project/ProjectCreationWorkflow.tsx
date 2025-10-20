@@ -66,6 +66,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     initial_advance: 20,
     retention_percentage: 5,
     priority: 'medium',
+    progress: 0, // Progression globale calculée
     // Project type: infrastructure | fourniture | distribution_rurale
     project_type: 'infrastructure',
     sector: '',
@@ -206,7 +207,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     return step ? step.isCompleted(formData) : false;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Calculer la progression globale avant soumission
+    const { ProgressCalculationService } = await import('@/services/ProgressCalculationService');
+    
+    const calculatedProgress = ProgressCalculationService.calculateProjectProgress(
+      phases,
+      [], // tasks seront ajoutés après création
+      [] // inspections seront ajoutés après création
+    );
+
     // Prepare data for submission with correct field mappings
     const submitData = {
       ...formData,
@@ -215,6 +225,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       endDate: formData.end_date || formData.endDate,
       start_date: formData.start_date || formData.startDate,
       end_date: formData.end_date || formData.endDate,
+      progress: calculatedProgress,
       // Include all related data
       stakeholders,
       delegation,
