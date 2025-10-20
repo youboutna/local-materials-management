@@ -27,6 +27,7 @@ import {
 import { sendNotification } from '@/services/notificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
+import InspectionExecutionForm from './InspectionExecutionForm';
 import { useToast, toast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { usePagination } from '@/hooks/usePagination';
@@ -188,11 +189,45 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
     }
   };
 
-  const updateInspectionStatus = async (inspectionId: string, status: string, progress?: number) => {
+  const updateInspectionStatus = async (inspectionId: string, status: string, progress?: number, documents?: File[]) => {
     try {
+      const inspection = inspections.find(i => i.id === inspectionId);
+      if (!inspection) throw new Error('Inspection not found');
+
       const updateData: any = { status };
       if (progress !== undefined) {
         updateData.progress_at_inspection = progress;
+      }
+
+      // Upload validation documents if any
+      if (documents && documents.length > 0) {
+        const uploadPromises = documents.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `inspections/${inspection.project_id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('project-documents')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('project-documents')
+            .getPublicUrl(filePath);
+
+          return {
+            name: file.name,
+            url: publicUrl,
+            uploadedAt: new Date().toISOString()
+          };
+        });
+
+        const uploadedDocs = await Promise.all(uploadPromises);
+        updateData.documents = {
+          ...(inspection.documents || {}),
+          validation_documents: uploadedDocs
+        };
       }
 
       const { error } = await supabase
@@ -201,6 +236,11 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         .eq('id', inspectionId);
 
       if (error) throw error;
+
+      // Synchronize project progress
+      const { ProjectService } = await import('@/services/ProjectService');
+      const projectService = new ProjectService();
+      await projectService.synchronizeProjectProgress(inspection.project_id);
 
       // Send notification to project manager
       await supabase
@@ -215,7 +255,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
       toast({
         title: "Succès",
-        description: "Statut mis à jour et notification envoyée",
+        description: "Statut mis à jour, progression synchronisée et notification envoyée",
       });
 
       fetchData();
@@ -656,51 +696,22 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                   {inspections
                     .filter(i => i.status === 'scheduled' || i.status === 'in_progress')
                     .map((inspection) => (
-                    <Card key={inspection.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-medium">{getProjectTitle(inspection.project_id)}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Date: {new Date(inspection.date).toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                          {getStatusBadge(inspection.status)}
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          {inspection.status === 'scheduled' && (
-                            <Button 
-                              size="sm"
-                              onClick={() => updateInspectionStatus(inspection.id, 'in_progress')}
-                            >
-                              Commencer
-                            </Button>
-                          )}
-                          {inspection.status === 'in_progress' && (
-                            <>
-                              <Button 
-                                size="sm" 
-                                variant="default"
-                                onClick={() => updateInspectionStatus(inspection.id, 'completed', 100)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Terminer
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive"
-                                onClick={() => updateInspectionStatus(inspection.id, 'failed')}
-                              >
-                                <AlertTriangle className="h-4 w-4 mr-2" />
-                                Échec
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <InspectionExecutionForm
+                      key={inspection.id}
+                      inspection={inspection}
+                      projectTitle={getProjectTitle(inspection.project_id)}
+                      onUpdate={updateInspectionStatus}
+                    />
                   ))}
+                  {inspections.filter(i => i.status === 'scheduled' || i.status === 'in_progress').length === 0 && (
+                    <div className="text-center py-8">
+                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Aucune inspection à réaliser</h3>
+                      <p className="text-muted-foreground">
+                        Toutes les inspections programmées ont été traitées
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

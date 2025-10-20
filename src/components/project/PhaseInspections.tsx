@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink } from 'lucide-react';
+import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { ProjectService } from '@/services/ProjectService';
+import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 
 interface PhaseInspectionsProps {
   phaseId: string;
@@ -25,6 +27,7 @@ interface InspectionFormData {
   status: string;
   progress_at_inspection: string;
   comments: string;
+  documents?: File[];
 }
 
 const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId }) => {
@@ -36,12 +39,15 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     status: 'pending',
     progress_at_inspection: '',
     comments: '',
+    documents: [],
   });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+  const { syncProgress } = useProjectProgressSync(projectId);
+  const projectService = new ProjectService();
 
   const { data: inspections, isLoading } = useQuery({
     queryKey: ['phase-inspections', phaseId],
@@ -59,6 +65,35 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
   const addInspectionMutation = useMutation({
     mutationFn: async (inspectionData: InspectionFormData) => {
+      // Upload documents if any
+      let documentsData = {};
+      if (inspectionData.documents && inspectionData.documents.length > 0) {
+        const uploadPromises = inspectionData.documents.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `inspections/${projectId}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('project-documents')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('project-documents')
+            .getPublicUrl(filePath);
+
+          return {
+            name: file.name,
+            url: publicUrl,
+            uploadedAt: new Date().toISOString()
+          };
+        });
+
+        const uploadedDocs = await Promise.all(uploadPromises);
+        documentsData = { validation_documents: uploadedDocs };
+      }
+
       const { data, error } = await supabase
         .from('inspections')
         .insert({
@@ -69,19 +104,24 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           status: inspectionData.status,
           progress_at_inspection: parseInt(inspectionData.progress_at_inspection) || 0,
           comments: inspectionData.comments,
-          documents: {},
+          documents: documentsData,
         })
         .select()
         .single();
       
       if (error) throw error;
+
+      // Synchronize project progress
+      await syncProgress();
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       setIsAdding(false);
       resetForm();
-      toast({ title: 'Inspection ajoutée avec succès' });
+      toast({ title: 'Inspection ajoutée avec succès', description: 'La progression du projet a été mise à jour automatiquement' });
     },
   });
 
@@ -107,6 +147,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
       status: 'pending',
       progress_at_inspection: '',
       comments: '',
+      documents: [],
     });
   };
 
@@ -237,6 +278,31 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                     placeholder="Observations, remarques, recommandations..."
                     rows={4}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="documents">Documents de validation</Label>
+                  <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                    <input
+                      id="documents"
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        setFormData({ ...formData, documents: files });
+                      }}
+                      className="hidden"
+                    />
+                    <label htmlFor="documents" className="cursor-pointer">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        {formData.documents && formData.documents.length > 0
+                          ? `${formData.documents.length} fichier(s) sélectionné(s)`
+                          : 'Cliquez pour ajouter des documents (PDF, images, Word)'}
+                      </p>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-2">
