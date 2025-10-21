@@ -3856,7 +3856,9 @@ export type Database = {
       }
       suppliers: {
         Row: {
+          account_number: string | null
           address: string | null
+          bank_name: string | null
           category: string | null
           commerce_register_ref: string | null
           contact_person: string | null
@@ -3869,11 +3871,14 @@ export type Database = {
           nif: string | null
           phone: string | null
           rating: number | null
+          rib: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
           category?: string | null
           commerce_register_ref?: string | null
           contact_person?: string | null
@@ -3886,11 +3891,14 @@ export type Database = {
           nif?: string | null
           phone?: string | null
           rating?: number | null
+          rib?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          account_number?: string | null
           address?: string | null
+          bank_name?: string | null
           category?: string | null
           commerce_register_ref?: string | null
           contact_person?: string | null
@@ -3903,6 +3911,7 @@ export type Database = {
           nif?: string | null
           phone?: string | null
           rating?: number | null
+          rib?: string | null
           updated_at?: string | null
           user_id?: string | null
         }

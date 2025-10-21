@@ -47,17 +47,30 @@ export const PaymentRequestsManagement: React.FC = () => {
   const { data: paymentRequests = [], refetch } = useQuery({
     queryKey: ['payment-requests-management'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: requests, error } = await supabase
         .from('supplier_payment_requests')
-        .select(`
-          *,
-          suppliers(name, account_number, bank_name, rib),
-          projects(title)
-        `)
+        .select('*')
         .order('requested_date', { ascending: false });
 
       if (error) throw error;
-      return data as PaymentRequest[];
+
+      // Fetch supplier and project data separately
+      const enrichedRequests = await Promise.all(
+        (requests || []).map(async (request) => {
+          const [supplierData, projectData] = await Promise.all([
+            supabase.from('suppliers').select('name, account_number, bank_name, rib').eq('id', request.supplier_id).single(),
+            request.project_id ? supabase.from('projects').select('title').eq('id', request.project_id).single() : Promise.resolve({ data: null, error: null })
+          ]);
+
+          return {
+            ...request,
+            suppliers: supplierData.data || undefined,
+            projects: projectData.data || undefined,
+          };
+        })
+      );
+
+      return enrichedRequests as PaymentRequest[];
     },
   });
 
