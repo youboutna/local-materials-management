@@ -36,6 +36,10 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const [comments, setComments] = useState(inspection?.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createPaymentRequest, setCreatePaymentRequest] = useState(true);
+  const [paymentRequestType, setPaymentRequestType] = useState<'contractor' | 'inspector'>('contractor');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDescription, setPaymentDescription] = useState('');
   const { toast } = useToast();
   const { createNotification } = useNotifications();
 
@@ -175,31 +179,50 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         }
       }
 
-      // Create payment request automatically
-      const paymentAmount = (inspection.projects?.title && progress > 0) 
-        ? Math.round(progress * 10000) / 100 // Simple calculation, adjust as needed
-        : 0;
+      // Create payment request if requested
+      if (createPaymentRequest && paymentAmount) {
+        const amount = parseFloat(paymentAmount);
+        
+        if (paymentRequestType === 'contractor') {
+          // Get contractor from project stakeholders
+          const { data: contractorStakeholder } = await supabase
+            .from('project_stakeholders')
+            .select('supplier_id, suppliers(name, contact_person, phone)')
+            .eq('project_id', inspection.project_id)
+            .eq('role', 'contractor')
+            .limit(1)
+            .single();
 
-      if (paymentAmount > 0) {
-        const { error: paymentError } = await supabase
-          .from('supplier_payment_requests')
-          .insert({
-            supplier_id: supplierId,
+          const targetSupplierId = contractorStakeholder?.supplier_id || supplierId;
+
+          await supabase.from('supplier_payment_requests').insert({
+            supplier_id: targetSupplierId,
             project_id: inspection.project_id,
-            amount: paymentAmount,
-            description: `Paiement pour inspection complétée - ${progress}% d'avancement`,
-            payment_reason: 'inspection_completion',
+            amount,
+            description: paymentDescription || `Décompte de paiement suite à inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')} - Avancement: ${progress}%`,
+            payment_reason: 'progress_payment',
             status: 'pending',
             requested_date: new Date().toISOString(),
-            notes: `Inspection ID: ${inspection.id}\nDocuments: ${uploadedDocs.length} fichier(s)`
+            notes: `Inspection ID: ${inspection.id}\nDocuments: ${uploadedDocs.length} fichier(s)\nAvancement: ${progress}%`
           });
-
-        if (!paymentError) {
-          toast({
-            title: '✅ Succès',
-            description: 'Inspection complétée et demande de paiement créée',
+        } else {
+          // Payment for inspector (mission fees or consulting fees)
+          await supabase.from('supplier_payment_requests').insert({
+            supplier_id: supplierId,
+            project_id: inspection.project_id,
+            amount,
+            description: paymentDescription || `Frais d'inspection - Mission du ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+            payment_reason: 'inspection_fee',
+            status: 'pending',
+            requested_date: new Date().toISOString(),
+            notes: `Inspection ID: ${inspection.id}\nType: Frais de mission / Honoraires ingénieur conseil`
           });
         }
+
+        toast({
+          title: '✅ Succès',
+          description: 'Inspection complétée et demande de paiement créée',
+        });
       } else {
         toast({
           title: '✅ Inspection complétée',
@@ -340,11 +363,77 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             )}
           </div>
 
-          {/* Warning */}
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              ⚠️ Une fois validée, l'inspection sera marquée comme terminée et une demande de paiement sera automatiquement créée.
-            </p>
+          {/* Payment Request Section */}
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="createPaymentRequest"
+                checked={createPaymentRequest}
+                onChange={(e) => setCreatePaymentRequest(e.target.checked)}
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="createPaymentRequest" className="font-medium">
+                Créer une demande de paiement
+              </Label>
+            </div>
+
+            {createPaymentRequest && (
+              <div className="space-y-4 pl-6 border-l-2 border-primary/20">
+                <div className="space-y-2">
+                  <Label>Type de demande</Label>
+                  <select
+                    value={paymentRequestType}
+                    onChange={(e) => setPaymentRequestType(e.target.value as 'contractor' | 'inspector')}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="contractor">Paiement du contractant (Entreprise)</option>
+                    <option value="inspector">Frais d'inspection / Honoraires ingénieur</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="paymentAmount">
+                    Montant (MRU) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="paymentAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Montant à demander"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    required={createPaymentRequest}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="paymentDescription">
+                    Description du paiement
+                  </Label>
+                  <Textarea
+                    id="paymentDescription"
+                    placeholder={
+                      paymentRequestType === 'contractor'
+                        ? 'Décompte de facture pour avancement des travaux...'
+                        : 'Frais de mission d\'inspection, honoraires d\'ingénieur conseil...'
+                    }
+                    value={paymentDescription}
+                    onChange={(e) => setPaymentDescription(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    {paymentRequestType === 'contractor'
+                      ? '📋 Cette demande sera envoyée au chef de projet pour déclencher le processus de décompte de paiement de facture pour l\'entreprise contractante.'
+                      : '💼 Cette demande couvrira les frais de mission d\'inspection ou les honoraires d\'ingénieur conseil.'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -358,7 +447,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || documents.length === 0 || progress <= 0}
+              disabled={isSubmitting || documents.length === 0 || progress <= 0 || (createPaymentRequest && !paymentAmount)}
             >
               {isSubmitting ? (
                 <>
