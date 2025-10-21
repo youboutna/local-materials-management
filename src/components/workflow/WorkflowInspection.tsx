@@ -13,7 +13,8 @@ import {
   FileText,
   Calendar,
   User,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ProjectWithPayments, InspectionStatus } from '@/types/project';
@@ -21,6 +22,7 @@ import { InspectionDialog } from '@/components/project/InspectionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 interface WorkflowInspectionProps {
   project: ProjectWithPayments;
@@ -30,7 +32,8 @@ interface WorkflowInspectionProps {
 export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInspectionProps) {
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const { toast } = useToast();
-  const { t } = useLanguage(); // Add translation hook
+  const { t } = useLanguage();
+  const navigate = useNavigate();
   
   // Sort inspections by date
   const sortedInspections = project.inspections 
@@ -193,10 +196,21 @@ export function WorkflowInspection({ project, onInspectionUpdate }: WorkflowInsp
             <FileText className="h-6 w-6 text-adrar-600" />
             {t('inspection.dialog.title')}
           </CardTitle>
-          <InspectionDialog 
-            project={project} 
-            onInspectionCreated={handleInspectionCreated}
-          />
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/inspection-monitoring')}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Suivi des Inspections
+            </Button>
+            <InspectionDialog 
+              project={project} 
+              onInspectionCreated={handleInspectionCreated}
+            />
+          </div>
         </div>
         
         {/* Progress Overview */}
