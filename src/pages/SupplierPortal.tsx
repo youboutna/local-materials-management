@@ -17,6 +17,8 @@ import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/
 import { DocumentType } from '@/types/document';
 import BusinessDocuments from '@/components/documents/BusinessDocuments';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
+import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
+import { useSupplierInspections } from '@/hooks/useSupplierInspections';
 
 const SupplierPortal = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -33,7 +35,6 @@ const SupplierPortal = () => {
   const [uploadDescription, setUploadDescription] = useState('');
   const [assignedTasks, setAssignedTasks] = useState<SupplierNotification[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [inspections, setInspections] = useState<any[]>([]);
   const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
   const [parsedInvoices, setParsedInvoices] = useState<any[]>([]);
   const [taskComment, setTaskComment] = useState('');
@@ -44,6 +45,13 @@ const SupplierPortal = () => {
   const [documentType, setDocumentType] = useState<string>('supplier_info');
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
+  
+  // Use the custom hook for inspections with proper service layer
+  const { 
+    inspections, 
+    loading: inspectionsLoading, 
+    refetch: refetchInspections 
+  } = useSupplierInspections(supplierProfile?.id || null);
 
   // Function to mark item as viewed (will be enabled when types are updated)
   const markAsViewed = async (itemId: string, itemType: 'document' | 'notification' | 'task') => {
@@ -90,9 +98,9 @@ const SupplierPortal = () => {
       fetchUploadedDocuments();
       fetchAssignedTasks();
       fetchNotifications();
-      fetchInspections();
       fetchPaymentRequests();
       fetchParsedInvoices();
+      // Inspections are now managed by useSupplierInspections hook
     }
   }, [user, supplierProfile]);
 
@@ -262,41 +270,6 @@ const SupplierPortal = () => {
     setAssignedTasks(combinedTasks as SupplierNotification[]);
   };
 
-  const fetchInspections = async () => {
-    if (!user || !supplierProfile) return;
-
-    // Query inspections for projects where this supplier is involved
-    // First get supplier's projects
-    const { data: projectsData } = await supabase
-      .from('project_stakeholders')
-      .select('project_id')
-      .eq('stakeholder_id', supplierProfile.id)
-      .eq('stakeholder_type', 'supplier');
-
-    const projectIds = projectsData?.map(p => p.project_id) || [];
-
-    if (projectIds.length === 0) {
-      setInspections([]);
-      return;
-    }
-
-    // Then get inspections for those projects
-    const { data, error } = await supabase
-      .from('inspections')
-      .select(`
-        *,
-        projects (title, status)
-      `)
-      .in('project_id', projectIds)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching inspections:', error);
-    } else {
-      console.log('Fetched inspections for supplier:', data);
-      setInspections(data || []);
-    }
-  };
 
   const fetchNotifications = async () => {
     if (!user || !supplierProfile) return;
@@ -1180,70 +1153,10 @@ const SupplierPortal = () => {
           </TabsContent>
 
           <TabsContent value="inspections">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Résultats d'Inspection
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {inspections.length > 0 ? (
-                    inspections.map((inspection) => (
-                      <div key={inspection.id} className="p-4 border rounded-lg bg-card">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium mb-2">
-                              Inspection - {inspection.projects?.title || 'Projet inconnu'}
-                            </h3>
-                            <div className="space-y-1 text-sm">
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Inspecteur:</span> {inspection.inspector}
-                              </p>
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Progrès:</span> {inspection.progress_at_inspection}%
-                              </p>
-                              <p className="text-muted-foreground">
-                                <span className="font-medium">Commentaires:</span> {inspection.comments || 'Aucun commentaire'}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                {inspection.date ? new Date(inspection.date).toLocaleDateString('fr-FR', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                }) : 'Date inconnue'}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge 
-                            variant={inspection.status === 'approved' ? 'default' : 'secondary'}
-                            className={
-                              inspection.status === 'approved' 
-                                ? 'bg-green-100 text-green-800' 
-                                : inspection.status === 'rejected'
-                                ? 'bg-red-100 text-red-800'
-                                : inspection.status === 'in_progress'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-orange-100 text-orange-800'
-                            }
-                          >
-                            {inspection.status === 'approved' ? 'Approuvée' : 
-                             inspection.status === 'rejected' ? 'Rejetée' : 
-                             inspection.status === 'in_progress' ? 'En cours' : 
-                             inspection.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      Aucun résultat d'inspection pour le moment
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <SupplierInspectionsList 
+              inspections={inspections} 
+              loading={inspectionsLoading}
+            />
           </TabsContent>
 
           <TabsContent value="notifications">
