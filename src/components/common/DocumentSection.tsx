@@ -61,16 +61,73 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           query = query.eq('inspection_id', relatedId);
           break;
         case 'payment':
-          query = query.eq('related_id', relatedId).contains('tags', ['payment']);
+          // For payments, get the payment's project_id and filter documents by that
+          try {
+            const { data: paymentData } = await supabase
+              .from('payments')
+              .select('project_id')
+              .eq('id', relatedId)
+              .single();
+            
+            if (paymentData && paymentData.project_id) {
+              // Filter documents by project and payment tags
+              query = query.eq('project_id', paymentData.project_id).contains('tags', ['payment']);
+            } else {
+              // If no payment found, return empty results
+              setDocuments([]);
+              return;
+            }
+          } catch (err) {
+            console.error('Error fetching payment project:', err);
+            setDocuments([]);
+            return;
+          }
           break;
         case 'bank_guarantee':
-          query = query.eq('related_id', relatedId).contains('tags', ['bank_guarantee']);
+          // Get project_id from bank_guarantee and filter documents
+          try {
+            const { data: guaranteeData } = await supabase
+              .from('bank_guarantees')
+              .select('project_id')
+              .eq('id', relatedId)
+              .single();
+            
+            if (guaranteeData && guaranteeData.project_id) {
+              query = query.eq('project_id', guaranteeData.project_id).contains('tags', ['bank_guarantee']);
+            } else {
+              setDocuments([]);
+              return;
+            }
+          } catch (err) {
+            console.error('Error fetching bank guarantee project:', err);
+            setDocuments([]);
+            return;
+          }
           break;
         case 'insurance':
-          query = query.eq('related_id', relatedId).contains('tags', ['insurance']);
+          // Get project_id from insurance_certificates and filter documents
+          try {
+            const { data: insuranceData } = await supabase
+              .from('insurance_certificates')
+              .select('project_id')
+              .eq('id', relatedId)
+              .single();
+            
+            if (insuranceData && insuranceData.project_id) {
+              query = query.eq('project_id', insuranceData.project_id).contains('tags', ['insurance']);
+            } else {
+              setDocuments([]);
+              return;
+            }
+          } catch (err) {
+            console.error('Error fetching insurance project:', err);
+            setDocuments([]);
+            return;
+          }
           break;
         default:
-          query = query.eq('related_id', relatedId);
+          // For other types, try to match by project_id
+          query = query.eq('project_id', relatedId);
       }
 
       const { data, error } = await query;
