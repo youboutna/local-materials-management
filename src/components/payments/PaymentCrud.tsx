@@ -529,13 +529,75 @@ const PaymentCrud: React.FC = () => {
     }
   };
 
-  const handleDelete = async (paymentId: string) => {
+  const handleView = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setFormData({
+      project_id: payment.project_id,
+      contractor_id: payment.contractor_id || '',
+      contractor_name: payment.contractor_name,
+      contractor_contact: payment.contractor_contact,
+      amount: payment.amount,
+      payment_date: payment.payment_date,
+      progress_at_payment: payment.progress_at_payment,
+      transaction_id: payment.transaction_id,
+      payment_method: payment.payment_method,
+      inspection_id: payment.inspection_id || '',
+      phase_id: payment.phase_id || '',
+      bank_name: payment.bank_name || '',
+      account_number: payment.account_number || '',
+      check_number: payment.check_number || '',
+      mobile_number: payment.mobile_number || '',
+      mobile_operator: payment.mobile_operator || '',
+      receiver_name: payment.receiver_name || '',
+      supporting_documents: payment.supporting_documents || [],
+      notes: '',
+      purchase_order_url: undefined,
+      quote_url: undefined,
+      invoice_url: payment.invoice_url
+    });
+    setIsViewMode(true);
+    setIsEditing(false);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setFormData({
+      project_id: payment.project_id,
+      contractor_id: payment.contractor_id || '',
+      contractor_name: payment.contractor_name,
+      contractor_contact: payment.contractor_contact,
+      amount: payment.amount,
+      payment_date: payment.payment_date,
+      progress_at_payment: payment.progress_at_payment,
+      transaction_id: payment.transaction_id,
+      payment_method: payment.payment_method,
+      inspection_id: payment.inspection_id || '',
+      phase_id: payment.phase_id || '',
+      bank_name: payment.bank_name || '',
+      account_number: payment.account_number || '',
+      check_number: payment.check_number || '',
+      mobile_number: payment.mobile_number || '',
+      mobile_operator: payment.mobile_operator || '',
+      receiver_name: payment.receiver_name || '',
+      supporting_documents: payment.supporting_documents || [],
+      notes: '',
+      purchase_order_url: undefined,
+      quote_url: undefined,
+      invoice_url: payment.invoice_url
+    });
+    setIsEditing(true);
+    setIsViewMode(false);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (payment: Payment) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
       try {
         const { error } = await supabase
           .from('payments')
           .delete()
-          .eq('id', paymentId);
+          .eq('id', payment.id);
 
         if (error) throw error;
 
@@ -1289,25 +1351,40 @@ const PaymentCrud: React.FC = () => {
                         {payment.transaction_id}
                       </code>
                     </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="ghost" title="Voir les détails">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" title="Modifier">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost" title="Supprimer">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                        <ActionsDropdown
-                          entityType="payment"
-                          entityId={payment.id}
-                          projectId={payment.project_id}
-                          contractorId={payment.contractor_id || undefined}
-                        />
-                            </div>
-                          </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          title="Voir les détails"
+                          onClick={() => handleView(payment)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          title="Modifier"
+                          onClick={() => handleEdit(payment)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          title="Supprimer"
+                          onClick={() => handleDelete(payment)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                  <ActionsDropdown
+                    entityType="payment"
+                    entityId={payment.id}
+                    projectId={payment.project_id}
+                    contractorId={payment.contractor_id || undefined}
+                  />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {filteredPayments.length === 0 && !loading && (
