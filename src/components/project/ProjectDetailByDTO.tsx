@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   console.log('🔍 ProjectDetailByDTO render - projectId:', projectId);
 
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const queryClient = useQueryClient();
   const projectService = new ProjectService();
 
