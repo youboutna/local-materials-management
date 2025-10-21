@@ -56,14 +56,29 @@ const InspectionPaymentValidation: React.FC = () => {
     enabled: !!inspectionId,
   });
 
-  // Fetch project details
+  // Fetch project details with external stakeholders (contractors)
   const { data: project } = useQuery({
     queryKey: ['project-summary', projectId],
     queryFn: async () => {
       if (!projectId) return null;
       const { data, error } = await supabase
         .from('projects')
-        .select('*, project_stakeholders(*, suppliers(*))')
+        .select(`
+          *,
+          project_stakeholders(
+            stakeholder_type,
+            stakeholder_entity_type,
+            supplier_id,
+            suppliers(
+              id,
+              name,
+              contact_person,
+              phone,
+              email,
+              user_id
+            )
+          )
+        `)
         .eq('id', projectId)
         .single();
 
@@ -89,15 +104,16 @@ const InspectionPaymentValidation: React.FC = () => {
 
       if (error) throw error;
 
-      // Create notification for beneficiary (main contractor)
-      if (project?.project_stakeholders) {
-        const mainContractor = project.project_stakeholders.find(
-          (s: any) => s.role === 'main_contractor' && s.supplier_id
+      // Create notification for beneficiary (external contractor)
+      if (project?.project_stakeholders && Array.isArray(project.project_stakeholders)) {
+        // Find external contractor (partie prenante externe - supplier)
+        const contractor = project.project_stakeholders.find(
+          (s: any) => s.stakeholder_entity_type === 'supplier' && s.supplier_id && s.suppliers
         );
 
-        if (mainContractor?.suppliers?.user_id) {
+        if (contractor?.suppliers?.user_id) {
           await supabase.from('notifications').insert({
-            recipient_id: mainContractor.suppliers.user_id,
+            recipient_id: contractor.suppliers.user_id,
             title: 'Validation de paiement',
             message: `Votre demande de paiement a été ${
               data.payment_status === 'approved' ? 'approuvée' : 'rejetée'
@@ -407,26 +423,44 @@ const InspectionPaymentValidation: React.FC = () => {
               <CardTitle>Bénéficiaire (Contractant)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {project?.project_stakeholders?.find((s: any) => s.role === 'main_contractor') ? (
-                <>
-                  <div>
-                    <Label className="text-muted-foreground">Nom</Label>
-                    <p className="font-medium mt-1">
-                      {project.project_stakeholders.find((s: any) => s.role === 'main_contractor')?.suppliers?.name || 'Non défini'}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Contact</Label>
-                    <p className="font-medium mt-1">
-                      {project.project_stakeholders.find((s: any) => s.role === 'main_contractor')?.suppliers?.contact_person || 'Non défini'}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Aucun contractant principal défini pour ce projet.
-                </p>
-              )}
+              {(() => {
+                const contractor = project?.project_stakeholders?.find(
+                  (s: any) => s.stakeholder_entity_type === 'supplier' && s.suppliers
+                );
+                
+                return contractor?.suppliers ? (
+                  <>
+                    <div>
+                      <Label className="text-muted-foreground">Entreprise</Label>
+                      <p className="font-medium mt-1">
+                        {contractor.suppliers.name}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Contact</Label>
+                      <p className="font-medium mt-1">
+                        {contractor.suppliers.contact_person || 'Non défini'}
+                      </p>
+                    </div>
+                    {contractor.suppliers.phone && (
+                      <div>
+                        <Label className="text-muted-foreground">Téléphone</Label>
+                        <p className="font-medium mt-1">{contractor.suppliers.phone}</p>
+                      </div>
+                    )}
+                    {contractor.suppliers.email && (
+                      <div>
+                        <Label className="text-muted-foreground">Email</Label>
+                        <p className="font-medium mt-1">{contractor.suppliers.email}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Aucune entreprise contractante définie pour ce projet.
+                  </p>
+                );
+              })()}
             </CardContent>
           </Card>
 
