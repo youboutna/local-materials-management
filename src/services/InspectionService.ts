@@ -12,6 +12,8 @@ export class InspectionService {
    */
   static async getInspectionsForSupplier(supplierId: string): Promise<InspectionDTO[]> {
     try {
+      console.log('[InspectionService] Getting inspections for supplier:', supplierId);
+      
       // Get projects where this supplier is a stakeholder
       const { data: projectsData, error: projectsError } = await supabase
         .from('project_stakeholders')
@@ -20,15 +22,20 @@ export class InspectionService {
         .eq('stakeholder_entity_type', 'supplier');
 
       if (projectsError) {
-        console.error('Error fetching supplier projects:', projectsError);
+        console.error('[InspectionService] Error fetching supplier projects:', projectsError);
         throw projectsError;
       }
 
+      console.log('[InspectionService] Found projects for supplier:', projectsData);
+      
       const projectIds = projectsData?.map(p => p.project_id) || [];
 
       if (projectIds.length === 0) {
+        console.log('[InspectionService] No projects found for supplier');
         return [];
       }
+
+      console.log('[InspectionService] Fetching inspections for projects:', projectIds);
 
       // Get inspections for those projects
       const { data, error } = await supabase
@@ -41,13 +48,14 @@ export class InspectionService {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching inspections:', error);
+        console.error('[InspectionService] Error fetching inspections:', error);
         throw error;
       }
 
+      console.log('[InspectionService] Successfully fetched inspections:', data);
       return (data || []) as InspectionDTO[];
     } catch (error) {
-      console.error('InspectionService.getInspectionsForSupplier error:', error);
+      console.error('[InspectionService] getInspectionsForSupplier error:', error);
       return [];
     }
   }

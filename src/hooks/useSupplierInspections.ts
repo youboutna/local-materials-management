@@ -15,20 +15,23 @@ export const useSupplierInspections = (supplierId: string | null) => {
 
   const fetchInspections = async () => {
     if (!supplierId) {
+      console.log('[useSupplierInspections] No supplier ID provided');
       setInspections([]);
       setLoading(false);
       return;
     }
 
     try {
+      console.log('[useSupplierInspections] Fetching inspections for supplier:', supplierId);
       setLoading(true);
       setError(null);
       const data = await InspectionService.getInspectionsForSupplier(supplierId);
+      console.log('[useSupplierInspections] Fetched inspections:', data);
       setInspections(data);
     } catch (err) {
       const error = err as Error;
       setError(error);
-      console.error('Error fetching supplier inspections:', error);
+      console.error('[useSupplierInspections] Error fetching supplier inspections:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les inspections',
