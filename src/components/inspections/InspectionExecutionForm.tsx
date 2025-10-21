@@ -5,8 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -31,15 +33,44 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   const [newProgress, setNewProgress] = useState(inspection.progress_at_inspection.toString());
   const [comments, setComments] = useState(inspection.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(
-      inspection.id,
-      newStatus,
-      parseInt(newProgress) || undefined,
-      documents.length > 0 ? documents : undefined
-    );
+    setIsUploading(true);
+    
+    try {
+      // Upload service fait documents
+      if (documents.length > 0) {
+        for (const file of documents) {
+          const filePath = `inspections/${inspection.project_id}/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('project-documents')
+            .upload(filePath, file);
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage.from('project-documents').getPublicUrl(filePath);
+          
+          await supabase.from('documents').insert({
+            title: `Service Fait - ${file.name}`,
+            file_name: file.name,
+            file_url: publicUrl,
+            document_type: 'inspection_validation',
+            project_id: inspection.project_id,
+            inspection_id: inspection.id,
+            uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+            metadata: { progress: parseInt(newProgress) }
+          });
+        }
+      }
+      
+      onUpdate(inspection.id, newStatus, parseInt(newProgress), documents.length > 0 ? documents : undefined);
+      toast.success('Inspection mise à jour');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {

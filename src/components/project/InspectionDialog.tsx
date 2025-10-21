@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clipboard, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Clipboard } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectWithPayments, InspectionStatus } from '@/types/project';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
 interface InspectionDialogProps {
   project: ProjectWithPayments;
@@ -24,7 +25,8 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
-  const [inspector, setInspector] = useState('');
+  const [inspectorId, setInspectorId] = useState('');
+  const [inspectorName, setInspectorName] = useState('');
   const [status, setStatus] = useState<InspectionStatus>('pending');
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(project.progress);
@@ -34,7 +36,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inspector) {
+    if (!inspectorId || !inspectorName) {
       toast({
         title: t("inspection.dialog.validation_error"),
         description: t("inspection.dialog.validation_inspector"),
@@ -52,7 +54,7 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
           project_id: project.id,
           date: format(date, 'yyyy-MM-dd'),
           status,
-          inspector,
+          inspector: inspectorName,
           progress_at_inspection: progress,
           comments: comments || null,
         } as any)
@@ -76,7 +78,8 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
       setIsOpen(false);
       
       // Reset form
-      setInspector('');
+      setInspectorId('');
+      setInspectorName('');
       setStatus('pending');
       setComments('');
       setProgress(project.progress);
@@ -145,15 +148,16 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
             </div>
             
             <div className="grid grid-cols-4 items-center gap-2">
-              <Label htmlFor="inspector" className="col-span-4 mb-1">
-                {t("inspection.dialog.inspector")}
-              </Label>
-              <Input
-                id="inspector"
-                value={inspector}
-                onChange={(e) => setInspector(e.target.value)}
-                className="col-span-4"
+              <InspectorSelector
+                projectId={project.id}
+                value={inspectorId}
+                onValueChange={(id, name) => {
+                  setInspectorId(id);
+                  setInspectorName(name);
+                }}
+                label={t("inspection.dialog.inspector")}
                 placeholder={t("inspection.dialog.inspector_placeholder")}
+                className="col-span-4"
               />
             </div>
             

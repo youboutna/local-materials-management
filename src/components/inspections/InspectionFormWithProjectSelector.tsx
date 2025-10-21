@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
+import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,6 +38,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
   isLoading = false
 }) => {
   const { toast } = useToast();
+  const [inspectorId, setInspectorId] = useState('');
   const [formData, setFormData] = useState<InspectionFormData>({
     projectId: initialData?.projectId || '',
     tenderReference: initialData?.tenderReference || '',
@@ -86,13 +88,14 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="inspector">Inspecteur *</Label>
-              <Input
-                id="inspector"
-                value={formData.inspector}
-                onChange={(e) => updateFormData('inspector', e.target.value)}
-                placeholder="Nom de l'inspecteur"
-                required
+              <InspectorSelector
+                projectId={formData.projectId}
+                value={inspectorId}
+                onValueChange={(id, name) => {
+                  setInspectorId(id);
+                  updateFormData('inspector', name);
+                }}
+                label="Inspecteur *"
               />
             </div>
 
