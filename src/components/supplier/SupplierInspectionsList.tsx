@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ExternalLink, Calendar, User, FileText } from 'lucide-react';
+import { CheckCircle, ExternalLink, Calendar, User, FileText, Edit } from 'lucide-react';
 import { InspectionDTO } from '@/types/inspection.dto';
 import { useNavigate } from 'react-router-dom';
+import { SupplierInspectionExecutionDialog } from './SupplierInspectionExecutionDialog';
 
 interface SupplierInspectionsListProps {
   inspections: InspectionDTO[];
   loading?: boolean;
+  supplierId?: string;
+  onInspectionUpdated?: () => void;
 }
 
 const getStatusConfig = (status: string) => {
@@ -43,9 +46,22 @@ const getStatusConfig = (status: string) => {
 
 export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = ({ 
   inspections, 
-  loading 
+  loading,
+  supplierId,
+  onInspectionUpdated
 }) => {
   const navigate = useNavigate();
+  const [selectedInspection, setSelectedInspection] = useState<InspectionDTO | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleEditInspection = (inspection: InspectionDTO) => {
+    setSelectedInspection(inspection);
+    setDialogOpen(true);
+  };
+
+  const handleInspectionCompleted = () => {
+    onInspectionUpdated?.();
+  };
 
   if (loading) {
     return (
@@ -156,13 +172,28 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                       )}
                     </div>
 
-                    {/* Status Badge */}
-                    <Badge 
-                      variant="secondary"
-                      className={statusConfig.className}
-                    >
-                      {statusConfig.label}
-                    </Badge>
+                    {/* Status Badge and Actions */}
+                    <div className="flex flex-col gap-2">
+                      <Badge 
+                        variant="secondary"
+                        className={statusConfig.className}
+                      >
+                        {statusConfig.label}
+                      </Badge>
+                      
+                      {/* Edit button for scheduled inspections */}
+                      {inspection.status === 'scheduled' && supplierId && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditInspection(inspection)}
+                          className="flex items-center gap-2"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Compléter
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -180,6 +211,17 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
           )}
         </div>
       </CardContent>
+
+      {/* Inspection Execution Dialog */}
+      {supplierId && (
+        <SupplierInspectionExecutionDialog
+          inspection={selectedInspection}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onInspectionCompleted={handleInspectionCompleted}
+          supplierId={supplierId}
+        />
+      )}
     </Card>
   );
 };

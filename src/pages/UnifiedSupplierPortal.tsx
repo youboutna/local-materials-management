@@ -263,7 +263,7 @@ const UnifiedSupplierPortal = () => {
   });
 
   // Fetch inspections with service layer (stakeholder-based)
-  const { inspections: supplierInspections = [], loading: inspectionsLoading } = useSupplierInspections(supplierProfile?.id || null);
+  const { inspections: supplierInspections = [], loading: inspectionsLoading, refetch: refetchInspections } = useSupplierInspections(supplierProfile?.id || null);
 
   const handleLogin = async () => {
     try {
@@ -922,6 +922,8 @@ const UnifiedSupplierPortal = () => {
               <SupplierInspectionsList 
                 inspections={supplierInspections}
                 loading={inspectionsLoading}
+                supplierId={supplierProfile?.id}
+                onInspectionUpdated={refetchInspections}
               />
             </TabsContent>
 
