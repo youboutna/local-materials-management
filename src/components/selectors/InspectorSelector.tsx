@@ -112,7 +112,7 @@ export function InspectorSelector({
             id: emp.id,
             name: emp.full_name,
             type: 'employee',
-            position: emp.position
+            position: emp.position || undefined
           });
         });
 

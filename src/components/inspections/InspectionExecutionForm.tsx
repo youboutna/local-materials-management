@@ -51,22 +51,29 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
 
           const { data: { publicUrl } } = supabase.storage.from('project-documents').getPublicUrl(filePath);
           
-          await supabase.from('documents').insert({
+          // Insert document with proper type casting
+          const { error: insertError } = await supabase.from('documents').insert({
             title: `Service Fait - ${file.name}`,
             file_name: file.name,
             file_url: publicUrl,
-            document_type: 'inspection_validation',
+            file_size: file.size,
+            mime_type: file.type,
+            document_type: 'inspection_validation' as const,
             project_id: inspection.project_id,
             inspection_id: inspection.id,
             uploaded_by: (await supabase.auth.getUser()).data.user?.id,
-            metadata: { progress: parseInt(newProgress) }
-          });
+            status: 'approved' as const,
+            metadata: { progress: parseInt(newProgress), validation_type: 'service_fait' }
+          } as any);
+          
+          if (insertError) throw insertError;
         }
       }
       
       onUpdate(inspection.id, newStatus, parseInt(newProgress), documents.length > 0 ? documents : undefined);
       toast.success('Inspection mise à jour');
     } catch (error) {
+      console.error('Error updating inspection:', error);
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsUploading(false);
