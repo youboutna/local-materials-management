@@ -519,6 +519,7 @@ export type Database = {
           is_shared_with_suppliers: boolean | null
           metadata: Json | null
           mime_type: string | null
+          payment_id: string | null
           phase_id: string | null
           project_id: string | null
           shared_date: string | null
@@ -544,6 +545,7 @@ export type Database = {
           is_shared_with_suppliers?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
+          payment_id?: string | null
           phase_id?: string | null
           project_id?: string | null
           shared_date?: string | null
@@ -569,6 +571,7 @@ export type Database = {
           is_shared_with_suppliers?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
+          payment_id?: string | null
           phase_id?: string | null
           project_id?: string | null
           shared_date?: string | null
@@ -592,6 +595,13 @@ export type Database = {
             columns: ["inspection_id"]
             isOneToOne: false
             referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
           {

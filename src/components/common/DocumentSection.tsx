@@ -61,27 +61,8 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           query = query.eq('inspection_id', relatedId);
           break;
         case 'payment':
-          // For payments, get the payment's project_id and filter documents by that
-          try {
-            const { data: paymentData } = await supabase
-              .from('payments')
-              .select('project_id')
-              .eq('id', relatedId)
-              .single();
-            
-            if (paymentData && paymentData.project_id) {
-              // Filter documents by project and payment tags
-              query = query.eq('project_id', paymentData.project_id).contains('tags', ['payment']);
-            } else {
-              // If no payment found, return empty results
-              setDocuments([]);
-              return;
-            }
-          } catch (err) {
-            console.error('Error fetching payment project:', err);
-            setDocuments([]);
-            return;
-          }
+          // Filter documents by payment_id
+          query = query.eq('payment_id', relatedId);
           break;
         case 'bank_guarantee':
           // Get project_id from bank_guarantee and filter documents

@@ -486,7 +486,7 @@ const PaymentCrud: React.FC = () => {
         });
       } else {
         // Create new payment in database
-        const { error } = await supabase
+        const { data: newPayment, error } = await supabase
           .from('payments')
           .insert({
             project_id: formData.project_id,
@@ -506,9 +506,62 @@ const PaymentCrud: React.FC = () => {
             mobile_number: formData.mobile_number,
             mobile_operator: formData.mobile_operator,
             receiver_name: formData.receiver_name
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Save documents linked to this payment
+        if (newPayment && (formData.purchase_order_url || formData.quote_url || formData.invoice_url)) {
+          const documentsToCreate: any[] = [];
+          
+          if (formData.purchase_order_url) {
+            documentsToCreate.push({
+              title: 'Bon de Commande',
+              document_type: 'payment',
+              file_url: formData.purchase_order_url,
+              file_name: 'bon_de_commande.pdf',
+              payment_id: newPayment.id,
+              project_id: formData.project_id,
+              tags: ['payment', 'purchase_order']
+            });
+          }
+          
+          if (formData.quote_url) {
+            documentsToCreate.push({
+              title: 'Devis',
+              document_type: 'payment',
+              file_url: formData.quote_url,
+              file_name: 'devis.pdf',
+              payment_id: newPayment.id,
+              project_id: formData.project_id,
+              tags: ['payment', 'quote']
+            });
+          }
+          
+          if (formData.invoice_url) {
+            documentsToCreate.push({
+              title: 'Facture',
+              document_type: 'payment',
+              file_url: formData.invoice_url,
+              file_name: 'facture.pdf',
+              payment_id: newPayment.id,
+              project_id: formData.project_id,
+              tags: ['payment', 'invoice']
+            });
+          }
+          
+          if (documentsToCreate.length > 0) {
+            const { error: docError } = await supabase
+              .from('documents')
+              .insert(documentsToCreate);
+            
+            if (docError) {
+              console.error('Error saving documents:', docError);
+            }
+          }
+        }
 
         toast({
           title: "Succès",
