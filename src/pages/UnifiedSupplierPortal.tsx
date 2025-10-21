@@ -24,7 +24,8 @@ import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
 import EnhancedSupplierTenderPortal from '@/components/suppliers/EnhancedSupplierTenderPortal';
-import { scheduler } from 'timers/promises';
+import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
+import { useSupplierInspections } from '@/hooks/useSupplierInspections';
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -261,24 +262,8 @@ const UnifiedSupplierPortal = () => {
     }
   });
 
-  // Fetch inspections
-  const { data: inspections = [] } = useQuery({
-    queryKey: ['supplier-inspections', supplierProfile?.id],
-    enabled: !!supplierProfile?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          projects (title, status)
-        `)
-        .eq('inspector', supplierProfile!.name)
-        .order('date', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
+  // Fetch inspections with service layer (stakeholder-based)
+  const { inspections: supplierInspections = [], loading: inspectionsLoading } = useSupplierInspections(supplierProfile?.id || null);
 
   const handleLogin = async () => {
     try {
@@ -934,57 +919,10 @@ const UnifiedSupplierPortal = () => {
 
             {/* Inspections Tab */}
             <TabsContent value="inspections">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5" />
-                    Résultats d'Inspection
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {inspections.length > 0 ? (
-                      inspections.map((inspection) => (
-                        <div key={inspection.id} className="p-4 rounded-lg border bg-card">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium">
-                                Inspection - {inspection.projects?.title || 'Projet inconnu'}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                Inspecteur: {inspection.inspector}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Progrès: {inspection.progress_at_inspection}%
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Commentaires: {inspection.comments || 'Aucun commentaire'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {inspection.date ? new Date(inspection.date).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                              </p>
-                            </div>
-                            <Badge 
-                              variant={inspection.status === 'approved' ? 'default' : 'secondary'}
-                              className={
-                                inspection.status === 'approved' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : inspection.status === 'rejected'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-orange-100 text-orange-800'
-                              }
-                            >
-                              {inspection.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">Aucun résultat d'inspection</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <SupplierInspectionsList 
+                inspections={supplierInspections}
+                loading={inspectionsLoading}
+              />
             </TabsContent>
 
             {/* Parsed Invoices Tab */}
