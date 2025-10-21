@@ -18,6 +18,8 @@ interface ActionItem {
   dueDate?: Date;
   projectId?: string;
   projectName?: string;
+  inspectionId?: string;
+  paymentId?: string;
 }
 
 const ManagementActions: React.FC = () => {
@@ -32,28 +34,57 @@ const ManagementActions: React.FC = () => {
     try {
       const actions: ActionItem[] = [];
 
-      // Fetch pending payments that need approval
-      const { data: pendingPayments } = await supabase
-        .from('payments')
+      // Fetch pending inspections that require payment validation
+      const { data: pendingInspections } = await supabase
+        .from('inspections')
         .select(`
-          id, amount, payment_date, contractor_name,
+          id, date, inspector, progress_at_inspection, project_id, status,
           projects (id, title)
         `)
-        .is('inspection_id', null)
-        .order('payment_date', { ascending: true })
+        .in('status', ['in_progress', 'scheduled'])
+        .order('date', { ascending: true })
         .limit(5);
 
-      if (pendingPayments) {
-        pendingPayments.forEach(payment => {
+      if (pendingInspections) {
+        pendingInspections.forEach(inspection => {
           actions.push({
-            id: `payment-${payment.id}`,
-            title: 'Validation Paiement',
-            description: `Paiement de ${payment.amount.toLocaleString()} MRO pour ${payment.contractor_name}`,
-            urgency: payment.amount > 100000 ? 'critical' : 'high',
+            id: `inspection-payment-${inspection.id}`,
+            title: 'Validation Paiement - Inspection',
+            description: `Inspection à ${inspection.progress_at_inspection}% - ${inspection.inspector}`,
+            urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
             category: 'approval',
-            projectId: (payment.projects as any)?.id,
-            projectName: (payment.projects as any)?.title,
-            dueDate: new Date(payment.payment_date)
+            projectId: (inspection.projects as any)?.id,
+            projectName: (inspection.projects as any)?.title,
+            inspectionId: inspection.id,
+            dueDate: new Date(inspection.date)
+          });
+        });
+      }
+
+      // Fetch pending payment requests from suppliers
+      const { data: paymentRequests } = await supabase
+        .from('supplier_payment_requests')
+        .select(`
+          id, amount, requested_date, project_id, status,
+          projects (id, title),
+          suppliers (name)
+        `)
+        .eq('status', 'pending')
+        .order('requested_date', { ascending: true })
+        .limit(5);
+
+      if (paymentRequests) {
+        paymentRequests.forEach(request => {
+          actions.push({
+            id: `payment-request-${request.id}`,
+            title: 'Demande de Paiement',
+            description: `Montant: ${request.amount.toLocaleString()} MRU - ${(request.suppliers as any)?.name}`,
+            urgency: request.amount > 100000 ? 'critical' : 'high',
+            category: 'approval',
+            projectId: (request.projects as any)?.id,
+            projectName: (request.projects as any)?.title,
+            paymentId: request.id,
+            dueDate: new Date(request.requested_date)
           });
         });
       }
@@ -177,6 +208,15 @@ const ManagementActions: React.FC = () => {
   const getActionRoute = (item: ActionItem) => {
     switch (item.category) {
       case 'approval':
+        // If it's an inspection payment validation, go to the specific inspection page
+        if (item.inspectionId && item.projectId) {
+          return `/projects/${item.projectId}?tab=inspections&inspection=${item.inspectionId}`;
+        }
+        // If it's a payment request, go to payment control page
+        if (item.title.includes('Demande de Paiement')) {
+          return '/payment-control';
+        }
+        // Default payment validation
         if (item.title.includes('Paiement')) return '/payment-control';
         return '/projects';
       case 'task':
