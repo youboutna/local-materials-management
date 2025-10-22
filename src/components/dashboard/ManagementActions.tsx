@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -339,6 +339,14 @@ const ManagementActions: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {item.inspectionId && (
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={getActionRoute(item)}>
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Lien
+                        </Link>
+                      </Button>
+                    )}
                     <Button size="sm" asChild>
                       <Link to={getActionRoute(item)}>
                         <Send className="h-4 w-4 mr-1" />
