@@ -70,6 +70,12 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // Helper function to get project title
+  const getProjectTitle = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.title : projectId;
+  };
+
   // Filter inspections based on search query
   const filteredInspections = useMemo(() => {
     if (!debouncedSearchQuery.trim()) {
@@ -90,7 +96,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         status.includes(query)
       );
     });
-  }, [inspections, debouncedSearchQuery]);
+  }, [inspections, debouncedSearchQuery, projects]);
 
   const {
     currentData: paginatedInspections,
@@ -481,11 +487,6 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         variant: 'destructive'
       });
     }
-  };
-
-  const getProjectTitle = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.title : projectId;
   };
 
   const getStatusBadge = (status: string) => {
