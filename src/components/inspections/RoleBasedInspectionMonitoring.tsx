@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { Link } from 'react-router-dom';
 import { 
   Calendar, 
   Bell, 
@@ -22,7 +23,8 @@ import {
   MessageSquare,
   Phone,
   Mail,
-  FileText
+  FileText,
+  ExternalLink
 } from 'lucide-react';
 import { sendNotification } from '@/services/notificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
@@ -581,6 +583,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                         <TableHead>Statut</TableHead>
                         <TableHead>Progression</TableHead>
                         <TableHead>Commentaires</TableHead>
+                        <TableHead>Lien</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -622,6 +625,14 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                             <div className="max-w-xs truncate text-sm text-muted-foreground">
                               {inspection.comments || 'Aucun commentaire'}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button size="sm" variant="outline" asChild>
+                              <Link to={`/inspections/${inspection.id}`}>
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                Détail
+                              </Link>
+                            </Button>
                           </TableCell>
                            <TableCell>
                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
