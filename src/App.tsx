@@ -41,6 +41,7 @@ import NotFound from './pages/NotFound';
 import Index from './pages/Index';
 import InspectionCreate from './pages/InspectionCreate';
 import InspectionEdit from './pages/InspectionEdit';
+import InspectionDetail from './pages/InspectionDetail';
 import ResetPassword from './pages/ResetPassword';
 import UnifiedSupplierPortal from './pages/UnifiedSupplierPortal';
 import SupplierPasswordReset from './pages/SupplierPasswordReset';
@@ -203,6 +204,11 @@ function App() {
 <Route path="/inspections/create" element={
   <RoleBasedRoute disallowedRoles={['supplier']}>
     <InspectionCreate />
+  </RoleBasedRoute>
+} />
+<Route path="/inspections/:id" element={
+  <RoleBasedRoute disallowedRoles={['supplier']}>
+    <InspectionDetail />
   </RoleBasedRoute>
 } />
 <Route path="/inspections/:id/edit" element={
