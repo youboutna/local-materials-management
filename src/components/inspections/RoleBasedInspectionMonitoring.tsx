@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -24,8 +25,10 @@ import {
   Phone,
   Mail,
   FileText,
-  ExternalLink
+  ExternalLink,
+  Search
 } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { sendNotification } from '@/services/notificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
@@ -61,8 +64,33 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const { toast } = useToast();
+  
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Filter inspections based on search query
+  const filteredInspections = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) {
+      return inspections;
+    }
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return inspections.filter((inspection) => {
+      const projectTitle = getProjectTitle(inspection.project_id).toLowerCase();
+      const inspector = inspection.inspector?.toLowerCase() || '';
+      const comments = inspection.comments?.toLowerCase() || '';
+      const status = inspection.status.toLowerCase();
+      
+      return (
+        projectTitle.includes(query) ||
+        inspector.includes(query) ||
+        comments.includes(query) ||
+        status.includes(query)
+      );
+    });
+  }, [inspections, debouncedSearchQuery]);
 
   const {
     currentData: paginatedInspections,
@@ -72,7 +100,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
     itemsPerPage,
     goToPage
   } = usePagination({
-    data: inspections,
+    data: filteredInspections,
     itemsPerPage: 10
   });
 
@@ -559,19 +587,31 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      {inspections.length} inspection(s) trouvée(s)
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={fetchData}
-                      className="gap-2"
-                    >
-                      <TrendingUp className="h-4 w-4" />
-                      Actualiser
-                    </Button>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="relative flex-1 w-full sm:max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Rechercher par projet, inspecteur, commentaire..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                      <p className="text-sm text-muted-foreground">
+                        {filteredInspections.length} inspection(s) trouvée(s)
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={fetchData}
+                        className="gap-2"
+                      >
+                        <TrendingUp className="h-4 w-4" />
+                        Actualiser
+                      </Button>
+                    </div>
                   </div>
                   
                   <Table>
