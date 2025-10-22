@@ -19,9 +19,12 @@ import {
   Calendar,
   TrendingUp,
   DollarSign,
-  ArrowLeft
+  ArrowLeft,
+  Users
 } from 'lucide-react';
 import { InspectionService } from '@/services/InspectionService';
+
+type PaymentType = 'contractor' | 'mission_fees' | 'engineer_fees';
 
 type PaymentStatus = 'pending' | 'approved' | 'info_missing' | 'amount_inconsistent';
 
@@ -42,6 +45,7 @@ const InspectionPaymentValidation: React.FC = () => {
 
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
   const [rejectionNotes, setRejectionNotes] = useState('');
+  const [paymentType, setPaymentType] = useState<PaymentType>('contractor');
 
   // Check if user has required role
   const canValidate = hasAnyRole(['project_manager', 'engineering_consultant', 'admin', 'director']);
@@ -69,6 +73,7 @@ const InspectionPaymentValidation: React.FC = () => {
             stakeholder_type,
             stakeholder_entity_type,
             supplier_id,
+            employee_id,
             suppliers(
               id,
               name,
@@ -90,7 +95,7 @@ const InspectionPaymentValidation: React.FC = () => {
 
   // Update inspection mutation
   const updateInspectionMutation = useMutation({
-    mutationFn: async (data: { status: string; comments: string; payment_status?: PaymentStatus }) => {
+    mutationFn: async (data: { status: string; comments: string; payment_status?: PaymentStatus; payment_type: PaymentType }) => {
       if (!inspectionId) throw new Error('Inspection ID missing');
 
       const { error } = await supabase
@@ -98,35 +103,62 @@ const InspectionPaymentValidation: React.FC = () => {
         .update({
           status: data.status,
           comments: data.comments,
+          payment_type: data.payment_type,
           updated_at: new Date().toISOString(),
         })
         .eq('id', inspectionId);
 
       if (error) throw error;
 
-      // Create notification for beneficiary (external contractor)
-      if (project?.project_stakeholders && Array.isArray(project.project_stakeholders)) {
+      // Determine beneficiary based on payment type
+      let beneficiaryUserId: string | null = null;
+
+      if (data.payment_type === 'contractor') {
         // Find external contractor (partie prenante externe - supplier)
-        const contractor = project.project_stakeholders.find(
+        const contractor = project?.project_stakeholders?.find(
           (s: any) => s.stakeholder_entity_type === 'supplier' && s.supplier_id && s.suppliers
         );
-
-        if (contractor?.suppliers?.user_id) {
-          await supabase.from('notifications').insert({
-            recipient_id: contractor.suppliers.user_id,
-            title: 'Validation de paiement',
-            message: `Votre demande de paiement a été ${
-              data.payment_status === 'approved' ? 'approuvée' : 'rejetée'
-            } pour le projet "${project.title}"`,
-            type: 'payment_validation',
-            metadata: {
-              project_id: projectId,
-              inspection_id: inspectionId,
-              payment_status: data.payment_status,
-              rejection_notes: data.comments,
-            },
-          });
+        beneficiaryUserId = contractor?.suppliers?.user_id || null;
+      } else if (data.payment_type === 'mission_fees' || data.payment_type === 'engineer_fees') {
+        // Find engineering consultant (ingénieur conseil)
+        const engineer = project?.project_stakeholders?.find(
+          (s: any) => s.stakeholder_type === 'engineering_consultant' && s.employee_id
+        );
+        
+        if (engineer?.employee_id) {
+          // Get employee user_id
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('user_id')
+            .eq('id', engineer.employee_id)
+            .single();
+          beneficiaryUserId = employeeData?.user_id || null;
         }
+      }
+
+      // Create notification for beneficiary
+      if (beneficiaryUserId && project) {
+        const paymentTypeLabels = {
+          contractor: 'entreprise contractante',
+          mission_fees: 'frais de mission',
+          engineer_fees: 'honoraires ingénieur conseil'
+        };
+
+        await supabase.from('notifications').insert({
+          recipient_id: beneficiaryUserId,
+          title: 'Validation de paiement',
+          message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${
+            data.payment_status === 'approved' ? 'approuvée' : 'rejetée'
+          } pour le projet "${project.title}"`,
+          type: 'payment_validation',
+          metadata: {
+            project_id: projectId,
+            inspection_id: inspectionId,
+            payment_status: data.payment_status,
+            payment_type: data.payment_type,
+            rejection_notes: data.comments,
+          },
+        });
       }
     },
     onSuccess: () => {
@@ -175,6 +207,7 @@ const InspectionPaymentValidation: React.FC = () => {
       status: newStatus,
       comments,
       payment_status: paymentStatus,
+      payment_type: paymentType,
     });
   };
 
@@ -346,6 +379,35 @@ const InspectionPaymentValidation: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
+                <Label htmlFor="payment-type">Type de paiement *</Label>
+                <Select value={paymentType} onValueChange={(value) => setPaymentType(value as PaymentType)}>
+                  <SelectTrigger id="payment-type" className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contractor">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Entreprise contractante
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="mission_fees">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Frais de mission
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="engineer_fees">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Honoraires ingénieur conseil
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="payment-status">Statut de validation *</Label>
                 <Select value={paymentStatus} onValueChange={(value) => setPaymentStatus(value as PaymentStatus)}>
                   <SelectTrigger id="payment-status" className="mt-2">
@@ -420,46 +482,68 @@ const InspectionPaymentValidation: React.FC = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Bénéficiaire (Contractant)</CardTitle>
+              <CardTitle>Bénéficiaire</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {(() => {
-                const contractor = project?.project_stakeholders?.find(
-                  (s: any) => s.stakeholder_entity_type === 'supplier' && s.suppliers
-                );
-                
-                return contractor?.suppliers ? (
-                  <>
-                    <div>
-                      <Label className="text-muted-foreground">Entreprise</Label>
-                      <p className="font-medium mt-1">
-                        {contractor.suppliers.name}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Contact</Label>
-                      <p className="font-medium mt-1">
-                        {contractor.suppliers.contact_person || 'Non défini'}
-                      </p>
-                    </div>
-                    {contractor.suppliers.phone && (
+                if (paymentType === 'contractor') {
+                  const contractor = project?.project_stakeholders?.find(
+                    (s: any) => s.stakeholder_entity_type === 'supplier' && s.suppliers
+                  );
+                  
+                  return contractor?.suppliers ? (
+                    <>
                       <div>
-                        <Label className="text-muted-foreground">Téléphone</Label>
-                        <p className="font-medium mt-1">{contractor.suppliers.phone}</p>
+                        <Label className="text-muted-foreground">Type</Label>
+                        <p className="font-medium mt-1">Entreprise contractante</p>
                       </div>
-                    )}
-                    {contractor.suppliers.email && (
                       <div>
-                        <Label className="text-muted-foreground">Email</Label>
-                        <p className="font-medium mt-1">{contractor.suppliers.email}</p>
+                        <Label className="text-muted-foreground">Entreprise</Label>
+                        <p className="font-medium mt-1">
+                          {contractor.suppliers.name}
+                        </p>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Aucune entreprise contractante définie pour ce projet.
-                  </p>
-                );
+                      <div>
+                        <Label className="text-muted-foreground">Contact</Label>
+                        <p className="font-medium mt-1">
+                          {contractor.suppliers.contact_person || 'Non défini'}
+                        </p>
+                      </div>
+                      {contractor.suppliers.phone && (
+                        <div>
+                          <Label className="text-muted-foreground">Téléphone</Label>
+                          <p className="font-medium mt-1">{contractor.suppliers.phone}</p>
+                        </div>
+                      )}
+                      {contractor.suppliers.email && (
+                        <div>
+                          <Label className="text-muted-foreground">Email</Label>
+                          <p className="font-medium mt-1">{contractor.suppliers.email}</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      Aucune entreprise contractante définie pour ce projet.
+                    </p>
+                  );
+                } else if (paymentType === 'mission_fees' || paymentType === 'engineer_fees') {
+                  return (
+                    <>
+                      <div>
+                        <Label className="text-muted-foreground">Type</Label>
+                        <p className="font-medium mt-1">
+                          {paymentType === 'mission_fees' ? 'Frais de mission' : 'Honoraires ingénieur conseil'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Bénéficiaire</Label>
+                        <p className="font-medium mt-1">Ingénieur conseil</p>
+                      </div>
+                    </>
+                  );
+                }
+                return null;
               })()}
             </CardContent>
           </Card>

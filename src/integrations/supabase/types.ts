@@ -1056,6 +1056,7 @@ export type Database = {
           documents: Json | null
           id: string
           inspector: string
+          payment_type: string | null
           phase_id: string | null
           progress_at_inspection: number
           project_id: string
@@ -1069,6 +1070,7 @@ export type Database = {
           documents?: Json | null
           id?: string
           inspector: string
+          payment_type?: string | null
           phase_id?: string | null
           progress_at_inspection: number
           project_id: string
@@ -1082,6 +1084,7 @@ export type Database = {
           documents?: Json | null
           id?: string
           inspector?: string
+          payment_type?: string | null
           phase_id?: string | null
           progress_at_inspection?: number
           project_id?: string
