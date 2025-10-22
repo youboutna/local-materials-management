@@ -3800,6 +3800,13 @@ export type Database = {
             referencedRelation: "inspections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "supplier_payment_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
         ]
       }
       supplier_payments: {
@@ -5311,6 +5318,12 @@ export type Database = {
           work_description: string | null
           workflow_history: Json | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "progress_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_supplier_payment_request: {
         Args: {
@@ -5337,10 +5350,7 @@ export type Database = {
           updated_at: string
         }[]
       }
-      generate_request_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_request_number: { Args: never; Returns: string }
       generate_supplier_reset_token: {
         Args: { supplier_email: string }
         Returns: string
@@ -5414,10 +5424,7 @@ export type Database = {
         Args: { role_name: string; user_id: string }
         Returns: boolean
       }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_current_user_admin: { Args: never; Returns: boolean }
       search_projects_autocomplete: {
         Args: { search_term?: string }
         Returns: {
