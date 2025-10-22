@@ -3745,6 +3745,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          inspection_id: string | null
           notes: string | null
           payment_reason: string
           project_id: string | null
@@ -3762,6 +3763,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          inspection_id?: string | null
           notes?: string | null
           payment_reason: string
           project_id?: string | null
@@ -3779,6 +3781,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          inspection_id?: string | null
           notes?: string | null
           payment_reason?: string
           project_id?: string | null
@@ -3789,7 +3792,15 @@ export type Database = {
           supporting_documents?: string[] | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payment_requests_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplier_payments: {
         Row: {

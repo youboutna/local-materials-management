@@ -50,12 +50,34 @@ const InspectionPaymentValidation: React.FC = () => {
   // Check if user has required role
   const canValidate = hasAnyRole(['project_manager', 'engineering_consultant', 'admin', 'director']);
 
-  // Fetch inspection details
+  // Fetch inspection details with payment request
   const { data: inspection, isLoading: inspectionLoading } = useQuery<InspectionDTO | null>({
     queryKey: ['inspection', inspectionId],
     queryFn: async () => {
       if (!inspectionId) return null;
-      return await InspectionService.getInspectionById(inspectionId);
+      
+      // Get inspection
+      const inspectionData = await InspectionService.getInspectionById(inspectionId);
+      
+      // Check if inspection is approved (terminé)
+      if (inspectionData?.status !== 'approved') {
+        return null;
+      }
+      
+      // Check if there's a pending payment request linked to this inspection
+      const { data: paymentRequest } = await supabase
+        .from('supplier_payment_requests')
+        .select('*')
+        .eq('inspection_id', inspectionId)
+        .eq('status', 'pending')
+        .single();
+      
+      // Only return inspection if it has a pending payment request
+      if (!paymentRequest) {
+        return null;
+      }
+      
+      return inspectionData;
     },
     enabled: !!inspectionId,
   });
@@ -241,9 +263,9 @@ const InspectionPaymentValidation: React.FC = () => {
         <Card>
           <CardContent className="p-12 text-center">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Inspection introuvable</h3>
+            <h3 className="text-lg font-semibold mb-2">Inspection non éligible</h3>
             <p className="text-muted-foreground mb-4">
-              L'inspection demandée n'existe pas ou vous n'avez pas les permissions pour y accéder.
+              Cette inspection doit être terminée et avoir une demande de paiement en attente pour être validée.
             </p>
             <Button onClick={() => navigate(`/projects/${projectId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
