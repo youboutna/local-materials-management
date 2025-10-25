@@ -62,6 +62,25 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     mutationFn: async (taskData: TaskFormData) => {
       const { data: { user } } = await supabase.auth.getUser();
       
+      let assigneeName = '';
+      let assigneeEmail = '';
+      let assigneeType: 'employee' | 'supplier' | 'user' = 'employee';
+
+      // Fetch employee details if assigned
+      if (taskData.assigned_to) {
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('full_name, email')
+          .eq('id', taskData.assigned_to)
+          .maybeSingle();
+        
+        if (employeeData) {
+          assigneeName = employeeData.full_name;
+          assigneeEmail = employeeData.email || '';
+          assigneeType = 'employee';
+        }
+      }
+      
       const { data, error } = await supabase
         .from('task_assignments')
         .insert({
@@ -70,6 +89,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
           project_id: projectId,
           phase_id: phaseId,
           assigned_to: taskData.assigned_to || null,
+          assignee_type: taskData.assigned_to ? assigneeType : null,
+          assignee_name: taskData.assigned_to ? assigneeName : null,
+          assignee_email: taskData.assigned_to ? assigneeEmail : null,
           assigned_by: user?.id || null,
           due_date: taskData.due_date || null,
           priority: taskData.priority,
