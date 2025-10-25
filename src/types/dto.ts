@@ -21,6 +21,12 @@ export interface ProjectDTO {
   localisation?: any[];
   forme?: string;
   adresse?: string | any;
+  // Location-specific fields
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  hasUtilities?: boolean;
+  requiresPermits?: boolean;
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;
@@ -80,6 +86,12 @@ export interface ProjectFormDTO {
     latitude: number;
     longitude: number;
   };
+  // Location-specific fields
+  geographicZone?: string;
+  terrainType?: string;
+  environmentalConstraints?: string;
+  hasUtilities?: boolean;
+  requiresPermits?: boolean;
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;

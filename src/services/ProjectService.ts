@@ -116,6 +116,12 @@ export class ProjectService {
       ...((formData as any).localisation !== undefined && { localisation: (formData as any).localisation }),
       ...((formData as any).forme !== undefined && { forme: (formData as any).forme }),
       ...((formData as any).adresse !== undefined && { adresse: (formData as any).adresse }),
+      // Location-specific fields
+      ...((formData as any).geographicZone !== undefined && { geographic_zone: (formData as any).geographicZone }),
+      ...((formData as any).terrainType !== undefined && { terrain_type: (formData as any).terrainType }),
+      ...((formData as any).environmentalConstraints !== undefined && { environmental_constraints: (formData as any).environmentalConstraints }),
+      ...((formData as any).hasUtilities !== undefined && { has_utilities: (formData as any).hasUtilities }),
+      ...((formData as any).requiresPermits !== undefined && { requires_permits: (formData as any).requiresPermits }),
       ...(formData.financingSource !== undefined && { financing_source: formData.financingSource }),
       ...(formData.marketType !== undefined && { market_type: formData.marketType }),
       ...(formData.selectionMode !== undefined && { selection_mode: formData.selectionMode }),

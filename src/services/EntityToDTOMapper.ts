@@ -27,6 +27,12 @@ export class EntityToDTOMapper {
       localisation: (entity as any).localisation || [],
       forme: (entity as any).forme,
       adresse: (entity as any).adresse,
+      // Location-specific fields
+      geographicZone: (entity as any).geographic_zone,
+      terrainType: (entity as any).terrain_type,
+      environmentalConstraints: (entity as any).environmental_constraints,
+      hasUtilities: (entity as any).has_utilities,
+      requiresPermits: (entity as any).requires_permits,
       financingSource: entity.financing_source,
       marketType: entity.market_type,
       selectionMode: entity.selection_mode,

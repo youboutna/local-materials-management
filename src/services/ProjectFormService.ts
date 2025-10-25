@@ -27,6 +27,12 @@ export interface ProjectFormData {
   longitude?: number | null;
   area_sqm?: number | null;
   site_details?: string;
+  // Location-specific fields from LocationStep
+  geographic_zone?: string;
+  terrain_type?: string;
+  environmental_constraints?: string;
+  has_utilities?: boolean;
+  requires_permits?: boolean;
   // Financial data
   advance_percentage?: number;
   // Additional fields
@@ -197,7 +203,13 @@ export class ProjectFormService {
       technical_manager_id: nullIfEmpty(formData.technical_manager_id),
       supervisor_id: nullIfEmpty(formData.supervisor_id),
       client_id: nullIfEmpty(formData.client_id),
-      workspace_id: nullIfEmpty(formData.workspace_id)
+      workspace_id: nullIfEmpty(formData.workspace_id),
+      // Location-specific fields
+      geographic_zone: formData.geographic_zone || null,
+      terrain_type: formData.terrain_type || null,
+      environmental_constraints: formData.environmental_constraints || null,
+      has_utilities: formData.has_utilities || false,
+      requires_permits: formData.requires_permits || false
     };
   }
 
@@ -238,7 +250,13 @@ export class ProjectFormService {
           warehouseShape: (projectData as any).localisation || [],
           address: (projectData as any).adresse,
           shapeType: (projectData as any).forme
-        } : undefined
+        } : undefined,
+        // Location-specific fields
+        geographic_zone: projectData.geographicZone || '',
+        terrain_type: projectData.terrainType || '',
+        environmental_constraints: projectData.environmentalConstraints || '',
+        has_utilities: projectData.hasUtilities || false,
+        requires_permits: projectData.requiresPermits || false
       };
     } catch (error) {
       console.error('Error loading project data:', error);

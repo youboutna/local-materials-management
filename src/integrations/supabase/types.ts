@@ -3115,10 +3115,13 @@ export type Database = {
           current_stage: string | null
           description: string
           end_date: string | null
+          environmental_constraints: string | null
           estimated_days: number | null
           financing_source: string | null
           forme: string | null
           funding_source: string | null
+          geographic_zone: string | null
+          has_utilities: boolean | null
           id: string
           initial_advance_percentage: number | null
           initial_payment_percentage: number | null
@@ -3140,12 +3143,14 @@ export type Database = {
           project_type: string | null
           requires_consultant_validation: boolean | null
           requires_ministry_approval: boolean | null
+          requires_permits: boolean | null
           retention_percentage: number | null
           sector: string | null
           selection_mode: string | null
           start_date: string
           status: string
           team_size: number
+          terrain_type: string | null
           thumbnail: string
           title: string
           updated_at: string
@@ -3166,10 +3171,13 @@ export type Database = {
           current_stage?: string | null
           description: string
           end_date?: string | null
+          environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
           funding_source?: string | null
+          geographic_zone?: string | null
+          has_utilities?: boolean | null
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
@@ -3191,12 +3199,14 @@ export type Database = {
           project_type?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
+          requires_permits?: boolean | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
           start_date: string
           status: string
           team_size: number
+          terrain_type?: string | null
           thumbnail?: string
           title: string
           updated_at?: string
@@ -3217,10 +3227,13 @@ export type Database = {
           current_stage?: string | null
           description?: string
           end_date?: string | null
+          environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
           forme?: string | null
           funding_source?: string | null
+          geographic_zone?: string | null
+          has_utilities?: boolean | null
           id?: string
           initial_advance_percentage?: number | null
           initial_payment_percentage?: number | null
@@ -3242,12 +3255,14 @@ export type Database = {
           project_type?: string | null
           requires_consultant_validation?: boolean | null
           requires_ministry_approval?: boolean | null
+          requires_permits?: boolean | null
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
           start_date?: string
           status?: string
           team_size?: number
+          terrain_type?: string | null
           thumbnail?: string
           title?: string
           updated_at?: string
