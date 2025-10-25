@@ -378,7 +378,19 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     checkAuthenticationAndProceed(() => {
       const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
       
-      const newPhases: PhaseData[] = referentialPhases.map((refPhase, index) => ({
+      // Filter out phases that already exist based on title
+      const existingPhaseTitles = new Set(phases.map(p => p.title));
+      const phasesToAdd = referentialPhases.filter(refPhase => !existingPhaseTitles.has(refPhase.label));
+      
+      if (phasesToAdd.length === 0) {
+        toast({
+          title: "Aucune nouvelle phase",
+          description: "Toutes les phases du référentiel sont déjà présentes",
+        });
+        return;
+      }
+      
+      const newPhases: PhaseData[] = phasesToAdd.map((refPhase, index) => ({
         id: `ref-${Date.now()}-${index}`,
         title: refPhase.label,
         description: refPhase.description || '',
@@ -396,10 +408,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
         notes: ''
       }));
 
-      onChange(newPhases);
+      // Add new phases to existing phases instead of replacing
+      onChange([...phases, ...newPhases]);
       toast({
-        title: "Phases générées",
-        description: `${newPhases.length} phases générées depuis le référentiel ${selectedReferential}`,
+        title: "Phases ajoutées",
+        description: `${newPhases.length} nouvelle(s) phase(s) ajoutée(s) depuis le référentiel ${selectedReferential}`,
       });
     }, 'générer les phases');
   };
