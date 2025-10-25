@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import EmployeeSelector from '@/components/selectors/EmployeeSelector';
 
 interface PhaseTasksProps {
   phaseId: string;
@@ -135,6 +136,17 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.title.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Le titre de la tâche est requis',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (editingId) {
       updateTaskMutation.mutate({ id: editingId, data: formData });
     } else {
@@ -208,15 +220,15 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       required
+                      placeholder="Titre de la tâche"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="assigned_to">Assigné à (Email)</Label>
-                    <Input
-                      id="assigned_to"
-                      type="email"
+                    <EmployeeSelector
                       value={formData.assigned_to}
-                      onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                      onChange={(employeeId) => setFormData({ ...formData, assigned_to: employeeId })}
+                      label="Assigné à"
+                      placeholder="Sélectionner un employé"
                     />
                   </div>
                 </div>
@@ -287,8 +299,10 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                   <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">
-                    {editingId ? 'Mettre à jour' : 'Créer'}
+                  <Button type="submit" disabled={createTaskMutation.isPending || updateTaskMutation.isPending}>
+                    {(createTaskMutation.isPending || updateTaskMutation.isPending) 
+                      ? 'Enregistrement...' 
+                      : editingId ? 'Mettre à jour' : 'Créer la tâche'}
                   </Button>
                 </div>
               </form>

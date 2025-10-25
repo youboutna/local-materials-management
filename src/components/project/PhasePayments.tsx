@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, DollarSign, Trash2, Calendar, ExternalLink } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
 
 interface PhasePaymentsProps {
   phaseId: string;
@@ -26,6 +27,7 @@ interface PaymentFormData {
   contractor_name: string;
   contractor_contact: string;
   transaction_id: string;
+  supplier_id: string;
 }
 
 const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => {
@@ -39,6 +41,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
     contractor_name: '',
     contractor_contact: '',
     transaction_id: '',
+    supplier_id: '',
   });
   
   const { toast } = useToast();
@@ -113,11 +116,59 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
       contractor_name: '',
       contractor_contact: '',
       transaction_id: '',
+      supplier_id: '',
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Veuillez saisir un montant valide',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.contractor_name.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Veuillez sélectionner un contractant',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.contractor_contact.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Le contact du contractant est requis',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.transaction_id.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'L\'ID de transaction est requis',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (formData.progress_at_payment && (parseInt(formData.progress_at_payment) < 0 || parseInt(formData.progress_at_payment) > 100)) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'La progression doit être entre 0 et 100%',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     addPaymentMutation.mutate(formData);
   };
 
@@ -169,6 +220,56 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 <DialogTitle>Enregistrer un paiement</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <SimpleSupplierSelector
+                    value={formData.supplier_id}
+                    onChange={async (supplierId) => {
+                      setFormData({ ...formData, supplier_id: supplierId });
+                      
+                      // Auto-fill contractor info from supplier
+                      const { data } = await supabase
+                        .from('suppliers')
+                        .select('name, contact_person, phone, email')
+                        .eq('id', supplierId)
+                        .single();
+                      
+                      if (data) {
+                        setFormData(prev => ({
+                          ...prev,
+                          supplier_id: supplierId,
+                          contractor_name: data.name,
+                          contractor_contact: data.contact_person || data.email || data.phone || '',
+                        }));
+                      }
+                    }}
+                    label="Fournisseur/Contractant *"
+                    placeholder="Sélectionner un fournisseur"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="contractor_name">Nom du contractant *</Label>
+                    <Input
+                      id="contractor_name"
+                      value={formData.contractor_name}
+                      onChange={(e) => setFormData({ ...formData, contractor_name: e.target.value })}
+                      required
+                      placeholder="Rempli automatiquement"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contractor_contact">Contact du contractant *</Label>
+                    <Input
+                      id="contractor_contact"
+                      value={formData.contractor_contact}
+                      onChange={(e) => setFormData({ ...formData, contractor_contact: e.target.value })}
+                      required
+                      placeholder="Rempli automatiquement"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="amount">Montant (MRU) *</Label>
@@ -176,6 +277,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       id="amount"
                       type="number"
                       step="0.01"
+                      min="0"
                       value={formData.amount}
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                       required
@@ -203,12 +305,13 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="payment_date">Date de paiement</Label>
+                    <Label htmlFor="payment_date">Date de paiement *</Label>
                     <Input
                       id="payment_date"
                       type="date"
                       value={formData.payment_date}
                       onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                      required
                     />
                   </div>
                   <div>
@@ -220,27 +323,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       max="100"
                       value={formData.progress_at_payment}
                       onChange={(e) => setFormData({ ...formData, progress_at_payment: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="contractor_name">Nom du contractant *</Label>
-                    <Input
-                      id="contractor_name"
-                      value={formData.contractor_name}
-                      onChange={(e) => setFormData({ ...formData, contractor_name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contractor_contact">Contact du contractant *</Label>
-                    <Input
-                      id="contractor_contact"
-                      value={formData.contractor_contact}
-                      onChange={(e) => setFormData({ ...formData, contractor_contact: e.target.value })}
-                      required
+                      placeholder="0-100"
                     />
                   </div>
                 </div>
@@ -260,7 +343,9 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                   <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">Enregistrer</Button>
+                  <Button type="submit" disabled={addPaymentMutation.isPending}>
+                    {addPaymentMutation.isPending ? 'Enregistrement...' : 'Enregistrer le paiement'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
