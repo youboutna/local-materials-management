@@ -10,7 +10,10 @@ import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
 import TenderDocumentManager from '@/components/tenders/TenderDocumentManager';
 import TenderEvaluationPanel from '@/components/tenders/TenderEvaluationPanel';
 import PublicProcurementWorkflow from '@/components/tenders/PublicProcurementWorkflow';
+import { TenderSecurityBadge } from '@/components/tenders/TenderSecurityBadge';
+import { TenderTimelineCard } from '@/components/tenders/TenderTimelineCard';
 import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
+import { SecureSharingDialog } from '@/components/tenders/SecureSharingDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { WorkflowPhase, WorkflowStage } from '@/types/workflow';
 
@@ -43,6 +46,7 @@ interface SelectedSupplier {
 const TenderManagement = () => {
   const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
   const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
+  const [secureSharingOpen, setSecureSharingOpen] = useState(false);
   const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<SelectedSupplier | null>(null);
   const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: WorkflowPhase; stage: WorkflowStage } | null>(null);
@@ -85,11 +89,14 @@ const TenderManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Gestion des Appels d'Offres</h1>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-foreground">Gestion des Appels d'Offres</h1>
+              <TenderSecurityBadge level="confidential" />
+            </div>
             <p className="text-muted-foreground">
-              Gérez le cycle complet des appels d'offres selon les standards mauritaniens
+              Gérez le cycle complet des appels d'offres selon les standards mauritaniens et la charte d'éthique
             </p>
           </div>
           {selectedTender && (
@@ -99,17 +106,12 @@ const TenderManagement = () => {
                 {selectedTender.status}
               </Badge>
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
-                onClick={() => {
-                  // Use a default workflow step for general sharing
-                  const defaultPhase = { id: 'general', code: 'general', label: 'Partage général', value: 'general', customizable: false, stages: [] };
-                  const defaultStage = { id: 'general', code: 'general', label: 'Ensemble du dossier', value: 'general', customizable: false, tasks: [] };
-                  handleShareWithSuppliers(defaultPhase, defaultStage);
-                }}
+                onClick={() => setSecureSharingOpen(true)}
               >
                 <Users className="h-4 w-4 mr-2" />
-                Partager
+                Partage Sécurisé
               </Button>
             </div>
           )}
@@ -153,9 +155,10 @@ const TenderManagement = () => {
                 </CardHeader>
 
                 <Tabs defaultValue="workflow" className="flex-1">
-                  <div className="border-b px-6">
-                    <TabsList className="grid w-full grid-cols-4 max-w-md">
+                  <div className="border-b px-6 bg-muted/30">
+                    <TabsList className="grid w-full grid-cols-5 max-w-2xl">
                       <TabsTrigger value="workflow" className="text-xs">Workflow</TabsTrigger>
+                      <TabsTrigger value="timeline" className="text-xs">Chronologie</TabsTrigger>
                       <TabsTrigger value="steps" className="text-xs">Étapes</TabsTrigger>
                       <TabsTrigger value="documents" className="text-xs">Documents</TabsTrigger>
                       <TabsTrigger value="evaluation" className="text-xs">Évaluation</TabsTrigger>
@@ -167,6 +170,12 @@ const TenderManagement = () => {
                       <PublicProcurementWorkflow 
                         selectedTender={selectedTender}
                         onShareWithSuppliers={handleShareWithSuppliers}
+                      />
+                    </TabsContent>
+                    <TabsContent value="timeline" className="mt-0">
+                      <TenderTimelineCard
+                        launchDate={selectedTender.launch_date}
+                        deadlineDate={selectedTender.attribution_date}
                       />
                     </TabsContent>
                     <TabsContent value="steps" className="mt-0">
@@ -206,6 +215,18 @@ const TenderManagement = () => {
             )}
           </div>
         </div>
+
+        {/* Secure Sharing Dialog */}
+        {selectedTender && (
+          <SecureSharingDialog
+            isOpen={secureSharingOpen}
+            onOpenChange={setSecureSharingOpen}
+            tenderId={selectedTender.id}
+            tenderTitle={selectedTender.title}
+            workflowPhase={selectedWorkflowStep?.phase.code}
+            workflowStage={selectedWorkflowStep?.stage.code}
+          />
+        )}
 
         {/* Document Sharing Dialog */}
         {selectedSupplier && (

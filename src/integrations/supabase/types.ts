@@ -4488,6 +4488,126 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_sharing_access_logs: {
+        Row: {
+          accessed_at: string | null
+          accessed_documents: string[] | null
+          action_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          sharing_secret_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          accessed_documents?: string[] | null
+          action_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          sharing_secret_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          accessed_documents?: string[] | null
+          action_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          sharing_secret_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_sharing_access_logs_sharing_secret_id_fkey"
+            columns: ["sharing_secret_id"]
+            isOneToOne: false
+            referencedRelation: "tender_sharing_secrets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_sharing_secrets: {
+        Row: {
+          access_count: number | null
+          allowed_document_ids: string[] | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          max_access_count: number | null
+          metadata: Json | null
+          secret_code: string
+          shared_by: string | null
+          supplier_email: string | null
+          supplier_id: string | null
+          tender_id: string
+          updated_at: string | null
+          workflow_phase: string | null
+          workflow_stage: string | null
+        }
+        Insert: {
+          access_count?: number | null
+          allowed_document_ids?: string[] | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          max_access_count?: number | null
+          metadata?: Json | null
+          secret_code: string
+          shared_by?: string | null
+          supplier_email?: string | null
+          supplier_id?: string | null
+          tender_id: string
+          updated_at?: string | null
+          workflow_phase?: string | null
+          workflow_stage?: string | null
+        }
+        Update: {
+          access_count?: number | null
+          allowed_document_ids?: string[] | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          max_access_count?: number | null
+          metadata?: Json | null
+          secret_code?: string
+          shared_by?: string | null
+          supplier_email?: string | null
+          supplier_id?: string | null
+          tender_id?: string
+          updated_at?: string | null
+          workflow_phase?: string | null
+          workflow_stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_sharing_secrets_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "tender_sharing_secrets_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tender_sharing_secrets_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tender_step_documents: {
         Row: {
           created_at: string
@@ -5355,6 +5475,7 @@ export type Database = {
         Args: { supplier_email: string }
         Returns: string
       }
+      generate_tender_secret_code: { Args: never; Returns: string }
       get_escalation_targets: {
         Args: { escalation_level_param: string; project_id_param: string }
         Returns: {
@@ -5431,6 +5552,15 @@ export type Database = {
           id: string
           project_reference: string
           title: string
+        }[]
+      }
+      validate_tender_secret: {
+        Args: { secret_code_param: string }
+        Returns: {
+          allowed_documents: string[]
+          is_valid: boolean
+          message: string
+          tender_id: string
         }[]
       }
     }

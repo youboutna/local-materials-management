@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package, Shield } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,17 +92,26 @@ const MainNavbar = () => {
               >
                 <div className="py-2">
                   {isSupplierOnly ? (
-                    <DropdownMenuItem asChild>
-                      <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-gray-900">
-                        <Building2 className="h-5 w-5 mr-3" />
-                        {t('nav.supplier_portal') || 'Supplier Portal'}
-                      </Link>
-
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-gray-900">
+                          <Building2 className="h-5 w-5 mr-3" />
+                          {t('nav.supplier_portal') || 'Supplier Portal'}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/supplier-tender" className="flex items-center px-4 py-3 text-gray-900">
-                        <Building2 className="h-5 w-5 mr-3" />
-                        {t('nav.supplier_tender_portal') || 'Supplier soummission Portal'}
-                      </Link>
-                    </DropdownMenuItem>
+                          <Building2 className="h-5 w-5 mr-3" />
+                          {t('nav.supplier_tender_portal') || 'Portail Soumissions'}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
+                          <Shield className="h-5 w-5 mr-3 text-primary" />
+                          Accès Sécurisé
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
 
                     
                   ) : (
@@ -226,7 +235,11 @@ const MainNavbar = () => {
                     asChild
                   >
                   <Link to="/supplier-tender">
-                      {t('nav.supplier_tender_portal') || 'Supplier soumission Portal'}
+                      {t('nav.supplier_tender_portal') || 'Portail Soumissions'}
+                    </Link>
+                  <Link to="/supplier-access" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-primary" />
+                      Accès Sécurisé
                     </Link>
                   </Button>
                 </NavigationMenuItem>

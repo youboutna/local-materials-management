@@ -57,6 +57,7 @@ import NotificationsCenterPage from './pages/NotificationsCenter';
 import InsuranceManagementPage from './pages/InsuranceManagement';
 import PaymentControlPage from './pages/PaymentControl';
 import EnhancedSupplierTenderPortal from './components/suppliers/EnhancedSupplierTenderPortal';
+import { SupplierSecureAccessPortal } from './components/tenders/SupplierSecureAccessPortal';
 import WorkflowTest from './pages/WorkflowTest';
 
 const queryClient = new QueryClient({
@@ -91,6 +92,7 @@ function App() {
                       <Route path="/reset-password" element={<ResetPassword />} />
                       <Route path="/supplier-portal" element={<UnifiedSupplierPortal />} />
                       <Route path='/supplier-tender' element={<EnhancedSupplierTenderPortal/>}/>
+                      <Route path='/supplier-access' element={<SupplierSecureAccessPortal/>}/>
                       <Route path="/supplier-password-reset" element={<SupplierPasswordReset />} />
                       <Route path="/workflow-test" element={<WorkflowTest />} />
                       
