@@ -15,6 +15,7 @@ import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload } fr
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { ProjectService } from '@/services/ProjectService';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
+import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
 interface PhaseInspectionsProps {
   phaseId: string;
@@ -33,6 +34,7 @@ interface InspectionFormData {
 const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId }) => {
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
+  const [inspectorId, setInspectorId] = useState('');
   const [formData, setFormData] = useState<InspectionFormData>({
     inspector: '',
     date: new Date().toISOString().split('T')[0],
@@ -141,6 +143,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   });
 
   const resetForm = () => {
+    setInspectorId('');
     setFormData({
       inspector: '',
       date: new Date().toISOString().split('T')[0],
@@ -153,6 +156,35 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.inspector.trim()) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Veuillez sélectionner un inspecteur',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!formData.date) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'Veuillez sélectionner une date d\'inspection',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (formData.progress_at_inspection && (parseInt(formData.progress_at_inspection) < 0 || parseInt(formData.progress_at_inspection) > 100)) {
+      toast({
+        title: 'Erreur de validation',
+        description: 'La progression doit être entre 0 et 100%',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     addInspectionMutation.mutate(formData);
   };
 
@@ -218,22 +250,25 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="inspector">Inspecteur *</Label>
-                    <Input
-                      id="inspector"
-                      value={formData.inspector}
-                      onChange={(e) => setFormData({ ...formData, inspector: e.target.value })}
-                      required
-                      placeholder="Nom de l'inspecteur"
+                    <InspectorSelector
+                      projectId={projectId}
+                      value={inspectorId}
+                      onValueChange={(id, name) => {
+                        setInspectorId(id);
+                        setFormData({ ...formData, inspector: name });
+                      }}
+                      label="Inspecteur *"
+                      placeholder="Sélectionner un inspecteur"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="date">Date d'inspection</Label>
+                    <Label htmlFor="date">Date d'inspection *</Label>
                     <Input
                       id="date"
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
@@ -309,7 +344,9 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                   <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">Ajouter</Button>
+                  <Button type="submit" disabled={addInspectionMutation.isPending}>
+                    {addInspectionMutation.isPending ? 'Ajout en cours...' : 'Ajouter l\'inspection'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
