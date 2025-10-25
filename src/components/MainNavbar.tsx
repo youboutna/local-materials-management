@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
-import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package, Shield } from 'lucide-react';
+import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package, Shield, Lock } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,12 +108,16 @@ const MainNavbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
                           <Shield className="h-5 w-5 mr-3 text-primary" />
-                          Accès Sécurisé
+                          Accès Documents (Fournisseur)
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-gray-900 bg-amber-50">
+                          <Lock className="h-5 w-5 mr-3 text-amber-600" />
+                          Accès Évaluation (Commission)
                         </Link>
                       </DropdownMenuItem>
                     </>
-
-                    
                   ) : (
                     <>
                       <DropdownMenuItem asChild>

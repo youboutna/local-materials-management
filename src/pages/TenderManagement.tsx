@@ -14,8 +14,11 @@ import { TenderSecurityBadge } from '@/components/tenders/TenderSecurityBadge';
 import { TenderTimelineCard } from '@/components/tenders/TenderTimelineCard';
 import { EnhancedDocumentSharing } from '@/components/suppliers/EnhancedDocumentSharing';
 import { SecureSharingDialog } from '@/components/tenders/SecureSharingDialog';
+import { SubmissionSecretDialog } from '@/components/tenders/SubmissionSecretDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { WorkflowPhase, WorkflowStage } from '@/types/workflow';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Tender {
   id: string;
@@ -48,8 +51,28 @@ const TenderManagement = () => {
   const [documentSharingOpen, setDocumentSharingOpen] = useState(false);
   const [secureSharingOpen, setSecureSharingOpen] = useState(false);
   const [documentSelectorOpen, setDocumentSelectorOpen] = useState(false);
+  const [submissionSecretOpen, setSubmissionSecretOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<{ id: string; supplierName: string } | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<SelectedSupplier | null>(null);
   const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: WorkflowPhase; stage: WorkflowStage } | null>(null);
+
+  // Fetch tender submissions for the selected tender
+  const { data: submissions } = useQuery({
+    queryKey: ['tender-submissions', selectedTender?.id],
+    queryFn: async () => {
+      if (!selectedTender?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('tender_submissions')
+        .select('*')
+        .eq('tender_id', selectedTender.id)
+        .order('submission_date', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedTender?.id
+  });
 
   const handleShareWithSuppliers = (phase: WorkflowPhase, stage: WorkflowStage) => {
     setSelectedWorkflowStep({ phase, stage });
@@ -188,8 +211,59 @@ const TenderManagement = () => {
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentManager tenderId={selectedTender.id} />
                     </TabsContent>
-                    <TabsContent value="evaluation" className="mt-0">
-                      <TenderEvaluationPanel tenderId={selectedTender.id} />
+                  <TabsContent value="evaluation" className="mt-0">
+                      <div className="space-y-4">
+                        {/* Submissions List with Secret Code Management */}
+                        {submissions && submissions.length > 0 && (
+                          <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                Soumissions Reçues ({submissions.length})
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {submissions.map((sub: any) => (
+                                  <div 
+                                    key={sub.id} 
+                                    className="flex items-center justify-between p-3 border rounded-lg bg-background hover:shadow-md transition-shadow"
+                                  >
+                                    <div className="flex-1">
+                                      <p className="font-medium">{sub.supplier_name}</p>
+                                      <p className="text-sm text-muted-foreground">{sub.supplier_email}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {sub.secret_code && (
+                                        <Badge variant="outline" className="gap-1">
+                                          <FileText className="h-3 w-3" />
+                                          Code actif
+                                        </Badge>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedSubmission({
+                                            id: sub.id,
+                                            supplierName: sub.supplier_name
+                                          });
+                                          setSubmissionSecretOpen(true);
+                                        }}
+                                      >
+                                        <FileText className="h-4 w-4 mr-1" />
+                                        Code Secret
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        <TenderEvaluationPanel tenderId={selectedTender.id} />
+                      </div>
                     </TabsContent>
                   </CardContent>
                 </Tabs>
@@ -283,6 +357,17 @@ const TenderManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {/* Submission Secret Dialog */}
+        {selectedSubmission && (
+          <SubmissionSecretDialog
+            isOpen={submissionSecretOpen}
+            onOpenChange={setSubmissionSecretOpen}
+            submissionId={selectedSubmission.id}
+            supplierName={selectedSubmission.supplierName}
+            tenderId={selectedTender?.id || ''}
+          />
         )}
       </div>
     </div>

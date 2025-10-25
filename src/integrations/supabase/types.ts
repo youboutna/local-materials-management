@@ -3569,6 +3569,60 @@ export type Database = {
           },
         ]
       }
+      submission_access_logs: {
+        Row: {
+          accessed_at: string
+          accessed_by: string | null
+          accessed_sections: string[] | null
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          submission_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          accessed_by?: string | null
+          accessed_sections?: string[] | null
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          submission_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          accessed_by?: string | null
+          accessed_sections?: string[] | null
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          submission_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_access_logs_accessed_by_fkey"
+            columns: ["accessed_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "submission_access_logs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "tender_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           act_codes: Json | null
@@ -4782,11 +4836,19 @@ export type Database = {
         Row: {
           administrative_score: number | null
           created_at: string
+          evaluation_phase: string | null
+          evaluation_stage: string | null
           evaluator_notes: string | null
           financial_score: number | null
           id: string
+          is_secret_active: boolean | null
+          max_secret_access: number | null
           reviewed_at: string | null
           reviewer_id: string | null
+          secret_access_count: number | null
+          secret_code: string | null
+          secret_created_at: string | null
+          secret_expires_at: string | null
           status: string
           submission_date: string
           supplier_email: string | null
@@ -4800,11 +4862,19 @@ export type Database = {
         Insert: {
           administrative_score?: number | null
           created_at?: string
+          evaluation_phase?: string | null
+          evaluation_stage?: string | null
           evaluator_notes?: string | null
           financial_score?: number | null
           id?: string
+          is_secret_active?: boolean | null
+          max_secret_access?: number | null
           reviewed_at?: string | null
           reviewer_id?: string | null
+          secret_access_count?: number | null
+          secret_code?: string | null
+          secret_created_at?: string | null
+          secret_expires_at?: string | null
           status?: string
           submission_date?: string
           supplier_email?: string | null
@@ -4818,11 +4888,19 @@ export type Database = {
         Update: {
           administrative_score?: number | null
           created_at?: string
+          evaluation_phase?: string | null
+          evaluation_stage?: string | null
           evaluator_notes?: string | null
           financial_score?: number | null
           id?: string
+          is_secret_active?: boolean | null
+          max_secret_access?: number | null
           reviewed_at?: string | null
           reviewer_id?: string | null
+          secret_access_count?: number | null
+          secret_code?: string | null
+          secret_created_at?: string | null
+          secret_expires_at?: string | null
           status?: string
           submission_date?: string
           supplier_email?: string | null
@@ -5471,6 +5549,7 @@ export type Database = {
         }[]
       }
       generate_request_number: { Args: never; Returns: string }
+      generate_submission_secret_code: { Args: never; Returns: string }
       generate_supplier_reset_token: {
         Args: { supplier_email: string }
         Returns: string
@@ -5552,6 +5631,16 @@ export type Database = {
           id: string
           project_reference: string
           title: string
+        }[]
+      }
+      validate_submission_secret: {
+        Args: { secret_code_param: string }
+        Returns: {
+          is_valid: boolean
+          message: string
+          submission_id: string
+          supplier_name: string
+          tender_id: string
         }[]
       }
       validate_tender_secret: {
