@@ -27,6 +27,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
+import { SubmissionSecretService } from '@/services/SubmissionSecretService';
+import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
 
 interface PublicTender {
   id: string;
@@ -330,9 +332,24 @@ const EnhancedSupplierTenderPortal = () => {
         uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
       }
 
+      // Generate secret code for evaluation commission access
+      try {
+        const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30); // 30 days validity
+        await SubmissionSecretService.createSubmissionSecret({
+          submission_id: submission.id,
+          expires_at: expiresAt,
+          max_access: 50, // Allow up to 50 accesses for evaluation
+          evaluation_phase: 'evaluation',
+          evaluation_stage: 'initial'
+        });
+      } catch (secretError) {
+        console.error('Error generating secret code:', secretError);
+        // Don't fail the submission if secret generation fails
+      }
+
       return submission;
     },
-    onSuccess: () => {
+    onSuccess: (submission) => {
       queryClient.invalidateQueries({ queryKey: ['user-submission'] });
       setSelectedFiles({});
       setSubmissionData({ notes: '' });
@@ -600,16 +617,23 @@ const EnhancedSupplierTenderPortal = () => {
                     </div>
 
                     {userSubmission ? (
-                      <div className="bg-green-50 p-4 rounded">
-                        <h4 className="font-medium text-green-800">Soumission déjà envoyée</h4>
-                        <p className="text-sm text-green-600">
-                          Votre dossier de candidature a été soumis le{' '}
-                          {new Date(userSubmission.submission_date).toLocaleDateString()}
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          Statut: {userSubmission.status === 'submitted' ? 'En cours d\'évaluation' : userSubmission.status}
-                        </p>
-                      </div>
+                      <>
+                        <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
+                          <div>
+                            <h4 className="font-medium text-green-800 mb-1">Soumission envoyée avec succès</h4>
+                            <p className="text-sm text-green-600">
+                              Votre dossier de candidature a été soumis le{' '}
+                              {new Date(userSubmission.submission_date).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                              Statut: {userSubmission.status === 'submitted' ? 'En cours d\'évaluation' : userSubmission.status}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Display Secret Code for Evaluation Commission */}
+                        <SubmissionSecretDisplay submissionId={userSubmission.id} />
+                      </>
                     ) : canSubmitBid() && (
                       <div className="space-y-6">
                         {Object.entries(DOCUMENT_CATEGORIES).map(([categoryKey, categoryLabel]) => (
