@@ -181,6 +181,7 @@ const Projects: React.FC = () => {
             <ProjectFilters 
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              onSearchSubmit={performSearch}
               statusFilter={statusFilter}
               onStatusChange={setStatusFilter}
               regionFilter={regionFilter}

@@ -3,20 +3,17 @@ import { ProjectData } from '@/components/ProjectCard';
 import { SortOption } from '@/components/projects/ProjectFilters';
 import { useNavigate } from 'react-router-dom';
 import { MAURITANIA_REGIONS, Region } from '@/types/mauritania';
-import { useDebounce } from './useDebounce';
 
 export const useProjectsFilter = (projects: ProjectData[]) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState(''); // Actual search to filter by
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([]);
   const [searchResults, setSearchResults] = useState<ProjectData[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  
-  // Debounce search query to allow user to finish typing (300ms delay)
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
   // Extract all unique statuses from projects for filtering
   const availableStatuses = useMemo(() => {
@@ -38,13 +35,13 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     }));
   }, []);
   
-  // Handle searching and filtering using debounced search with fulltext
+  // Handle searching and filtering using active search query
   useEffect(() => {
     let result = [...projects];
     
     // Apply fulltext search filter first if there's a query
-    if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
-      const queryTerms = debouncedSearchQuery.toLowerCase().trim().split(/\s+/);
+    if (activeSearchQuery && activeSearchQuery.trim()) {
+      const queryTerms = activeSearchQuery.toLowerCase().trim().split(/\s+/);
       
       result = result.filter(project => {
         // Create searchable text from all project fields
@@ -112,14 +109,14 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setFilteredProjects(result);
     
     // Update search results for potential autocomplete
-    if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+    if (activeSearchQuery && activeSearchQuery.trim()) {
       setSearchResults(result);
       setShowSearchResults(true);
     } else {
       setSearchResults([]);
       setShowSearchResults(false);
     }
-  }, [debouncedSearchQuery, statusFilter, regionFilter, sortOption, projects]);
+  }, [activeSearchQuery, statusFilter, regionFilter, sortOption, projects]);
   
   // Function to handle clicking on a search result
   const handleSelectSearchResult = (projectId: string) => {
@@ -134,15 +131,15 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     setShowSearchResults(false);
   };
   
-  // Function for real-time search as user types - only updates search query with debouncing
-  const performSearch = (query: string) => {
-    // Don't update state immediately - let ResponsiveFilters handle debouncing
-    // This function is now just a placeholder for API compatibility
+  // Function to trigger search (called on Enter key press)
+  const performSearch = () => {
+    setActiveSearchQuery(searchQuery);
   };
 
   return {
     searchQuery,
     setSearchQuery,
+    activeSearchQuery,
     statusFilter,
     setStatusFilter,
     regionFilter,

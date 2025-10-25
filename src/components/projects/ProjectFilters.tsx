@@ -8,6 +8,7 @@ export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'p
 interface ProjectFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSearchSubmit: () => void;
   statusFilter: string;
   onStatusChange: (status: string) => void;
   regionFilter: string;
@@ -25,6 +26,7 @@ interface ProjectFiltersProps {
 const ProjectFilters: React.FC<ProjectFiltersProps> = ({ 
   searchQuery,
   onSearchChange,
+  onSearchSubmit,
   statusFilter,
   onStatusChange,
   regionFilter,
@@ -87,6 +89,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
+      onSearchSubmit={onSearchSubmit}
       searchPlaceholder="Rechercher projets..."
       filters={filters}
       onReset={onReset}

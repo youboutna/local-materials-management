@@ -222,12 +222,13 @@ const Materials: React.FC = () => {
       <div className="space-y-6">
         <InteractiveMaterialFilters
           searchTerm={interactiveSearchTerm}
+          onSearchChange={setInteractiveSearchTerm}
+          onSearchSubmit={performInteractiveSearch}
           selectedCategory={selectedInteractiveCategory}
           selectedRegion={selectedRegion}
           selectedStockLevel={selectedStockLevel}
           categories={categories}
           regions={regions}
-          onSearchChange={setInteractiveSearchTerm}
           onCategoryChange={setSelectedInteractiveCategory}
           onRegionChange={setSelectedRegion}
           onStockLevelChange={setSelectedStockLevel}
@@ -300,11 +301,12 @@ const Materials: React.FC = () => {
           <TabsContent value="grid" className="space-y-6">
             <MaterialFilters
               searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onSearchSubmit={performSearch}
               selectedCategory={selectedCategory}
               selectedLocalType={selectedLocalType}
               categories={categories}
               localTypes={localTypes}
-              onSearchChange={setSearchTerm}
               onCategoryChange={setSelectedCategory}
               onLocalTypeChange={setSelectedLocalType}
               onReset={handleResetFilters}

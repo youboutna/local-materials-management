@@ -3,26 +3,28 @@ import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFi
 
 interface MaterialFiltersProps {
   searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   selectedCategory: string;
+  onCategoryChange: (value: string) => void;
   selectedLocalType: string;
+  onLocalTypeChange: (value: string) => void;
   categories: string[];
   localTypes: string[];
-  onSearchChange: (value: string) => void;
-  onCategoryChange: (value: string) => void;
-  onLocalTypeChange: (value: string) => void;
   onReset: () => void;
   resultCount?: number;
 }
 
 const MaterialFilters: React.FC<MaterialFiltersProps> = ({
   searchTerm,
+  onSearchChange,
+  onSearchSubmit,
   selectedCategory,
+  onCategoryChange,
   selectedLocalType,
+  onLocalTypeChange,
   categories,
   localTypes,
-  onSearchChange,
-  onCategoryChange,
-  onLocalTypeChange,
   onReset,
   resultCount
 }) => {
@@ -49,6 +51,7 @@ const MaterialFilters: React.FC<MaterialFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchTerm}
       onSearchChange={onSearchChange}
+      onSearchSubmit={onSearchSubmit}
       searchPlaceholder="Rechercher des matériaux..."
       filters={filters}
       onReset={onReset}

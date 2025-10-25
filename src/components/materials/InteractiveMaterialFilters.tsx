@@ -5,15 +5,16 @@ import { MapPin, Package } from 'lucide-react';
 
 interface InteractiveMaterialFiltersProps {
   searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   selectedCategory: string;
+  onCategoryChange: (value: string) => void;
   selectedRegion: string;
+  onRegionChange: (value: string) => void;
   selectedStockLevel: string;
+  onStockLevelChange: (value: string) => void;
   categories: string[];
   regions: string[];
-  onSearchChange: (value: string) => void;
-  onCategoryChange: (value: string) => void;
-  onRegionChange: (value: string) => void;
-  onStockLevelChange: (value: string) => void;
   onReset: () => void;
   materialCount: number;
   gpsCount: number;
@@ -21,15 +22,16 @@ interface InteractiveMaterialFiltersProps {
 
 const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
   searchTerm,
+  onSearchChange,
+  onSearchSubmit,
   selectedCategory,
+  onCategoryChange,
   selectedRegion,
+  onRegionChange,
   selectedStockLevel,
+  onStockLevelChange,
   categories,
   regions,
-  onSearchChange,
-  onCategoryChange,
-  onRegionChange,
-  onStockLevelChange,
   onReset,
   materialCount,
   gpsCount
@@ -82,6 +84,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
       <ResponsiveFilters
         searchValue={searchTerm}
         onSearchChange={onSearchChange}
+        onSearchSubmit={onSearchSubmit}
         searchPlaceholder="Recherche fulltext: nom, description, catégorie, région, type..."
         filters={filters}
         onReset={onReset}

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useDebounce } from './useDebounce';
 
 interface Material {
   id: string;
@@ -23,19 +22,17 @@ interface Material {
 
 export const useMaterialsFilter = (materials: Material[]) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeSearchTerm, setActiveSearchTerm] = useState(""); // Actual search to filter by
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocalType, setSelectedLocalType] = useState("all");
   const [filteredMaterials, setFilteredMaterials] = useState<Material[]>([]);
   
   // Interactive map filters
   const [interactiveSearchTerm, setInteractiveSearchTerm] = useState("");
+  const [activeInteractiveSearchTerm, setActiveInteractiveSearchTerm] = useState(""); // Actual search to filter by
   const [selectedInteractiveCategory, setSelectedInteractiveCategory] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedStockLevel, setSelectedStockLevel] = useState("all");
-  
-  // Debounce search queries to allow user to finish typing (300ms delay)
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  const debouncedInteractiveSearchTerm = useDebounce(interactiveSearchTerm, 300);
   
   // Extract unique values for filter options
   const categories = useMemo(() => 
@@ -53,13 +50,13 @@ export const useMaterialsFilter = (materials: Material[]) => {
     [materials]
   );
   
-  // Filter materials based on fulltext search and filters using debounced search
+  // Filter materials based on fulltext search and filters using active search term
   useEffect(() => {
     let filtered = materials;
 
     // Apply fulltext search filter
-    if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
-      const queryTerms = debouncedSearchTerm.toLowerCase().trim().split(/\s+/);
+    if (activeSearchTerm && activeSearchTerm.trim()) {
+      const queryTerms = activeSearchTerm.toLowerCase().trim().split(/\s+/);
       
       filtered = filtered.filter((material) => {
         // Create searchable text from all material fields
@@ -95,7 +92,7 @@ export const useMaterialsFilter = (materials: Material[]) => {
     }
 
     setFilteredMaterials(filtered);
-  }, [materials, debouncedSearchTerm, selectedCategory, selectedLocalType]);
+  }, [materials, activeSearchTerm, selectedCategory, selectedLocalType]);
   
   // Get stock level for material
   const getStockLevel = (available: number) => {
@@ -105,15 +102,15 @@ export const useMaterialsFilter = (materials: Material[]) => {
     return 'high';
   };
 
-  // Filter materials for interactive map using fulltext debounced search
+  // Filter materials for interactive map using fulltext active search term
   const filteredInteractiveMaterials = useMemo(() => {
     return materials.filter(material => {
       // Only show materials with GPS coordinates
       if (!material.coordinates_latitude || !material.coordinates_longitude) return false;
 
-      // Fulltext search filter using debounced term
-      if (debouncedInteractiveSearchTerm && debouncedInteractiveSearchTerm.trim()) {
-        const queryTerms = debouncedInteractiveSearchTerm.toLowerCase().trim().split(/\s+/);
+      // Fulltext search filter using active search term
+      if (activeInteractiveSearchTerm && activeInteractiveSearchTerm.trim()) {
+        const queryTerms = activeInteractiveSearchTerm.toLowerCase().trim().split(/\s+/);
         
         const searchableText = [
           material.name,
@@ -149,29 +146,31 @@ export const useMaterialsFilter = (materials: Material[]) => {
 
       return true;
     });
-  }, [materials, debouncedInteractiveSearchTerm, selectedInteractiveCategory, selectedRegion, selectedStockLevel]);
+  }, [materials, activeInteractiveSearchTerm, selectedInteractiveCategory, selectedRegion, selectedStockLevel]);
   
   // Reset functions
   const handleResetFilters = () => {
     setSearchTerm("");
+    setActiveSearchTerm("");
     setSelectedCategory("all");
     setSelectedLocalType("all");
   };
 
   const handleResetInteractiveFilters = () => {
     setInteractiveSearchTerm("");
+    setActiveInteractiveSearchTerm("");
     setSelectedInteractiveCategory("all");
     setSelectedRegion("all");
     setSelectedStockLevel("all");
   };
   
-  // Functions for real-time search - only used for API compatibility
-  const performSearch = (query: string) => {
-    // Don't update state immediately - let ResponsiveFilters handle debouncing
+  // Functions to trigger search (called on Enter key press)
+  const performSearch = () => {
+    setActiveSearchTerm(searchTerm);
   };
   
-  const performInteractiveSearch = (query: string) => {
-    // Don't update state immediately - let ResponsiveFilters handle debouncing
+  const performInteractiveSearch = () => {
+    setActiveInteractiveSearchTerm(interactiveSearchTerm);
   };
 
   return {

@@ -32,6 +32,7 @@ export interface FilterField {
 export interface ResponsiveFiltersProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  onSearchSubmit?: () => void; // New prop for Enter key press
   searchPlaceholder?: string;
   filters: FilterField[];
   onReset: () => void;
@@ -45,6 +46,7 @@ export interface ResponsiveFiltersProps {
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   searchValue = '',
   onSearchChange,
+  onSearchSubmit,
   searchPlaceholder = 'Rechercher...',
   filters,
   onReset,
@@ -54,10 +56,17 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   autocompleteOptions = [],
   onAutocompleteSelect
 }) => {
-  // Handle search input change - pass through immediately, debouncing happens in the hooks
+  // Handle search input change - pass through immediately
   const handleSearchChange = (value: string) => {
     if (onSearchChange) {
       onSearchChange(value);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onSearchSubmit) {
+      onSearchSubmit();
     }
   };
 
@@ -114,6 +123,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                     placeholder={searchPlaceholder}
                     value={searchValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     className="pl-10"
                   />
                 </>
@@ -221,6 +231,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                 placeholder={searchPlaceholder}
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="pl-10"
               />
             </>
