@@ -96,29 +96,25 @@ const MainNavbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-portal" className="flex items-center px-4 py-3 text-gray-900">
                           <Building2 className="h-5 w-5 mr-3" />
-                          {t('nav.supplier_portal') || 'Supplier Portal'}
+                          <span>{t('nav.supplier_portal') || 'Supplier Portal'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-tender" className="flex items-center px-4 py-3 text-gray-900">
                           <Building2 className="h-5 w-5 mr-3" />
-                          {t('nav.supplier_tender_portal') || 'Portail Soumissions'}
+                          <span>{t('nav.supplier_tender_portal') || 'Portail Soumissions'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
-                          <>
-                            <Shield className="h-5 w-5 mr-3 text-primary" />
-                            Accès Documents (Fournisseur)
-                          </>
+                          <Shield className="h-5 w-5 mr-3 text-primary" />
+                          <span>Accès Documents (Fournisseur)</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-gray-900 bg-amber-50">
-                          <>
-                            <Lock className="h-5 w-5 mr-3 text-amber-600" />
-                            Accès Évaluation (Commission)
-                          </>
+                          <Lock className="h-5 w-5 mr-3 text-amber-600" />
+                          <span>Accès Évaluation (Commission)</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -127,58 +123,58 @@ const MainNavbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/dashboard" className="flex items-center px-4 py-3 text-gray-900">
                           <Home className="h-5 w-5 mr-3" />
-                          {t('dashboard.title') || 'Dashboard'}
+                          <span>{t('dashboard.title') || 'Dashboard'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
                         <Link to="/projects" className="flex items-center px-4 py-3 text-gray-900">
                           <Briefcase className="h-5 w-5 mr-3" />
-                          {t('nav.projects') || 'Projets'}
+                          <span>{t('nav.projects') || 'Projets'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
                         <Link to="/materials" className="flex items-center px-4 py-3 text-gray-900">
                           <Package className="h-5 w-5 mr-3" />
-                          {t('nav.materials') || 'Matériaux'}
+                          <span>{t('nav.materials') || 'Matériaux'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
                         <Link to="/documents" className="flex items-center px-4 py-3 text-gray-900">
                           <FileText className="h-5 w-5 mr-3" />
-                          {t('documents.title') || 'Documents'}
+                          <span>{t('documents.title') || 'Documents'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
-                        <DropdownMenuItem asChild>
-                          <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
-                            <ClipboardList className="h-5 w-5 mr-3" />
-                            {t('task.title') || 'Tâches'}
-                          </Link>
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem asChild>
-                          <Link to="/employees" className="flex items-center px-4 py-3 text-gray-900">
-                            <Users className="h-5 w-5 mr-3" />
-                            {t('nav.employees') || 'Employés'}
-                          </Link>
-                        </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/tasks" className="flex items-center px-4 py-3 text-gray-900">
+                          <ClipboardList className="h-5 w-5 mr-3" />
+                          <span>{t('task.title') || 'Tâches'}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link to="/employees" className="flex items-center px-4 py-3 text-gray-900">
+                          <Users className="h-5 w-5 mr-3" />
+                          <span>{t('nav.employees') || 'Employés'}</span>
+                        </Link>
+                      </DropdownMenuItem>
 
                       {canManageUsers && (
                         <>
                           <DropdownMenuItem asChild>
                             <Link to="/users" className="flex items-center px-4 py-3 text-gray-900">
                               <Users className="h-5 w-5 mr-3" />
-                              {t('nav.users') || 'Utilisateurs'}
+                              <span>{t('nav.users') || 'Utilisateurs'}</span>
                             </Link>
                           </DropdownMenuItem>
                           
                           <DropdownMenuItem asChild>
                             <Link to="/settings" className="flex items-center px-4 py-3 text-gray-900">
                               <Cog className="h-5 w-5 mr-3" />
-                              {t('settings.title') || 'Settings'}
+                              <span>{t('settings.title') || 'Settings'}</span>
                             </Link>
                           </DropdownMenuItem>
                         </>
@@ -187,14 +183,14 @@ const MainNavbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/suppliers" className="flex items-center px-4 py-3 text-gray-900">
                           <Building2 className="h-5 w-5 mr-3" />
-                          {t('nav.suppliers') || 'Fournisseurs'}
+                          <span>{t('nav.suppliers') || 'Fournisseurs'}</span>
                         </Link>
                       </DropdownMenuItem>
                       
                       <DropdownMenuItem asChild>
                         <Link to="/tender-management" className="flex items-center px-4 py-3 text-gray-900">
                           <FileText className="h-5 w-5 mr-3" />
-                          {t('nav.tender_management') || "Appels d'Offres"}
+                          <span>{t('nav.tender_management') || "Appels d'Offres"}</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -235,19 +231,28 @@ const MainNavbar = () => {
                     </Link>
                   </Button>
                 </NavigationMenuItem>
-                  <NavigationMenuItem>
+                <NavigationMenuItem>
                   <Button 
                     variant="ghost" 
                     className="text-white hover:text-gray-200 hover:bg-adrar-600"
                     size="sm"
                     asChild
                   >
-                  <Link to="/supplier-tender">
+                    <Link to="/supplier-tender">
                       {t('nav.supplier_tender_portal') || 'Portail Soumissions'}
                     </Link>
-                  <Link to="/supplier-access" className="flex items-center gap-2">
+                  </Button>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Button 
+                    variant="ghost" 
+                    className="text-white hover:text-gray-200 hover:bg-adrar-600"
+                    size="sm"
+                    asChild
+                  >
+                    <Link to="/supplier-access" className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-primary" />
-                      Accès Sécurisé
+                      <span>Accès Sécurisé</span>
                     </Link>
                   </Button>
                 </NavigationMenuItem>
