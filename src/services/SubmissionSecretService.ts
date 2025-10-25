@@ -115,6 +115,26 @@ export class SubmissionSecretService {
   }
 
   /**
+   * Get submission details by submission ID
+   */
+  static async getSubmissionById(
+    submissionId: string
+  ): Promise<SubmissionSecretDTO | null> {
+    const { data, error } = await supabase
+      .from('tender_submissions')
+      .select('*')
+      .eq('id', submissionId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching submission by ID:', error);
+      return null;
+    }
+    
+    return data as SubmissionSecretDTO;
+  }
+
+  /**
    * Get submission by secret code
    */
   static async getSubmissionBySecret(

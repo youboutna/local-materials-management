@@ -30,7 +30,7 @@ export const SubmissionSecretDisplay: React.FC<SubmissionSecretDisplayProps> = (
   const { data: submission, isLoading } = useQuery({
     queryKey: ['submission-secret-display', submissionId],
     queryFn: async () => {
-      const data = await SubmissionSecretService.getSubmissionBySecret(submissionId);
+      const data = await SubmissionSecretService.getSubmissionById(submissionId);
       return data;
     },
     enabled: !!submissionId

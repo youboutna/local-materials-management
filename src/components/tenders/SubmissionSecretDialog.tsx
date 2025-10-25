@@ -49,7 +49,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
   const { data: submission, isLoading } = useQuery({
     queryKey: ['submission-secret', submissionId],
     queryFn: async () => {
-      return SubmissionSecretService.getSubmissionBySecret(submissionId);
+      return SubmissionSecretService.getSubmissionById(submissionId);
     },
     enabled: isOpen && !!submissionId
   });
