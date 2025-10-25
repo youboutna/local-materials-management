@@ -15,8 +15,8 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
   const [searchResults, setSearchResults] = useState<ProjectData[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   
-  // Debounce search query to allow user to finish typing
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  // Debounce search query to allow user to finish typing (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
   // Extract all unique statuses from projects for filtering
   const availableStatuses = useMemo(() => {

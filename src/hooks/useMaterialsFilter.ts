@@ -33,9 +33,9 @@ export const useMaterialsFilter = (materials: Material[]) => {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedStockLevel, setSelectedStockLevel] = useState("all");
   
-  // Debounce search queries to allow user to finish typing
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const debouncedInteractiveSearchTerm = useDebounce(interactiveSearchTerm, 500);
+  // Debounce search queries to allow user to finish typing (300ms delay)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const debouncedInteractiveSearchTerm = useDebounce(interactiveSearchTerm, 300);
   
   // Extract unique values for filter options
   const categories = useMemo(() => 

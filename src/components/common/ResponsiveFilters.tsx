@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -54,41 +54,23 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   autocompleteOptions = [],
   onAutocompleteSelect
 }) => {
-  // Local search state for immediate UI updates
-  const [localSearchValue, setLocalSearchValue] = useState(searchValue);
-  
-  // Update local state when external searchValue changes
-  useEffect(() => {
-    setLocalSearchValue(searchValue);
-  }, [searchValue]);
-  
-  // Debounced search effect with proper autocomplete behavior
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (onSearchChange && localSearchValue !== searchValue) {
-        onSearchChange(localSearchValue);
-      }
-    }, 300); // Reduced delay for better autocomplete responsiveness
-
-    return () => clearTimeout(timeoutId);
-  }, [localSearchValue, onSearchChange, searchValue]);
-  
-  // Handle search input change
+  // Handle search input change - pass through immediately, debouncing happens in the hooks
   const handleSearchChange = (value: string) => {
-    setLocalSearchValue(value);
+    if (onSearchChange) {
+      onSearchChange(value);
+    }
   };
 
   // Handle autocomplete selection
   const handleAutocompleteSelect = (option: AutocompleteOption) => {
-    setLocalSearchValue(option.label);
-    onAutocompleteSelect?.(option);
     if (onSearchChange) {
       onSearchChange(option.label);
     }
+    onAutocompleteSelect?.(option);
   };
 
   const activeFiltersCount = filters.filter(f => f.value && f.value !== 'all').length;
-  const hasActiveFilters = activeFiltersCount > 0 || (localSearchValue && localSearchValue.trim().length > 0);
+  const hasActiveFilters = activeFiltersCount > 0 || (searchValue && searchValue.trim().length > 0);
 
   // Desktop View
   const DesktopFilters = () => (
@@ -117,7 +99,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
             <div className="relative">
               {autocompleteOptions.length > 0 ? (
                 <Autocomplete
-                  value={localSearchValue}
+                  value={searchValue}
                   onChange={handleSearchChange}
                   onSelect={handleAutocompleteSelect}
                   options={autocompleteOptions}
@@ -130,7 +112,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     placeholder={searchPlaceholder}
-                    value={localSearchValue}
+                    value={searchValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="pl-10"
                   />
@@ -178,15 +160,15 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         {/* Active Filters Display */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-            {localSearchValue && localSearchValue.trim().length > 0 && (
+            {searchValue && searchValue.trim().length > 0 && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Search className="h-3 w-3" />
-                "{localSearchValue}"
+                "{searchValue}"
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 ml-1"
-                  onClick={() => {setLocalSearchValue(''); onSearchChange?.('');}}
+                  onClick={() => onSearchChange?.('')}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -224,7 +206,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         <div className="relative mb-4">
           {autocompleteOptions.length > 0 ? (
             <Autocomplete
-              value={localSearchValue}
+              value={searchValue}
               onChange={handleSearchChange}
               onSelect={handleAutocompleteSelect}
               options={autocompleteOptions}
@@ -237,7 +219,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={searchPlaceholder}
-                value={localSearchValue}
+                value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
@@ -320,15 +302,15 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {localSearchValue && localSearchValue.trim().length > 0 && (
+          {searchValue && searchValue.trim().length > 0 && (
             <Badge variant="secondary" className="flex items-center gap-1">
               <Search className="h-3 w-3" />
-              "{localSearchValue}"
+              "{searchValue}"
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 ml-1"
-                onClick={() => {setLocalSearchValue(''); onSearchChange?.('');}}
+                onClick={() => onSearchChange?.('')}
               >
                 <X className="h-3 w-3" />
               </Button>
