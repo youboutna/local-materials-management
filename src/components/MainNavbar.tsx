@@ -107,14 +107,18 @@ const MainNavbar = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
-                          <Shield className="h-5 w-5 mr-3 text-primary" />
-                          Accès Documents (Fournisseur)
+                          <>
+                            <Shield className="h-5 w-5 mr-3 text-primary" />
+                            Accès Documents (Fournisseur)
+                          </>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-gray-900 bg-amber-50">
-                          <Lock className="h-5 w-5 mr-3 text-amber-600" />
-                          Accès Évaluation (Commission)
+                          <>
+                            <Lock className="h-5 w-5 mr-3 text-amber-600" />
+                            Accès Évaluation (Commission)
+                          </>
                         </Link>
                       </DropdownMenuItem>
                     </>
