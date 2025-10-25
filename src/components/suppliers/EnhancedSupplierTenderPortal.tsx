@@ -279,75 +279,86 @@ const EnhancedSupplierTenderPortal = () => {
       console.log("All selectedFiles:", selectedFiles);
       console.log("Files to process:", Object.entries(selectedFiles));
 
-      for (const [docKey, file] of Object.entries(selectedFiles)) {
-        console.log("Processing document:", docKey, "File:", file.name);
-        const [category] = docKey.split('-');
-        console.log("Extracted category:", category);
-        const subcategory = docKey.split('-').slice(1).join('-');
-        console.log("Extracted subCategory:", subcategory);
-        const uploadResult = await uploadFile(
-          file, 
-          `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${subcategory}`
-        );
-        console.log("Extracted upload url :",uploadResult.url);
+      try {
+        for (const [docKey, file] of Object.entries(selectedFiles)) {
+          console.log("Processing document:", docKey, "File:", file.name);
+          const [category] = docKey.split('-');
+          console.log("Extracted category:", category);
+          const subcategory = docKey.split('-').slice(1).join('-');
+          console.log("Extracted subCategory:", subcategory);
+          const uploadResult = await uploadFile(
+            file, 
+            `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${subcategory}`
+          );
+          console.log("Extracted upload url :",uploadResult.url);
 
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || 'Échec du téléchargement');
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.error || 'Échec du téléchargement');
+          }
+
+          // Create document record
+          const { data: document, error: docError } = await supabase
+            .from('documents')
+            .insert({
+              title: file.name,
+              description: `Document ${category} pour l'appel d'offres ${selectedTender.title}`,
+              file_url: uploadResult.url,
+              file_name: file.name,
+              mime_type: file.type,
+              file_size: file.size,
+              document_type: 'tender',
+              uploaded_by: user.user.id,
+              metadata: {
+                tender_id: selectedTender.id,
+                submission_id: submission.id,
+                category: category,
+                document_key: docKey
+              }
+            })
+            .select()
+            .single();
+
+          if (docError) throw docError;
+
+          // Link document to submission
+          await supabase
+            .from('tender_submission_documents')
+            .insert({
+              submission_id: submission.id,
+              document_id: document.id,
+              category: category as 'administrative' | 'technical' | 'financial',
+              subcategory: docKey.split('-').slice(1).join('-')
+            });
+
+          uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
         }
 
-        // Create document record
-        const { data: document, error: docError } = await supabase
-          .from('documents')
-          .insert({
-            title: file.name,
-            description: `Document ${category} pour l'appel d'offres ${selectedTender.title}`,
-            file_url: uploadResult.url,
-            file_name: file.name,
-            mime_type: file.type,
-            file_size: file.size,
-            document_type: 'tender',
-            uploaded_by: user.user.id,
-            metadata: {
-              tender_id: selectedTender.id,
-              submission_id: submission.id,
-              category: category,
-              document_key: docKey
-            }
-          })
-          .select()
-          .single();
-
-        if (docError) throw docError;
-
-        // Link document to submission
-        await supabase
-          .from('tender_submission_documents')
-          .insert({
+        // Generate secret code for evaluation commission access
+        try {
+          const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30); // 30 days validity
+          await SubmissionSecretService.createSubmissionSecret({
             submission_id: submission.id,
-            document_id: document.id,
-            category: category as 'administrative' | 'technical' | 'financial',
-            subcategory: docKey.split('-').slice(1).join('-')
+            expires_at: expiresAt,
+            max_access: 50, // Allow up to 50 accesses for evaluation
+            evaluation_phase: 'evaluation',
+            evaluation_stage: 'initial'
           });
+        } catch (secretError) {
+          console.error('Error generating secret code:', secretError);
+          // Don't fail the submission if secret generation fails
+        }
 
-        uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
+        return submission;
+      } catch (uploadError) {
+        // Rollback: delete the submission if file upload fails
+        console.error('Upload error, rolling back submission:', uploadError);
+        await supabase
+          .from('tender_submissions')
+          .delete()
+          .eq('id', submission.id);
+        
+        throw uploadError;
       }
-
-      // Generate secret code for evaluation commission access
-      try {
-        const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30); // 30 days validity
-        await SubmissionSecretService.createSubmissionSecret({
-          submission_id: submission.id,
-          expires_at: expiresAt,
-          max_access: 50, // Allow up to 50 accesses for evaluation
-          evaluation_phase: 'evaluation',
-          evaluation_stage: 'initial'
-        });
-      } catch (secretError) {
-        console.error('Error generating secret code:', secretError);
-        // Don't fail the submission if secret generation fails
-      }
-
-      return submission;
     },
     onSuccess: (submission) => {
       queryClient.invalidateQueries({ queryKey: ['user-submission'] });
