@@ -83,6 +83,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   const [currentShapeType, setCurrentShapeType] = useState<'polygon' | 'rectangle' | 'circle'>('polygon');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [activeTab, setActiveTab] = useState('location');
+  const [mapLayer, setMapLayer] = useState<'osm' | 'satellite' | 'topo' | 'relief'>('osm');
 
   // Mauritania cities for reference
   const mauritaniaCities = [
@@ -213,6 +214,34 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
     : [20.0, -12.0];
   const mapZoom = mapData?.coordinates ? 12 : 6;
 
+  const getMapTileLayer = () => {
+    switch (mapLayer) {
+      case 'satellite':
+        return {
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          attribution: '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        };
+      case 'topo':
+        return {
+          url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
+        };
+      case 'relief':
+        return {
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
+          attribution: '&copy; Esri, NAVTEQ, DeLorme'
+        };
+      case 'osm':
+      default:
+        return {
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          attribution: '&copy; OpenStreetMap contributors'
+        };
+    }
+  };
+
+  const tileLayerConfig = getMapTileLayer();
+
   return (
     <Card className={`${className} border-0 shadow-elegant bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm`}>
       <CardHeader className="bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border-b border-border/50">
@@ -286,6 +315,44 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             )}
 
             <div className="relative">
+              <div className="absolute top-4 right-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 space-y-1">
+                <Button
+                  type="button"
+                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('osm')}
+                  className="w-full justify-start text-xs"
+                >
+                  OpenStreetMap
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('satellite')}
+                  className="w-full justify-start text-xs"
+                >
+                  Vue Satellite
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('topo')}
+                  className="w-full justify-start text-xs"
+                >
+                  Topographique
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('relief')}
+                  className="w-full justify-start text-xs"
+                >
+                  Relief
+                </Button>
+              </div>
               <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
                 <MapContainer
                   center={mapCenter}
@@ -293,8 +360,9 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   style={{ height: '100%', width: '100%' }}
                 >
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="© OpenStreetMap contributors"
+                    key={mapLayer}
+                    url={tileLayerConfig.url}
+                    attribution={tileLayerConfig.attribution}
                   />
 
                   <MapClickHandler
@@ -390,6 +458,44 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             </div>
 
             <div className="relative">
+              <div className="absolute top-4 right-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 space-y-1">
+                <Button
+                  type="button"
+                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('osm')}
+                  className="w-full justify-start text-xs"
+                >
+                  OpenStreetMap
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('satellite')}
+                  className="w-full justify-start text-xs"
+                >
+                  Vue Satellite
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('topo')}
+                  className="w-full justify-start text-xs"
+                >
+                  Topographique
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('relief')}
+                  className="w-full justify-start text-xs"
+                >
+                  Relief
+                </Button>
+              </div>
               <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
                 <MapContainer
                   center={mapCenter}
@@ -397,8 +503,9 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   style={{ height: '100%', width: '100%' }}
                 >
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="© OpenStreetMap contributors"
+                    key={mapLayer}
+                    url={tileLayerConfig.url}
+                    attribution={tileLayerConfig.attribution}
                   />
 
                   <MapClickHandler
