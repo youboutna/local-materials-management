@@ -315,44 +315,6 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             )}
 
             <div className="relative">
-              <div className="absolute top-4 right-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 space-y-1">
-                <Button
-                  type="button"
-                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('osm')}
-                  className="w-full justify-start text-xs"
-                >
-                  OpenStreetMap
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('satellite')}
-                  className="w-full justify-start text-xs"
-                >
-                  Vue Satellite
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('topo')}
-                  className="w-full justify-start text-xs"
-                >
-                  Topographique
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('relief')}
-                  className="w-full justify-start text-xs"
-                >
-                  Relief
-                </Button>
-              </div>
               <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
                 <MapContainer
                   center={mapCenter}
@@ -390,6 +352,44 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     </Marker>
                   )}
                 </MapContainer>
+              </div>
+              <div className="absolute bottom-4 left-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 flex gap-1">
+                <Button
+                  type="button"
+                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('osm')}
+                  className="text-xs"
+                >
+                  OSM
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('satellite')}
+                  className="text-xs"
+                >
+                  Satellite
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('topo')}
+                  className="text-xs"
+                >
+                  Topo
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('relief')}
+                  className="text-xs"
+                >
+                  Relief
+                </Button>
               </div>
             </div>
 
@@ -458,44 +458,6 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             </div>
 
             <div className="relative">
-              <div className="absolute top-4 right-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 space-y-1">
-                <Button
-                  type="button"
-                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('osm')}
-                  className="w-full justify-start text-xs"
-                >
-                  OpenStreetMap
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('satellite')}
-                  className="w-full justify-start text-xs"
-                >
-                  Vue Satellite
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('topo')}
-                  className="w-full justify-start text-xs"
-                >
-                  Topographique
-                </Button>
-                <Button
-                  type="button"
-                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setMapLayer('relief')}
-                  className="w-full justify-start text-xs"
-                >
-                  Relief
-                </Button>
-              </div>
               <div className="h-80 w-full border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
                 <MapContainer
                   center={mapCenter}
@@ -542,6 +504,44 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     </Polygon>
                   )}
                 </MapContainer>
+              </div>
+              <div className="absolute bottom-4 left-4 z-[1000] bg-background/95 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-2 flex gap-1">
+                <Button
+                  type="button"
+                  variant={mapLayer === 'osm' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('osm')}
+                  className="text-xs"
+                >
+                  OSM
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'satellite' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('satellite')}
+                  className="text-xs"
+                >
+                  Satellite
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'topo' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('topo')}
+                  className="text-xs"
+                >
+                  Topo
+                </Button>
+                <Button
+                  type="button"
+                  variant={mapLayer === 'relief' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setMapLayer('relief')}
+                  className="text-xs"
+                >
+                  Relief
+                </Button>
               </div>
             </div>
 
