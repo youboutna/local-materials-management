@@ -53,18 +53,31 @@ export const useMaterialsFilter = (materials: Material[]) => {
     [materials]
   );
   
-  // Filter materials based on search and filters using debounced search
+  // Filter materials based on fulltext search and filters using debounced search
   useEffect(() => {
     let filtered = materials;
 
-    // Apply search filter
+    // Apply fulltext search filter
     if (debouncedSearchTerm && debouncedSearchTerm.trim()) {
-      const searchLower = debouncedSearchTerm.toLowerCase().trim();
-      filtered = filtered.filter(
-        (material) =>
-          material.name.toLowerCase().includes(searchLower) ||
-          material.description.toLowerCase().includes(searchLower)
-      );
+      const queryTerms = debouncedSearchTerm.toLowerCase().trim().split(/\s+/);
+      
+      filtered = filtered.filter((material) => {
+        // Create searchable text from all material fields
+        const searchableText = [
+          material.name,
+          material.description,
+          material.category,
+          material.unit,
+          material.origin_location,
+          material.local_type,
+          material.price_per_unit?.toString(),
+          material.available_quantity?.toString(),
+          typeof material.adresse === 'string' ? material.adresse : JSON.stringify(material.adresse)
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        // Check if all query terms are found in searchable text
+        return queryTerms.every(term => searchableText.includes(term));
+      });
     }
 
     // Apply category filter
@@ -92,17 +105,26 @@ export const useMaterialsFilter = (materials: Material[]) => {
     return 'high';
   };
 
-  // Filter materials for interactive map using debounced search
+  // Filter materials for interactive map using fulltext debounced search
   const filteredInteractiveMaterials = useMemo(() => {
     return materials.filter(material => {
       // Only show materials with GPS coordinates
       if (!material.coordinates_latitude || !material.coordinates_longitude) return false;
 
-      // Search filter using debounced term
+      // Fulltext search filter using debounced term
       if (debouncedInteractiveSearchTerm && debouncedInteractiveSearchTerm.trim()) {
-        const searchLower = debouncedInteractiveSearchTerm.toLowerCase().trim();
-        if (!material.name.toLowerCase().includes(searchLower) && 
-            !material.description.toLowerCase().includes(searchLower)) {
+        const queryTerms = debouncedInteractiveSearchTerm.toLowerCase().trim().split(/\s+/);
+        
+        const searchableText = [
+          material.name,
+          material.description,
+          material.category,
+          material.origin_location,
+          material.local_type,
+          material.unit
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        if (!queryTerms.every(term => searchableText.includes(term))) {
           return false;
         }
       }

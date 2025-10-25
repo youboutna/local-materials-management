@@ -38,19 +38,32 @@ export const useProjectsFilter = (projects: ProjectData[]) => {
     }));
   }, []);
   
-  // Handle searching and filtering using debounced search
+  // Handle searching and filtering using debounced search with fulltext
   useEffect(() => {
     let result = [...projects];
     
-    // Apply search filter first if there's a query
+    // Apply fulltext search filter first if there's a query
     if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
-      const query = debouncedSearchQuery.toLowerCase().trim();
-      result = result.filter(project => 
-        project.title?.toLowerCase().includes(query) || 
-        project.description?.toLowerCase().includes(query) ||
-        project.location?.toLowerCase().includes(query) ||
-        project.projectReference?.toLowerCase().includes(query)
-      );
+      const queryTerms = debouncedSearchQuery.toLowerCase().trim().split(/\s+/);
+      
+      result = result.filter(project => {
+        // Create searchable text from all project fields
+        const searchableText = [
+          project.title,
+          project.description,
+          project.location,
+          project.projectReference,
+          project.status,
+          project.budget?.toString(),
+          project.progress?.toString(),
+          project.teamSize?.toString(),
+          project.startDate,
+          project.endDate
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        // Check if all query terms are found in searchable text
+        return queryTerms.every(term => searchableText.includes(term));
+      });
     }
 
     // Apply status filter
