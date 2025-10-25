@@ -42,6 +42,7 @@ export interface ProjectReferential {
   requiresDonorApproval: boolean;
   requiresMinistryApproval: boolean;
   paymentWorkflow: 'standard' | 'simplified' | 'custom';
+  procurementTypes?: string[];
   phases: ReferentialPhase[];
 }
 

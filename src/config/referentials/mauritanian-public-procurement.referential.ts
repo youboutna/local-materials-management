@@ -5,6 +5,22 @@
 
 import { ProjectReferential, MultiLanguageLabel } from './somelec.referential';
 
+// Types de procédures mauritaniennes
+export type ProcurementType = 
+  | 'AOO_PREQUALIF'
+  | 'AOO_SANS_PREQUALIF'
+  | 'AO_2_ETAPES'
+  | 'AOR'
+  | 'CS'
+  | 'ED'
+  | 'SFQC'
+  | 'SMC'
+  | 'SBD'
+  | 'SFQT'
+  | 'QC'
+  | 'CI'
+  | 'EXECUTION';
+
 export const mauritanianPublicProcurementReferential: ProjectReferential = {
   code: 'MR_PUBLIC_PROCUREMENT',
   name: {
@@ -15,14 +31,29 @@ export const mauritanianPublicProcurementReferential: ProjectReferential = {
   },
   description: {
     code: 'MR_PUBLIC_PROCUREMENT_DESC',
-    fr: 'Procédures conformes au code des marchés publics mauritaniens',
-    ar: 'إجراءات متوافقة مع قانون الصفقات العمومية الموريتانية',
-    en: 'Procedures compliant with Mauritanian public procurement code'
+    fr: 'Procédures conformes au code des marchés publics mauritaniens (13 types de procédures)',
+    ar: 'إجراءات متوافقة مع قانون الصفقات العمومية الموريتانية (13 نوع من الإجراءات)',
+    en: 'Procedures compliant with Mauritanian public procurement code (13 procedure types)'
   },
   requiresEngineeringConsultant: false,
   requiresDonorApproval: false,
   requiresMinistryApproval: true,
   paymentWorkflow: 'standard',
+  procurementTypes: [
+    'AOO_PREQUALIF',
+    'AOO_SANS_PREQUALIF',
+    'AO_2_ETAPES',
+    'AOR',
+    'CS',
+    'ED',
+    'SFQC',
+    'SMC',
+    'SBD',
+    'SFQT',
+    'QC',
+    'CI',
+    'EXECUTION'
+  ],
   phases: [
     {
       code: 'PLANIFICATION',

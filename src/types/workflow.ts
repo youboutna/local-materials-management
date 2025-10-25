@@ -1,11 +1,46 @@
 // New standardized workflow system for projects and tenders
 
+// Types de procédures mauritaniennes
+export type MauritanianProcurementType = 
+  | 'AOO_PREQUALIF' // Appel d'Offres Ouvert avec préqualification
+  | 'AOO_SANS_PREQUALIF' // Appel d'Offres Ouvert sans préqualification
+  | 'AO_2_ETAPES' // Appel d'Offres en deux étapes
+  | 'AOR' // Appel d'Offres Restreint
+  | 'CS' // Consultation Simplifiée
+  | 'ED' // Entente Directe
+  | 'SFQC' // Sélection de consultants - Qualité et Coût
+  | 'SMC' // Sélection de consultants - Moindre Coût
+  | 'SBD' // Sélection de consultants - Budget Déterminé
+  | 'SFQT' // Sélection de consultants - Qualité Technique
+  | 'QC' // Qualification de consultants
+  | 'CI' // Consultant Individuel
+  | 'EXECUTION'; // Exécution des marchés
+
+export const MAURITANIAN_PROCUREMENT_LABELS: Record<MauritanianProcurementType, string> = {
+  AOO_PREQUALIF: 'Appel d\'Offres Ouvert avec Préqualification',
+  AOO_SANS_PREQUALIF: 'Appel d\'Offres Ouvert sans Préqualification',
+  AO_2_ETAPES: 'Appel d\'Offres en Deux Étapes',
+  AOR: 'Appel d\'Offres Restreint',
+  CS: 'Consultation Simplifiée',
+  ED: 'Entente Directe',
+  SFQC: 'Sélection Consultants - Qualité et Coût',
+  SMC: 'Sélection Consultants - Moindre Coût',
+  SBD: 'Sélection Consultants - Budget Déterminé',
+  SFQT: 'Sélection Consultants - Qualité Technique',
+  QC: 'Qualification de Consultants',
+  CI: 'Consultant Individuel',
+  EXECUTION: 'Exécution des Marchés'
+};
+
 export interface WorkflowPhase {
   id: string;
   code: string;
   label: string;
   value: string;
   customizable: boolean;
+  procurementType?: MauritanianProcurementType;
+  requiresCPMPApproval?: boolean;
+  requiresCNCMPApproval?: boolean;
   stages: WorkflowStage[];
 }
 
@@ -15,6 +50,10 @@ export interface WorkflowStage {
   label: string;
   value: string;
   customizable: boolean;
+  estimatedDurationDays?: number;
+  requiresCPMPApproval?: boolean;
+  requiresCNCMPApproval?: boolean;
+  requiredDocuments?: string[];
   tasks: WorkflowTask[];
 }
 
@@ -30,6 +69,9 @@ export interface WorkflowTask {
   resources?: string[];
   costEstimate?: number;
   durationEstimate?: number;
+  estimatedDurationDays?: number;
+  requiresCPMPApproval?: boolean;
+  requiresCNCMPApproval?: boolean;
 }
 
 export interface InspectionTemplate {
