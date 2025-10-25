@@ -2,8 +2,7 @@
 // Decoupled component with service layer integration
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,20 +10,23 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { SubmissionSecretService } from '@/services/SubmissionSecretService';
+import { SubmissionEvaluationPanel } from '@/components/tenders/SubmissionEvaluationPanel';
 import { 
   Shield, 
   Lock, 
   AlertCircle, 
   CheckCircle2, 
-  ArrowRight,
   FileText,
   User
 } from 'lucide-react';
 
+
 export const EvaluationAccessPortal: React.FC = () => {
   const [secretCode, setSecretCode] = useState('');
   const [validationResult, setValidationResult] = useState<any>(null);
-  const navigate = useNavigate();
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [tenderId, setTenderId] = useState<string | null>(null);
 
   const validateMutation = useMutation({
     mutationFn: async (code: string) => {
@@ -46,10 +48,9 @@ export const EvaluationAccessPortal: React.FC = () => {
       setValidationResult(data);
       
       if (data.is_valid && data.tender_id && data.submission_id) {
-        // Redirect to evaluation page after 2 seconds
-        setTimeout(() => {
-          navigate(`/tender-management?tender=${data.tender_id}&submission=${data.submission_id}`);
-        }, 2000);
+        setAccessGranted(true);
+        setSubmissionId(data.submission_id);
+        setTenderId(data.tender_id);
       }
     },
     onError: (error) => {
@@ -87,6 +88,43 @@ export const EvaluationAccessPortal: React.FC = () => {
     return parts.join('-');
   };
 
+  // If access is granted, show the evaluation panel
+  if (accessGranted && submissionId && tenderId) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold">Commission d'Évaluation</h1>
+                <p className="text-sm text-muted-foreground">Accès sécurisé autorisé</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAccessGranted(false);
+                setSubmissionId(null);
+                setTenderId(null);
+                setSecretCode('');
+                setValidationResult(null);
+              }}
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Quitter
+            </Button>
+          </div>
+          
+          <SubmissionEvaluationPanel 
+            submissionId={submissionId} 
+            tenderId={tenderId}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -108,7 +146,7 @@ export const EvaluationAccessPortal: React.FC = () => {
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl">Code Secret d'Accès</CardTitle>
             <CardDescription>
-              Entrez le code secret fourni par le responsable du projet
+              Entrez le code secret fourni par le soumissionnaire
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -158,9 +196,9 @@ export const EvaluationAccessPortal: React.FC = () => {
                             <span className="font-medium">Soumissionnaire:</span>
                             <span>{validationResult.supplier_name}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-green-700">
-                            <ArrowRight className="h-4 w-4" />
-                            Redirection vers l'évaluation...
+                          <div className="text-sm text-green-700">
+                            <CheckCircle2 className="h-4 w-4 inline mr-1" />
+                            Accès autorisé - Chargement du dossier...
                           </div>
                         </div>
                       )}
@@ -221,7 +259,7 @@ export const EvaluationAccessPortal: React.FC = () => {
           <p>
             Vous n'avez pas de code d'accès?
             <br />
-            Contactez le responsable du projet ou l'administrateur système.
+            Contactez le soumissionnaire ou l'administrateur système.
           </p>
         </div>
       </div>
