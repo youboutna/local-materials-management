@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
-import EmployeeSelector from '@/components/selectors/EmployeeSelector';
+import TaskAssigneeSelector from '@/components/selectors/TaskAssigneeSelector';
 
 interface PhaseTasksProps {
   phaseId: string;
@@ -22,6 +22,9 @@ interface TaskFormData {
   title: string;
   description: string;
   assigned_to: string;
+  assignee_name: string;
+  assignee_email: string;
+  assignee_type: 'employee' | 'supplier' | 'user';
   due_date: string;
   priority: string;
   status: string;
@@ -35,6 +38,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     title: '',
     description: '',
     assigned_to: '',
+    assignee_name: '',
+    assignee_email: '',
+    assignee_type: 'employee',
     due_date: '',
     priority: 'medium',
     status: 'pending',
@@ -62,25 +68,6 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     mutationFn: async (taskData: TaskFormData) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      let assigneeName = '';
-      let assigneeEmail = '';
-      let assigneeType: 'employee' | 'supplier' | 'user' = 'employee';
-
-      // Fetch employee details if assigned
-      if (taskData.assigned_to) {
-        const { data: employeeData } = await supabase
-          .from('employees')
-          .select('full_name, email')
-          .eq('id', taskData.assigned_to)
-          .maybeSingle();
-        
-        if (employeeData) {
-          assigneeName = employeeData.full_name;
-          assigneeEmail = employeeData.email || '';
-          assigneeType = 'employee';
-        }
-      }
-      
       const { data, error } = await supabase
         .from('task_assignments')
         .insert({
@@ -89,9 +76,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
           project_id: projectId,
           phase_id: phaseId,
           assigned_to: taskData.assigned_to || null,
-          assignee_type: taskData.assigned_to ? assigneeType : null,
-          assignee_name: taskData.assigned_to ? assigneeName : null,
-          assignee_email: taskData.assigned_to ? assigneeEmail : null,
+          assignee_type: taskData.assigned_to ? taskData.assignee_type : null,
+          assignee_name: taskData.assigned_to ? taskData.assignee_name : null,
+          assignee_email: taskData.assigned_to ? taskData.assignee_email : null,
           assigned_by: user?.id || null,
           due_date: taskData.due_date || null,
           priority: taskData.priority,
@@ -149,6 +136,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
       title: '',
       description: '',
       assigned_to: '',
+      assignee_name: '',
+      assignee_email: '',
+      assignee_type: 'employee',
       due_date: '',
       priority: 'medium',
       status: 'pending',
@@ -181,6 +171,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
       title: task.title || '',
       description: task.description || '',
       assigned_to: task.assigned_to || '',
+      assignee_name: task.assignee_name || '',
+      assignee_email: task.assignee_email || '',
+      assignee_type: task.assignee_type || 'employee',
       due_date: task.due_date || '',
       priority: task.priority || 'medium',
       status: task.status || 'pending',
@@ -246,11 +239,20 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     />
                   </div>
                   <div>
-                    <EmployeeSelector
+                    <TaskAssigneeSelector
+                      projectId={projectId}
                       value={formData.assigned_to}
-                      onChange={(employeeId) => setFormData({ ...formData, assigned_to: employeeId })}
+                      onChange={(id, name, email, type) => 
+                        setFormData({ 
+                          ...formData, 
+                          assigned_to: id,
+                          assignee_name: name,
+                          assignee_email: email,
+                          assignee_type: type
+                        })
+                      }
                       label="Assigné à"
-                      placeholder="Sélectionner un employé"
+                      placeholder="Sélectionner un employé ou partie prenante"
                     />
                   </div>
                 </div>
