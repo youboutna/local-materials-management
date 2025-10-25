@@ -590,7 +590,8 @@ const UnifiedSupplierPortal = () => {
 
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8 overflow-x-auto">
+              <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Télécharger</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
@@ -707,6 +708,11 @@ const UnifiedSupplierPortal = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Tender Submissions Tab - New */}
+            <TabsContent value="tenders">
+              <EnhancedSupplierTenderPortal />
             </TabsContent>
 
             {/* Upload Tab */}

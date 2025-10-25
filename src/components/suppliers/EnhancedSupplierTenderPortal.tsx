@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
+import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
 
 interface PublicTender {
   id: string;
@@ -120,9 +121,18 @@ const EnhancedSupplierTenderPortal = () => {
     notes: ''
   });
   const [activeTab, setActiveTab] = useState('browse');
+  const [hasAccessToTender, setHasAccessToTender] = useState(false);
+  const [accessGrantedTenderId, setAccessGrantedTenderId] = useState<string | null>(null);
+  const [supplierEmailFromSecret, setSupplierEmailFromSecret] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
+
+  const handleAccessGranted = (tenderId: string, supplierEmail: string) => {
+    setHasAccessToTender(true);
+    setAccessGrantedTenderId(tenderId);
+    setSupplierEmailFromSecret(supplierEmail);
+  };
 
   // Fetch public tenders and filter for submission phase
   const { data: publicTenders, isLoading } = useQuery({
@@ -401,15 +411,21 @@ const EnhancedSupplierTenderPortal = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Portail Fournisseurs - Appels d'Offres</h1>
-          <p className="text-muted-foreground mt-2">
-            Consultez et soumissionnez aux appels d'offres publics
-          </p>
+    <SupplierTenderAccessGuard onAccessGranted={handleAccessGranted}>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Portail Fournisseurs - Appels d'Offres</h1>
+            <p className="text-muted-foreground mt-2">
+              Consultez et soumissionnez aux appels d'offres publics
+            </p>
+            {hasAccessToTender && supplierEmailFromSecret && (
+              <Badge variant="outline" className="mt-2">
+                Accès autorisé pour: {supplierEmailFromSecret}
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -727,6 +743,7 @@ const EnhancedSupplierTenderPortal = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </SupplierTenderAccessGuard>
   );
 };
 
