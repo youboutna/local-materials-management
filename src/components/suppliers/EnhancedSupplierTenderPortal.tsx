@@ -283,7 +283,7 @@ const EnhancedSupplierTenderPortal = () => {
         console.log("Processing document:", docKey, "File:", file.name);
         const [category] = docKey.split('-');
         console.log("Extracted category:", category);
-        const [subcategory] = docKey.split('-').slice(1).join('-');
+        const subcategory = docKey.split('-').slice(1).join('-');
         console.log("Extracted subCategory:", subcategory);
         const uploadResult = await uploadFile(
           file, 
