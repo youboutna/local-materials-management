@@ -34,12 +34,12 @@ const RoleBadge: React.FC<RoleBadgeProps> = ({ role, className = '' }) => {
 
   const getRoleLabel = (role: RoleType) => {
     const labels = {
-      admin: 'Administrateur',
-      project_manager: 'Chef de projet',
-      supervisor: 'Superviseur',
-      inspector: 'Inspecteur',
-      supplier: 'Fournisseur',
-      viewer: 'Lecteur'
+      admin: t('roles.admin') || 'Administrateur',
+      project_manager: t('roles.project_manager') || 'Chef de projet',
+      supervisor: t('roles.supervisor') || 'Superviseur',
+      inspector: t('roles.inspector') || 'Inspecteur',
+      supplier: t('roles.supplier') || 'Fournisseur',
+      viewer: t('roles.viewer') || 'Lecteur'
     };
     return labels[role] || role;
   };

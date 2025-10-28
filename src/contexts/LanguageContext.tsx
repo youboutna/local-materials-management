@@ -452,6 +452,17 @@ export const translations = {
             }
         },
         projects: {
+            header: {
+                title: "Projets",
+                subtitle: "Gérez et suivez tous vos projets de construction",
+                new_project: "Nouveau Projet",
+                import_export: "Import/Export"
+            },
+            empty_state: {
+                title: "Aucun projet trouvé",
+                description: "Modifiez vos critères de recherche ou créez un nouveau projet.",
+                create_button: "Créer un nouveau projet"
+            },
             delete: "Supprimer",
             payments_management: "Gestion des paiements",
             quick_payment_actions: "Actions de paiement rapides",
@@ -1452,10 +1463,22 @@ export const translations = {
                 inactive: "غير نشط",
                 no_employees: "لا يوجد موظفون",
                 created_successfully: "تم إنشاء الموظف بنجاح",
-                deleted_successfully: "تم حذف الموظف بنجاح"
+                deleted_successfully: "تم حذف الموظف بنجاح",
+                subtitle: "قائمة الموظفين"
             }
         },
         projects: {
+            header: {
+                title: "المشاريع",
+                subtitle: "إدارة ومتابعة جميع مشاريع البناء الخاصة بك",
+                new_project: "مشروع جديد",
+                import_export: "استيراد/تصدير"
+            },
+            empty_state: {
+                title: "لم يتم العثور على مشاريع",
+                description: "قم بتعديل معايير البحث أو إنشاء مشروع جديد.",
+                create_button: "إنشاء مشروع جديد"
+            },
             delete: "حذف",
             payments_management: "إدارة المدفوعات",
             quick_payment_actions: "إجراءات الدفع السريعة",
@@ -2450,6 +2473,17 @@ export const translations = {
             }
         },
         projects: {
+            header: {
+                title: "Projects",
+                subtitle: "Manage and track all your construction projects",
+                new_project: "New Project",
+                import_export: "Import/Export"
+            },
+            empty_state: {
+                title: "No projects found",
+                description: "Modify your search criteria or create a new project.",
+                create_button: "Create New Project"
+            },
             loading_detail: "Loading details...",
             title: "Projects",
             all_desc: "All projects",
