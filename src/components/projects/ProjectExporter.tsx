@@ -4,12 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Download, 
   FileSpreadsheet, 
   FileText,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectService } from '@/services/ProjectService';
@@ -22,6 +25,8 @@ const ProjectExporter = () => {
   const [exportFormat, setExportFormat] = useState<'json' | 'excel' | 'csv'>('json');
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
   const projectService = new ProjectService();
@@ -32,6 +37,8 @@ const ProjectExporter = () => {
       try {
         const data = await projectService.getAllProjects();
         setProjects(data);
+        // Select all projects by default
+        setSelectedProjects(data.map(p => p.id));
       } catch (error) {
         console.error('Error loading projects:', error);
       } finally {
@@ -41,8 +48,38 @@ const ProjectExporter = () => {
     loadProjects();
   }, []);
 
+  // Filter projects based on search query
+  const filteredProjects = projects.filter(project => {
+    if (!searchQuery) return true;
+    const search = searchQuery.toLowerCase();
+    return (
+      project.title?.toLowerCase().includes(search) ||
+      project.description?.toLowerCase().includes(search) ||
+      project.location?.toLowerCase().includes(search) ||
+      project.status?.toLowerCase().includes(search)
+    );
+  });
+
+  const toggleProjectSelection = (projectId: string) => {
+    setSelectedProjects(prev => 
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProjects.length === filteredProjects.length) {
+      setSelectedProjects([]);
+    } else {
+      setSelectedProjects(filteredProjects.map(p => p.id));
+    }
+  };
+
   const prepareProjectData = () => {
-    return projects.map(project => ({
+    // Only export selected projects
+    const projectsToExport = projects.filter(p => selectedProjects.includes(p.id));
+    return projectsToExport.map(project => ({
       title: project.title,
       description: project.description,
       location: project.location,
@@ -116,6 +153,15 @@ const ProjectExporter = () => {
       return;
     }
 
+    if (selectedProjects.length === 0) {
+      toast({
+        title: t('projects.export.noSelection'),
+        description: t('projects.export.noSelectionDescription'),
+        variant: "destructive",
+      });
+      return;
+    }
+
     setExporting(true);
     
     try {
@@ -133,7 +179,7 @@ const ProjectExporter = () => {
       
       toast({
         title: t('projects.export.success'),
-        description: `${projects.length} ${t('projects.export.projectsExported')} ${exportFormat.toUpperCase()}`,
+        description: `${selectedProjects.length} ${t('projects.export.projectsExported')} ${exportFormat.toUpperCase()}`,
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -171,12 +217,82 @@ const ProjectExporter = () => {
           <AlertDescription>
             {t('projects.export.description')}
             {projects && (
-              <Badge variant="secondary" className="ml-2">
-                {projects.length} {t('projects.export.available')}
-              </Badge>
+              <div className="flex gap-2 mt-2">
+                <Badge variant="secondary">
+                  {projects.length} {t('projects.export.total')}
+                </Badge>
+                <Badge variant="default">
+                  {selectedProjects.length} {t('projects.export.selected')}
+                </Badge>
+              </div>
             )}
           </AlertDescription>
         </Alert>
+
+        {/* Search and filter section */}
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('projects.export.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="select-all"
+                checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
+                onCheckedChange={toggleSelectAll}
+              />
+              <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+                {t('projects.export.selectAll')} ({filteredProjects.length})
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedProjects([])}
+              disabled={selectedProjects.length === 0}
+            >
+              {t('projects.export.clearSelection')}
+            </Button>
+          </div>
+
+          {/* Project list */}
+          <div className="border rounded-lg max-h-64 overflow-y-auto">
+            {filteredProjects.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                {searchQuery ? t('projects.export.noResults') : t('projects.export.noProjects')}
+              </div>
+            ) : (
+              <div className="divide-y">
+                {filteredProjects.map((project) => (
+                  <div key={project.id} className="flex items-center gap-3 p-3 hover:bg-muted/50">
+                    <Checkbox
+                      id={`project-${project.id}`}
+                      checked={selectedProjects.includes(project.id)}
+                      onCheckedChange={() => toggleProjectSelection(project.id)}
+                    />
+                    <label 
+                      htmlFor={`project-${project.id}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <div className="font-medium">{project.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {project.location} • {project.status}
+                      </div>
+                    </label>
+                    <Badge variant="outline">{project.progress}%</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-3">
           <h4 className="text-sm font-medium">{t('projects.export.selectFormat')}:</h4>
@@ -223,12 +339,12 @@ const ProjectExporter = () => {
         <div className="pt-4 border-t">
           <Button
             onClick={handleExport}
-            disabled={exporting || !projects || projects.length === 0}
+            disabled={exporting || !projects || projects.length === 0 || selectedProjects.length === 0}
             className="w-full"
             size="lg"
           >
             <Download className="h-4 w-4 mr-2" />
-            {exporting ? t('projects.export.exporting') : `${t('projects.export.exportAs')} ${exportFormat.toUpperCase()}`}
+            {exporting ? t('projects.export.exporting') : `${t('projects.export.exportAs')} ${exportFormat.toUpperCase()} (${selectedProjects.length})`}
           </Button>
         </div>
 
