@@ -215,7 +215,7 @@ const Dashboard: React.FC = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Vérification des permissions...</p>
+          <p className="text-muted-foreground">{t('dashboard.checking_permissions')}</p>
         </div>
       </div>
     );
@@ -227,16 +227,16 @@ const Dashboard: React.FC = () => {
         <div className="max-w-md w-full mx-auto text-center p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <Shield className="h-12 w-12 text-red-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-2">Accès Refusé</h2>
+            <h2 className="text-xl font-semibold text-red-800 mb-2">{t('dashboard.access_denied_title')}</h2>
             <p className="text-red-600 mb-4">
-              Ce tableau de bord est réservé aux gestionnaires de projets, administrateurs et directeurs.
+              {t('dashboard.access_restricted')}
             </p>
             <div className="space-y-2">
               <p className="text-sm text-red-600">
-                <strong>Vos rôles actuels:</strong> {userRoles.length > 0 ? userRoles.join(', ') : 'Aucun rôle assigné'}
+                <strong>{t('dashboard.your_roles')}:</strong> {userRoles.length > 0 ? userRoles.join(', ') : t('dashboard.no_role_assigned')}
               </p>
               <p className="text-sm text-red-600">
-                <strong>Rôles requis:</strong> {allowedRoles.join(', ')}
+                <strong>{t('dashboard.required_roles_label')}:</strong> {allowedRoles.join(', ')}
               </p>
             </div>
             <Button 
@@ -244,7 +244,7 @@ const Dashboard: React.FC = () => {
               onClick={() => navigate('/projects')}
               variant="outline"
             >
-              Retour aux Projets
+              {t('dashboard.back_to_projects')}
             </Button>
           </div>
         </div>
@@ -261,29 +261,29 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  🏢 Tableau de Bord Gestion
+                  {t('dashboard.management_title')}
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  Centre de contrôle pour gestionnaires de projets
+                  {t('dashboard.management_subtitle')}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className="text-xs">
-                    Rôles: {userRoles.join(', ')}
+                    {t('dashboard.badges.roles_label')}: {userRoles.join(', ')}
                   </Badge>
                   {userRoles.includes('admin') && (
-                    <Badge className="bg-red-500 text-white text-xs">Administrateur</Badge>
+                    <Badge className="bg-red-500 text-white text-xs">{t('dashboard.badges.administrator')}</Badge>
                   )}
                   {userRoles.includes('director') && (
-                    <Badge className="bg-blue-500 text-white text-xs">Directeur</Badge>
+                    <Badge className="bg-blue-500 text-white text-xs">{t('dashboard.badges.director')}</Badge>
                   )}
                   {userRoles.includes('project_manager') && (
-                    <Badge className="bg-green-500 text-white text-xs">Chef de Projet</Badge>
+                    <Badge className="bg-green-500 text-white text-xs">{t('dashboard.badges.project_manager')}</Badge>
                   )}
                 </div>
               </div>
               {DEV_MODE && (
                 <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-                  🛠️ Mode Développement
+                  🛠️ {t('dashboard.dev_mode')}
                 </div>
               )}
             </div>
@@ -298,10 +298,10 @@ const Dashboard: React.FC = () => {
           >
             <Tabs defaultValue="actions" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="actions">Actions Management</TabsTrigger>
-                <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-                <TabsTrigger value="alerts">Alertes</TabsTrigger>
+                <TabsTrigger value="actions">{t('dashboard.management_tabs.actions')}</TabsTrigger>
+                <TabsTrigger value="overview">{t('dashboard.management_tabs.overview')}</TabsTrigger>
+                <TabsTrigger value="monitoring">{t('dashboard.management_tabs.monitoring')}</TabsTrigger>
+                <TabsTrigger value="alerts">{t('dashboard.management_tabs.alerts')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="actions" className="mt-6">
@@ -319,21 +319,21 @@ const Dashboard: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Card className="border-l-4 border-l-primary">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">Projets Actifs</CardTitle>
-                        <CardDescription>En cours de réalisation</CardDescription>
+                        <CardTitle className="text-lg font-medium">{t('dashboard.cards.active_projects')}</CardTitle>
+                        <CardDescription>{t('dashboard.cards.in_progress_description')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline">
                           <span className="text-3xl font-bold">{stats.activeProjects}</span>
-                          <span className="ml-2 text-sm text-muted-foreground">projets</span>
+                          <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.projects_label')}</span>
                         </div>
                       </CardContent>
                     </Card>
                     
                     <Card className="border-l-4 border-l-green-500">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">Budget Total</CardTitle>
-                        <CardDescription>Ressources financières</CardDescription>
+                        <CardTitle className="text-lg font-medium">{t('dashboard.cards.total_budget')}</CardTitle>
+                        <CardDescription>{t('dashboard.cards.financial_resources')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline">
@@ -347,7 +347,7 @@ const Dashboard: React.FC = () => {
                     
                     <Card className="border-l-4 border-l-blue-500">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">Équipes</CardTitle>
+                        <CardTitle className="text-lg font-medium">{t('dashboard.cards.teams')}</CardTitle>
                         <CardDescription>Personnel affecté</CardDescription>
                       </CardHeader>
                       <CardContent>

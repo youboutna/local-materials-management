@@ -6,13 +6,15 @@ import HttpMonitor from '@/components/monitoring/HttpMonitor';
 import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
 import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
 import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 const MonitoringDashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({
-    guarantees: { count: 0, status: "0 Alertes" },
-    payments: { count: 0, status: "0 Bloqués" },
-    inspections: { count: 0, status: "0 En Retard" }
+    guarantees: { count: 0, status: `0 ${t('dashboard.monitoring.alerts_count')}` },
+    payments: { count: 0, status: `0 ${t('dashboard.monitoring.overdue')}` },
+    inspections: { count: 0, status: `0 ${t('dashboard.monitoring.overdue')}` }
   });
 
   useEffect(() => {
@@ -55,15 +57,15 @@ const MonitoringDashboard: React.FC = () => {
         setStats({
           guarantees: { 
             count: guarantees?.length || 0,
-            status: guarantees?.length ? `${guarantees.length} Alertes` : "Surveillées"
+            status: guarantees?.length ? `${guarantees.length} ${t('dashboard.monitoring.alerts_count')}` : t('dashboard.monitoring.active')
           },
           payments: { 
             count: blockedPayments?.length || 0,
-            status: blockedPayments?.length ? `${blockedPayments.length} Bloqués` : "Actif"
+            status: blockedPayments?.length ? `${blockedPayments.length} ${t('dashboard.monitoring.overdue')}` : t('dashboard.monitoring.active')
           },
           inspections: { 
             count: inspections?.length || 0,
-            status: inspections?.length ? `${inspections.length} En Retard` : "Suivi"
+            status: inspections?.length ? `${inspections.length} ${t('dashboard.monitoring.overdue')}` : t('dashboard.monitoring.active')
           }
         });
       } catch (error) {
@@ -79,18 +81,18 @@ const MonitoringDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Statut HTTP</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.http_status')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Actif</div>
-            <p className="text-xs text-muted-foreground">Surveillance en temps réel</p>
+            <div className="text-2xl font-bold text-green-600">{t('dashboard.monitoring.active')}</div>
+            <p className="text-xs text-muted-foreground">{t('dashboard.monitoring.real_time_monitoring')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Garanties Bancaires</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.guarantees')}</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -98,14 +100,14 @@ const MonitoringDashboard: React.FC = () => {
               {stats.guarantees.status}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.guarantees.count > 0 ? 'Garanties expirant bientôt' : 'Détection automatique des retards'}
+              {stats.guarantees.count > 0 ? t('dashboard.monitoring.expiring_soon') : t('bank_guarantee.subtitle')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contrôle Paiements</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.payment_control')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -113,14 +115,14 @@ const MonitoringDashboard: React.FC = () => {
               {stats.payments.status}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.payments.count > 0 ? 'Paiements en attente' : 'Validation automatique'}
+              {stats.payments.count > 0 ? t('payment_control.no_pending') : t('dashboard.monitoring.automatic_validation')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inspections</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.inspections')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -128,7 +130,7 @@ const MonitoringDashboard: React.FC = () => {
               {stats.inspections.status}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.inspections.count > 0 ? 'Inspections en retard' : 'Monitoring des inspections'}
+              {stats.inspections.count > 0 ? t('dashboard.monitoring.overdue_inspections') : t('dashboard.monitoring.real_time_monitoring')}
             </p>
           </CardContent>
         </Card>
@@ -136,10 +138,10 @@ const MonitoringDashboard: React.FC = () => {
 
       <Tabs defaultValue="http" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="http">HTTP Monitor</TabsTrigger>
-          <TabsTrigger value="guarantees">Garanties Bancaires</TabsTrigger>
-          <TabsTrigger value="payments">Contrôle Paiements</TabsTrigger>
-          <TabsTrigger value="inspections">Inspections</TabsTrigger>
+          <TabsTrigger value="http">{t('dashboard.monitoring.http_status')}</TabsTrigger>
+          <TabsTrigger value="guarantees">{t('dashboard.monitoring.guarantees')}</TabsTrigger>
+          <TabsTrigger value="payments">{t('dashboard.monitoring.payment_control')}</TabsTrigger>
+          <TabsTrigger value="inspections">{t('dashboard.monitoring.inspections')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="http" className="mt-6">
@@ -149,7 +151,7 @@ const MonitoringDashboard: React.FC = () => {
         <TabsContent value="guarantees" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Surveillance des Garanties Bancaires</CardTitle>
+              <CardTitle>{t('bank_guarantee.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <BankGuaranteeMonitor />
@@ -160,7 +162,7 @@ const MonitoringDashboard: React.FC = () => {
         <TabsContent value="payments" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Contrôle et Validation des Paiements</CardTitle>
+              <CardTitle>{t('payment_control.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <EnhancedPaymentBlockingInterface />
