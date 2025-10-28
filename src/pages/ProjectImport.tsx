@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProjectImporter2025 from '@/components/projects/ProjectImporter2025';
 import ProjectFileImporter from '@/components/projects/ProjectFileImporter';
+import AdvancedProjectImporter from '@/components/projects/AdvancedProjectImporter';
 import ProjectExporter from '@/components/projects/ProjectExporter';
 import { Database, FileSpreadsheet, Upload, Download } from 'lucide-react';
 import { ImportResult } from '@/types/project';
@@ -27,10 +28,14 @@ const ProjectImport = () => {
       </div>
 
       <Tabs defaultValue="file-import" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="file-import" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             {t('projects.importExport.fileImport')}
+          </TabsTrigger>
+          <TabsTrigger value="advanced" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            QField/MS Project
           </TabsTrigger>
           <TabsTrigger value="predefined" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -68,6 +73,10 @@ const ProjectImport = () => {
               <ProjectFileImporter onImportComplete={handleImportComplete} />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-4">
+          <AdvancedProjectImporter onImportComplete={handleImportComplete} />
         </TabsContent>
 
         <TabsContent value="predefined" className="space-y-4">
