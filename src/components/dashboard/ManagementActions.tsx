@@ -7,6 +7,7 @@ import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users, E
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ActionItem {
   id: string;
@@ -23,6 +24,7 @@ interface ActionItem {
 }
 
 const ManagementActions: React.FC = () => {
+  const { t } = useLanguage();
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,8 +51,8 @@ const ManagementActions: React.FC = () => {
         pendingInspections.forEach(inspection => {
           actions.push({
             id: `inspection-payment-${inspection.id}`,
-            title: 'Validation Paiement - Inspection',
-            description: `Inspection à ${inspection.progress_at_inspection}% - ${inspection.inspector}`,
+            title: t('management_actions.validation_payment_inspection'),
+            description: `${t('management_actions.inspection_at')} ${inspection.progress_at_inspection}% - ${inspection.inspector}`,
             urgency: inspection.status === 'in_progress' ? 'high' : 'medium',
             category: 'approval',
             projectId: (inspection.projects as any)?.id,
@@ -77,8 +79,8 @@ const ManagementActions: React.FC = () => {
         paymentRequests.forEach(request => {
           actions.push({
             id: `payment-request-${request.id}`,
-            title: 'Demande de Paiement',
-            description: `Montant: ${request.amount.toLocaleString()} MRU - ${(request.suppliers as any)?.name}`,
+            title: t('management_actions.payment_request'),
+            description: `${t('management_actions.amount')}: ${request.amount.toLocaleString()} MRU - ${(request.suppliers as any)?.name}`,
             urgency: request.amount > 100000 ? 'critical' : 'high',
             category: 'approval',
             projectId: (request.projects as any)?.id,
@@ -106,8 +108,8 @@ const ManagementActions: React.FC = () => {
           const daysPast = Math.floor((Date.now() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
           actions.push({
             id: `inspection-${inspection.id}`,
-            title: 'Inspection Manquée',
-            description: `Inspection en retard de ${daysPast} jours - Inspecteur: ${inspection.inspector}`,
+            title: t('management_actions.missed_inspection'),
+            description: `${daysPast} ${t('management_actions.days_overdue')} - ${t('management_actions.inspector')}: ${inspection.inspector}`,
             urgency: daysPast > 7 ? 'high' : 'medium',
             category: 'task',
             projectId: (inspection.projects as any)?.id,
@@ -128,8 +130,8 @@ const ManagementActions: React.FC = () => {
         projectsWithBudgetIssues.forEach(project => {
           actions.push({
             id: `budget-${project.id}`,
-            title: 'Révision Budget',
-            description: `Projet à ${project.progress}% - vérification budget nécessaire`,
+            title: t('management_actions.budget_review'),
+            description: `${t('management_actions.project_at')} ${project.progress}% - ${t('management_actions.budget_check_needed')}`,
             urgency: 'medium',
             category: 'review',
             projectId: project.id,
@@ -151,8 +153,8 @@ const ManagementActions: React.FC = () => {
         newProjects.forEach(project => {
           actions.push({
             id: `team-${project.id}`,
-            title: 'Affectation Équipe',
-            description: `Nouveau projet démarrant - affecter équipe d'ingénieurs`,
+            title: t('management_actions.team_assignment'),
+            description: t('management_actions.new_project_starting'),
             urgency: 'medium',
             category: 'decision',
             projectId: project.id,
@@ -166,8 +168,8 @@ const ManagementActions: React.FC = () => {
     } catch (error) {
       console.error('Error fetching action items:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les actions',
+        title: t('management_actions.error_title'),
+        description: t('management_actions.error_loading'),
         variant: 'destructive'
       });
     } finally {
@@ -197,11 +199,11 @@ const ManagementActions: React.FC = () => {
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
-      case 'approval': return 'Validation';
-      case 'task': return 'Tâche';
-      case 'review': return 'Révision';
-      case 'decision': return 'Décision';
-      default: return 'Action';
+      case 'approval': return t('management_actions.category_validation');
+      case 'task': return t('management_actions.category_task');
+      case 'review': return t('management_actions.category_review');
+      case 'decision': return t('management_actions.category_decision');
+      default: return t('management_actions.category_action');
     }
   };
 
@@ -213,14 +215,14 @@ const ManagementActions: React.FC = () => {
           return `/projects/${item.projectId}?tab=inspections&inspection=${item.inspectionId}`;
         }
         // If it's a payment request, go to payment control page
-        if (item.title.includes('Demande de Paiement')) {
+        if (item.title.includes(t('management_actions.payment_request'))) {
           return '/payment-control';
         }
         // Default payment validation
-        if (item.title.includes('Paiement')) return '/payment-control';
+        if (item.title.includes('Paiement') || item.title.includes('Payment')) return '/payment-control';
         return '/projects';
       case 'task':
-        if (item.title.includes('Inspection')) return '/inspection-monitoring';
+        if (item.title.includes(t('management_actions.missed_inspection')) || item.title.includes('Inspection')) return '/inspection-monitoring';
         return '/projects';
       case 'review':
         return `/projects/${item.projectId}`;
@@ -245,53 +247,53 @@ const ManagementActions: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Actions Critiques</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('management_actions.critical_actions')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {actionItems.filter(item => item.urgency === 'critical').length}
             </div>
-            <p className="text-xs text-muted-foreground">Nécessitent une attention immédiate</p>
+            <p className="text-xs text-muted-foreground">{t('management_actions.critical_attention')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Validations Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('management_actions.validations_pending')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
               {actionItems.filter(item => item.category === 'approval').length}
             </div>
-            <p className="text-xs text-muted-foreground">En attente de validation</p>
+            <p className="text-xs text-muted-foreground">{t('management_actions.pending_validation')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tâches Urgentes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('management_actions.urgent_tasks')}</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
               {actionItems.filter(item => item.category === 'task' && item.urgency === 'high').length}
             </div>
-            <p className="text-xs text-muted-foreground">À réaliser rapidement</p>
+            <p className="text-xs text-muted-foreground">{t('management_actions.to_do_quickly')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Décisions Requises</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('management_actions.decisions_required')}</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {actionItems.filter(item => item.category === 'decision').length}
             </div>
-            <p className="text-xs text-muted-foreground">Décisions managériales</p>
+            <p className="text-xs text-muted-foreground">{t('management_actions.managerial_decisions')}</p>
           </CardContent>
         </Card>
       </div>
@@ -301,10 +303,10 @@ const ManagementActions: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Actions Prioritaires
+            {t('management_actions.priority_actions')}
           </CardTitle>
           <CardDescription>
-            Actions nécessitant une intervention managériale immédiate
+            {t('management_actions.priority_description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -328,12 +330,12 @@ const ManagementActions: React.FC = () => {
                       <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
                       {item.projectName && (
                         <p className="text-xs text-blue-600">
-                          <strong>Projet:</strong> {item.projectName}
+                          <strong>{t('management_actions.project')}:</strong> {item.projectName}
                         </p>
                       )}
                       {item.dueDate && (
                         <p className="text-xs text-muted-foreground">
-                          <strong>Échéance:</strong> {item.dueDate.toLocaleDateString('fr-FR')}
+                          <strong>{t('management_actions.deadline')}:</strong> {item.dueDate.toLocaleDateString('fr-FR')}
                         </p>
                       )}
                     </div>
@@ -343,14 +345,14 @@ const ManagementActions: React.FC = () => {
                       <Button size="sm" variant="outline" asChild>
                         <Link to={getActionRoute(item)}>
                           <ExternalLink className="h-4 w-4 mr-1" />
-                          Lien
+                          {t('management_actions.link')}
                         </Link>
                       </Button>
                     )}
                     <Button size="sm" asChild>
                       <Link to={getActionRoute(item)}>
                         <Send className="h-4 w-4 mr-1" />
-                        Traiter
+                        {t('management_actions.process')}
                       </Link>
                     </Button>
                   </div>
@@ -365,14 +367,14 @@ const ManagementActions: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Contrôle Paiements</CardTitle>
-            <CardDescription>Valider et débloquer les paiements</CardDescription>
+            <CardTitle className="text-lg">{t('management_actions.payment_control')}</CardTitle>
+            <CardDescription>{t('management_actions.payment_control_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" asChild>
               <Link to="/payment-control">
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Accéder au Contrôle
+                {t('management_actions.access_control')}
               </Link>
             </Button>
           </CardContent>
@@ -380,14 +382,14 @@ const ManagementActions: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Surveillance Garanties</CardTitle>
-            <CardDescription>Suivre les garanties bancaires</CardDescription>
+            <CardTitle className="text-lg">{t('management_actions.guarantee_monitoring')}</CardTitle>
+            <CardDescription>{t('management_actions.guarantee_monitoring_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" asChild>
               <Link to="/bank-guarantee-monitor">
                 <AlertTriangle className="h-4 w-4 mr-2" />
-                Surveiller Garanties
+                {t('management_actions.monitor_guarantees')}
               </Link>
             </Button>
           </CardContent>
@@ -395,14 +397,14 @@ const ManagementActions: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Suivi Inspections</CardTitle>
-            <CardDescription>Monitoring des inspections</CardDescription>
+            <CardTitle className="text-lg">{t('management_actions.inspection_tracking')}</CardTitle>
+            <CardDescription>{t('management_actions.inspection_tracking_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" asChild>
               <Link to="/inspection-monitoring">
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Suivi Inspections
+                {t('management_actions.track_inspections')}
               </Link>
             </Button>
           </CardContent>
