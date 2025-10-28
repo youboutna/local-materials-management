@@ -269,18 +269,29 @@ export function ProjectPDFDocument({
       )}
 
       {/* Phases */}
-      {reportConfig.includeSections.phases && safeReportData.phases.length > 0 && (
+      {reportConfig.includeSections.phases && enrichedData?.phases && enrichedData.phases.length > 0 && (
         <PDFSection title="Phases du Projet" borderColor="#f59e0b">
           <PDFTable
-            headers={['Phase', 'Statut', 'Budget', 'Coût Réel', 'Écart']}
-            data={safeReportData.phases.map((p: any) => [
-              p.title || p.name || 'Sans nom',
-              p.status || 'Non défini',
-              p.estimated_cost ? `${p.estimated_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
-              p.actual_cost ? `${p.actual_cost.toLocaleString('fr-FR')} MRU` : '0 MRU',
-              ((p.actual_cost || 0) - (p.estimated_cost || 0)).toLocaleString('fr-FR') + ' MRU'
-            ])}
-            columnWidths={['25%', '15%', '20%', '20%', '20%']}
+            headers={['Phase', 'Progression', 'Statut', 'Budget', 'Coût Réel', 'Écart']}
+            data={enrichedData.phases.map((p: any) => {
+              const statusMap: Record<string, string> = {
+                'planned': 'Planifié',
+                'in_progress': 'En cours',
+                'completed': 'Terminé',
+                'delayed': 'En retard',
+                'not_started': 'Non démarré'
+              };
+              
+              return [
+                p.name || 'Sans nom',
+                `${p.actualProgress || 0}%`,
+                statusMap[p.status] || p.status || 'Non défini',
+                p.budget ? `${p.budget.toLocaleString('fr-FR')} MRU` : '0 MRU',
+                p.actualCost ? `${p.actualCost.toLocaleString('fr-FR')} MRU` : '0 MRU',
+                ((p.actualCost || 0) - (p.budget || 0)).toLocaleString('fr-FR') + ' MRU'
+              ];
+            })}
+            columnWidths={['25%', '10%', '15%', '17%', '17%', '16%']}
           />
         </PDFSection>
       )}
@@ -416,17 +427,54 @@ export function ProjectPDFDocument({
       {/* Jalons */}
       {reportConfig.includeSections.milestones && (
         <PDFSection title="Jalons du Projet" borderColor="#10b981">
-          <PDFTable
-            headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
-            data={[
-              ['Démarrage du Projet', '0%', project.progress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 0 ? '✓' : '⏳'],
-              ['25% d\'Avancement', '25%', project.progress >= 25 ? 'Terminé' : project.progress >= 15 ? 'En cours' : 'En attente', '', project.progress >= 25 ? '✓' : project.progress >= 15 ? '⏳' : '⌛'],
-              ['50% d\'Avancement', '50%', project.progress >= 50 ? 'Terminé' : project.progress >= 40 ? 'En cours' : 'En attente', '', project.progress >= 50 ? '✓' : project.progress >= 40 ? '⏳' : '⌛'],
-              ['75% d\'Avancement', '75%', project.progress >= 75 ? 'Terminé' : project.progress >= 65 ? 'En cours' : 'En attente', '', project.progress >= 75 ? '✓' : project.progress >= 65 ? '⏳' : '⌛'],
-              ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
-            ]}
-            columnWidths={['25%', '15%', '20%', '20%', '20%']}
-          />
+          {enrichedData?.constructionMilestones && enrichedData.constructionMilestones.length > 0 ? (
+            <PDFTable
+              headers={['Jalon', 'Date cible', 'Statut', 'Priorité', 'Progression', 'Phase']}
+              data={enrichedData.constructionMilestones.map((milestone: any) => {
+                const statusMap: Record<string, string> = {
+                  'pending': 'En attente',
+                  'in_progress': 'En cours',
+                  'completed': 'Terminé',
+                  'overdue': 'En retard'
+                };
+                const priorityMap: Record<string, string> = {
+                  'low': 'Faible',
+                  'medium': 'Moyenne',
+                  'high': 'Haute',
+                  'critical': 'Critique'
+                };
+                const stageMap: Record<string, string> = {
+                  'conception': 'Conception',
+                  'preparation': 'Préparation',
+                  'execution': 'Exécution',
+                  'validation': 'Validation',
+                  'livraison': 'Livraison'
+                };
+                
+                return [
+                  milestone.title || 'Sans titre',
+                  milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Non défini',
+                  statusMap[milestone.status] || milestone.status || 'Non défini',
+                  priorityMap[milestone.priority] || milestone.priority || 'Moyenne',
+                  `${milestone.completionPercentage || 0}%`,
+                  stageMap[milestone.stage] || milestone.stage || 'Exécution'
+                ];
+              })}
+              columnWidths={['25%', '15%', '15%', '13%', '12%', '20%']}
+            />
+          ) : (
+            <PDFTable
+              headers={['Jalon', 'Progression cible', 'Statut', 'Date prévue', 'Réalisation']}
+              data={[
+                ['Démarrage du Projet', '0%', project.progress >= 0 ? 'Terminé' : 'En attente', project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 0 ? '✓' : '⏳'],
+                ['25% d\'Avancement', '25%', project.progress >= 25 ? 'Terminé' : project.progress >= 15 ? 'En cours' : 'En attente', '', project.progress >= 25 ? '✓' : project.progress >= 15 ? '⏳' : '⌛'],
+                ['50% d\'Avancement', '50%', project.progress >= 50 ? 'Terminé' : project.progress >= 40 ? 'En cours' : 'En attente', '', project.progress >= 50 ? '✓' : project.progress >= 40 ? '⏳' : '⌛'],
+                ['75% d\'Avancement', '75%', project.progress >= 75 ? 'Terminé' : project.progress >= 65 ? 'En cours' : 'En attente', '', project.progress >= 75 ? '✓' : project.progress >= 65 ? '⏳' : '⌛'],
+                ['Finalisation', '100%', project.progress >= 100 ? 'Terminé' : project.progress >= 90 ? 'En cours' : 'En attente', project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini', project.progress >= 100 ? '✓' : project.progress >= 90 ? '⏳' : '⌛']
+              ]}
+              columnWidths={['25%', '15%', '20%', '20%', '20%']}
+            />
+          )}
         </PDFSection>
       )}
 

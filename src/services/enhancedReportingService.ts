@@ -138,24 +138,36 @@ export class EnhancedReportingService {
         .select('*')
         .eq('project_id', projectId);
 
-      if (!phasesData) return [];
+      if (!phasesData || phasesData.length === 0) return [];
 
-      return phasesData.map(phase => ({
-        id: phase.id,
-        name: phase.phase_name,
-        plannedProgress: 0,
-        actualProgress: phase.progress || 0,
-        budget: phase.estimated_cost || 0,
-        actualCost: phase.actual_cost || 0,
-        startDate: new Date(phase.start_date || Date.now()),
-        endDate: new Date(phase.end_date || Date.now()),
-        status: this.mapPhaseStatus(phase.status),
-        procurementStep: phase.construction_phase || '',
-        projectId: phase.project_id,
-        riskLevel: this.calculatePhaseRiskLevel(phase),
-        dependencies: [],
-        assignedTeam: []
-      }));
+      return phasesData.map(phase => {
+        const plannedDuration = phase.end_date && phase.start_date 
+          ? Math.max(1, Math.ceil((new Date(phase.end_date).getTime() - new Date(phase.start_date).getTime()) / (1000 * 60 * 60 * 24)))
+          : 30;
+        
+        const elapsedDuration = phase.start_date
+          ? Math.ceil((new Date().getTime() - new Date(phase.start_date).getTime()) / (1000 * 60 * 60 * 24))
+          : 0;
+        
+        const plannedProgress = Math.min(100, (elapsedDuration / plannedDuration) * 100);
+
+        return {
+          id: phase.id,
+          name: phase.phase_name || 'Phase sans nom',
+          plannedProgress: Math.round(plannedProgress),
+          actualProgress: phase.progress || 0,
+          budget: phase.estimated_cost || 0,
+          actualCost: phase.actual_cost || 0,
+          startDate: new Date(phase.start_date || Date.now()),
+          endDate: new Date(phase.end_date || Date.now()),
+          status: this.mapPhaseStatus(phase.status),
+          procurementStep: phase.construction_phase || 'preparation',
+          projectId: phase.project_id,
+          riskLevel: this.calculatePhaseRiskLevel(phase),
+          dependencies: [],
+          assignedTeam: []
+        };
+      });
     } catch (error) {
       console.error('Error fetching enhanced phases:', error);
       return [];
@@ -164,29 +176,54 @@ export class EnhancedReportingService {
 
   private static async fetchConstructionMilestones(projectId: string): Promise<ConstructionMilestoneDTO[]> {
     try {
+      // Try enhanced_project_milestones first, then fall back to project_milestones
+      const { data: enhancedMilestones } = await supabase
+        .from('enhanced_project_milestones')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (enhancedMilestones && enhancedMilestones.length > 0) {
+        return enhancedMilestones.map(milestone => ({
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description || '',
+          targetDate: new Date(milestone.target_date || Date.now()),
+          completedDate: milestone.completed_date ? new Date(milestone.completed_date) : undefined,
+          status: this.mapMilestoneStatus(milestone.status || 'pending'),
+          projectId: milestone.project_id,
+          phaseId: milestone.phase_id || undefined,
+          stage: this.inferConstructionStage(milestone.title),
+          priority: this.inferMilestonePriority(milestone.title),
+          completionPercentage: Math.round((milestone.weight || 0) * 100),
+          blockers: [],
+          dependencies: Array.isArray(milestone.dependencies) ? milestone.dependencies.map(d => String(d)) : []
+        }));
+      }
+
+      // Fall back to project_milestones
       const { data: milestonesData } = await supabase
         .from('project_milestones')
         .select('*')
         .eq('project_id', projectId);
 
-      if (!milestonesData || milestonesData.length === 0) {
-        return this.generateDefaultConstructionMilestones(projectId);
+      if (milestonesData && milestonesData.length > 0) {
+        return milestonesData.map(milestone => ({
+          id: milestone.id,
+          title: milestone.title,
+          description: milestone.description || '',
+          targetDate: new Date(milestone.target_date || Date.now()),
+          completedDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
+          status: this.mapMilestoneStatus(milestone.status || 'pending'),
+          projectId: milestone.project_id,
+          stage: this.inferConstructionStage(milestone.title),
+          priority: this.inferMilestonePriority(milestone.title),
+          completionPercentage: milestone.progress_percentage || 0,
+          blockers: [],
+          dependencies: []
+        }));
       }
 
-      return milestonesData.map(milestone => ({
-        id: milestone.id,
-        title: milestone.title,
-        description: milestone.description || '',
-        targetDate: new Date(milestone.target_date || Date.now()),
-        completedDate: milestone.completion_date ? new Date(milestone.completion_date) : undefined,
-        status: this.mapMilestoneStatus(milestone.status || 'pending'),
-        projectId: milestone.project_id,
-        stage: this.inferConstructionStage(milestone.title),
-        priority: this.inferMilestonePriority(milestone.title),
-        completionPercentage: milestone.progress_percentage || 0,
-        blockers: [],
-        dependencies: []
-      }));
+      return this.generateDefaultConstructionMilestones(projectId);
     } catch (error) {
       console.error('Error fetching construction milestones:', error);
       return this.generateDefaultConstructionMilestones(projectId);
@@ -318,12 +355,15 @@ export class EnhancedReportingService {
 
   // Helper methods (implementation copied from reportDataTransformer)
   private static mapPhaseStatus(status: string): 'planned' | 'in_progress' | 'completed' | 'delayed' {
-    switch (status) {
-      case 'completed': return 'completed';
-      case 'in_progress': return 'in_progress';
-      case 'delayed': return 'delayed';
-      default: return 'planned';
-    }
+    if (!status) return 'planned';
+    
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('completed') || statusLower === 'done' || statusLower === 'terminé') return 'completed';
+    if (statusLower.includes('progress') || statusLower === 'in_progress' || statusLower === 'en_cours') return 'in_progress';
+    if (statusLower.includes('delayed') || statusLower === 'retard' || statusLower === 'en_retard') return 'delayed';
+    if (statusLower.includes('not_started') || statusLower === 'planned' || statusLower === 'planifié') return 'planned';
+    
+    return 'planned';
   }
 
   private static mapMilestoneStatus(status: string): 'pending' | 'in_progress' | 'completed' | 'overdue' {
