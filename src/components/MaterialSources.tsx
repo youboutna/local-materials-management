@@ -19,7 +19,7 @@ const MaterialSources = ({
   sources?: MaterialSource[];
   className?: string;
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <Card className={className}>
@@ -48,7 +48,7 @@ const MaterialSources = ({
                     <MapPin className="mr-1 h-3 w-3" /> {source.location}
                   </p>
                   <p className="text-xs text-adrar-400 mt-1">
-                    {t('materials.last_updated') || 'Dernière mise à jour'}: {new Date(source.lastUpdated).toLocaleDateString(t('locale') || 'fr-FR')}
+                    {t('materials.last_updated') || 'Dernière mise à jour'}: {new Date(source.lastUpdated).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR')}
                   </p>
                 </div>
               </div>

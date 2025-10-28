@@ -61,7 +61,7 @@ const TaskAssignments = () => {
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
 
   // Fetch assignee details when assigned_to changes
@@ -774,7 +774,7 @@ const TaskAssignments = () => {
                     <span>
                       {t("task.due") || "Échéance"}:{" "}
                       {new Date(task.due_date).toLocaleDateString(
-                        t("locale") || "fr-FR"
+                        language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR'
                       )}
                     </span>
                   </div>
@@ -782,7 +782,7 @@ const TaskAssignments = () => {
                 <div className="text-xs text-muted-foreground">
                   {t("task.created") || "Créé"}:{" "}
                   {new Date(task.created_at || "").toLocaleDateString(
-                    t("locale") || "fr-FR"
+                    language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR'
                   )}
                 </div>
               </div>

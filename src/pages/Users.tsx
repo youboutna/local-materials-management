@@ -76,7 +76,7 @@ const Users = () => {
   const { user, isDevelopmentMode } = useAuth();
   const navigate = useNavigate();
   const { hasAnyRole } = useCurrentUserRoles();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [profiles, setProfiles] = useState<UserProfile[]>(
     isDevelopmentMode ? DEV_PROFILES : []
   );
@@ -450,7 +450,7 @@ const Users = () => {
                   <label className="text-muted-foreground text-sm">{t('users.created_at') || "Date d'inscription"}</label>
                   <p className="font-medium">
                     {selectedUser.created_at 
-                      ? new Date(selectedUser.created_at).toLocaleDateString(t('locale') || 'fr-FR', {
+                      ? new Date(selectedUser.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
