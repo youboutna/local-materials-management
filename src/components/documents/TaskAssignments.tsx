@@ -32,16 +32,15 @@ import type { Database } from "@/integrations/supabase/types";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserSelector from '@/components/selectors/UserSelector';
 import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 type TaskAssignment = Database["public"]["Tables"]["task_assignments"]["Row"];
 type Project = { id: string; title: string };
 
-const ITEMS_PER_PAGE = 12;
-
 const TaskAssignments = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
@@ -424,11 +423,17 @@ const TaskAssignments = () => {
   };
 
   // Pagination
-  const totalPages = Math.ceil((tasks?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedTasks = tasks?.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const {
+    currentData: paginatedTasks,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage,
+  } = usePagination({
+    data: tasks || [],
+    itemsPerPage: 12
+  });
 
   if (isLoading) {
     return (
@@ -474,20 +479,14 @@ const TaskAssignments = () => {
                 id="search"
                 placeholder="Titre, description, assigné..."
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div>
               <Label htmlFor="filter-status">Statut</Label>
               <Select
                 value={filterStatus}
-                onValueChange={(value) => {
-                  setFilterStatus(value);
-                  setCurrentPage(1);
-                }}
+                onValueChange={setFilterStatus}
               >
                 <SelectTrigger id="filter-status">
                   <SelectValue />
@@ -505,10 +504,7 @@ const TaskAssignments = () => {
               <Label htmlFor="filter-priority">Priorité</Label>
               <Select
                 value={filterPriority}
-                onValueChange={(value) => {
-                  setFilterPriority(value);
-                  setCurrentPage(1);
-                }}
+                onValueChange={setFilterPriority}
               >
                 <SelectTrigger id="filter-priority">
                   <SelectValue />
@@ -526,10 +522,7 @@ const TaskAssignments = () => {
               <Label htmlFor="filter-assignee">Assigné à</Label>
               <Select
                 value={filterAssignee}
-                onValueChange={(value) => {
-                  setFilterAssignee(value);
-                  setCurrentPage(1);
-                }}
+                onValueChange={setFilterAssignee}
               >
                 <SelectTrigger id="filter-assignee">
                   <SelectValue />
@@ -836,29 +829,13 @@ const TaskAssignments = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Précédent
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {currentPage} sur {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Suivant
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+        />
       )}
     </div>
   );

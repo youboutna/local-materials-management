@@ -14,6 +14,8 @@ import { Users, Plus, Edit, Trash2, Search, Settings } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 type Employee = Database['public']['Tables']['employees']['Row'];
 
@@ -39,7 +41,7 @@ const EmployeeManagement = () => {
     is_active: true
   });
 
-  const { data: employees, isLoading } = useQuery({
+  const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees', searchTerm],
     queryFn: async () => {
       let query = supabase
@@ -55,6 +57,18 @@ const EmployeeManagement = () => {
       if (error) throw error;
       return (data as unknown as Employee[]) || [];
     },
+  });
+
+  const {
+    currentData: paginatedEmployees,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    goToPage,
+  } = usePagination({
+    data: employees,
+    itemsPerPage: 10
   });
 
   const createMutation = useMutation({
@@ -305,7 +319,7 @@ const EmployeeManagement = () => {
           </div>
 
           <div className="space-y-4">
-            {employees?.map((employee) => (
+            {paginatedEmployees.map((employee) => (
               <Card key={employee.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -347,9 +361,21 @@ const EmployeeManagement = () => {
             ))}
           </div>
 
-          {employees?.length === 0 && (
+          {employees.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               {t('documents.employee.no_employees')}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={goToPage}
+              />
             </div>
           )}
         </CardContent>
