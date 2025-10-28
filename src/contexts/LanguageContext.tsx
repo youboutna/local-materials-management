@@ -210,6 +210,42 @@ export const translations = {
             no_results: "Aucun résultat trouvé"
         },
         dashboard: {
+            management_title: "Tableau de Bord Gestion",
+            management_subtitle: "Centre de contrôle pour gestionnaires de projets",
+            checking_permissions: "Vérification des permissions...",
+            access_denied_title: "Accès Refusé",
+            access_restricted: "Ce tableau de bord est réservé aux gestionnaires de projets, administrateurs et directeurs.",
+            your_roles: "Vos rôles actuels",
+            required_roles_label: "Rôles requis",
+            no_role_assigned: "Aucun rôle assigné",
+            back_to_projects: "Retour aux Projets",
+            management_tabs: {
+                actions: "Actions Management",
+                overview: "Vue d'ensemble",
+                monitoring: "Monitoring",
+                alerts: "Alertes"
+            },
+            cards: {
+                active_projects: "Projets Actifs",
+                in_progress_description: "En cours de réalisation",
+                projects_label: "projets",
+                total_budget: "Budget Total",
+                financial_resources: "Ressources financières",
+                teams: "Équipes",
+                staff_assigned: "Personnel affecté",
+                members_label: "membres",
+                materials_title: "Matériaux",
+                available_resources: "Ressources disponibles",
+                types_label: "types",
+                project_progress: "Progression des Projets",
+                recent_projects: "Projets Récents"
+            },
+            badges: {
+                roles_label: "Rôles",
+                administrator: "Administrateur",
+                director: "Directeur",
+                project_manager: "Chef de Projet"
+            },
             loading: "Loading...",
             title: "Tableau de bord",
             welcome: "Bienvenue",
@@ -253,6 +289,77 @@ export const translations = {
             project_distribution: "Répartition des projets",
             no_geolocated_projects: "Aucun projet géolocalisé",
             dev_mode: "Mode développement"
+        },
+        bank_guarantee: {
+            title: "Surveillance Garanties Bancaires",
+            subtitle: "Système automatisé de détection des retards et déclenchement des garanties bancaires",
+            active_alerts: "Alerte(s) Active(s)",
+            manager_alerts: "Alertes du Gestionnaire de Projet",
+            severity: "Sévérité",
+            type: "Type",
+            acknowledge: "Acquitter",
+            acknowledged_note: "Pris en compte depuis le monitoring",
+            loading_project: "Chargement du projet et de l'organisation..."
+        },
+        insurance_management: {
+            title: "Gestion des Assurances",
+            subtitle: "Surveillance automatisée des certificats d'assurance et alertes d'expiration",
+            active_alerts: "Alerte(s) Active(s)",
+            manager_alerts: "Alertes d'Assurance du Gestionnaire de Projet",
+            severity: "Sévérité",
+            type: "Type",
+            detected_on: "Détecté le",
+            process: "Traiter",
+            processed_note: "Traité depuis la gestion des assurances",
+            loading_project: "Chargement du projet et de l'organisation..."
+        },
+        notifications_center: {
+            title: "Centre de Notifications",
+            subtitle: "Système de notifications centralisé avec gestion des alertes et notifications par rôle",
+            unread: "non lues",
+            mark_all_read: "Marquer tout lu",
+            refresh: "Actualiser",
+            mark_all_success: "Toutes les notifications ont été marquées comme lues",
+            load_error: "Impossible de charger les notifications",
+            mark_error: "Impossible de marquer les notifications comme lues",
+            search_placeholder: "Rechercher dans les notifications...",
+            filters: "Filtres",
+            stats: {
+                total: "Total",
+                unread: "Non lues",
+                urgent: "Urgentes",
+                inspections: "Inspections",
+                projects: "Projets",
+                payments: "Paiements",
+                tasks: "Tâches",
+                documents: "Documents",
+                system: "Système"
+            },
+            tabs: {
+                all: "Toutes",
+                role_based: "Par Rôle",
+                inspections: "Inspections",
+                projects: "Projets",
+                payments: "Paiements",
+                tasks: "Tâches",
+                documents: "Documents",
+                system: "Système",
+                management: "Gestion"
+            },
+            role_based_description: "Notifications filtrées selon votre rôle et vos responsabilités dans le système",
+            no_notifications: "Aucune notification"
+        },
+        payment_control: {
+            title: "Contrôle des Paiements",
+            subtitle: "Gestion et validation des paiements avec notifications en temps réel",
+            notifications_label: "Notifications",
+            recent_notifications: "Notifications de Paiement Récentes",
+            new: "nouveau(x)",
+            no_recent: "Aucune notification de paiement récente",
+            no_pending: "Aucun paiement en attente de validation",
+            access_restricted: "Accès restreint. Vous n'avez pas les permissions nécessaires pour accéder au contrôle des paiements.",
+            load_error: "Impossible de charger les notifications de paiement",
+            loading_project: "Chargement du projet et de l'organisation..."
         },
 
         task: {
