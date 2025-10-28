@@ -76,31 +76,81 @@ const ProjectExporter = () => {
     }
   };
 
-  const prepareProjectData = () => {
+  const prepareProjectData = async () => {
     // Only export selected projects
     const projectsToExport = projects.filter(p => selectedProjects.includes(p.id));
-    return projectsToExport.map(project => ({
-      title: project.title,
-      description: project.description,
-      location: project.location,
-      status: project.status,
-      progress: project.progress,
-      budget: project.budget,
-      startDate: project.startDate,
-      endDate: project.endDate || '',
-      teamSize: project.teamSize,
-      latitude: project.coordinates?.latitude || '',
-      longitude: project.coordinates?.longitude || '',
-      financingSource: project.financingSource || '',
-      marketType: project.marketType || '',
-      selectionMode: project.selectionMode || '',
-      launchDate: project.launchDate || '',
-      attributionDate: project.attributionDate || ''
-    }));
+    
+    // Fetch detailed data for each selected project
+    const detailedProjects = await Promise.all(
+      projectsToExport.map(async (project) => {
+        try {
+          const detail = await projectService.getProjectDetail(project.id);
+          return {
+            // Basic info
+            title: detail?.title || project.title,
+            description: detail?.description || project.description,
+            location: detail?.location || project.location,
+            status: detail?.status || project.status,
+            progress: detail?.progress || project.progress,
+            budget: detail?.budget || project.budget,
+            startDate: detail?.startDate || project.startDate,
+            endDate: detail?.endDate || project.endDate || '',
+            teamSize: detail?.teamSize || project.teamSize,
+            
+            // Location details
+            latitude: detail?.coordinates?.latitude || project.coordinates?.latitude || '',
+            longitude: detail?.coordinates?.longitude || project.coordinates?.longitude || '',
+            
+            // Project details
+            financingSource: detail?.financingSource || project.financingSource || '',
+            marketType: detail?.marketType || project.marketType || '',
+            selectionMode: detail?.selectionMode || project.selectionMode || '',
+            launchDate: detail?.launchDate || project.launchDate || '',
+            attributionDate: detail?.attributionDate || project.attributionDate || '',
+            projectReference: detail?.projectReference || '',
+            mainContractor: detail?.mainContractor || '',
+            allowsInitialPayment: detail?.allowsInitialPayment || false,
+            initialPaymentPercentage: detail?.initialPaymentPercentage || 0,
+            
+            // Related data
+            phases: detail?.plannedPhases || [],
+            tasks: detail?.tasks || [],
+            inspections: detail?.inspections || [],
+            risks: detail?.risks || [],
+            resources: detail?.resources || [],
+            expenses: detail?.expenses || []
+          };
+        } catch (error) {
+          console.error(`Error fetching details for project ${project.id}:`, error);
+          // Return basic project data if detail fetch fails
+          return {
+            title: project.title,
+            description: project.description,
+            location: project.location,
+            status: project.status,
+            progress: project.progress,
+            budget: project.budget,
+            startDate: project.startDate,
+            endDate: project.endDate || '',
+            teamSize: project.teamSize,
+            latitude: project.coordinates?.latitude || '',
+            longitude: project.coordinates?.longitude || '',
+            phases: [],
+            tasks: [],
+            inspections: [],
+            risks: [],
+            resources: [],
+            expenses: []
+          };
+        }
+      })
+    );
+    
+    return detailedProjects;
   };
 
-  const exportToJson = () => {
-    const data = prepareProjectData();
+  const exportToJson = async () => {
+    const data = await prepareProjectData();
     const dataStr = JSON.stringify(data, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -111,27 +161,176 @@ const ProjectExporter = () => {
     URL.revokeObjectURL(url);
   };
 
-  const exportToExcel = () => {
-    const data = prepareProjectData();
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Projets');
+  const exportToExcel = async () => {
+    const data = await prepareProjectData();
     
-    // Auto-adjust column widths
-    const colWidths = Object.keys(data[0] || {}).map(key => ({
-      wch: Math.max(key.length, 15)
+    // Create separate sheets for each data type
+    const workbook = XLSX.utils.book_new();
+    
+    // Main projects sheet
+    const projectsFlat = data.map(p => ({
+      title: p.title,
+      description: p.description,
+      location: p.location,
+      status: p.status,
+      progress: p.progress,
+      budget: p.budget,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      teamSize: p.teamSize,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      financingSource: p.financingSource,
+      marketType: p.marketType,
+      selectionMode: p.selectionMode,
+      launchDate: p.launchDate,
+      attributionDate: p.attributionDate,
+      projectReference: p.projectReference,
+      mainContractor: p.mainContractor,
+      tasksCount: p.tasks?.length || 0,
+      phasesCount: p.phases?.length || 0,
+      inspectionsCount: p.inspections?.length || 0,
+      risksCount: p.risks?.length || 0,
+      expensesCount: p.expenses?.length || 0
     }));
-    worksheet['!cols'] = colWidths;
+    
+    const projectsSheet = XLSX.utils.json_to_sheet(projectsFlat);
+    XLSX.utils.book_append_sheet(workbook, projectsSheet, 'Projets');
+    
+    // Tasks sheet
+    const allTasks: any[] = [];
+    data.forEach(project => {
+      project.tasks?.forEach((task: any) => {
+        allTasks.push({
+          project: project.title,
+          taskName: task.name,
+          status: task.status,
+          progress: task.progress,
+          startDate: task.startDate,
+          endDate: task.endDate,
+          assignedTo: task.assignedTo,
+          cost: task.cost
+        });
+      });
+    });
+    if (allTasks.length > 0) {
+      const tasksSheet = XLSX.utils.json_to_sheet(allTasks);
+      XLSX.utils.book_append_sheet(workbook, tasksSheet, 'Tâches');
+    }
+    
+    // Phases sheet
+    const allPhases: any[] = [];
+    data.forEach(project => {
+      project.phases?.forEach((phase: any) => {
+        allPhases.push({
+          project: project.title,
+          phaseName: phase.phase_name,
+          status: phase.status,
+          startDate: phase.start_date,
+          endDate: phase.end_date,
+          progress: phase.progress
+        });
+      });
+    });
+    if (allPhases.length > 0) {
+      const phasesSheet = XLSX.utils.json_to_sheet(allPhases);
+      XLSX.utils.book_append_sheet(workbook, phasesSheet, 'Phases');
+    }
+    
+    // Inspections sheet
+    const allInspections: any[] = [];
+    data.forEach(project => {
+      project.inspections?.forEach((inspection: any) => {
+        allInspections.push({
+          project: project.title,
+          inspector: inspection.inspector,
+          date: inspection.date,
+          status: inspection.status,
+          progressAtInspection: inspection.progressAtInspection,
+          comments: inspection.comments
+        });
+      });
+    });
+    if (allInspections.length > 0) {
+      const inspectionsSheet = XLSX.utils.json_to_sheet(allInspections);
+      XLSX.utils.book_append_sheet(workbook, inspectionsSheet, 'Inspections');
+    }
+    
+    // Risks sheet
+    const allRisks: any[] = [];
+    data.forEach(project => {
+      project.risks?.forEach((risk: any) => {
+        allRisks.push({
+          project: project.title,
+          riskName: risk.name,
+          description: risk.description,
+          probability: risk.probability,
+          impact: risk.impact,
+          mitigationPlan: risk.mitigationPlan
+        });
+      });
+    });
+    if (allRisks.length > 0) {
+      const risksSheet = XLSX.utils.json_to_sheet(allRisks);
+      XLSX.utils.book_append_sheet(workbook, risksSheet, 'Risques');
+    }
+    
+    // Expenses sheet
+    const allExpenses: any[] = [];
+    data.forEach(project => {
+      project.expenses?.forEach((expense: any) => {
+        allExpenses.push({
+          project: project.title,
+          amount: expense.amount || 0,
+          date: expense.date || expense.payment_date || '',
+          description: expense.description || '',
+          category: expense.category || ''
+        });
+      });
+    });
+    if (allExpenses.length > 0) {
+      const expensesSheet = XLSX.utils.json_to_sheet(allExpenses);
+      XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Dépenses');
+    }
     
     XLSX.writeFile(workbook, `projets_export_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const exportToCsv = () => {
-    const data = prepareProjectData();
-    const headers = Object.keys(data[0] || {});
+  const exportToCsv = async () => {
+    const data = await prepareProjectData();
+    
+    // Flatten nested data for CSV
+    const flatData = data.map(project => ({
+      title: project.title,
+      description: project.description,
+      location: project.location,
+      status: project.status,
+      progress: project.progress,
+      budget: project.budget,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      teamSize: project.teamSize,
+      latitude: project.latitude,
+      longitude: project.longitude,
+      financingSource: project.financingSource,
+      marketType: project.marketType,
+      selectionMode: project.selectionMode,
+      launchDate: project.launchDate,
+      attributionDate: project.attributionDate,
+      projectReference: project.projectReference,
+      mainContractor: project.mainContractor,
+      tasksCount: project.tasks?.length || 0,
+      phasesCount: project.phases?.length || 0,
+      inspectionsCount: project.inspections?.length || 0,
+      risksCount: project.risks?.length || 0,
+      resourcesCount: project.resources?.length || 0,
+      expensesCount: project.expenses?.length || 0
+    }));
+    
+    const headers = Object.keys(flatData[0] || {});
     const csvContent = [
       headers.join(','),
-      ...data.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+      ...flatData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
     ].join('\n');
     
     const dataBlob = new Blob([csvContent], { type: 'text/csv' });
@@ -167,13 +366,13 @@ const ProjectExporter = () => {
     try {
       switch (exportFormat) {
         case 'json':
-          exportToJson();
+          await exportToJson();
           break;
         case 'excel':
-          exportToExcel();
+          await exportToExcel();
           break;
         case 'csv':
-          exportToCsv();
+          await exportToCsv();
           break;
       }
       

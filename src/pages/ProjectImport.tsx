@@ -61,7 +61,7 @@ const ProjectImport = () => {
                   <li>• {t('projects.import.supportedFormats')}: Excel (.xlsx, .xls), JSON (.json), CSV (.csv)</li>
                   <li>• {t('projects.import.maxSize')}: 10 MB</li>
                   <li>• {t('projects.import.requiredColumns')}: title, description, location</li>
-                  <li>• {t('projects.import.optionalColumns')}: budget, startDate, endDate, teamSize, coordinates</li>
+                  <li>• {t('projects.import.optionalColumns')}: budget, startDate, endDate, teamSize, coordinates, phases, tasks, inspections, risks, payments</li>
                 </ul>
               </div>
 
