@@ -155,7 +155,8 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     }
 
     try {
-      const { error } = await supabase.from("documents").insert({
+      const { DocumentService } = await import('@/services/DocumentService');
+      await DocumentService.createDocument({
         title: uploadData.file.name,
         description: uploadData.description,
         document_type: uploadData.document_type as any,
@@ -165,8 +166,6 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
         project_id: projectId,
         status: "draft",
       });
-
-      if (error) throw error;
 
       toast({
         title: t("success.title"),

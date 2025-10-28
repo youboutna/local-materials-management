@@ -62,9 +62,8 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const { data: suppliersList } = useSuppliersQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('suppliers').select('id, name, contact_person, email, phone');
-      if (error) throw error;
-      return data;
+      const { SupplierService } = await import('@/services/SupplierService');
+      return await SupplierService.getAllSuppliers();
     },
   });
 
