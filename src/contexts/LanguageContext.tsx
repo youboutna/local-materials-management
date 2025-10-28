@@ -667,6 +667,35 @@ export const translations = {
             return_home: "Retour à l'accueil"
         },
         inspection: {
+            common: {
+                back: "Retour",
+                loading: "Chargement...",
+                save: "Enregistrer",
+                saving: "Enregistrement...",
+                cancel: "Annuler",
+                error: "Erreur",
+                success: "Succès",
+                not_found: "Inspection non trouvée",
+                load_error: "Impossible de charger l'inspection",
+                update_success: "Inspection mise à jour avec succès",
+                update_error: "Impossible de mettre à jour l'inspection",
+                required_fields: "Veuillez remplir tous les champs obligatoires",
+                inspector_required: "Inspecteur *",
+                inspector_placeholder: "Nom de l'inspecteur",
+                date_label: "Date d'inspection *",
+                status_label: "Statut",
+                progress_label: "Progression (%)",
+                comments_label: "Commentaires",
+                comments_placeholder: "Vos commentaires...",
+                project_label: "Projet"
+            },
+            status: {
+                scheduled: "Programmée",
+                in_progress: "En cours",
+                approved: "Approuvée",
+                rejected: "Rejetée",
+                requires_changes: "Modifications requises"
+            },
             edit: {
                 title: "Modifier l'inspection",
                 description: "Modification de l'inspection pour le projet",
@@ -719,6 +748,34 @@ export const translations = {
             removed: "Rôle supprimé",
             removed_success: "Rôle supprimé avec succès",
             remove_error: "Erreur lors de la suppression du rôle"
+        },
+        profile: {
+            title: "Profil",
+            user_id_label: "ID Utilisateur",
+            account_security: "Sécurité du compte",
+            change_password: "Changer le mot de passe",
+            change_password_description: "Modifiez votre mot de passe pour sécuriser votre compte.",
+            new_password: "Nouveau mot de passe",
+            new_password_placeholder: "Entrez votre nouveau mot de passe",
+            confirm_password: "Confirmer le nouveau mot de passe",
+            confirm_password_placeholder: "Confirmez votre nouveau mot de passe",
+            password_mismatch: "Les nouveaux mots de passe ne correspondent pas.",
+            password_length_error: "Le mot de passe doit contenir au moins 6 caractères.",
+            password_updated: "Mot de passe mis à jour avec succès",
+            update_password: "Mettre à jour le mot de passe",
+            updating: "Mise à jour..."
+        },
+        reset_password: {
+            title: "Nouveau mot de passe",
+            invalid_link: "Lien invalide",
+            checking_link: "Vérification du lien...",
+            invalid_expired: "Ce lien de réinitialisation est invalide ou a expiré.",
+            back_to_login: "Retour à la connexion",
+            update_button: "Mettre à jour le mot de passe",
+            password_mismatch: "Les mots de passe ne correspondent pas.",
+            password_length_error: "Le mot de passe doit contenir au moins 6 caractères.",
+            update_error: "Erreur lors de la mise à jour du mot de passe.",
+            invalid_link_error: "Lien de réinitialisation invalide ou expiré."
         },
         policy: {
             title: "Politique de confidentialité",
@@ -1679,6 +1736,35 @@ export const translations = {
             return_home: "العودة للرئيسية"
         },
         inspection: {
+            common: {
+                back: "رجوع",
+                loading: "جاري التحميل...",
+                save: "حفظ",
+                saving: "جاري الحفظ...",
+                cancel: "إلغاء",
+                error: "خطأ",
+                success: "نجاح",
+                not_found: "التفتيش غير موجود",
+                load_error: "تعذر تحميل التفتيش",
+                update_success: "تم تحديث التفتيش بنجاح",
+                update_error: "تعذر تحديث التفتيش",
+                required_fields: "يرجى ملء جميع الحقول المطلوبة",
+                inspector_required: "المفتش *",
+                inspector_placeholder: "اسم المفتش",
+                date_label: "تاريخ التفتيش *",
+                status_label: "الحالة",
+                progress_label: "التقدم (%)",
+                comments_label: "التعليقات",
+                comments_placeholder: "تعليقاتك...",
+                project_label: "المشروع"
+            },
+            status: {
+                scheduled: "مجدول",
+                in_progress: "قيد التنفيذ",
+                approved: "مقبول",
+                rejected: "مرفوض",
+                requires_changes: "يتطلب تعديلات"
+            },
             edit: {
                 title: "تعديل التفتيش",
                 description: "تعديل التفتيش للمشروع",
@@ -1716,6 +1802,34 @@ export const translations = {
                 validation_error: "خطأ في التحقق",
                 validation_inspector: "اسم المفتش مطلوب."
             },
+        },
+        profile: {
+            title: "الملف الشخصي",
+            user_id_label: "معرف المستخدم",
+            account_security: "أمان الحساب",
+            change_password: "تغيير كلمة المرور",
+            change_password_description: "قم بتغيير كلمة المرور الخاصة بك لتأمين حسابك.",
+            new_password: "كلمة المرور الجديدة",
+            new_password_placeholder: "أدخل كلمة المرور الجديدة",
+            confirm_password: "تأكيد كلمة المرور الجديدة",
+            confirm_password_placeholder: "أكد كلمة المرور الجديدة",
+            password_mismatch: "كلمات المرور الجديدة غير متطابقة.",
+            password_length_error: "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل.",
+            password_updated: "تم تحديث كلمة المرور بنجاح",
+            update_password: "تحديث كلمة المرور",
+            updating: "جاري التحديث..."
+        },
+        reset_password: {
+            title: "كلمة مرور جديدة",
+            invalid_link: "رابط غير صالح",
+            checking_link: "جاري التحقق من الرابط...",
+            invalid_expired: "رابط إعادة التعيين هذا غير صالح أو منتهي الصلاحية.",
+            back_to_login: "العودة إلى تسجيل الدخول",
+            update_button: "تحديث كلمة المرور",
+            password_mismatch: "كلمات المرور غير متطابقة.",
+            password_length_error: "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل.",
+            update_error: "خطأ في تحديث كلمة المرور.",
+            invalid_link_error: "رابط إعادة التعيين غير صالح أو منتهي الصلاحية."
         },
         roles: {
             user: "مستخدم",
@@ -2674,6 +2788,35 @@ export const translations = {
             return_home: "Return home"
         },
         inspection: {
+            common: {
+                back: "Back",
+                loading: "Loading...",
+                save: "Save",
+                saving: "Saving...",
+                cancel: "Cancel",
+                error: "Error",
+                success: "Success",
+                not_found: "Inspection not found",
+                load_error: "Unable to load inspection",
+                update_success: "Inspection updated successfully",
+                update_error: "Unable to update inspection",
+                required_fields: "Please fill in all required fields",
+                inspector_required: "Inspector *",
+                inspector_placeholder: "Inspector's name",
+                date_label: "Inspection date *",
+                status_label: "Status",
+                progress_label: "Progress (%)",
+                comments_label: "Comments",
+                comments_placeholder: "Your comments...",
+                project_label: "Project"
+            },
+            status: {
+                scheduled: "Scheduled",
+                in_progress: "In Progress",
+                approved: "Approved",
+                rejected: "Rejected",
+                requires_changes: "Requires Changes"
+            },
             edit: {
                 title: "Edit Inspection",
                 description: "Edit inspection for project",

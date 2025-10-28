@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { InspectionService } from '@/services/InspectionService';
 import { InspectionDTO, UpdateInspectionDTO } from '@/types/inspection.dto';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const InspectionEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [inspection, setInspection] = useState<InspectionDTO | null>(null);
@@ -30,11 +32,11 @@ const InspectionEdit = () => {
   });
 
   const statusOptions = [
-    { value: 'scheduled', label: 'Programmée', icon: Clock },
-    { value: 'in_progress', label: 'En cours', icon: Clock },
-    { value: 'approved', label: 'Approuvée', icon: CheckCircle },
-    { value: 'rejected', label: 'Rejetée', icon: XCircle },
-    { value: 'requires_changes', label: 'Modifications requises', icon: AlertTriangle }
+    { value: 'scheduled', label: t('inspection.status.scheduled'), icon: Clock },
+    { value: 'in_progress', label: t('inspection.status.in_progress'), icon: Clock },
+    { value: 'approved', label: t('inspection.status.approved'), icon: CheckCircle },
+    { value: 'rejected', label: t('inspection.status.rejected'), icon: XCircle },
+    { value: 'requires_changes', label: t('inspection.status.requires_changes'), icon: AlertTriangle }
   ];
 
   useEffect(() => {
@@ -62,8 +64,8 @@ const InspectionEdit = () => {
         });
       } else {
         toast({
-          title: 'Erreur',
-          description: 'Inspection non trouvée',
+          title: t('inspection.common.error'),
+          description: t('inspection.common.not_found'),
           variant: 'destructive'
         });
         navigate('/inspection-monitoring');
@@ -71,8 +73,8 @@ const InspectionEdit = () => {
     } catch (error) {
       console.error('Error loading inspection:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de charger l\'inspection',
+        title: t('inspection.common.error'),
+        description: t('inspection.common.load_error'),
         variant: 'destructive'
       });
     } finally {
@@ -85,8 +87,8 @@ const InspectionEdit = () => {
     
     if (!id || !formData.inspector || !formData.date) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        title: t('inspection.common.error'),
+        description: t('inspection.common.required_fields'),
         variant: 'destructive'
       });
       return;
@@ -106,16 +108,16 @@ const InspectionEdit = () => {
       await InspectionService.updateInspection(id, updates);
       
       toast({
-        title: 'Succès',
-        description: 'Inspection mise à jour avec succès'
+        title: t('inspection.common.success'),
+        description: t('inspection.common.update_success')
       });
       
       navigate(`/inspections/${id}`);
     } catch (error) {
       console.error('Error updating inspection:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour l\'inspection',
+        title: t('inspection.common.error'),
+        description: t('inspection.common.update_error'),
         variant: 'destructive'
       });
     } finally {
@@ -132,7 +134,7 @@ const InspectionEdit = () => {
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">Chargement...</p>
+            <p className="text-center text-muted-foreground">{t('inspection.common.loading')}</p>
           </CardContent>
         </Card>
       </div>
@@ -147,18 +149,18 @@ const InspectionEdit = () => {
         className="mb-4"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Retour
+        {t('inspection.common.back')}
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Modifier l'Inspection</CardTitle>
+          <CardTitle>{t('inspection.edit.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="project">Projet</Label>
+                <Label htmlFor="project">{t('inspection.common.project_label')}</Label>
                 <ProjectSelector
                   value={formData.project_id}
                   onChange={(value) => setFormData(prev => ({ ...prev, project_id: value || '' }))}
@@ -167,20 +169,20 @@ const InspectionEdit = () => {
               </div>
               
               <div>
-                <Label htmlFor="inspector">Inspecteur *</Label>
+                <Label htmlFor="inspector">{t('inspection.common.inspector_required')}</Label>
                 <Input
                   id="inspector"
                   value={formData.inspector}
                   onChange={(e) => setFormData(prev => ({ ...prev, inspector: e.target.value }))}
                   required
-                  placeholder="Nom de l'inspecteur"
+                  placeholder={t('inspection.common.inspector_placeholder')}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="date">Date d'inspection *</Label>
+                <Label htmlFor="date">{t('inspection.common.date_label')}</Label>
                 <Input
                   id="date"
                   type="date"
@@ -191,7 +193,7 @@ const InspectionEdit = () => {
               </div>
               
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status">{t('inspection.common.status_label')}</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
@@ -213,7 +215,7 @@ const InspectionEdit = () => {
               </div>
               
               <div>
-                <Label htmlFor="progress">Progression (%)</Label>
+                <Label htmlFor="progress">{t('inspection.common.progress_label')}</Label>
                 <Input
                   id="progress"
                   type="number"
@@ -226,13 +228,13 @@ const InspectionEdit = () => {
             </div>
 
             <div>
-              <Label htmlFor="comments">Commentaires</Label>
+              <Label htmlFor="comments">{t('inspection.common.comments_label')}</Label>
               <Textarea
                 id="comments"
                 value={formData.comments}
                 onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
                 rows={4}
-                placeholder="Observations et commentaires sur l'inspection..."
+                placeholder={t('inspection.common.comments_placeholder')}
               />
             </div>
 
@@ -243,10 +245,10 @@ const InspectionEdit = () => {
                 onClick={() => navigate(-1)}
                 disabled={saving}
               >
-                Annuler
+                {t('inspection.common.cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Enregistrement...' : 'Enregistrer'}
+                {saving ? t('inspection.common.saving') : t('inspection.common.save')}
               </Button>
             </div>
           </form>
