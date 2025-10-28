@@ -14,8 +14,8 @@ import {
   Gauge
 } from 'lucide-react';
 import { formatMetric } from '@/utils/monitoringCalculations';
-import { supabase } from '@/integrations/supabase/client';
 import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
+import { PerformanceMonitoringService } from '@/services/PerformanceMonitoringService';
 
 interface PerformanceData {
   database: {
@@ -138,18 +138,10 @@ const PerformanceMetrics: React.FC = () => {
 
   const getDatabaseMetrics = async (): Promise<Partial<PerformanceData>> => {
     try {
-      // Perform a test query to measure response time
-      const startTime = Date.now();
-      await supabase.from('projects').select('count').limit(1);
-      const queryTime = Date.now() - startTime;
-
+      const dbMetrics = await PerformanceMonitoringService.getDatabaseMetrics();
+      
       return {
-        database: {
-          connections: Math.floor(Math.random() * 20) + 5, // Simulated
-          maxConnections: 100,
-          queryTime,
-          slowQueries: queryTime > 1000 ? 1 : 0
-        }
+        database: dbMetrics
       };
     } catch (error) {
       console.error('Error getting database metrics:', error);
