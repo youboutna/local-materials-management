@@ -176,11 +176,17 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         latitude: parseFloat(item.latitude),
         longitude: parseFloat(item.longitude)
       } : undefined),
+      
+      // Extended fields
       financingSource: item.financingSource || item.sourceFinancement,
       marketType: item.marketType || item.typeMarche,
       selectionMode: item.selectionMode || item.modeSelection,
       launchDate: item.launchDate || item.dateLancement,
-      attributionDate: item.attributionDate || item.dateAttribution
+      attributionDate: item.attributionDate || item.dateAttribution,
+      projectReference: item.projectReference || item.reference,
+      mainContractor: item.mainContractor || item.contractor,
+      allowsInitialPayment: item.allowsInitialPayment || false,
+      initialPaymentPercentage: parseFloat(item.initialPaymentPercentage || '0')
     };
   };
 

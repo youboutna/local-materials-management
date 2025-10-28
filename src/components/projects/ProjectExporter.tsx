@@ -87,6 +87,7 @@ const ProjectExporter = () => {
           const detail = await projectService.getProjectDetail(project.id);
           return {
             // Basic info
+            id: detail?.id || project.id,
             title: detail?.title || project.title,
             description: detail?.description || project.description,
             location: detail?.location || project.location,
@@ -96,6 +97,7 @@ const ProjectExporter = () => {
             startDate: detail?.startDate || project.startDate,
             endDate: detail?.endDate || project.endDate || '',
             teamSize: detail?.teamSize || project.teamSize,
+            thumbnail: detail?.thumbnail || '',
             
             // Location details
             latitude: detail?.coordinates?.latitude || project.coordinates?.latitude || '',
@@ -111,19 +113,39 @@ const ProjectExporter = () => {
             mainContractor: detail?.mainContractor || '',
             allowsInitialPayment: detail?.allowsInitialPayment || false,
             initialPaymentPercentage: detail?.initialPaymentPercentage || 0,
+            projectResponsableId: detail?.projectResponsableId || '',
             
-            // Related data
+            // Financial details
+            totalCost: detail?.budget || project.budget || 0,
+            spentAmount: detail?.expenses?.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0) || 0,
+            remainingBudget: (detail?.budget || 0) - (detail?.expenses?.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0) || 0),
+            
+            // Statistics
+            tasksCount: detail?.tasks?.length || 0,
+            completedTasksCount: detail?.tasks?.filter((t: any) => t.status === 'completed').length || 0,
+            phasesCount: detail?.plannedPhases?.length || 0,
+            inspectionsCount: detail?.inspections?.length || 0,
+            risksCount: detail?.risks?.length || 0,
+            resourcesCount: detail?.resources?.length || 0,
+            expensesCount: detail?.expenses?.length || 0,
+            alertsCount: detail?.alerts?.length || 0,
+            
+            // Related data arrays
             phases: detail?.plannedPhases || [],
             tasks: detail?.tasks || [],
             inspections: detail?.inspections || [],
             risks: detail?.risks || [],
             resources: detail?.resources || [],
-            expenses: detail?.expenses || []
+            expenses: detail?.expenses || [],
+            alerts: detail?.alerts || [],
+            insurancePolicies: detail?.insurancePolicies || [],
+            contacts: detail?.contacts || []
           };
         } catch (error) {
           console.error(`Error fetching details for project ${project.id}:`, error);
           // Return basic project data if detail fetch fails
           return {
+            id: project.id,
             title: project.title,
             description: project.description,
             location: project.location,
@@ -140,7 +162,9 @@ const ProjectExporter = () => {
             inspections: [],
             risks: [],
             resources: [],
-            expenses: []
+            expenses: [],
+            alerts: [],
+            contacts: []
           };
         }
       })
@@ -167,19 +191,26 @@ const ProjectExporter = () => {
     // Create separate sheets for each data type
     const workbook = XLSX.utils.book_new();
     
-    // Main projects sheet
+    // Main projects sheet with extended info
     const projectsFlat = data.map(p => ({
+      id: p.id,
       title: p.title,
       description: p.description,
       location: p.location,
       status: p.status,
       progress: p.progress,
       budget: p.budget,
+      spentAmount: p.spentAmount,
+      remainingBudget: p.remainingBudget,
       startDate: p.startDate,
       endDate: p.endDate,
       teamSize: p.teamSize,
+      
+      // Location details
       latitude: p.latitude,
       longitude: p.longitude,
+      
+      // Project details
       financingSource: p.financingSource,
       marketType: p.marketType,
       selectionMode: p.selectionMode,
@@ -187,11 +218,18 @@ const ProjectExporter = () => {
       attributionDate: p.attributionDate,
       projectReference: p.projectReference,
       mainContractor: p.mainContractor,
-      tasksCount: p.tasks?.length || 0,
-      phasesCount: p.phases?.length || 0,
-      inspectionsCount: p.inspections?.length || 0,
-      risksCount: p.risks?.length || 0,
-      expensesCount: p.expenses?.length || 0
+      allowsInitialPayment: p.allowsInitialPayment,
+      initialPaymentPercentage: p.initialPaymentPercentage,
+      
+      // Statistics
+      tasksCount: p.tasksCount,
+      completedTasksCount: p.completedTasksCount,
+      phasesCount: p.phasesCount,
+      inspectionsCount: p.inspectionsCount,
+      risksCount: p.risksCount,
+      resourcesCount: p.resourcesCount,
+      expensesCount: p.expensesCount,
+      alertsCount: p.alertsCount
     }));
     
     const projectsSheet = XLSX.utils.json_to_sheet(projectsFlat);
@@ -202,14 +240,21 @@ const ProjectExporter = () => {
     data.forEach(project => {
       project.tasks?.forEach((task: any) => {
         allTasks.push({
+          projectId: project.id,
           project: project.title,
-          taskName: task.name,
+          taskName: task.name || task.title,
+          description: task.description,
           status: task.status,
+          priority: task.priority,
           progress: task.progress,
           startDate: task.startDate,
           endDate: task.endDate,
+          dueDate: task.dueDate,
           assignedTo: task.assignedTo,
-          cost: task.cost
+          assignedBy: task.assignedBy,
+          cost: task.cost,
+          notes: task.notes,
+          completedAt: task.completedAt
         });
       });
     });
@@ -223,12 +268,17 @@ const ProjectExporter = () => {
     data.forEach(project => {
       project.phases?.forEach((phase: any) => {
         allPhases.push({
+          projectId: project.id,
           project: project.title,
-          phaseName: phase.phase_name,
+          phaseName: phase.phase_name || phase.name,
           status: phase.status,
-          startDate: phase.start_date,
-          endDate: phase.end_date,
-          progress: phase.progress
+          startDate: phase.start_date || phase.startDate,
+          endDate: phase.end_date || phase.endDate,
+          progress: phase.progress,
+          budget: phase.budget,
+          description: phase.description,
+          dependencies: phase.dependencies,
+          milestones: phase.milestones
         });
       });
     });
@@ -242,12 +292,16 @@ const ProjectExporter = () => {
     data.forEach(project => {
       project.inspections?.forEach((inspection: any) => {
         allInspections.push({
+          projectId: project.id,
           project: project.title,
           inspector: inspection.inspector,
           date: inspection.date,
           status: inspection.status,
           progressAtInspection: inspection.progressAtInspection,
-          comments: inspection.comments
+          comments: inspection.comments,
+          phaseId: inspection.phaseId,
+          issues: inspection.issues?.length || 0,
+          documents: inspection.documents?.length || 0
         });
       });
     });
@@ -261,12 +315,19 @@ const ProjectExporter = () => {
     data.forEach(project => {
       project.risks?.forEach((risk: any) => {
         allRisks.push({
+          projectId: project.id,
           project: project.title,
-          riskName: risk.name,
+          riskName: risk.name || risk.title,
           description: risk.description,
+          category: risk.category,
           probability: risk.probability,
           impact: risk.impact,
-          mitigationPlan: risk.mitigationPlan
+          severity: risk.severity,
+          status: risk.status,
+          mitigationPlan: risk.mitigationPlan,
+          owner: risk.owner,
+          identifiedDate: risk.identifiedDate,
+          reviewDate: risk.reviewDate
         });
       });
     });
@@ -280,17 +341,67 @@ const ProjectExporter = () => {
     data.forEach(project => {
       project.expenses?.forEach((expense: any) => {
         allExpenses.push({
+          projectId: project.id,
           project: project.title,
           amount: expense.amount || 0,
           date: expense.date || expense.payment_date || '',
           description: expense.description || '',
-          category: expense.category || ''
+          category: expense.category || '',
+          paymentMethod: expense.payment_method || expense.paymentMethod,
+          transactionId: expense.transaction_id || expense.transactionId,
+          contractorName: expense.contractor_name || expense.contractorName,
+          approvedBy: expense.approved_by || expense.approvedBy,
+          status: expense.status
         });
       });
     });
     if (allExpenses.length > 0) {
       const expensesSheet = XLSX.utils.json_to_sheet(allExpenses);
       XLSX.utils.book_append_sheet(workbook, expensesSheet, 'Dépenses');
+    }
+    
+    // Resources sheet
+    const allResources: any[] = [];
+    data.forEach(project => {
+      project.resources?.forEach((resource: any) => {
+        allResources.push({
+          projectId: project.id,
+          project: project.title,
+          resourceType: resource.type,
+          name: resource.name,
+          quantity: resource.quantity,
+          unit: resource.unit,
+          costPerUnit: resource.costPerUnit,
+          totalCost: resource.totalCost,
+          supplier: resource.supplier,
+          availability: resource.availability
+        });
+      });
+    });
+    if (allResources.length > 0) {
+      const resourcesSheet = XLSX.utils.json_to_sheet(allResources);
+      XLSX.utils.book_append_sheet(workbook, resourcesSheet, 'Ressources');
+    }
+    
+    // Contacts sheet
+    const allContacts: any[] = [];
+    data.forEach(project => {
+      project.contacts?.forEach((contact: any) => {
+        allContacts.push({
+          projectId: project.id,
+          project: project.title,
+          name: contact.name,
+          role: contact.role,
+          organization: contact.organization,
+          email: contact.email,
+          phone: contact.phone,
+          isPrimary: contact.isPrimary
+        });
+      });
+    });
+    if (allContacts.length > 0) {
+      const contactsSheet = XLSX.utils.json_to_sheet(allContacts);
+      XLSX.utils.book_append_sheet(workbook, contactsSheet, 'Contacts');
     }
     
     XLSX.writeFile(workbook, `projets_export_${new Date().toISOString().split('T')[0]}.xlsx`);

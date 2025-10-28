@@ -281,7 +281,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       title: item.title || item.nom || item.name || t('projects.import.defaultTitle'),
       description: item.description || item.desc || '',
       location: item.location || item.lieu || item.localisation || '',
-      budget: parseFloat(item.budget || item.cout || item.montant || '0'),
+      budget: parseFloat(item.budget || item.cout || item.montant || item.totalCost || '0'),
       startDate: item.startDate || item.dateDebut || item.start_date || new Date().toISOString().split('T')[0],
       endDate: item.endDate || item.dateFin || item.end_date,
       teamSize: parseInt(item.teamSize || item.equipe || item.team_size || '1'),
@@ -289,11 +289,18 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         latitude: parseFloat(item.latitude),
         longitude: parseFloat(item.longitude)
       } : undefined),
+      
+      // Project details
       financingSource: item.financingSource || item.sourceFinancement || item.financing_source,
       marketType: item.marketType || item.typeMarche || item.market_type,
       selectionMode: item.selectionMode || item.modeSelection || item.selection_mode,
       launchDate: item.launchDate || item.dateLancement || item.launch_date,
-      attributionDate: item.attributionDate || item.dateAttribution || item.attribution_date
+      attributionDate: item.attributionDate || item.dateAttribution || item.attribution_date,
+      projectReference: item.projectReference || item.project_reference || item.reference,
+      mainContractor: item.mainContractor || item.main_contractor || item.contractor,
+      allowsInitialPayment: item.allowsInitialPayment || item.allows_initial_payment || false,
+      initialPaymentPercentage: parseFloat(item.initialPaymentPercentage || item.initial_payment_percentage || '0'),
+      projectResponsableId: item.projectResponsableId || item.project_responsable_id
     };
   };
 
