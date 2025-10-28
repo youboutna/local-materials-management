@@ -18,7 +18,7 @@ import { SubmissionSecretDialog } from '@/components/tenders/SubmissionSecretDia
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { WorkflowPhase, WorkflowStage } from '@/types/workflow';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { TenderService } from '@/services/TenderService';
 
 interface Tender {
   id: string;
@@ -56,20 +56,12 @@ const TenderManagement = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<SelectedSupplier | null>(null);
   const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: WorkflowPhase; stage: WorkflowStage } | null>(null);
 
-  // Fetch tender submissions for the selected tender
+  // Fetch tender submissions for the selected tender using TenderService
   const { data: submissions } = useQuery({
     queryKey: ['tender-submissions', selectedTender?.id],
     queryFn: async () => {
       if (!selectedTender?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('tender_id', selectedTender.id)
-        .order('submission_date', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      return await TenderService.getTenderSubmissions(selectedTender.id);
     },
     enabled: !!selectedTender?.id
   });
