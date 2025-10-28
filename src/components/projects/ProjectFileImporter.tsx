@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { 
   Upload, 
   FileSpreadsheet, 
@@ -21,6 +23,8 @@ import { ProjectService } from '@/services/ProjectService';
 import { ProjectFormDTO } from '@/types/dto';
 import { useLanguage } from '@/contexts/LanguageContext';
 import * as XLSX from 'xlsx';
+
+type ImportMode = 'create' | 'update' | 'patch';
 
 const IMPORT_OPTIONS: ImportOptions = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -41,6 +45,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importMode, setImportMode] = useState<ImportMode>('create');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -211,14 +216,47 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
 
       // Transform and import projects
       let importedCount = 0;
+      let updatedCount = 0;
       const errors: string[] = [];
 
       for (let i = 0; i < rawData.length; i++) {
         try {
           const projectData = transformToProjectData(rawData[i]);
-          console.log('Creating project:', projectData.title);
-          await projectService.createProject(projectData);
-          importedCount++;
+          const projectId = rawData[i].id;
+          
+          if (importMode === 'create') {
+            console.log('Creating project:', projectData.title);
+            await projectService.createProject(projectData);
+            importedCount++;
+          } else if (importMode === 'update' || importMode === 'patch') {
+            // Try to find existing project by ID or reference
+            if (projectId) {
+              console.log(`${importMode === 'update' ? 'Updating' : 'Patching'} project:`, projectData.title);
+              
+              if (importMode === 'update') {
+                // Full update - replace all fields
+                await projectService.updateProject(projectId, projectData);
+              } else {
+                // Patch - only update provided fields
+                const fieldsToUpdate: Partial<ProjectFormDTO> = {};
+                Object.keys(rawData[i]).forEach(key => {
+                  if (rawData[i][key] !== undefined && rawData[i][key] !== null && rawData[i][key] !== '') {
+                    const value = projectData[key as keyof ProjectFormDTO];
+                    if (value !== undefined) {
+                      (fieldsToUpdate as any)[key] = value;
+                    }
+                  }
+                });
+                await projectService.updateProject(projectId, fieldsToUpdate);
+              }
+              updatedCount++;
+            } else {
+              // No ID provided, create new project
+              console.log('No ID found, creating project:', projectData.title);
+              await projectService.createProject(projectData);
+              importedCount++;
+            }
+          }
         } catch (error) {
           const errorMsg = `${t('projects.import.line')} ${i + 1}: ${error instanceof Error ? error.message : t('common.error')}`;
           console.error(errorMsg);
@@ -227,10 +265,21 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         setImportProgress(50 + (i / rawData.length) * 50);
       }
 
+      const totalProcessed = importedCount + updatedCount;
+      let message = '';
+      if (importMode === 'create') {
+        message = `${importedCount} ${t('projects.import.projectsImported')}`;
+      } else {
+        message = `${importedCount} ${t('projects.import.projectsCreated')}, ${updatedCount} ${t('projects.import.projectsUpdated')}`;
+      }
+      if (errors.length > 0) {
+        message += ` (${errors.length} ${t('projects.import.errors')})`;
+      }
+
       const result: ImportResult = {
-        success: importedCount > 0,
-        message: `${importedCount} ${t('projects.import.projectsImported')}${errors.length > 0 ? ` (${errors.length} ${t('projects.import.errors')})` : ''}`,
-        importedCount,
+        success: totalProcessed > 0,
+        message,
+        importedCount: totalProcessed,
         errors: errors.length > 0 ? errors : undefined
       };
 
@@ -323,7 +372,38 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
           </AlertDescription>
         </Alert>
 
-        <div className="flex gap-2">
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium mb-3 block">
+              {t('projects.import.importMode')}
+            </Label>
+            <RadioGroup value={importMode} onValueChange={(value) => setImportMode(value as ImportMode)} className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="create" id="mode-create" />
+                <Label htmlFor="mode-create" className="cursor-pointer">
+                  {t('projects.import.modeCreate')}
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="update" id="mode-update" />
+                <Label htmlFor="mode-update" className="cursor-pointer">
+                  {t('projects.import.modeUpdate')}
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="patch" id="mode-patch" />
+                <Label htmlFor="mode-patch" className="cursor-pointer">
+                  {t('projects.import.modePatch')}
+                </Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground mt-2">
+              {importMode === 'create' && t('projects.import.modeCreateDesc')}
+              {importMode === 'update' && t('projects.import.modeUpdateDesc')}
+              {importMode === 'patch' && t('projects.import.modePatchDesc')}
+            </p>
+          </div>
+
           <Button 
             variant="outline" 
             onClick={downloadTemplate}
