@@ -280,7 +280,13 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         longitude: -15.9582,
         financingSource: "État",
         marketType: "Public",
-        selectionMode: "Appel d'offres"
+        selectionMode: "Appel d'offres",
+        launchDate: "2025-01-15",
+        attributionDate: "2025-02-01",
+        projectReference: "PRJ-2025-001",
+        mainContractor: "Entreprise Exemple SA",
+        allowsInitialPayment: true,
+        initialPaymentPercentage: 15
       }
     ];
 
