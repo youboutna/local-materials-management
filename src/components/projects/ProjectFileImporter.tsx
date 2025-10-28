@@ -344,7 +344,53 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         allowsInitialPayment: true,
         initialPaymentPercentage: 15,
         status: "en cours",
-        progress: 25
+        progress: 25,
+        inspections: [
+          {
+            inspectionDate: "2025-02-15",
+            inspector: "Mohamed Ould Ahmed",
+            status: "completed",
+            progressAtInspection: 15,
+            comments: "Travaux conformes aux spécifications",
+            issues: ["Quelques retards mineurs"],
+            recommendations: ["Accélérer le rythme des travaux"]
+          },
+          {
+            inspectionDate: "2025-03-15",
+            inspector: "Fatima Mint Salem",
+            status: "planned",
+            progressAtInspection: 30,
+            comments: "",
+            issues: [],
+            recommendations: []
+          }
+        ],
+        stakeholders: [
+          {
+            name: "Ahmed Ould Mohamed",
+            email: "ahmed@example.com",
+            phone: "+22212345678",
+            role: "Chef de projet",
+            organization: "Entreprise Exemple SA",
+            isPrimary: true
+          },
+          {
+            name: "Mariem Mint Abdallahi",
+            email: "mariem@ministry.mr",
+            phone: "+22298765432",
+            role: "Responsable technique",
+            organization: "Ministère des Infrastructures",
+            isPrimary: false
+          },
+          {
+            name: "Sidi Ould Cheikh",
+            email: "sidi@control.mr",
+            phone: "+22287654321",
+            role: "Bureau de contrôle",
+            organization: "Bureau Contrôle Qualité",
+            isPrimary: false
+          }
+        ]
       }
     ];
 

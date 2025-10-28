@@ -450,7 +450,25 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
             market_type: "Public",
             selection_mode: "Appel d'offres",
             project_reference: "PRJ-2025-001",
-            main_contractor: "Entreprise Exemple SA"
+            main_contractor: "Entreprise Exemple SA",
+            inspections: JSON.stringify([
+              {
+                inspectionDate: "2025-02-15",
+                inspector: "Mohamed Ould Ahmed",
+                status: "completed",
+                progressAtInspection: 15,
+                comments: "Inspection terrain - Travaux conformes"
+              }
+            ]),
+            stakeholders: JSON.stringify([
+              {
+                name: "Ahmed Ould Mohamed",
+                email: "ahmed@example.com",
+                phone: "+22212345678",
+                role: "Chef de projet terrain",
+                isPrimary: true
+              }
+            ])
           },
           geometry: {
             type: "Point",
@@ -496,6 +514,14 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       <ExtendedAttribute>
         <FieldName>FinancingSource</FieldName>
         <Value>État</Value>
+      </ExtendedAttribute>
+      <ExtendedAttribute>
+        <FieldName>Inspections</FieldName>
+        <Value>[{"inspectionDate":"2025-02-15","inspector":"Mohamed Ould Ahmed","status":"completed","progressAtInspection":15,"comments":"Inspection planification"}]</Value>
+      </ExtendedAttribute>
+      <ExtendedAttribute>
+        <FieldName>Stakeholders</FieldName>
+        <Value>[{"name":"Ahmed Ould Mohamed","email":"ahmed@example.com","phone":"+22212345678","role":"Chef de projet","isPrimary":true}]</Value>
       </ExtendedAttribute>
     </Task>
   </Tasks>
