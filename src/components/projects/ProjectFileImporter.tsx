@@ -16,8 +16,10 @@ import {
   Download
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useProjects } from '@/hooks/projects/useProjects';
 import { ImportFile, ImportOptions, ImportResult } from '@/types/project';
+import { ProjectService } from '@/services/ProjectService';
+import { ProjectFormDTO } from '@/types/dto';
+import { useLanguage } from '@/contexts/LanguageContext';
 import * as XLSX from 'xlsx';
 
 const IMPORT_OPTIONS: ImportOptions = {
@@ -41,7 +43,8 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { createProject } = useProjects();
+  const { t } = useLanguage();
+  const projectService = new ProjectService();
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -53,11 +56,11 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
 
   const validateFile = (file: File): string | null => {
     if (file.size > IMPORT_OPTIONS.maxFileSize) {
-      return `Le fichier est trop volumineux. Taille maximale autorisée: ${formatFileSize(IMPORT_OPTIONS.maxFileSize)}`;
+      return `${t('projects.import.fileTooLarge')} ${formatFileSize(IMPORT_OPTIONS.maxFileSize)}`;
     }
 
     if (!IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
-      return 'Format de fichier non supporté. Formats autorisés: Excel (.xlsx, .xls), JSON (.json), CSV (.csv)';
+      return t('projects.import.unsupportedFormat');
     }
 
     return null;
@@ -70,7 +73,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
     const validationError = validateFile(file);
     if (validationError) {
       toast({
-        title: "Fichier invalide",
+        title: t('projects.import.invalidFile'),
         description: validationError,
         variant: "destructive",
       });
@@ -93,10 +96,10 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
           resolve(jsonData);
         } catch (error) {
-          reject(new Error('Erreur lors de la lecture du fichier Excel'));
+          reject(new Error(t('projects.import.excelReadError')));
         }
       };
-      reader.onerror = () => reject(new Error('Erreur lors de la lecture du fichier'));
+      reader.onerror = () => reject(new Error(t('projects.import.fileReadError')));
       reader.readAsArrayBuffer(file);
     });
   };
@@ -110,7 +113,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
           const data = JSON.parse(content);
           resolve(Array.isArray(data) ? data : [data]);
         } catch (error) {
-          reject(new Error('Fichier JSON invalide'));
+          reject(new Error(t('projects.import.invalidJson')));
         }
       };
       reader.readAsText(file);
@@ -139,7 +142,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
           
           resolve(data);
         } catch (error) {
-          reject(new Error('Erreur lors de la lecture du fichier CSV'));
+          reject(new Error(t('projects.import.csvReadError')));
         }
       };
       reader.readAsText(file);
@@ -156,26 +159,28 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       case 'text/csv':
         return parseCsvFile(file);
       default:
-        throw new Error('Format de fichier non supporté');
+        throw new Error(t('projects.import.unsupportedFormat'));
     }
   };
 
-  const transformToProjectData = (item: any) => {
+  const transformToProjectData = (item: any): ProjectFormDTO => {
     return {
-      title: item.title || item.nom || item.name || 'Projet importé',
+      title: item.title || item.nom || item.name || t('projects.import.defaultTitle'),
       description: item.description || item.desc || '',
       location: item.location || item.lieu || item.localisation || '',
-      status: item.status || item.statut || 'en attente',
-      progress: parseInt(item.progress || item.progression || '0'),
       budget: parseFloat(item.budget || item.cout || item.montant || '0'),
       startDate: item.startDate || item.dateDebut || item.start_date || new Date().toISOString().split('T')[0],
       endDate: item.endDate || item.dateFin || item.end_date,
-      thumbnail: item.thumbnail || '/img/project-placeholder.jpg',
       teamSize: parseInt(item.teamSize || item.equipe || item.team_size || '1'),
       coordinates: item.coordinates || (item.latitude && item.longitude ? {
         latitude: parseFloat(item.latitude),
         longitude: parseFloat(item.longitude)
-      } : undefined)
+      } : undefined),
+      financingSource: item.financingSource || item.sourceFinancement,
+      marketType: item.marketType || item.typeMarche,
+      selectionMode: item.selectionMode || item.modeSelection,
+      launchDate: item.launchDate || item.dateLancement,
+      attributionDate: item.attributionDate || item.dateAttribution
     };
   };
 
@@ -193,7 +198,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       console.log('File parsed successfully, rows:', rawData.length);
       
       if (!rawData || rawData.length === 0) {
-        throw new Error('Aucune donnée trouvée dans le fichier');
+        throw new Error(t('projects.import.noData'));
       }
 
       setImportProgress(50);
@@ -206,10 +211,10 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         try {
           const projectData = transformToProjectData(rawData[i]);
           console.log('Creating project:', projectData.title);
-          await createProject(projectData);
+          await projectService.createProject(projectData);
           importedCount++;
         } catch (error) {
-          const errorMsg = `Ligne ${i + 1}: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+          const errorMsg = `${t('projects.import.line')} ${i + 1}: ${error instanceof Error ? error.message : t('common.error')}`;
           console.error(errorMsg);
           errors.push(errorMsg);
         }
@@ -218,7 +223,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
 
       const result: ImportResult = {
         success: importedCount > 0,
-        message: `${importedCount} projet(s) importé(s) avec succès${errors.length > 0 ? ` (${errors.length} erreur(s))` : ''}`,
+        message: `${importedCount} ${t('projects.import.projectsImported')}${errors.length > 0 ? ` (${errors.length} ${t('projects.import.errors')})` : ''}`,
         importedCount,
         errors: errors.length > 0 ? errors : undefined
       };
@@ -228,7 +233,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
 
       if (result.success) {
         toast({
-          title: "Import réussi",
+          title: t('projects.import.success'),
           description: result.message,
         });
       }
@@ -237,13 +242,13 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       console.error('Import error:', error);
       const result: ImportResult = {
         success: false,
-        message: error instanceof Error ? error.message : 'Erreur lors de l\'import',
-        errors: [error instanceof Error ? error.message : 'Erreur inconnue']
+        message: error instanceof Error ? error.message : t('projects.import.error'),
+        errors: [error instanceof Error ? error.message : t('common.error')]
       };
       
       setImportResult(result);
       toast({
-        title: "Erreur d'import",
+        title: t('projects.import.error'),
         description: result.message,
         variant: "destructive",
       });
@@ -264,17 +269,18 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
   const downloadTemplate = () => {
     const template = [
       {
-        title: "Exemple Projet 1",
-        description: "Description du projet exemple",
+        title: t('projects.import.exampleProject'),
+        description: t('projects.import.exampleDescription'),
         location: "Nouakchott",
-        status: "en cours",
-        progress: 25,
         budget: 50000000,
         startDate: "2025-01-01",
         endDate: "2025-12-31",
         teamSize: 5,
         latitude: 18.0735,
-        longitude: -15.9582
+        longitude: -15.9582,
+        financingSource: "État",
+        marketType: "Public",
+        selectionMode: "Appel d'offres"
       }
     ];
 
@@ -293,15 +299,15 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Import de projets par fichier
+          {t('projects.import.fileImport')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Formats supportés: Excel (.xlsx, .xls), JSON (.json), CSV (.csv). 
-            Taille maximale: {formatFileSize(IMPORT_OPTIONS.maxFileSize)}
+            {t('projects.import.supportedFormats')}: Excel (.xlsx, .xls), JSON (.json), CSV (.csv). 
+            {t('projects.import.maxSize')}: {formatFileSize(IMPORT_OPTIONS.maxFileSize)}
           </AlertDescription>
         </Alert>
 
@@ -312,7 +318,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            Télécharger un modèle
+            {t('projects.import.downloadTemplate')}
           </Button>
         </div>
 
@@ -321,8 +327,8 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
             <Upload className="mx-auto h-12 w-12 text-gray-400" />
             <div className="mt-4">
               <label htmlFor="file-upload" className="cursor-pointer">
-                <span className="mt-2 block text-sm font-medium text-gray-900">
-                  Sélectionnez un fichier ou glissez-le ici
+                <span className="mt-2 block text-sm font-medium">
+                  {t('projects.import.selectFile')}
                 </span>
                 <Input
                   ref={fileInputRef}
@@ -364,7 +370,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         {importing && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Import en cours...</span>
+              <span>{t('projects.import.importing')}...</span>
               <span>{importProgress}%</span>
             </div>
             <Progress value={importProgress} className="h-2" />
@@ -383,7 +389,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
               {importResult.errors && importResult.errors.length > 0 && (
                 <details className="mt-2">
                   <summary className="cursor-pointer font-medium">
-                    Erreurs détaillées ({importResult.errors.length})
+                    {t('projects.import.detailedErrors')} ({importResult.errors.length})
                   </summary>
                   <ul className="mt-2 space-y-1 text-xs">
                     {importResult.errors.map((error, index) => (
@@ -402,7 +408,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
             disabled={!selectedFile || importing}
             className="flex-1"
           >
-            {importing ? 'Import en cours...' : 'Importer les projets'}
+            {importing ? t('projects.import.importing') : t('projects.import.importProjects')}
           </Button>
           {selectedFile && (
             <Button
@@ -410,7 +416,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
               onClick={clearSelection}
               disabled={importing}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
           )}
         </div>

@@ -12,14 +12,34 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useProjects } from '@/hooks/projects/useProjects';
+import { ProjectService } from '@/services/ProjectService';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useEffect } from 'react';
 import * as XLSX from 'xlsx';
 
 const ProjectExporter = () => {
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'excel' | 'csv'>('json');
-  const { projects, loading } = useProjects();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const projectService = new ProjectService();
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      setLoading(true);
+      try {
+        const data = await projectService.getAllProjects();
+        setProjects(data);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProjects();
+  }, []);
 
   const prepareProjectData = () => {
     return projects.map(project => ({
@@ -89,8 +109,8 @@ const ProjectExporter = () => {
   const handleExport = async () => {
     if (!projects || projects.length === 0) {
       toast({
-        title: "Aucun projet à exporter",
-        description: "Aucun projet n'est disponible pour l'export.",
+        title: t('projects.export.noProjects'),
+        description: t('projects.export.noProjectsDescription'),
         variant: "destructive",
       });
       return;
@@ -112,14 +132,14 @@ const ProjectExporter = () => {
       }
       
       toast({
-        title: "Export réussi",
-        description: `${projects.length} projet(s) exporté(s) au format ${exportFormat.toUpperCase()}`,
+        title: t('projects.export.success'),
+        description: `${projects.length} ${t('projects.export.projectsExported')} ${exportFormat.toUpperCase()}`,
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Erreur d'export",
-        description: "Une erreur est survenue lors de l'export des projets.",
+        title: t('projects.export.error'),
+        description: t('projects.export.errorDescription'),
         variant: "destructive",
       });
     } finally {
@@ -131,7 +151,7 @@ const ProjectExporter = () => {
     return (
       <Card className="w-full">
         <CardContent className="p-6">
-          <div className="text-center">Chargement des projets...</div>
+          <div className="text-center">{t('common.loading')}...</div>
         </CardContent>
       </Card>
     );
@@ -142,24 +162,24 @@ const ProjectExporter = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Download className="h-5 w-5" />
-          Export des projets
+          {t('projects.export.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            Exportez tous vos projets dans le format de votre choix. 
+            {t('projects.export.description')}
             {projects && (
               <Badge variant="secondary" className="ml-2">
-                {projects.length} projet{projects.length > 1 ? 's' : ''} disponible{projects.length > 1 ? 's' : ''}
+                {projects.length} {t('projects.export.available')}
               </Badge>
             )}
           </AlertDescription>
         </Alert>
 
         <div className="space-y-3">
-          <h4 className="text-sm font-medium">Choisissez le format d'export :</h4>
+          <h4 className="text-sm font-medium">{t('projects.export.selectFormat')}:</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Button
@@ -170,7 +190,7 @@ const ProjectExporter = () => {
               <FileText className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium">JSON</div>
-                <div className="text-xs opacity-70">Format structuré</div>
+                <div className="text-xs opacity-70">{t('projects.export.jsonDesc')}</div>
               </div>
             </Button>
             
@@ -182,7 +202,7 @@ const ProjectExporter = () => {
               <FileSpreadsheet className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium">Excel</div>
-                <div className="text-xs opacity-70">Feuille de calcul</div>
+                <div className="text-xs opacity-70">{t('projects.export.excelDesc')}</div>
               </div>
             </Button>
             
@@ -194,7 +214,7 @@ const ProjectExporter = () => {
               <FileText className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium">CSV</div>
-                <div className="text-xs opacity-70">Valeurs séparées</div>
+                <div className="text-xs opacity-70">{t('projects.export.csvDesc')}</div>
               </div>
             </Button>
           </div>
@@ -208,7 +228,7 @@ const ProjectExporter = () => {
             size="lg"
           >
             <Download className="h-4 w-4 mr-2" />
-            {exporting ? 'Export en cours...' : `Exporter au format ${exportFormat.toUpperCase()}`}
+            {exporting ? t('projects.export.exporting') : `${t('projects.export.exportAs')} ${exportFormat.toUpperCase()}`}
           </Button>
         </div>
 
@@ -216,7 +236,7 @@ const ProjectExporter = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Aucun projet n'est disponible pour l'export. Créez d'abord quelques projets.
+              {t('projects.export.createFirst')}
             </AlertDescription>
           </Alert>
         )}

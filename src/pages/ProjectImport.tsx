@@ -21,8 +21,8 @@ const ProjectImport = () => {
       <div className="flex items-center space-x-3 mb-6">
         <FileSpreadsheet className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Import/Export de Projets</h1>
-          <p className="text-gray-600">Importez ou exportez vos projets dans différents formats</p>
+          <h1 className="text-3xl font-bold">{t('projects.importExport.title')}</h1>
+          <p className="text-muted-foreground">{t('projects.importExport.description')}</p>
         </div>
       </div>
 
@@ -30,15 +30,15 @@ const ProjectImport = () => {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="file-import" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Import de fichiers
+            {t('projects.importExport.fileImport')}
           </TabsTrigger>
           <TabsTrigger value="predefined" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            Projets prédéfinis
+            {t('projects.importExport.predefinedProjects')}
           </TabsTrigger>
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Export
+            {t('projects.importExport.export')}
           </TabsTrigger>
         </TabsList>
 
@@ -47,21 +47,21 @@ const ProjectImport = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Upload className="h-5 w-5 mr-2" />
-                Import de projets par fichier
+                {t('projects.import.fileImport')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                Importez vos projets depuis un fichier Excel, JSON ou CSV.
+              <p className="text-muted-foreground mb-4">
+                {t('projects.import.fileImportDescription')}
               </p>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-blue-900 mb-2">Informations importantes :</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Formats supportés : Excel (.xlsx, .xls), JSON (.json), CSV (.csv)</li>
-                  <li>• Taille maximale : 10 MB</li>
-                  <li>• Colonnes requises : title, description, location, status</li>
-                  <li>• Colonnes optionnelles : budget, startDate, endDate, progress, teamSize, coordinates</li>
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">{t('projects.import.importantInfo')}:</h3>
+                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <li>• {t('projects.import.supportedFormats')}: Excel (.xlsx, .xls), JSON (.json), CSV (.csv)</li>
+                  <li>• {t('projects.import.maxSize')}: 10 MB</li>
+                  <li>• {t('projects.import.requiredColumns')}: title, description, location</li>
+                  <li>• {t('projects.import.optionalColumns')}: budget, startDate, endDate, teamSize, coordinates</li>
                 </ul>
               </div>
 
@@ -75,21 +75,21 @@ const ProjectImport = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Database className="h-5 w-5 mr-2" />
-                Projets prédéfinis 2025
+                {t('projects.importExport.predefined2025')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                Importez des projets prédéfinis avec des données réalistes pour la Mauritanie.
+              <p className="text-muted-foreground mb-4">
+                {t('projects.importExport.predefinedDescription')}
               </p>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-blue-900 mb-2">Projets inclus :</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Projets d'infrastructure avec budgets réalistes</li>
-                  <li>• Diversité des sources de financement</li>
-                  <li>• Types de marchés variés (public, privé, PPP)</li>
-                  <li>• Chronologie 2025-2027</li>
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">{t('projects.importExport.includedProjects')}:</h3>
+                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <li>• {t('projects.importExport.infrastructureProjects')}</li>
+                  <li>• {t('projects.importExport.diverseFunding')}</li>
+                  <li>• {t('projects.importExport.variedMarkets')}</li>
+                  <li>• {t('projects.importExport.timeline2025')}</li>
                 </ul>
               </div>
 
@@ -103,20 +103,20 @@ const ProjectImport = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Download className="h-5 w-5 mr-2" />
-                Export des projets
+                {t('projects.export.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
-                Exportez tous vos projets dans le format de votre choix.
+              <p className="text-muted-foreground mb-4">
+                {t('projects.export.description')}
               </p>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-green-900 mb-2">Formats d'export disponibles :</h3>
-                <ul className="text-sm text-green-800 space-y-1">
-                  <li>• <strong>JSON</strong> : Format structuré pour développeurs</li>
-                  <li>• <strong>Excel</strong> : Feuille de calcul pour analyse</li>
-                  <li>• <strong>CSV</strong> : Valeurs séparées par virgules</li>
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-green-900 dark:text-green-100 mb-2">{t('projects.export.availableFormats')}:</h3>
+                <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                  <li>• <strong>JSON</strong>: {t('projects.export.jsonDesc')}</li>
+                  <li>• <strong>Excel</strong>: {t('projects.export.excelDesc')}</li>
+                  <li>• <strong>CSV</strong>: {t('projects.export.csvDesc')}</li>
                 </ul>
               </div>
 
