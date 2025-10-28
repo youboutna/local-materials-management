@@ -436,6 +436,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         {
           type: "Feature",
           properties: {
+            id: "00000000-0000-0000-0000-000000000000",
             name: "Projet Exemple QField",
             description: "Description du projet terrain",
             location: "Nouakchott",
@@ -446,7 +447,10 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
             status: "en cours",
             progress: 25,
             financing_source: "État",
-            market_type: "Public"
+            market_type: "Public",
+            selection_mode: "Appel d'offres",
+            project_reference: "PRJ-2025-001",
+            main_contractor: "Entreprise Exemple SA"
           },
           geometry: {
             type: "Point",
@@ -471,7 +475,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
 <Project xmlns="http://schemas.microsoft.com/project">
   <Tasks>
     <Task>
-      <UID>1</UID>
+      <UID>00000000-0000-0000-0000-000000000000</UID>
       <Name>Projet d'Infrastructure Exemple</Name>
       <Summary>1</Summary>
       <OutlineLevel>1</OutlineLevel>
@@ -481,6 +485,18 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       <Cost>50000000</Cost>
       <Notes>Description détaillée du projet d'infrastructure</Notes>
       <WBS>1</WBS>
+      <ExtendedAttribute>
+        <FieldName>Reference</FieldName>
+        <Value>PRJ-2025-001</Value>
+      </ExtendedAttribute>
+      <ExtendedAttribute>
+        <FieldName>Location</FieldName>
+        <Value>Nouakchott</Value>
+      </ExtendedAttribute>
+      <ExtendedAttribute>
+        <FieldName>FinancingSource</FieldName>
+        <Value>État</Value>
+      </ExtendedAttribute>
     </Task>
   </Tasks>
 </Project>`;

@@ -324,6 +324,7 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
   const downloadTemplate = () => {
     const template = [
       {
+        id: "00000000-0000-0000-0000-000000000000",
         title: t('projects.import.exampleProject'),
         description: t('projects.import.exampleDescription'),
         location: "Nouakchott",
@@ -341,7 +342,9 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         projectReference: "PRJ-2025-001",
         mainContractor: "Entreprise Exemple SA",
         allowsInitialPayment: true,
-        initialPaymentPercentage: 15
+        initialPaymentPercentage: 15,
+        status: "en cours",
+        progress: 25
       }
     ];
 
