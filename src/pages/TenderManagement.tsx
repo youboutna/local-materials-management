@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { FileText, Users, Upload, Settings } from 'lucide-react';
 import TenderCrud from '@/components/tenders/TenderCrud';
 import TenderWorkflowSteps from '@/components/tenders/TenderWorkflowSteps';
@@ -226,25 +227,18 @@ const TenderManagement = () => {
                                       <p className="text-sm text-muted-foreground">{sub.supplier_email}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      {sub.secret_code && (
-                                        <Badge variant="outline" className="gap-1">
-                                          <FileText className="h-3 w-3" />
-                                          Code actif
-                                        </Badge>
-                                      )}
+                                      <Input
+                                        type="text"
+                                        placeholder="Entrer le code secret"
+                                        className="w-48"
+                                        maxLength={10}
+                                      />
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => {
-                                          setSelectedSubmission({
-                                            id: sub.id,
-                                            supplierName: sub.supplier_name
-                                          });
-                                          setSubmissionSecretOpen(true);
-                                        }}
                                       >
                                         <FileText className="h-4 w-4 mr-1" />
-                                        Code Secret
+                                        Vérifier
                                       </Button>
                                     </div>
                                   </div>
