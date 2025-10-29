@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { WorkflowPhase, WorkflowStage } from '@/types/workflow';
 import { useQuery } from '@tanstack/react-query';
 import { TenderService } from '@/services/TenderService';
+import { SubmissionSecretService } from '@/services/SubmissionSecretService';
+import { useToast } from '@/hooks/use-toast';
 
 interface Tender {
   id: string;
@@ -56,6 +58,10 @@ const TenderManagement = () => {
   const [selectedSubmission, setSelectedSubmission] = useState<{ id: string; supplierName: string } | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<SelectedSupplier | null>(null);
   const [selectedWorkflowStep, setSelectedWorkflowStep] = useState<{ phase: WorkflowPhase; stage: WorkflowStage } | null>(null);
+  const [verifiedSubmissions, setVerifiedSubmissions] = useState<Set<string>>(new Set());
+  const [secretCodes, setSecretCodes] = useState<Record<string, string>>({});
+  const [validatingSubmission, setValidatingSubmission] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch tender submissions for the selected tender using TenderService
   const { data: submissions } = useQuery({
@@ -99,6 +105,45 @@ const TenderManagement = () => {
     });
     setDocumentSelectorOpen(false);
     setDocumentSharingOpen(true);
+  };
+
+  const handleVerifySecret = async (submissionId: string) => {
+    const secretCode = secretCodes[submissionId];
+    if (!secretCode || secretCode.trim().length === 0) {
+      toast({
+        title: "Code requis",
+        description: "Veuillez entrer le code secret",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setValidatingSubmission(submissionId);
+    try {
+      const result = await SubmissionSecretService.validateSecret(secretCode);
+      
+      if (result.is_valid && result.submission_id === submissionId) {
+        setVerifiedSubmissions(prev => new Set(prev).add(submissionId));
+        toast({
+          title: "Code vérifié",
+          description: "L'accès à la soumission a été autorisé",
+        });
+      } else {
+        toast({
+          title: "Code invalide",
+          description: result.message || "Le code secret n'est pas valide pour cette soumission",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de vérifier le code secret",
+        variant: "destructive"
+      });
+    } finally {
+      setValidatingSubmission(null);
+    }
   };
 
   return (
@@ -227,19 +272,35 @@ const TenderManagement = () => {
                                       <p className="text-sm text-muted-foreground">{sub.supplier_email}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <Input
-                                        type="text"
-                                        placeholder="Entrer le code secret"
-                                        className="w-48"
-                                        maxLength={10}
-                                      />
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                      >
-                                        <FileText className="h-4 w-4 mr-1" />
-                                        Vérifier
-                                      </Button>
+                                      {!verifiedSubmissions.has(sub.id) ? (
+                                        <>
+                                          <Input
+                                            type="text"
+                                            placeholder="Entrer le code secret"
+                                            className="w-48"
+                                            maxLength={10}
+                                            value={secretCodes[sub.id] || ''}
+                                            onChange={(e) => setSecretCodes(prev => ({
+                                              ...prev,
+                                              [sub.id]: e.target.value
+                                            }))}
+                                          />
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleVerifySecret(sub.id)}
+                                            disabled={validatingSubmission === sub.id}
+                                          >
+                                            <FileText className="h-4 w-4 mr-1" />
+                                            {validatingSubmission === sub.id ? 'Vérification...' : 'Vérifier'}
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <Badge variant="default" className="gap-1">
+                                          <FileText className="h-3 w-3" />
+                                          Code vérifié
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -248,7 +309,12 @@ const TenderManagement = () => {
                           </Card>
                         )}
                         
-                        <TenderEvaluationPanel tenderId={selectedTender.id} />
+                        {verifiedSubmissions.size > 0 && (
+                          <TenderEvaluationPanel 
+                            tenderId={selectedTender.id} 
+                            verifiedSubmissions={Array.from(verifiedSubmissions)}
+                          />
+                        )}
                       </div>
                     </TabsContent>
                   </CardContent>

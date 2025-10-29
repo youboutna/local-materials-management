@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 interface TenderEvaluationPanelProps {
   tenderId: string;
   onEvaluationUpdate?: () => void;
+  verifiedSubmissions?: string[];
 }
 
 interface Submission {
@@ -54,7 +55,8 @@ interface Submission {
 
 const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
   tenderId,
-  onEvaluationUpdate
+  onEvaluationUpdate,
+  verifiedSubmissions = []
 }) => {
   const [activeTab, setActiveTab] = useState('administrative');
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
@@ -179,7 +181,9 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
           </CardHeader>
           <CardContent className="h-full overflow-y-auto">
             <div className="space-y-3">
-              {submissions.map((submission) => (
+              {submissions
+                .filter(sub => verifiedSubmissions.length === 0 || verifiedSubmissions.includes(sub.id))
+                .map((submission) => (
                 <div
                   key={submission.id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
