@@ -1,38 +1,30 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { 
-  Building, 
-  Users, 
-  UserCheck, 
-  Shield, 
-  MapPin,
+import { motion } from 'framer-motion';
+import {
   AlertTriangle,
-  FileCheck,
-  Layers,
+  Building,
   CheckCircle,
-  Clock,
-  DollarSign,
-  Target,
-  Package,
   ChevronLeft,
   ChevronRight,
-  Save
+  FileCheck,
+  Layers,
+  MapPin,
+  Save,
+  Users
 } from 'lucide-react';
+import React, { useState } from 'react';
 
 // Import step components
-import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
-import TeamContractorsStep from './steps/TeamContractorsStep';
+import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import ConstructionPhaseManager from './ConstructionPhaseManager';
+import ComplianceStep from './steps/ComplianceStep';
 import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
 import RiskAnalysisStep from './steps/RiskAnalysisStep';
-import ProjectDocumentUpload from './ProjectDocumentUpload';
-import ComplianceStep from './steps/ComplianceStep';
-import ConstructionPhaseManager from './ConstructionPhaseManager';
-import InteractiveMapGIS from '../materials/InteractiveMapGIS';
+import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
@@ -153,7 +145,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       icon: Layers,
       description: 'Phase → Step → Task avec documents, ressources, inspections',
       color: 'bg-indigo-500',
-      isCompleted: (data: any) => Boolean(phases && phases.length > 0)
+      isCompleted: (data: any) => Boolean(phases && phases.length > 0 )
     },
     {
       id: 5,
@@ -436,51 +428,24 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         );
       
-      case 3: // Phases
+      case 3: // Planification WBS (Phases, Steps, Tasks with Resources)
         return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-indigo-500" />
-                Planification des Phases
+                Planification WBS Complète
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Les phases seront configurées après la création du projet.
-              </p>
-              <Button 
-                onClick={() => setPhases([{ name: 'Phase initiale', description: 'Phase de démarrage' }])}
-                variant="outline"
-              >
-                Ajouter une phase par défaut
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      
-      case 4: // Planification & Phases
-        return (
-          <ConstructionPhaseManager
-            phases={phases}
-            onChange={setPhases}
-            projectBudget={parseFloat(formData.budget) || 0}
-          />
-        );
-      
-      case 5: // Risks - OLD PLACEHOLDER
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-500" />
-                Planification des Phases (Phase → Step → Task)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Configurez la structure Phase → Step → Task avec documents, ressources, inspections, garanties et paiements.
-              </p>
+            <CardContent className="space-y-6">
+              {/* Construction Phase Manager for Phase → Step → Task structure */}
+              <ConstructionPhaseManager
+                phases={phases}
+                onChange={setPhases}
+                projectBudget={parseFloat(formData.budget) || 0}
+              />
+              
+              {/* Resources and Materials integrated within phase planning */}
               <ResourcesMaterialsStep
                 formData={formData}
                 onUpdate={updateFormData}
@@ -491,7 +456,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           </Card>
         );
       
-      case 5: // Risques
+      case 4: // Risks
         return (
           <RiskAnalysisStep
             formData={formData}
@@ -499,7 +464,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           />
         );
       
-      case 6: // Conformité
+      case 5: // Compliance
         return (
           <ComplianceStep
             formData={formData}
