@@ -1,4 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@4.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,10 +81,16 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Email sending is disabled - just log it
-    console.log("Email notification (not sent):", { to, subject, priority, actionType });
+    const emailResponse = await resend.emails.send({
+      from: "Système de Surveillance <notifications@resend.dev>",
+      to: [to],
+      subject: `${priorityEmojis[priority]} ${subject}`,
+      html: emailHtml,
+    });
 
-    return new Response(JSON.stringify({ success: true, message: "Notification logged" }), {
+    console.log("Email sent successfully:", emailResponse);
+
+    return new Response(JSON.stringify(emailResponse), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
