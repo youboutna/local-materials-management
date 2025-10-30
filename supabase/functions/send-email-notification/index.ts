@@ -81,10 +81,14 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
+    const fromName = Deno.env.get("Deno_mail_from_name") || "Système de Surveillance";
+    const fromEmail = Deno.env.get("Deno_mail_from_notif") || "notifications@resend.dev";
+    const defaultSubject = Deno.env.get("Deno_mail_default_subject") || "Notification";
+
     const emailResponse = await resend.emails.send({
-      from: "Système de Surveillance <notifications@resend.dev>",
+      from: `${fromName} <${fromEmail}>`,
       to: [to],
-      subject: `${priorityEmojis[priority]} ${subject}`,
+      subject: `${priorityEmojis[priority]} ${subject || defaultSubject}`,
       html: emailHtml,
     });
 
