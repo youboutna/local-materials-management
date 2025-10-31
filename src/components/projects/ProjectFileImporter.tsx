@@ -191,7 +191,26 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       projectReference: item.projectReference || item.reference,
       mainContractor: item.mainContractor || item.contractor,
       allowsInitialPayment: item.allowsInitialPayment || false,
-      initialPaymentPercentage: parseFloat(item.initialPaymentPercentage || '0')
+      initialPaymentPercentage: parseFloat(item.initialPaymentPercentage || '0'),
+      
+      // Classification fields
+      category: item.category || item.categorie,
+      subCategory: item.subCategory || item.sousCategorie,
+      priorityLevel: item.priorityLevel || item.niveauPriorite,
+      riskLevel: item.riskLevel || item.niveauRisque,
+      environmentalImpact: item.environmentalImpact || item.impactEnvironnemental,
+      sustainabilityScore: item.sustainabilityScore ? parseFloat(item.sustainabilityScore) : undefined,
+      
+      // Additional data
+      status: item.status || 'en cours',
+      progress: item.progress ? parseFloat(item.progress) : 0,
+      thumbnail: item.thumbnail,
+      
+      // Related entities (will be processed separately)
+      milestones: item.milestones,
+      documents: item.documents,
+      stakeholders: item.stakeholders,
+      inspections: item.inspections
     };
   };
 
@@ -334,6 +353,8 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         teamSize: 5,
         latitude: 18.0735,
         longitude: -15.9582,
+        
+        // Procurement details
         financingSource: "État",
         marketType: "Public",
         selectionMode: "Appel d'offres",
@@ -343,8 +364,45 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
         mainContractor: "Entreprise Exemple SA",
         allowsInitialPayment: true,
         initialPaymentPercentage: 15,
+        
+        // Classification
+        category: "Infrastructure",
+        subCategory: "Travaux publics",
+        priorityLevel: "Élevée",
+        riskLevel: "Moyen",
+        environmentalImpact: "Faible",
+        sustainabilityScore: 75,
+        
         status: "en cours",
         progress: 25,
+        
+        // Milestones
+        milestones: [
+          {
+            name: "Démarrage des travaux",
+            plannedDate: "2025-01-15",
+            actualDate: "2025-01-15",
+            status: "completed"
+          },
+          {
+            name: "Fin de la phase 1",
+            plannedDate: "2025-06-30",
+            actualDate: null,
+            status: "in_progress"
+          }
+        ],
+        
+        // Documents
+        documents: [
+          {
+            name: "Dossier_Technique.pdf",
+            type: "Dossier technique",
+            url: "https://example.com/documents/technique.pdf",
+            uploadDate: "2025-01-10"
+          }
+        ],
+        
+        // Inspections
         inspections: [
           {
             inspectionDate: "2025-02-15",
@@ -365,6 +423,8 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
             recommendations: []
           }
         ],
+        
+        // Stakeholders
         stakeholders: [
           {
             name: "Ahmed Ould Mohamed",

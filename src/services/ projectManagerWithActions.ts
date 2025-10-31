@@ -250,7 +250,11 @@ export class ProjectManager {
     for (const inspection of inspections) {
       // Vérifier les inspections avec problèmes
       if (inspection.issues && inspection.issues.length > 0) {
-        const criticalIssues = inspection.issues.filter(issue => 
+        const issuesList = inspection.issues || [];
+        const validIssues = Array.isArray(issuesList) 
+          ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
+          : [];
+        const criticalIssues = validIssues.filter((issue: any) => 
           issue.severity === 'high' || issue.severity === 'critical'
         );
 

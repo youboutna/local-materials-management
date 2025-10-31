@@ -5,6 +5,7 @@ import { ProjectCalculationService } from './ProjectCalculationService';
 import { ProjectDTO, ProjectDetailDTO, ProjectSummaryDTO, ProjectListItemDTO, ProjectFormDTO } from '@/types/dto';
 import { ProjectEntity } from '@/types/entities';
 import { EVMCalculations, ProgressAnalytics, BudgetAnalytics, TimelineAnalytics, QualityMetrics, RiskAnalytics, ProjectHealthScore } from '@/types/calculations';
+import { ProjectStatus } from '@/types/project';
 import { supabase } from '@/integrations/supabase/client';
 
 export class ProjectService {
@@ -78,12 +79,15 @@ export class ProjectService {
   }
 
   async createProject(formData: ProjectFormDTO): Promise<ProjectDTO> {
+    const defaultStatus: ProjectStatus = 'en cours';
+    const { status: formStatus, ...restFormData } = formData;
+    
     const entityData = EntityToDTOMapper.projectDTOToEntity({
       id: '', // Will be generated
-      status: 'en cours',
-      progress: 0,
-      thumbnail: '/img/project-placeholder.jpg',
-      ...formData
+      ...restFormData,
+      status: formStatus ? (formStatus as ProjectStatus) : defaultStatus,
+      progress: formData.progress || 0,
+      thumbnail: formData.thumbnail || '/img/project-placeholder.jpg'
     });
 
     const createdEntity = await this.repository.create(entityData);

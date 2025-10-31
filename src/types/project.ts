@@ -76,14 +76,17 @@ export interface Inspection {
   project_id: string;
   inspector: string;
   date: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending';
+  inspectionDate?: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending' | 'planned';
   progress_at_inspection: number;
+  progressAtInspection?: number;
   comments?: string | null;
   created_at: string;
   updated_at: string;
   phase_id?: string | null;
   documents?: string[];
-  issues?: InspectionIssue[];
+  issues?: InspectionIssue[] | string[];
+  recommendations?: string[];
 }
 
 export interface InspectionIssue {
@@ -140,22 +143,32 @@ export interface ProjectData {
   budget: number;
   startDate: string;
   endDate?: string;
-  thumbnail: string;
+  thumbnail?: string;
   teamSize: number;
   coordinates?: {
     latitude: number;
     longitude: number;
   };
+  
+  // Project classification
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
+  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
+  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  sustainabilityScore?: number;
+  
+  // Procurement details
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;
   launchDate?: string;
   attributionDate?: string;
-  projectResponsableId?: string;
-  mainContractor?: string;
   projectReference?: string;
+  mainContractor?: string;
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
+  projectResponsableId?: string;
   currentPhase?: ConstructionPhase;
   currentStage?: ConstructionStage;
   plannedPhases?: {
@@ -178,13 +191,40 @@ export interface ProjectData {
     status: 'pending' | 'completed' | 'overdue';
     notes?: string;
     weight: number;
-  dependencies?:any[];
+    dependencies?:any[];
   }[];
-  inspections? :Inspection[];
+  
+  // Enhanced milestones structure
+  milestones?: {
+    name: string;
+    plannedDate: string;
+    actualDate?: string | null;
+    status: 'planned' | 'in_progress' | 'completed' | 'delayed';
+  }[];
+  
+  inspections?: Inspection[];
   tasks?: Task[];
   risks?: ProjectRisk[];
   expenses? :any[];//real budget project consumation 
   resources?: ProjectResource[];
+  
+  // Documents
+  documents?: {
+    name: string;
+    type: string;
+    url: string;
+    uploadDate: string;
+  }[];
+  
+  // Stakeholders
+  stakeholders?: {
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    organization: string;
+    isPrimary: boolean;
+  }[];
   
   insurancePolicies?: InsurancePolicy[];
   alerts?: Alert[];

@@ -27,6 +27,15 @@ export interface ProjectDTO {
   environmentalConstraints?: string;
   hasUtilities?: boolean;
   requiresPermits?: boolean;
+  
+  // Classification
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
+  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
+  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  sustainabilityScore?: number;
+  
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;
@@ -65,6 +74,9 @@ export interface ProjectDetailDTO extends ProjectDTO {
   earnedValueManagement?: EVMData;
   contacts?: ProjectContact[];
   constructionMilestones?: any[];
+  milestones?: any[];
+  documents?: any[];
+  stakeholders?: any[];
   escalationThresholds?: {
     alert: number;
     notification: number;
@@ -92,6 +104,15 @@ export interface ProjectFormDTO {
   environmentalConstraints?: string;
   hasUtilities?: boolean;
   requiresPermits?: boolean;
+  
+  // Classification
+  category?: string;
+  subCategory?: string;
+  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
+  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
+  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  sustainabilityScore?: number;
+  
   financingSource?: string;
   marketType?: string;
   selectionMode?: string;
@@ -102,6 +123,15 @@ export interface ProjectFormDTO {
   projectReference?: string;
   allowsInitialPayment?: boolean;
   initialPaymentPercentage?: number;
+  
+  // Additional data (for import only)
+  status?: string;
+  progress?: number;
+  thumbnail?: string;
+  milestones?: any[];
+  documents?: any[];
+  stakeholders?: any[];
+  inspections?: any[];
 }
 
 export interface TaskDTO {

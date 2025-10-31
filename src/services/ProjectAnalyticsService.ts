@@ -89,9 +89,15 @@ export class ProjectAnalyticsService {
       i.status === 'scheduled' || i.status === 'pending'
     ).length;
 
-    const issues = inspections.flatMap(i => i.issues || []);
-    const openIssues = issues.filter(issue => issue.status === 'open').length;
-    const criticalIssues = issues.filter(issue => 
+    const issues = inspections.flatMap(i => {
+      const issuesList = i.issues || [];
+      // Filter only InspectionIssue objects, not strings
+      return Array.isArray(issuesList) 
+        ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
+        : [];
+    });
+    const openIssues = issues.filter((issue: any) => issue.status === 'open').length;
+    const criticalIssues = issues.filter((issue: any) => 
       issue.severity === 'critical' || issue.severity === 'high'
     ).length;
 
@@ -103,7 +109,7 @@ export class ProjectAnalyticsService {
       complianceRate: totalInspections > 0 ? (passedInspections / totalInspections) * 100 : 0,
       openIssues,
       criticalIssues,
-      resolvedIssues: issues.filter(issue => issue.status === 'resolved').length,
+      resolvedIssues: issues.filter((issue: any) => issue.status === 'resolved').length,
       inspectionHistory: inspections.map(i => ({
         id: i.id,
         date: i.date,

@@ -130,14 +130,22 @@ export class ProjectCalculationService {
       : 0;
     
     const criticalIssuesCount = inspections.reduce((count, inspection) => {
-      const criticalIssues = inspection.issues?.filter(issue => 
+      const issuesList = inspection.issues || [];
+      const validIssues = Array.isArray(issuesList) 
+        ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
+        : [];
+      const criticalIssues = validIssues.filter((issue: any) => 
         issue.severity === 'high' || issue.severity === 'critical'
-      ) || [];
+      );
       return count + criticalIssues.length;
     }, 0);
     
     const resolvedIssuesCount = inspections.reduce((count, inspection) => {
-      const resolvedIssues = inspection.issues?.filter(issue => issue.status === 'resolved') || [];
+      const issuesList = inspection.issues || [];
+      const validIssues = Array.isArray(issuesList) 
+        ? issuesList.filter(issue => typeof issue === 'object' && issue !== null)
+        : [];
+      const resolvedIssues = validIssues.filter((issue: any) => issue.status === 'resolved');
       return count + resolvedIssues.length;
     }, 0);
     

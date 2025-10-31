@@ -103,6 +103,14 @@ const ProjectExporter = () => {
             latitude: detail?.coordinates?.latitude || project.coordinates?.latitude || '',
             longitude: detail?.coordinates?.longitude || project.coordinates?.longitude || '',
             
+            // Classification
+            category: detail?.category || project.category || '',
+            subCategory: detail?.subCategory || project.subCategory || '',
+            priorityLevel: detail?.priorityLevel || project.priorityLevel || '',
+            riskLevel: detail?.riskLevel || project.riskLevel || '',
+            environmentalImpact: detail?.environmentalImpact || project.environmentalImpact || '',
+            sustainabilityScore: detail?.sustainabilityScore || project.sustainabilityScore || 0,
+            
             // Project details
             financingSource: detail?.financingSource || project.financingSource || '',
             marketType: detail?.marketType || project.marketType || '',
@@ -139,7 +147,10 @@ const ProjectExporter = () => {
             expenses: detail?.expenses || [],
             alerts: detail?.alerts || [],
             insurancePolicies: detail?.insurancePolicies || [],
-            contacts: detail?.contacts || []
+            contacts: detail?.contacts || [],
+            milestones: detail?.milestones || detail?.constructionMilestones || [],
+            documents: detail?.documents || [],
+            stakeholders: detail?.stakeholders || []
           };
         } catch (error) {
           console.error(`Error fetching details for project ${project.id}:`, error);
@@ -209,6 +220,14 @@ const ProjectExporter = () => {
       // Location details
       latitude: p.latitude,
       longitude: p.longitude,
+      
+      // Classification
+      category: p.category,
+      subCategory: p.subCategory,
+      priorityLevel: p.priorityLevel,
+      riskLevel: p.riskLevel,
+      environmentalImpact: p.environmentalImpact,
+      sustainabilityScore: p.sustainabilityScore,
       
       // Project details
       financingSource: p.financingSource,
@@ -383,10 +402,16 @@ const ProjectExporter = () => {
       XLSX.utils.book_append_sheet(workbook, resourcesSheet, 'Ressources');
     }
     
-    // Contacts sheet
+    // Contacts/Stakeholders sheet
     const allContacts: any[] = [];
     data.forEach(project => {
-      project.contacts?.forEach((contact: any) => {
+      // Merge contacts and stakeholders
+      const projectContacts = [
+        ...(project.contacts || []),
+        ...(project.stakeholders || [])
+      ];
+      
+      projectContacts.forEach((contact: any) => {
         allContacts.push({
           projectId: project.id,
           project: project.title,
@@ -402,6 +427,44 @@ const ProjectExporter = () => {
     if (allContacts.length > 0) {
       const contactsSheet = XLSX.utils.json_to_sheet(allContacts);
       XLSX.utils.book_append_sheet(workbook, contactsSheet, 'Contacts');
+    }
+    
+    // Milestones sheet
+    const allMilestones: any[] = [];
+    data.forEach(project => {
+      project.milestones?.forEach((milestone: any) => {
+        allMilestones.push({
+          projectId: project.id,
+          project: project.title,
+          name: milestone.name || milestone.title,
+          plannedDate: milestone.plannedDate || milestone.targetDate,
+          actualDate: milestone.actualDate || milestone.completedDate,
+          status: milestone.status
+        });
+      });
+    });
+    if (allMilestones.length > 0) {
+      const milestonesSheet = XLSX.utils.json_to_sheet(allMilestones);
+      XLSX.utils.book_append_sheet(workbook, milestonesSheet, 'Jalons');
+    }
+    
+    // Documents sheet
+    const allDocuments: any[] = [];
+    data.forEach(project => {
+      project.documents?.forEach((doc: any) => {
+        allDocuments.push({
+          projectId: project.id,
+          project: project.title,
+          name: doc.name,
+          type: doc.type,
+          url: doc.url,
+          uploadDate: doc.uploadDate
+        });
+      });
+    });
+    if (allDocuments.length > 0) {
+      const documentsSheet = XLSX.utils.json_to_sheet(allDocuments);
+      XLSX.utils.book_append_sheet(workbook, documentsSheet, 'Documents');
     }
     
     XLSX.writeFile(workbook, `projets_export_${new Date().toISOString().split('T')[0]}.xlsx`);
