@@ -302,12 +302,12 @@ const EnhancedSupplierTenderPortal = () => {
             .from('documents')
             .insert({
               title: file.name,
-              description: `${subcategory} - ${categoryLabel}`,
+              description: `${subcategory} pour soumission appel d'offres`,
               file_url: uploadResult.url,
               file_name: file.name,
               mime_type: file.type,
               file_size: file.size,
-              document_type: 'supplier_upload',
+              document_type: 'tender',
               uploaded_by: user.user.id,
               metadata: {
                 tender_id: selectedTender.id,
