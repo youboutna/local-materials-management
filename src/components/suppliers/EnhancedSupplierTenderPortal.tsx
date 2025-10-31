@@ -285,15 +285,16 @@ const EnhancedSupplierTenderPortal = () => {
           const [category] = docKey.split('-');
           console.log("Extracted category:", category);
           const subcategory = docKey.split('-').slice(1).join('-');
-          console.log("Extracted subCategory:", subcategory);
+          console.log("Extracted subcategory:", subcategory);
+          
           const uploadResult = await uploadFile(
             file, 
-            `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${subcategory}`
+            `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${file.name}`
           );
-          console.log("Extracted upload url :",uploadResult.url);
+          console.log("Upload result:", uploadResult);
 
-          if (!uploadResult.success) {
-            throw new Error(uploadResult.error || 'Échec du téléchargement');
+          if (!uploadResult.success || !uploadResult.url) {
+            throw new Error(uploadResult.error || 'Échec du téléchargement du fichier');
           }
 
           // Create document record
@@ -301,34 +302,47 @@ const EnhancedSupplierTenderPortal = () => {
             .from('documents')
             .insert({
               title: file.name,
-              description: `Document ${category} pour l'appel d'offres ${selectedTender.title}`,
+              description: `${subcategory} - ${categoryLabel}`,
               file_url: uploadResult.url,
               file_name: file.name,
               mime_type: file.type,
               file_size: file.size,
-              document_type: 'tender',
+              document_type: 'supplier_upload',
               uploaded_by: user.user.id,
               metadata: {
                 tender_id: selectedTender.id,
                 submission_id: submission.id,
                 category: category,
+                subcategory: subcategory,
                 document_key: docKey
               }
             })
             .select()
             .single();
 
-          if (docError) throw docError;
+          if (docError) {
+            console.error('Error creating document record:', docError);
+            throw new Error(`Erreur lors de la création du document: ${docError.message}`);
+          }
+
+          if (!document) {
+            throw new Error('Aucun document créé');
+          }
 
           // Link document to submission
-          await supabase
+          const { error: linkError } = await supabase
             .from('tender_submission_documents')
             .insert({
               submission_id: submission.id,
               document_id: document.id,
               category: category as 'administrative' | 'technical' | 'financial',
-              subcategory: docKey.split('-').slice(1).join('-')
+              subcategory: subcategory
             });
+
+          if (linkError) {
+            console.error('Error linking document to submission:', linkError);
+            throw new Error(`Erreur lors de la liaison du document: ${linkError.message}`);
+          }
 
           uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
         }
