@@ -201,6 +201,83 @@ export class EntityToDTOMapper {
     };
   }
 
+  // ============= Inspection Mapping =============
+
+  /**
+   * Map InspectionEntity to InspectionDTO with optional project info
+   */
+  static inspectionEntityToDTOWithProject(
+    entity: InspectionEntity, 
+    projectInfo?: { title: string; status: string }
+  ): any {
+    return {
+      id: entity.id,
+      project_id: entity.project_id,
+      date: entity.date,
+      status: entity.status,
+      inspector: entity.inspector,
+      comments: entity.comments || null,
+      progress_at_inspection: entity.progress_at_inspection || null,
+      documents: entity.documents || null,
+      phase_id: entity.phase_id || null,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at,
+      projects: projectInfo || null
+    };
+  }
+
+  // ============= Tender Mapping =============
+
+  /**
+   * Map TenderEntity to TenderDTO
+   */
+  static tenderEntityToDTO(entity: any): any {
+    return {
+      id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      project_id: entity.project_id || null,
+      launch_date: entity.launch_date || null,
+      attribution_date: entity.attribution_date || null,
+      selection_mode: entity.selection_mode || null,
+      market_type: entity.market_type || null,
+      financing_source: entity.financing_source || null,
+      project_reference: entity.project_reference || null,
+      status: entity.status,
+      tender_number: entity.tender_number || null,
+      publication_date: entity.publication_date || null,
+      deadline_date: entity.deadline_date || null,
+      budget_min: entity.budget_min || null,
+      budget_max: entity.budget_max || null,
+      evaluation_criteria: entity.evaluation_criteria || null,
+      eligibility_requirements: entity.eligibility_requirements || null,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at
+    };
+  }
+
+  /**
+   * Map TenderSubmissionEntity to TenderSubmissionDTO
+   */
+  static tenderSubmissionEntityToDTO(entity: any): any {
+    return {
+      id: entity.id,
+      tender_id: entity.tender_id,
+      supplier_id: entity.supplier_id || null,
+      supplier_name: entity.supplier_name,
+      submission_date: entity.submission_date,
+      status: entity.status,
+      total_amount: entity.total_amount || null,
+      secret_code: entity.secret_code || null,
+      secret_expires_at: entity.secret_expires_at || null,
+      is_secret_active: entity.is_secret_active || false,
+      secret_access_count: entity.secret_access_count || 0,
+      max_secret_access: entity.max_secret_access || null,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at
+    };
+  }
+
   // ============= Reverse Mappings (DTO to Entity) =============
 
   static projectDTOToEntity(dto: ProjectDTO): Omit<ProjectEntity, 'id' | 'created_at' | 'updated_at'> {

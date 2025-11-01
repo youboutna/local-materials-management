@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { TenderRepository } from './TenderRepository';
+import { EntityToDTOMapper } from './EntityToDTOMapper';
 
 export interface TenderDTO {
   id: string;
@@ -56,20 +58,17 @@ export interface TenderSubmissionDTO {
 
 /**
  * Service for managing tenders with DTO pattern
- * Provides abstraction layer over Supabase
+ * Uses repository pattern and DTO mapping
  */
 export class TenderService {
+  private static repository = new TenderRepository();
+
   /**
    * Get all tenders
    */
   static async getAllTenders(): Promise<TenderDTO[]> {
-    const { data, error } = await supabase
-      .from('tenders')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return (data || []) as TenderDTO[];
+    const entities = await this.repository.findAll();
+    return entities.map(entity => EntityToDTOMapper.tenderEntityToDTO(entity));
   }
 
   /**

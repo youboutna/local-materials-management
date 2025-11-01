@@ -1,59 +1,42 @@
 import { supabase } from '@/integrations/supabase/client';
 import { InspectionDTO, CreateInspectionDTO, UpdateInspectionDTO } from '@/types/inspection.dto';
+import { InspectionRepository } from './InspectionRepository';
+import { EntityToDTOMapper } from './EntityToDTOMapper';
 
 /**
  * Service for managing inspections with proper separation of concerns
- * Provides CRUD operations and business logic for inspections
+ * Uses repository pattern and DTO mapping
  */
 export class InspectionService {
+  private static repository = new InspectionRepository();
   /**
-   * Get all inspections for a specific supplier
+   * Get all inspections for a specific supplier with project info
    * Fetches inspections from projects where the supplier is a stakeholder
    */
   static async getInspectionsForSupplier(supplierId: string): Promise<InspectionDTO[]> {
     try {
       console.log('[InspectionService] Getting inspections for supplier:', supplierId);
       
-      // Get projects where this supplier is a stakeholder
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('project_stakeholders')
-        .select('project_id')
-        .eq('supplier_id', supplierId)
-        .eq('stakeholder_entity_type', 'supplier');
-
-      if (projectsError) {
-        console.error('[InspectionService] Error fetching supplier projects:', projectsError);
-        throw projectsError;
-      }
-
-      console.log('[InspectionService] Found projects for supplier:', projectsData);
+      const entities = await this.repository.findBySupplierId(supplierId);
       
-      const projectIds = projectsData?.map(p => p.project_id) || [];
+      // Fetch project info for each inspection
+      const inspectionsWithProject = await Promise.all(
+        entities.map(async (entity) => {
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('title, status')
+            .eq('id', entity.project_id)
+            .maybeSingle();
+          
+          return EntityToDTOMapper.inspectionEntityToDTOWithProject(
+            entity,
+            projectData ? { title: projectData.title, status: projectData.status } : undefined
+          );
+        })
+      );
 
-      if (projectIds.length === 0) {
-        console.log('[InspectionService] No projects found for supplier');
-        return [];
-      }
-
-      console.log('[InspectionService] Fetching inspections for projects:', projectIds);
-
-      // Get inspections for those projects
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          projects (title, status)
-        `)
-        .in('project_id', projectIds)
-        .order('date', { ascending: false });
-
-      if (error) {
-        console.error('[InspectionService] Error fetching inspections:', error);
-        throw error;
-      }
-
-      console.log('[InspectionService] Successfully fetched inspections:', data);
-      return (data || []) as InspectionDTO[];
+      console.log('[InspectionService] Successfully fetched inspections:', inspectionsWithProject);
+      return inspectionsWithProject;
     } catch (error) {
       console.error('[InspectionService] getInspectionsForSupplier error:', error);
       return [];
@@ -61,25 +44,24 @@ export class InspectionService {
   }
 
   /**
-   * Get all inspections for a specific project
+   * Get all inspections for a specific project with project info
    */
   static async getInspectionsByProject(projectId: string): Promise<InspectionDTO[]> {
     try {
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          projects (title, status)
-        `)
-        .eq('project_id', projectId)
-        .order('date', { ascending: false });
+      const entities = await this.repository.findByProjectId(projectId);
+      
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('title, status')
+        .eq('id', projectId)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching project inspections:', error);
-        throw error;
-      }
-
-      return (data || []) as InspectionDTO[];
+      return entities.map(entity => 
+        EntityToDTOMapper.inspectionEntityToDTOWithProject(
+          entity,
+          projectData ? { title: projectData.title, status: projectData.status } : undefined
+        )
+      );
     } catch (error) {
       console.error('InspectionService.getInspectionsByProject error:', error);
       return [];
@@ -234,15 +216,7 @@ export class InspectionService {
    */
   static async getInspectionStats(supplierId: string): Promise<Record<string, number>> {
     try {
-      const inspections = await this.getInspectionsForSupplier(supplierId);
-      
-      const stats = inspections.reduce((acc, inspection) => {
-        const status = inspection.status || 'unknown';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      return stats;
+      return await this.repository.getStatsBySupplierId(supplierId);
     } catch (error) {
       console.error('InspectionService.getInspectionStats error:', error);
       return {};
