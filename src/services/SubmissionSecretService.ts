@@ -200,6 +200,15 @@ export class SubmissionSecretService {
    * For audit trail and compliance
    */
   static async logAccess(dto: CreateSubmissionAccessLogDTO): Promise<void> {
+    // Validate that submission_id is a valid UUID before inserting
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!dto.submission_id || !uuidRegex.test(dto.submission_id)) {
+      console.error('Invalid submission_id for logging:', dto.submission_id);
+      // Don't throw error, just log and return
+      return;
+    }
+
     const { error } = await supabase
       .from('submission_access_logs')
       .insert({

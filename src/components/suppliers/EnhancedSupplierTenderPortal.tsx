@@ -349,17 +349,24 @@ const EnhancedSupplierTenderPortal = () => {
 
         // Generate secret code for evaluation commission access
         try {
+          console.log('Generating secret code for submission:', submission.id);
           const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30); // 30 days validity
-          await SubmissionSecretService.createSubmissionSecret({
+          const secretResult = await SubmissionSecretService.createSubmissionSecret({
             submission_id: submission.id,
             expires_at: expiresAt,
             max_access: 50, // Allow up to 50 accesses for evaluation
             evaluation_phase: 'evaluation',
             evaluation_stage: 'initial'
           });
+          console.log('Secret code generated successfully:', secretResult.secret_code);
         } catch (secretError) {
           console.error('Error generating secret code:', secretError);
           // Don't fail the submission if secret generation fails
+          toast({
+            title: 'Avertissement',
+            description: 'Soumission créée mais le code secret n\'a pas pu être généré.',
+            variant: 'default'
+          });
         }
 
         return submission;
