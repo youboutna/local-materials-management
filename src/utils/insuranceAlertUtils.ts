@@ -1,12 +1,12 @@
-import { detectExpiringInsurance, sendInsuranceExpiryAlerts } from '@/services/insuranceCertificateService';
+import { InsuranceService } from '@/services/InsuranceService';
 import { toast } from '@/hooks/use-toast';
 
 export const checkAndSendInsuranceAlerts = async () => {
   try {
     console.log('Checking for insurance expiry alerts...');
     
-    // Detect expiring insurance
-    const alerts = await detectExpiringInsurance();
+    // Detect expiring insurance using service
+    const alerts = await InsuranceService.detectExpiringInsurance();
     
     if (alerts.length === 0) {
       console.log('No insurance alerts found');
@@ -15,8 +15,8 @@ export const checkAndSendInsuranceAlerts = async () => {
 
     console.log(`Found ${alerts.length} insurance alerts`);
     
-    // Send alerts
-    const result = await sendInsuranceExpiryAlerts(alerts);
+    // Send alerts using service
+    const result = await InsuranceService.sendInsuranceExpiryAlerts(alerts);
     
     if (result.success) {
       toast({

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Package, MapPin, Edit2, Trash2, Calculator } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { MaterialService } from '@/services/MaterialService';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MaterialSelector from '@/components/MaterialSelector';
@@ -42,39 +42,21 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const fetchProjectMaterials = async () => {
     try {
-      const { data, error } = await supabase
-        .from('project_materials')
-        .select(`
-          id,
-          quantity,
-          material:materials(
-            id,
-            name,
-            description,
-            category,
-            unit,
-            price_per_unit,
-            origin_location,
-            image
-          )
-        `)
-        .eq('project_id', projectId);
-
-      if (error) throw error;
+      const projectMaterials = await MaterialService.getProjectMaterials(projectId);
       
-      // Transform the data to match our interface, handling null values properly
-      const transformedMaterials: ProjectMaterial[] = (data || []).map(item => ({
+      // Transform the data to match our interface
+      const transformedMaterials: ProjectMaterial[] = projectMaterials.map(item => ({
         id: item.id,
         quantity: item.quantity,
         material: {
-          id: item.material.id,
-          name: item.material.name,
-          description: item.material.description,
-          category: item.material.category,
-          unit: item.material.unit,
-          price_per_unit: item.material.price_per_unit,
-          origin_location: item.material.origin_location || undefined,
-          image: item.material.image || undefined
+          id: item.materials.id,
+          name: item.materials.name,
+          description: item.materials.description || '',
+          category: item.materials.category || '',
+          unit: item.materials.unit || '',
+          price_per_unit: item.materials.unit_price || 0,
+          origin_location: undefined,
+          image: undefined
         }
       }));
       
@@ -91,19 +73,18 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
     }
   };
 
-  useEffect(() => {
-    fetchProjectMaterials();
-  }, [projectId]);
 
   const createQuantityTakeoffs = async (materials: SelectedMaterial[]) => {
     try {
       console.log('Creating quantity takeoffs for materials:', materials);
       
+      const { supabase } = await import('@/integrations/supabase/client');
+      
       const takeoffsToCreate = materials.map(material => ({
         project_id: projectId,
         material_id: material.materialId,
         element_type: 'Standard Element',
-        unit: 'unité', // Default unit, will be updated based on material
+        unit: 'unité',
         length: material.quantity,
         width: null,
         height: null,
@@ -136,17 +117,14 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
     if (selectedMaterials.length === 0) return;
 
     try {
-      const materialsToAdd = selectedMaterials.map(material => ({
-        project_id: projectId,
-        material_id: material.materialId,
-        quantity: material.quantity
-      }));
-
-      const { error } = await supabase
-        .from('project_materials')
-        .insert(materialsToAdd);
-
-      if (error) throw error;
+      // Add materials using the service
+      for (const material of selectedMaterials) {
+        await MaterialService.addMaterialToProject(
+          projectId,
+          material.materialId,
+          material.quantity
+        );
+      }
 
       // Automatically create quantity takeoffs for the new materials
       await createQuantityTakeoffs(selectedMaterials);
@@ -172,12 +150,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
   const handleRemoveMaterial = async (materialId: string) => {
     try {
-      const { error } = await supabase
-        .from('project_materials')
-        .delete()
-        .eq('id', materialId);
-
-      if (error) throw error;
+      await MaterialService.removeMaterialFromProject(materialId);
 
       toast({
         title: "Matériau supprimé",

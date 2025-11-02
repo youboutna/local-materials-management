@@ -25,7 +25,7 @@ import {
   getPaymentBlockHistory,
   PaymentValidationResult 
 } from '@/services/paymentBlockingService';
-import { detectProjectDelays } from '@/services/bankGuaranteeService';
+import { BankGuaranteeService } from '@/services/BankGuaranteeService';
 import { createPaymentControlAction } from '@/services/paymentControlActionService';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -107,7 +107,7 @@ const EnhancedPaymentBlockingInterface = () => {
         .lt('valid_until', new Date().toISOString());
 
       // Count delayed projects (using threshold from our escalation service)
-      const delayedProjects = await detectProjectDelays();
+      const delayedProjects = await BankGuaranteeService.detectProjectDelays();
       const { data: thresholdData } = await supabase
         .from('escalation_thresholds')
         .select('threshold_value')

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { createBankGuaranteeAction } from '@/services/bankGuaranteeActionService';
-import { detectProjectDelays, triggerBankGuaranteeNotification } from '@/services/bankGuaranteeService';
+import { BankGuaranteeService } from '@/services/BankGuaranteeService';
 import { AlertTriangle, Clock, DollarSign, Send, ExternalLink } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -41,7 +41,7 @@ const BankGuaranteeMonitor: React.FC = () => {
 
   const loadDelays = async () => {
     try {
-      const projectDelays = await detectProjectDelays();
+      const projectDelays = await BankGuaranteeService.detectProjectDelays();
       const criticalDelays = projectDelays.filter(
         delay => delay.delayPercentage >= DELAY_THRESHOLDS.WARNING
       );
@@ -88,7 +88,7 @@ const BankGuaranteeMonitor: React.FC = () => {
         contractClause: 'Article 15.3 - Garantie de bonne exécution'
       };
 
-      const result = await triggerBankGuaranteeNotification(delay, bankGuaranteeData);
+      const result = await BankGuaranteeService.triggerBankGuaranteeNotification(delay, bankGuaranteeData);
       
       toast({
         title: 'Notification bancaire envoyée',

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Clock, DollarSign, Shield, TrendingDown, Bell } from 'lucide-react';
-import { detectProjectDelays } from '@/services/bankGuaranteeService';
+import { BankGuaranteeService } from '@/services/BankGuaranteeService';
 import { DELAY_THRESHOLDS } from '@/types/project';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +44,7 @@ const AlertsDashboard: React.FC = () => {
       const allAlerts: AlertData[] = [];
 
       // Load project delays
-      const delays = await detectProjectDelays();
+      const delays = await BankGuaranteeService.detectProjectDelays();
       const delayAlerts: AlertData[] = delays
         .filter(delay => delay.delayPercentage >= DELAY_THRESHOLDS.WARNING)
         .map(delay => ({
