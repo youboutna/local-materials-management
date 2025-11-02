@@ -1,5 +1,7 @@
-
-export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé';
+/**
+ * project status types
+ */
+export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé'|'attribué' | 'planifié' |'pré-qualification' | 'en conception' | 'en construction' | 'en clôture';
 
 // New construction phase types
 export type ConstructionPhase = 
