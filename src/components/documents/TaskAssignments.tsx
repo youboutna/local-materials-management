@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationService } from "@/services/NotificationService";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -207,7 +208,7 @@ const TaskAssignments = () => {
       if (data && taskData.assigned_to) {
         try {
           // Create notification in notifications table
-          await supabase.from('notifications').insert({
+          await NotificationService.createNotification({
             recipient_id: taskData.assigned_to,
             title: '📋 Nouvelle tâche assignée',
             message: `Une nouvelle tâche "${taskData.title}" vous a été assignée${taskData.priority === 'high' ? ' (Priorité élevée)' : ''}.`,
@@ -224,7 +225,7 @@ const TaskAssignments = () => {
 
           // If supplier, also create supplier notification
           if (taskData.assignee_type === 'supplier' && taskData.assignee_email) {
-            await supabase.from('supplier_notifications').insert({
+            await NotificationService.createSupplierNotification({
               supplier_id: taskData.assigned_to,
               notification_type: 'task_assignment',
               email: taskData.assignee_email,
@@ -286,7 +287,7 @@ const TaskAssignments = () => {
       // Send notification if status changed to completed
       if (data.status === 'completed' && data.assigned_to) {
         try {
-          await supabase.from('notifications').insert({
+          await NotificationService.createNotification({
             recipient_id: data.assigned_to,
             title: '✅ Tâche terminée',
             message: `La tâche "${data.title}" a été marquée comme terminée.`,

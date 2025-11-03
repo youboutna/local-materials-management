@@ -29,6 +29,8 @@ import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeE
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
 import { SubmissionSecretService } from '@/services/SubmissionSecretService';
 import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
+import { TenderService } from '@/services/TenderService';
+import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
 
 interface PublicTender {
   id: string;
@@ -140,19 +142,13 @@ const EnhancedSupplierTenderPortal = () => {
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tenders')
-        .select(`
-          *,
-          project:projects(title, description, location)
-        `)
-        .eq('status', 'published')
-        .order('launch_date', { ascending: false });
-
-      if (error) throw error;
-
+      const tenders = await TenderService.getAllTenders();
+      
       const now = new Date();
-      const filtered = (data || []).filter((tender: any) => {
+      const filtered = tenders.filter((tender: any) => {
+        // Only published tenders
+        if (tender.status !== 'published') return false;
+        
         // Check if tender is in submission phase (phase 2)
         const isPhase2 = Number(tender.current_phase) === 2;
         
@@ -198,15 +194,10 @@ const EnhancedSupplierTenderPortal = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return null;
 
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('tender_id', selectedTender.id)
-        .eq('user_id', user.user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
+      return await TenderSubmissionService.getUserSubmission(
+        selectedTender.id,
+        user.user.id
+      );
     },
     enabled: !!selectedTender?.id
   });
@@ -221,7 +212,6 @@ const EnhancedSupplierTenderPortal = () => {
         const deadline = new Date(selectedTender.deadline_date);
         const now = new Date();
         
-        // Check if deadline is a valid date
         if (isNaN(deadline.getTime())) {
           throw new Error('Date limite de soumission invalide');
         }
@@ -241,145 +231,29 @@ const EnhancedSupplierTenderPortal = () => {
         .eq('id', user.user.id)
         .single();
 
-      // Check if user already has a submission for this tender
-      const { data: existingSubmission } = await supabase
-        .from('tender_submissions')
-        .select('id')
-        .eq('tender_id', selectedTender.id)
-        .eq('user_id', user.user.id)
-        .maybeSingle();
+      // Prepare documents for upload
+      const documents: UploadedDocument[] = Object.entries(selectedFiles).map(([docKey, file]) => {
+        const [category, ...subcategoryParts] = docKey.split('-');
+        return {
+          file,
+          category: category as 'administrative' | 'technical' | 'financial',
+          subcategory: subcategoryParts.join('-')
+        };
+      });
 
-      if (existingSubmission) {
-        throw new Error('Vous avez déjà soumissionné pour cet appel d\'offres');
-      }
-
-      // Create tender submission record first
-      const { data: submission, error: submissionError } = await supabase
-        .from('tender_submissions')
-        .insert({
+      // Create submission with documents and secret using service
+      return await TenderSubmissionService.createSubmissionWithDocuments(
+        {
           tender_id: selectedTender.id,
           user_id: user.user.id,
           supplier_name: profile?.full_name || 'Fournisseur',
           supplier_email: user.user.email || '',
           submission_date: new Date().toISOString(),
           status: 'submitted'
-        })
-        .select()
-        .single();
-
-      if (submissionError) throw submissionError;
-
-      // Upload files and create document records
-      const uploadedDocs: {[key: string]: string[]} = {
-        administrative: [],
-        technical: [],
-        financial: []
-      };
-
-      console.log("All selectedFiles:", selectedFiles);
-      console.log("Files to process:", Object.entries(selectedFiles));
-
-      try {
-        for (const [docKey, file] of Object.entries(selectedFiles)) {
-          console.log("Processing document:", docKey, "File:", file.name);
-          const [category] = docKey.split('-');
-          console.log("Extracted category:", category);
-          const subcategory = docKey.split('-').slice(1).join('-');
-          console.log("Extracted subcategory:", subcategory);
-          
-          const uploadResult = await uploadFile(
-            file, 
-            `tender-submissions/${selectedTender.id}/${user.user.id}/${category}/${file.name}`
-          );
-          console.log("Upload result:", uploadResult);
-
-          if (!uploadResult.success || !uploadResult.url) {
-            throw new Error(uploadResult.error || 'Échec du téléchargement du fichier');
-          }
-
-          // Create document record
-          const { data: document, error: docError } = await supabase
-            .from('documents')
-            .insert({
-              title: file.name,
-              description: `${subcategory} pour soumission appel d'offres`,
-              file_url: uploadResult.url,
-              file_name: file.name,
-              mime_type: file.type,
-              file_size: file.size,
-              document_type: 'tender',
-              uploaded_by: user.user.id,
-              metadata: {
-                tender_id: selectedTender.id,
-                submission_id: submission.id,
-                category: category,
-                subcategory: subcategory,
-                document_key: docKey
-              }
-            })
-            .select()
-            .single();
-
-          if (docError) {
-            console.error('Error creating document record:', docError);
-            throw new Error(`Erreur lors de la création du document: ${docError.message}`);
-          }
-
-          if (!document) {
-            throw new Error('Aucun document créé');
-          }
-
-          // Link document to submission
-          const { error: linkError } = await supabase
-            .from('tender_submission_documents')
-            .insert({
-              submission_id: submission.id,
-              document_id: document.id,
-              category: category as 'administrative' | 'technical' | 'financial',
-              subcategory: subcategory
-            });
-
-          if (linkError) {
-            console.error('Error linking document to submission:', linkError);
-            throw new Error(`Erreur lors de la liaison du document: ${linkError.message}`);
-          }
-
-          uploadedDocs[category as keyof typeof uploadedDocs].push(document.id);
-        }
-
-        // Generate secret code for evaluation commission access
-        try {
-          console.log('Generating secret code for submission:', submission.id);
-          const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30); // 30 days validity
-          const secretResult = await SubmissionSecretService.createSubmissionSecret({
-            submission_id: submission.id,
-            expires_at: expiresAt,
-            max_access: 50, // Allow up to 50 accesses for evaluation
-            evaluation_phase: 'evaluation',
-            evaluation_stage: 'initial'
-          });
-          console.log('Secret code generated successfully:', secretResult.secret_code);
-        } catch (secretError) {
-          console.error('Error generating secret code:', secretError);
-          // Don't fail the submission if secret generation fails
-          toast({
-            title: 'Avertissement',
-            description: 'Soumission créée mais le code secret n\'a pas pu être généré.',
-            variant: 'default'
-          });
-        }
-
-        return submission;
-      } catch (uploadError) {
-        // Rollback: delete the submission if file upload fails
-        console.error('Upload error, rolling back submission:', uploadError);
-        await supabase
-          .from('tender_submissions')
-          .delete()
-          .eq('id', submission.id);
-        
-        throw uploadError;
-      }
+        },
+        documents,
+        uploadFile
+      );
     },
     onSuccess: (submission) => {
       queryClient.invalidateQueries({ queryKey: ['user-submission'] });

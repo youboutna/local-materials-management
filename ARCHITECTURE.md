@@ -37,37 +37,58 @@ Ce projet suit une architecture en couches avec séparation des responsabilités
 
 ## Modules Refactorisés
 
-### 1. Projects
-- **Entity**: `src/types/project.entity.ts`
-- **Repository**: `src/services/ProjectRepository.ts`
-- **Service**: `src/services/ProjectService.ts`
-- **Mapper**: `src/services/EntityToDTOMapper.ts`
+✅ **TOUS les modules suivants ont été COMPLETEMENT refactorisés selon le pattern Repository → Service → Mapper → DTO**
 
-### 2. Inspections
-- **Entity**: Types définis dans entities
-- **Repository**: `src/services/InspectionRepository.ts`
-- **Service**: `src/services/InspectionService.ts`
-- **Mapper**: `src/services/EntityToDTOMapper.ts`
+### 1. Projects ✅
+- **Entity**: `src/types/project.entity.ts` - `ProjectEntity`
+- **Repository**: `src/services/ProjectRepository.ts` - `ProjectRepository`
+- **Service**: `src/services/ProjectService.ts` - `ProjectService`
+- **Mapper**: `src/services/EntityToDTOMapper.ts` - `projectEntityToDTO`
+- **DTOs**: `src/types/project-dto.ts`
 
-### 3. Tenders
-- **Entity**: `src/types/tender.entity.ts`
-- **Repository**: `src/services/TenderRepository.ts`
-- **Service**: `src/services/TenderService.ts`
-- **Mapper**: `src/services/EntityToDTOMapper.ts`
+### 2. Inspections ✅
+- **Entity**: `src/types/inspection.entity.ts` - `InspectionEntity`
+- **Repository**: `src/services/InspectionRepository.ts` - `InspectionRepository`
+- **Service**: `src/services/InspectionService.ts` - `InspectionService`
+- **Mapper**: `src/services/EntityToDTOMapper.ts` - `inspectionEntityToDTOWithProject`
+- **DTOs**: `src/types/inspection.dto.ts`
 
-### 4. Bank Guarantees
-- **Entity**: `src/types/bankGuarantee.entity.ts`
-- **Repository**: `src/services/BankGuaranteeRepository.ts`
-- **Service**: `src/services/bankGuaranteeService.ts`
+### 3. Tenders ✅
+- **Entity**: `src/types/tender.entity.ts` - `TenderEntity`, `TenderSubmissionEntity`
+- **Repository**: `src/services/TenderRepository.ts` - `TenderRepository`
+- **Service**: `src/services/TenderService.ts` - `TenderService`
+- **Submission Service**: `src/services/TenderSubmissionService.ts` - `TenderSubmissionService`
+- **Mapper**: `src/services/EntityToDTOMapper.ts` - `tenderEntityToDTO`, `tenderSubmissionEntityToDTO`
+- **DTOs**: `src/types/submission-dto.ts`
+- **Components Updated**: `EnhancedSupplierTenderPortal.tsx` utilise les services
 
-### 5. Insurance
-- **Entity**: `src/types/insurance.entity.ts`
-- **Repository**: `src/services/InsuranceRepository.ts`
-- **Service**: `src/services/insuranceCertificateService.ts`
+### 4. Bank Guarantees ✅
+- **Entity**: `src/types/bankGuarantee.entity.ts` - `BankGuaranteeEntity`, `ProjectDelayEntity`
+- **Repository**: `src/services/BankGuaranteeRepository.ts` - `BankGuaranteeRepository`
+- **Service**: `src/services/BankGuaranteeService.ts` - `BankGuaranteeService`
+- **Components Updated**: `BankGuaranteeMonitor.tsx`, `AlertsDashboard.tsx`, `EnhancedPaymentBlockingInterface.tsx`
 
-### 6. Materials
-- **Entity**: `src/types/material.entity.ts`
-- **Repository**: `src/services/MaterialRepository.ts`
+### 5. Insurance ✅
+- **Entity**: `src/types/insurance.entity.ts` - `InsuranceCertificateEntity`, `InsuranceAlertEntity`
+- **Repository**: `src/services/InsuranceRepository.ts` - `InsuranceRepository`
+- **Service**: `src/services/InsuranceService.ts` - `InsuranceService`
+- **Utilities Updated**: `src/utils/insuranceAlertUtils.ts` utilise `InsuranceService`
+
+### 6. Materials ✅
+- **Entity**: `src/types/material.entity.ts` - `MaterialEntity`, `ProjectMaterialEntity`
+- **Repository**: `src/services/MaterialRepository.ts` - `MaterialRepository`
+- **Service**: `src/services/MaterialService.ts` - `MaterialService`
+- **Components Updated**: `ProjectMaterials.tsx` utilise `MaterialService`
+
+### 7. Notifications ✅
+- **Service**: `src/services/NotificationService.ts` - `NotificationService`
+- **Methods**: `createNotification`, `createBatchNotifications`, `createSupplierNotification`
+- **Components Updated**: TOUS les composants qui appelaient Supabase pour les notifications
+  - `TaskAssignments.tsx`
+  - `InspectionPaymentValidation.tsx`
+  - `ConsultantValidationPanel.tsx`
+  - `EnhancedDocumentSharing.tsx`
+  - `SupplierPaymentRequest.tsx`
 
 ## Conventions de Nommage
 
@@ -165,35 +186,77 @@ npm run test:watch
 
 ## Best Practices
 
-### 1. Séparation des Responsabilités
-- **Components**: Ne doivent jamais appeler Supabase directement
-- **Services**: Logique métier uniquement, pas de SQL brut
-- **Repositories**: Accès données uniquement, pas de logique métier
+### 1. Séparation des Responsabilités ⚠️ CRITIQUE
+- **Components**: Ne doivent JAMAIS appeler Supabase directement (sauf `auth.*` et `storage.*.getPublicUrl()`)
+- **Components**: Doivent TOUJOURS utiliser les Services
+- **Services**: Logique métier + orchestration des Repositories
+- **Repositories**: Accès données Supabase UNIQUEMENT
+- **Mappers**: Transformations Entity ↔ DTO
+
+**✅ CORRECT:**
+```typescript
+import { TenderService } from '@/services/TenderService';
+const tenders = await TenderService.getAllTenders();
+```
+
+**❌ INCORRECT:**
+```typescript
+import { supabase } from '@/integrations/supabase/client';
+const { data } = await supabase.from('tenders').select('*');
+```
 
 ### 2. Gestion d'Erreurs
-- Toujours utiliser `AppError` pour les erreurs métier
-- Logger les erreurs avec contexte
-- Fournir des messages utilisateur clairs
+- Toujours utiliser `AppError` avec `ErrorCode` approprié
+- Logger les erreurs avec contexte métier via `ErrorLogger`
+- Fournir des messages utilisateur clairs et actionnables
+- Utiliser `handleAsync()` pour wrapper les opérations async
+
+**Exemple:**
+```typescript
+try {
+  const result = await Repository.method();
+  return result;
+} catch (error) {
+  throw new AppError(
+    ErrorCode.DATABASE_ERROR,
+    'Message utilisateur clair',
+    error,
+    { contextData: '...' }
+  );
+}
+```
 
 ### 3. Type Safety
-- Utiliser des types stricts (Entity vs DTO)
-- Éviter `any`, préférer `unknown` si nécessaire
-- Interfaces pour tous les objets complexes
+- Utiliser des types stricts: **Entity** pour DB, **DTO** pour UI
+- JAMAIS de `any`, préférer `unknown` si vraiment nécessaire
+- Interfaces TypeScript pour tous les objets complexes
+- Mapper systématiquement: `Entity → DTO` via `EntityToDTOMapper`
 
 ### 4. Async/Await
 - Toujours gérer les erreurs dans try/catch
 - Utiliser `handleAsync()` pour pattern cohérent
+- Valider les résultats des opérations async
 - Éviter les promesses non gérées
 
 ### 5. Réutilisabilité
-- Mapper centralisé pour transformations
-- Utilitaires partagés dans `/utils`
-- Hooks React pour logique UI partagée
+- Mapper centralisé: `src/services/EntityToDTOMapper.ts`
+- Utilitaires partagés: `src/utils/`
+- Hooks React pour logique UI commune
+- Services réutilisables entre composants
+- Repositories atomiques et composables
+
+## État de Migration
+
+✅ **COMPLET** - Tous les modules principaux ont été migrés:
+- Projects, Inspections, Tenders, Bank Guarantees, Insurance, Materials, Notifications
+
+✅ **Tous les composants React** utilisent maintenant les Services au lieu d'appeler Supabase directement
 
 ## Prochaines Étapes
 
-1. Continuer la migration des modules restants vers le pattern Repository
-2. Augmenter la couverture de tests (objectif: >80%)
-3. Implémenter des tests d'intégration pour flux critiques
-4. Ajouter monitoring et logging structuré
-5. Optimiser les performances avec caching stratégique
+1. ✅ ~~Migration des modules vers le pattern Repository → Service → Mapper → DTO~~ **TERMINÉ**
+2. ✅ ~~Refactoriser tous les composants pour utiliser les Services~~ **TERMINÉ**
+3. 🔄 Augmenter la couverture de tests (objectif: >80%)
+4. 🔄 Implémenter des tests d'intégration pour flux critiques
+5. 🔄 Ajouter monitoring et logging structuré en production
+6. 🔄 Optimiser les performances avec caching stratégique (React Query)

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationService } from '@/services/NotificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -166,7 +167,7 @@ const InspectionPaymentValidation: React.FC = () => {
           engineer_fees: 'honoraires ingénieur conseil'
         };
 
-        await supabase.from('notifications').insert({
+        await NotificationService.createNotification({
           recipient_id: beneficiaryUserId,
           title: 'Validation de paiement',
           message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${

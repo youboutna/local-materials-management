@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationService } from '@/services/NotificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -198,9 +199,9 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
     try {
       // Create notification
-      await supabase.from('notifications').insert({
+      await NotificationService.createNotification({
         recipient_id: supplier.id,
-        type: 'supplier_payment_request', // Use valid notification type
+        type: 'supplier_payment_request',
         title: 'Nouveau document partagé',
         message: `Le document "${documentTitle}" a été partagé avec vous.`,
         related_id: documentId,

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationService } from '@/services/NotificationService';
 import { CheckCircle, XCircle, Eye, FileText, AlertTriangle, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
@@ -230,7 +231,7 @@ export function ConsultantValidationPanel() {
       // Create notification for supplier
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
-        await supabase.from('notifications').insert({
+        await NotificationService.createNotification({
           recipient_id: invoice.id, // Should be supplier user ID
           title: approved ? 'Facture approuvée par le consultant' : 'Facture rejetée par le consultant',
           message: `Facture ${invoice.invoice_number}: ${approved ? 'Approuvée' : 'Rejetée'} par l'ingénieur conseil`,

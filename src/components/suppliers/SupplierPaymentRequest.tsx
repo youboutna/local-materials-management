@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Send, FileText, Upload, Eye, Clock, CheckCircle, AlertTriangle, DollarSign, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationService } from '@/services/NotificationService';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { ProgressInvoiceForm } from '@/components/invoices/ProgressInvoiceForm';
 
@@ -309,7 +310,7 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
           },
         }));
 
-        await supabase.from('notifications').insert(notifications);
+        await NotificationService.createBatchNotifications(notifications);
       }
 
       toast({
