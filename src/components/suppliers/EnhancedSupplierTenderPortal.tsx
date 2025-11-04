@@ -1,36 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
+import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
+import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  FileText, 
-  Upload, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Send, 
-  Eye,
-  Calculator,
-  Download,
-  Share2,
-  Calendar
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
-import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
-import { SubmissionSecretService } from '@/services/SubmissionSecretService';
-import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
+import { supabase } from '@/integrations/supabase/client';
 import { TenderService } from '@/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Calculator,
+  Calendar,
+  CheckCircle,
+  Download,
+  FileText,
+  Send,
+  Share2,
+  Upload,
+  XCircle
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface PublicTender {
   id: string;
@@ -241,7 +235,7 @@ const EnhancedSupplierTenderPortal = () => {
       setSelectedFiles({});
       setSubmissionData({ notes: '' });
       toast({
-        title: 'Soumission envoyée',
+        title: 'Soumission :'+submission.tender_id+ ':envoyée',
         description: 'Votre dossier de candidature a été soumis avec succès.',
       });
     },
@@ -293,9 +287,10 @@ const EnhancedSupplierTenderPortal = () => {
       const now = new Date();
       if (now > deadline) return false;
     }
-
+    console.log("electedTender?.current_phase: +", selectedTender?.current_phase);
+    console.log("selectedTender?.status: +", selectedTender?.status);
     // Check if tender is in submission phase (phase 2)
-    return selectedTender?.current_phase === 2;
+    return selectedTender?.current_phase === 2 || selectedTender?.status === 'published';
   };
 
   const isSubmissionComplete = () => {
