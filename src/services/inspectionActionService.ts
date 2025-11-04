@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { communicationService } from './communicationService';
 import OrganizationalHierarchyService from './organizationalHierarchyService';
 
@@ -151,7 +151,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
     } catch (error) {
       console.error('Error assigning inspection task:', error);
       // Fallback to notification only
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: action.assigneeId,
         title: `Tâche inspection: ${action.title}`,
         message: action.message,
@@ -171,7 +171,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
 
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Nouvelle tâche d'inspection assignée`,
         message: `Une tâche d'inspection a été assignée: ${action.title}`,
@@ -208,7 +208,7 @@ const executeInspectionHierarchyNotification = async (action: InspectionControlA
     };
 
     for (const target of escalationTargets) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: `${action.message}\n\nInspection: ${action.inspectionId}\nProjet: ${action.projectId}\nNiveau: ${target.hierarchy_level}`,
@@ -288,7 +288,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
       }
 
       // Still send notification for tracking
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: employee.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,

@@ -2,7 +2,7 @@
 // This will be fully functional once Supabase types are regenerated
 
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { validateInsuranceCoverage } from './insuranceCertificateService';
 import { detectProjectDelays } from './bankGuaranteeService';
 
@@ -130,7 +130,7 @@ export const attemptPayment = async (
 
     // Send success notification if there were warnings
     if (validation.warningReasons.length > 0) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: 'system',
         title: 'Paiement effectué avec avertissements',
         message: `Paiement de ${paymentAmount} effectué avec ${validation.warningReasons.length} avertissement(s).`,
@@ -169,7 +169,7 @@ const sendPaymentBlockedNotification = async (validation: PaymentValidationResul
     .map(reason => reason.description)
     .join(', ');
 
-  await sendNotification({
+  await NotificationService.createNotification({
     recipient_id: 'system',
     title: 'PAIEMENT BLOQUÉ - Action requise',
     message: `Paiement de ${validation.totalAmount}€ bloqué pour le projet. Raisons: ${blockingReasonsText}`,

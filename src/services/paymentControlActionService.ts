@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 
 export interface PaymentControlAction {
   id: string;
@@ -78,7 +78,7 @@ const executeTaskAssignment = async (action: PaymentControlAction): Promise<void
   
   // Create task assignment notification
   if (action.assigneeId) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: action.assigneeId,
       title: `Tâche assignée: ${action.title}`,
       message: action.message,
@@ -98,7 +98,7 @@ const executeTaskAssignment = async (action: PaymentControlAction): Promise<void
   // Notify all recipients
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Nouvelle tâche de paiement assignée`,
         message: `Une tâche a été assignée pour résoudre les problèmes de paiement: ${action.title}`,
@@ -125,7 +125,7 @@ const executeHierarchyNotification = async (action: PaymentControlAction): Promi
   };
 
   for (const recipientId of action.recipientIds) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: recipientId,
       title: escalationTitles[action.escalationLevel || 'team'],
       message: action.message,
@@ -148,7 +148,7 @@ const executeSMSAction = async (action: PaymentControlAction): Promise<void> => 
   
   // In a real implementation, this would integrate with an SMS service
   for (const recipientId of action.recipientIds) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: recipientId,
       title: 'SMS - Contrôle de paiement',
       message: `SMS envoyé: ${action.message}`,
@@ -167,7 +167,7 @@ const executeCallAction = async (action: PaymentControlAction): Promise<void> =>
   console.log('Executing call action:', action);
   
   for (const recipientId of action.recipientIds) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: recipientId,
       title: 'Appel programmé - Contrôle de paiement',
       message: `Appel prévu concernant: ${action.message}`,
@@ -188,7 +188,7 @@ const executeEmailAction = async (action: PaymentControlAction): Promise<void> =
   
   // In a real implementation, this would send actual emails
   for (const recipientId of action.recipientIds) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: recipientId,
       title: `Email: ${action.title}`,
       message: action.message,
@@ -208,7 +208,7 @@ const executeMailAction = async (action: PaymentControlAction): Promise<void> =>
   console.log('Executing mail action:', action);
   
   for (const recipientId of action.recipientIds) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: recipientId,
       title: 'Courrier postal programmé',
       message: `Courrier postal préparé: ${action.message}`,

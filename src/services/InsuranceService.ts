@@ -1,5 +1,5 @@
 import { InsuranceRepository, INSURANCE_ALERT_THRESHOLDS } from './InsuranceRepository';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { InsuranceAlertEntity, InsuranceCertificateEntity } from '@/types/insurance.entity';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 
@@ -56,7 +56,7 @@ export class InsuranceService {
           : `⚠️ Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s).`;
 
         for (const recipientId of recipients) {
-          await sendNotification({
+          await NotificationService.createNotification({
             recipient_id: recipientId,
             title: alertTitle,
             message: alertMessage,
@@ -101,7 +101,7 @@ export class InsuranceService {
       const createdCertificate = await InsuranceRepository.create(certificate);
 
       // Notify relevant stakeholders about new certificate
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: '00000000-0000-0000-0000-000000000000',
         title: "Nouvelle attestation d'assurance enregistrée",
         message: `Attestation ${certificate.coverage_type} pour ${certificate.contractor_name} ajoutée au projet.`,

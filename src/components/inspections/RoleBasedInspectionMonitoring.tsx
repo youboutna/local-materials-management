@@ -29,7 +29,7 @@ import {
   Search
 } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { sendNotification } from '@/services/notificationService';
+import { NotificationService } from '@/services/NotificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
 import InspectionExecutionForm from './InspectionExecutionForm';

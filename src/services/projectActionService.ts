@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { communicationService } from './communicationService';
 import OrganizationalHierarchyService from './organizationalHierarchyService';
 
@@ -145,7 +145,7 @@ const executeProjectTaskAssignment = async (action: ProjectControlAction): Promi
       }
     } catch (error) {
       console.error('Error assigning project task:', error);
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: action.assigneeId,
         title: `Tâche projet: ${action.title}`,
         message: action.message,
@@ -162,7 +162,7 @@ const executeProjectTaskAssignment = async (action: ProjectControlAction): Promi
 
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Nouvelle tâche projet assignée`,
         message: `Une tâche a été assignée pour le projet: ${action.title}`,
@@ -213,7 +213,7 @@ HIÉRARCHIE:
 - Niveau: ${target.hierarchy_level}
       `;
 
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
@@ -324,7 +324,7 @@ const executeProjectExportReceipt = async (action: ProjectControlAction): Promis
 
     // Notify recipients
     for (const recipientId of action.recipientIds) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Rapport projet généré`,
         message: `Le rapport pour le projet ${action.metadata?.project?.title || action.projectId} a été généré avec succès.`,
@@ -363,7 +363,7 @@ const executeProjectBlockchainVerification = async (action: ProjectControlAction
 
     // Notify recipients
     for (const recipientId of action.recipientIds) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Vérification blockchain projet complétée`,
         message: `Le projet ${action.metadata?.project?.title || action.projectId} a été vérifié sur la blockchain.`,

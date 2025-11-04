@@ -1,7 +1,7 @@
 // Service for insurance certificate management and alerts
 
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 
 export interface InsuranceCertificate {
   id?: string;
@@ -127,7 +127,7 @@ export const sendInsuranceExpiryAlerts = async (alerts: InsuranceAlert[]) => {
         : `⚠️ Assurance ${alert.insuranceType} de ${alert.contractorName} expire dans ${alert.daysRemaining} jour(s).`;
 
       for (const recipientId of recipients) {
-        await sendNotification({
+        await NotificationService.createNotification({
           recipient_id: recipientId,
           title: alertTitle,
           message: alertMessage,
@@ -170,7 +170,7 @@ export const createInsuranceCertificate = async (certificate: Omit<InsuranceCert
     const mockId = `cert-${Date.now()}`;
     
     // Notify relevant stakeholders about new certificate
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: '00000000-0000-0000-0000-000000000000', // System notification
       title: 'Nouvelle attestation d\'assurance enregistrée',
       message: `Attestation ${certificate.coverageType} pour ${certificate.contractorName} ajoutée au projet.`,

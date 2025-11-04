@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 
 export interface InspectionData {
   id?: string;
@@ -203,7 +203,7 @@ export const submitInspectionForApproval = async (
     if (!inspection) throw new Error('Inspection not found');
 
     // Notify consultant for approval
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: consultantId,
       title: 'Approbation inspection requise',
       message: `Inspection du projet "${inspection.projects.title}" en attente d'approbation.`,
@@ -227,7 +227,7 @@ export const submitInspectionForApproval = async (
         .eq('role_name', 'director');
 
       for (const director of directors || []) {
-        await sendNotification({
+        await NotificationService.createNotification({
           recipient_id: director.user_id,
           title: 'APPROBATION DIRECTEUR - Inspection critique',
           message: `Inspection critique nécessitant votre approbation: "${inspection.projects.title}".`,
@@ -255,20 +255,20 @@ export const submitInspectionForApproval = async (
 // Helper functions
 const notifyInspectionScheduled = async (inspectionId: string, inspectionData: InspectionData) => {
   // Notify inspector
-  await sendNotification({
-    recipient_id: inspectionData.inspectorId,
-    title: 'Nouvelle inspection programmée',
-    message: `Inspection ${inspectionData.inspectionType} programmée pour le ${new Date(inspectionData.scheduledDate).toLocaleDateString()}.`,
-    type: 'inspection_required',
-    related_id: inspectionId,
-    metadata: {
-      related_project_id: inspectionData.projectId,
-      related_inspection_id: inspectionId,
-      priority: 'medium',
-      inspection_type: inspectionData.inspectionType,
-      due_date: inspectionData.scheduledDate
-    }
-  });
+    await NotificationService.createNotification({
+      recipient_id: inspectionData.inspectorId,
+      title: 'Nouvelle inspection programmée',
+      message: `Inspection ${inspectionData.inspectionType} programmée pour le ${new Date(inspectionData.scheduledDate).toLocaleDateString()}.`,
+      type: 'inspection_required',
+      related_id: inspectionId,
+      metadata: {
+        related_project_id: inspectionData.projectId,
+        related_inspection_id: inspectionId,
+        priority: 'medium',
+        inspection_type: inspectionData.inspectionType,
+        due_date: inspectionData.scheduledDate
+      }
+    });
 
   // Note: project_manager_id doesn't exist in current schema
   // This would need to be implemented when project manager relationships are added
@@ -279,7 +279,7 @@ const sendOverdueInspectionAlert = async (inspection: any) => {
   const daysPastDue = Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24));
   
   // Alert inspector
-  await sendNotification({
+  await NotificationService.createNotification({
     recipient_id: inspection.inspector,
     title: 'INSPECTION EN RETARD',
     message: `Inspection en retard de ${daysPastDue} jour(s) sur le projet "${inspection.projects.title}".`,
@@ -302,7 +302,7 @@ const sendOverdueInspectionAlert = async (inspection: any) => {
       .single();
 
     if (supervisor?.superior_id) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: supervisor.superior_id,
         title: 'Inspection en retard - Intervention requise',
         message: `Inspection en retard de ${daysPastDue} jours nécessite votre intervention.`,
@@ -330,7 +330,7 @@ const sendComplianceAlert = async (alert: ComplianceAlert) => {
     .in('role_name', ['project_manager', 'director', 'engineering_consultant']);
 
   for (const stakeholder of stakeholders || []) {
-    await sendNotification({
+    await NotificationService.createNotification({
       recipient_id: stakeholder.user_id,
       title: `ALERTE CONFORMITÉ - ${alert.severity.toUpperCase()}`,
       message: alert.description,

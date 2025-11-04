@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { communicationService } from './communicationService';
 import OrganizationalHierarchyService from './organizationalHierarchyService';
 
@@ -149,7 +149,7 @@ const executePaymentTaskAssignment = async (action: PaymentControlAction): Promi
       }
     } catch (error) {
       console.error('Error assigning payment task:', error);
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: action.assigneeId,
         title: `Tâche paiement: ${action.title}`,
         message: action.message,
@@ -167,7 +167,7 @@ const executePaymentTaskAssignment = async (action: PaymentControlAction): Promi
 
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Nouvelle tâche paiement assignée`,
         message: `Une tâche a été assignée pour le paiement: ${action.title}`,
@@ -216,7 +216,7 @@ CONTEXTE PROJET:
 - Paiement: ${action.paymentId}
       `;
 
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
@@ -324,7 +324,7 @@ const executePaymentExportReceipt = async (action: PaymentControlAction): Promis
 
     // Notify recipients
     for (const recipientId of action.recipientIds) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Reçu de paiement généré`,
         message: `Le reçu pour le paiement ${action.paymentId} a été généré avec succès.`,
@@ -358,7 +358,7 @@ const executePaymentBlockchainVerification = async (action: PaymentControlAction
 
     // Notify recipients
     for (const recipientId of action.recipientIds) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Vérification blockchain complétée`,
         message: `Le paiement ${action.paymentId} a été vérifié sur la blockchain.`,

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import UserSelector from '@/components/selectors/UserSelector';
-import { sendNotification } from '@/services/notificationService';
+import { NotificationService } from '@/services/NotificationService';
 
 interface Project {
   id: string;
@@ -198,8 +198,8 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
 
       // Notify contractor if requested
       if (notifyContractor && selectedProject.contractor_contact) {
-        await sendNotification({
-          recipient_id: selectedProject.contractor_contact, // This should be contractor's user ID
+        await NotificationService.createNotification({
+          recipient_id: selectedProject.contractor_contact,
           title: 'Inspection Programmée',
           message: `Une inspection ${INSPECTION_TYPES.find(t => t.value === inspectionType)?.label} a été programmée pour le projet "${selectedProject.title}" le ${new Date(inspectionDate).toLocaleDateString('fr-FR')}.`,
           type: 'inspection_required',

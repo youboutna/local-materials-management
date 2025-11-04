@@ -1,5 +1,5 @@
 import { BankGuaranteeRepository } from './BankGuaranteeRepository';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS } from '@/types/project';
 import { AppError, ErrorLogger } from '@/utils/errorHandling';
 
@@ -104,7 +104,7 @@ export class BankGuaranteeService {
 
       // Send all notifications
       const results = await Promise.allSettled(
-        notifications.map(notification => sendNotification(notification))
+        notifications.map(notification => NotificationService.createNotification(notification))
       );
 
       console.log(`Bank guarantee notifications sent: ${results.filter(r => r.status === 'fulfilled').length} successful`);
@@ -152,7 +152,7 @@ export class BankGuaranteeService {
         .single();
 
       if (contractor?.user_id) {
-        await sendNotification({
+        await NotificationService.createNotification({
           recipient_id: contractor.user_id,
           title: 'PÉNALITÉ CONTRACTUELLE - Action requise',
           message: `Votre projet "${projectDelay.projectName}" accuse un retard de ${projectDelay.delayDays} jours. Pénalité appliquée: ${penaltyData.totalPenalty.toLocaleString()} MRU.`,

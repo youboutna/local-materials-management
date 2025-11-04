@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import { communicationService } from './communicationService';
 import OrganizationalHierarchyService from './organizationalHierarchyService';
 
@@ -151,7 +151,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
     } catch (error) {
       console.error('Error assigning bank guarantee task:', error);
       // Fallback to notification only
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: action.assigneeId,
         title: `Tâche garantie bancaire: ${action.title}`,
         message: action.message,
@@ -171,7 +171,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
 
   for (const recipientId of action.recipientIds) {
     if (recipientId !== action.assigneeId) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Nouvelle tâche garantie bancaire assignée`,
         message: `Une tâche a été assignée pour gérer la garantie bancaire: ${action.title}`,
@@ -228,7 +228,7 @@ CONTEXTE PROJET:
 - Entrepreneur: ${action.contractorId}
       `;
 
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: target.employee_id,
         title: escalationTitles[action.escalationLevel || 'team'],
         message: hierarchyMessage,
@@ -254,7 +254,7 @@ CONTEXTE PROJET:
     console.error('Error in bank guarantee hierarchy notification:', error);
     // Fallback to original recipients if hierarchy fails
     for (const recipientId of action.recipientIds) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: recipientId,
         title: `Escalade Garantie Bancaire - ${action.title}`,
         message: action.message,
@@ -399,7 +399,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
       }
 
       // Send tracking notification
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: target.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,

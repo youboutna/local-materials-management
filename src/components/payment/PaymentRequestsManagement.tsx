@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentRequestDetailsDialog } from './PaymentRequestDetailsDialog';
-import { sendNotification } from '@/services/notificationService';
+import { NotificationService } from '@/services/NotificationService';
 
 interface PaymentRequest {
   id: string;
@@ -90,7 +90,7 @@ export const PaymentRequestsManagement: React.FC = () => {
   const handleApprove = async (request: PaymentRequest) => {
     if (!checkBankingInfo(request)) {
       // Send notification to supplier to complete banking info
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: request.supplier_id,
         title: 'Informations bancaires requises',
         message: `Pour traiter votre demande de paiement de ${request.amount} MRU, veuillez compléter vos informations bancaires et joindre la facture de décompte.`,
@@ -124,7 +124,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       if (error) throw error;
 
       // Notify supplier
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: request.supplier_id,
         title: 'Demande de paiement approuvée',
         message: `Votre demande de paiement de ${request.amount} MRU a été approuvée.`,
@@ -167,7 +167,7 @@ export const PaymentRequestsManagement: React.FC = () => {
       if (error) throw error;
 
       // Notify supplier
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: request.supplier_id,
         title: 'Demande de paiement rejetée',
         message: `Votre demande de paiement de ${request.amount} MRU a été rejetée. Raison: ${reason}`,

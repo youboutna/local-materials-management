@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from './notificationService';
+import { NotificationService } from './NotificationService';
 import {ProjectDelay, BankGuaranteeData, NOTIFICATION_ROLES, DELAY_THRESHOLDS} from '@/types/project';
 
 export const detectProjectDelays = async (): Promise<ProjectDelay[]> => {
@@ -131,7 +131,7 @@ export const triggerBankGuaranteeNotification = async (
 
     // Send all notifications
     const results = await Promise.allSettled(
-      notifications.map(notification => sendNotification(notification))
+      notifications.map(notification => NotificationService.createNotification(notification))
     );
 
     console.log(`Bank guarantee notifications sent: ${results.filter(r => r.status === 'fulfilled').length} successful`);
@@ -171,7 +171,7 @@ export const sendContractorPenaltyNotification = async (
       .single();
 
     if (contractor?.user_id) {
-      await sendNotification({
+      await NotificationService.createNotification({
         recipient_id: contractor.user_id,
         title: 'PÉNALITÉ CONTRACTUELLE - Action requise',
         message: `Votre projet "${projectDelay.projectName}" accuse un retard de ${projectDelay.delayDays} jours. Pénalité appliquée: ${penaltyData.totalPenalty.toLocaleString()} MRU.`,
