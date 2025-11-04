@@ -170,4 +170,12 @@ export class TenderService {
     if (error) throw error;
     return (data || []) as TenderDTO[];
   }
+
+  /**
+   * Get published tenders available for supplier submission (Phase 2 + valid deadline)
+   */
+  static async getPublishedTendersForSubmission(): Promise<TenderDTO[]> {
+    const entities = await this.repository.findPublishedPhase2WithValidDeadline();
+    return entities.map(entity => EntityToDTOMapper.tenderEntityToDTO(entity));
+  }
 }

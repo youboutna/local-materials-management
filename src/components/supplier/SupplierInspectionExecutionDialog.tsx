@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { InspectionDTO } from '@/types/inspection.dto';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { SupplierPaymentService } from '@/services/SupplierPaymentService';
 
 interface SupplierInspectionExecutionDialogProps {
   inspection: InspectionDTO | null;
@@ -184,39 +185,25 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
         const amount = parseFloat(paymentAmount);
         
         if (paymentRequestType === 'contractor') {
-          // Get contractor from project stakeholders
-          const { data: contractorStakeholder } = await supabase
-            .from('project_stakeholders')
-            .select('supplier_id, suppliers(name, contact_person, phone)')
-            .eq('project_id', inspection.project_id)
-            .eq('role', 'contractor')
-            .limit(1)
-            .single();
-
-          const targetSupplierId = contractorStakeholder?.supplier_id || supplierId;
-
-          await supabase.from('supplier_payment_requests').insert({
-            supplier_id: targetSupplierId,
-            project_id: inspection.project_id,
+          // Create contractor progress payment
+          await SupplierPaymentService.createContractorProgressPayment(
+            inspection.project_id,
             amount,
-            description: paymentDescription || `Décompte de paiement suite à inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')} - Avancement: ${progress}%`,
-            payment_reason: 'progress_payment',
-            status: 'pending',
-            requested_date: new Date().toISOString(),
-            notes: `Inspection ID: ${inspection.id}\nDocuments: ${uploadedDocs.length} fichier(s)\nAvancement: ${progress}%`
-          });
+            inspection.id,
+            progress,
+            uploadedDocs.length,
+            paymentDescription
+          );
         } else {
-          // Payment for inspector (mission fees or consulting fees)
-          await supabase.from('supplier_payment_requests').insert({
-            supplier_id: supplierId,
-            project_id: inspection.project_id,
+          // Create inspector fee payment
+          await SupplierPaymentService.createInspectorFeePayment(
+            supplierId,
+            inspection.project_id,
             amount,
-            description: paymentDescription || `Frais d'inspection - Mission du ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
-            payment_reason: 'inspection_fee',
-            status: 'pending',
-            requested_date: new Date().toISOString(),
-            notes: `Inspection ID: ${inspection.id}\nType: Frais de mission / Honoraires ingénieur conseil`
-          });
+            inspection.id,
+            inspection.date,
+            paymentDescription
+          );
         }
 
         toast({

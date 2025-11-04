@@ -61,6 +61,22 @@ export class TenderRepository {
   }
 
   /**
+   * Find published tenders in phase 2 with valid deadline
+   */
+  async findPublishedPhase2WithValidDeadline(): Promise<TenderEntity[]> {
+    const { data, error } = await supabase
+      .from('tenders')
+      .select('*')
+      .eq('status', 'published')
+      .eq('current_phase', 2)
+      .gte('deadline_date', new Date().toISOString())
+      .order('deadline_date', { ascending: true });
+    
+    if (error) throw error;
+    return (data || []) as TenderEntity[];
+  }
+
+  /**
    * Create tender
    */
   async create(tenderData: Omit<TenderEntity, 'id' | 'created_at' | 'updated_at'>): Promise<TenderEntity> {

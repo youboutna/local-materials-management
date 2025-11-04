@@ -138,31 +138,11 @@ const EnhancedSupplierTenderPortal = () => {
     setSupplierEmailFromSecret(supplierEmail);
   };
 
-  // Fetch public tenders and filter for submission phase
+  // Fetch public tenders for submission (published, phase 2, valid deadline)
   const { data: publicTenders, isLoading } = useQuery({
     queryKey: ['public-tenders'],
     queryFn: async () => {
-      const tenders = await TenderService.getAllTenders();
-      
-      const now = new Date();
-      const filtered = tenders.filter((tender: any) => {
-        // Only published tenders
-        if (tender.status !== 'published') return false;
-        
-        // Check if tender is in submission phase (phase 2)
-        const isPhase2 = Number(tender.current_phase) === 2;
-        
-        // Check if deadline is in the future
-        let hasValidDeadline = false;
-        if (tender.deadline_date) {
-          const deadline = new Date(tender.deadline_date);
-          hasValidDeadline = !isNaN(deadline.getTime()) && deadline >= now;
-        }
-        
-        return isPhase2 && hasValidDeadline;
-      });
-
-      return filtered as PublicTender[];
+      return await TenderService.getPublishedTendersForSubmission() as PublicTender[];
     }
   });
 
@@ -172,6 +152,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryFn: async () => {
       if (!selectedTender?.id) return [];
       
+      // TODO: Create DocumentService to handle this
       const { data, error } = await supabase
         .from('documents')
         .select('*')
