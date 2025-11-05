@@ -45,7 +45,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
 
-  const { data: tenderDocuments, isLoading } = useQuery({
+  // Fetch tender documents
+  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useQuery({
     queryKey: ['tender-documents', tenderId],
     queryFn: async () => {
       // Query tender_documents with tender_id
@@ -75,6 +76,62 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     },
     enabled: !!tenderId
   });
+
+  // Fetch workflow step documents
+  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useQuery({
+    queryKey: ['workflow-step-documents', tenderId],
+    queryFn: async () => {
+      // First get all steps for this tender
+      const { data: steps, error: stepsError } = await supabase
+        .from('tender_steps')
+        .select('id, title, step_number')
+        .eq('tender_id', tenderId);
+      
+      if (stepsError) throw stepsError;
+      if (!steps?.length) return [];
+
+      // Get all documents for these steps
+      const stepIds = steps.map(s => s.id);
+      const { data: stepDocs, error: docsError } = await supabase
+        .from('tender_step_documents')
+        .select(`
+          *,
+          document:documents(*),
+          step:tender_steps(title, step_number)
+        `)
+        .in('step_id', stepIds);
+
+      if (docsError) throw docsError;
+
+      // Transform to match TenderDocumentWithDetails format
+      return (stepDocs || []).map(doc => ({
+        id: doc.id,
+        tender_id: tenderId,
+        document_id: doc.document_id,
+        category: doc.document_type as TenderDocumentCategory || 'administrative',
+        subcategory: 'workflow_step' as any,
+        is_required: doc.is_required,
+        reviewer_notes: doc.reviewer_notes,
+        status: doc.status as any,
+        created_at: doc.created_at,
+        updated_at: doc.created_at,
+        document: doc.document,
+        step_info: {
+          step_title: doc.step?.title,
+          step_number: doc.step?.step_number
+        }
+      }));
+    },
+    enabled: !!tenderId,
+  });
+
+  const isLoading = isTenderDocsLoading || isWorkflowDocsLoading;
+
+  // Combine all documents
+  const allDocuments = [
+    ...(tenderDocuments || []),
+    ...(workflowStepDocuments || [])
+  ];
 
   // Updated upload document mutation to use tender_id
   const uploadMutation = useMutation({
@@ -347,7 +404,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   };
 
   const filterDocumentsByCategory = (category: TenderDocumentCategory) => {
-    return tenderDocuments?.filter(doc => doc.category === category) || [];
+    return allDocuments?.filter(doc => doc.category === category) || [];
   };
 
    const handleSubcategoryChange = (value: TenderDocumentSubcategory) => {
@@ -418,12 +475,23 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-medium text-sm mb-1">
-                              {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                              {tenderDoc.subcategory === 'workflow_step' ? (
+                                tenderDoc.document?.title || 'Document workflow'
+                              ) : (
+                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]
+                              )}
                             </h4>
-                            {tenderDoc.document?.title && (
-                              <p className="text-xs text-gray-600 mb-2">
-                                {tenderDoc.document.title}
+                            {tenderDoc.subcategory === 'workflow_step' ? (
+                              <p className="text-xs text-gray-500 flex items-center">
+                                <FileText className="h-3 w-3 mr-1" />
+                                Étape {(tenderDoc as any).step_info?.step_number}: {(tenderDoc as any).step_info?.step_title}
                               </p>
+                            ) : (
+                              tenderDoc.document?.title && (
+                                <p className="text-xs text-gray-600 mb-2">
+                                  {tenderDoc.document.title}
+                                </p>
+                              )
                             )}
                           </div>
                           <div className="flex items-center gap-2">

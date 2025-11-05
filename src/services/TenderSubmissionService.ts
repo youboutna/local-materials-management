@@ -119,9 +119,11 @@ export class TenderSubmissionService {
       try {
         // Upload documents and link to submission
         for (const doc of documents) {
+          // Sanitize file name to avoid path issues
+          const sanitizedFileName = doc.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const uploadResult = await uploadFile(
             doc.file,
-            `tender-submissions/${submissionData.tender_id}/${submissionData.user_id}/${doc.category}/${doc.file.name}`
+            `tender-submissions/${submissionData.tender_id}/${submission.id}/${sanitizedFileName}`
           );
 
           if (!uploadResult.success || !uploadResult.url) {
