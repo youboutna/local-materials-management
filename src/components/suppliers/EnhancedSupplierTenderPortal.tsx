@@ -12,6 +12,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { TenderService } from '@/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
+import { DocumentValidationService } from '@/services/DocumentValidationService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calculator,
