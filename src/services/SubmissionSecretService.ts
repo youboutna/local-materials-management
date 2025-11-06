@@ -68,11 +68,15 @@ export class SubmissionSecretService {
       .update(updateData)
       .eq('id', dto.submission_id)
       .select()
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error creating submission secret:', error);
       throw new Error('Impossible de créer le code secret');
+    }
+
+    if (!data) {
+      throw new Error('Soumission introuvable');
     }
     
     return data as SubmissionSecretDTO;
@@ -124,7 +128,7 @@ export class SubmissionSecretService {
       .from('tender_submissions')
       .select('*')
       .eq('id', submissionId)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching submission by ID:', error);
@@ -144,7 +148,7 @@ export class SubmissionSecretService {
       .from('tender_submissions')
       .select('*')
       .eq('secret_code', secretCode)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching submission by secret:', error);
@@ -185,11 +189,15 @@ export class SubmissionSecretService {
       })
       .eq('id', submissionId)
       .select()
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error regenerating submission secret:', error);
       throw new Error('Impossible de régénérer le code secret');
+    }
+
+    if (!data) {
+      throw new Error('Soumission introuvable');
     }
     
     return data as SubmissionSecretDTO;
