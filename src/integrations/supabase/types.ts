@@ -5731,6 +5731,17 @@ export type Database = {
           position_title: string
         }[]
       }
+      get_submission_activity_logs: {
+        Args: { p_submission_id: string }
+        Returns: {
+          action: string
+          created_at: string
+          details: string
+          id: string
+          performed_by: string
+          submission_id: string
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -5739,6 +5750,19 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: {
           role_name: string
+        }[]
+      }
+      get_validation_logs: {
+        Args: { p_submission_id: string }
+        Returns: {
+          created_at: string
+          document_id: string
+          errors: Json
+          id: string
+          is_valid: boolean
+          submission_id: string
+          validated_at: string
+          warnings: Json
         }[]
       }
       has_role: {
