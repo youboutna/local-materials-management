@@ -138,19 +138,16 @@ const SupplierSubmissionDashboard = () => {
     queryFn: async () => {
       if (!selectedSubmission?.id) return [];
 
-      // Use raw query since types haven't been generated yet
-      const { data, error } = await supabase
-        .from('submission_activity_logs' as any)
-        .select('*')
-        .eq('submission_id', selectedSubmission.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // Use rpc call to bypass type checking for new table
+      const { data, error } = await supabase.rpc('get_submission_activity_logs', {
+        p_submission_id: selectedSubmission.id
+      });
 
       if (error) {
         console.error('Error fetching activity logs:', error);
         return [];
       }
-      return (data || []) as unknown as ActivityLog[];
+      return (data || []) as ActivityLog[];
     },
     enabled: !!selectedSubmission?.id
   });

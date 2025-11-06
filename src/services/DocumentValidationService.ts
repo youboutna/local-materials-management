@@ -86,12 +86,10 @@ export class DocumentValidationService {
    */
   static async getValidationLogs(submissionId: string) {
     try {
-      // Use raw query since types haven't been generated yet
-      const { data, error } = await supabase
-        .from('document_validation_logs' as any)
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('validated_at', { ascending: false });
+      // Use rpc call to bypass type checking for new table
+      const { data, error } = await supabase.rpc('get_validation_logs', {
+        p_submission_id: submissionId
+      });
 
       if (error) throw error;
       return data;
