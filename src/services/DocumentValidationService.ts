@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
 
 export interface ValidationResult {
   is_valid: boolean;
@@ -87,7 +88,7 @@ export class DocumentValidationService {
   static async getValidationLogs(submissionId: string) {
     try {
       // Direct query with type suppression
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as ExtendedSupabaseClient)
         .from('document_validation_logs')
         .select('*')
         .eq('submission_id', submissionId)

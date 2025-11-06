@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { ExtendedSupabaseClient } from '@/types/supabase-helpers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -139,7 +140,7 @@ const SupplierSubmissionDashboard = () => {
       if (!selectedSubmission?.id) return [];
 
       // Direct query with type suppression
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as ExtendedSupabaseClient)
         .from('submission_activity_logs')
         .select('*')
         .eq('submission_id', selectedSubmission.id)
