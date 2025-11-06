@@ -87,15 +87,27 @@ const SupplierSubmissionDashboard = () => {
 
       const { data, error } = await supabase
         .from('tender_submissions')
-        .select(`
-          *,
-          tender:tenders(title, deadline_date)
-        `)
+        .select('*')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Submission[];
+      
+      // Fetch tender titles separately
+      const enrichedData = await Promise.all((data || []).map(async (submission: any) => {
+        const { data: tender } = await supabase
+          .from('tenders')
+          .select('title, deadline_date')
+          .eq('id', submission.tender_id)
+          .single();
+        
+        return {
+          ...submission,
+          tender: tender || undefined
+        };
+      }));
+
+      return enrichedData as Submission[];
     },
     enabled: !!currentUser?.id
   });
@@ -126,8 +138,9 @@ const SupplierSubmissionDashboard = () => {
     queryFn: async () => {
       if (!selectedSubmission?.id) return [];
 
+      // Use raw query since types haven't been generated yet
       const { data, error } = await supabase
-        .from('submission_activity_logs')
+        .from('submission_activity_logs' as any)
         .select('*')
         .eq('submission_id', selectedSubmission.id)
         .order('created_at', { ascending: false })
@@ -137,7 +150,7 @@ const SupplierSubmissionDashboard = () => {
         console.error('Error fetching activity logs:', error);
         return [];
       }
-      return data as ActivityLog[];
+      return (data || []) as unknown as ActivityLog[];
     },
     enabled: !!selectedSubmission?.id
   });

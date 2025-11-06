@@ -511,6 +511,54 @@ export type Database = {
           },
         ]
       }
+      document_validation_logs: {
+        Row: {
+          created_at: string
+          document_id: string
+          errors: Json | null
+          id: string
+          is_valid: boolean
+          submission_id: string
+          validated_at: string
+          warnings: Json | null
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          errors?: Json | null
+          id?: string
+          is_valid?: boolean
+          submission_id: string
+          validated_at?: string
+          warnings?: Json | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          errors?: Json | null
+          id?: string
+          is_valid?: boolean
+          submission_id?: string
+          validated_at?: string
+          warnings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_validation_logs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_validation_logs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "tender_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           assigned_to: string | null
@@ -3647,6 +3695,48 @@ export type Database = {
           },
           {
             foreignKeyName: "submission_access_logs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "tender_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          performed_by: string | null
+          submission_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          performed_by?: string | null
+          submission_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          performed_by?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_activity_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "submission_activity_logs_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "tender_submissions"

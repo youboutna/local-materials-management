@@ -86,8 +86,9 @@ export class DocumentValidationService {
    */
   static async getValidationLogs(submissionId: string) {
     try {
+      // Use raw query since types haven't been generated yet
       const { data, error } = await supabase
-        .from('document_validation_logs')
+        .from('document_validation_logs' as any)
         .select('*')
         .eq('submission_id', submissionId)
         .order('validated_at', { ascending: false });
