@@ -181,19 +181,14 @@ export class TenderSubmissionService {
         }
 
         // Generate secret code for evaluation access
-        try {
-          const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30);
-          await SubmissionSecretService.createSubmissionSecret({
-            submission_id: submission.id,
-            expires_at: expiresAt,
-            max_access: 50,
-            evaluation_phase: 'evaluation',
-            evaluation_stage: 'initial'
-          });
-        } catch (secretError) {
-          console.error('Warning: Failed to generate secret code:', secretError);
-          // Don't fail submission if secret generation fails
-        }
+        const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30);
+        await SubmissionSecretService.createSubmissionSecret({
+          submission_id: submission.id,
+          expires_at: expiresAt,
+          max_access: 50,
+          evaluation_phase: 'evaluation',
+          evaluation_stage: 'initial'
+        });
 
         return submission;
       } catch (uploadError) {
