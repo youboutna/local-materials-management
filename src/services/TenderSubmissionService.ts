@@ -72,7 +72,8 @@ export class TenderSubmissionService {
   static async createSubmissionWithDocuments(
     submissionData: CreateTenderSubmissionDTO,
     documents: UploadedDocument[],
-    uploadFile: (file: File, path: string) => Promise<{ success: boolean; url?: string; error?: string }>
+    uploadFile: (file: File, path: string) => Promise<{ success: boolean; url?: string; error?: string }>,
+    onProgress?: (step: 'creating' | 'uploading' | 'generating', current?: number, total?: number) => void
   ) {
     try {
       // Validate no existing submission
@@ -89,6 +90,7 @@ export class TenderSubmissionService {
       }
 
       // Create submission record
+      onProgress?.('creating');
       const { data: submission, error: submissionError } = await supabase
         .from('tender_submissions')
         .insert({
@@ -118,6 +120,9 @@ export class TenderSubmissionService {
 
       try {
         // Upload documents and link to submission
+        onProgress?.('uploading', 0, documents.length);
+        let uploadedCount = 0;
+        
         for (const doc of documents) {
           // Sanitize file name to avoid path issues
           const sanitizedFileName = doc.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -178,9 +183,13 @@ export class TenderSubmissionService {
               `Erreur lors de la liaison du document: ${linkError.message}`
             );
           }
+          
+          uploadedCount++;
+          onProgress?.('uploading', uploadedCount, documents.length);
         }
 
         // Generate secret code for evaluation access
+        onProgress?.('generating');
         const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30);
         await SubmissionSecretService.createSubmissionSecret({
           submission_id: submission.id,

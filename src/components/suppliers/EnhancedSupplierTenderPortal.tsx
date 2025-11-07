@@ -1,3 +1,4 @@
+import { SubmissionProgressTracker, SubmissionStep } from '@/components/suppliers/SubmissionProgressTracker';
 import { SubmissionSecretDisplay } from '@/components/suppliers/SubmissionSecretDisplay';
 import { SupplierTenderAccessGuard } from '@/components/suppliers/SupplierTenderAccessGuard';
 import TenderQuantitativeEstimate from '@/components/tenders/TenderQuantitativeEstimate';
@@ -116,6 +117,9 @@ const EnhancedSupplierTenderPortal = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File}>({});
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof DOCUMENT_CATEGORIES | null>(null);
+  const [submissionStep, setSubmissionStep] = useState<SubmissionStep>('idle');
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [submissionError, setSubmissionError] = useState<string>('');
   const [submissionData, setSubmissionData] = useState({
     notes: ''
   });
@@ -181,6 +185,10 @@ const EnhancedSupplierTenderPortal = () => {
   // Submit comprehensive bid mutation
   const submitBidMutation = useMutation({
     mutationFn: async () => {
+      setSubmissionStep('creating');
+      setSubmissionError('');
+      setUploadProgress({ current: 0, total: 0 });
+      
       if (!selectedTender?.id) throw new Error('Appel d\'offres non sélectionné');
       
       // Validate deadline
@@ -228,20 +236,36 @@ const EnhancedSupplierTenderPortal = () => {
           status: 'submitted'
         },
         documents,
-        uploadFile
+        uploadFile,
+        (step, current, total) => {
+          setSubmissionStep(step);
+          if (step === 'uploading' && current !== undefined && total !== undefined) {
+            setUploadProgress({ current, total });
+          }
+        }
       );
     },
     onSuccess: (submission) => {
+      setSubmissionStep('completed');
       queryClient.invalidateQueries({ queryKey: ['user-submission'] });
       setSelectedFiles({});
       setSubmissionData({ notes: '' });
+      
+      // Reset progress after a delay
+      setTimeout(() => {
+        setSubmissionStep('idle');
+        setUploadProgress({ current: 0, total: 0 });
+      }, 3000);
+      
       toast({
         title: 'Soumission :'+submission.tender_id+ ':envoyée',
         description: 'Votre dossier de candidature a été soumis avec succès.',
       });
     },
     onError: (error) => {
+      setSubmissionStep('error');
       console.error('Submit bid error:', error);
+      
       let message = 'Erreur lors de la soumission du dossier.';
       if (
         error instanceof Error &&
@@ -250,7 +274,12 @@ const EnhancedSupplierTenderPortal = () => {
          error.message.includes('unique constraint'))
       ) {
         message = 'Vous avez déjà soumis un dossier pour cet appel d\'offres.';
+      } else if (error instanceof Error) {
+        message = error.message;
       }
+      
+      setSubmissionError(message);
+      
       toast({
         title: 'Erreur',
         description: message,
@@ -582,6 +611,16 @@ const EnhancedSupplierTenderPortal = () => {
                             />
                           </CardContent>
                         </Card>
+
+                        {/* Submission Progress Tracker */}
+                        {submissionStep !== 'idle' && (
+                          <SubmissionProgressTracker
+                            currentStep={submissionStep}
+                            totalDocuments={uploadProgress.total}
+                            uploadedDocuments={uploadProgress.current}
+                            error={submissionError}
+                          />
+                        )}
 
                         <div className="flex justify-end gap-4">
                           <div className="text-sm text-muted-foreground">
