@@ -1,6 +1,7 @@
 import { TenderRepository } from './TenderRepository';
 import { EntityToDTOMapper } from './EntityToDTOMapper';
 import { SubmissionSecretService } from './SubmissionSecretService';
+import { sendTenderSubmissionNotification } from './tenderSubmissionNotificationService';
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -191,13 +192,32 @@ export class TenderSubmissionService {
         // Generate secret code for evaluation access
         onProgress?.('generating');
         const expiresAt = SubmissionSecretService.getDefaultExpirationDate(30);
-        await SubmissionSecretService.createSubmissionSecret({
+        const secretData = await SubmissionSecretService.createSubmissionSecret({
           submission_id: submission.id,
           expires_at: expiresAt,
           max_access: 50,
           evaluation_phase: 'evaluation',
           evaluation_stage: 'initial'
         });
+
+        // Get tender details for notification
+        const { data: tender } = await supabase
+          .from('tenders')
+          .select('title, project_id')
+          .eq('id', submissionData.tender_id)
+          .single();
+
+        // Send email notifications (non-blocking - don't fail submission if email fails)
+        if (secretData?.secret_code) {
+          sendTenderSubmissionNotification({
+            supplier_email: submissionData.supplier_email,
+            supplier_name: submissionData.supplier_name,
+            tender_title: tender?.title || 'Appel d\'offres',
+            submission_id: submission.id,
+            secret_code: secretData.secret_code,
+            admin_emails: [] // Add admin emails if needed
+          }).catch(err => console.error('Email notification failed:', err));
+        }
 
         return submission;
       } catch (uploadError) {

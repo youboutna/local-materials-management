@@ -258,8 +258,8 @@ const EnhancedSupplierTenderPortal = () => {
       }, 3000);
       
       toast({
-        title: 'Soumission :'+submission.tender_id+ ':envoyée',
-        description: 'Votre dossier de candidature a été soumis avec succès.',
+        title: 'Soumission envoyée avec succès',
+        description: 'Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé.',
       });
     },
     onError: (error) => {

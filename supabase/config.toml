@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.assign-task-to-employee]
 verify_jwt = false
+
+[functions.send-tender-submission-notification]
+verify_jwt = false
