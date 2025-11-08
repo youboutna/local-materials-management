@@ -207,6 +207,15 @@ export class TenderSubmissionService {
           .eq('id', submissionData.tender_id)
           .single();
 
+        // Fetch admin notification emails from system settings
+        const { data: settingsData } = await supabase
+          .from('system_settings')
+          .select('configuration')
+          .eq('key', 'admin_notification_emails')
+          .single();
+
+        const adminEmails = ((settingsData?.configuration as { emails?: string[] })?.emails) || [];
+
         // Send email notifications (non-blocking - don't fail submission if email fails)
         if (secretData?.secret_code) {
           sendTenderSubmissionNotification({
@@ -215,7 +224,7 @@ export class TenderSubmissionService {
             tender_title: tender?.title || 'Appel d\'offres',
             submission_id: submission.id,
             secret_code: secretData.secret_code,
-            admin_emails: [] // Add admin emails if needed
+            admin_emails: adminEmails
           }).catch(err => console.error('Email notification failed:', err));
         }
 

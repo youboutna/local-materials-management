@@ -18,7 +18,7 @@ export const AdminEmailsSettings = () => {
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
-        .eq('setting_key', 'admin_notification_emails')
+        .eq('key', 'admin_notification_emails')
         .single();
 
       if (error) throw error;
@@ -31,10 +31,10 @@ export const AdminEmailsSettings = () => {
       const { data, error } = await supabase
         .from('system_settings')
         .update({ 
-          setting_value: emails,
+          configuration: { emails },
           updated_at: new Date().toISOString()
         })
-        .eq('setting_key', 'admin_notification_emails')
+        .eq('key', 'admin_notification_emails')
         .select()
         .single();
 
@@ -57,7 +57,7 @@ export const AdminEmailsSettings = () => {
     },
   });
 
-  const currentEmails = (settings?.setting_value as string[]) || [];
+  const currentEmails = ((settings?.configuration as { emails?: string[] })?.emails) || [];
 
   const handleAddEmail = () => {
     const trimmedEmail = newEmail.trim();
