@@ -1,27 +1,26 @@
 
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Upload, 
-  FileSpreadsheet, 
-  FileText, 
-  CheckCircle, 
-  AlertTriangle,
-  X,
-  Download
-} from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { ImportFile, ImportOptions, ImportResult } from '@/types/project';
 import { ProjectService } from '@/services/ProjectService';
 import { ProjectFormDTO } from '@/types/dto';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { ImportOptions, ImportResult } from '@/types/project';
+import {
+  AlertTriangle,
+  CheckCircle,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Upload,
+  X
+} from 'lucide-react';
+import React, { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 type ImportMode = 'create' | 'update' | 'patch';
@@ -207,10 +206,18 @@ export default function ProjectFileImporter({ onImportComplete }: ProjectFileImp
       thumbnail: item.thumbnail,
       
       // Related entities (will be processed separately)
-      milestones: item.milestones,
-      documents: item.documents,
-      stakeholders: item.stakeholders,
-      inspections: item.inspections
+      milestones: item?.milestones,
+      documents: item?.documents,
+      stakeholders: item?.stakeholders,
+      inspections: item?.inspections,
+      risks: item?.risks,
+      tasks: item?.tasks,
+      payments: item?.payments,
+      phases: item?.phases,
+      plannedPhases: item?.plannedPhases,
+      constructionMilestones: item?.constructionMilestones,
+      expenses: item?.expenses,
+      resources: item?.resources,
     };
   };
 

@@ -1,5 +1,5 @@
 // Data Transfer Objects for UI components
-import { ProjectStatus, ConstructionPhase, ConstructionStage, Task, ProjectRisk, ProjectResource, Inspection, Alert, InsurancePolicy, GanttChartData, PERTAnalysis, EVMData, ProjectContact, CheckScheduleLastRun } from '@/types/project';
+import { Alert, CheckScheduleLastRun, ConstructionPhase, ConstructionStage, EVMData, GanttChartData, Inspection, InsurancePolicy, PERTAnalysis, ProjectContact, ProjectResource, ProjectRisk, ProjectStatus, Task } from '@/types/project';
 
 export interface ProjectDTO {
   id: string;
@@ -78,10 +78,10 @@ export interface ProjectDetailDTO extends ProjectDTO {
   documents?: any[];
   stakeholders?: any[];
   escalationThresholds?: {
-    alert: number;
-    notification: number;
-    guarantee: number;
-    legal: number;
+  alert: number;
+  notification: number;
+  guarantee: number;
+  legal: number;
   };
   checkScheduleLastRun?: CheckScheduleLastRun;
 }
@@ -132,6 +132,14 @@ export interface ProjectFormDTO {
   documents?: any[];
   stakeholders?: any[];
   inspections?: any[];
+  risks?: any[];
+  tasks?: any[];
+  payments?: any[];
+  phases?: any[];
+  plannedPhases?: any[];
+  constructionMilestones?: any[];
+  expenses?: any[];
+  resources?: any[];
 }
 
 export interface TaskDTO {
