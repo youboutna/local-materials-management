@@ -1,47 +1,98 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PaginationControls } from '@/components/ui/pagination-controls';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle, Upload, FileText, Bell, Settings, Calendar, Users, MessageSquare, Phone, Mail } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { usePagination } from '@/hooks/usePagination';
-import { 
-  validatePaymentEligibility, 
-  attemptPayment, 
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Shield,
+  AlertTriangle,
+  DollarSign,
+  Clock,
+  Ban,
+  CheckCircle,
+  Upload,
+  FileText,
+  Bell,
+  Settings,
+  Calendar,
+  Users,
+  MessageSquare,
+  Phone,
+  Mail,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { usePagination } from "@/hooks/usePagination";
+import {
+  validatePaymentEligibility,
+  attemptPayment,
   getPaymentBlockHistory,
-  PaymentValidationResult 
-} from '@/services/paymentBlockingService';
-import { BankGuaranteeService } from '@/services/BankGuaranteeService';
-import { createPaymentControlAction } from '@/services/paymentControlActionService';
-import ProjectSelector from '@/components/selectors/ProjectSelector';
-import SupplierSelector from '@/components/suppliers/SupplierSelector';
-import UserSelector from '@/components/selectors/UserSelector';
-import DocumentSelector from '@/components/selectors/DocumentSelector';
-import DocumentUpload from '@/components/documents/DocumentUpload';
-import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+  PaymentValidationResult,
+} from "@/services/paymentBlockingService";
+import { detectProjectDelays } from "@/services/bankGuaranteeService";
+import { createPaymentControlAction } from "@/services/paymentControlActionService";
+import ProjectSelector from "@/components/selectors/ProjectSelector";
+import SupplierSelector from "@/components/suppliers/SupplierSelector";
+import UserSelector from "@/components/selectors/UserSelector";
+import DocumentSelector from "@/components/selectors/DocumentSelector";
+import DocumentUpload from "@/components/documents/DocumentUpload";
+import { ActionsDropdown } from "@/components/actions/ActionsDropdown";
 
 const paymentFormSchema = z.object({
-  projectId: z.string().min(1, 'ID projet requis'),
-  contractorId: z.string().min(1, 'ID entrepreneur requis'),
-  amount: z.number().min(1, 'Montant requis'),
-  contractorName: z.string().min(1, 'Nom entrepreneur requis'),
-  contractorContact: z.string().min(1, 'Contact entrepreneur requis'),
-  paymentMethod: z.string().min(1, 'Méthode de paiement requise'),
-  progressAtPayment: z.number().min(0).max(100, 'Progression doit être entre 0 et 100'),
+  projectId: z.string().min(1, "ID projet requis"),
+  contractorId: z.string().min(1, "ID entrepreneur requis"),
+  amount: z.number().min(1, "Montant requis"),
+  contractorName: z.string().min(1, "Nom entrepreneur requis"),
+  contractorContact: z.string().min(1, "Contact entrepreneur requis"),
+  paymentMethod: z.string().min(1, "Méthode de paiement requise"),
+  progressAtPayment: z
+    .number()
+    .min(0)
+    .max(100, "Progression doit être entre 0 et 100"),
   inspectionId: z.string().optional(),
   phaseId: z.string().optional(),
   bankName: z.string().optional(),
@@ -51,11 +102,12 @@ const paymentFormSchema = z.object({
   mobileOperator: z.string().optional(),
   receiverName: z.string().optional(),
   supportingDocuments: z.array(z.string()).optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 const EnhancedPaymentBlockingInterface = () => {
-  const [validationResult, setValidationResult] = useState<PaymentValidationResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<PaymentValidationResult | null>(null);
   const [blockHistory, setBlockHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,7 +117,7 @@ const EnhancedPaymentBlockingInterface = () => {
     blockedPayments: 0,
     expiredInsurances: 0,
     delayedProjects: 0,
-    missingDocuments: 0
+    missingDocuments: 0,
   });
   const { toast } = useToast();
 
@@ -77,10 +129,10 @@ const EnhancedPaymentBlockingInterface = () => {
     totalPages,
     totalItems,
     itemsPerPage,
-    goToPage
+    goToPage,
   } = usePagination({
     data: recentPaymentBlocks,
-    itemsPerPage: 10
+    itemsPerPage: 10,
   });
 
   useEffect(() => {
@@ -95,44 +147,46 @@ const EnhancedPaymentBlockingInterface = () => {
       startOfMonth.setHours(0, 0, 0, 0);
 
       const { data: blockedPaymentsCount } = await supabase
-        .from('payment_blocks')
-        .select('id', { count: 'exact' })
-        .is('resolved_at', null)
-        .gte('blocked_at', startOfMonth.toISOString());
+        .from("payment_blocks")
+        .select("id", { count: "exact" })
+        .is("resolved_at", null)
+        .gte("blocked_at", startOfMonth.toISOString());
 
       // Count expired insurances
       const { data: expiredInsurancesData } = await supabase
-        .from('insurance_certificates')
-        .select('contractor_id', { count: 'exact' })
-        .lt('valid_until', new Date().toISOString());
+        .from("insurance_certificates")
+        .select("contractor_id", { count: "exact" })
+        .lt("valid_until", new Date().toISOString());
 
       // Count delayed projects (using threshold from our escalation service)
-      const delayedProjects = await BankGuaranteeService.detectProjectDelays();
+      const delayedProjects = await detectProjectDelays();
       const { data: thresholdData } = await supabase
-        .from('escalation_thresholds')
-        .select('threshold_value')
-        .eq('threshold_type', 'project_delay')
-        .eq('threshold_name', 'bank_notification')
+        .from("escalation_thresholds")
+        .select("threshold_value")
+        .eq("threshold_type", "project_delay")
+        .eq("threshold_name", "bank_notification")
         .single();
 
       const threshold = thresholdData?.threshold_value || 20;
-      const criticallyDelayed = delayedProjects.filter(p => p.delayPercentage >= threshold);
+      const criticallyDelayed = delayedProjects.filter(
+        (p) => p.delayPercentage >= threshold
+      );
 
       // Count missing documents (payments pending due to missing docs)
       const { data: missingDocsCount } = await supabase
-        .from('documents')
-        .select('project_id', { count: 'exact' })
-        .eq('status', 'draft')
-        .eq('document_type', 'contract');
+        .from("documents")
+        .select("project_id", { count: "exact" })
+        .eq("status", "draft")
+        .eq("document_type", "contract");
 
       setStats({
         blockedPayments: blockedPaymentsCount?.length || 0,
         expiredInsurances: expiredInsurancesData?.length || 0,
         delayedProjects: criticallyDelayed.length,
-        missingDocuments: missingDocsCount?.length || 0
+        missingDocuments: missingDocsCount?.length || 0,
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error("Error loading stats:", error);
     }
   };
 
@@ -141,60 +195,64 @@ const EnhancedPaymentBlockingInterface = () => {
     defaultValues: {
       amount: 0,
       progressAtPayment: 0,
-      paymentMethod: 'bank_transfer',
-      supportingDocuments: []
-    }
+      paymentMethod: "bank_transfer",
+      supportingDocuments: [],
+    },
   });
 
   const paymentMethods = [
-    { value: 'bank_transfer', label: 'Virement bancaire' },
-    { value: 'check', label: 'Chèque' },
-    { value: 'mobile_money', label: 'Mobile Money' },
-    { value: 'cash', label: 'Espèces' },
-    { value: 'card', label: 'Carte bancaire' }
+    { value: "bank_transfer", label: "Virement bancaire" },
+    { value: "check", label: "Chèque" },
+    { value: "mobile_money", label: "Mobile Money" },
+    { value: "cash", label: "Espèces" },
+    { value: "card", label: "Carte bancaire" },
   ];
 
   const mobileOperators = [
-    { value: 'mauritel', label: 'Mauritel' },
-    { value: 'mattel', label: 'Mattel' },
-    { value: 'chinguitel', label: 'Chinguitel' }
+    { value: "mauritel", label: "Mauritel" },
+    { value: "mattel", label: "Mattel" },
+    { value: "chinguitel", label: "Chinguitel" },
   ];
 
-  const onValidatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
+  const onValidatePayment = async (
+    values: z.infer<typeof paymentFormSchema>
+  ) => {
     try {
       setLoading(true);
       const result = await validatePaymentEligibility(
-        values.projectId, 
-        values.contractorId, 
+        values.projectId,
+        values.contractorId,
         values.amount
       );
       setValidationResult(result);
-      
+
       if (result.canProceed) {
         toast({
           title: "Validation réussie",
-          description: "Le paiement peut être traité"
+          description: "Le paiement peut être traité",
         });
       } else {
         toast({
           title: "Paiement bloqué",
           description: `${result.blockingReasons.length} problème(s) détecté(s)`,
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error validating payment:', error);
+      console.error("Error validating payment:", error);
       toast({
         title: "Erreur",
         description: "Erreur lors de la validation du paiement",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const onProcessPayment = async (values: z.infer<typeof paymentFormSchema>) => {
+  const onProcessPayment = async (
+    values: z.infer<typeof paymentFormSchema>
+  ) => {
     try {
       setLoading(true);
       const result = await attemptPayment(
@@ -215,14 +273,14 @@ const EnhancedPaymentBlockingInterface = () => {
           mobile_operator: values.mobileOperator,
           receiver_name: values.receiverName,
           supporting_documents: uploadedDocuments,
-          notes: values.notes
+          notes: values.notes,
         }
       );
 
       if (result.success) {
         toast({
           title: "Paiement effectué",
-          description: `Paiement de ${values.amount} MRU traité avec succès`
+          description: `Paiement de ${values.amount} MRU traité avec succès`,
         });
         form.reset();
         setValidationResult(null);
@@ -232,15 +290,15 @@ const EnhancedPaymentBlockingInterface = () => {
         toast({
           title: "Paiement bloqué",
           description: "Le paiement n'a pas pu être traité",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error processing payment:', error);
+      console.error("Error processing payment:", error);
       toast({
         title: "Erreur",
         description: "Erreur lors du traitement du paiement",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -248,70 +306,94 @@ const EnhancedPaymentBlockingInterface = () => {
   };
 
   const handleDocumentUpload = (documentId: string) => {
-    setUploadedDocuments(prev => [...prev, documentId]);
-    form.setValue('supportingDocuments', [...(form.getValues('supportingDocuments') || []), documentId]);
+    setUploadedDocuments((prev) => [...prev, documentId]);
+    form.setValue("supportingDocuments", [
+      ...(form.getValues("supportingDocuments") || []),
+      documentId,
+    ]);
     setIsUploadDialogOpen(false);
     toast({
       title: "Document ajouté",
-      description: "Le document justificatif a été ajouté au paiement"
+      description: "Le document justificatif a été ajouté au paiement",
     });
   };
 
   const removeDocument = (documentId: string) => {
-    setUploadedDocuments(prev => prev.filter(id => id !== documentId));
-    const currentDocs = form.getValues('supportingDocuments') || [];
-    form.setValue('supportingDocuments', currentDocs.filter(id => id !== documentId));
+    setUploadedDocuments((prev) => prev.filter((id) => id !== documentId));
+    const currentDocs = form.getValues("supportingDocuments") || [];
+    form.setValue(
+      "supportingDocuments",
+      currentDocs.filter((id) => id !== documentId)
+    );
   };
 
-  const handlePaymentAction = async (paymentId: string, actionType: string, contractorName?: string) => {
+  const handlePaymentAction = async (
+    paymentId: string,
+    actionType: string,
+    contractorName?: string
+  ) => {
     try {
-      const payment = recentPaymentBlocks.find(p => p.id === paymentId);
+      const payment = recentPaymentBlocks.find((p) => p.id === paymentId);
       if (!payment) {
         toast({
-          title: 'Erreur',
-          description: 'Paiement introuvable',
-          variant: 'destructive'
+          title: "Erreur",
+          description: "Paiement introuvable",
+          variant: "destructive",
         });
         return;
       }
 
       // Get current user or use a fallback
-      const { data: { user } } = await supabase.auth.getUser();
-      const currentUserId = user?.id || 'system-user';
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const currentUserId = user?.id || "system-user";
 
-      let title = '';
-      let message = '';
-      
+      let title = "";
+      let message = "";
+
       switch (actionType) {
-        case 'task_assignment':
-          title = 'Résolution blocage paiement';
-          message = `Veuillez traiter le blocage de paiement pour ${contractorName || payment.contractor_name}`;
+        case "task_assignment":
+          title = "Résolution blocage paiement";
+          message = `Veuillez traiter le blocage de paiement pour ${
+            contractorName || payment.contractor_name
+          }`;
           break;
-        case 'hierarchy_notification':
-          title = 'Alerte paiement bloqué';
-          message = `Le paiement pour ${contractorName || payment.contractor_name} est bloqué et nécessite une attention particulière`;
+        case "hierarchy_notification":
+          title = "Alerte paiement bloqué";
+          message = `Le paiement pour ${
+            contractorName || payment.contractor_name
+          } est bloqué et nécessite une attention particulière`;
           break;
-        case 'sms':
-          title = 'SMS paiement bloqué';
-          message = `SMS: Paiement bloqué - ${contractorName || payment.contractor_name} - Action requise`;
+        case "sms":
+          title = "SMS paiement bloqué";
+          message = `SMS: Paiement bloqué - ${
+            contractorName || payment.contractor_name
+          } - Action requise`;
           break;
-        case 'call':
-          title = 'Appel paiement bloqué';
-          message = `Appel concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
+        case "call":
+          title = "Appel paiement bloqué";
+          message = `Appel concernant le blocage de paiement pour ${
+            contractorName || payment.contractor_name
+          }`;
           break;
-        case 'email':
-          title = 'Email paiement bloqué';
-          message = `Email concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
+        case "email":
+          title = "Email paiement bloqué";
+          message = `Email concernant le blocage de paiement pour ${
+            contractorName || payment.contractor_name
+          }`;
           break;
-        case 'mail':
-          title = 'Courrier paiement bloqué';
-          message = `Courrier concernant le blocage de paiement pour ${contractorName || payment.contractor_name}`;
+        case "mail":
+          title = "Courrier paiement bloqué";
+          message = `Courrier concernant le blocage de paiement pour ${
+            contractorName || payment.contractor_name
+          }`;
           break;
         default:
           toast({
-            title: 'Erreur',
-            description: 'Type d\'action non reconnu',
-            variant: 'destructive'
+            title: "Erreur",
+            description: "Type d'action non reconnu",
+            variant: "destructive",
           });
           return;
       }
@@ -323,54 +405,67 @@ const EnhancedPaymentBlockingInterface = () => {
         actionType: actionType as any,
         title,
         message,
-        priority: 'high',
+        priority: "high",
         assigneeId: currentUserId,
         recipientIds: [currentUserId],
-        metadata: { contractorName: contractorName || payment.contractor_name }
+        metadata: { contractorName: contractorName || payment.contractor_name },
       });
 
       toast({
-        title: 'Action créée',
+        title: "Action créée",
         description: `${title} créée avec succès`,
       });
     } catch (error: any) {
-      console.error('Error creating payment action:', error);
+      console.error("Error creating payment action:", error);
       toast({
-        title: 'Erreur',
-        description: `Impossible de créer l'action: ${error?.message || 'Erreur inconnue'}`,
-        variant: 'destructive'
+        title: "Erreur",
+        description: `Impossible de créer l'action: ${
+          error?.message || "Erreur inconnue"
+        }`,
+        variant: "destructive",
       });
     }
   };
 
   const getReasonIcon = (reason: string) => {
     switch (reason) {
-      case 'expired_insurance': return <Shield className="h-4 w-4" />;
-      case 'expired_guarantee': return <Shield className="h-4 w-4" />;
-      case 'project_delay': return <Clock className="h-4 w-4" />;
-      case 'compliance_issue': return <AlertTriangle className="h-4 w-4" />;
-      case 'missing_documents': return <FileText className="h-4 w-4" />;
-      default: return <Ban className="h-4 w-4" />;
+      case "expired_insurance":
+        return <Shield className="h-4 w-4" />;
+      case "expired_guarantee":
+        return <Shield className="h-4 w-4" />;
+      case "project_delay":
+        return <Clock className="h-4 w-4" />;
+      case "compliance_issue":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "missing_documents":
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <Ban className="h-4 w-4" />;
     }
   };
 
   const getReasonLabel = (reason: string) => {
     switch (reason) {
-      case 'expired_insurance': return 'Assurance expirée';
-      case 'expired_guarantee': return 'Garantie expirée';
-      case 'project_delay': return 'Retard projet';
-      case 'compliance_issue': return 'Non-conformité';
-      case 'missing_documents': return 'Documents manquants';
-      default: return 'Autre';
+      case "expired_insurance":
+        return "Assurance expirée";
+      case "expired_guarantee":
+        return "Garantie expirée";
+      case "project_delay":
+        return "Retard projet";
+      case "compliance_issue":
+        return "Non-conformité";
+      case "missing_documents":
+        return "Documents manquants";
+      default:
+        return "Autre";
     }
   };
 
-
   const renderPaymentMethodFields = () => {
-    const paymentMethod = form.watch('paymentMethod');
-    
+    const paymentMethod = form.watch("paymentMethod");
+
     switch (paymentMethod) {
-      case 'bank_transfer':
+      case "bank_transfer":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
@@ -401,8 +496,8 @@ const EnhancedPaymentBlockingInterface = () => {
             />
           </div>
         );
-      
-      case 'check':
+
+      case "check":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
@@ -433,8 +528,8 @@ const EnhancedPaymentBlockingInterface = () => {
             />
           </div>
         );
-      
-      case 'mobile_money':
+
+      case "mobile_money":
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
@@ -443,7 +538,10 @@ const EnhancedPaymentBlockingInterface = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Opérateur</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un opérateur" />
@@ -476,8 +574,8 @@ const EnhancedPaymentBlockingInterface = () => {
             />
           </div>
         );
-      
-      case 'cash':
+
+      case "cash":
         return (
           <FormField
             control={form.control}
@@ -493,7 +591,7 @@ const EnhancedPaymentBlockingInterface = () => {
             )}
           />
         );
-      
+
       default:
         return null;
     }
@@ -503,7 +601,9 @@ const EnhancedPaymentBlockingInterface = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">💰 Contrôle des Paiements</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            💰 Contrôle des Paiements
+          </h2>
           <p className="text-muted-foreground">
             Système de blocage automatique avec gestion documentaire intégrée
           </p>
@@ -519,7 +619,8 @@ const EnhancedPaymentBlockingInterface = () => {
             <DialogHeader>
               <DialogTitle>Traitement de Paiement</DialogTitle>
               <DialogDescription>
-                Valider les prérequis et traiter un paiement avec documents justificatifs
+                Valider les prérequis et traiter un paiement avec documents
+                justificatifs
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -551,16 +652,19 @@ const EnhancedPaymentBlockingInterface = () => {
                         <FormLabel>Entrepreneur</FormLabel>
                         <FormControl>
                           <SupplierSelector
-                            value={{ 
-                              id: form.watch('contractorId') || '',
-                              name: field.value || '',
-                              contact: form.watch('contractorContact') || '',
-                              leadTime: 0
+                            value={{
+                              id: form.watch("contractorId") || "",
+                              name: field.value || "",
+                              contact: form.watch("contractorContact") || "",
+                              leadTime: 0,
                             }}
                             onChange={(supplier) => {
-                              form.setValue('contractorId', supplier.id || '');
-                              field.onChange(supplier.name || '');
-                              form.setValue('contractorContact', supplier.contact || '');
+                              form.setValue("contractorId", supplier.id || "");
+                              field.onChange(supplier.name || "");
+                              form.setValue(
+                                "contractorContact",
+                                supplier.contact || ""
+                              );
                             }}
                             allowCustom={true}
                           />
@@ -579,11 +683,13 @@ const EnhancedPaymentBlockingInterface = () => {
                       <FormItem>
                         <FormLabel>Montant (MRU)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="500000" 
+                          <Input
+                            type="number"
+                            placeholder="500000"
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -597,11 +703,13 @@ const EnhancedPaymentBlockingInterface = () => {
                       <FormItem>
                         <FormLabel>Progression (%)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="75" 
+                          <Input
+                            type="number"
+                            placeholder="75"
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -616,7 +724,10 @@ const EnhancedPaymentBlockingInterface = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Méthode de Paiement</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner la méthode" />
@@ -670,7 +781,10 @@ const EnhancedPaymentBlockingInterface = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>Documents justificatifs</Label>
-                    <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                    <Dialog
+                      open={isUploadDialogOpen}
+                      onOpenChange={setIsUploadDialogOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button type="button" variant="outline" size="sm">
                           <Upload className="h-4 w-4 mr-2" />
@@ -679,33 +793,47 @@ const EnhancedPaymentBlockingInterface = () => {
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Ajouter Document Justificatif</DialogTitle>
+                          <DialogTitle>
+                            Ajouter Document Justificatif
+                          </DialogTitle>
                           <DialogDescription>
                             Télécharger un document pour justifier ce paiement
                           </DialogDescription>
                         </DialogHeader>
-                      <div className="p-4">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Télécharger un document justificatif pour ce paiement (PDF, JPG, PNG acceptés, max 10MB)
-                        </p>
-                        {/* Placeholder for document upload functionality */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-600">Glisser-déposer ou cliquer pour sélectionner</p>
-                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                        <div className="p-4">
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Télécharger un document justificatif pour ce
+                            paiement (PDF, JPG, PNG acceptés, max 10MB)
+                          </p>
+                          {/* Placeholder for document upload functionality */}
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                            <p className="text-sm text-gray-600">
+                              Glisser-déposer ou cliquer pour sélectionner
+                            </p>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                            />
+                          </div>
                         </div>
-                      </div>
                       </DialogContent>
                     </Dialog>
                   </div>
-                  
+
                   {uploadedDocuments.length > 0 && (
                     <div className="border rounded-lg p-3 space-y-2">
                       {uploadedDocuments.map((docId, index) => (
-                        <div key={docId} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <div
+                          key={docId}
+                          className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                        >
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4" />
-                            <span className="text-sm">Document {index + 1}</span>
+                            <span className="text-sm">
+                              Document {index + 1}
+                            </span>
                           </div>
                           <Button
                             type="button"
@@ -728,7 +856,10 @@ const EnhancedPaymentBlockingInterface = () => {
                     <FormItem>
                       <FormLabel>Notes (optionnel)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Notes additionnelles..." {...field} />
+                        <Textarea
+                          placeholder="Notes additionnelles..."
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -736,22 +867,22 @@ const EnhancedPaymentBlockingInterface = () => {
                 />
 
                 <div className="flex gap-2">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={form.handleSubmit(onValidatePayment)}
                     disabled={loading}
                     variant="outline"
                   >
-                    {loading ? 'Validation...' : 'Valider Prérequis'}
+                    {loading ? "Validation..." : "Valider Prérequis"}
                   </Button>
-                  
+
                   {validationResult?.canProceed && (
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       onClick={form.handleSubmit(onProcessPayment)}
                       disabled={loading}
                     >
-                      {loading ? 'Traitement...' : 'Traiter Paiement'}
+                      {loading ? "Traitement..." : "Traiter Paiement"}
                     </Button>
                   )}
                 </div>
@@ -761,7 +892,13 @@ const EnhancedPaymentBlockingInterface = () => {
             {/* Validation Results */}
             {validationResult && (
               <div className="mt-6 space-y-4">
-                <div className={`p-4 rounded-lg border ${validationResult.canProceed ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                <div
+                  className={`p-4 rounded-lg border ${
+                    validationResult.canProceed
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
+                  }`}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     {validationResult.canProceed ? (
                       <CheckCircle className="h-5 w-5 text-green-600" />
@@ -769,29 +906,47 @@ const EnhancedPaymentBlockingInterface = () => {
                       <Ban className="h-5 w-5 text-red-600" />
                     )}
                     <h3 className="font-medium">
-                      {validationResult.canProceed ? 'Paiement autorisé' : 'Paiement bloqué'}
+                      {validationResult.canProceed
+                        ? "Paiement autorisé"
+                        : "Paiement bloqué"}
                     </h3>
                   </div>
-                  
+
                   {validationResult.blockingReasons.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-red-700">Problèmes bloquants:</p>
+                      <p className="text-sm font-medium text-red-700">
+                        Problèmes bloquants:
+                      </p>
                       {validationResult.blockingReasons.map((reason, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm text-red-600">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-sm text-red-600"
+                        >
                           {getReasonIcon(reason.reason)}
-                          <span>{getReasonLabel(reason.reason)}: {reason.description}</span>
+                          <span>
+                            {getReasonLabel(reason.reason)}:{" "}
+                            {reason.description}
+                          </span>
                         </div>
                       ))}
                     </div>
                   )}
-                  
+
                   {validationResult.warningReasons.length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <p className="text-sm font-medium text-orange-700">Avertissements:</p>
+                      <p className="text-sm font-medium text-orange-700">
+                        Avertissements:
+                      </p>
                       {validationResult.warningReasons.map((reason, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm text-orange-600">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-sm text-orange-600"
+                        >
                           {getReasonIcon(reason.reason)}
-                          <span>{getReasonLabel(reason.reason)}: {reason.description}</span>
+                          <span>
+                            {getReasonLabel(reason.reason)}:{" "}
+                            {reason.description}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -807,45 +962,65 @@ const EnhancedPaymentBlockingInterface = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Paiements Bloqués
+            </CardTitle>
             <Ban className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.blockedPayments}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.blockedPayments}
+            </div>
             <p className="text-xs text-muted-foreground">Ce mois</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assurances Expirées</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Assurances Expirées
+            </CardTitle>
             <Shield className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.expiredInsurances}</div>
-            <p className="text-xs text-muted-foreground">Entrepreneurs concernés</p>
+            <div className="text-2xl font-bold text-orange-600">
+              {stats.expiredInsurances}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Entrepreneurs concernés
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projets en Retard</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Projets en Retard
+            </CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.delayedProjects}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.delayedProjects}
+            </div>
             <p className="text-xs text-muted-foreground">Retards &gt; 20%</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Documents Manquants
+            </CardTitle>
             <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.missingDocuments}</div>
-            <p className="text-xs text-muted-foreground">Paiements en attente</p>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.missingDocuments}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paiements en attente
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -855,30 +1030,40 @@ const EnhancedPaymentBlockingInterface = () => {
         <CardHeader>
           <CardTitle>Paiements Bloqués Récents</CardTitle>
           <CardDescription>
-            Historique des paiements bloqués par le système de contrôle automatique
+            Historique des paiements bloqués par le système de contrôle
+            automatique
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {paginatedPayments.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div
+                key={payment.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
                 <div className="flex items-center gap-3">
                   <Ban className="h-5 w-5 text-red-500" />
                   <div>
                     <p className="font-medium">{payment.contractor_name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {payment.project_title} - {payment.amount.toLocaleString()} MRU
+                      {payment.project_title} -{" "}
+                      {payment.amount.toLocaleString()} MRU
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <Badge variant="destructive">{getReasonLabel(payment.blocking_reason)}</Badge>
+                    <Badge variant="destructive">
+                      {getReasonLabel(payment.blocking_reason)}
+                    </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(payment.blocked_at || Date.now()), { 
-                        addSuffix: true, 
-                        locale: fr 
-                      })}
+                      {formatDistanceToNow(
+                        new Date(payment.blocked_at || Date.now()),
+                        {
+                          addSuffix: true,
+                          locale: fr,
+                        }
+                      )}
                     </p>
                   </div>
                   <ActionsDropdown
@@ -890,7 +1075,7 @@ const EnhancedPaymentBlockingInterface = () => {
                 </div>
               </div>
             ))}
-            
+
             {/* Pagination */}
             {recentPaymentBlocks.length > 10 && (
               <PaginationControls
