@@ -42,7 +42,7 @@ const Materials: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Use the custom hook for filtering with debouncing
   const {
     searchTerm,
@@ -67,7 +67,7 @@ const Materials: React.FC = () => {
     setSelectedLocalType,
     setSelectedInteractiveCategory,
     setSelectedRegion,
-    setSelectedStockLevel
+    setSelectedStockLevel,
   } = useMaterialsFilter(materials);
 
   // Helper function to safely extract address string - always returns a string
@@ -205,15 +205,16 @@ const Materials: React.FC = () => {
     currentPage,
     totalPages,
     totalItems,
-    goToPage
+    goToPage,
   } = usePagination({
     data: filteredMaterials,
-    itemsPerPage: 20
+    itemsPerPage: 20,
   });
 
-
   // Interactive materials map view component
-  const InteractiveMaterialsMapView: React.FC<{ materials: Material[] }> = ({ materials }) => {
+  const InteractiveMaterialsMapView: React.FC<{ materials: Material[] }> = ({
+    materials,
+  }) => {
     const handleMaterialSelect = (material: Material) => {
       navigate(`/materials/${material.id}`);
     };
@@ -261,7 +262,6 @@ const Materials: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8  ">
-      <Navbar />
       <div className="mt-10 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -319,7 +319,9 @@ const Materials: React.FC = () => {
               totalPages={totalPages}
               totalItems={totalItems}
               onPageChange={goToPage}
-              onMaterialClick={(material) => navigate(`/materials/${material.id}`)}
+              onMaterialClick={(material) =>
+                navigate(`/materials/${material.id}`)
+              }
             />
           </TabsContent>
 

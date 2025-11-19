@@ -1,18 +1,23 @@
-
-import { useEffect, useState } from 'react';
-import { useKeycloakAuth } from '@/contexts/KeycloakAuthContext';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { LogOut, User, Shield } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useKeycloakAuth } from "@/contexts/KeycloakAuthContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { LogOut, User, Shield } from "lucide-react";
 
 const UserProfile = () => {
   const { user, logout } = useKeycloakAuth();
-  const [initials, setInitials] = useState('');
-  
+  const [initials, setInitials] = useState("");
+
   useEffect(() => {
     if (user) {
       // Get initials from username or first/last name
@@ -21,7 +26,7 @@ const UserProfile = () => {
       } else if (user.username) {
         setInitials(user.username.substring(0, 2).toUpperCase());
       } else {
-        setInitials('U');
+        setInitials("U");
       }
     }
   }, [user]);
@@ -32,8 +37,6 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       <main className="flex-grow container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto">
           <Card className="shadow-lg border-none">
@@ -52,10 +55,10 @@ const UserProfile = () => {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              
+
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold">
-                  {(user.firstName && user.lastName) 
+                  {user.firstName && user.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : user.username}
                 </h2>
@@ -64,17 +67,17 @@ const UserProfile = () => {
                 )}
                 <div className="flex justify-center gap-2 mt-3">
                   {user.roles.map((role) => (
-                    <Badge 
+                    <Badge
                       key={role}
-                      variant={role === 'admin' ? 'default' : 'outline'}
-                      className={role === 'admin' ? 'bg-adrar-600' : ''}
+                      variant={role === "admin" ? "default" : "outline"}
+                      className={role === "admin" ? "bg-adrar-600" : ""}
                     >
                       {role}
                     </Badge>
                   ))}
                 </div>
               </div>
-              
+
               <div className="grid md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-700 flex items-center">
@@ -82,39 +85,46 @@ const UserProfile = () => {
                     Information utilisateur
                   </h3>
                   <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="font-medium text-gray-500">Nom d'utilisateur</div>
+                    <div className="font-medium text-gray-500">
+                      Nom d'utilisateur
+                    </div>
                     <div className="col-span-2">{user.username}</div>
-                    
+
                     <div className="font-medium text-gray-500">ID Keycloak</div>
                     <div className="col-span-2">
                       <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
-                        {user.keycloakId.slice(0, 8)}...{user.keycloakId.slice(-8)}
+                        {user.keycloakId.slice(0, 8)}...
+                        {user.keycloakId.slice(-8)}
                       </code>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-700 flex items-center">
                     <Shield className="h-4 w-4 mr-2" />
                     Permissions
                   </h3>
                   <ul className="list-disc list-inside text-sm space-y-1 text-gray-600">
-                    {user.roles.includes('admin') && (
+                    {user.roles.includes("admin") && (
                       <li>Accès complet à la gestion de projets</li>
                     )}
-                    {user.roles.includes('user') && (
+                    {user.roles.includes("user") && (
                       <li>Accès à la visualisation des projets</li>
                     )}
-                    {user.roles.includes('material-manager') && (
+                    {user.roles.includes("material-manager") && (
                       <li>Gestion des matériaux</li>
                     )}
                   </ul>
                 </div>
               </div>
-              
+
               <div className="border-t mt-8 pt-6 flex justify-end">
-                <Button onClick={logout} variant="destructive" className="flex items-center">
+                <Button
+                  onClick={logout}
+                  variant="destructive"
+                  className="flex items-center"
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   Se déconnecter
                 </Button>
@@ -123,8 +133,6 @@ const UserProfile = () => {
           </Card>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

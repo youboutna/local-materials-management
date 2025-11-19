@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,10 +22,15 @@ import WaterfallProjectManager from "@/components/project/WaterfallProjectManage
 
 const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
-  const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
-  const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
-  const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
-  
+  const [originalMapLocations, setOriginalMapLocations] = useState<
+    MapLocation[]
+  >([]);
+  const [filteredMapLocations, setFilteredMapLocations] = useState<
+    MapLocation[]
+  >([]);
+  const [interactiveFilteredProjects, setInteractiveFilteredProjects] =
+    useState<ProjectData[]>([]);
+
   // Use the projects filter hook
   const {
     searchQuery,
@@ -44,7 +48,7 @@ const Projects: React.FC = () => {
     clearSearch,
     availableStatuses,
     availableRegions,
-    performSearch
+    performSearch,
   } = useProjectsFilter(projects || []);
 
   // Pagination for projects
@@ -53,10 +57,10 @@ const Projects: React.FC = () => {
     currentPage,
     totalPages,
     totalItems,
-    goToPage
+    goToPage,
   } = usePagination({
     data: filteredProjects,
-    itemsPerPage: 20
+    itemsPerPage: 20,
   });
 
   // Initialize locations when projects load
@@ -80,7 +84,7 @@ const Projects: React.FC = () => {
           endDate: project.endDate,
         }));
 
-      console.log('Projects initialized - Total locations:', locations.length);
+      console.log("Projects initialized - Total locations:", locations.length);
       setOriginalMapLocations(locations);
       setFilteredMapLocations(locations);
     }
@@ -111,21 +115,31 @@ const Projects: React.FC = () => {
   }, [filteredProjects]);
 
   const handleReset = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setRegionFilter('all');
-    setSortOption('newest');
+    setSearchQuery("");
+    setStatusFilter("all");
+    setRegionFilter("all");
+    setSortOption("newest");
   };
 
   const handleMapFilterChange = (filteredLocations: MapLocation[]) => {
-    console.log('Map filter applied - Filtered locations:', filteredLocations.length);
+    console.log(
+      "Map filter applied - Filtered locations:",
+      filteredLocations.length
+    );
     setFilteredMapLocations(filteredLocations);
-    
+
     // Also update the filtered projects to match the map filter
     if (projects) {
-      const filteredProjectIds = new Set(filteredLocations.map(loc => loc.id));
-      const matchingProjects = projects.filter(project => filteredProjectIds.has(project.id));
-      console.log('Map filter - Updated grid projects:', matchingProjects.length);
+      const filteredProjectIds = new Set(
+        filteredLocations.map((loc) => loc.id)
+      );
+      const matchingProjects = projects.filter((project) =>
+        filteredProjectIds.has(project.id)
+      );
+      console.log(
+        "Map filter - Updated grid projects:",
+        matchingProjects.length
+      );
       // Note: filteredProjects is handled by the hook
     }
   };
@@ -150,7 +164,6 @@ const Projects: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8  ">
-      <Navbar />
       <div className="mt-10 space-y-6">
         <ProjectsHeader />
 
@@ -178,7 +191,7 @@ const Projects: React.FC = () => {
           </TabsList>
 
           <TabsContent value="grid" className="space-y-6">
-            <ProjectFilters 
+            <ProjectFilters
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onSearchSubmit={performSearch}
@@ -194,7 +207,7 @@ const Projects: React.FC = () => {
               resultCount={filteredProjects.length}
             />
 
-            <ProjectsGridPaginated 
+            <ProjectsGridPaginated
               projects={paginatedProjects}
               currentPage={currentPage}
               totalPages={totalPages}
@@ -219,7 +232,9 @@ const Projects: React.FC = () => {
                 <ProjectMap
                   locations={filteredMapLocations}
                   height="600px"
-                  focusRegion={regionFilter !== 'all' ? regionFilter : undefined}
+                  focusRegion={
+                    regionFilter !== "all" ? regionFilter : undefined
+                  }
                   className="rounded-lg"
                 />
               </CardContent>
@@ -236,34 +251,63 @@ const Projects: React.FC = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredMapLocations.map((location) => {
-                      const project = projects?.find(p => p.id === location.id);
+                      const project = projects?.find(
+                        (p) => p.id === location.id
+                      );
                       return (
-                        <div key={location.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <h4 className="font-medium text-lg mb-2">{location.name}</h4>
+                        <div
+                          key={location.id}
+                          className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                        >
+                          <h4 className="font-medium text-lg mb-2">
+                            {location.name}
+                          </h4>
                           <div className="space-y-1 text-sm text-gray-600">
-                            <p><strong>Région:</strong> {location.region}</p>
-                            <p><strong>Statut:</strong> 
-                              <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                location.status === 'en cours' ? 'bg-blue-100 text-blue-800' :
-                                location.status === 'terminé' ? 'bg-green-100 text-green-800' :
-                                location.status === 'en attente' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
+                            <p>
+                              <strong>Région:</strong> {location.region}
+                            </p>
+                            <p>
+                              <strong>Statut:</strong>
+                              <span
+                                className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  location.status === "en cours"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : location.status === "terminé"
+                                    ? "bg-green-100 text-green-800"
+                                    : location.status === "en attente"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
                                 {location.status}
                               </span>
                             </p>
                             {project && (
                               <>
-                                <p><strong>Budget:</strong> {project.budget.toLocaleString()} MRU</p>
-                                <p><strong>Équipe:</strong> {project.teamSize} membres</p>
-                                <p><strong>Progrès:</strong> {project.progress}%</p>
+                                <p>
+                                  <strong>Budget:</strong>{" "}
+                                  {project.budget.toLocaleString()} MRU
+                                </p>
+                                <p>
+                                  <strong>Équipe:</strong> {project.teamSize}{" "}
+                                  membres
+                                </p>
+                                <p>
+                                  <strong>Progrès:</strong> {project.progress}%
+                                </p>
                               </>
                             )}
                             <p className="text-xs text-gray-500">
-                              Coordonnées: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                              Coordonnées: {location.latitude.toFixed(6)},{" "}
+                              {location.longitude.toFixed(6)}
                             </p>
                             {location.startDate && (
-                              <p><strong>Début:</strong> {new Date(location.startDate).toLocaleDateString('fr-FR')}</p>
+                              <p>
+                                <strong>Début:</strong>{" "}
+                                {new Date(
+                                  location.startDate
+                                ).toLocaleDateString("fr-FR")}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -274,17 +318,23 @@ const Projects: React.FC = () => {
               </Card>
             )}
 
-            {filteredMapLocations.length === 0 && originalMapLocations.length > 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <div className="text-gray-500">
-                    <Map className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">Aucun projet trouvé</h3>
-                    <p>Aucun projet ne correspond aux critères de filtrage sélectionnés.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {filteredMapLocations.length === 0 &&
+              originalMapLocations.length > 0 && (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <div className="text-gray-500">
+                      <Map className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-lg font-medium mb-2">
+                        Aucun projet trouvé
+                      </h3>
+                      <p>
+                        Aucun projet ne correspond aux critères de filtrage
+                        sélectionnés.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
           </TabsContent>
 
           <TabsContent value="interactive" className="space-y-6">
@@ -296,7 +346,11 @@ const Projects: React.FC = () => {
 
             {/* Enhanced Interactive Map */}
             <EnhancedInteractiveMap
-              projects={interactiveFilteredProjects.length > 0 ? interactiveFilteredProjects : (projects || [])}
+              projects={
+                interactiveFilteredProjects.length > 0
+                  ? interactiveFilteredProjects
+                  : projects || []
+              }
               onProjectSelect={(project) => {
                 console.log("Selected project:", project);
                 // Navigate to project detail or show modal
@@ -305,7 +359,11 @@ const Projects: React.FC = () => {
 
             {/* Projects List with Pagination */}
             <InteractiveProjectsList
-              projects={interactiveFilteredProjects.length > 0 ? interactiveFilteredProjects : (projects || [])}
+              projects={
+                interactiveFilteredProjects.length > 0
+                  ? interactiveFilteredProjects
+                  : projects || []
+              }
               onProjectSelect={(project) => {
                 console.log("Selected project from list:", project);
                 // Navigate to project detail or show modal

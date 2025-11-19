@@ -1,15 +1,14 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
-import { useLanguage } from '@/contexts/LanguageContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Package } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MaterialCreate = () => {
   const { t } = useLanguage();
@@ -30,29 +29,31 @@ const MaterialCreate = () => {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from('materials')
-        .insert([{
-          name: materialData.name,
-          description: materialData.description || '',
-          category: materialData.category,
-          unit: materialData.unit || 'kg',
-          price_per_unit: materialData.pricePerUnit || 0,
-          available_quantity: materialData.availableQuantity || 0,
-          origin_location: materialData.adresse || null,
-          workspace_id: materialData.workspaceId || null,
-          image: materialData.image || null,
-          adresse: materialData.adresse || null,
-          forme: materialData.forme || null,
-          coordinates_latitude: materialData.coordinatesLatitude || null,
-          coordinates_longitude: materialData.coordinatesLongitude || null,
-          localisation: materialData.localisation || null,
-          // New identifier fields
-          gtin: materialData.gtin || null,
-          sku: materialData.sku || null,
-          ean: materialData.ean || null,
-          asin: materialData.asin || null,
-          multilang_labels: materialData.multilangLabels || null,
-        }])
+        .from("materials")
+        .insert([
+          {
+            name: materialData.name,
+            description: materialData.description || "",
+            category: materialData.category,
+            unit: materialData.unit || "kg",
+            price_per_unit: materialData.pricePerUnit || 0,
+            available_quantity: materialData.availableQuantity || 0,
+            origin_location: materialData.adresse || null,
+            workspace_id: materialData.workspaceId || null,
+            image: materialData.image || null,
+            adresse: materialData.adresse || null,
+            forme: materialData.forme || null,
+            coordinates_latitude: materialData.coordinatesLatitude || null,
+            coordinates_longitude: materialData.coordinatesLongitude || null,
+            localisation: materialData.localisation || null,
+            // New identifier fields
+            gtin: materialData.gtin || null,
+            sku: materialData.sku || null,
+            ean: materialData.ean || null,
+            asin: materialData.asin || null,
+            multilang_labels: materialData.multilangLabels || null,
+          },
+        ])
         .select()
         .single();
 
@@ -63,9 +64,9 @@ const MaterialCreate = () => {
         description: "Le matériau a été créé avec succès.",
       });
 
-      navigate('/materials');
+      navigate("/materials");
     } catch (error) {
-      console.error('Error creating material:', error);
+      console.error("Error creating material:", error);
       toast({
         title: "Erreur",
         description: "Impossible de créer le matériau.",
@@ -78,16 +79,14 @@ const MaterialCreate = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50">
-      <Navbar />
-      
       {/* Header Section */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6 pt-24">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
-              onClick={() => navigate('/materials')}
+              onClick={() => navigate("/materials")}
               className="text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -117,19 +116,19 @@ const MaterialCreate = () => {
                 onSubmit={handleSubmit}
                 showSubmitButton={false}
               />
-              
+
               <div className="flex justify-end gap-4 pt-6 mt-6 border-t">
-                <Button 
+                <Button
                   variant="outline"
-                  onClick={() => navigate('/materials')}
+                  onClick={() => navigate("/materials")}
                   disabled={loading}
                 >
                   Annuler
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     // Trigger form submission
-                    const formElement = document.querySelector('form');
+                    const formElement = document.querySelector("form");
                     if (formElement) {
                       formElement.requestSubmit();
                     }
@@ -137,15 +136,13 @@ const MaterialCreate = () => {
                   disabled={loading}
                   className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700 text-white"
                 >
-                  {loading ? 'Création...' : 'Créer le matériau'}
+                  {loading ? "Création..." : "Créer le matériau"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };

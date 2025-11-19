@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableHeader,
@@ -13,18 +13,24 @@ import {
   TableFooter,
   TableHead,
   TableRow,
-  TableCell
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { UserPlus, Search, User, Edit, Ban, CheckCircle } from 'lucide-react';
-import { DEV_MODE } from '@/config/constants';
-import RoleBadge, { RoleType } from '@/components/RoleBadge';
-import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import UserManagementDialog from '@/components/users/UserManagementDialog';
-import { useLanguage } from '@/contexts/LanguageContext';
+  TableCell,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { UserPlus, Search, User, Edit, Ban, CheckCircle } from "lucide-react";
+import { DEV_MODE } from "@/config/constants";
+import RoleBadge, { RoleType } from "@/components/RoleBadge";
+import { useCurrentUserRoles } from "@/hooks/useUserRoles";
+import UserManagementDialog from "@/components/users/UserManagementDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Define user profile type with roles array and email
 type UserProfile = {
@@ -51,10 +57,10 @@ const DEV_PROFILES: UserProfile[] = [
     avatar_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    roles: ['admin'],
-    primaryRole: 'admin',
+    roles: ["admin"],
+    primaryRole: "admin",
     is_active: true,
-    email: "dev@example.com"
+    email: "dev@example.com",
   },
   {
     id: "dev-user-id-2",
@@ -64,11 +70,11 @@ const DEV_PROFILES: UserProfile[] = [
     avatar_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    roles: ['project_manager'],
-    primaryRole: 'project_manager',
+    roles: ["project_manager"],
+    primaryRole: "project_manager",
     is_active: true,
-    email: "marie@example.com"
-  }
+    email: "marie@example.com",
+  },
 ];
 
 const Users = () => {
@@ -81,23 +87,26 @@ const Users = () => {
     isDevelopmentMode ? DEV_PROFILES : []
   );
   const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
-  const [isManagementDialogOpen, setIsManagementDialogOpen] = useState<boolean>(false);
-  const [managementMode, setManagementMode] = useState<'create' | 'edit'>('create');
+  const [isManagementDialogOpen, setIsManagementDialogOpen] =
+    useState<boolean>(false);
+  const [managementMode, setManagementMode] = useState<"create" | "edit">(
+    "create"
+  );
 
   // Check if user can manage users (admin or director)
-  const canManageUsers = hasAnyRole(['admin', 'director']);
+  const canManageUsers = hasAnyRole(["admin", "director"]);
 
   // Check if user is authenticated
   useEffect(() => {
     if (!user && !isDevelopmentMode) {
-      navigate('/auth?mode=login');
+      navigate("/auth?mode=login");
       toast({
         title: "Accès restreint",
         description: "Veuillez vous connecter pour accéder à cette page.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   }, [user, navigate, toast, isDevelopmentMode]);
@@ -105,19 +114,19 @@ const Users = () => {
   // Fetch profiles with roles and email
   useEffect(() => {
     if (isDevelopmentMode) {
-      console.log('Using mock profiles in development mode');
+      console.log("Using mock profiles in development mode");
       return;
     }
 
     const fetchProfilesWithRoles = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch profiles
         const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .from("profiles")
+          .select("*")
+          .order("created_at", { ascending: false });
 
         if (profilesError) throw profilesError;
 
@@ -127,21 +136,23 @@ const Users = () => {
             profilesData.map(async (profile) => {
               // Get user roles
               const { data: rolesData } = await (supabase as any)
-                .from('user_roles')
-                .select('role_name')
-                .eq('user_id', profile.id);
+                .from("user_roles")
+                .select("role_name")
+                .eq("user_id", profile.id);
 
               // Get user email from auth.users (this requires admin privileges)
-              const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
+              const { data: userData } = await supabase.auth.admin.getUserById(
+                profile.id
+              );
 
               const roles = rolesData?.map((r: any) => r.role_name) || [];
-              const primaryRole = roles[0] as RoleType || 'viewer';
+              const primaryRole = (roles[0] as RoleType) || "viewer";
 
               return {
                 ...profile,
                 roles,
                 primaryRole,
-                email: userData.user?.email || null
+                email: userData.user?.email || null,
               } as UserProfile;
             })
           );
@@ -149,11 +160,11 @@ const Users = () => {
           setProfiles(profilesWithRoles);
         }
       } catch (error: any) {
-        console.error('Error fetching profiles:', error);
+        console.error("Error fetching profiles:", error);
         toast({
           title: "Erreur",
           description: `Impossible de récupérer les utilisateurs: ${error.message}`,
-          variant: "destructive"
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
@@ -172,43 +183,46 @@ const Users = () => {
 
   const handleCreateUser = () => {
     setSelectedUser(null);
-    setManagementMode('create');
+    setManagementMode("create");
     setIsManagementDialogOpen(true);
   };
 
   const handleEditUser = (profile: UserProfile) => {
     setSelectedUser(profile);
-    setManagementMode('edit');
+    setManagementMode("edit");
     setIsManagementDialogOpen(true);
   };
 
   const handleToggleUserStatus = async (profile: UserProfile) => {
     try {
       const newStatus = !profile.is_active;
-      
+
       // Update user status in auth.users table
-      const { error } = await supabase.auth.admin.updateUserById(
-        profile.id,
-        { ban_duration: newStatus ? 'none' : '24h' }
-      );
+      const { error } = await supabase.auth.admin.updateUserById(profile.id, {
+        ban_duration: newStatus ? "none" : "24h",
+      });
 
       if (error) throw error;
 
       // Update local state
-      setProfiles(prev => prev.map(p => 
-        p.id === profile.id ? { ...p, is_active: newStatus } : p
-      ));
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, is_active: newStatus } : p
+        )
+      );
 
       toast({
         title: newStatus ? "Utilisateur activé" : "Utilisateur désactivé",
-        description: `Le compte de ${profile.full_name} a été ${newStatus ? 'activé' : 'désactivé'}.`
+        description: `Le compte de ${profile.full_name} a été ${
+          newStatus ? "activé" : "désactivé"
+        }.`,
       });
     } catch (error) {
-      console.error('Error toggling user status:', error);
+      console.error("Error toggling user status:", error);
       toast({
         title: "Erreur",
         description: "Impossible de modifier le statut de l'utilisateur",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -219,32 +233,33 @@ const Users = () => {
   };
 
   // Filter profiles based on search query (now including email)
-  const filteredProfiles = profiles.filter(profile => 
-    profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    profile.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    profile.national_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    profile.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProfiles = profiles.filter(
+    (profile) =>
+      profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.national_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Get user initials for avatar
   const getUserInitials = (fullName: string | null) => {
-    if (!fullName) return 'U';
-    
-    const nameParts = fullName.split(' ');
+    if (!fullName) return "U";
+
+    const nameParts = fullName.split(" ");
     if (nameParts.length === 1) return nameParts[0][0].toUpperCase();
-    return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+    return `${nameParts[0][0]}${
+      nameParts[nameParts.length - 1][0]
+    }`.toUpperCase();
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-          🛠️ {t('dev_mode.active') || "Mode développement actif"}
+          🛠️ {t("dev_mode.active") || "Mode développement actif"}
         </div>
       )}
-      
+
       <main className="flex-grow container mx-auto px-4 py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -254,43 +269,59 @@ const Users = () => {
         >
           <div className="flex justify-between items-center">
             <h1 className="text-2xl md:text-3xl font-serif text-adrar-800">
-              {t('users.title') || "Gestion des Utilisateurs"}
+              {t("users.title") || "Gestion des Utilisateurs"}
             </h1>
-            
+
             {canManageUsers && (
               <Button
                 className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
                 onClick={handleCreateUser}
               >
                 <UserPlus className="h-4 w-4" />
-                <span>{t('users.new') || "Nouvel Utilisateur"}</span>
+                <span>{t("users.new") || "Nouvel Utilisateur"}</span>
               </Button>
             )}
           </div>
-          
+
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
             <Input
-              placeholder={t('users.search_placeholder') || "Rechercher un utilisateur..."}
+              placeholder={
+                t("users.search_placeholder") || "Rechercher un utilisateur..."
+              }
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           {/* Users Table */}
           <div className="border rounded-lg overflow-hidden shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('users.table.name') || "Utilisateur"}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('auth.email') || "Email"}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('users.table.phone') || "Téléphone"}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('users.table.national_id') || "ID National"}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('users.table.role') || "Rôle principal"}</TableHead>
-                  <TableHead className="hidden md:table-cell">{t('users.table.status') || "Statut"}</TableHead>
-                  <TableHead className="text-right">{t('users.table.actions') || "Actions"}</TableHead>
+                  <TableHead>
+                    {t("users.table.name") || "Utilisateur"}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("auth.email") || "Email"}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("users.table.phone") || "Téléphone"}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("users.table.national_id") || "ID National"}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("users.table.role") || "Rôle principal"}
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    {t("users.table.status") || "Statut"}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t("users.table.actions") || "Actions"}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -304,10 +335,14 @@ const Users = () => {
                   </TableRow>
                 ) : filteredProfiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-adrar-600">
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-10 text-adrar-600"
+                    >
                       {searchQuery
-                        ? t('users.no_results') || "Aucun utilisateur ne correspond à la recherche"
-                        : t('users.none_found') || "Aucun utilisateur trouvé"}
+                        ? t("users.no_results") ||
+                          "Aucun utilisateur ne correspond à la recherche"
+                        : t("users.none_found") || "Aucun utilisateur trouvé"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -317,65 +352,88 @@ const Users = () => {
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8 bg-terracotta-100 text-terracotta-700">
                             {profile.avatar_url ? (
-                              <AvatarImage src={profile.avatar_url} alt={profile.full_name || t('users.no_name') || 'Utilisateur'} />
+                              <AvatarImage
+                                src={profile.avatar_url}
+                                alt={
+                                  profile.full_name ||
+                                  t("users.no_name") ||
+                                  "Utilisateur"
+                                }
+                              />
                             ) : (
-                              <AvatarFallback>{getUserInitials(profile.full_name)}</AvatarFallback>
+                              <AvatarFallback>
+                                {getUserInitials(profile.full_name)}
+                              </AvatarFallback>
                             )}
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm">{profile.full_name || t('users.no_name') || 'Utilisateur sans nom'}</p>
+                            <p className="font-medium text-sm">
+                              {profile.full_name ||
+                                t("users.no_name") ||
+                                "Utilisateur sans nom"}
+                            </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className="text-sm text-gray-600">{profile.email || '-'}</span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{profile.phone || '-'}</TableCell>
-                      <TableCell className="hidden md:table-cell">{profile.national_id || '-'}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {profile.primaryRole && <RoleBadge role={profile.primaryRole} />}
+                        <span className="text-sm text-gray-600">
+                          {profile.email || "-"}
+                        </span>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          profile.is_active !== false 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        {profile.phone || "-"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {profile.national_id || "-"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {profile.primaryRole && (
+                          <RoleBadge role={profile.primaryRole} />
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            profile.is_active !== false
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
                           {profile.is_active !== false
-                            ? t('users.active') || 'Actif'
-                            : t('users.inactive') || 'Désactivé'}
+                            ? t("users.active") || "Actif"
+                            : t("users.inactive") || "Désactivé"}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-1 justify-end">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="h-8 border-terracotta-200 hover:border-terracotta-300"
                             onClick={() => handleViewDetails(profile)}
                           >
                             <User className="h-4 w-4" />
                           </Button>
-                          
+
                           {canManageUsers && (
                             <>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="h-8 border-blue-200 hover:border-blue-300"
                                 onClick={() => handleEditUser(profile)}
                               >
                                 <Edit className="h-4 w-4" />
-                                {t('users.edit')}
+                                {t("users.edit")}
                               </Button>
-                              
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className={`h-8 ${
-                                  profile.is_active !== false 
-                                    ? 'border-red-200 hover:border-red-300 text-red-600' 
-                                    : 'border-green-200 hover:border-green-300 text-green-600'
+                                  profile.is_active !== false
+                                    ? "border-red-200 hover:border-red-300 text-red-600"
+                                    : "border-green-200 hover:border-green-300 text-green-600"
                                 }`}
                                 onClick={() => handleToggleUserStatus(profile)}
                               >
@@ -395,8 +453,16 @@ const Users = () => {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground text-xs text-right">
-                    {t('users.total') ? t('users.total').replace('{count}', filteredProfiles.length.toString()) : `Total: ${filteredProfiles.length} utilisateur(s)`}
+                  <TableCell
+                    colSpan={7}
+                    className="text-muted-foreground text-xs text-right"
+                  >
+                    {t("users.total")
+                      ? t("users.total").replace(
+                          "{count}",
+                          filteredProfiles.length.toString()
+                        )
+                      : `Total: ${filteredProfiles.length} utilisateur(s)`}
                   </TableCell>
                 </TableRow>
               </TableFooter>
@@ -409,75 +475,106 @@ const Users = () => {
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <SheetContent className="w-[90%] sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle className="text-lg font-serif">{t('users.details_title') || "Détails de l'utilisateur"}</SheetTitle>
+            <SheetTitle className="text-lg font-serif">
+              {t("users.details_title") || "Détails de l'utilisateur"}
+            </SheetTitle>
           </SheetHeader>
-          
+
           {selectedUser && (
             <div className="py-6 space-y-6">
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-20 w-20 bg-terracotta-100 text-terracotta-700 text-2xl">
                   {selectedUser.avatar_url ? (
-                    <AvatarImage src={selectedUser.avatar_url} alt={selectedUser.full_name || t('users.no_name') || 'Utilisateur'} />
+                    <AvatarImage
+                      src={selectedUser.avatar_url}
+                      alt={
+                        selectedUser.full_name ||
+                        t("users.no_name") ||
+                        "Utilisateur"
+                      }
+                    />
                   ) : (
-                    <AvatarFallback>{getUserInitials(selectedUser.full_name)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getUserInitials(selectedUser.full_name)}
+                    </AvatarFallback>
                   )}
                 </Avatar>
-                <h3 className="text-xl font-medium">{selectedUser.full_name || t('users.no_name') || 'Utilisateur sans nom'}</h3>
+                <h3 className="text-xl font-medium">
+                  {selectedUser.full_name ||
+                    t("users.no_name") ||
+                    "Utilisateur sans nom"}
+                </h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedUser.roles?.map(role => (
+                  {selectedUser.roles?.map((role) => (
                     <RoleBadge key={role} role={role as RoleType} />
                   ))}
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="text-muted-foreground text-sm">{t('auth.email') || "Email"}</label>
-                  <p className="font-medium">{selectedUser.email || '-'}</p>
+                  <label className="text-muted-foreground text-sm">
+                    {t("auth.email") || "Email"}
+                  </label>
+                  <p className="font-medium">{selectedUser.email || "-"}</p>
                 </div>
-                
+
                 <div>
-                  <label className="text-muted-foreground text-sm">{t('users.phone') || "Téléphone"}</label>
-                  <p className="font-medium">{selectedUser.phone || '-'}</p>
+                  <label className="text-muted-foreground text-sm">
+                    {t("users.phone") || "Téléphone"}
+                  </label>
+                  <p className="font-medium">{selectedUser.phone || "-"}</p>
                 </div>
-                
+
                 <div>
-                  <label className="text-muted-foreground text-sm">{t('users.national_id') || "ID National"}</label>
-                  <p className="font-medium">{selectedUser.national_id || '-'}</p>
-                </div>
-                
-                <div>
-                  <label className="text-muted-foreground text-sm">{t('users.created_at') || "Date d'inscription"}</label>
+                  <label className="text-muted-foreground text-sm">
+                    {t("users.national_id") || "ID National"}
+                  </label>
                   <p className="font-medium">
-                    {selectedUser.created_at 
-                      ? new Date(selectedUser.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'en' ? 'en-US' : 'fr-FR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })
-                      : '-'
-                    }
+                    {selectedUser.national_id || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-muted-foreground text-sm">
+                    {t("users.created_at") || "Date d'inscription"}
+                  </label>
+                  <p className="font-medium">
+                    {selectedUser.created_at
+                      ? new Date(selectedUser.created_at).toLocaleDateString(
+                          language === "ar"
+                            ? "ar-SA"
+                            : language === "en"
+                            ? "en-US"
+                            : "fr-FR",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )
+                      : "-"}
                   </p>
                 </div>
               </div>
             </div>
           )}
-          
+
           {canManageUsers && selectedUser && (
             <SheetFooter className="pt-4 flex gap-2 justify-center sm:justify-end">
-              <Button 
+              <Button
                 variant="outline"
                 className="border-terracotta-200 hover:border-terracotta-300 flex items-center gap-2"
                 onClick={() => handleEditUser(selectedUser)}
               >
                 <Edit className="h-4 w-4" />
-                <span>{t('users.edit') || "Modifier"}</span>
+                <span>{t("users.edit") || "Modifier"}</span>
               </Button>
             </SheetFooter>
           )}
         </SheetContent>
       </Sheet>
-      
+
       {/* User Management Dialog */}
       <UserManagementDialog
         user={selectedUser}
@@ -486,8 +583,6 @@ const Users = () => {
         onUpdate={refreshUserList}
         mode={managementMode}
       />
-      
-   
     </div>
   );
 };

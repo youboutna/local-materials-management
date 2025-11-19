@@ -1,8 +1,6 @@
-
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -59,7 +57,7 @@
 }
 
 .menu-link::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0.75rem;
@@ -71,7 +69,7 @@
 
 .menu-link:hover::after,
 .menu-link.active::after {
-  background-color: #B29F69;
+  background-color: #b29f69;
 }
 
 .page-background {
@@ -83,7 +81,7 @@
 
 /* Button enhancements to match "Découvrir nos projets" style */
 .btn-discover {
-  background-color: #E07A5F; /* terracotta color */
+  background-color: #e07a5f; /* terracotta color */
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.375rem;
@@ -94,7 +92,7 @@
 }
 
 .btn-discover:hover {
-  background-color: #D2725A;
+  background-color: #d2725a;
   transform: translateY(-1px);
 }
 
@@ -106,4 +104,3 @@
 .btn-discover:hover svg {
   transform: translateX(3px);
 }
-
