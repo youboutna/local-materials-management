@@ -173,7 +173,85 @@ export default function ProjectFileImporter({
   };
 
   const transformToProjectData = (item: any): ProjectFormDTO => {
+    // Map des statuts vers les valeurs autorisées
+    const statusMap: { [key: string]: string } = {
+      "en construction": "en cours",
+      "en clôture": "en cours",
+      "en conception": "en attente",
+      planifié: "en attente",
+    };
+
+    const rawStatus = item.status || "en cours";
+    const mappedStatus = statusMap[rawStatus] || rawStatus;
     const progress = item.progress ? Math.round(parseFloat(item.progress)) : 0;
+
+    // Génération automatique des phases compatibles avec PhaseData
+    const generatePhases = (projectItem: any): any[] => {
+      const phases: any[] = [];
+
+      // Déterminer le type de phase basé sur le statut
+      let phaseType = "construction";
+      let phaseStatus: "not_started" | "in_progress" | "completed" | "delayed" =
+        "not_started";
+
+      switch (mappedStatus) {
+        case "en attente":
+          phaseType = "planning";
+          phaseStatus = "not_started";
+          break;
+        case "en cours":
+          phaseType = "construction";
+          phaseStatus = progress > 0 ? "in_progress" : "not_started";
+          break;
+        case "en inspection":
+          phaseType = "inspection";
+          phaseStatus = "in_progress";
+          break;
+        case "terminé":
+          phaseType = "closure";
+          phaseStatus = "completed";
+          break;
+      }
+
+      // Calculer la durée estimée (en jours)
+      const startDate = new Date(projectItem.startDate);
+      const endDate = new Date(projectItem.endDate);
+      const estimatedDuration = Math.max(
+        1,
+        Math.ceil(
+          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+        )
+      );
+
+      // Créer la phase principale
+      const mainPhase = {
+        id: `imported-phase-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 9)}`,
+        title: projectItem.title || "Phase Principale",
+        description:
+          projectItem.description ||
+          `Phase automatiquement générée pour l'importation`,
+        startDate: projectItem.startDate,
+        endDate: projectItem.endDate,
+        estimatedDuration: estimatedDuration,
+        status: phaseStatus,
+        budget: projectItem.budget ? projectItem.budget * 0.8 : 0,
+        actualCost: 0,
+        progress: progress,
+        materials: [],
+        humanResources: [],
+        suppliers: [],
+        location: projectItem.location || "",
+        notes: `Phase générée automatiquement lors de l'importation. Statut: ${mappedStatus}, Progression: ${progress}%`,
+      };
+
+      phases.push(mainPhase);
+      return phases;
+    };
+
+    const generatedPhases = generatePhases(item);
+    console.log(`📊 Phases générées pour ${item.title}:`, generatedPhases);
     return {
       title:
         item.title ||
@@ -224,7 +302,7 @@ export default function ProjectFileImporter({
         : undefined,
 
       // Additional data
-      status: item.status || "en cours",
+      status: mappedStatus,
       progress: progress,
       thumbnail: item.thumbnail,
 
@@ -236,14 +314,16 @@ export default function ProjectFileImporter({
       risks: item?.risks,
       tasks: item?.tasks,
       payments: item?.payments,
-      phases: item?.phases,
-      plannedPhases: item?.plannedPhases,
+
+      // PHASES GÉNÉRÉES AUTOMATIQUEMENT - compatibles avec PhaseData
+      phases: generatedPhases,
+      plannedPhases: generatedPhases,
+
       constructionMilestones: item?.constructionMilestones,
       expenses: item?.expenses,
       resources: item?.resources,
     };
   };
-
   const handleImport = async () => {
     if (!selectedFile) return;
 
@@ -273,20 +353,213 @@ export default function ProjectFileImporter({
           const projectData = transformToProjectData(rawData[i]);
           const projectId = rawData[i].id;
 
-          console.log(`🔍 Processing project ${i + 1}:`, {
+          // LOG pour voir les données AVANT création
+          console.log("🚀 CRÉATION PROJET:", {
             title: projectData.title,
-            status: projectData.status,
-            budget: projectData.budget,
-            startDate: projectData.startDate,
-            endDate: projectData.endDate,
+            hasPhases: !!projectData.phases,
+            phasesCount: projectData.phases?.length,
+            phases: projectData.phases,
           });
 
           if (importMode === "create") {
             console.log("Creating project:", projectData.title);
-            await projectService.createProject(projectData);
+
+            // 1. Créer le projet d'abord
+            const createdProject = await projectService.createProject(
+              projectData
+            );
+
+            // LOG pour vérifier la création
+            console.log("🔍 RÉSULTAT CRÉATION PROJET:", {
+              createdProject,
+              hasId: !!createdProject?.id,
+              id: createdProject?.id,
+              title: createdProject?.title,
+            });
+
+            // 2. SAUVEGARDER LES PHASES SÉPARÉMENT si le projet est créé avec succès
+            if (createdProject && createdProject.id) {
+              console.log("✅ Projet créé avec ID:", createdProject.id);
+
+              if (projectData.phases && projectData.phases.length > 0) {
+                console.log(
+                  "💾 Début sauvegarde des phases pour:",
+                  createdProject.id
+                );
+                console.log("📊 Structure des phases:", {
+                  projectId: createdProject.id,
+                  phasesCount: projectData.phases.length,
+                  firstPhase: projectData.phases[0],
+                });
+
+                try {
+                  // Importer dynamiquement PhaseService
+                  console.log("🔧 Importation de PhaseService...");
+                  const { PhaseService } = await import(
+                    "@/services/phaseService"
+                  );
+                  console.log("🔧 PhaseService importé avec succès");
+
+                  // Sauvegarder les phases
+                  console.log("💾 Appel de saveProjectPhases...");
+                  await PhaseService.saveProjectPhases(
+                    createdProject.id,
+                    projectData.phases
+                  );
+                  console.log(
+                    "✅ Phases sauvegardées avec succès pour:",
+                    projectData.title
+                  );
+                } catch (phaseError) {
+                  console.error(
+                    "❌ Erreur détaillée sauvegarde phases:",
+                    phaseError
+                  );
+                  console.error(
+                    "❌ Stack trace:",
+                    phaseError instanceof Error ? phaseError.stack : "No stack"
+                  );
+
+                  // Ne pas bloquer l'import si les phases échouent
+                  const phaseErrorMsg = `Erreur phases - ${
+                    phaseError instanceof Error
+                      ? phaseError.message
+                      : "Erreur inconnue"
+                  }`;
+                  errors.push(
+                    `${t("projects.import.line")} ${i + 1}: ${phaseErrorMsg}`
+                  );
+                }
+              } else {
+                console.log(
+                  "ℹ️ Aucune phase à sauvegarder pour:",
+                  projectData.title
+                );
+              }
+            } else {
+              console.error("❌ Projet créé mais sans ID:", createdProject);
+              errors.push(
+                `${t("projects.import.line")} ${i + 1}: Projet créé sans ID`
+              );
+            }
+
             importedCount++;
+          } else if (importMode === "update" || importMode === "patch") {
+            // Try to find existing project by ID or reference
+            if (projectId) {
+              console.log(
+                `${importMode === "update" ? "Updating" : "Patching"} project:`,
+                projectData.title
+              );
+
+              if (importMode === "update") {
+                // Full update - replace all fields
+                await projectService.updateProject(projectId, projectData);
+              } else {
+                // Patch - only update provided fields
+                const fieldsToUpdate: Partial<ProjectFormDTO> = {};
+                Object.keys(rawData[i]).forEach((key) => {
+                  if (
+                    rawData[i][key] !== undefined &&
+                    rawData[i][key] !== null &&
+                    rawData[i][key] !== ""
+                  ) {
+                    const value = projectData[key as keyof ProjectFormDTO];
+                    if (value !== undefined) {
+                      (fieldsToUpdate as any)[key] = value;
+                    }
+                  }
+                });
+                await projectService.updateProject(projectId, fieldsToUpdate);
+              }
+
+              // SAUVEGARDER LES PHASES POUR UPDATE AUSSI
+              if (projectData.phases && projectData.phases.length > 0) {
+                console.log("💾 Sauvegarde des phases pour update:", projectId);
+                try {
+                  const { PhaseService } = await import(
+                    "@/services/phaseService"
+                  );
+                  await PhaseService.saveProjectPhases(
+                    projectId,
+                    projectData.phases
+                  );
+                  console.log(
+                    "✅ Phases sauvegardées avec succès pour update:",
+                    projectData.title
+                  );
+                } catch (phaseError) {
+                  console.error(
+                    "❌ Erreur sauvegarde phases update:",
+                    phaseError
+                  );
+                  errors.push(
+                    `${t("projects.import.line")} ${
+                      i + 1
+                    }: Erreur phases update - ${
+                      phaseError instanceof Error
+                        ? phaseError.message
+                        : "Erreur inconnue"
+                    }`
+                  );
+                }
+              }
+
+              updatedCount++;
+            } else {
+              // No ID provided, create new project
+              console.log("No ID found, creating project:", projectData.title);
+              const createdProject = await projectService.createProject(
+                projectData
+              );
+
+              // SAUVEGARDER LES PHASES POUR CRÉATION SANS ID
+              if (
+                createdProject &&
+                createdProject.id &&
+                projectData.phases &&
+                projectData.phases.length > 0
+              ) {
+                console.log(
+                  "💾 Sauvegarde des phases pour création sans ID:",
+                  createdProject.id
+                );
+                try {
+                  const { PhaseService } = await import(
+                    "@/services/phaseService"
+                  );
+                  await PhaseService.saveProjectPhases(
+                    createdProject.id,
+                    projectData.phases
+                  );
+                  console.log(
+                    "✅ Phases sauvegardées avec succès pour création sans ID:",
+                    projectData.title
+                  );
+                } catch (phaseError) {
+                  console.error(
+                    "❌ Erreur sauvegarde phases création sans ID:",
+                    phaseError
+                  );
+                  errors.push(
+                    `${t("projects.import.line")} ${
+                      i + 1
+                    }: Erreur phases création - ${
+                      phaseError instanceof Error
+                        ? phaseError.message
+                        : "Erreur inconnue"
+                    }`
+                  );
+                }
+              }
+
+              importedCount++;
+            }
           }
-          // ... reste du code pour update/patch
+
+          console.log(
+            `✅ Projet ${i + 1}/${rawData.length} traité avec succès`
+          );
         } catch (error) {
           console.error(`❌ Error on line ${i + 1}:`, error);
 
@@ -336,6 +609,8 @@ export default function ProjectFileImporter({
           description: result.message,
         });
       }
+
+      console.log("🎉 IMPORTATION TERMINÉE:", result);
     } catch (error) {
       console.error("Import error:", error);
       const result: ImportResult = {
