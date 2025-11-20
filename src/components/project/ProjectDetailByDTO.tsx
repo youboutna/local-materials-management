@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProjectService } from "@/services/ProjectService";
 import { ProjectAnalyticsService } from "@/services/ProjectAnalyticsService";
@@ -37,6 +36,8 @@ import {
   Shield,
 } from "lucide-react";
 import { ProgressCalculationService } from "@/services/ProgressCalculationService";
+import { ElectricSpinner } from "../loading-page";
+import { toast } from "sonner";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -192,38 +193,37 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [risks, setRisks] = useState<any[]>([]);
 
   useEffect(() => {
+    const computeResources = () => {
+      if (!projectDetail) return;
+      const allResources: any[] = [];
+      if (projectDetail.projectResponsableId) {
+        allResources.push({
+          id: `manager-${projectDetail.projectResponsableId}`,
+          name: "Chef de projet",
+          type: "human",
+          position: "Chef de projet",
+          costPerHour: 0,
+          availability: 100,
+        });
+      }
+      if (projectDetail.mainContractor) {
+        allResources.push({
+          id: `contractor-main`,
+          name: projectDetail.mainContractor,
+          type: "human",
+          position: "Contractant principal",
+          costPerHour: 0,
+          availability: 100,
+        });
+      }
+      setResources(allResources);
+    };
     if (projectDetail) {
       computeResources();
       setTasks(tasksSource);
       setRisks(risksSource);
     }
-  }, [projectDetail?.id]);
-
-  const computeResources = () => {
-    if (!projectDetail) return;
-    const allResources: any[] = [];
-    if (projectDetail.projectResponsableId) {
-      allResources.push({
-        id: `manager-${projectDetail.projectResponsableId}`,
-        name: "Chef de projet",
-        type: "human",
-        position: "Chef de projet",
-        costPerHour: 0,
-        availability: 100,
-      });
-    }
-    if (projectDetail.mainContractor) {
-      allResources.push({
-        id: `contractor-main`,
-        name: projectDetail.mainContractor,
-        type: "human",
-        position: "Contractant principal",
-        costPerHour: 0,
-        availability: 100,
-      });
-    }
-    setResources(allResources);
-  };
+  }, [projectDetail, risksSource, tasksSource]);
 
   // Calculate realistic progress
   const [calculatedProgress, setCalculatedProgress] = useState<number>(0);
@@ -231,21 +231,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   useEffect(() => {
     const calculateProgress = async () => {
       if (projectDetail) {
-        const progress = ProgressCalculationService.calculateProjectProgress(
-          projectDetail.plannedPhases || [],
-          projectDetail.tasks || [],
-          projectDetail.inspections || []
-        );
-        setCalculatedProgress(progress);
+        // const progress = ProgressCalculationService.calculateProjectProgress(
+        //   projectDetail.plannedPhases || [],
+        //   projectDetail.tasks || [],
+        //   projectDetail.inspections || []
+        // );
+        // setCalculatedProgress(progress);
+        setCalculatedProgress(projectDetail.progress || 0);
       }
     };
     calculateProgress();
-  }, [
-    projectDetail?.id,
-    projectDetail?.plannedPhases,
-    projectDetail?.tasks,
-    projectDetail?.inspections,
-  ]);
+  }, [projectDetail]);
 
   // Use data from DTO for all tabs
   const payments = paymentsSource;
@@ -289,16 +285,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   if (projectLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">
-            Chargement des données du projet...
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Récupération des informations depuis la base de données
-          </p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center  ">
+        <ElectricSpinner />
       </div>
     );
   }
@@ -327,7 +315,31 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       </div>
     );
   }
+  const handleDelete = async (projectId: string) => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir supprimer cette projet  ? Cette action est irréversible.`
+      )
+    ) {
+      return;
+    }
 
+    try {
+      // Implement your  delete API call here
+
+      // Example API call (replace with your actual API):
+      if (projectId) {
+        await projectService.deleteProject(projectId);
+        navigate("/projects");
+      }
+
+      // Show success message
+      toast.success(`Le projet est supprimé avec succès`);
+    } catch (error) {
+      console.error("Error deleting projects:", error);
+      toast.error("Erreur lors de la suppression de projet");
+    }
+  };
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -371,11 +383,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
+          <ReportManager data={{ project }} reportType="project" />
           {onEdit && (
             <Button onClick={onEdit} variant="outline">
               Modifier
             </Button>
           )}
+          <Button
+            variant="destructive"
+            onClick={() => handleDelete(project.id)}
+          >
+            Supprimer
+          </Button>
           {onClose && (
             <Button onClick={onClose} variant="ghost">
               Fermer
@@ -1360,19 +1379,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Reports Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Rapports et analyses
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ReportManager data={{ project }} reportType="project" />
-        </CardContent>
-      </Card>
     </div>
   );
 };

@@ -19,6 +19,12 @@ import { MapLocation } from "@/components/ProjectMap";
 import Navbar from "@/components/Navbar";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
+import { ElectricSpinner } from "@/components/loading-page";
+import { useBulkSelection } from "@/hooks/projects/useBulkSelection";
+import BulkActions from "@/components/projects/BulkActions";
+import { Button } from "@/components/ui/button";
+import { ProjectService } from "@/services/ProjectService";
+import { toast } from "sonner";
 
 const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
@@ -30,6 +36,7 @@ const Projects: React.FC = () => {
   >([]);
   const [interactiveFilteredProjects, setInteractiveFilteredProjects] =
     useState<ProjectData[]>([]);
+  const projectService = new ProjectService();
 
   // Use the projects filter hook
   const {
@@ -62,6 +69,49 @@ const Projects: React.FC = () => {
     data: filteredProjects,
     itemsPerPage: 20,
   });
+
+  // Add bulk selection
+  const {
+    selectedProjects,
+    toggleProjectSelection,
+    selectAllOnPage,
+    deselectAllOnPage,
+    selectAll,
+    clearSelection,
+    isProjectSelected,
+  } = useBulkSelection();
+
+  // Add delete handler
+  const handleBulkDelete = async (projectIds: string[]) => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir supprimer ${projectIds.length} projet(s) ? Cette action est irréversible.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // Implement your bulk delete API call here
+      console.log("Deleting projects:", projectIds);
+
+      // Example API call (replace with your actual API):
+      for (const projectId of projectIds) {
+        await projectService.deleteProject(projectId);
+      }
+      // After successful deletion, clear selection
+      clearSelection();
+
+      // You might want to refetch projects here or update the local state
+      handleReset();
+
+      // Show success message
+      toast.success(`${projectIds.length} projet(s) supprimé(s) avec succès`);
+    } catch (error) {
+      console.error("Error deleting projects:", error);
+      toast.error("Erreur lors de la suppression des projets");
+    }
+  };
 
   // Initialize locations when projects load
   useEffect(() => {
@@ -146,8 +196,8 @@ const Projects: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Chargement des projets...</div>
+      <div className="min-h-screen flex items-center justify-center ">
+        <ElectricSpinner />
       </div>
     );
   }
@@ -191,6 +241,48 @@ const Projects: React.FC = () => {
           </TabsList>
 
           <TabsContent value="grid" className="space-y-6">
+            {/* Add Bulk Actions Component */}
+            <BulkActions
+              selectedProjects={selectedProjects}
+              projects={projects || []}
+              onDelete={handleBulkDelete}
+              onClearSelection={clearSelection}
+            />
+
+            {/* Selection Options - Separate from ProjectFilters */}
+            {selectedProjects.size > 0 && (
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm text-gray-600">
+                  {selectedProjects.size} élément(s) sélectionné(s) sur{" "}
+                  {filteredProjects.length}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      selectAllOnPage(paginatedProjects.map((p) => p.id))
+                    }
+                  >
+                    Sélectionner la page
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => selectAll(projects?.map((p) => p.id) || [])}
+                  >
+                    Tout sélectionner
+                  </Button>
+
+                  <Button variant="outline" size="sm" onClick={clearSelection}>
+                    Tout désélectionner
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <ProjectFilters
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -214,6 +306,10 @@ const Projects: React.FC = () => {
               totalItems={totalItems}
               onPageChange={goToPage}
               isLoading={isLoading}
+              selectedProjects={selectedProjects}
+              onProjectSelect={toggleProjectSelection}
+              onSelectAllOnPage={selectAllOnPage}
+              onDeselectAllOnPage={deselectAllOnPage}
             />
           </TabsContent>
 

@@ -1,9 +1,9 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import {
   AlertTriangle,
   Building,
@@ -14,22 +14,31 @@ import {
   Layers,
   MapPin,
   Save,
-  Users
-} from 'lucide-react';
-import React, { useState } from 'react';
+  Users,
+} from "lucide-react";
+import React, { useState } from "react";
 
 // Import step components
-import InteractiveMapGIS from '../materials/InteractiveMapGIS';
-import ConstructionPhaseManager from './ConstructionPhaseManager';
-import ComplianceStep from './steps/ComplianceStep';
-import ResourcesMaterialsStep from './steps/ResourcesMaterialsStep';
-import RiskAnalysisStep from './steps/RiskAnalysisStep';
-import StakeholdersTeamStep from './steps/StakeholdersTeamStep';
+import InteractiveMapGIS from "../materials/InteractiveMapGIS";
+import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import ComplianceStep from "./steps/ComplianceStep";
+import ResourcesMaterialsStep from "./steps/ResourcesMaterialsStep";
+import RiskAnalysisStep from "./steps/RiskAnalysisStep";
+import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface ProjectCreationWorkflowProps {
   onSubmit: (data: any) => void;
   selectedMaterials: Array<{ materialId: string; quantity: number }>;
-  onMaterialsChange: (materials: Array<{ materialId: string; quantity: number }>) => void;
+  onMaterialsChange: (
+    materials: Array<{ materialId: string; quantity: number }>
+  ) => void;
   initialData?: any;
 }
 
@@ -37,64 +46,70 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   onSubmit,
   selectedMaterials,
   onMaterialsChange,
-  initialData
+  initialData,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     // Basic info matching database schema
-    title: '',
-    project_reference: '',
-    description: '',
-    budget: '',
-    estimated_duration_days: '',
-    currency: 'MRU',
-    status: 'planning',
-    start_date: new Date().toISOString().split('T')[0], // Default to today
-    startDate: new Date().toISOString().split('T')[0],
-    end_date: '',
-    endDate: '',
-    payment_mode: 'progressive',
-    payment_frequency: 'monthly',
+    title: "",
+    project_reference: "",
+    description: "",
+    budget: "",
+    estimated_duration_days: "",
+    currency: "MRU",
+    status: "planning",
+    start_date: new Date().toISOString().split("T")[0], // Default to today
+    startDate: new Date().toISOString().split("T")[0],
+    end_date: "",
+    endDate: "",
+    payment_mode: "progressive",
+    payment_frequency: "monthly",
     initial_advance: 20,
     retention_percentage: 5,
-    priority: 'medium',
+    priority: "medium",
     progress: 0, // Progression globale calculée
     // Project type: infrastructure | fourniture | distribution_rurale
-    project_type: 'infrastructure',
-    sector: '',
-    permit_number: '',
+    project_type: "infrastructure",
+    sector: "",
+    permit_number: "",
     // Location data
-    address: '',
+    address: "",
     latitude: null,
     longitude: null,
     area_sqm: null,
-    site_details: '',
+    site_details: "",
     // Financial data
     advance_percentage: 20,
     // Additional fields to match database
-    client_name: '',
-    main_contractor: '',
-    engineering_consultant: '',
+    client_name: "",
+    main_contractor: "",
+    engineering_consultant: "",
     project_manager_id: null,
     technical_manager_id: null,
     supervisor_id: null,
     client_id: null,
     workspace_id: null,
     // Funding source fields (Bailleurs de fonds)
-    financing_source: '',
-    donor_organization: '',
+    financing_source: "",
+    donor_organization: "",
     // Market type (Mauritania procurement)
-    market_type: 'appel_offre_international',
-    selection_mode: 'qualite_cout',
-    ...initialData
+    market_type: "appel_offre_international",
+    selection_mode: "qualite_cout",
+    ...initialData,
   });
-
+  const statusOptions = [
+    { value: "en cours", label: "En cours" },
+    { value: "terminé", label: "Terminé" },
+    { value: "en attente", label: "En attente" },
+    { value: "suspendu", label: "Suspendu" },
+    { value: "annulé", label: "Annulé" },
+  ] as const;
   const [stakeholders, setStakeholders] = useState<any[]>([]);
   const [delegation, setDelegation] = useState<any>({
-    projectManager: '',
-    technicalManager: '',
-    supervisor: '',
-    client: ''
+    projectManager: "",
+    technicalManager: "",
+    supervisor: "",
+    client: "",
   });
   const [risks, setRisks] = useState<any[]>([]);
   const [compliance, setCompliance] = useState<any[]>([]);
@@ -106,79 +121,86 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const steps = [
     {
       id: 1,
-      title: 'Informations du projet',
+      title: "Informations du projet",
       icon: Building,
-      description: 'Type, budget, dates, référence',
-      color: 'bg-blue-500',
-      isCompleted: (data: any) => Boolean(
-        data.title && 
-        data.description && 
-        data.budget && 
-        data.project_type &&
-        data.start_date
-      )
+      description: "Type, budget, dates, référence",
+      color: "bg-blue-500",
+      isCompleted: (data: any) =>
+        Boolean(
+          data.title &&
+            data.description &&
+            data.budget &&
+            data.project_type &&
+            data.start_date
+        ),
     },
     {
       id: 2,
-      title: 'Parties prenantes',
+      title: "Parties prenantes",
       icon: Users,
-      description: 'Bailleurs, Ministères, Entreprises, Banques, Bureau conseil',
-      color: 'bg-green-500',
-      isCompleted: (data: any) => Boolean(
-        data.project_manager_id || 
-        data.client_id ||
-        data.engineering_consultant ||
-        data.main_contractor
-      )
+      description:
+        "Bailleurs, Ministères, Entreprises, Banques, Bureau conseil",
+      color: "bg-green-500",
+      isCompleted: (data: any) =>
+        Boolean(
+          data.project_manager_id ||
+            data.client_id ||
+            data.engineering_consultant ||
+            data.main_contractor
+        ),
     },
     {
       id: 3,
-      title: 'Localisation',
+      title: "Localisation",
       icon: MapPin,
-      description: 'Géolocalisation interactive (Maps/Leaflet)',
-      color: 'bg-cyan-500',
-      isCompleted: (data: any) => Boolean(data.address && (data.latitude || data.longitude))
+      description: "Géolocalisation interactive (Maps/Leaflet)",
+      color: "bg-cyan-500",
+      isCompleted: (data: any) =>
+        Boolean(data.address && (data.latitude || data.longitude)),
     },
     {
       id: 4,
-      title: 'Planification WBS',
+      title: "Planification WBS",
       icon: Layers,
-      description: 'Phase → Step → Task avec documents, ressources, inspections',
-      color: 'bg-indigo-500',
-      isCompleted: (data: any) => Boolean(phases && phases.length > 0 )
+      description:
+        "Phase → Step → Task avec documents, ressources, inspections",
+      color: "bg-indigo-500",
+      isCompleted: (data: any) => Boolean(phases && phases.length > 0),
     },
     {
       id: 5,
-      title: 'Risques',
+      title: "Risques",
       icon: AlertTriangle,
-      description: 'Analyse et gestion des risques',
-      color: 'bg-red-500',
-      isCompleted: (data: any) => Boolean(risks && risks.length >= 0)
+      description: "Analyse et gestion des risques",
+      color: "bg-red-500",
+      isCompleted: (data: any) => Boolean(risks && risks.length >= 0),
     },
     {
       id: 6,
-      title: 'Conformité',
+      title: "Conformité",
       icon: FileCheck,
-      description: 'Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)',
-      color: 'bg-amber-500',
-      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0)
+      description: "Standards SOMELEC et bailleurs (BM, BAD, BID, AFD)",
+      color: "bg-amber-500",
+      isCompleted: (data: any) => Boolean(compliance && compliance.length >= 0),
     },
     {
       id: 7,
-      title: 'Validation',
+      title: "Validation",
       icon: CheckCircle,
-      description: 'Réception définitive et clôture',
-      color: 'bg-teal-500',
-      isCompleted: (data: any) => true
-    }
+      description: "Réception définitive et clôture",
+      color: "bg-teal-500",
+      isCompleted: (data: any) => true,
+    },
   ];
 
   const updateFormData = (updates: any) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const getStepProgress = () => {
-    const completedCount = steps.filter(step => step.isCompleted(formData)).length;
+    const completedCount = steps.filter((step) =>
+      step.isCompleted(formData)
+    ).length;
     return (completedCount / steps.length) * 100;
   };
 
@@ -201,13 +223,16 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
   const handleSubmit = async () => {
     // Calculer la progression globale avant soumission
-    const { ProgressCalculationService } = await import('@/services/ProgressCalculationService');
-    
-    const calculatedProgress = ProgressCalculationService.calculateProjectProgress(
-      phases,
-      [], // tasks seront ajoutés après création
-      [] // inspections seront ajoutés après création
+    const { ProgressCalculationService } = await import(
+      "@/services/ProgressCalculationService"
     );
+
+    const calculatedProgress =
+      ProgressCalculationService.calculateProjectProgress(
+        phases,
+        [], // tasks seront ajoutés après création
+        [] // inspections seront ajoutés après création
+      );
 
     // Prepare data for submission with correct field mappings
     const submitData = {
@@ -225,10 +250,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       materials: selectedMaterials,
       risks,
       compliance,
-      shapeData
+      shapeData,
     };
-    
-    console.log('Submitting project data:', submitData);
+
+    console.log("Submitting project data:", submitData);
     onSubmit(submitData);
   };
 
@@ -247,84 +272,180 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Titre du projet *</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-medium mb-2">
+                      Titre du projet *
+                    </label>
+                    <input
+                      type="text"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Nom du projet de construction"
                       required
                       value={formData.title}
-                      onChange={(e) => updateFormData({ title: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ title: e.target.value })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Référence du projet</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-medium mb-2">
+                      Référence du projet
+                    </label>
+                    <input
+                      type="text"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="REF-2025-001"
                       value={formData.project_reference}
-                      onChange={(e) => updateFormData({ project_reference: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ project_reference: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="">
+                    <label className="text-sm font-medium">Status *</label>
+
+                    <Select
+                      value={formData.status ?? undefined}
+                      required
+                      onValueChange={(value) =>
+                        updateFormData({ status: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <SelectValue placeholder="Sélectionner le status" />
+                      </SelectTrigger>
+                      <SelectContent side="bottom" align="start">
+                        {statusOptions.map((status) => (
+                          <SelectItem
+                            key={status.value}
+                            value={status.value}
+                            className="cursor-pointer"
+                          >
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Progress *
+                    </label>
+
+                    {/* Progress Bar */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <Progress
+                        value={formData.progress || 0}
+                        className="flex-1 h-2"
+                      />
+                      <span className="text-sm font-medium w-12 text-right">
+                        {formData.progress || 0}%
+                      </span>
+                    </div>
+
+                    {/* Input */}
+                    <input
+                      type="number"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="0"
+                      min={0}
+                      max={100}
+                      required
+                      value={formData.progress || ""}
+                      onChange={(e) =>
+                        updateFormData({
+                          progress: parseInt(e.target.value) || 0,
+                        })
+                      }
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description détaillée *</label>
-                  <textarea 
+                  <label className="block text-sm font-medium mb-2">
+                    Description détaillée *
+                  </label>
+                  <textarea
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[120px]"
                     placeholder="Description complète du projet, objectifs et spécifications techniques"
                     required
                     value={formData.description}
-                    onChange={(e) => updateFormData({ description: e.target.value })}
+                    onChange={(e) =>
+                      updateFormData({ description: e.target.value })
+                    }
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Type de projet *</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Type de projet *
+                    </label>
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                       value={formData.project_type}
-                      onChange={(e) => updateFormData({ project_type: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ project_type: e.target.value })
+                      }
                     >
-                      <option value="infrastructure">Infrastructure (HT, Postes, Centrales)</option>
-                      <option value="fourniture">Fourniture (Équipements, Kits solaires)</option>
-                      <option value="distribution_rurale">Distribution Rurale</option>
+                      <option value="infrastructure">
+                        Infrastructure (HT, Postes, Centrales)
+                      </option>
+                      <option value="fourniture">
+                        Fourniture (Équipements, Kits solaires)
+                      </option>
+                      <option value="distribution_rurale">
+                        Distribution Rurale
+                      </option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Budget total (MRU) *</label>
-                    <input 
-                      type="number" 
+                    <label className="block text-sm font-medium mb-2">
+                      Budget total (MRU) *
+                    </label>
+                    <input
+                      type="number"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="1000000"
                       required
                       value={formData.budget}
-                      onChange={(e) => updateFormData({ budget: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ budget: e.target.value })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Durée estimée (jours)</label>
-                    <input 
-                      type="number" 
+                    <label className="block text-sm font-medium mb-2">
+                      Durée estimée (jours)
+                    </label>
+                    <input
+                      type="number"
                       min="1"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="365"
                       value={formData.estimated_duration_days}
-                      onChange={(e) => updateFormData({ estimated_duration_days: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({
+                          estimated_duration_days: e.target.value,
+                        })
+                      }
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Source de financement</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Source de financement
+                    </label>
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       value={formData.financing_source}
-                      onChange={(e) => updateFormData({ financing_source: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ financing_source: e.target.value })
+                      }
                     >
                       <option value="">Sélectionner</option>
                       <option value="banque_mondiale">Banque Mondiale</option>
@@ -333,21 +454,33 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       <option value="afd">AFD</option>
                       <option value="fmi">FMI</option>
                       <option value="fades">FADES</option>
-                      <option value="bei">Banque Européenne d'Investissement</option>
+                      <option value="bei">
+                        Banque Européenne d'Investissement
+                      </option>
                       <option value="etat_mauritanien">État Mauritanien</option>
                       <option value="autre">Autre</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Type de marché</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Type de marché
+                    </label>
                     <select
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       value={formData.market_type}
-                      onChange={(e) => updateFormData({ market_type: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ market_type: e.target.value })
+                      }
                     >
-                      <option value="appel_offre_international">Appel d'offre international</option>
-                      <option value="appel_offre_national">Appel d'offre national</option>
-                      <option value="consultation_restreinte">Consultation restreinte</option>
+                      <option value="appel_offre_international">
+                        Appel d'offre international
+                      </option>
+                      <option value="appel_offre_national">
+                        Appel d'offre national
+                      </option>
+                      <option value="consultation_restreinte">
+                        Consultation restreinte
+                      </option>
                       <option value="gre_a_gre">Gré à gré</option>
                     </select>
                   </div>
@@ -355,21 +488,29 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Date de début</label>
-                    <input 
-                      type="date" 
+                    <label className="block text-sm font-medium mb-2">
+                      Date de début
+                    </label>
+                    <input
+                      type="date"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       value={formData.start_date}
-                      onChange={(e) => updateFormData({ start_date: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ start_date: e.target.value })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Date de fin</label>
-                    <input 
-                      type="date" 
+                    <label className="block text-sm font-medium mb-2">
+                      Date de fin
+                    </label>
+                    <input
+                      type="date"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       value={formData.end_date}
-                      onChange={(e) => updateFormData({ end_date: e.target.value })}
+                      onChange={(e) =>
+                        updateFormData({ end_date: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -377,15 +518,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardContent>
           </Card>
         );
-      
+
       case 1: // Stakeholders
         return (
-          <StakeholdersTeamStep
-            formData={formData}
-            onUpdate={updateFormData}
-          />
+          <StakeholdersTeamStep formData={formData} onUpdate={updateFormData} />
         );
-      
+
       case 2: // Location
         return (
           <Card>
@@ -402,24 +540,27 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   description="Sélectionnez l'emplacement et tracez la zone de travail"
                   allowPolygon={true}
                   value={{
-                    coordinates: formData.latitude && formData.longitude 
-                      ? { lat: formData.latitude, lng: formData.longitude }
-                      : undefined,
+                    coordinates:
+                      formData.latitude && formData.longitude
+                        ? { lat: formData.latitude, lng: formData.longitude }
+                        : undefined,
                     address: formData.address,
                     shape: shapeData?.shape,
-                    shapeType: shapeData?.shapeType
+                    shapeType: shapeData?.shapeType,
                   }}
                   onChange={(locationData) => {
                     // Update formData with location info
                     updateFormData({
                       address: locationData.address || formData.address,
-                      latitude: locationData.coordinates?.lat || formData.latitude,
-                      longitude: locationData.coordinates?.lng || formData.longitude,
+                      latitude:
+                        locationData.coordinates?.lat || formData.latitude,
+                      longitude:
+                        locationData.coordinates?.lng || formData.longitude,
                     });
                     // Store shape data separately
                     setShapeData({
                       shape: locationData.shape,
-                      shapeType: locationData.shapeType
+                      shapeType: locationData.shapeType,
                     });
                   }}
                 />
@@ -427,7 +568,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardContent>
           </Card>
         );
-      
+
       case 3: // Planification WBS (Phases, Steps, Tasks with Resources)
         return (
           <Card>
@@ -444,7 +585,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                 onChange={setPhases}
                 projectBudget={parseFloat(formData.budget) || 0}
               />
-              
+
               {/* Resources and Materials integrated within phase planning */}
               <ResourcesMaterialsStep
                 formData={formData}
@@ -455,23 +596,15 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             </CardContent>
           </Card>
         );
-      
+
       case 4: // Risks
         return (
-          <RiskAnalysisStep
-            formData={formData}
-            onUpdate={updateFormData}
-          />
+          <RiskAnalysisStep formData={formData} onUpdate={updateFormData} />
         );
-      
+
       case 5: // Compliance
-        return (
-          <ComplianceStep
-            formData={formData}
-            onUpdate={updateFormData}
-          />
-        );
-      
+        return <ComplianceStep formData={formData} onUpdate={updateFormData} />;
+
       case 6: // Validation & Closure
         return (
           <Card>
@@ -492,8 +625,10 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </label>
                   <select
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
-                    value={formData.reception_status || ''}
-                    onChange={(e) => updateFormData({ reception_status: e.target.value })}
+                    value={formData.reception_status || ""}
+                    onChange={(e) =>
+                      updateFormData({ reception_status: e.target.value })
+                    }
                   >
                     <option value="">Sélectionner</option>
                     <option value="provisional">Réception provisoire</option>
@@ -507,15 +642,17 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   <textarea
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary min-h-[100px]"
                     placeholder="Notes finales, observations, recommandations..."
-                    value={formData.closure_notes || ''}
-                    onChange={(e) => updateFormData({ closure_notes: e.target.value })}
+                    value={formData.closure_notes || ""}
+                    onChange={(e) =>
+                      updateFormData({ closure_notes: e.target.value })
+                    }
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
         );
-      
+
       default:
         return null;
     }
@@ -548,14 +685,14 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               const isCompleted = step.isCompleted(formData);
               const isActive = currentStep === index;
               const canAccess = index <= currentStep || isCompleted;
-              
+
               return (
                 <motion.div
                   key={step.id}
                   whileHover={{ scale: canAccess ? 1.02 : 1 }}
                   whileTap={{ scale: canAccess ? 0.98 : 1 }}
                 >
-                  <Card 
+                  <Card
                     className={cn(
                       "cursor-pointer transition-all duration-200",
                       isActive && "ring-2 ring-primary shadow-lg",
@@ -566,10 +703,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "p-2 rounded-full text-white flex-shrink-0 relative",
-                          step.color
-                        )}>
+                        <div
+                          className={cn(
+                            "p-2 rounded-full text-white flex-shrink-0 relative",
+                            step.color
+                          )}
+                        >
                           <Icon className="h-4 w-4" />
                           {isCompleted && (
                             <CheckCircle className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 text-white rounded-full" />
@@ -577,7 +716,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                         </div>
                         <div>
                           <h3 className="font-medium text-sm">{step.title}</h3>
-                          <p className="text-xs text-muted-foreground">{step.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {step.description}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -615,13 +756,13 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   variant="outline"
                   onClick={() => {
                     // Save current step without navigating
-                    console.log('Saving step data:', formData);
+                    console.log("Saving step data:", formData);
                   }}
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>
-                
+
                 {currentStep === steps.length - 1 ? (
                   <Button
                     onClick={handleSubmit}
@@ -630,10 +771,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                     Créer le projet
                   </Button>
                 ) : (
-                  <Button
-                    onClick={nextStep}
-                    disabled={!canProceedNext()}
-                  >
+                  <Button onClick={nextStep} disabled={!canProceedNext()}>
                     Sauvegarder et suivant
                     <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>

@@ -34,7 +34,6 @@ const ProjectCreate = () => {
     Completed: "terminé",
     Cancelled: "annulé",
   } as const;
-
   // Handle form submission from ProjectFormWithMap
   const handleFormSubmit = async (data: any) => {
     setIsSubmitting(true);

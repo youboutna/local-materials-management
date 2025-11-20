@@ -147,7 +147,7 @@ const Index = () => {
   }
 
   return (
-    <div className="-mt-20 min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="-mt-5 min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <main className="flex-grow">
         {/* Hero Section */}
         <Hero />

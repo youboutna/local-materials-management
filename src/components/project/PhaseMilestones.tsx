@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Target, Plus, CheckCircle, Clock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Target, Plus, CheckCircle, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { ElectricSpinner } from "../loading-page";
 
 interface Milestone {
   id: string;
@@ -16,7 +23,7 @@ interface Milestone {
   description?: string;
   target_date: string;
   completed_date?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  status: "pending" | "in_progress" | "completed" | "delayed";
   weight: number;
   notes?: string;
 }
@@ -26,18 +33,23 @@ interface PhaseMilestonesProps {
   projectId: string;
 }
 
-const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId }) => {
+const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
+  phaseId,
+  projectId,
+}) => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    target_date: '',
+    title: "",
+    description: "",
+    target_date: "",
     weight: 0.1,
-    notes: ''
+    notes: "",
   });
 
   useEffect(() => {
@@ -48,28 +60,32 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('phase_id', phaseId)
-        .order('target_date', { ascending: true });
+        .from("enhanced_project_milestones")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("phase_id", phaseId)
+        .order("target_date", { ascending: true });
 
       if (error) throw error;
-      const transformedData = (data || []).map(milestone => ({
+      const transformedData = (data || []).map((milestone) => ({
         ...milestone,
         description: milestone.description || undefined,
         notes: milestone.notes || undefined,
         completed_date: milestone.completed_date || undefined,
-        status: (milestone.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'delayed',
-        weight: milestone.weight || 0.1
+        status: (milestone.status || "pending") as
+          | "pending"
+          | "in_progress"
+          | "completed"
+          | "delayed",
+        weight: milestone.weight || 0.1,
       }));
       setMilestones(transformedData);
     } catch (error) {
-      console.error('Error loading milestones:', error);
+      console.error("Error loading milestones:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les jalons',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de charger les jalons",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -86,37 +102,37 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
         target_date: formData.target_date,
         weight: formData.weight,
         notes: formData.notes,
-        status: 'pending'
+        status: "pending",
       };
 
       let result;
       if (editingMilestone) {
         result = await supabase
-          .from('enhanced_project_milestones')
+          .from("enhanced_project_milestones")
           .update(milestoneData)
-          .eq('id', editingMilestone.id);
+          .eq("id", editingMilestone.id);
       } else {
         result = await supabase
-          .from('enhanced_project_milestones')
+          .from("enhanced_project_milestones")
           .insert(milestoneData);
       }
 
       if (result.error) throw result.error;
 
       toast({
-        title: 'Succès',
-        description: editingMilestone ? 'Jalon modifié' : 'Jalon ajouté'
+        title: "Succès",
+        description: editingMilestone ? "Jalon modifié" : "Jalon ajouté",
       });
 
       setIsDialogOpen(false);
       resetForm();
       loadMilestones();
     } catch (error) {
-      console.error('Error saving milestone:', error);
+      console.error("Error saving milestone:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de sauvegarder",
+        variant: "destructive",
       });
     }
   };
@@ -125,10 +141,10 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
     setEditingMilestone(milestone);
     setFormData({
       title: milestone.title,
-      description: milestone.description || '',
+      description: milestone.description || "",
       target_date: milestone.target_date,
       weight: milestone.weight,
-      notes: milestone.notes || ''
+      notes: milestone.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -136,27 +152,33 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
   const handleMarkCompleted = async (milestone: Milestone) => {
     try {
       const { error } = await supabase
-        .from('enhanced_project_milestones')
+        .from("enhanced_project_milestones")
         .update({
-          status: milestone.status === 'completed' ? 'pending' : 'completed',
-          completed_date: milestone.status === 'completed' ? null : new Date().toISOString().split('T')[0]
+          status: milestone.status === "completed" ? "pending" : "completed",
+          completed_date:
+            milestone.status === "completed"
+              ? null
+              : new Date().toISOString().split("T")[0],
         })
-        .eq('id', milestone.id);
+        .eq("id", milestone.id);
 
       if (error) throw error;
 
       toast({
-        title: 'Succès',
-        description: milestone.status === 'completed' ? 'Jalon marqué comme en attente' : 'Jalon marqué comme terminé'
+        title: "Succès",
+        description:
+          milestone.status === "completed"
+            ? "Jalon marqué comme en attente"
+            : "Jalon marqué comme terminé",
       });
 
       loadMilestones();
     } catch (error) {
-      console.error('Error updating milestone status:', error);
+      console.error("Error updating milestone status:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour le statut',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive",
       });
     }
   };
@@ -164,43 +186,55 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
   const resetForm = () => {
     setEditingMilestone(null);
     setFormData({
-      title: '',
-      description: '',
-      target_date: '',
+      title: "",
+      description: "",
+      target_date: "",
       weight: 0.1,
-      notes: ''
+      notes: "",
     });
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'delayed': return <Clock className="h-4 w-4 text-red-500" />;
-      default: return <Clock className="h-4 w-4 text-orange-500" />;
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "in_progress":
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case "delayed":
+        return <Clock className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-orange-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'delayed': return 'bg-red-100 text-red-800';
-      default: return 'bg-orange-100 text-orange-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "delayed":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-orange-100 text-orange-800";
     }
   };
 
   const calculateProgress = () => {
     if (milestones.length === 0) return 0;
     const completedWeight = milestones
-      .filter(m => m.status === 'completed')
+      .filter((m) => m.status === "completed")
       .reduce((sum, m) => sum + m.weight, 0);
     const totalWeight = milestones.reduce((sum, m) => sum + m.weight, 0);
     return totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
   };
 
   if (loading) {
-    return <div className="p-4">Chargement...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center ">
+        <ElectricSpinner />
+      </div>
+    );
   }
 
   return (
@@ -225,7 +259,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingMilestone ? 'Modifier' : 'Ajouter'} un jalon
+                {editingMilestone ? "Modifier" : "Ajouter"} un jalon
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4">
@@ -234,7 +268,9 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="Titre du jalon"
                 />
               </div>
@@ -243,7 +279,9 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Description du jalon"
                 />
               </div>
@@ -254,7 +292,9 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                     id="target_date"
                     type="date"
                     value={formData.target_date}
-                    onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, target_date: e.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -266,7 +306,12 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                     max="1"
                     step="0.1"
                     value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        weight: parseFloat(e.target.value),
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -275,16 +320,21 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   placeholder="Notes additionnelles"
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Annuler
                 </Button>
                 <Button onClick={handleSave}>
-                  {editingMilestone ? 'Modifier' : 'Ajouter'}
+                  {editingMilestone ? "Modifier" : "Ajouter"}
                 </Button>
               </div>
             </div>
@@ -311,9 +361,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                       <Badge className={getStatusColor(milestone.status)}>
                         {milestone.status}
                       </Badge>
-                      <Badge variant="outline">
-                        Poids: {milestone.weight}
-                      </Badge>
+                      <Badge variant="outline">Poids: {milestone.weight}</Badge>
                     </div>
                     {milestone.description && (
                       <p className="text-sm text-muted-foreground mb-2">
@@ -323,12 +371,16 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <CalendarDays className="h-4 w-4" />
-                        Cible: {new Date(milestone.target_date).toLocaleDateString()}
+                        Cible:{" "}
+                        {new Date(milestone.target_date).toLocaleDateString()}
                       </div>
                       {milestone.completed_date && (
                         <div className="flex items-center gap-1">
                           <CheckCircle className="h-4 w-4" />
-                          Terminé: {new Date(milestone.completed_date).toLocaleDateString()}
+                          Terminé:{" "}
+                          {new Date(
+                            milestone.completed_date
+                          ).toLocaleDateString()}
                         </div>
                       )}
                     </div>
@@ -339,7 +391,9 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({ phaseId, projectId })
                       size="sm"
                       onClick={() => handleMarkCompleted(milestone)}
                     >
-                      {milestone.status === 'completed' ? 'Marquer en attente' : 'Marquer terminé'}
+                      {milestone.status === "completed"
+                        ? "Marquer en attente"
+                        : "Marquer terminé"}
                     </Button>
                     <Button
                       variant="outline"

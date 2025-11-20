@@ -16,6 +16,7 @@ import { useMaterialsFilter } from "@/hooks/useMaterialsFilter";
 import InteractiveMaterialFilters from "@/components/materials/InteractiveMaterialFilters";
 import InteractiveMaterialsList from "@/components/materials/InteractiveMaterialsList";
 import EnhancedInteractiveMaterialMap from "@/components/materials/EnhancedInteractiveMaterialMap";
+import { ElectricSpinner } from "@/components/loading-page";
 
 interface Material {
   id: string;
@@ -254,8 +255,8 @@ const Materials: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Chargement des matériaux...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <ElectricSpinner />
       </div>
     );
   }

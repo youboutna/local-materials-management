@@ -1,23 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, Clock, Plus, FileText } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Plus,
+  FileText,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { ElectricSpinner } from "../loading-page";
 
 interface ComplianceItem {
   id: string;
-  category: 'regulatory' | 'financial' | 'technical' | 'environmental';
+  category: "regulatory" | "financial" | "technical" | "environmental";
   title: string;
   description?: string;
-  status: 'compliant' | 'pending' | 'non_compliant' | 'in_review';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: "compliant" | "pending" | "non_compliant" | "in_review";
+  priority: "low" | "medium" | "high" | "critical";
   deadline?: string;
   responsible_person?: string;
   documents?: string[];
@@ -29,21 +48,32 @@ interface PhaseComplianceProps {
   projectId: string;
 }
 
-const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId }) => {
+const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
+  phaseId,
+  projectId,
+}) => {
   const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ComplianceItem | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    category: 'regulatory' as 'regulatory' | 'financial' | 'technical' | 'environmental',
-    title: '',
-    description: '',
-    status: 'pending' as 'compliant' | 'pending' | 'non_compliant' | 'in_review',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
-    deadline: '',
-    responsible_person: '',
-    notes: ''
+    category: "regulatory" as
+      | "regulatory"
+      | "financial"
+      | "technical"
+      | "environmental",
+    title: "",
+    description: "",
+    status: "pending" as
+      | "compliant"
+      | "pending"
+      | "non_compliant"
+      | "in_review",
+    priority: "medium" as "low" | "medium" | "high" | "critical",
+    deadline: "",
+    responsible_person: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -54,38 +84,38 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .eq('document_type', 'project_report')
-        .order('created_at', { ascending: false });
+        .from("documents")
+        .select("*")
+        .eq("phase_id", phaseId)
+        .eq("document_type", "project_report")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       // Transform documents to compliance items
-      const items: ComplianceItem[] = (data || []).map(doc => {
-        const metadata = doc.metadata as any || {};
+      const items: ComplianceItem[] = (data || []).map((doc) => {
+        const metadata = (doc.metadata as any) || {};
         return {
           id: doc.id,
-          category: metadata.category || 'regulatory',
+          category: metadata.category || "regulatory",
           title: doc.title,
           description: doc.description || undefined,
-          status: metadata.status || 'pending',
-          priority: metadata.priority || 'medium',
+          status: metadata.status || "pending",
+          priority: metadata.priority || "medium",
           deadline: doc.deadline_date || undefined,
           responsible_person: metadata.responsible_person,
           documents: metadata.documents || [],
-          notes: metadata.notes
+          notes: metadata.notes,
         };
       });
 
       setComplianceItems(items);
     } catch (error) {
-      console.error('Error loading compliance items:', error);
+      console.error("Error loading compliance items:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les éléments de conformité',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de charger les éléments de conformité",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -97,7 +127,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
       const complianceData = {
         title: formData.title,
         description: formData.description,
-        document_type: 'project_report' as const,
+        document_type: "project_report" as const,
         phase_id: phaseId,
         project_id: projectId,
         deadline_date: formData.deadline || null,
@@ -107,38 +137,36 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
           priority: formData.priority,
           responsible_person: formData.responsible_person,
           notes: formData.notes,
-          documents: []
-        }
+          documents: [],
+        },
       };
 
       let result;
       if (editingItem) {
         result = await supabase
-          .from('documents')
+          .from("documents")
           .update(complianceData)
-          .eq('id', editingItem.id);
+          .eq("id", editingItem.id);
       } else {
-        result = await supabase
-          .from('documents')
-          .insert(complianceData);
+        result = await supabase.from("documents").insert(complianceData);
       }
 
       if (result.error) throw result.error;
 
       toast({
-        title: 'Succès',
-        description: editingItem ? 'Élément modifié' : 'Élément ajouté'
+        title: "Succès",
+        description: editingItem ? "Élément modifié" : "Élément ajouté",
       });
 
       setIsDialogOpen(false);
       resetForm();
       loadComplianceItems();
     } catch (error) {
-      console.error('Error saving compliance item:', error);
+      console.error("Error saving compliance item:", error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder',
-        variant: 'destructive'
+        title: "Erreur",
+        description: "Impossible de sauvegarder",
+        variant: "destructive",
       });
     }
   };
@@ -148,12 +176,12 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
     setFormData({
       category: item.category,
       title: item.title,
-      description: item.description || '',
+      description: item.description || "",
       status: item.status,
       priority: item.priority,
-      deadline: item.deadline ? item.deadline.split('T')[0] : '',
-      responsible_person: item.responsible_person || '',
-      notes: item.notes || ''
+      deadline: item.deadline ? item.deadline.split("T")[0] : "",
+      responsible_person: item.responsible_person || "",
+      notes: item.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -161,46 +189,62 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
   const resetForm = () => {
     setEditingItem(null);
     setFormData({
-      category: 'regulatory',
-      title: '',
-      description: '',
-      status: 'pending',
-      priority: 'medium',
-      deadline: '',
-      responsible_person: '',
-      notes: ''
+      category: "regulatory",
+      title: "",
+      description: "",
+      status: "pending",
+      priority: "medium",
+      deadline: "",
+      responsible_person: "",
+      notes: "",
     });
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'compliant': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'non_compliant': return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'in_review': return <Clock className="h-4 w-4 text-blue-500" />;
-      default: return <Clock className="h-4 w-4 text-orange-500" />;
+      case "compliant":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "non_compliant":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case "in_review":
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-orange-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'compliant': return 'bg-green-100 text-green-800';
-      case 'non_compliant': return 'bg-red-100 text-red-800';
-      case 'in_review': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-orange-100 text-orange-800';
+      case "compliant":
+        return "bg-green-100 text-green-800";
+      case "non_compliant":
+        return "bg-red-100 text-red-800";
+      case "in_review":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-orange-100 text-orange-800";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "critical":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   if (loading) {
-    return <div className="p-4">Chargement...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center ">
+        <ElectricSpinner />
+      </div>
+    );
   }
 
   return (
@@ -220,14 +264,19 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingItem ? 'Modifier' : 'Ajouter'} un élément de conformité
+                {editingItem ? "Modifier" : "Ajouter"} un élément de conformité
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="category">Catégorie</Label>
-                  <Select value={formData.category} onValueChange={(value: any) => setFormData({ ...formData, category: value })}>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -235,13 +284,20 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                       <SelectItem value="regulatory">Réglementaire</SelectItem>
                       <SelectItem value="financial">Financière</SelectItem>
                       <SelectItem value="technical">Technique</SelectItem>
-                      <SelectItem value="environmental">Environnementale</SelectItem>
+                      <SelectItem value="environmental">
+                        Environnementale
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label htmlFor="priority">Priorité</Label>
-                  <Select value={formData.priority} onValueChange={(value: any) => setFormData({ ...formData, priority: value })}>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, priority: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -259,7 +315,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="Titre de l'élément de conformité"
                 />
               </div>
@@ -268,14 +326,21 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Description détaillée"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value: any) =>
+                      setFormData({ ...formData, status: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -283,7 +348,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                       <SelectItem value="pending">En attente</SelectItem>
                       <SelectItem value="in_review">En révision</SelectItem>
                       <SelectItem value="compliant">Conforme</SelectItem>
-                      <SelectItem value="non_compliant">Non conforme</SelectItem>
+                      <SelectItem value="non_compliant">
+                        Non conforme
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -293,7 +360,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                     id="deadline"
                     type="date"
                     value={formData.deadline}
-                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, deadline: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -302,7 +371,12 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                 <Input
                   id="responsible"
                   value={formData.responsible_person}
-                  onChange={(e) => setFormData({ ...formData, responsible_person: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      responsible_person: e.target.value,
+                    })
+                  }
                   placeholder="Personne responsable"
                 />
               </div>
@@ -311,16 +385,21 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   placeholder="Notes additionnelles"
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Annuler
                 </Button>
                 <Button onClick={handleSave}>
-                  {editingItem ? 'Modifier' : 'Ajouter'}
+                  {editingItem ? "Modifier" : "Ajouter"}
                 </Button>
               </div>
             </div>
@@ -358,12 +437,11 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({ phaseId, projectId })
                       <Badge className={getStatusColor(item.status)}>
                         {item.status}
                       </Badge>
-                      <Badge variant="outline">
-                        {item.category}
-                      </Badge>
+                      <Badge variant="outline">{item.category}</Badge>
                       {item.deadline && (
                         <Badge variant="outline">
-                          Échéance: {new Date(item.deadline).toLocaleDateString()}
+                          Échéance:{" "}
+                          {new Date(item.deadline).toLocaleDateString()}
                         </Badge>
                       )}
                     </div>
