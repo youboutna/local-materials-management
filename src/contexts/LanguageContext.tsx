@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export type Language = 'fr' | 'ar' | 'en';
 
@@ -1197,11 +1197,40 @@ export const translations = {
                 discover: "Découvrir",
                 login_to_access: "Se connecter pour accéder",
                 register: "Créer un compte",
+                powered: "Plateforme complète, Propulsé par HadraTech",
                 management: "GESTION DE MATÉRIAUX, SUIVI DES PROJETS",
                 system: "Système  de suivi des projets et Gestion des Matériaux",
                 message: "Valoriser le patrimoine avec les matériaux locaux",
                 details: "Suivez vos projets de construction utilisant la pierre d'Atar/aioun, coquillage/nouakchott et l'argile mauritanienne. Notre solution optimise la gestion des projets de construction, nottament avec des matériaux locaux et préserve les techniques traditionnelles."
-            },
+            },// Pour la Direction/Planification
+        direction_features: {
+            title: "Tableaux de Bord Stratégiques",
+            description: "Pilotage des investissements et planification énergétique",
+            powered: "Gestion de Projet Intégré, Propulsé par HadraTech",
+            system: "Système de supervision et aide à la décision",
+            details: "Visualisez en temps réel les indicateurs de performance, planifiez les investissements d'infrastructure et optimisez la répartition des ressources énergétiques sur le territoire national.",
+            management : "Gestion des Actifs et Maintenance Préventive",
+    message:"Suivi et optimisation des infrastructures énergétiques",},
+
+// Pour les Bureaux d'Études
+    consulting_features: {
+            title: "Ingénierie et Études de Projets",
+            description: "Conception et simulation de réseaux électriques",
+            system: "Plateforme de modélisation et dimensionnement",
+            details: "Étudiez la faisabilité technique des projets, dimensionnez les réseaux de distribution et simulez l'impact des nouvelles infrastructures énergétiques."
+        ,message: "Optimisation des réseaux pour une distribution efficace de l'énergie",
+    management : "Gestion des Projets d'Ingénierie",
+    powered : "Gestion de Projet Intégré, Propulsé par HadraTech",
+
+        },
+
+        // Pour l'Approvisionnement
+        procurement_features: {
+            title: "Gestion de la Chaîne Logistique",
+            description: "Optimisation des achats et stocks énergétiques",
+            system: "Système de traçabilité des équipements",
+            details: "Gérez les appels d'offres, suivez les commandes de transformateurs, câbles et compteurs, et optimisez les niveaux de stock pour garantir la continuité du service."
+        },
             cta: {
                 title: "Commencez dès maintenant",
                 authenticated: "Accédez à votre tableau de bord",
@@ -2524,6 +2553,7 @@ export const translations = {
                 title: "الميزات",
                 description: "اكتشف أدوات الإدارة لدينا",
                 discover: "اكتشف",
+                powered: "مدعوم",
                 login_to_access: "تسجيل الدخول للوصول",
                 register: "إنشاء حساب",
                 management: "  إدارة مشاريع, إدارة المواد",
@@ -2532,6 +2562,33 @@ export const translations = {
                 details: "تابعوا مشاريعكم الإنشائية باستخدام حجر أطار/العيون، الصدف/نواكشوط والطين الموريتاني. حلّنا يُحسِّن إدارة مشاريع البناء، خصوصًا باستخدام المواد المحلية، ويحافظ على التقنيات التقليدية."
 
             },
+direction_features: {
+    title: "لوحات القيادة الاستراتيجية",
+    description: "توجيه الاستثمارات والتخطيط الطاقوي",
+    powered: "إدارة مشروع متكاملة، مدعومة من HadraTech",
+    system: "نظام للإشراف ومساعدة في اتخاذ القرار",
+    details: "تصور مؤشرات الأداء في الوقت الفعلي، خطط لاستثمارات البنية التحتية وحسن توزيع الموارد الطاقوية على الصعيد الوطني.",
+    management: "إدارة الأصول والصيانة الوقائية",
+    message: "تتبع وتحسين البنى التحتية للطاقة"
+},
+
+consulting_features: {
+    title: "الهندسة ودراسات المشاريع",
+    description: "تصميم ومحاكاة الشبكات الكهربائية",
+    system: "منصة للنمذجة والتقييس",
+    details: "ادرس الجدوى التقنية للمشاريع، قم بتقييس شبكات التوزيع ومحاكاة تأثير البنى التحتية الطاقوية الجديدة.",
+    message: "تحسين الشبكات لتوزيع فعال للطاقة",
+    management: "إدارة مشاريع الهندسة",
+    powered: "إدارة مشروع متكاملة، مدعومة من HadraTech"
+},
+
+procurement_features: {
+    title: "إدارة سلسلة التوريد",
+    description: "تحسين المشتريات ومخزونات الطاقة",
+    system: "نظام تتبع المعدات",
+    details: "إدرة طلبات العروض، تتبع طلبيات المحولات، الكابلات والعدادات، وتحسين مستويات المخزون لضمان استمرارية الخدمة."
+},
+
             cta: {
                 title: "ابدأ الآن",
                 authenticated: "انتقل إلى لوحة التحكم",
@@ -3812,6 +3869,7 @@ export const translations = {
                 title: "Features",
                 description: "Discover our management tools",
                 discover: "Discover",
+                powered: "Comprehensive platform powered by HadraTech",
                 login_to_access: "Login to access",
                 register: "Create an account",
                 management: "MATERIALS MANAGEMENT AND MONITORING OF PROJECTS",
@@ -3820,6 +3878,33 @@ export const translations = {
                 details: "Track your construction projects using Atar/Aioun stone, Nouakchott seashells, and Mauritanian clay. Our solution optimizes the management of construction projects, particularly with local materials, and preserves traditional techniques."
 
             },
+            direction_features: {
+    title: "Strategic Dashboards",
+    description: "Investment steering and energy planning",
+    powered: "Integrated Project Management, Powered by HadraTech",
+    system: "Supervision system and decision support",
+    details: "Visualize real-time performance indicators, plan infrastructure investments and optimize the distribution of energy resources across the national territory.",
+    management: "Asset Management and Preventive Maintenance",
+    message: "Monitoring and optimization of energy infrastructure"
+},
+
+consulting_features: {
+    title: "Engineering and Project Studies",
+    description: "Design and simulation of electrical networks",
+    system: "Modeling and sizing platform",
+    details: "Study the technical feasibility of projects, dimension distribution networks and simulate the impact of new energy infrastructures.",
+    message: "Network optimization for efficient energy distribution",
+    management: "Engineering Project Management",
+    powered: "Integrated Project Management, Powered by HadraTech"
+},
+
+procurement_features: {
+    title: "Supply Chain Management",
+    description: "Optimization of energy purchases and stocks",
+    system: "Equipment traceability system",
+    details: "Manage calls for tender, track orders for transformers, cables and meters, and optimize stock levels to guarantee service continuity."
+}
+            ,
             cta: {
                 title: "Get Started Now",
                 authenticated: "Go to your dashboard",

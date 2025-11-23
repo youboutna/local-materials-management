@@ -1,12 +1,10 @@
 // Unified service that orchestrates repository, mapping, and calculations
-import { ProjectRepository } from './ProjectRepository';
+import { supabase } from '@/integrations/supabase/client';
+import { ProjectDTO, ProjectDetailDTO, ProjectFormDTO, ProjectListItemDTO, ProjectSummaryDTO } from '@/types/dto';
+import { ProjectStatus } from '@/types/project';
 import { EntityToDTOMapper } from './EntityToDTOMapper';
 import { ProjectCalculationService } from './ProjectCalculationService';
-import { ProjectDTO, ProjectDetailDTO, ProjectSummaryDTO, ProjectListItemDTO, ProjectFormDTO } from '@/types/dto';
-import { ProjectEntity } from '@/types/entities';
-import { EVMCalculations, ProgressAnalytics, BudgetAnalytics, TimelineAnalytics, QualityMetrics, RiskAnalytics, ProjectHealthScore } from '@/types/calculations';
-import { ProjectStatus } from '@/types/project';
-import { supabase } from '@/integrations/supabase/client';
+import { ProjectRepository } from './ProjectRepository';
 
 export class ProjectService {
   private repository: ProjectRepository;
@@ -80,10 +78,10 @@ export class ProjectService {
 
   async createProject(formData: ProjectFormDTO): Promise<ProjectDTO> {
     const defaultStatus: ProjectStatus = 'en cours';
-    const { status: formStatus, ...restFormData } = formData;
+    const { id: formId, status: formStatus, ...restFormData } = formData;
     
     const entityData = EntityToDTOMapper.projectDTOToEntity({
-      id: '', // Will be generated
+      id: formId || '', // Will be generated
       ...restFormData,
       status: formStatus ? (formStatus as ProjectStatus) : defaultStatus,
       progress: formData.progress || 0,

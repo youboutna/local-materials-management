@@ -1,5 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
+import ManagementActions from "@/components/dashboard/ManagementActions";
+import MonitoringDashboard from "@/components/dashboard/MonitoringDashboard";
+import ProjectDistributionChart from "@/components/ProjectDistributionChart";
+import ProjectMap from "@/components/ProjectMap";
+import ProjectProgressChart from "@/components/ProjectProgressChart";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,36 +14,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { DEV_MODE } from "@/config/constants";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useProjects } from "@/hooks/projects/useProjects";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 import {
-  MapPin,
+  ArrowRight,
+  BarChart3,
   Calendar,
   CheckSquare,
-  ArrowRight,
-  Users,
-  BarChart3,
-  AlertTriangle,
-  Clock,
+  MapPin,
   Shield,
-  TrendingUp,
+  Users
 } from "lucide-react";
-import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
-import MonitoringDashboard from "@/components/dashboard/MonitoringDashboard";
-import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
-import ManagementActions from "@/components/dashboard/ManagementActions";
-import { Link } from "react-router-dom";
-import LoadDataButton from "@/components/LoadDataButton";
-import { DEV_MODE } from "@/config/constants";
-import { useProjects } from "@/hooks/projects/useProjects";
-import ProjectProgressChart from "@/components/ProjectProgressChart";
-import ProjectDistributionChart from "@/components/ProjectDistributionChart";
-import ProjectMap from "@/components/ProjectMap";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -345,13 +338,13 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <Tabs defaultValue="actions" className="w-full">
+            <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="actions">
-                  {t("dashboard.management_tabs.actions")}
-                </TabsTrigger>
                 <TabsTrigger value="overview">
                   {t("dashboard.management_tabs.overview")}
+                </TabsTrigger>
+                <TabsTrigger value="actions">
+                  {t("dashboard.management_tabs.actions")}
                 </TabsTrigger>
                 <TabsTrigger value="monitoring">
                   {t("dashboard.management_tabs.monitoring")}
