@@ -1,18 +1,24 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter, RotateCcw, X } from 'lucide-react';
-import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
+import React, { useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Search, Filter, RotateCcw, X } from "lucide-react";
+import Autocomplete, { AutocompleteOption } from "@/components/ui/autocomplete";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator 
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export interface FilterOption {
   value: string;
@@ -44,42 +50,51 @@ export interface ResponsiveFiltersProps {
 }
 
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
-  searchValue = '',
+  searchValue = "",
   onSearchChange,
   onSearchSubmit,
-  searchPlaceholder = 'Rechercher...',
+  searchPlaceholder = "Rechercher...",
   filters,
   onReset,
   resultCount,
-  className = '',
+  className = "",
   showMobileDropdown = true,
   autocompleteOptions = [],
-  onAutocompleteSelect
+  onAutocompleteSelect,
 }) => {
   // Handle search input change - pass through immediately
-  const handleSearchChange = (value: string) => {
-    if (onSearchChange) {
-      onSearchChange(value);
-    }
-  };
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (onSearchChange) {
+        onSearchChange(value);
+      }
+    },
+    [onSearchChange]
+  );
 
   // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && onSearchSubmit) {
-      onSearchSubmit();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && onSearchSubmit) {
+        onSearchSubmit();
+      }
+    },
+    [onSearchSubmit]
+  );
 
   // Handle autocomplete selection
-  const handleAutocompleteSelect = (option: AutocompleteOption) => {
-    if (onSearchChange) {
-      onSearchChange(option.label);
-    }
-    onAutocompleteSelect?.(option);
-  };
+  const handleAutocompleteSelect = useCallback(
+    (option: AutocompleteOption) => {
+      onAutocompleteSelect?.(option);
+    },
+    [onAutocompleteSelect]
+  );
 
-  const activeFiltersCount = filters.filter(f => f.value && f.value !== 'all').length;
-  const hasActiveFilters = activeFiltersCount > 0 || (searchValue && searchValue.trim().length > 0);
+  const activeFiltersCount = filters.filter(
+    (f) => f.value && f.value !== "all"
+  ).length;
+  const hasActiveFilters =
+    activeFiltersCount > 0 || (searchValue && searchValue.trim().length > 0);
 
   // Desktop View
   const DesktopFilters = () => (
@@ -97,20 +112,38 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           </CardTitle>
           {resultCount !== undefined && (
             <span className="text-sm text-muted-foreground">
-              {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+              {resultCount} résultat{resultCount !== 1 ? "s" : ""}
             </span>
           )}
         </div>
       </CardHeader>
       <CardContent>
-        <div className={`grid gap-4 ${filters.length <= 2 ? 'grid-cols-1 lg:grid-cols-3' : filters.length === 3 ? 'grid-cols-1 lg:grid-cols-4' : 'grid-cols-1 lg:grid-cols-5'}`}>
+        <div
+          className={`grid gap-4 ${
+            filters.length <= 2
+              ? "grid-cols-1 lg:grid-cols-3"
+              : filters.length === 3
+              ? "grid-cols-1 lg:grid-cols-4"
+              : "grid-cols-1 lg:grid-cols-5"
+          }`}
+        >
           {onSearchChange && (
             <div className="relative">
               {autocompleteOptions.length > 0 ? (
                 <Autocomplete
                   value={searchValue}
-                  onChange={handleSearchChange}
-                  onSelect={handleAutocompleteSelect}
+                  onChange={handleSearchChange} // This now only updates local state
+                  onSelect={(option) => {
+                    // This is called only when an option is selected or Enter is pressed
+                    if (onSearchChange) {
+                      onSearchChange(option.label);
+                    }
+                    // Trigger the search
+                    if (onSearchSubmit) {
+                      onSearchSubmit();
+                    }
+                    onAutocompleteSelect?.(option);
+                  }}
                   options={autocompleteOptions}
                   placeholder={searchPlaceholder}
                   minSearchLength={1}
@@ -125,6 +158,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onKeyPress={handleKeyPress}
                     className="pl-10"
+                    autoFocus={true}
                   />
                 </>
               )}
@@ -132,13 +166,19 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           )}
 
           {filters.map((filter) => (
-            <Select key={filter.key} value={filter.value} onValueChange={filter.onChange}>
+            <Select
+              key={filter.key}
+              value={filter.value}
+              onValueChange={filter.onChange}
+            >
               <SelectTrigger>
                 <SelectValue placeholder={filter.placeholder} />
               </SelectTrigger>
               <SelectContent>
-                {!filter.options.find(opt => opt.value === 'all') && (
-                  <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                {!filter.options.find((opt) => opt.value === "all") && (
+                  <SelectItem value="all">
+                    Tous les {filter.label.toLowerCase()}
+                  </SelectItem>
                 )}
                 {filter.options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -156,9 +196,9 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
             </Select>
           ))}
 
-          <Button 
-            variant="outline" 
-            onClick={onReset} 
+          <Button
+            variant="outline"
+            onClick={onReset}
             className="flex items-center gap-2"
             disabled={!hasActiveFilters}
           >
@@ -172,30 +212,35 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
             {searchValue && searchValue.trim().length > 0 && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                <Search className="h-3 w-3" />
-                "{searchValue}"
+                <Search className="h-3 w-3" />"{searchValue}"
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 ml-1"
-                  onClick={() => onSearchChange?.('')}
+                  onClick={() => onSearchChange?.("")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
               </Badge>
             )}
             {filters
-              .filter(f => f.value && f.value !== 'all')
+              .filter((f) => f.value && f.value !== "all")
               .map((filter) => {
-                const option = filter.options.find(o => o.value === filter.value);
+                const option = filter.options.find(
+                  (o) => o.value === filter.value
+                );
                 return (
-                  <Badge key={filter.key} variant="secondary" className="flex items-center gap-1">
+                  <Badge
+                    key={filter.key}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
                     {filter.label}: {option?.label || filter.value}
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-auto p-0 ml-1"
-                      onClick={() => filter.onChange('all')}
+                      onClick={() => filter.onChange("all")}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -269,25 +314,35 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              
+
               <div className="space-y-4">
                 {filters.map((filter) => (
                   <div key={filter.key} className="space-y-2">
-                    <label className="text-sm font-medium">{filter.label}</label>
-                    <Select value={filter.value} onValueChange={filter.onChange}>
+                    <label className="text-sm font-medium">
+                      {filter.label}
+                    </label>
+                    <Select
+                      value={filter.value}
+                      onValueChange={filter.onChange}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={filter.placeholder} />
                       </SelectTrigger>
                       <SelectContent>
-                        {!filter.options.find(opt => opt.value === 'all') && (
-                          <SelectItem value="all">Tous les {filter.label.toLowerCase()}</SelectItem>
+                        {!filter.options.find((opt) => opt.value === "all") && (
+                          <SelectItem value="all">
+                            Tous les {filter.label.toLowerCase()}
+                          </SelectItem>
                         )}
                         {filter.options.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             <div className="flex items-center justify-between w-full">
                               <span>{option.label}</span>
                               {option.count !== undefined && (
-                                <Badge variant="outline" className="ml-2 text-xs">
+                                <Badge
+                                  variant="outline"
+                                  className="ml-2 text-xs"
+                                >
                                   {option.count}
                                 </Badge>
                               )}
@@ -304,7 +359,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
           {resultCount !== undefined && (
             <span className="text-sm text-muted-foreground">
-              {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+              {resultCount} résultat{resultCount !== 1 ? "s" : ""}
             </span>
           )}
         </div>
@@ -315,30 +370,35 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
         <div className="flex flex-wrap gap-2 mb-4">
           {searchValue && searchValue.trim().length > 0 && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              <Search className="h-3 w-3" />
-              "{searchValue}"
+              <Search className="h-3 w-3" />"{searchValue}"
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 ml-1"
-                onClick={() => onSearchChange?.('')}
+                onClick={() => onSearchChange?.("")}
               >
                 <X className="h-3 w-3" />
               </Button>
             </Badge>
           )}
           {filters
-            .filter(f => f.value && f.value !== 'all')
+            .filter((f) => f.value && f.value !== "all")
             .map((filter) => {
-              const option = filter.options.find(o => o.value === filter.value);
+              const option = filter.options.find(
+                (o) => o.value === filter.value
+              );
               return (
-                <Badge key={filter.key} variant="secondary" className="flex items-center gap-1">
+                <Badge
+                  key={filter.key}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
                   {filter.label}: {option?.label || filter.value}
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 ml-1"
-                    onClick={() => filter.onChange('all')}
+                    onClick={() => filter.onChange("all")}
                   >
                     <X className="h-3 w-3" />
                   </Button>

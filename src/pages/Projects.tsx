@@ -57,6 +57,7 @@ const Projects: React.FC = () => {
     availableRegions,
     performSearch,
   } = useProjectsFilter(projects || []);
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   // Pagination for projects
   const {
@@ -193,7 +194,10 @@ const Projects: React.FC = () => {
       // Note: filteredProjects is handled by the hook
     }
   };
-
+  const handleSearchChange = (query: string) => {
+    setLocalSearchQuery(query);
+    setSearchQuery(query); // This will trigger the debounced search
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center ">
@@ -284,8 +288,8 @@ const Projects: React.FC = () => {
             )}
 
             <ProjectFilters
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
+              searchQuery={localSearchQuery}
+              onSearchChange={handleSearchChange}
               onSearchSubmit={performSearch}
               statusFilter={statusFilter}
               onStatusChange={setStatusFilter}

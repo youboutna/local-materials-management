@@ -57,7 +57,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
     budget: "",
     estimated_duration_days: "",
     currency: "MRU",
-    status: "planning",
+    status: "en cours",
     start_date: new Date().toISOString().split("T")[0], // Default to today
     startDate: new Date().toISOString().split("T")[0],
     end_date: "",
@@ -116,6 +116,9 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
   const [phases, setPhases] = useState<any[]>([]);
   const [shapeData, setShapeData] = useState<any>(null);
   const [phasesData, setPhasesData] = useState<any[]>([]);
+  const [estimatedDuration, setEstimatedDuration] = useState(
+    formData.estimated_duration_days || ""
+  );
 
   // Steps aligned with workflow specification (7 étapes critiques)
   const steps = [
@@ -250,13 +253,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       materials: selectedMaterials,
       risks,
       compliance,
+
       shapeData,
     };
 
     console.log("Submitting project data:", submitData);
     onSubmit(submitData);
   };
+  const calculateDatesFromDuration = (durationDays: number) => {
+    const startDate = new Date(formData.start_date || new Date());
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + durationDays);
 
+    return {
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+    };
+  };
   const renderStepContent = () => {
     switch (currentStep) {
       case 0: // Basic Info
@@ -302,9 +315,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="">
+                  <div>
                     <label className="text-sm font-medium">Status *</label>
-
                     <Select
                       value={formData.status ?? undefined}
                       required
@@ -425,12 +437,28 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       min="1"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="365"
-                      value={formData.estimated_duration_days}
-                      onChange={(e) =>
-                        updateFormData({
-                          estimated_duration_days: e.target.value,
-                        })
-                      }
+                      value={estimatedDuration}
+                      onChange={(e) => {
+                        const duration = e.target.value;
+                        setEstimatedDuration(duration);
+
+                        if (duration && formData.start_date) {
+                          const calculatedDates = calculateDatesFromDuration(
+                            parseInt(duration)
+                          );
+                          updateFormData({
+                            estimated_duration_days: duration,
+                            end_date: calculatedDates.endDate,
+                            endDate: calculatedDates.endDate,
+                          });
+                        } else {
+                          updateFormData({
+                            estimated_duration_days: duration,
+                            end_date: "",
+                            endDate: "",
+                          });
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -495,9 +523,24 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                       type="date"
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       value={formData.start_date}
-                      onChange={(e) =>
-                        updateFormData({ start_date: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const startDate = e.target.value;
+                        updateFormData({
+                          start_date: startDate,
+                          startDate: startDate,
+                        });
+
+                        // Recalculer la date de fin si la durée est définie
+                        if (estimatedDuration && startDate) {
+                          const calculatedDates = calculateDatesFromDuration(
+                            parseInt(estimatedDuration)
+                          );
+                          updateFormData({
+                            end_date: calculatedDates.endDate,
+                            endDate: calculatedDates.endDate,
+                          });
+                        }
+                      }}
                     />
                   </div>
                   <div>

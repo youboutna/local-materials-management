@@ -102,6 +102,55 @@ const MaterialEdit = () => {
     },
   });
 
+  // Transform material data to form format
+  useEffect(() => {
+    if (material) {
+      const transformedData: Partial<MaterialFormData> = {
+        name: material.name,
+        description: material.description,
+        category: material.category,
+        unit: material.unit,
+        quantity: Number(material.available_quantity),
+        minQuantity: 0,
+        pricePerUnit: Number(material.price_per_unit),
+        availableQuantity: Number(material.available_quantity),
+        workspaceId: material.workspace_id || "",
+        image: material.image || "",
+        adresse:
+          typeof material.adresse === "string"
+            ? material.adresse
+            : (material.adresse as any)?.address || "",
+        forme: material.forme as string | undefined,
+        localisation: Array.isArray(material.localisation)
+          ? (material.localisation as any[])
+          : [],
+        coordinatesLatitude: material.coordinates_latitude
+          ? Number(material.coordinates_latitude)
+          : undefined,
+        coordinatesLongitude: material.coordinates_longitude
+          ? Number(material.coordinates_longitude)
+          : undefined,
+        // New identifier fields
+        gtin: (material as any).gtin || "",
+        sku: (material as any).sku || "",
+        ean: (material as any).ean || "",
+        asin: (material as any).asin || "",
+        multilangLabels: (material as any).multilang_labels || {},
+        timeline: {
+          start: new Date(),
+          end: new Date(),
+          estimatedDuration: 7,
+        },
+        supplier: {
+          name: material.origin_location || "",
+          contact: "",
+          leadTime: 7,
+        },
+      };
+      setFormData(transformedData);
+    }
+  }, [material]);
+
   // Update material mutation
   const updateMaterial = useMutation({
     mutationFn: async (updatedData: Partial<MaterialFormData>) => {
@@ -157,55 +206,6 @@ const MaterialEdit = () => {
       });
     },
   });
-
-  // Transform material data to form format
-  useEffect(() => {
-    if (material) {
-      const transformedData: Partial<MaterialFormData> = {
-        name: material.name,
-        description: material.description,
-        category: material.category,
-        unit: material.unit,
-        quantity: Number(material.available_quantity),
-        minQuantity: 0,
-        pricePerUnit: Number(material.price_per_unit),
-        availableQuantity: Number(material.available_quantity),
-        workspaceId: material.workspace_id || "",
-        image: material.image || "",
-        adresse:
-          typeof material.adresse === "string"
-            ? material.adresse
-            : (material.adresse as any)?.address || "",
-        forme: material.forme as string | undefined,
-        localisation: Array.isArray(material.localisation)
-          ? (material.localisation as any[])
-          : [],
-        coordinatesLatitude: material.coordinates_latitude
-          ? Number(material.coordinates_latitude)
-          : undefined,
-        coordinatesLongitude: material.coordinates_longitude
-          ? Number(material.coordinates_longitude)
-          : undefined,
-        // New identifier fields
-        gtin: (material as any).gtin || "",
-        sku: (material as any).sku || "",
-        ean: (material as any).ean || "",
-        asin: (material as any).asin || "",
-        multilangLabels: (material as any).multilang_labels || {},
-        timeline: {
-          start: new Date(),
-          end: new Date(),
-          estimatedDuration: 7,
-        },
-        supplier: {
-          name: material.origin_location || "",
-          contact: "",
-          leadTime: 7,
-        },
-      };
-      setFormData(transformedData);
-    }
-  }, [material]);
 
   const handleSubmit = (updatedData: Partial<MaterialFormData>) => {
     // Get the current form data from the form component

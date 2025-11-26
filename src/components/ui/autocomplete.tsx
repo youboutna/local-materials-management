@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Search, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useRef, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface AutocompleteOption {
   id: string;
@@ -33,7 +33,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   disabled = false,
   maxSuggestions = 8,
   minSearchLength = 2,
-  showClearButton = true
+  showClearButton = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -43,12 +43,13 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   // Filter options based on search value
   const filteredOptions = React.useMemo(() => {
     if (!value || value.length < minSearchLength) return [];
-    
+
     const query = value.toLowerCase().trim();
     return options
-      .filter(option => 
-        option.label.toLowerCase().includes(query) ||
-        option.subtitle?.toLowerCase().includes(query)
+      .filter(
+        (option) =>
+          option.label.toLowerCase().includes(query) ||
+          option.subtitle?.toLowerCase().includes(query)
       )
       .slice(0, maxSuggestions);
   }, [value, options, minSearchLength, maxSuggestions]);
@@ -56,6 +57,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    // Only update local state, don't call parent's onChange immediately
     onChange(newValue);
     setIsOpen(true);
     setHighlightedIndex(-1);
@@ -72,28 +74,47 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen || filteredOptions.length === 0) return;
+    if (!isOpen || filteredOptions.length === 0) {
+      // If dropdown is not open, handle Enter key for search
+      if (e.key === "Enter") {
+        e.preventDefault();
+        // Call onSelect with the current input value as a "custom option"
+        onSelect?.({
+          id: "custom-search",
+          label: value,
+        });
+        setIsOpen(false);
+      }
+      return;
+    }
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex((prev) =>
           prev < filteredOptions.length - 1 ? prev + 1 : 0
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex((prev) =>
           prev > 0 ? prev - 1 : filteredOptions.length - 1
         );
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (highlightedIndex >= 0) {
           handleOptionSelect(filteredOptions[highlightedIndex]);
+        } else {
+          // If no option is highlighted, treat as custom search
+          onSelect?.({
+            id: "custom-search",
+            label: value,
+          });
+          setIsOpen(false);
         }
         break;
-      case 'Escape':
+      case "Escape":
         setIsOpen(false);
         setHighlightedIndex(-1);
         inputRef.current?.blur();
@@ -103,7 +124,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
 
   // Handle clear
   const handleClear = () => {
-    onChange('');
+    onChange("");
     setIsOpen(false);
     setHighlightedIndex(-1);
     inputRef.current?.focus();
@@ -112,31 +133,38 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(event.target as Node) &&
-          listRef.current && !listRef.current.contains(event.target as Node)) {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node) &&
+        listRef.current &&
+        !listRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setHighlightedIndex(-1);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Scroll highlighted option into view
   useEffect(() => {
     if (highlightedIndex >= 0 && listRef.current) {
-      const highlightedElement = listRef.current.children[highlightedIndex] as HTMLElement;
+      const highlightedElement = listRef.current.children[
+        highlightedIndex
+      ] as HTMLElement;
       if (highlightedElement) {
         highlightedElement.scrollIntoView({
-          block: 'nearest',
-          behavior: 'smooth'
+          block: "nearest",
+          behavior: "smooth",
         });
       }
     }
   }, [highlightedIndex]);
 
-  const showSuggestions = isOpen && filteredOptions.length > 0 && value.length >= minSearchLength;
+  const showSuggestions =
+    isOpen && filteredOptions.length > 0 && value.length >= minSearchLength;
 
   return (
     <div className={cn("relative", className)}>
@@ -147,14 +175,22 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
           value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onFocus={() => value.length >= minSearchLength && setIsOpen(true)}
+          onFocus={() => {
+            if (value.length >= minSearchLength) {
+              setIsOpen(true);
+            }
+          }}
           placeholder={placeholder}
           disabled={disabled}
-          className={cn(
-            "pl-10",
-            showClearButton && value && "pr-10"
-          )}
+          className={cn("pl-10", showClearButton && value && "pr-10")}
           autoComplete="off"
+          // Add these props for better focus control
+          onBlur={(e) => {
+            // Only close if not related to option selection
+            if (!e.relatedTarget?.closest?.('ul[role="listbox"]')) {
+              setIsOpen(false);
+            }
+          }}
         />
         {showClearButton && value && (
           <button
@@ -190,7 +226,9 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
                 <div className="flex flex-col">
                   <span className="font-medium">{option.label}</span>
                   {option.subtitle && (
-                    <span className="text-sm text-muted-foreground">{option.subtitle}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {option.subtitle}
+                    </span>
                   )}
                   {option.category && (
                     <span className="text-xs text-muted-foreground mt-1">

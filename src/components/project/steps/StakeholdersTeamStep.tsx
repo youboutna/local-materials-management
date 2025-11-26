@@ -1,15 +1,31 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Building2, FileText, Plus, Upload, User, UserCheck, Users, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import EmployeeSelector from '../../selectors/EmployeeSelector';
-import SimpleSupplierSelector from '../../selectors/SimpleSupplierSelector';
-import { Badge } from '../../ui/badge';
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { Input } from '../../ui/input';
-import { Label } from '../../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Briefcase,
+  Building2,
+  FileText,
+  Plus,
+  Upload,
+  User,
+  UserCheck,
+  Users,
+  X,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import EmployeeSelector from "../../selectors/EmployeeSelector";
+import SimpleSupplierSelector from "../../selectors/SimpleSupplierSelector";
+import { Badge } from "../../ui/badge";
+import { Button } from "../../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 
 interface StakeholdersTeamStepProps {
   formData: any;
@@ -20,7 +36,7 @@ interface StakeholdersTeamStepProps {
 
 interface Stakeholder {
   id: string;
-  type: 'employee' | 'external';
+  type: "employee" | "external";
   entityId: string;
   role: string;
   isPrimary: boolean;
@@ -38,13 +54,19 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   formData,
   onUpdate,
   isEditing = false,
-  baseData = {}
+  baseData = {},
 }) => {
-  const [stakeholders, setStakeholders] = useState<Stakeholder[]>(formData.stakeholders || []);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(formData.teamMembers || []);
-  const [newStakeholder, setNewStakeholder] = useState<Partial<Stakeholder>>({});
+  const [stakeholders, setStakeholders] = useState<Stakeholder[]>(
+    formData.stakeholders || []
+  );
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
+    formData.teamMembers || []
+  );
+  const [newStakeholder, setNewStakeholder] = useState<Partial<Stakeholder>>(
+    {}
+  );
   const [newTeamMember, setNewTeamMember] = useState<Partial<TeamMember>>({});
-  
+
   // Use database data from baseData or local state
   const [employees, setEmployees] = useState<any[]>(baseData.employees || []);
   const [suppliers, setSuppliers] = useState<any[]>(baseData.suppliers || []);
@@ -65,84 +87,89 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   const loadEmployees = async () => {
     try {
       const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('is_active', true)
-        .order('full_name');
-      
+        .from("employees")
+        .select("*")
+        .eq("is_active", true)
+        .order("full_name");
+
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
-      console.error('Error loading employees:', error);
+      console.error("Error loading employees:", error);
     }
   };
 
   const loadSuppliers = async () => {
     try {
       const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      
+        .from("suppliers")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+
       if (error) throw error;
       setSuppliers(data || []);
     } catch (error) {
-      console.error('Error loading suppliers:', error);
+      console.error("Error loading suppliers:", error);
     }
   };
 
   // Predefined roles and positions
   const internalStakeholderRoles = [
-    'Responsable financier',
-    'Responsable achats',
-    'Responsable logistique',
-    'Responsable HSE',
-    'Coordonnateur sécurité',
-    'Gestionnaire contrats',
-    'Contrôleur de gestion',
-    'Autres'
+    "Responsable financier",
+    "Responsable achats",
+    "Responsable logistique",
+    "Responsable HSE",
+    "Coordonnateur sécurité",
+    "Gestionnaire contrats",
+    "Contrôleur de gestion",
+    "Autres",
   ];
 
   const externalStakeholderRoles = [
-    'Ingénieur conseil',
-    'Fournisseur matériaux',
-    'Entrepreneur / Contractant',
-    'Bureau de contrôle',
-    'Architecte',
-    'Bureau d\'études',
-    'Ministère (tutelle)',
-    'Banque / Bailleur de fonds',
-    'Assureur',
-    'Organisme certification',
-    'Autres'
+    "Ingénieur conseil",
+    "Fournisseur matériaux",
+    "Entrepreneur / Contractant",
+    "Bureau de contrôle",
+    "Architecte",
+    "Bureau d'études",
+    "Ministère (tutelle)",
+    "Banque / Bailleur de fonds",
+    "Assureur",
+    "Organisme certification",
+    "Autres",
   ];
 
   const teamPositions = [
-    'Chef de projet',
-    'Ingénieur principal',
-    'Architecte projet',
-    'Coordonnateur technique',
-    'Responsable qualité',
-    'Coordonnateur sécurité',
-    'Gestionnaire contrats',
-    'Superviseur travaux',
-    'Technicien spécialisé',
-    'Assistant projet'
+    "Chef de projet",
+    "Ingénieur principal",
+    "Architecte projet",
+    "Coordonnateur technique",
+    "Responsable qualité",
+    "Coordonnateur sécurité",
+    "Gestionnaire contrats",
+    "Superviseur travaux",
+    "Technicien spécialisé",
+    "Assistant projet",
   ];
 
   // CRUD Operations
   const addStakeholder = () => {
-    if (!newStakeholder.type || !newStakeholder.entityId || !newStakeholder.role) return;
-    
+    if (
+      !newStakeholder.type ||
+      !newStakeholder.entityId ||
+      !newStakeholder.role
+    )
+      return;
+
     const stakeholder: Stakeholder = {
       id: Date.now().toString(),
       type: newStakeholder.type,
       entityId: newStakeholder.entityId,
       role: newStakeholder.role,
-      isPrimary: newStakeholder.isPrimary || false
+      isPrimary: newStakeholder.isPrimary || false,
     };
-    
+
     const updatedStakeholders = [...stakeholders, stakeholder];
     setStakeholders(updatedStakeholders);
     setNewStakeholder({});
@@ -150,22 +177,22 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   };
 
   const removeStakeholder = (id: string) => {
-    const updatedStakeholders = stakeholders.filter(s => s.id !== id);
+    const updatedStakeholders = stakeholders.filter((s) => s.id !== id);
     setStakeholders(updatedStakeholders);
     onUpdate({ stakeholders: updatedStakeholders });
   };
 
   const addTeamMember = () => {
     if (!newTeamMember.employeeId || !newTeamMember.position) return;
-    
+
     const teamMember: TeamMember = {
       id: Date.now().toString(),
       employeeId: newTeamMember.employeeId,
       position: newTeamMember.position,
-      responsibilities: newTeamMember.responsibilities || '',
-      availability: newTeamMember.availability || 'full-time'
+      responsibilities: newTeamMember.responsibilities || "",
+      availability: newTeamMember.availability || "full-time",
     };
-    
+
     const updatedTeamMembers = [...teamMembers, teamMember];
     setTeamMembers(updatedTeamMembers);
     setNewTeamMember({});
@@ -173,24 +200,24 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   };
 
   const removeTeamMember = (id: string) => {
-    const updatedTeamMembers = teamMembers.filter(t => t.id !== id);
+    const updatedTeamMembers = teamMembers.filter((t) => t.id !== id);
     setTeamMembers(updatedTeamMembers);
     onUpdate({ teamMembers: updatedTeamMembers });
   };
 
   const getEntityName = (stakeholder: Stakeholder) => {
-    if (stakeholder.type === 'employee') {
-      const employee = employees.find(e => e.id === stakeholder.entityId);
-      return employee?.full_name || 'Employé inconnu';
+    if (stakeholder.type === "employee") {
+      const employee = employees.find((e) => e.id === stakeholder.entityId);
+      return employee?.full_name || "Employé inconnu";
     } else {
-      const supplier = suppliers.find(s => s.id === stakeholder.entityId);
-      return supplier?.name || 'Fournisseur inconnu';
+      const supplier = suppliers.find((s) => s.id === stakeholder.entityId);
+      return supplier?.name || "Fournisseur inconnu";
     }
   };
 
   const getEmployeeName = (employeeId: string) => {
-    const employee = employees.find(e => e.id === employeeId);
-    return employee?.full_name || 'Employé inconnu';
+    const employee = employees.find((e) => e.id === employeeId);
+    return employee?.full_name || "Employé inconnu";
   };
 
   return (
@@ -201,145 +228,31 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
           Parties Prenantes du Projet
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Configuration des acteurs: Organigramme, RH, Liste acteurs selon le workflow CONFIGCOMPANY
+          Configuration des acteurs: Organigramme, RH, Liste acteurs selon le
+          workflow CONFIGCOMPANY
         </p>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="principals" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="principals">Principaux</TabsTrigger>
+        <Tabs defaultValue="stakeholders" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stakeholders">Parties Prenantes</TabsTrigger>
             <TabsTrigger value="team">Équipe</TabsTrigger>
             <TabsTrigger value="contractors">Contractants</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="principals" className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Acteurs Principaux</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Chef de projet */}
-                <div>
-                  <EmployeeSelector
-                    label="Chef de projet *"
-                    value={formData.delegation?.projectManager || formData.project_manager_id || ''}
-                    onChange={(value) => {
-                      const updatedDelegation = { ...formData.delegation, projectManager: value };
-                      onUpdate({ 
-                        delegation: updatedDelegation,
-                        project_manager_id: value 
-                      });
-                    }}
-                    placeholder="Sélectionner le chef de projet"
-                    departmentFilter={['management', 'engineering']}
-                  />
-                </div>
-
-                {/* Responsable technique */}
-                <div>
-                  <EmployeeSelector
-                    label="Responsable technique *"
-                    value={formData.delegation?.technicalManager || formData.technical_manager_id || ''}
-                    onChange={(value) => {
-                      const updatedDelegation = { ...formData.delegation, technicalManager: value };
-                      onUpdate({ 
-                        delegation: updatedDelegation,
-                        technical_manager_id: value 
-                      });
-                    }}
-                    placeholder="Sélectionner le responsable technique"
-                    departmentFilter={['engineering', 'technical']}
-                  />
-                </div>
-
-                {/* Superviseur */}
-                <div>
-                  <EmployeeSelector
-                    label="Superviseur technique"
-                    value={formData.delegation?.supervisor || formData.supervisor_id || ''}
-                    onChange={(value) => {
-                      const updatedDelegation = { ...formData.delegation, supervisor: value };
-                      onUpdate({ 
-                        delegation: updatedDelegation,
-                        supervisor_id: value 
-                      });
-                    }}
-                    placeholder="Sélectionner le superviseur"
-                    departmentFilter={['technical', 'engineering']}
-                  />
-                </div>
-
-                {/* Responsable qualité */}
-                <div>
-                  <EmployeeSelector
-                    label="Responsable qualité"
-                    value={formData.quality_manager || ''}
-                    onChange={(value) => onUpdate({ quality_manager: value })}
-                    placeholder="Sélectionner le responsable qualité"
-                    departmentFilter={['quality', 'engineering']}
-                  />
-                </div>
-
-                {/* Ingénieur conseil */}
-                <div>
-                  <EmployeeSelector
-                    label="Ingénieur conseil"
-                    value={formData.engineering_consultant || ''}
-                    onChange={(value) => onUpdate({ engineering_consultant: value })}
-                    placeholder="Sélectionner l'ingénieur conseil"
-                    departmentFilter={['engineering', 'consulting']}
-                  />
-                </div>
-
-                {/* Client */}
-                <div>
-                  <Label>Client principal</Label>
-                  <Input
-                    placeholder="Nom du client"
-                    value={formData.client_name || ''}
-                    onChange={(e) => onUpdate({ client_name: e.target.value })}
-                  />
-                </div>
-
-                {/* Entrepreneur principal */}
-                <div>
-                  <SimpleSupplierSelector
-                    label="Entrepreneur principal"
-                    value={formData.contractors?.mainContractor || formData.main_contractor || ''}
-                    onChange={(value) => {
-                      const updatedContractors = { ...formData.contractors, mainContractor: value };
-                      onUpdate({ 
-                        contractors: updatedContractors,
-                        main_contractor: value 
-                      });
-                    }}
-                    placeholder="Sélectionner l'entrepreneur principal"
-                  />
-                </div>
-
-                {/* Maître d'ouvrage */}
-                <div>
-                  <Label>Maître d'ouvrage</Label>
-                  <Input
-                    placeholder="CONFIGCOMPANY ou autre"
-                    value={formData.project_owner || ''}
-                    onChange={(e) => onUpdate({ project_owner: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
           <TabsContent value="stakeholders" className="space-y-6">
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Autres Parties Prenantes</h3>
+                <h3 className="text-lg font-semibold">
+                  Autres Parties Prenantes
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Configuration des acteurs internes CONFIGCOMPANY et parties externes (fournisseurs, ministères, banques, etc.)
+                  Configuration des acteurs internes CONFIGCOMPANY et parties
+                  externes (fournisseurs, ministères, banques, etc.)
                 </p>
               </div>
-              
+
               <Tabs defaultValue="internal" className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="internal">
@@ -361,19 +274,78 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     </h4>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Chef de projet */}
+                        <div>
+                          <EmployeeSelector
+                            label="Chef de projet *"
+                            value={
+                              formData.delegation?.projectManager ||
+                              formData.project_manager_id ||
+                              ""
+                            }
+                            onChange={(value) => {
+                              const updatedDelegation = {
+                                ...formData.delegation,
+                                projectManager: value,
+                              };
+                              onUpdate({
+                                delegation: updatedDelegation,
+                                project_manager_id: value,
+                              });
+                            }}
+                            placeholder="Sélectionner le chef de projet"
+                            departmentFilter={["management", "engineering"]}
+                          />
+                        </div>
+
+                        {/* Responsable technique */}
+                        <div>
+                          <EmployeeSelector
+                            label="Responsable technique *"
+                            value={
+                              formData.delegation?.technicalManager ||
+                              formData.technical_manager_id ||
+                              ""
+                            }
+                            onChange={(value) => {
+                              const updatedDelegation = {
+                                ...formData.delegation,
+                                technicalManager: value,
+                              };
+                              onUpdate({
+                                delegation: updatedDelegation,
+                                technical_manager_id: value,
+                              });
+                            }}
+                            placeholder="Sélectionner le responsable technique"
+                            departmentFilter={["engineering", "technical"]}
+                          />
+                        </div>
+
                         <div>
                           <EmployeeSelector
                             label="Employé"
-                            value={newStakeholder.entityId || ''}
-                            onChange={(value) => setNewStakeholder({...newStakeholder, type: 'employee', entityId: value})}
+                            value={newStakeholder.entityId || ""}
+                            onChange={(value) =>
+                              setNewStakeholder({
+                                ...newStakeholder,
+                                type: "employee",
+                                entityId: value,
+                              })
+                            }
                             placeholder="Sélectionner un employé"
                           />
                         </div>
                         <div>
                           <Label>Rôle / Responsabilité</Label>
-                          <Select 
-                            value={newStakeholder.role || ''} 
-                            onValueChange={(value) => setNewStakeholder({...newStakeholder, role: value})}
+                          <Select
+                            value={newStakeholder.role || ""}
+                            onValueChange={(value) =>
+                              setNewStakeholder({
+                                ...newStakeholder,
+                                role: value,
+                              })
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Sélectionner le rôle" />
@@ -388,10 +360,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                           </Select>
                         </div>
                       </div>
-                      <Button 
-                        onClick={addStakeholder} 
+                      <Button
+                        onClick={addStakeholder}
                         className="w-full"
-                        disabled={!newStakeholder.entityId || !newStakeholder.role}
+                        disabled={
+                          !newStakeholder.entityId || !newStakeholder.role
+                        }
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Ajouter l'employé comme partie prenante
@@ -400,29 +374,44 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   </div>
 
                   {/* List of internal stakeholders */}
-                  {stakeholders.filter(s => s.type === 'employee').length > 0 && (
+                  {stakeholders.filter((s) => s.type === "employee").length >
+                    0 && (
                     <div className="space-y-2">
                       <h5 className="font-medium text-sm">
-                        Employés CONFIGCOMPANY ({stakeholders.filter(s => s.type === 'employee').length})
+                        Employés CONFIGCOMPANY (
+                        {
+                          stakeholders.filter((s) => s.type === "employee")
+                            .length
+                        }
+                        )
                       </h5>
-                      {stakeholders.filter(s => s.type === 'employee').map((stakeholder) => (
-                        <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <User className="h-4 w-4 text-blue-500" />
-                            <div>
-                              <div className="font-medium">{getEntityName(stakeholder)}</div>
-                              <div className="text-sm text-muted-foreground">{stakeholder.role}</div>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeStakeholder(stakeholder.id)}
+                      {stakeholders
+                        .filter((s) => s.type === "employee")
+                        .map((stakeholder) => (
+                          <div
+                            key={stakeholder.id}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
                           >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-3">
+                              <User className="h-4 w-4 text-blue-500" />
+                              <div>
+                                <div className="font-medium">
+                                  {getEntityName(stakeholder)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {stakeholder.role}
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeStakeholder(stakeholder.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </TabsContent>
@@ -435,23 +424,35 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                       Ajouter une organisation externe
                     </h4>
                     <p className="text-xs text-muted-foreground mb-4">
-                      Ingénieur conseil, fournisseurs, contractants, ministères, banques, bailleurs de fonds
+                      Ingénieur conseil, fournisseurs, contractants, ministères,
+                      banques, bailleurs de fonds
                     </p>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <SimpleSupplierSelector
                             label="Organisation / Fournisseur"
-                            value={newStakeholder.entityId || ''}
-                            onChange={(value) => setNewStakeholder({...newStakeholder, type: 'external', entityId: value})}
+                            value={newStakeholder.entityId || ""}
+                            onChange={(value) =>
+                              setNewStakeholder({
+                                ...newStakeholder,
+                                type: "external",
+                                entityId: value,
+                              })
+                            }
                             placeholder="Sélectionner une organisation"
                           />
                         </div>
                         <div>
                           <Label>Rôle / Type</Label>
-                          <Select 
-                            value={newStakeholder.role || ''} 
-                            onValueChange={(value) => setNewStakeholder({...newStakeholder, role: value})}
+                          <Select
+                            value={newStakeholder.role || ""}
+                            onValueChange={(value) =>
+                              setNewStakeholder({
+                                ...newStakeholder,
+                                role: value,
+                              })
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Sélectionner le rôle" />
@@ -466,10 +467,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                           </Select>
                         </div>
                       </div>
-                      <Button 
-                        onClick={addStakeholder} 
+                      <Button
+                        onClick={addStakeholder}
                         className="w-full"
-                        disabled={!newStakeholder.entityId || !newStakeholder.role}
+                        disabled={
+                          !newStakeholder.entityId || !newStakeholder.role
+                        }
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Ajouter l'organisation comme partie prenante
@@ -478,31 +481,47 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   </div>
 
                   {/* List of external stakeholders */}
-                  {stakeholders.filter(s => s.type === 'external').length > 0 && (
+                  {stakeholders.filter((s) => s.type === "external").length >
+                    0 && (
                     <div className="space-y-2">
                       <h5 className="font-medium text-sm">
-                        Organisations externes ({stakeholders.filter(s => s.type === 'external').length})
+                        Organisations externes (
+                        {
+                          stakeholders.filter((s) => s.type === "external")
+                            .length
+                        }
+                        )
                       </h5>
-                      {stakeholders.filter(s => s.type === 'external').map((stakeholder) => (
-                        <div key={stakeholder.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <Building2 className="h-4 w-4 text-orange-500" />
-                            <div>
-                              <div className="font-medium">{getEntityName(stakeholder)}</div>
-                              <Badge variant="outline" className="text-xs mt-1">
-                                {stakeholder.role}
-                              </Badge>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeStakeholder(stakeholder.id)}
+                      {stakeholders
+                        .filter((s) => s.type === "external")
+                        .map((stakeholder) => (
+                          <div
+                            key={stakeholder.id}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
                           >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-3">
+                              <Building2 className="h-4 w-4 text-orange-500" />
+                              <div>
+                                <div className="font-medium">
+                                  {getEntityName(stakeholder)}
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs mt-1"
+                                >
+                                  {stakeholder.role}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeStakeholder(stakeholder.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </TabsContent>
@@ -513,7 +532,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
           <TabsContent value="team" className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Équipe du projet</h3>
-              
+
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-4">Ajouter un membre d'équipe</h4>
                 <div className="space-y-4">
@@ -521,16 +540,26 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <div>
                       <EmployeeSelector
                         label="Employé"
-                        value={newTeamMember.employeeId || ''}
-                        onChange={(value) => setNewTeamMember({...newTeamMember, employeeId: value})}
+                        value={newTeamMember.employeeId || ""}
+                        onChange={(value) =>
+                          setNewTeamMember({
+                            ...newTeamMember,
+                            employeeId: value,
+                          })
+                        }
                         placeholder="Sélectionner un employé"
                       />
                     </div>
                     <div>
                       <Label>Position dans le projet</Label>
-                      <Select 
-                        value={newTeamMember.position || ''} 
-                        onValueChange={(value) => setNewTeamMember({...newTeamMember, position: value})}
+                      <Select
+                        value={newTeamMember.position || ""}
+                        onValueChange={(value) =>
+                          setNewTeamMember({
+                            ...newTeamMember,
+                            position: value,
+                          })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Position" />
@@ -550,22 +579,34 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                       <Label>Responsabilités</Label>
                       <Input
                         placeholder="Responsabilités spécifiques"
-                        value={newTeamMember.responsibilities || ''}
-                        onChange={(e) => setNewTeamMember({...newTeamMember, responsibilities: e.target.value})}
+                        value={newTeamMember.responsibilities || ""}
+                        onChange={(e) =>
+                          setNewTeamMember({
+                            ...newTeamMember,
+                            responsibilities: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div>
                       <Label>Disponibilité</Label>
-                      <Select 
-                        value={newTeamMember.availability || 'full-time'} 
-                        onValueChange={(value) => setNewTeamMember({...newTeamMember, availability: value})}
+                      <Select
+                        value={newTeamMember.availability || "full-time"}
+                        onValueChange={(value) =>
+                          setNewTeamMember({
+                            ...newTeamMember,
+                            availability: value,
+                          })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-background border shadow-lg z-50">
                           <SelectItem value="full-time">Temps plein</SelectItem>
-                          <SelectItem value="part-time">Temps partiel</SelectItem>
+                          <SelectItem value="part-time">
+                            Temps partiel
+                          </SelectItem>
                           <SelectItem value="on-demand">Sur demande</SelectItem>
                         </SelectContent>
                       </Select>
@@ -584,19 +625,31 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div className="space-y-2">
                   <h4 className="font-medium">Membres de l'équipe</h4>
                   {teamMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex items-center gap-3">
                         <UserCheck className="h-4 w-4 text-green-500" />
                         <div>
-                          <div className="font-medium">{getEmployeeName(member.employeeId)}</div>
-                          <div className="text-sm text-gray-500">{member.position}</div>
+                          <div className="font-medium">
+                            {getEmployeeName(member.employeeId)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {member.position}
+                          </div>
                           {member.responsibilities && (
-                            <div className="text-xs text-gray-400">{member.responsibilities}</div>
+                            <div className="text-xs text-gray-400">
+                              {member.responsibilities}
+                            </div>
                           )}
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          {member.availability === 'full-time' ? 'Temps plein' : 
-                           member.availability === 'part-time' ? 'Temps partiel' : 'Sur demande'}
+                          {member.availability === "full-time"
+                            ? "Temps plein"
+                            : member.availability === "part-time"
+                            ? "Temps partiel"
+                            : "Sur demande"}
                         </Badge>
                       </div>
                       <Button
@@ -615,15 +668,20 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
           <TabsContent value="contractors" className="space-y-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Contractants et fournisseurs</h3>
-              
+              <h3 className="text-lg font-semibold">
+                Contractants et fournisseurs
+              </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <SimpleSupplierSelector
                     label="Bureau d'études"
-                    value={formData.contractors?.engineeringConsultant || ''}
+                    value={formData.contractors?.engineeringConsultant || ""}
                     onChange={(value) => {
-                      const updatedContractors = { ...formData.contractors, engineeringConsultant: value };
+                      const updatedContractors = {
+                        ...formData.contractors,
+                        engineeringConsultant: value,
+                      };
                       onUpdate({ contractors: updatedContractors });
                     }}
                     placeholder="Sélectionner le bureau d'études"
@@ -632,9 +690,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div>
                   <SimpleSupplierSelector
                     label="Entrepreneur général"
-                    value={formData.contractors?.generalContractor || ''}
+                    value={formData.contractors?.generalContractor || ""}
                     onChange={(value) => {
-                      const updatedContractors = { ...formData.contractors, generalContractor: value };
+                      const updatedContractors = {
+                        ...formData.contractors,
+                        generalContractor: value,
+                      };
                       onUpdate({ contractors: updatedContractors });
                     }}
                     placeholder="Sélectionner l'entrepreneur général"
@@ -644,27 +705,37 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="specializedSubcontractors">Sous-traitants spécialisés</Label>
-                  <textarea 
+                  <Label htmlFor="specializedSubcontractors">
+                    Sous-traitants spécialisés
+                  </Label>
+                  <textarea
                     id="specializedSubcontractors"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                     placeholder="Liste des sous-traitants spécialisés requis"
-                    value={formData.contractors?.specializedSubcontractors || ''}
+                    value={
+                      formData.contractors?.specializedSubcontractors || ""
+                    }
                     onChange={(e) => {
-                      const updatedContractors = { ...formData.contractors, specializedSubcontractors: e.target.value };
+                      const updatedContractors = {
+                        ...formData.contractors,
+                        specializedSubcontractors: e.target.value,
+                      };
                       onUpdate({ contractors: updatedContractors });
                     }}
                   />
                 </div>
                 <div>
                   <Label htmlFor="mainSuppliers">Fournisseurs principaux</Label>
-                  <textarea 
+                  <textarea
                     id="mainSuppliers"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                     placeholder="Liste des fournisseurs de matériaux principaux"
-                    value={formData.contractors?.mainSuppliers || ''}
+                    value={formData.contractors?.mainSuppliers || ""}
                     onChange={(e) => {
-                      const updatedContractors = { ...formData.contractors, mainSuppliers: e.target.value };
+                      const updatedContractors = {
+                        ...formData.contractors,
+                        mainSuppliers: e.target.value,
+                      };
                       onUpdate({ contractors: updatedContractors });
                     }}
                   />
@@ -677,8 +748,9 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   <div>
                     <h4 className="font-medium text-blue-800">Information</h4>
                     <p className="text-sm text-blue-700 mt-1">
-                      Les contractants sélectionnés seront automatiquement liés aux garanties bancaires, 
-                      certificats d'assurance et autres documents contractuels du projet.
+                      Les contractants sélectionnés seront automatiquement liés
+                      aux garanties bancaires, certificats d'assurance et autres
+                      documents contractuels du projet.
                     </p>
                   </div>
                 </div>
@@ -689,9 +761,12 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
           <TabsContent value="documents" className="space-y-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold">Documents des Parties Prenantes</h3>
+                <h3 className="text-lg font-semibold">
+                  Documents des Parties Prenantes
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Conventions, contrats, documents de référence associés aux acteurs du projet
+                  Conventions, contrats, documents de référence associés aux
+                  acteurs du projet
                 </p>
               </div>
 
@@ -733,7 +808,9 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                 <div className="flex items-start gap-3">
                   <FileText className="h-5 w-5 text-amber-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-amber-800">Documents requis</h4>
+                    <h4 className="font-medium text-amber-800">
+                      Documents requis
+                    </h4>
                     <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc list-inside">
                       <li>Contrat avec entrepreneur principal</li>
                       <li>Convention avec ingénieur conseil</li>
@@ -743,7 +820,8 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                       <li>Protocoles inter-organisationnels</li>
                     </ul>
                     <p className="text-xs text-amber-600 mt-3">
-                      Ces documents seront également accessibles dans la section Documents du projet.
+                      Ces documents seront également accessibles dans la section
+                      Documents du projet.
                     </p>
                   </div>
                 </div>

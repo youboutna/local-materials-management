@@ -30,10 +30,10 @@ const Hero = () => {
   ];
 
   return (
-    <div className="relative bg-adrar-900 min-h-[80vh] flex items-center justify-center overflow-hidden">
+    <div className="relative py-20 bg-adrar-900 min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Background avec conteneur fixe */}
       <div className="absolute inset-0 bg-gradient-to-br from-adrar-900 via-adrar-800 to-terracotta-900" />
-      
+
       {/* Éléments d'arrière-plan simplifiés */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-20 w-64 h-64 bg-terracotta-500 rounded-full blur-3xl opacity-10" />
@@ -41,8 +41,11 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className={`flex flex-col lg:flex-row items-center gap-12 ${isRTL ? "lg:flex-row-reverse" : ""}`}>
-          
+        <div
+          className={`flex flex-col lg:flex-row items-center gap-12 ${
+            isRTL ? "lg:flex-row-reverse" : ""
+          }`}
+        >
           {/* Section Gauche - Contenu texte */}
           <motion.div
             initial={{ opacity: 0, x: isRTL ? 50 : -50 }}
@@ -58,7 +61,10 @@ const Hero = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-terracotta-500 bg-opacity-20 border border-terracotta-500 border-opacity-30 text-terracotta-200 text-sm mb-6"
             >
               <Shield className="h-4 w-4" />
-              {safeT("index.direction_features.management", "GESTION DE MATÉRIAUX")}
+              {safeT(
+                "index.direction_features.management",
+                "GESTION DE MATÉRIAUX"
+              )}
             </motion.div>
 
             {/* Titre principal */}
@@ -69,7 +75,10 @@ const Hero = () => {
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
             >
               <span className="block bg-gradient-to-br from-white to-gray-200 bg-clip-text text-transparent">
-                {safeT("index.features.system", "Système de suivi des projets et Gestion des Matériaux")}
+                {safeT(
+                  "index.features.system",
+                  "Système de suivi des projets et Gestion des Matériaux"
+                )}
               </span>
               <span className="block bg-gradient-to-r from-terracotta-400 to-terracotta-300 bg-clip-text text-transparent">
                 {safeT("index.features.management", "Management System")}

@@ -67,13 +67,8 @@ const ProjectCreate = () => {
         title: data.title,
         description: data.description,
         location: data.shapeData?.address || data.location || "Non spécifié",
-        status: mappedStatus as
-          | "en cours"
-          | "terminé"
-          | "en attente"
-          | "suspendu"
-          | "annulé",
-        progress: 0,
+        status: data.status,
+        progress: data.progress,
         budget: parseFloat(data.budget) || 0,
         estimated_days: parseInt(data.estimatedDays) || null,
         currency: data.currency || "MRU",

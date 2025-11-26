@@ -71,31 +71,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="">
-              <label className="text-sm font-medium">Status *</label>
-
-              <Select
-                value={formData.status ?? undefined}
-                required
-                onValueChange={(value) => onUpdate({ status: value })}
-              >
-                <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                  <SelectValue placeholder="Sélectionner le status" />
-                </SelectTrigger>
-                <SelectContent side="bottom" align="start">
-                  {statusOptions.map((status) => (
-                    <SelectItem
-                      key={status.value}
-                      value={status.value}
-                      className="cursor-pointer"
-                    >
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 ">
             <div>
               <label className="block text-sm font-medium mb-2">
                 Progress *
@@ -192,7 +168,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            {/* <div>
               <EmployeeSelector
                 label="Chef de projet"
                 value={formData.project_responsable_id || ""}
@@ -202,7 +178,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 placeholder="Sélectionner le chef de projet"
                 departmentFilter={["management", "engineering"]}
               />
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -339,9 +315,9 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
                 <SelectContent side="bottom" align="start">
-                  <SelectItem value="planning" className="cursor-pointer">
+                  {/* <SelectItem value="planning" className="cursor-pointer">
                     En planification
-                  </SelectItem>
+                  </SelectItem> */}
                   <SelectItem value="en cours" className="cursor-pointer">
                     En cours
                   </SelectItem>
