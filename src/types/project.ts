@@ -1,32 +1,44 @@
 /**
  * project status types
  */
-export type ProjectStatus = 'en cours' | 'terminé' | 'en attente' | 'en inspection' | 'suspendu' | 'annulé'|'attribué' | 'planifié' |'pré-qualification' | 'en conception' | 'en construction' | 'en clôture';
+export type ProjectStatus =
+  | "en cours"
+  | "terminé"
+  | "en attente"
+  | "en inspection"
+  | "suspendu"
+  | "annulé"
+  | "attribué"
+  | "planifié"
+  | "pré-qualification"
+  | "en conception"
+  | "en construction"
+  | "en clôture";
 
 // New construction phase types
-export type ConstructionPhase = 
-  | 'pre_construction' 
-  | 'site_preparation' 
-  | 'foundation' 
-  | 'framing' 
-  | 'structural_work' 
-  | 'finishing' 
-  | 'post_construction' 
-  | 'handover';
+export type ConstructionPhase =
+  | "pre_construction"
+  | "site_preparation"
+  | "foundation"
+  | "framing"
+  | "structural_work"
+  | "finishing"
+  | "post_construction"
+  | "handover";
 
-export type ConstructionStage = 
-  | 'planning_design'
-  | 'permits_approvals'
-  | 'site_clearing'
-  | 'excavation'
-  | 'foundation_work'
-  | 'structural_framing'
-  | 'roofing'
-  | 'electrical_plumbing'
-  | 'interior_finishing'
-  | 'exterior_finishing'
-  | 'final_inspection'
-  | 'handover_complete';
+export type ConstructionStage =
+  | "planning_design"
+  | "permits_approvals"
+  | "site_clearing"
+  | "excavation"
+  | "foundation_work"
+  | "structural_framing"
+  | "roofing"
+  | "electrical_plumbing"
+  | "interior_finishing"
+  | "exterior_finishing"
+  | "final_inspection"
+  | "handover_complete";
 
 /**
  * ---------------------------
@@ -36,7 +48,7 @@ export type ConstructionStage =
 
 export interface InsurancePolicy {
   id: string;
-  type: 'assurance' | 'garantie_bancaire';
+  type: "assurance" | "garantie_bancaire";
   reference: string;
   projectId: string;
   issuer: string;
@@ -44,7 +56,7 @@ export interface InsurancePolicy {
   endDate: string;
   amount: number;
   coverage: string;
-  status: 'active' | 'expiring_soon' | 'expired';
+  status: "active" | "expiring_soon" | "expired";
   renewalDate?: string;
   documents?: string[];
   notes?: string;
@@ -62,7 +74,7 @@ export interface Task {
   actualDuration?: number;
   startDate: string;
   endDate: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+  status: "not_started" | "in_progress" | "completed" | "delayed";
   progress: number;
   weight: number;
   costEstimate: number;
@@ -79,7 +91,16 @@ export interface Inspection {
   inspector: string;
   date: string;
   inspectionDate?: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'approved' | 'rejected' | 'requires_changes' | 'pending' | 'planned';
+  status:
+    | "scheduled"
+    | "in_progress"
+    | "completed"
+    | "cancelled"
+    | "approved"
+    | "rejected"
+    | "requires_changes"
+    | "pending"
+    | "planned";
   progress_at_inspection: number;
   progressAtInspection?: number;
   comments?: string | null;
@@ -94,21 +115,37 @@ export interface Inspection {
 export interface InspectionIssue {
   id: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved';
+  severity: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_progress" | "resolved";
   deadline?: string;
   assignedTo?: string;
 }
 
 export interface Alert {
   id: string;
-  type: 'insurance_expiry' | 'project_delay' | 'inspection_issue' | 'financial_risk' | 'bank_guarantee' | 'inspection_overdue' | 'payment_blocked' | 'compliance_violation' | 'delivery' | 'deadline' | 'quality';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type:
+    | "insurance_expiry"
+    | "project_delay"
+    | "inspection_issue"
+    | "financial_risk"
+    | "bank_guarantee"
+    | "inspection_overdue"
+    | "payment_blocked"
+    | "compliance_violation"
+    | "delivery"
+    | "deadline"
+    | "quality";
+  severity: "low" | "medium" | "high" | "critical";
   title: string;
   message: string;
   projectId: string;
   relatedEntityId?: string;
-  source?: 'insurance' | 'bank_guarantee' | 'inspection' | 'payment' | 'notification';
+  source?:
+    | "insurance"
+    | "bank_guarantee"
+    | "inspection"
+    | "payment"
+    | "notification";
   projectTitle?: string;
   delayDays?: number;
   timestamp: string;
@@ -128,7 +165,7 @@ export interface Alert {
 }
 
 export interface ActionProof {
-  type: 'email' | 'sms' | 'document' | 'call' | 'meeting';
+  type: "email" | "sms" | "document" | "call" | "meeting";
   timestamp: string;
   performedBy: string;
   details: string;
@@ -151,15 +188,21 @@ export interface ProjectData {
     latitude: number;
     longitude: number;
   };
-  
+
+  geographic_zone?: string;
+  terrain_type?: string;
+  environmental_constraints?: string;
+  has_utilities?: boolean;
+  requires_permits?: boolean;
+
   // Project classification
   category?: string;
   subCategory?: string;
-  priorityLevel?: 'Faible' | 'Moyenne' | 'Élevée' | 'Très élevée';
-  riskLevel?: 'Faible' | 'Moyen' | 'Élevé' | 'Critique';
-  environmentalImpact?: 'Nul' | 'Faible' | 'Modéré' | 'Élevé';
+  priorityLevel?: "Faible" | "Moyenne" | "Élevée" | "Très élevée";
+  riskLevel?: "Faible" | "Moyen" | "Élevé" | "Critique";
+  environmentalImpact?: "Nul" | "Faible" | "Modéré" | "Élevé";
   sustainabilityScore?: number;
-  
+
   // Procurement details
   financingSource?: string;
   marketType?: string;
@@ -179,9 +222,9 @@ export interface ProjectData {
     startDate: string;
     endDate: string;
     estimatedDuration: number;
-    status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
+    status: "not_started" | "in_progress" | "completed" | "delayed";
     weight: number;
-    dependencies?:any[];
+    dependencies?: any[];
   }[];
   constructionMilestones?: {
     id: string;
@@ -190,26 +233,26 @@ export interface ProjectData {
     stage: ConstructionStage;
     targetDate: string;
     completedDate?: string;
-    status: 'pending' | 'completed' | 'overdue';
+    status: "pending" | "completed" | "overdue";
     notes?: string;
     weight: number;
-    dependencies?:any[];
+    dependencies?: any[];
   }[];
-  
+
   // Enhanced milestones structure
   milestones?: {
     name: string;
     plannedDate: string;
     actualDate?: string | null;
-    status: 'planned' | 'in_progress' | 'completed' | 'delayed';
+    status: "planned" | "in_progress" | "completed" | "delayed";
   }[];
-  
+
   inspections?: Inspection[];
   tasks?: Task[];
   risks?: ProjectRisk[];
-  expenses? :any[];//real budget project consumation 
+  expenses?: any[]; //real budget project consumation
   resources?: ProjectResource[];
-  
+
   // Documents
   documents?: {
     name: string;
@@ -217,7 +260,7 @@ export interface ProjectData {
     url: string;
     uploadDate: string;
   }[];
-  
+
   // Stakeholders
   stakeholders?: {
     name: string;
@@ -227,7 +270,7 @@ export interface ProjectData {
     organization: string;
     isPrimary: boolean;
   }[];
-  
+
   insurancePolicies?: InsurancePolicy[];
   alerts?: Alert[];
   escalationThresholds?: {
@@ -236,7 +279,10 @@ export interface ProjectData {
     guarantee: number;
     legal: number;
   };
-  methodology?: 'waterfall' | 'agile' | 'hybrid';
+  forme?: string;
+  localisation?: any[];
+
+  methodology?: "waterfall" | "agile" | "hybrid";
   ganttChart?: GanttChartData;
   pertAnalysis?: PERTAnalysis;
   earnedValueManagement?: EVMData;
@@ -251,14 +297,14 @@ export interface ProjectRisk {
   probability: number;
   impact: number;
   mitigationPlan: string;
-  status: 'identified' | 'monitored' | 'mitigated' | 'resolved';
+  status: "identified" | "monitored" | "mitigated" | "resolved";
   relatedTasks: string[];
 }
 
 export interface ProjectResource {
   id: string;
   name: string;
-  type: 'human' | 'material' | 'equipment';
+  type: "human" | "material" | "equipment";
   skills?: string[];
   costPerHour?: number;
   availability: number;
@@ -286,8 +332,6 @@ export interface GanttDependency {
   target: string;
   type: string;
 }
-
-
 
 export interface EVMMetrics {
   plannedValue: number;
@@ -359,18 +403,18 @@ export type EscalationRoles = {
  * ---------------------------
  */
 export type ActionLabels = {
-  task_assignment: 'Assigner une tâche',
-  hierarchy_notification: 'Notifier la hiérarchie',
-  sms: 'Envoyer SMS',
-  call: 'Programmer appel',
-  email: 'Envoyer email',
-  mail: 'Courrier postal',
-  export_receipt: 'Exporter reçu',
-  blockchain_verification: 'Vérification blockchain',
-  document_upload: 'Uploader document',
-  meeting_schedule: 'Planifier réunion',
-  financial_review: 'Revue financière',
-  legal_consultation: 'Consultation juridique',
+  task_assignment: "Assigner une tâche";
+  hierarchy_notification: "Notifier la hiérarchie";
+  sms: "Envoyer SMS";
+  call: "Programmer appel";
+  email: "Envoyer email";
+  mail: "Courrier postal";
+  export_receipt: "Exporter reçu";
+  blockchain_verification: "Vérification blockchain";
+  document_upload: "Uploader document";
+  meeting_schedule: "Planifier réunion";
+  financial_review: "Revue financière";
+  legal_consultation: "Consultation juridique";
 };
 
 export interface Payment {
@@ -393,7 +437,11 @@ export interface Payment {
   receiver_name?: string;
 }
 
-export type InspectionStatus = 'approved' | 'requires_changes' | 'rejected' | 'pending';
+export type InspectionStatus =
+  | "approved"
+  | "requires_changes"
+  | "rejected"
+  | "pending";
 
 export interface InspectionData {
   id: string;
@@ -491,8 +539,8 @@ export interface TaskAssignment {
   description?: string;
   assignedTo?: string;
   assignedBy?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: "pending" | "in_progress" | "completed" | "cancelled";
+  priority: "low" | "medium" | "high" | "urgent";
   dueDate?: Date;
   completionDate?: Date;
   notes?: string;
@@ -522,12 +570,12 @@ export interface ProjectDelay {
 
 // Role-based notification recipients
 export const NOTIFICATION_ROLES = {
-  PROJECT_MANAGER: 'project_manager',
-  DIRECTOR_PROGRAMMING: 'director_programming', 
-  DIRECTOR: 'director',
-  BANK_LIAISON: 'bank_liaison',
-  ENGINEERING_CONSULTANT: 'engineering_consultant',
-  CONTRACTOR: 'contractor'
+  PROJECT_MANAGER: "project_manager",
+  DIRECTOR_PROGRAMMING: "director_programming",
+  DIRECTOR: "director",
+  BANK_LIAISON: "bank_liaison",
+  ENGINEERING_CONSULTANT: "engineering_consultant",
+  CONTRACTOR: "contractor",
 };
 
 // Delay thresholds for escalation
@@ -535,5 +583,5 @@ export const DELAY_THRESHOLDS = {
   WARNING: 10, // 10% delay triggers warning
   BANK_NOTIFICATION: 20, // 20% delay triggers bank notification
   GUARANTEE_TRIGGER: 30, // 30% delay triggers guarantee clause
-  LEGAL_ESCALATION: 40 // 40% delay triggers legal team
+  LEGAL_ESCALATION: 40, // 40% delay triggers legal team
 };

@@ -308,7 +308,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                 Statut du projet
               </label>
               <Select
-                value={formData.status || "planning"}
+                value={formData.status || "en cours"}
                 onValueChange={(value) => onUpdate({ status: value })}
               >
                 <SelectTrigger className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">

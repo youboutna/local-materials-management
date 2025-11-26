@@ -1,6 +1,6 @@
-import { supabase } from '../integrations/supabase/client';
-import { ProjectService } from './ProjectService';
-import { ProjectStakeholderService } from './ProjectStakeholderService';
+import { supabase } from "../integrations/supabase/client";
+import { ProjectService } from "./ProjectService";
+import { ProjectStakeholderService } from "./ProjectStakeholderService";
 
 export interface ProjectFormData {
   // Basic information matching database schema exactly
@@ -94,7 +94,7 @@ export interface ProjectFormData {
 
 export interface SaveContext {
   currentStep: number;
-  saveType: 'step_only' | 'save_and_next' | 'global_and_close';
+  saveType: "step_only" | "save_and_next" | "global_and_close";
   isDraft: boolean;
   isComplete?: boolean;
 }
@@ -108,68 +108,73 @@ export class ProjectFormService {
 
   // Format date for input fields
   formatDateForInput = (dateString: any): string => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
     } catch (error) {
-      console.warn('Date formatting error:', error);
-      return '';
+      console.warn("Date formatting error:", error);
+      return "";
     }
   };
 
   // Map status from database
   mapStatusFromDB = (status: string): string => {
     const mapping = {
-      'en attente': 'planning',
-      'en cours': 'en cours', 
-      'suspendu': 'suspendu',
-      'terminé': 'terminé',
-      'annulé': 'annulé'
+      "en attente": "planning",
+      "en cours": "en cours",
+      suspendu: "suspendu",
+      terminé: "terminé",
+      annulé: "annulé",
     } as const;
-    return mapping[status as keyof typeof mapping] || 'planning';
+    return mapping[status as keyof typeof mapping] || "planning";
   };
 
   mapFieldsFromDB(dbData: any): ProjectFormData {
     return {
-      title: dbData.title || '',
-      project_reference: dbData.project_reference || '',
-      description: dbData.description || '',
-      budget: dbData.budget?.toString() || '',
-      estimated_duration_days: dbData.estimated_duration_days?.toString() || '',
-      currency: dbData.currency || 'MRU',
-      status: this.mapStatusFromDB(dbData.status || 'planning'),
+      title: dbData.title || "",
+      project_reference: dbData.project_reference || "",
+      description: dbData.description || "",
+      budget: dbData.budget?.toString() || "",
+      estimated_duration_days: dbData.estimated_duration_days?.toString() || "",
+      currency: dbData.currency || "MRU",
+      status: dbData.status || "en cours",
+      geographic_zone: dbData.geographic_zone || "",
+      terrain_type: dbData.terrain_type || "",
+      environmental_constraints: dbData.environmental_constraints || "",
+      has_utilities: dbData.has_utilities || false,
+      requires_permits: dbData.requires_permits || false,
       start_date: this.formatDateForInput(dbData.start_date),
       end_date: this.formatDateForInput(dbData.end_date),
-      payment_mode: dbData.payment_mode || 'progressive',
-      payment_frequency: dbData.payment_frequency || 'monthly',
+      payment_mode: dbData.payment_mode || "progressive",
+      payment_frequency: dbData.payment_frequency || "monthly",
       initial_advance: dbData.initial_advance || 20,
       retention_percentage: dbData.retention_percentage || 5,
-      priority: dbData.priority || 'medium',
-      project_type: dbData.project_type || 'construction',
-      sector: dbData.sector || '',
-      permit_number: dbData.permit_number || '',
-      address: dbData.address || '',
+      priority: dbData.priority || "medium",
+      project_type: dbData.project_type || "construction",
+      sector: dbData.sector || "",
+      permit_number: dbData.permit_number || "",
+      address: dbData.address || "",
       latitude: dbData.coordinates_latitude,
       longitude: dbData.coordinates_longitude,
       area_sqm: dbData.area_sqm,
-      site_details: dbData.site_details || '',
+      site_details: dbData.site_details || "",
       advance_percentage: dbData.advance_percentage || 20,
-      client_name: dbData.client_name || '',
-      main_contractor: dbData.main_contractor || '',
+      client_name: dbData.client_name || "",
+      main_contractor: dbData.main_contractor || "",
       project_manager_id: dbData.project_manager_id,
       technical_manager_id: dbData.technical_manager_id,
       supervisor_id: dbData.supervisor_id,
       client_id: dbData.client_id,
-      workspace_id: dbData.workspace_id
+      workspace_id: dbData.workspace_id,
     };
   }
 
   mapFieldsToDB(formData: ProjectFormData): any {
     // Helper to convert empty string to null for UUID fields
     const nullIfEmpty = (value: any) => {
-      if (value === '' || value === undefined) return null;
+      if (value === "" || value === undefined) return null;
       return value;
     };
 
@@ -177,18 +182,19 @@ export class ProjectFormService {
       title: formData.title,
       project_reference: formData.project_reference || null,
       description: formData.description,
-      budget: parseFloat(formData.budget || '0') || 0,
-      estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
-      currency: formData.currency || 'MRU',
+      budget: parseFloat(formData.budget || "0") || 0,
+      estimated_duration_days:
+        parseInt(formData.estimated_duration_days || "0") || null,
+      currency: formData.currency || "MRU",
       status: formData.status,
       start_date: formData.start_date || null,
       end_date: formData.end_date || null,
-      payment_mode: formData.payment_mode || 'progressive',
-      payment_frequency: formData.payment_frequency || 'monthly',
+      payment_mode: formData.payment_mode || "progressive",
+      payment_frequency: formData.payment_frequency || "monthly",
       initial_advance: formData.initial_advance || 20,
       retention_percentage: formData.retention_percentage || 5,
-      priority: formData.priority || 'medium',
-      project_type: formData.project_type || 'construction',
+      priority: formData.priority || "medium",
+      project_type: formData.project_type || "construction",
       sector: formData.sector || null,
       permit_number: formData.permit_number || null,
       address: formData.address || null,
@@ -209,7 +215,7 @@ export class ProjectFormService {
       terrain_type: formData.terrain_type || null,
       environmental_constraints: formData.environmental_constraints || null,
       has_utilities: formData.has_utilities || false,
-      requires_permits: formData.requires_permits || false
+      requires_permits: formData.requires_permits || false,
     };
   }
 
@@ -223,43 +229,46 @@ export class ProjectFormService {
         title: projectData.title,
         description: projectData.description,
         location: projectData.location,
-        status: this.mapStatusFromDB(projectData.status || 'planning'),
-        budget: projectData.budget?.toString() || '',
+        status: projectData.status || "en cours",
+        budget: projectData.budget?.toString() || "",
         startDate: this.formatDateForInput(projectData.startDate),
         endDate: this.formatDateForInput(projectData.endDate),
         start_date: this.formatDateForInput(projectData.startDate),
         end_date: this.formatDateForInput(projectData.endDate),
         team_size: projectData.teamSize || 1,
-        financing_source: projectData.financingSource || '',
-        market_type: projectData.marketType || '',
-        selection_mode: projectData.selectionMode || '',
+        financing_source: projectData.financingSource || "",
+        market_type: projectData.marketType || "",
+        selection_mode: projectData.selectionMode || "",
         project_responsable_id: projectData.projectResponsableId || undefined,
         main_contractor: projectData.mainContractor || undefined,
-        engineering_consultant: (projectData as any).engineeringConsultant || undefined,
-        project_reference: projectData.projectReference || '',
+        engineering_consultant:
+          (projectData as any).engineeringConsultant || undefined,
+        project_reference: projectData.projectReference || "",
         allows_initial_payment: projectData.allowsInitialPayment || false,
         initial_payment_percentage: projectData.initialPaymentPercentage || 0,
-        current_phase: projectData.currentPhase || '',
-        current_stage: projectData.currentStage || '',
-        facilitiesLocation: projectData.coordinates ? {
-          center: {
-            lat: projectData.coordinates.latitude,
-            lng: projectData.coordinates.longitude
-          },
-          polygon: (projectData as any).localisation || [],
-          warehouseShape: (projectData as any).localisation || [],
-          address: (projectData as any).adresse,
-          shapeType: (projectData as any).forme
-        } : undefined,
+        current_phase: projectData.currentPhase || "",
+        current_stage: projectData.currentStage || "",
+        facilitiesLocation: projectData.coordinates
+          ? {
+              center: {
+                lat: projectData.coordinates.latitude,
+                lng: projectData.coordinates.longitude,
+              },
+              polygon: (projectData as any).localisation || [],
+              warehouseShape: (projectData as any).localisation || [],
+              address: (projectData as any).adresse,
+              shapeType: (projectData as any).forme,
+            }
+          : undefined,
         // Location-specific fields
-        geographic_zone: projectData.geographicZone || '',
-        terrain_type: projectData.terrainType || '',
-        environmental_constraints: projectData.environmentalConstraints || '',
+        geographic_zone: projectData.geographicZone || "",
+        terrain_type: projectData.terrainType || "",
+        environmental_constraints: projectData.environmentalConstraints || "",
         has_utilities: projectData.hasUtilities || false,
-        requires_permits: projectData.requiresPermits || false
+        requires_permits: projectData.requiresPermits || false,
       };
     } catch (error) {
-      console.error('Error loading project data:', error);
+      console.error("Error loading project data:", error);
       throw error;
     }
   }
@@ -268,91 +277,98 @@ export class ProjectFormService {
   async loadRelatedData(projectId: string): Promise<Partial<ProjectFormData>> {
     try {
       // Load stakeholders
-      const stakeholders = await ProjectStakeholderService.getProjectStakeholders(projectId);
-      
+      const stakeholders =
+        await ProjectStakeholderService.getProjectStakeholders(projectId);
+
       // Load phases
       const { data: phasesData } = await supabase
-        .from('project_phases')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('start_date');
-      
-      const phases = phasesData?.map(phase => ({
-        id: phase.id,
-        title: phase.phase_name,
-        description: phase.description || '',
-        startDate: this.formatDateForInput(phase.start_date),
-        endDate: this.formatDateForInput(phase.end_date),
-        status: phase.status,
-        budget: phase.estimated_cost || 0,
-        progress: phase.progress || 0
-      })) || [];
+        .from("project_phases")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("start_date");
+
+      const phases =
+        phasesData?.map((phase) => ({
+          id: phase.id,
+          title: phase.phase_name,
+          description: phase.description || "",
+          startDate: this.formatDateForInput(phase.start_date),
+          endDate: this.formatDateForInput(phase.end_date),
+          status: phase.status,
+          budget: phase.estimated_cost || 0,
+          progress: phase.progress || 0,
+        })) || [];
 
       // Load materials
       const { data: materialsData } = await supabase
-        .from('project_materials')
-        .select('material_id, quantity')
-        .eq('project_id', projectId);
-      
-      const materials = materialsData?.map(item => ({
-        materialId: item.material_id,
-        quantity: item.quantity
-      })) || [];
+        .from("project_materials")
+        .select("material_id, quantity")
+        .eq("project_id", projectId);
+
+      const materials =
+        materialsData?.map((item) => ({
+          materialId: item.material_id,
+          quantity: item.quantity,
+        })) || [];
 
       // Load risks
       const { data: risksData } = await supabase
-        .from('project_risks')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at');
+        .from("project_risks")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at");
 
-      const risks = risksData?.map(risk => ({
-        id: risk.id,
-        category: risk.risk_level || 'technical',
-        description: risk.risk_description || '',
-        probability: risk.probability || 'medium',
-        impact: risk.impact || 'medium',
-        riskScore: this.calculateRiskScore(risk.probability || 'medium', risk.impact || 'medium'),
-        mitigationPlan: risk.mitigation_strategy || '',
-        owner: risk.owner_id || '',
-        status: risk.status || 'active'
-      })) || [];
+      const risks =
+        risksData?.map((risk) => ({
+          id: risk.id,
+          category: risk.risk_level || "technical",
+          description: risk.risk_description || "",
+          probability: risk.probability || "medium",
+          impact: risk.impact || "medium",
+          riskScore: this.calculateRiskScore(
+            risk.probability || "medium",
+            risk.impact || "medium"
+          ),
+          mitigationPlan: risk.mitigation_strategy || "",
+          owner: risk.owner_id || "",
+          status: risk.status || "active",
+        })) || [];
 
       // Load bank guarantees
       const { data: bankGuaranteesData } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at');
+        .from("bank_guarantees")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at");
 
       // Load insurance certificates
       const { data: insuranceData } = await supabase
-        .from('insurance_certificates')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at');
+        .from("insurance_certificates")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at");
 
       // Load project documents
       const { data: documentsData } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at');
+        .from("documents")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at");
 
       // Load employees for team/stakeholders
       const { data: employeesData } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('is_active', true)
-        .order('full_name');
+        .from("employees")
+        .select("*")
+        .eq("is_active", true)
+        .order("full_name");
 
       // Load suppliers for contractors
       const { data: suppliersData } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      
+        .from("suppliers")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+
       return {
         stakeholders: stakeholders || [],
         phases,
@@ -362,22 +378,35 @@ export class ProjectFormService {
         insuranceCertificates: insuranceData || [],
         documents: documentsData || [],
         employees: employeesData || [],
-        suppliers: suppliersData || []
+        suppliers: suppliersData || [],
       };
     } catch (error) {
-      console.error('Error loading related data:', error);
+      console.error("Error loading related data:", error);
       throw error;
     }
   }
 
   // Helper to calculate risk score
   private calculateRiskScore(probability: string, impact: string): number {
-    const probabilityValues = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
-    const impactValues = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
-    
-    const probValue = probabilityValues[probability as keyof typeof probabilityValues] || 3;
+    const probabilityValues = {
+      very_low: 1,
+      low: 2,
+      medium: 3,
+      high: 4,
+      very_high: 5,
+    };
+    const impactValues = {
+      very_low: 1,
+      low: 2,
+      medium: 3,
+      high: 4,
+      very_high: 5,
+    };
+
+    const probValue =
+      probabilityValues[probability as keyof typeof probabilityValues] || 3;
     const impactValue = impactValues[impact as keyof typeof impactValues] || 3;
-    
+
     return probValue * impactValue;
   }
 
@@ -388,27 +417,39 @@ export class ProjectFormService {
         { data: employeesData },
         { data: suppliersData },
         { data: materialsData },
-        { data: organizationsData }
+        { data: organizationsData },
       ] = await Promise.all([
-        supabase.from('employees').select('*').eq('is_active', true).order('full_name'),
-        supabase.from('suppliers').select('*').eq('is_active', true).order('name'),
-        supabase.from('materials').select('*').order('name'),
-        supabase.from('organizations').select('*').eq('is_active', true).order('name')
+        supabase
+          .from("employees")
+          .select("*")
+          .eq("is_active", true)
+          .order("full_name"),
+        supabase
+          .from("suppliers")
+          .select("*")
+          .eq("is_active", true)
+          .order("name"),
+        supabase.from("materials").select("*").order("name"),
+        supabase
+          .from("organizations")
+          .select("*")
+          .eq("is_active", true)
+          .order("name"),
       ]);
 
       return {
         employees: employeesData || [],
         suppliers: suppliersData || [],
         materials: materialsData || [],
-        organizations: organizationsData || []
+        organizations: organizationsData || [],
       };
     } catch (error) {
-      console.error('Error loading base data:', error);
+      console.error("Error loading base data:", error);
       return {
         employees: [],
         suppliers: [],
         materials: [],
-        organizations: []
+        organizations: [],
       };
     }
   }
@@ -419,15 +460,20 @@ export class ProjectFormService {
       case 1:
         return !!(formData.title && formData.description && formData.budget);
       case 2:
-        return !!(formData.stakeholders?.length || formData.project_responsable_id || formData.main_contractor || formData.teamMembers?.length);
+        return !!(
+          formData.stakeholders?.length ||
+          formData.project_responsable_id ||
+          formData.main_contractor ||
+          formData.teamMembers?.length
+        );
       case 3:
-        return !!(formData.phases?.length);
+        return !!formData.phases?.length;
       case 4:
         return !!(formData.facilitiesLocation?.center || formData.location);
       case 5:
-        return !!(formData.risks?.length);
+        return !!formData.risks?.length;
       case 6:
-        return !!(formData.compliance?.length);
+        return !!formData.compliance?.length;
       default:
         return false;
     }
@@ -440,7 +486,7 @@ export class ProjectFormService {
       currentStep: context.currentStep,
       isDraft: context.isDraft,
       isComplete: context.isComplete,
-      saveType: context.saveType
+      saveType: context.saveType,
     };
   }
 }
