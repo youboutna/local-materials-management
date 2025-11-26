@@ -8,7 +8,7 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow py-16">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-xl shadow-elegant p-8">
             <h1 className="text-3xl font-serif font-bold text-adrar-900 mb-6">

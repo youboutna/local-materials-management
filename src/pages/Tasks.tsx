@@ -10,7 +10,7 @@ const Tasks = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow py-16">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

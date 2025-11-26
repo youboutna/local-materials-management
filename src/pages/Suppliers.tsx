@@ -1,53 +1,81 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Edit, Trash2, Star, Send, FileText, Mail, Share2 } from 'lucide-react';
-import { sendSupplierNotification, generateSupplierPasswordReset } from '@/services/supplierNotificationService';
-import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
-import SupplierDocumentUpload from '@/components/suppliers/SupplierDocumentUpload';
-import SupplierDocumentsList from '@/components/suppliers/SupplierDocumentsList';
-import type { Database } from '@/integrations/supabase/types';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Building2,
+  Plus,
+  Edit,
+  Trash2,
+  Star,
+  Send,
+  FileText,
+  Mail,
+  Share2,
+} from "lucide-react";
+import {
+  sendSupplierNotification,
+  generateSupplierPasswordReset,
+} from "@/services/supplierNotificationService";
+import EnhancedDocumentSharing from "@/components/suppliers/EnhancedDocumentSharing";
+import SupplierDocumentUpload from "@/components/suppliers/SupplierDocumentUpload";
+import SupplierDocumentsList from "@/components/suppliers/SupplierDocumentsList";
+import type { Database } from "@/integrations/supabase/types";
 
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
-type Document = Database['public']['Tables']['documents']['Row'];
+type Supplier = Database["public"]["Tables"]["suppliers"]["Row"];
+type Document = Database["public"]["Tables"]["documents"]["Row"];
 
 const Suppliers = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+    null
+  );
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] = useState(false);
+  const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] =
+    useState(false);
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    contact_person: '',
-    email: '',
-    phone: '',
-    address: '',
-    category: '',
+    name: "",
+    contact_person: "",
+    email: "",
+    phone: "",
+    address: "",
+    category: "",
     rating: 0,
-    nif: '',
-    commerce_register_ref: ''
+    nif: "",
+    commerce_register_ref: "",
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers'],
+    queryKey: ["suppliers"],
     queryFn: async (): Promise<Supplier[]> => {
       const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name');
+        .from("suppliers")
+        .select("*")
+        .order("name");
       if (error) throw error;
       return (data as unknown as Supplier[]) || [];
     },
@@ -56,7 +84,7 @@ const Suppliers = () => {
   const createMutation = useMutation({
     mutationFn: async (supplierData: typeof formData) => {
       const { data, error } = await supabase
-        .from('suppliers')
+        .from("suppliers")
         .insert(supplierData as any)
         .select()
         .single();
@@ -64,7 +92,7 @@ const Suppliers = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       toast({ title: "Succès", description: "Fournisseur créé avec succès." });
       resetForm();
     },
@@ -72,65 +100,71 @@ const Suppliers = () => {
       toast({
         title: "Erreur",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
       const { error } = await supabase
-        .from('suppliers')
+        .from("suppliers")
         .update(data as any)
-        .eq('id', id as any);
+        .eq("id", id as any);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur mis à jour avec succès." });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      toast({
+        title: "Succès",
+        description: "Fournisseur mis à jour avec succès.",
+      });
       resetForm();
     },
     onError: (error: Error) => {
       toast({
         title: "Erreur",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('suppliers')
+        .from("suppliers")
         .delete()
-        .eq('id', id as any);
+        .eq("id", id as any);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur supprimé avec succès." });
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+      toast({
+        title: "Succès",
+        description: "Fournisseur supprimé avec succès.",
+      });
     },
     onError: (error: Error) => {
       toast({
         title: "Erreur",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      contact_person: '',
-      email: '',
-      phone: '',
-      address: '',
-      category: '',
+      name: "",
+      contact_person: "",
+      email: "",
+      phone: "",
+      address: "",
+      category: "",
       rating: 0,
-      nif: '',
-      commerce_register_ref: ''
+      nif: "",
+      commerce_register_ref: "",
     });
     setIsCreating(false);
     setEditingId(null);
@@ -147,42 +181,46 @@ const Suppliers = () => {
 
   const handleEdit = (supplier: Supplier) => {
     setFormData({
-      name: supplier.name || '',
-      contact_person: supplier.contact_person || '',
-      email: supplier.email || '',
-      phone: supplier.phone || '',
-      address: supplier.address || '',
-      category: supplier.category || '',
+      name: supplier.name || "",
+      contact_person: supplier.contact_person || "",
+      email: supplier.email || "",
+      phone: supplier.phone || "",
+      address: supplier.address || "",
+      category: supplier.category || "",
       rating: supplier.rating || 0,
-      nif: (supplier as any).nif || '',
-      commerce_register_ref: (supplier as any).commerce_register_ref || ''
+      nif: (supplier as any).nif || "",
+      commerce_register_ref: (supplier as any).commerce_register_ref || "",
     });
     setEditingId(supplier.id);
     setIsCreating(true);
   };
 
-  const handleNotifySupplier = async (supplier: Supplier, taskTitle: string, taskId?: string) => {
+  const handleNotifySupplier = async (
+    supplier: Supplier,
+    taskTitle: string,
+    taskId?: string
+  ) => {
     if (!supplier.email) {
       toast({
         title: "Erreur",
         description: "Ce fournisseur n'a pas d'adresse email.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     try {
       await sendSupplierNotification({
-        type: 'task_assignment',
+        type: "task_assignment",
         email: supplier.email,
         supplier_name: supplier.name,
         supplier_id: supplier.id,
         task_id: taskId,
-        task_title: taskTitle
+        task_title: taskTitle,
       });
       setNotificationOpen(false);
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error("Error sending notification:", error);
     }
   };
 
@@ -191,15 +229,19 @@ const Suppliers = () => {
       toast({
         title: "Erreur",
         description: "Ce fournisseur n'a pas d'adresse email.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     try {
-      await generateSupplierPasswordReset(supplier.email, supplier.name, supplier.id);
+      await generateSupplierPasswordReset(
+        supplier.email,
+        supplier.name,
+        supplier.id
+      );
     } catch (error) {
-      console.error('Error generating password reset:', error);
+      console.error("Error generating password reset:", error);
     }
   };
 
@@ -217,7 +259,9 @@ const Suppliers = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+        className={`h-4 w-4 ${
+          i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
+        }`}
       />
     ));
   };
@@ -231,7 +275,7 @@ const Suppliers = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto px-6 py-16 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Gestion des Fournisseurs</h1>
         <Button onClick={() => setIsCreating(true)}>
@@ -244,7 +288,7 @@ const Suppliers = () => {
         <Card>
           <CardHeader>
             <CardTitle>
-              {editingId ? 'Modifier le Fournisseur' : 'Nouveau Fournisseur'}
+              {editingId ? "Modifier le Fournisseur" : "Nouveau Fournisseur"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -254,15 +298,24 @@ const Suppliers = () => {
                   <label className="text-sm font-medium">Nom *</label>
                   <Input
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Personne de contact</label>
+                  <label className="text-sm font-medium">
+                    Personne de contact
+                  </label>
                   <Input
                     value={formData.contact_person}
-                    onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contact_person: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div>
@@ -270,21 +323,27 @@ const Suppliers = () => {
                   <Input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium">Téléphone</label>
                   <Input
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium">Catégorie</label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une catégorie" />
@@ -302,7 +361,9 @@ const Suppliers = () => {
                   <label className="text-sm font-medium">Note (1-5)</label>
                   <Select
                     value={formData.rating.toString()}
-                    onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, rating: parseInt(value) })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une note" />
@@ -310,45 +371,63 @@ const Suppliers = () => {
                     <SelectContent>
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <SelectItem key={rating} value={rating.toString()}>
-                          {rating} étoile{rating > 1 ? 's' : ''}
+                          {rating} étoile{rating > 1 ? "s" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium">Adresse</label>
                 <Textarea
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                   rows={3}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">NIF (Numéro d'Identification Fiscale)</label>
+                  <label className="text-sm font-medium">
+                    NIF (Numéro d'Identification Fiscale)
+                  </label>
                   <Input
                     value={formData.nif}
-                    onChange={(e) => setFormData({ ...formData, nif: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nif: e.target.value })
+                    }
                     placeholder="Ex: 123456789"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Référence Registre de Commerce</label>
+                  <label className="text-sm font-medium">
+                    Référence Registre de Commerce
+                  </label>
                   <Input
                     value={formData.commerce_register_ref}
-                    onChange={(e) => setFormData({ ...formData, commerce_register_ref: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        commerce_register_ref: e.target.value,
+                      })
+                    }
                     placeholder="Ex: RC-2024-001"
                   />
                 </div>
               </div>
 
               <div className="flex space-x-2">
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingId ? 'Mettre à jour' : 'Créer'}
+                <Button
+                  type="submit"
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                >
+                  {editingId ? "Mettre à jour" : "Créer"}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Annuler
@@ -376,7 +455,7 @@ const Suppliers = () => {
                   </div>
                 </div>
                 <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                  {supplier.is_active ? 'Actif' : 'Inactif'}
+                  {supplier.is_active ? "Actif" : "Inactif"}
                 </Badge>
               </div>
             </CardHeader>
@@ -385,18 +464,12 @@ const Suppliers = () => {
                 {supplier.contact_person && (
                   <div>Contact: {supplier.contact_person}</div>
                 )}
-                {supplier.email && (
-                  <div>Email: {supplier.email}</div>
-                )}
-                {supplier.phone && (
-                  <div>Tél: {supplier.phone}</div>
-                )}
+                {supplier.email && <div>Email: {supplier.email}</div>}
+                {supplier.phone && <div>Tél: {supplier.phone}</div>}
                 {supplier.rating && (
                   <div className="flex items-center space-x-1">
                     <span>Note:</span>
-                    <div className="flex">
-                      {renderStars(supplier.rating)}
-                    </div>
+                    <div className="flex">{renderStars(supplier.rating)}</div>
                   </div>
                 )}
               </div>
@@ -418,7 +491,12 @@ const Suppliers = () => {
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
-                <Dialog open={notificationOpen && selectedSupplier?.id === supplier.id} onOpenChange={setNotificationOpen}>
+                <Dialog
+                  open={
+                    notificationOpen && selectedSupplier?.id === supplier.id
+                  }
+                  onOpenChange={setNotificationOpen}
+                >
                   <DialogTrigger asChild>
                     <Button
                       size="sm"
@@ -437,16 +515,25 @@ const Suppliers = () => {
                     </DialogHeader>
                     <Tabs defaultValue="notification" className="w-full">
                       <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="notification">Notification</TabsTrigger>
+                        <TabsTrigger value="notification">
+                          Notification
+                        </TabsTrigger>
                         <TabsTrigger value="password">Mot de passe</TabsTrigger>
                       </TabsList>
                       <TabsContent value="notification" className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium">Titre de la tâche</label>
+                          <label className="text-sm font-medium">
+                            Titre de la tâche
+                          </label>
                           <Input placeholder="Entrez le titre de la tâche..." />
                         </div>
-                        <Button 
-                          onClick={() => handleNotifySupplier(supplier, "Nouvelle tâche assignée")}
+                        <Button
+                          onClick={() =>
+                            handleNotifySupplier(
+                              supplier,
+                              "Nouvelle tâche assignée"
+                            )
+                          }
                           className="w-full"
                         >
                           <Mail className="h-4 w-4 mr-2" />
@@ -455,9 +542,10 @@ const Suppliers = () => {
                       </TabsContent>
                       <TabsContent value="password" className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                          Envoyer un email de réinitialisation de mot de passe à ce fournisseur.
+                          Envoyer un email de réinitialisation de mot de passe à
+                          ce fournisseur.
                         </p>
-                        <Button 
+                        <Button
                           onClick={() => handlePasswordReset(supplier)}
                           className="w-full"
                         >
@@ -514,11 +602,13 @@ const Suppliers = () => {
                 <SupplierDocumentsList supplier={selectedSupplier} />
               </TabsContent>
               <TabsContent value="upload" className="space-y-4">
-                <SupplierDocumentUpload 
+                <SupplierDocumentUpload
                   supplier={selectedSupplier}
                   onSuccess={() => {
                     // Switch to list tab after successful upload
-                    const listTab = document.querySelector('[value="list"]') as HTMLElement;
+                    const listTab = document.querySelector(
+                      '[value="list"]'
+                    ) as HTMLElement;
                     listTab?.click();
                   }}
                 />

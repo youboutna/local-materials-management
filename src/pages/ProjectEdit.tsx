@@ -506,7 +506,7 @@ const ProjectEdit = () => {
   }
 
   return (
-    <div className="layout-main bg-gray-50">
+    <div className="layout-main -mt-8 bg-gray-50">
       {/* Navbar removed - already in App.tsx */}
 
       <main className="layout-content">

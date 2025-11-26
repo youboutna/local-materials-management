@@ -9,7 +9,7 @@ const Employees = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow py-16">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}

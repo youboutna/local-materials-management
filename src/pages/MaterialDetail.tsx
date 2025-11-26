@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import ProjectMap, { MapLocation } from '@/components/ProjectMap';
-import MaterialLocationMap from '@/components/materials/MaterialLocationMap';
-import MaterialAvailabilityCard from '@/components/materials/MaterialAvailabilityCard';
-import WarehouseShapeTracer from '@/components/materials/WarehouseShapeTracer';
-import { ArrowLeft, MapPin, Package, Warehouse, Info, Edit } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useParams, Navigate, Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import ProjectMap, { MapLocation } from "@/components/ProjectMap";
+import MaterialLocationMap from "@/components/materials/MaterialLocationMap";
+import MaterialAvailabilityCard from "@/components/materials/MaterialAvailabilityCard";
+import WarehouseShapeTracer from "@/components/materials/WarehouseShapeTracer";
+import {
+  ArrowLeft,
+  MapPin,
+  Package,
+  Warehouse,
+  Info,
+  Edit,
+} from "lucide-react";
 
 interface MaterialDetail {
   id: string;
@@ -36,7 +43,9 @@ const MaterialDetail = () => {
   const { id } = useParams();
   const [material, setMaterial] = useState<MaterialDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [warehouseShape, setWarehouseShape] = useState<{x: number; y: number}[]>([]);
+  const [warehouseShape, setWarehouseShape] = useState<
+    { x: number; y: number }[]
+  >([]);
 
   useEffect(() => {
     if (id) {
@@ -46,16 +55,16 @@ const MaterialDetail = () => {
 
   const fetchMaterialDetail = async () => {
     if (!id) return;
-    
+
     try {
       const { data, error } = await supabase
-        .from('materials')
-        .select('*')
-        .eq('id', id)
+        .from("materials")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
-      
+
       // Transform the Supabase data to match our interface
       const transformedMaterial: MaterialDetail = {
         id: data.id,
@@ -69,14 +78,14 @@ const MaterialDetail = () => {
         image: data.image || undefined,
         coordinates_latitude: data.coordinates_latitude || undefined,
         coordinates_longitude: data.coordinates_longitude || undefined,
-        adresse: typeof data.adresse === 'string' ? data.adresse : undefined,
+        adresse: typeof data.adresse === "string" ? data.adresse : undefined,
         forme: data.forme || undefined,
         localisation: Array.isArray(data.localisation) ? data.localisation : [],
         workspace_id: data.workspace_id || undefined,
       };
-      
+
       setMaterial(transformedMaterial);
-      
+
       // Parse warehouse shape if it exists in forme field
       if (transformedMaterial.forme) {
         try {
@@ -85,11 +94,11 @@ const MaterialDetail = () => {
             setWarehouseShape(shapeData);
           }
         } catch (e) {
-          console.log('Could not parse warehouse shape data');
+          console.log("Could not parse warehouse shape data");
         }
       }
     } catch (error) {
-      console.error('Error fetching material:', error);
+      console.error("Error fetching material:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les détails du matériau.",
@@ -120,7 +129,9 @@ const MaterialDetail = () => {
         <Card>
           <CardContent className="p-8 text-center">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Matériau non trouvé</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Matériau non trouvé
+            </h3>
             <p className="text-gray-600 mb-4">
               Le matériau demandé n'existe pas ou a été supprimé.
             </p>
@@ -137,7 +148,7 @@ const MaterialDetail = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-16">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -148,7 +159,9 @@ const MaterialDetail = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-adrar-900">{material.name}</h1>
+            <h1 className="text-2xl font-bold text-adrar-900">
+              {material.name}
+            </h1>
             <p className="text-adrar-600">{material.category}</p>
           </div>
         </div>
@@ -176,14 +189,15 @@ const MaterialDetail = () => {
                 <h3 className="font-medium text-gray-900 mb-2">Description</h3>
                 <p className="text-gray-600">{material.description}</p>
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Prix unitaire</p>
                   <p className="font-medium">
-                    {material.price_per_unit.toLocaleString('fr-FR')} MRU/{material.unit}
+                    {material.price_per_unit.toLocaleString("fr-FR")} MRU/
+                    {material.unit}
                   </p>
                 </div>
                 <div>
@@ -212,7 +226,7 @@ const MaterialDetail = () => {
                   <p className="font-medium">{material.adresse}</p>
                 </div>
               )}
-              
+
               {material.origin_location && (
                 <div>
                   <p className="text-sm text-gray-600">Origine</p>
@@ -220,25 +234,32 @@ const MaterialDetail = () => {
                 </div>
               )}
 
-              {material.coordinates_latitude && material.coordinates_longitude && (
-                <div>
-                  <p className="text-sm text-gray-600">Coordonnées GPS</p>
-                  <p className="font-mono text-sm">
-                    {material.coordinates_latitude.toFixed(6)}, {material.coordinates_longitude.toFixed(6)}
-                  </p>
-                </div>
-              )}
+              {material.coordinates_latitude &&
+                material.coordinates_longitude && (
+                  <div>
+                    <p className="text-sm text-gray-600">Coordonnées GPS</p>
+                    <p className="font-mono text-sm">
+                      {material.coordinates_latitude.toFixed(6)},{" "}
+                      {material.coordinates_longitude.toFixed(6)}
+                    </p>
+                  </div>
+                )}
 
               {material.localisation && material.localisation.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-600">Coordonnées de localisation</p>
+                  <p className="text-sm text-gray-600">
+                    Coordonnées de localisation
+                  </p>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {material.localisation.map((zone, index) => (
-                      <Badge key={index} variant="outline" className="font-mono text-xs">
-                        {typeof zone === 'object' && zone.lat && zone.lng 
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="font-mono text-xs"
+                      >
+                        {typeof zone === "object" && zone.lat && zone.lng
                           ? `${zone.lat.toFixed(4)}, ${zone.lng.toFixed(4)}`
-                          : String(zone)
-                        }
+                          : String(zone)}
                       </Badge>
                     ))}
                   </div>
@@ -284,12 +305,13 @@ const MaterialDetail = () => {
                   alt={material.name}
                   className="w-full h-64 object-cover rounded-lg"
                   onError={(e) => {
-                    e.currentTarget.src = window.location.origin + '/img/material-placeholder.jpg';
+                    e.currentTarget.src =
+                      window.location.origin + "/img/material-placeholder.jpg";
                   }}
                 />
               ) : (
                 <img
-                  src={window.location.origin + '/img/material-placeholder.jpg'}
+                  src={window.location.origin + "/img/material-placeholder.jpg"}
                   alt={material.name}
                   className="w-full h-64 object-cover rounded-lg"
                 />

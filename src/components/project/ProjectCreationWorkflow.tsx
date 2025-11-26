@@ -253,7 +253,6 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
       materials: selectedMaterials,
       risks,
       compliance,
-
       shapeData,
     };
 

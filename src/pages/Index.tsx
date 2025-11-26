@@ -130,7 +130,7 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+        <main className="flex-grow py-16 flex items-center justify-center">
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}

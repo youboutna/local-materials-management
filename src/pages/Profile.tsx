@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, Lock, User } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { usePasswordManagement } from '@/hooks/usePasswordManagement';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { usePasswordManagement } from "@/hooks/usePasswordManagement";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -17,16 +17,16 @@ const Profile = () => {
   const { toast } = useToast();
 
   const [showPasswordSection, setShowPasswordSection] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       toast({
         title: "Erreur",
@@ -38,7 +38,7 @@ const Profile = () => {
 
     if (newPassword.length < 6) {
       toast({
-        title: "Erreur", 
+        title: "Erreur",
         description: "Le mot de passe doit contenir au moins 6 caractères.",
         variant: "destructive",
       });
@@ -46,44 +46,58 @@ const Profile = () => {
     }
 
     const result = await updatePassword(newPassword, confirmPassword);
-    
+
     if (result.success) {
       setShowPasswordSection(false);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-16 max-w-4xl">
       {/* Profile Information Card */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {t('nav.profile')}
+            {t("nav.profile")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">{t('auth.email')}</Label>
-                <p className="text-lg">{user?.email || t('materials.not_defined')}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  {t("auth.email")}
+                </Label>
+                <p className="text-lg">
+                  {user?.email || t("materials.not_defined")}
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">{t('auth.full_name')}</Label>
-                <p className="text-lg">{user?.user_metadata?.full_name || t('materials.not_defined')}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  {t("auth.full_name")}
+                </Label>
+                <p className="text-lg">
+                  {user?.user_metadata?.full_name || t("materials.not_defined")}
+                </p>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">{t('roles.user')}</Label>
-                <p className="text-lg">{user?.user_metadata?.role || t('roles.user')}</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  {t("roles.user")}
+                </Label>
+                <p className="text-lg">
+                  {user?.user_metadata?.role || t("roles.user")}
+                </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">ID Utilisateur</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  ID Utilisateur
+                </Label>
                 <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
                   {user?.id?.slice(0, 8)}...{user?.id?.slice(-8)}
                 </p>
@@ -107,7 +121,7 @@ const Profile = () => {
               <p className="text-muted-foreground">
                 Modifiez votre mot de passe pour sécuriser votre compte.
               </p>
-              <Button 
+              <Button
                 onClick={() => setShowPasswordSection(true)}
                 variant="outline"
               >
@@ -144,7 +158,9 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+                <Label htmlFor="confirmPassword">
+                  Confirmer le nouveau mot de passe
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -171,22 +187,19 @@ const Profile = () => {
               </div>
 
               <Separator />
-              
+
               <div className="flex gap-2">
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                >
+                <Button type="submit" disabled={loading}>
                   {loading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
                 </Button>
-                <Button 
+                <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     setShowPasswordSection(false);
-                    setCurrentPassword('');
-                    setNewPassword('');
-                    setConfirmPassword('');
+                    setCurrentPassword("");
+                    setNewPassword("");
+                    setConfirmPassword("");
                   }}
                 >
                   Annuler

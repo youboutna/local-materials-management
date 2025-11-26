@@ -107,7 +107,7 @@ const SupplierDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow py-16">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="mb-8">

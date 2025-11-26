@@ -225,7 +225,7 @@ const MaterialEdit = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+        <main className="flex-grow py-16 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="w-16 h-16 border-4 border-terracotta-500 animate-spin mx-auto mb-4" />
             <p className="text-adrar-600">{t("materials.loading")}</p>
@@ -238,7 +238,7 @@ const MaterialEdit = () => {
   if (error || !material) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
-        <main className="flex-grow pt-24 pb-16 flex items-center justify-center">
+        <main className="flex-grow py-16 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600 mb-4">{t("materials.error_loading")}</p>
             <Button onClick={() => navigate("/materials")}>
@@ -252,7 +252,7 @@ const MaterialEdit = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow pt-24 pb-16">
+      <main className="flex-grow py-16">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
