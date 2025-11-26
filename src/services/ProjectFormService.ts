@@ -1,6 +1,6 @@
+import { supabase } from '../integrations/supabase/client';
 import { ProjectService } from './ProjectService';
 import { ProjectStakeholderService } from './ProjectStakeholderService';
-import { supabase } from '../integrations/supabase/client';
 
 export interface ProjectFormData {
   // Basic information matching database schema exactly
@@ -151,8 +151,8 @@ export class ProjectFormService {
       sector: dbData.sector || '',
       permit_number: dbData.permit_number || '',
       address: dbData.address || '',
-      latitude: dbData.latitude,
-      longitude: dbData.longitude,
+      latitude: dbData.coordinates_latitude,
+      longitude: dbData.coordinates_longitude,
       area_sqm: dbData.area_sqm,
       site_details: dbData.site_details || '',
       advance_percentage: dbData.advance_percentage || 20,
@@ -192,8 +192,8 @@ export class ProjectFormService {
       sector: formData.sector || null,
       permit_number: formData.permit_number || null,
       address: formData.address || null,
-      latitude: formData.latitude || null,
-      longitude: formData.longitude || null,
+      coordinates_latitude: formData.latitude || null,
+      coordinates_longitude: formData.longitude || null,
       area_sqm: formData.area_sqm || null,
       site_details: formData.site_details || null,
       advance_percentage: formData.advance_percentage || 20,

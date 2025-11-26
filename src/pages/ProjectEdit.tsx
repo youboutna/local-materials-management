@@ -1,21 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useProjects } from '@/hooks/projects/useProjects';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ProjectFormWithMap from '@/components/project/ProjectFormWithMap';
-import MaterialFormSection from '@/components/MaterialFormSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useProjects } from '@/hooks/projects/useProjects';
+import { toast } from '@/hooks/use-toast';
 import { PhaseService } from '@/services/phaseService';
 import { ProjectStakeholderService } from '@/services/ProjectStakeholderService';
-import OrganizationalHierarchyManager from '@/components/admin/OrganizationalHierarchyManager';
-import { Building, Users, UserCheck, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import EnhancedProjectEditForm from '../components/project/EnhancedProjectEditForm';
-import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 
 
 // Add interface for selected materials
@@ -136,6 +130,7 @@ const ProjectEdit = () => {
             location: projectDetail.location,
             status: statusMapping[projectDetail.status as keyof typeof statusMapping] || 'Planning',
             budget: projectDetail.budget,
+            progress: projectDetail.progress || 0,
             startDate: formatDateForInput(projectDetail.startDate),
             endDate: formatDateForInput(projectDetail.endDate),
             start_date: formatDateForInput(projectDetail.startDate),
