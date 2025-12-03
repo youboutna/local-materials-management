@@ -308,4 +308,238 @@ export class EntityToDTOMapper {
       current_stage: dto.currentStage
     };
   }
+
+  // ============= Form Data Mappings (for ProjectFormService) =============
+
+  /**
+   * Map database entity to form data format
+   */
+  static projectEntityToFormData(entity: any): any {
+    const formatDate = (dateString: any): string => {
+      if (!dateString) return '';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+      } catch {
+        return '';
+      }
+    };
+
+    const mapStatus = (status: string): string => {
+      const mapping: Record<string, string> = {
+        'en attente': 'planning',
+        'en cours': 'en cours',
+        'suspendu': 'suspendu',
+        'terminé': 'terminé',
+        'annulé': 'annulé'
+      };
+      return mapping[status] || status || 'planning';
+    };
+
+    return {
+      // Basic info
+      title: entity.title || '',
+      project_reference: entity.project_reference || '',
+      description: entity.description || '',
+      budget: entity.budget?.toString() || '',
+      estimated_duration_days: entity.estimated_duration_days?.toString() || '',
+      currency: entity.currency || 'MRU',
+      status: mapStatus(entity.status),
+      start_date: formatDate(entity.start_date),
+      end_date: formatDate(entity.end_date),
+      startDate: formatDate(entity.start_date),
+      endDate: formatDate(entity.end_date),
+      // Payment
+      payment_mode: entity.payment_mode || 'progressive',
+      payment_frequency: entity.payment_frequency || 'monthly',
+      initial_advance: entity.initial_advance || 20,
+      retention_percentage: entity.retention_percentage || 5,
+      advance_percentage: entity.advance_percentage || 20,
+      // Meta
+      priority: entity.priority || 'medium',
+      project_type: entity.project_type || 'construction',
+      sector: entity.sector || '',
+      permit_number: entity.permit_number || '',
+      progress: entity.progress || 0,
+      // Location
+      address: entity.address || entity.location || '',
+      location: entity.location || entity.address || '',
+      latitude: entity.latitude || entity.coordinates_latitude,
+      longitude: entity.longitude || entity.coordinates_longitude,
+      area_sqm: entity.area_sqm,
+      site_details: entity.site_details || '',
+      geographic_zone: entity.geographic_zone || '',
+      terrain_type: entity.terrain_type || '',
+      environmental_constraints: entity.environmental_constraints || '',
+      has_utilities: entity.has_utilities || false,
+      requires_permits: entity.requires_permits || false,
+      // Stakeholders
+      client_name: entity.client_name || '',
+      main_contractor: entity.main_contractor || '',
+      engineering_consultant: entity.engineering_consultant || '',
+      project_manager_id: entity.project_manager_id,
+      technical_manager_id: entity.technical_manager_id,
+      supervisor_id: entity.supervisor_id,
+      client_id: entity.client_id,
+      workspace_id: entity.workspace_id,
+      // Financing
+      financing_source: entity.financing_source || '',
+      market_type: entity.market_type || '',
+      selection_mode: entity.selection_mode || '',
+      // Financial instruments
+      bank_guarantee_required: entity.bank_guarantee_required || false,
+      bank_guarantee_amount: entity.bank_guarantee_amount,
+      insurance_required: entity.insurance_required || false
+    };
+  }
+
+  /**
+   * Map form data to database entity format
+   */
+  static formDataToProjectEntity(formData: any, step?: number): any {
+    const nullIfEmpty = (value: any) => {
+      if (value === '' || value === undefined) return null;
+      return value;
+    };
+
+    // Base fields always included
+    const baseFields = {
+      title: formData.title,
+      description: formData.description,
+      status: formData.status || 'planning',
+      progress: formData.progress || 0
+    };
+
+    // Step 1: Basic info
+    const step1Fields = {
+      ...baseFields,
+      project_reference: nullIfEmpty(formData.project_reference),
+      budget: parseFloat(formData.budget || '0') || 0,
+      estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
+      currency: formData.currency || 'MRU',
+      start_date: nullIfEmpty(formData.start_date || formData.startDate),
+      end_date: nullIfEmpty(formData.end_date || formData.endDate),
+      payment_mode: formData.payment_mode || 'progressive',
+      payment_frequency: formData.payment_frequency || 'monthly',
+      initial_advance: formData.initial_advance || 20,
+      retention_percentage: formData.retention_percentage || 5,
+      priority: formData.priority || 'medium',
+      project_type: formData.project_type || 'construction',
+      sector: nullIfEmpty(formData.sector),
+      permit_number: nullIfEmpty(formData.permit_number),
+      financing_source: nullIfEmpty(formData.financing_source),
+      market_type: nullIfEmpty(formData.market_type),
+      selection_mode: nullIfEmpty(formData.selection_mode)
+    };
+
+    // Step 2: Stakeholders
+    const step2Fields = {
+      client_name: nullIfEmpty(formData.client_name),
+      main_contractor: nullIfEmpty(formData.main_contractor),
+      engineering_consultant: nullIfEmpty(formData.engineering_consultant),
+      project_manager_id: nullIfEmpty(formData.project_manager_id),
+      technical_manager_id: nullIfEmpty(formData.technical_manager_id),
+      supervisor_id: nullIfEmpty(formData.supervisor_id),
+      client_id: nullIfEmpty(formData.client_id),
+      workspace_id: nullIfEmpty(formData.workspace_id)
+    };
+
+    // Step 3: Location
+    const step3Fields = {
+      address: nullIfEmpty(formData.address),
+      location: nullIfEmpty(formData.location || formData.address),
+      latitude: formData.latitude || null,
+      longitude: formData.longitude || null,
+      coordinates_latitude: formData.latitude || null,
+      coordinates_longitude: formData.longitude || null,
+      area_sqm: formData.area_sqm || null,
+      site_details: nullIfEmpty(formData.site_details),
+      geographic_zone: nullIfEmpty(formData.geographic_zone),
+      terrain_type: nullIfEmpty(formData.terrain_type),
+      environmental_constraints: nullIfEmpty(formData.environmental_constraints),
+      has_utilities: formData.has_utilities || false,
+      requires_permits: formData.requires_permits || false
+    };
+
+    // Step 6: Financial instruments
+    const step6Fields = {
+      advance_percentage: formData.advance_percentage || 20,
+      bank_guarantee_required: formData.bank_guarantee_required || false,
+      bank_guarantee_amount: formData.bank_guarantee_amount || null,
+      insurance_required: formData.insurance_required || false
+    };
+
+    // Return based on step (undefined = all fields)
+    if (step === undefined) {
+      return {
+        ...step1Fields,
+        ...step2Fields,
+        ...step3Fields,
+        ...step6Fields
+      };
+    }
+
+    switch (step) {
+      case 1:
+        return step1Fields;
+      case 2:
+        return { ...baseFields, ...step2Fields };
+      case 3:
+        return { ...baseFields, ...step3Fields };
+      case 4: // Phases - handled separately
+      case 5: // Risks - handled separately
+        return baseFields;
+      case 6:
+        return { ...baseFields, ...step6Fields };
+      case 7: // Validation
+        return { ...baseFields, status: formData.status || 'planning' };
+      default:
+        return step1Fields;
+    }
+  }
+
+  /**
+   * Get required fields for validation per step
+   */
+  static getRequiredFieldsForStep(step: number): string[] {
+    switch (step) {
+      case 1:
+        return ['title', 'description', 'budget', 'project_type', 'start_date'];
+      case 2:
+        return []; // At least one stakeholder recommended but not required
+      case 3:
+        return ['address'];
+      case 4:
+        return []; // Phases handled separately
+      case 5:
+        return []; // Risks handled separately
+      case 6:
+        return []; // Compliance handled separately
+      case 7:
+        return [];
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * Validate form data for a specific step
+   */
+  static validateStepData(formData: any, step: number): { valid: boolean; errors: string[] } {
+    const requiredFields = this.getRequiredFieldsForStep(step);
+    const errors: string[] = [];
+
+    for (const field of requiredFields) {
+      const value = formData[field];
+      if (value === undefined || value === null || value === '') {
+        errors.push(`${field} is required`);
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
 }

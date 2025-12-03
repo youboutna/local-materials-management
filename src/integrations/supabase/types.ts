@@ -716,6 +716,56 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          subject: string
+          template_key: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject: string
+          template_key: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject?: string
+          template_key?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           certifications: Json | null
@@ -1044,6 +1094,57 @@ export type Database = {
           },
         ]
       }
+      form_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string
+          description: string
+          fields: Json
+          id: string
+          is_active: boolean
+          is_public: boolean
+          name: string
+          sections: Json | null
+          template_type: string
+          updated_at: string | null
+          usage_count: number
+          version: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by: string
+          description: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name: string
+          sections?: Json | null
+          template_type: string
+          updated_at?: string | null
+          usage_count?: number
+          version?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name?: string
+          sections?: Json | null
+          template_type?: string
+          updated_at?: string | null
+          usage_count?: number
+          version?: string
+        }
+        Relationships: []
+      }
       health_claims: {
         Row: {
           act_reimbursement_rates: Json | null
@@ -1103,6 +1204,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hse_evaluations: {
+        Row: {
+          category: string
+          corrective_actions: string[] | null
+          created_at: string | null
+          deadline: string | null
+          documents: string[] | null
+          environment_score: number | null
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name: string | null
+          findings: string
+          id: string
+          inspection_type: string
+          location_details: string
+          non_conformities: string[] | null
+          observations: string
+          overall_score: number | null
+          photos: string[] | null
+          recommendations: string
+          review_date: string | null
+          review_notes: string | null
+          reviewed_by: string | null
+          risk_level: string
+          safety_score: number | null
+          station_id: string | null
+          station_name: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          corrective_actions?: string[] | null
+          created_at?: string | null
+          deadline?: string | null
+          documents?: string[] | null
+          environment_score?: number | null
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name?: string | null
+          findings: string
+          id?: string
+          inspection_type: string
+          location_details: string
+          non_conformities?: string[] | null
+          observations: string
+          overall_score?: number | null
+          photos?: string[] | null
+          recommendations: string
+          review_date?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          risk_level: string
+          safety_score?: number | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          corrective_actions?: string[] | null
+          created_at?: string | null
+          deadline?: string | null
+          documents?: string[] | null
+          environment_score?: number | null
+          evaluation_date?: string
+          evaluator_id?: string
+          evaluator_name?: string | null
+          findings?: string
+          id?: string
+          inspection_type?: string
+          location_details?: string
+          non_conformities?: string[] | null
+          observations?: string
+          overall_score?: number | null
+          photos?: string[] | null
+          recommendations?: string
+          review_date?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          risk_level?: string
+          safety_score?: number | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       inspections: {
         Row: {
@@ -5768,6 +5959,10 @@ export type Database = {
       has_role: {
         Args: { role_name: string; user_id: string }
         Returns: boolean
+      }
+      increment_template_usage: {
+        Args: { template_id: string }
+        Returns: undefined
       }
       is_current_user_admin: { Args: never; Returns: boolean }
       search_projects_autocomplete: {
