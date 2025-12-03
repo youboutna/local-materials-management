@@ -1,6 +1,7 @@
 import { ProjectService } from './ProjectService';
 import { ProjectStakeholderService } from './ProjectStakeholderService';
 import { supabase } from '../integrations/supabase/client';
+import { EntityToDTOMapper } from './EntityToDTOMapper';
 
 export interface ProjectFormData {
   // Basic information matching database schema exactly
@@ -106,111 +107,157 @@ export class ProjectFormService {
     this.projectService = new ProjectService();
   }
 
-  // Format date for input fields
+  // Utility: Format date for input fields
   formatDateForInput = (dateString: any): string => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
       return date.toISOString().split('T')[0];
-    } catch (error) {
-      console.warn('Date formatting error:', error);
+    } catch {
       return '';
     }
   };
 
-  // Map status from database
+  // Utility: Map status from database
   mapStatusFromDB = (status: string): string => {
-    const mapping = {
+    const mapping: Record<string, string> = {
       'en attente': 'planning',
-      'en cours': 'en cours', 
+      'en cours': 'en cours',
       'suspendu': 'suspendu',
       'terminé': 'terminé',
       'annulé': 'annulé'
-    } as const;
-    return mapping[status as keyof typeof mapping] || 'planning';
+    };
+    return mapping[status] || status || 'planning';
   };
 
+  // Delegate to EntityToDTOMapper for consistent mapping
   mapFieldsFromDB(dbData: any): ProjectFormData {
-    return {
-      title: dbData.title || '',
-      project_reference: dbData.project_reference || '',
-      description: dbData.description || '',
-      budget: dbData.budget?.toString() || '',
-      estimated_duration_days: dbData.estimated_duration_days?.toString() || '',
-      currency: dbData.currency || 'MRU',
-      status: this.mapStatusFromDB(dbData.status || 'planning'),
-      start_date: this.formatDateForInput(dbData.start_date),
-      end_date: this.formatDateForInput(dbData.end_date),
-      payment_mode: dbData.payment_mode || 'progressive',
-      payment_frequency: dbData.payment_frequency || 'monthly',
-      initial_advance: dbData.initial_advance || 20,
-      retention_percentage: dbData.retention_percentage || 5,
-      priority: dbData.priority || 'medium',
-      project_type: dbData.project_type || 'construction',
-      sector: dbData.sector || '',
-      permit_number: dbData.permit_number || '',
-      address: dbData.address || '',
-      latitude: dbData.latitude,
-      longitude: dbData.longitude,
-      area_sqm: dbData.area_sqm,
-      site_details: dbData.site_details || '',
-      advance_percentage: dbData.advance_percentage || 20,
-      client_name: dbData.client_name || '',
-      main_contractor: dbData.main_contractor || '',
-      project_manager_id: dbData.project_manager_id,
-      technical_manager_id: dbData.technical_manager_id,
-      supervisor_id: dbData.supervisor_id,
-      client_id: dbData.client_id,
-      workspace_id: dbData.workspace_id
-    };
+    return EntityToDTOMapper.projectEntityToFormData(dbData) as ProjectFormData;
   }
 
-  mapFieldsToDB(formData: ProjectFormData): any {
-    // Helper to convert empty string to null for UUID fields
-    const nullIfEmpty = (value: any) => {
-      if (value === '' || value === undefined) return null;
-      return value;
-    };
+  mapFieldsToDB(formData: ProjectFormData, step?: number): any {
+    return EntityToDTOMapper.formDataToProjectEntity(formData, step);
+  }
 
-    return {
-      title: formData.title,
-      project_reference: formData.project_reference || null,
-      description: formData.description,
-      budget: parseFloat(formData.budget || '0') || 0,
-      estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
-      currency: formData.currency || 'MRU',
-      status: formData.status,
-      start_date: formData.start_date || null,
-      end_date: formData.end_date || null,
-      payment_mode: formData.payment_mode || 'progressive',
-      payment_frequency: formData.payment_frequency || 'monthly',
-      initial_advance: formData.initial_advance || 20,
-      retention_percentage: formData.retention_percentage || 5,
-      priority: formData.priority || 'medium',
-      project_type: formData.project_type || 'construction',
-      sector: formData.sector || null,
-      permit_number: formData.permit_number || null,
-      address: formData.address || null,
-      latitude: formData.latitude || null,
-      longitude: formData.longitude || null,
-      area_sqm: formData.area_sqm || null,
-      site_details: formData.site_details || null,
-      advance_percentage: formData.advance_percentage || 20,
-      client_name: formData.client_name || null,
-      main_contractor: nullIfEmpty(formData.main_contractor),
-      project_manager_id: nullIfEmpty(formData.project_manager_id),
-      technical_manager_id: nullIfEmpty(formData.technical_manager_id),
-      supervisor_id: nullIfEmpty(formData.supervisor_id),
-      client_id: nullIfEmpty(formData.client_id),
-      workspace_id: nullIfEmpty(formData.workspace_id),
-      // Location-specific fields
-      geographic_zone: formData.geographic_zone || null,
-      terrain_type: formData.terrain_type || null,
-      environmental_constraints: formData.environmental_constraints || null,
-      has_utilities: formData.has_utilities || false,
-      requires_permits: formData.requires_permits || false
-    };
+  // Validate step data using unified mapper
+  validateStepData(formData: ProjectFormData, step: number): { valid: boolean; errors: string[] } {
+    return EntityToDTOMapper.validateStepData(formData, step);
+  }
+
+  // Save partial project data at a specific step
+  async saveStepData(
+    projectId: string | null,
+    formData: ProjectFormData,
+    step: number
+  ): Promise<{ success: boolean; projectId: string | null; error?: string }> {
+    try {
+      const dbData = this.mapFieldsToDB(formData, step);
+      
+      if (projectId) {
+        // Update existing project
+        const { error } = await supabase
+          .from('projects')
+          .update(dbData)
+          .eq('id', projectId);
+
+        if (error) throw error;
+        return { success: true, projectId };
+      } else {
+        // Create new project (only on step 1 with required fields)
+        const validation = this.validateStepData(formData, 1);
+        if (!validation.valid) {
+          return { success: false, projectId: null, error: validation.errors.join(', ') };
+        }
+
+        const { data, error } = await supabase
+          .from('projects')
+          .insert(dbData)
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        return { success: true, projectId: data.id };
+      }
+    } catch (error: any) {
+      console.error('Error saving step data:', error);
+      return { success: false, projectId, error: error.message };
+    }
+  }
+
+  // Save related data for specific steps
+  async saveStepRelatedData(
+    projectId: string,
+    step: number,
+    data: {
+      phases?: any[];
+      risks?: any[];
+      materials?: any[];
+      stakeholders?: any[];
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      switch (step) {
+        case 2: // Stakeholders
+          if (data.stakeholders?.length) {
+            await ProjectStakeholderService.updateProjectStakeholders(projectId, data.stakeholders, {});
+          }
+          break;
+
+        case 4: // Phases
+          if (data.phases?.length) {
+            // Delete existing phases and insert new ones
+            await supabase.from('project_phases').delete().eq('project_id', projectId);
+            const phasesToInsert = data.phases.map((phase, index) => ({
+              project_id: projectId,
+              phase_name: phase.title || phase.name,
+              description: phase.description,
+              start_date: phase.startDate || phase.start_date,
+              end_date: phase.endDate || phase.end_date,
+              status: phase.status || 'pending',
+              estimated_cost: phase.budget || phase.estimated_cost || 0,
+              progress: phase.progress || 0,
+              order_index: index
+            }));
+            await supabase.from('project_phases').insert(phasesToInsert);
+          }
+          break;
+
+        case 5: // Risks
+          if (data.risks?.length) {
+            await supabase.from('project_risks').delete().eq('project_id', projectId);
+            const risksToInsert = data.risks.map(risk => ({
+              project_id: projectId,
+              risk_title: risk.title || risk.category,
+              risk_description: risk.description,
+              risk_level: risk.category || 'medium',
+              probability: risk.probability,
+              impact: risk.impact,
+              mitigation_strategy: risk.mitigationPlan,
+              status: risk.status || 'active'
+            }));
+            await supabase.from('project_risks').insert(risksToInsert);
+          }
+          break;
+
+        case 3: // Materials (part of planning)
+          if (data.materials?.length) {
+            await supabase.from('project_materials').delete().eq('project_id', projectId);
+            const materialsToInsert = data.materials.map(m => ({
+              project_id: projectId,
+              material_id: m.materialId,
+              quantity: m.quantity
+            }));
+            await supabase.from('project_materials').insert(materialsToInsert);
+          }
+          break;
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error saving related data:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   // Load project data
