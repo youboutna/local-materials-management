@@ -343,54 +343,58 @@ export class EntityToDTOMapper {
       project_reference: entity.project_reference || '',
       description: entity.description || '',
       budget: entity.budget?.toString() || '',
-      estimated_duration_days: entity.estimated_duration_days?.toString() || '',
+      // Map DB estimated_days to form estimated_duration_days
+      estimated_duration_days: (entity.estimated_days || entity.estimated_duration_days)?.toString() || '',
       currency: entity.currency || 'MRU',
       status: mapStatus(entity.status),
       start_date: formatDate(entity.start_date),
       end_date: formatDate(entity.end_date),
       startDate: formatDate(entity.start_date),
       endDate: formatDate(entity.end_date),
-      // Payment
+      // Payment - map DB initial_advance_percentage to form initial_advance
       payment_mode: entity.payment_mode || 'progressive',
       payment_frequency: entity.payment_frequency || 'monthly',
-      initial_advance: entity.initial_advance || 20,
+      initial_advance: entity.initial_advance_percentage || entity.initial_advance || 20,
       retention_percentage: entity.retention_percentage || 5,
-      advance_percentage: entity.advance_percentage || 20,
+      advance_percentage: entity.initial_advance_percentage || 20,
       // Meta
       priority: entity.priority || 'medium',
       project_type: entity.project_type || 'construction',
       sector: entity.sector || '',
       permit_number: entity.permit_number || '',
       progress: entity.progress || 0,
-      // Location
-      address: entity.address || entity.location || '',
-      location: entity.location || entity.address || '',
-      latitude: entity.latitude || entity.coordinates_latitude,
-      longitude: entity.longitude || entity.coordinates_longitude,
-      area_sqm: entity.area_sqm,
-      site_details: entity.site_details || '',
+      team_size: entity.team_size || 1,
+      // Location - map DB columns to form fields
+      address: entity.location || '',
+      location: entity.location || '',
+      latitude: entity.coordinates_latitude,
+      longitude: entity.coordinates_longitude,
       geographic_zone: entity.geographic_zone || '',
       terrain_type: entity.terrain_type || '',
       environmental_constraints: entity.environmental_constraints || '',
       has_utilities: entity.has_utilities || false,
       requires_permits: entity.requires_permits || false,
-      // Stakeholders
-      client_name: entity.client_name || '',
+      // JSON location data
+      adresse: entity.adresse,
+      localisation: entity.localisation,
+      forme: entity.forme,
+      // Stakeholders - map DB project_responsable_id to form project_manager_id
       main_contractor: entity.main_contractor || '',
-      engineering_consultant: entity.engineering_consultant || '',
-      project_manager_id: entity.project_manager_id,
-      technical_manager_id: entity.technical_manager_id,
-      supervisor_id: entity.supervisor_id,
-      client_id: entity.client_id,
-      workspace_id: entity.workspace_id,
+      project_manager_id: entity.project_responsable_id,
+      project_responsable_id: entity.project_responsable_id,
       // Financing
-      financing_source: entity.financing_source || '',
+      financing_source: entity.financing_source || entity.funding_source || '',
       market_type: entity.market_type || '',
       selection_mode: entity.selection_mode || '',
-      // Financial instruments
-      bank_guarantee_required: entity.bank_guarantee_required || false,
-      bank_guarantee_amount: entity.bank_guarantee_amount,
-      insurance_required: entity.insurance_required || false
+      // Workflow flags
+      requires_consultant_validation: entity.requires_consultant_validation || false,
+      requires_ministry_approval: entity.requires_ministry_approval || false,
+      // Phases
+      current_phase: entity.current_phase || '',
+      current_stage: entity.current_stage || '',
+      // Payment config
+      allows_initial_payment: entity.allows_initial_payment || false,
+      initial_payment_percentage: entity.initial_payment_percentage || 0
     };
   }
 
@@ -403,58 +407,63 @@ export class EntityToDTOMapper {
       return value;
     };
 
-    // Base fields always included
+    // Base fields always included (required fields with defaults)
     const baseFields = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title || 'Nouveau projet',
+      description: formData.description || '',
+      location: formData.address || formData.location || 'Non spécifié',
       status: formData.status || 'planning',
-      progress: formData.progress || 0
+      progress: formData.progress || 0,
+      thumbnail: formData.thumbnail || '/placeholder.svg',
+      team_size: formData.team_size || 1
     };
 
-    // Step 1: Basic info
+    // Step 1: Basic info - map form fields to actual DB columns
     const step1Fields = {
       ...baseFields,
       project_reference: nullIfEmpty(formData.project_reference),
       budget: parseFloat(formData.budget || '0') || 0,
-      estimated_duration_days: parseInt(formData.estimated_duration_days || '0') || null,
+      // Map form estimated_duration_days to DB estimated_days
+      estimated_days: parseInt(formData.estimated_duration_days || '0') || null,
       currency: formData.currency || 'MRU',
-      start_date: nullIfEmpty(formData.start_date || formData.startDate),
+      start_date: nullIfEmpty(formData.start_date || formData.startDate) || new Date().toISOString().split('T')[0],
       end_date: nullIfEmpty(formData.end_date || formData.endDate),
       payment_mode: formData.payment_mode || 'progressive',
       payment_frequency: formData.payment_frequency || 'monthly',
-      initial_advance: formData.initial_advance || 20,
+      // Map form initial_advance to DB initial_advance_percentage
+      initial_advance_percentage: formData.initial_advance || 20,
       retention_percentage: formData.retention_percentage || 5,
       priority: formData.priority || 'medium',
       project_type: formData.project_type || 'construction',
       sector: nullIfEmpty(formData.sector),
       permit_number: nullIfEmpty(formData.permit_number),
       financing_source: nullIfEmpty(formData.financing_source),
+      funding_source: nullIfEmpty(formData.financing_source),
       market_type: nullIfEmpty(formData.market_type),
       selection_mode: nullIfEmpty(formData.selection_mode)
     };
 
-    // Step 2: Stakeholders
+    // Step 2: Stakeholders - map form project_manager_id to DB project_responsable_id
     const step2Fields = {
-      client_name: nullIfEmpty(formData.client_name),
       main_contractor: nullIfEmpty(formData.main_contractor),
-      engineering_consultant: nullIfEmpty(formData.engineering_consultant),
-      project_manager_id: nullIfEmpty(formData.project_manager_id),
-      technical_manager_id: nullIfEmpty(formData.technical_manager_id),
-      supervisor_id: nullIfEmpty(formData.supervisor_id),
-      client_id: nullIfEmpty(formData.client_id),
-      workspace_id: nullIfEmpty(formData.workspace_id)
+      // Map form project_manager_id to DB project_responsable_id
+      project_responsable_id: nullIfEmpty(formData.project_manager_id || formData.project_responsable_id),
+      requires_consultant_validation: formData.requires_consultant_validation || false,
+      requires_ministry_approval: formData.requires_ministry_approval || false
     };
 
-    // Step 3: Location
+    // Step 3: Location - map form fields to actual DB columns
     const step3Fields = {
-      address: nullIfEmpty(formData.address),
-      location: nullIfEmpty(formData.location || formData.address),
-      latitude: formData.latitude || null,
-      longitude: formData.longitude || null,
+      // Map form address to DB location
+      location: formData.address || formData.location || 'Non spécifié',
+      // Map form lat/lng to DB coordinates_latitude/longitude
       coordinates_latitude: formData.latitude || null,
       coordinates_longitude: formData.longitude || null,
-      area_sqm: formData.area_sqm || null,
-      site_details: nullIfEmpty(formData.site_details),
+      // JSON location data
+      adresse: formData.adresse || (formData.address ? { address: formData.address } : null),
+      localisation: formData.localisation || formData.shapeData?.shape || null,
+      forme: formData.forme || formData.shapeData?.shapeType || null,
+      // Location metadata
       geographic_zone: nullIfEmpty(formData.geographic_zone),
       terrain_type: nullIfEmpty(formData.terrain_type),
       environmental_constraints: nullIfEmpty(formData.environmental_constraints),
@@ -462,12 +471,11 @@ export class EntityToDTOMapper {
       requires_permits: formData.requires_permits || false
     };
 
-    // Step 6: Financial instruments
+    // Step 6: Payment workflow config
     const step6Fields = {
-      advance_percentage: formData.advance_percentage || 20,
-      bank_guarantee_required: formData.bank_guarantee_required || false,
-      bank_guarantee_amount: formData.bank_guarantee_amount || null,
-      insurance_required: formData.insurance_required || false
+      allows_initial_payment: formData.allows_initial_payment || false,
+      initial_payment_percentage: formData.initial_payment_percentage || 0,
+      payment_workflow_config: formData.payment_workflow_config || null
     };
 
     // Return based on step (undefined = all fields)
