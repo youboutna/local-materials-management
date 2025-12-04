@@ -4,7 +4,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationService } from './NotificationService';
 import { validateInsuranceCoverage } from './insuranceCertificateService';
-import { detectProjectDelays } from './bankGuaranteeService';
+import { BankGuaranteeService, detectProjectDelays } from './BankGuaranteeService';
 
 export interface PaymentBlockReason {
   reason: 'expired_insurance' | 'expired_guarantee' | 'project_delay' | 'compliance_issue';

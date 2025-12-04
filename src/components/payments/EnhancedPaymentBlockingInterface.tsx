@@ -73,7 +73,7 @@ import {
   getPaymentBlockHistory,
   PaymentValidationResult,
 } from "@/services/paymentBlockingService";
-import { detectProjectDelays } from "@/services/bankGuaranteeService";
+import { BankGuaranteeService, detectProjectDelays } from "@/services/BankGuaranteeService";
 import { createPaymentControlAction } from "@/services/paymentControlActionService";
 import ProjectSelector from "@/components/selectors/ProjectSelector";
 import SupplierSelector from "@/components/suppliers/SupplierSelector";

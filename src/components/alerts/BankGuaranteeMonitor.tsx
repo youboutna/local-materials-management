@@ -8,10 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePagination } from "@/hooks/usePagination";
 import { supabase } from "@/integrations/supabase/client";
 import { createBankGuaranteeAction } from "@/services/bankGuaranteeActionService";
-import {
-  detectProjectDelays,
-  triggerBankGuaranteeNotification,
-} from "@/services/bankGuaranteeService";
+import { BankGuaranteeService, detectProjectDelays, triggerBankGuaranteeNotification } from "@/services/BankGuaranteeService";
 import {
   AlertTriangle,
   Clock,

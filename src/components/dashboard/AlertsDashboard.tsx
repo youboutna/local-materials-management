@@ -12,7 +12,7 @@ import {
   TrendingDown,
   Bell,
 } from "lucide-react";
-import { detectProjectDelays } from "@/services/bankGuaranteeService";
+import { BankGuaranteeService, detectProjectDelays } from "@/services/BankGuaranteeService";
 import { DELAY_THRESHOLDS } from "@/types/project";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
