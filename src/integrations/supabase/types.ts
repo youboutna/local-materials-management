@@ -3357,9 +3357,11 @@ export type Database = {
         Row: {
           adresse: Json | null
           allows_initial_payment: boolean | null
+          area_sqm: number | null
           attribution_date: string | null
           budget: number
           check_schedule_last_run: Json | null
+          client_id: string | null
           completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
@@ -3369,7 +3371,9 @@ export type Database = {
           current_phase: string | null
           current_stage: string | null
           description: string
+          donor_organization: string | null
           end_date: string | null
+          engineering_consultant_id: string | null
           environmental_constraints: string | null
           estimated_days: number | null
           financing_source: string | null
@@ -3402,20 +3406,26 @@ export type Database = {
           retention_percentage: number | null
           sector: string | null
           selection_mode: string | null
+          site_details: string | null
           start_date: string
           status: string
+          supervisor_id: string | null
           team_size: number
+          technical_manager_id: string | null
           terrain_type: string | null
           thumbnail: string
           title: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           adresse?: Json | null
           allows_initial_payment?: boolean | null
+          area_sqm?: number | null
           attribution_date?: string | null
           budget: number
           check_schedule_last_run?: Json | null
+          client_id?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3425,7 +3435,9 @@ export type Database = {
           current_phase?: string | null
           current_stage?: string | null
           description: string
+          donor_organization?: string | null
           end_date?: string | null
+          engineering_consultant_id?: string | null
           environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
@@ -3458,20 +3470,26 @@ export type Database = {
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
+          site_details?: string | null
           start_date: string
           status: string
+          supervisor_id?: string | null
           team_size: number
+          technical_manager_id?: string | null
           terrain_type?: string | null
           thumbnail?: string
           title: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           adresse?: Json | null
           allows_initial_payment?: boolean | null
+          area_sqm?: number | null
           attribution_date?: string | null
           budget?: number
           check_schedule_last_run?: Json | null
+          client_id?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3481,7 +3499,9 @@ export type Database = {
           current_phase?: string | null
           current_stage?: string | null
           description?: string
+          donor_organization?: string | null
           end_date?: string | null
+          engineering_consultant_id?: string | null
           environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
@@ -3514,21 +3534,67 @@ export type Database = {
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
+          site_details?: string | null
           start_date?: string
           status?: string
+          supervisor_id?: string | null
           team_size?: number
+          technical_manager_id?: string | null
           terrain_type?: string | null
           thumbnail?: string
           title?: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_full"
             referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "projects_engineering_consultant_id_fkey"
+            columns: ["engineering_consultant_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_project_responsable_id_fkey"
+            columns: ["project_responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_technical_manager_id_fkey"
+            columns: ["technical_manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
         ]
       }

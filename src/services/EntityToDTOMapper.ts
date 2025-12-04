@@ -374,18 +374,27 @@ export class EntityToDTOMapper {
       environmental_constraints: entity.environmental_constraints || '',
       has_utilities: entity.has_utilities || false,
       requires_permits: entity.requires_permits || false,
+      area_sqm: entity.area_sqm?.toString() || '',
+      site_details: entity.site_details || '',
       // JSON location data
       adresse: entity.adresse,
       localisation: entity.localisation,
       forme: entity.forme,
-      // Stakeholders - map DB project_responsable_id to form project_manager_id
+      // Stakeholders - map DB IDs to form fields
       main_contractor: entity.main_contractor || '',
       project_manager_id: entity.project_responsable_id,
       project_responsable_id: entity.project_responsable_id,
+      client_id: entity.client_id,
+      engineering_consultant_id: entity.engineering_consultant_id,
+      technical_manager_id: entity.technical_manager_id,
+      supervisor_id: entity.supervisor_id,
       // Financing
       financing_source: entity.financing_source || entity.funding_source || '',
       market_type: entity.market_type || '',
       selection_mode: entity.selection_mode || '',
+      donor_organization: entity.donor_organization || '',
+      // Workspace
+      workspace_id: entity.workspace_id,
       // Workflow flags
       requires_consultant_validation: entity.requires_consultant_validation || false,
       requires_ministry_approval: entity.requires_ministry_approval || false,
@@ -443,11 +452,15 @@ export class EntityToDTOMapper {
       selection_mode: nullIfEmpty(formData.selection_mode)
     };
 
-    // Step 2: Stakeholders - map form project_manager_id to DB project_responsable_id
+    // Step 2: Stakeholders - map form fields to DB columns
     const step2Fields = {
       main_contractor: nullIfEmpty(formData.main_contractor),
       // Map form project_manager_id to DB project_responsable_id
       project_responsable_id: nullIfEmpty(formData.project_manager_id || formData.project_responsable_id),
+      client_id: nullIfEmpty(formData.client_id),
+      engineering_consultant_id: nullIfEmpty(formData.engineering_consultant_id),
+      technical_manager_id: nullIfEmpty(formData.technical_manager_id),
+      supervisor_id: nullIfEmpty(formData.supervisor_id),
       requires_consultant_validation: formData.requires_consultant_validation || false,
       requires_ministry_approval: formData.requires_ministry_approval || false
     };
@@ -468,14 +481,18 @@ export class EntityToDTOMapper {
       terrain_type: nullIfEmpty(formData.terrain_type),
       environmental_constraints: nullIfEmpty(formData.environmental_constraints),
       has_utilities: formData.has_utilities || false,
-      requires_permits: formData.requires_permits || false
+      requires_permits: formData.requires_permits || false,
+      area_sqm: parseFloat(formData.area_sqm || '0') || null,
+      site_details: nullIfEmpty(formData.site_details)
     };
 
-    // Step 6: Payment workflow config
+    // Step 6: Payment workflow config + financing
     const step6Fields = {
       allows_initial_payment: formData.allows_initial_payment || false,
       initial_payment_percentage: formData.initial_payment_percentage || 0,
-      payment_workflow_config: formData.payment_workflow_config || null
+      payment_workflow_config: formData.payment_workflow_config || null,
+      donor_organization: nullIfEmpty(formData.donor_organization),
+      workspace_id: nullIfEmpty(formData.workspace_id)
     };
 
     // Return based on step (undefined = all fields)
