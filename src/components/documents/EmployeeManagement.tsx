@@ -362,12 +362,12 @@ const EmployeeManagement = () => {
           </div>
 
           {employees.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               {t('documents.employee.no_employees')}
             </div>
           )}
 
-          {totalPages > 1 && (
+          {employees.length > 0 && (
             <div className="mt-6">
               <PaginationControls
                 currentPage={currentPage}
