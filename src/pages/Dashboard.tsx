@@ -296,10 +296,10 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <Tabs defaultValue="actions" className="w-full">
+            <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="actions">{t('dashboard.management_tabs.actions')}</TabsTrigger>
                 <TabsTrigger value="overview">{t('dashboard.management_tabs.overview')}</TabsTrigger>
+                <TabsTrigger value="actions">{t('dashboard.management_tabs.actions')}</TabsTrigger>
                 <TabsTrigger value="monitoring">{t('dashboard.management_tabs.monitoring')}</TabsTrigger>
                 <TabsTrigger value="alerts">{t('dashboard.management_tabs.alerts')}</TabsTrigger>
               </TabsList>
