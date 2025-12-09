@@ -1918,6 +1918,57 @@ export type Database = {
           },
         ]
       }
+      monitoring_alerts: {
+        Row: {
+          alert_type: string
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          priority: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          station_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          station_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          station_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -3904,6 +3955,263 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          current_value: number | null
+          description: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          stock_id: string
+          threshold_id: string | null
+          threshold_value: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          stock_id: string
+          threshold_id?: string | null
+          threshold_value?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          stock_id?: string
+          threshold_id?: string | null
+          threshold_value?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_threshold_id_fkey"
+            columns: ["threshold_id"]
+            isOneToOne: false
+            referencedRelation: "stock_thresholds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          destination: string | null
+          id: string
+          movement_date: string
+          movement_type: string
+          notes: string | null
+          quantity: number
+          recorded_by: string | null
+          reference: string | null
+          stock_id: string
+          supplier: string | null
+          total_value: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          movement_date?: string
+          movement_type: string
+          notes?: string | null
+          quantity: number
+          recorded_by?: string | null
+          reference?: string | null
+          stock_id: string
+          supplier?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          movement_date?: string
+          movement_type?: string
+          notes?: string | null
+          quantity?: number
+          recorded_by?: string | null
+          reference?: string | null
+          stock_id?: string
+          supplier?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_thresholds: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          depot: string | null
+          id: string
+          is_active: boolean | null
+          notification_enabled: boolean | null
+          product: string | null
+          stock_id: string | null
+          threshold_type: string
+          threshold_unit: string
+          threshold_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          depot?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_enabled?: boolean | null
+          product?: string | null
+          stock_id?: string | null
+          threshold_type: string
+          threshold_unit?: string
+          threshold_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          depot?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_enabled?: boolean | null
+          product?: string | null
+          stock_id?: string | null
+          threshold_type?: string
+          threshold_unit?: string
+          threshold_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_thresholds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_thresholds_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stocks: {
+        Row: {
+          capacity: number
+          created_at: string
+          current_stock: number
+          depot: string
+          id: string
+          last_update: string | null
+          notes: string | null
+          product: string
+          rotation_rate: number | null
+          status: string
+          trend: string | null
+          updated_at: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          current_stock?: number
+          depot: string
+          id?: string
+          last_update?: string | null
+          notes?: string | null
+          product: string
+          rotation_rate?: number | null
+          status?: string
+          trend?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          current_stock?: number
+          depot?: string
+          id?: string
+          last_update?: string | null
+          notes?: string | null
+          product?: string
+          rotation_rate?: number | null
+          status?: string
+          trend?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       submission_access_logs: {
         Row: {
