@@ -19,6 +19,16 @@ export const useLanguage = () => {
 };
 export const translations = {
     fr: {
+        common: {
+            error: "Erreur",
+            success: "Succès",
+            info: "Information",
+            confirm_delete: "Confirmer la suppression",
+            yes: "Oui",
+            no: "Non"
+            ,loading: "Chargement...",
+            load_data: "Charger les données"
+        },
         locale: "Langue",
         currency: {
             mru: "MRU"
@@ -255,6 +265,15 @@ export const translations = {
                 total_requests: "Requêtes totales",
                 error_rate: "Taux d'erreur",
                 recent_errors: "Erreurs récentes",
+                success_rate: "Taux de succès",
+                avg_response_time: "Temps de réponse moyen",
+                recent_errors_desc: "Dernières erreurs HTTP détectées dans l'application",
+                no_recent_errors: "Aucune erreur récente",
+                error_alert_message: "Taux d'erreur élevé détecté. Vérifiez la connectivité réseau et l'état des services.",
+                status_success: "Succès",
+                status_redirect: "Redirection",
+                status_client_error: "Erreur Client",
+                status_server_error: "Erreur Serveur",
                 guarantees: "Garanties Bancaires",
                 alerts_count: "Alertes",
                 expiring_soon: "Garanties expirant bientôt",
@@ -306,6 +325,12 @@ export const translations = {
             distribution_by_region: "Répartition par région",
             project_distribution: "Répartition des projets",
             no_geolocated_projects: "Aucun projet géolocalisé",
+            map_no_data: "Aucune donnée géolocalisée à afficher",
+            legend_title: "Légende",
+            material_label: "Matériau",
+            materials_label: "Matériaux",
+            start_label: "Début",
+            end_label: "Fin",
             dev_mode: "Mode développement"
         },
         management_actions: {
@@ -363,6 +388,51 @@ export const translations = {
             acknowledge: "Acquitter",
             acknowledged_note: "Pris en compte depuis le monitoring",
             loading_project: "Chargement du projet et de l'organisation..."
+            ,
+            load_delays_error: "Impossible de charger les retards de projet",
+            not_found_for_project: "Aucune garantie bancaire trouvée pour ce projet",
+            bank_notified_prefix: "La banque a été notifiée du retard sur",
+            internal_notifications_sent: "notifications internes envoyées",
+            notification_send_failed: "Échec de l'envoi de la notification bancaire",
+            project_not_found: "Projet introuvable",
+            critical_projects: "projet(s) en retard critique",
+            critical_alerts_desc: "Des retards dépassent les seuils contractuels. Action immédiate requise.",
+            no_critical_delays_title: "Aucun retard critique détecté",
+            no_critical_delays_desc: "Tous les projets respectent les délais contractuels.",
+            notify_sending: "Envoi...",
+            notify_bank: "Notifier Banque",
+            view_project: "Voir Projet",
+            delay_label: "Retard",
+            days_label: "jours",
+            contractor_label: "Entrepreneur",
+            planned_date_label: "Date prévue",
+            milestones_missed_label: "Jalons manqués",
+            escalation_thresholds_title: "Seuils d'Escalade",
+            delay_percentage_suffix: "de retard",
+            severity_labels: {
+                delay_alert: "Alerte Retard",
+                bank_notification: "Notification Bancaire",
+                guarantee_trigger: "Déclenchement Garantie"
+            },
+            escalation: {
+                legal: "Escalade Juridique"
+            },
+            actions: {
+                task_assignment_title: "Gestion retard projet",
+                task_assignment_msg_prefix: "Veuillez traiter le retard de",
+                hierarchy_notification_title: "Alerte retard critique",
+                hierarchy_notification_msg_prefix: "Le projet",
+                sms_title: "SMS retard projet",
+                sms_msg_prefix: "SMS: Retard",
+                call_title: "Appel retard projet",
+                call_msg_prefix: "Appel concernant le retard du projet",
+                email_title: "Email retard projet",
+                email_msg_prefix: "Email concernant le retard du projet",
+                mail_title: "Courrier retard projet",
+                mail_msg_prefix: "Courrier concernant le retard du projet"
+            },
+            unknown_action_type: "Type d'action non reconnu",
+            action_created_success: "{title} créée avec succès",
         },
         insurance_management: {
             title: "Gestion des Assurances",
@@ -1361,6 +1431,16 @@ export const translations = {
     },
 
     ar: {
+        common: {
+            error: "خطأ",
+            success: "نجاح",
+            info: "معلومات",
+            confirm_delete: "تأكيد الحذف",
+            yes: "نعم",
+            no: "لا",
+            loading: "جار التحميل...",
+            load_data: "تحميل البيانات"
+        },
         employee: {
                 add: "إضافة موظف",
                 add_title: "إضافة موظف جديد",
@@ -1622,6 +1702,15 @@ export const translations = {
                 total_requests: "إجمالي الطلبات",
                 error_rate: "معدل الأخطاء",
                 recent_errors: "الأخطاء الأخيرة",
+                success_rate: "معدل النجاح",
+                avg_response_time: "متوسط زمن الاستجابة",
+                recent_errors_desc: "آخر أخطاء HTTP المكتشفة في التطبيق",
+                no_recent_errors: "لا توجد أخطاء حديثة",
+                error_alert_message: "تم اكتشاف معدل أخطاء مرتفع. تحقق من اتصال الشبكة وحالة الخدمات.",
+                status_success: "نجاح",
+                status_redirect: "إعادة توجيه",
+                status_client_error: "خطأ من العميل",
+                status_server_error: "خطأ من الخادم",
                 guarantees: "الضمانات المصرفية",
                 alerts_count: "تنبيهات",
                 expiring_soon: "الضمانات المنتهية قريباً",
@@ -1673,8 +1762,15 @@ export const translations = {
             distribution_by_region: "التوزيع حسب المنطقة",
             project_distribution: "توزيع المشاريع",
             no_geolocated_projects: "لا توجد مشاريع محددة جغرافياً",
+            map_no_data: "لا توجد بيانات جغرافية للعرض",
+            legend_title: "وسيلة إيضاح",
+            material_label: "مادة",
+            materials_label: "مواد",
+            start_label: "بداية",
+            end_label: "نهاية",
             dev_mode: "وضع التطوير"
         },
+        
         management_actions: {
             loading: "جاري التحميل...",
             error_title: "خطأ",
@@ -2696,6 +2792,16 @@ export const translations = {
     },
 
     en: {
+        common: {
+            error: "Error",
+            success: "Success",
+            info: "Information",
+            confirm_delete: "Confirm delete",
+            yes: "Yes",
+            no: "No",
+            loading: "Loading...",
+            load_data: "Load data"
+        },
         employee: {
             add: "Ajouter un employé",
             add_title: "Ajouter un nouvel employé",
@@ -2951,6 +3057,15 @@ export const translations = {
                 total_requests: "Total requests",
                 error_rate: "Error rate",
                 recent_errors: "Recent errors",
+                success_rate: "Success rate",
+                avg_response_time: "Average response time",
+                recent_errors_desc: "Latest HTTP errors detected in the application",
+                no_recent_errors: "No recent errors",
+                error_alert_message: "High error rate detected. Check network connectivity and service health.",
+                status_success: "Success",
+                status_redirect: "Redirect",
+                status_client_error: "Client Error",
+                status_server_error: "Server Error",
                 guarantees: "Bank Guarantees",
                 alerts_count: "Alerts",
                 expiring_soon: "Expiring soon guarantees",
@@ -3002,6 +3117,12 @@ export const translations = {
             distribution_by_region: "Distribution by Region",
             project_distribution: "Project Distribution",
             no_geolocated_projects: "No geolocated projects",
+            map_no_data: "No geolocated data to display",
+            legend_title: "Legend",
+            material_label: "Material",
+            materials_label: "Materials",
+            start_label: "Start",
+            end_label: "End",
             dev_mode: "Development Mode"
         },
         management_actions: {
@@ -3058,7 +3179,51 @@ export const translations = {
             type: "Type",
             acknowledge: "Acknowledge",
             acknowledged_note: "Acknowledged from monitoring",
-            loading_project: "Loading project and organization..."
+            loading_project: "Loading project and organization...",
+            load_delays_error: "Failed to load project delays",
+            not_found_for_project: "No bank guarantee found for this project",
+            bank_notified_prefix: "Bank has been notified of delay on",
+            internal_notifications_sent: "internal notifications sent",
+            notification_send_failed: "Failed to send bank notification",
+            project_not_found: "Project not found",
+            critical_projects: "critical delayed project(s)",
+            critical_alerts_desc: "Delays exceed contractual thresholds. Immediate action required.",
+            no_critical_delays_title: "No critical delays detected",
+            no_critical_delays_desc: "All projects comply with contractual deadlines.",
+            notify_sending: "Sending...",
+            notify_bank: "Notify Bank",
+            view_project: "View Project",
+            delay_label: "Delay",
+            days_label: "days",
+            contractor_label: "Contractor",
+            planned_date_label: "Planned date",
+            milestones_missed_label: "Milestones missed",
+            escalation_thresholds_title: "Escalation Thresholds",
+            delay_percentage_suffix: "% delay",
+            severity_labels: {
+                delay_alert: "Delay Alert",
+                bank_notification: "Bank Notification",
+                guarantee_trigger: "Guarantee Trigger"
+            },
+            escalation: {
+                legal: "Legal Escalation"
+            },
+            actions: {
+                task_assignment_title: "Project delay handling",
+                task_assignment_msg_prefix: "Please handle the delay of",
+                hierarchy_notification_title: "Critical delay alert",
+                hierarchy_notification_msg_prefix: "The project",
+                sms_title: "Project delay SMS",
+                sms_msg_prefix: "SMS: Delay",
+                call_title: "Project delay call",
+                call_msg_prefix: "Call regarding project delay",
+                email_title: "Project delay email",
+                email_msg_prefix: "Email regarding project delay",
+                mail_title: "Project delay mail",
+                mail_msg_prefix: "Mail regarding project delay"
+            },
+            unknown_action_type: "Unknown action type",
+            action_created_success: "{title} created successfully",
         },
         insurance_management: {
             title: "Insurance Management",

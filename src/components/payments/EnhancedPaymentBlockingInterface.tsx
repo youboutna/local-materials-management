@@ -66,6 +66,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
 import {
   validatePaymentEligibility,
@@ -120,6 +121,7 @@ const EnhancedPaymentBlockingInterface = () => {
     missingDocuments: 0,
   });
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [recentPaymentBlocks, setRecentPaymentBlocks] = useState<any[]>([]);
 
@@ -228,12 +230,12 @@ const EnhancedPaymentBlockingInterface = () => {
 
       if (result.canProceed) {
         toast({
-          title: "Validation réussie",
+          title: t('common.success'),
           description: "Le paiement peut être traité",
         });
       } else {
         toast({
-          title: "Paiement bloqué",
+          title: t('common.error'),
           description: `${result.blockingReasons.length} problème(s) détecté(s)`,
           variant: "destructive",
         });
@@ -241,9 +243,9 @@ const EnhancedPaymentBlockingInterface = () => {
     } catch (error) {
       console.error("Error validating payment:", error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors de la validation du paiement",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -279,7 +281,7 @@ const EnhancedPaymentBlockingInterface = () => {
 
       if (result.success) {
         toast({
-          title: "Paiement effectué",
+          title: t('common.success'),
           description: `Paiement de ${values.amount} MRU traité avec succès`,
         });
         form.reset();
@@ -288,17 +290,17 @@ const EnhancedPaymentBlockingInterface = () => {
         setIsDialogOpen(false);
       } else {
         toast({
-          title: "Paiement bloqué",
+          title: t('common.error'),
           description: "Le paiement n'a pas pu être traité",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Error processing payment:", error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du traitement du paiement",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -313,7 +315,7 @@ const EnhancedPaymentBlockingInterface = () => {
     ]);
     setIsUploadDialogOpen(false);
     toast({
-      title: "Document ajouté",
+      title: t('common.success'),
       description: "Le document justificatif a été ajouté au paiement",
     });
   };
@@ -336,7 +338,7 @@ const EnhancedPaymentBlockingInterface = () => {
       const payment = recentPaymentBlocks.find((p) => p.id === paymentId);
       if (!payment) {
         toast({
-          title: "Erreur",
+          title: t('common.error'),
           description: "Paiement introuvable",
           variant: "destructive",
         });
@@ -391,10 +393,10 @@ const EnhancedPaymentBlockingInterface = () => {
           break;
         default:
           toast({
-            title: "Erreur",
-            description: "Type d'action non reconnu",
-            variant: "destructive",
-          });
+              title: t('common.error'),
+              description: "Type d'action non reconnu",
+              variant: "destructive",
+            });
           return;
       }
 
@@ -412,13 +414,13 @@ const EnhancedPaymentBlockingInterface = () => {
       });
 
       toast({
-        title: "Action créée",
+        title: t('common.success'),
         description: `${title} créée avec succès`,
       });
     } catch (error: any) {
       console.error("Error creating payment action:", error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: `Impossible de créer l'action: ${
           error?.message || "Erreur inconnue"
         }`,

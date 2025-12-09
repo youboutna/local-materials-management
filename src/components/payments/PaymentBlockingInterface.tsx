@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Shield, AlertTriangle, DollarSign, Clock, Ban, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   validatePaymentEligibility, 
   attemptPayment, 
@@ -43,6 +44,7 @@ const PaymentBlockingInterface = () => {
     missingDocuments: 0
   });
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const loadStats = async () => {
@@ -137,9 +139,9 @@ const PaymentBlockingInterface = () => {
       );
       setValidationResult(result);
       
-      if (result.canProceed) {
+        if (result.canProceed) {
         toast({
-          title: "Validation réussie",
+          title: t('common.success'),
           description: "Le paiement peut être traité"
         });
       } else {
@@ -152,7 +154,7 @@ const PaymentBlockingInterface = () => {
     } catch (error) {
       console.error('Error validating payment:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors de la validation du paiement",
         variant: "destructive"
       });
@@ -176,9 +178,9 @@ const PaymentBlockingInterface = () => {
         }
       );
 
-      if (result.success) {
+        if (result.success) {
         toast({
-          title: "Paiement effectué",
+          title: t('common.success'),
           description: `Paiement de ${values.amount} MRU traité avec succès`
         });
         form.reset();
@@ -194,7 +196,7 @@ const PaymentBlockingInterface = () => {
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du traitement du paiement",
         variant: "destructive"
       });

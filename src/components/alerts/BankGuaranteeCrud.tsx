@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, AlertTriangle, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
@@ -46,6 +47,7 @@ const BankGuaranteeCrud: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     project_id: '',
@@ -130,7 +132,7 @@ const BankGuaranteeCrud: React.FC = () => {
     
     if (!formData.project_id || !formData.contractor_id || !formData.bank_name) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
@@ -160,7 +162,7 @@ const BankGuaranteeCrud: React.FC = () => {
         setGuarantees(prev => prev.map(g => g.id === selectedGuarantee.id ? updatedGuarantee : g));
         
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Garantie bancaire mise à jour avec succès",
         });
       } else {
@@ -186,7 +188,7 @@ const BankGuaranteeCrud: React.FC = () => {
         setGuarantees(prev => [...prev, data]);
         
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Garantie bancaire créée avec succès",
         });
       }
@@ -195,7 +197,7 @@ const BankGuaranteeCrud: React.FC = () => {
       resetForm();
     } catch (error) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Une erreur est survenue",
         variant: "destructive",
       });
@@ -206,7 +208,7 @@ const BankGuaranteeCrud: React.FC = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
       setGuarantees(prev => prev.filter(g => g.id !== guaranteeId));
       toast({
-        title: "Succès",
+        title: t('common.success'),
         description: "Garantie bancaire supprimée avec succès",
       });
     }

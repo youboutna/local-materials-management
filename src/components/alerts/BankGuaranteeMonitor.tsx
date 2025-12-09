@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
 import { supabase } from "@/integrations/supabase/client";
 import { createBankGuaranteeAction } from "@/services/bankGuaranteeActionService";
@@ -25,6 +26,7 @@ const BankGuaranteeMonitor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const {
     currentData: paginatedDelays,
@@ -53,12 +55,12 @@ const BankGuaranteeMonitor: React.FC = () => {
       );
       setDelays(criticalDelays);
     } catch (error) {
-      console.error("Error loading delays:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les retards de projet",
-        variant: "destructive",
-      });
+        console.error("Error loading delays:", error);
+        toast({
+          title: t('common.error'),
+          description: t('bank_guarantee.load_delays_error'),
+          variant: "destructive",
+        });
     } finally {
       setLoading(false);
     }
@@ -75,15 +77,15 @@ const BankGuaranteeMonitor: React.FC = () => {
         .eq("status", "active")
         .single();
 
-      if (guaranteeError) {
-        console.error("Error fetching bank guarantee:", guaranteeError);
-        toast({
-          title: "Erreur",
-          description: "Aucune garantie bancaire trouvée pour ce projet",
-          variant: "destructive",
-        });
-        return;
-      }
+        if (guaranteeError) {
+          console.error("Error fetching bank guarantee:", guaranteeError);
+          toast({
+            title: t('common.error'),
+            description: t('bank_guarantee.not_found_for_project'),
+            variant: "destructive",
+          });
+          return;
+        }
 
       const bankGuaranteeData = {
         projectId: delay.projectId,
@@ -102,8 +104,8 @@ const BankGuaranteeMonitor: React.FC = () => {
       );
 
       toast({
-        title: "Notification bancaire envoyée",
-        description: `La banque a été notifiée du retard sur "${delay.projectName}". ${result.notificationsSent} notifications internes envoyées.`,
+        title: t('common.success'),
+        description: `${t('bank_guarantee.bank_notified_prefix')} "${delay.projectName}". ${result.notificationsSent} ${t('bank_guarantee.internal_notifications_sent')}.`,
       });
 
       // Remove from current delays list
@@ -111,8 +113,8 @@ const BankGuaranteeMonitor: React.FC = () => {
     } catch (error) {
       console.error("Error triggering bank notification:", error);
       toast({
-        title: "Erreur",
-        description: "Échec de l'envoi de la notification bancaire",
+        title: t('common.error'),
+        description: t('bank_guarantee.notification_send_failed'),
         variant: "destructive",
       });
     } finally {
@@ -128,8 +130,8 @@ const BankGuaranteeMonitor: React.FC = () => {
       const delay = delays.find((d) => d.projectId === projectId);
       if (!delay) {
         toast({
-          title: "Erreur",
-          description: "Projet introuvable",
+          title: t('common.error'),
+          description: t('bank_guarantee.project_not_found'),
           variant: "destructive",
         });
         return;
@@ -146,35 +148,35 @@ const BankGuaranteeMonitor: React.FC = () => {
 
       switch (actionType) {
         case "task_assignment":
-          title = "Gestion retard projet";
-          message = `Veuillez traiter le retard de ${delay.delayDays} jours sur le projet ${delay.projectName}`;
+          title = t('bank_guarantee.actions.task_assignment_title');
+          message = `${t('bank_guarantee.actions.task_assignment_msg_prefix')} ${delay.delayDays} ${t('bank_guarantee.days_label')} - ${delay.projectName}`;
           break;
         case "hierarchy_notification":
-          title = "Alerte retard critique";
-          message = `Le projet ${delay.projectName} accuse un retard de ${delay.delayPercentage}%`;
+          title = t('bank_guarantee.actions.hierarchy_notification_title');
+          message = `${t('bank_guarantee.actions.hierarchy_notification_msg_prefix')} ${delay.projectName} ${t('bank_guarantee.delay_percent_prefix')} ${delay.delayPercentage}%`;
           break;
         case "sms":
-          title = "SMS retard projet";
-          message = `SMS: Retard ${delay.delayDays} jours - ${delay.projectName}`;
+          title = t('bank_guarantee.actions.sms_title');
+          message = `${t('bank_guarantee.actions.sms_msg_prefix')} ${delay.delayDays} ${t('bank_guarantee.days_label')} - ${delay.projectName}`;
           break;
         case "call":
-          title = "Appel retard projet";
-          message = `Appel concernant le retard du projet ${delay.projectName}`;
+          title = t('bank_guarantee.actions.call_title');
+          message = `${t('bank_guarantee.actions.call_msg_prefix')} ${delay.projectName}`;
           break;
         case "email":
-          title = "Email retard projet";
-          message = `Email concernant le retard du projet ${delay.projectName}`;
+          title = t('bank_guarantee.actions.email_title');
+          message = `${t('bank_guarantee.actions.email_msg_prefix')} ${delay.projectName}`;
           break;
         case "mail":
-          title = "Courrier retard projet";
-          message = `Courrier concernant le retard du projet ${delay.projectName}`;
+          title = t('bank_guarantee.actions.mail_title');
+          message = `${t('bank_guarantee.actions.mail_msg_prefix')} ${delay.projectName}`;
           break;
         default:
           toast({
-            title: "Erreur",
-            description: "Type d'action non reconnu",
-            variant: "destructive",
-          });
+              title: t('common.error'),
+              description: t('bank_guarantee.unknown_action_type'),
+              variant: "destructive",
+            });
           return;
       }
 
@@ -192,13 +194,13 @@ const BankGuaranteeMonitor: React.FC = () => {
       });
 
       toast({
-        title: "Action créée",
-        description: `${title} créée avec succès`,
+        title: t('common.success'),
+        description: t('bank_guarantee.action_created_success', { title }),
       });
     } catch (error: any) {
       console.error("Error creating bank guarantee action:", error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: `Impossible de créer l'action: ${
           error?.message || "Erreur inconnue"
         }`,
@@ -216,10 +218,10 @@ const BankGuaranteeMonitor: React.FC = () => {
 
   const getSeverityLabel = (delayPercentage: number) => {
     if (delayPercentage >= DELAY_THRESHOLDS.GUARANTEE_TRIGGER)
-      return "GARANTIE À DÉCLENCHER";
+      return t('bank_guarantee.severity_labels.guarantee_trigger');
     if (delayPercentage >= DELAY_THRESHOLDS.BANK_NOTIFICATION)
-      return "NOTIFICATION BANCAIRE";
-    return "ALERTE RETARD";
+      return t('bank_guarantee.severity_labels.bank_notification');
+    return t('bank_guarantee.severity_labels.delay_alert');
   };
 
   if (loading) {
@@ -239,16 +241,16 @@ const BankGuaranteeMonitor: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            Surveillance Garanties Bancaires
-          </CardTitle>
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              {t('bank_guarantee.title')}
+            </CardTitle>
         </CardHeader>
         <CardContent>
           {delays.length === 0 ? (
             <Alert>
-              <AlertTitle>Aucun retard critique détecté</AlertTitle>
+              <AlertTitle>{t('bank_guarantee.no_critical_delays_title')}</AlertTitle>
               <AlertDescription>
-                Tous les projets respectent les délais contractuels.
+                {t('bank_guarantee.no_critical_delays_desc')}
               </AlertDescription>
             </Alert>
           ) : (
@@ -256,11 +258,10 @@ const BankGuaranteeMonitor: React.FC = () => {
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>
-                  ⚠️ {delays.length} projet(s) en retard critique
+                  {`⚠️ ${delays.length} ${t('bank_guarantee.critical_projects')}`}
                 </AlertTitle>
                 <AlertDescription>
-                  Des retards dépassent les seuils contractuels. Action
-                  immédiate requise.
+                  {t('bank_guarantee.critical_alerts_desc')}
                 </AlertDescription>
               </Alert>
 
@@ -273,7 +274,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">
+                            <h3 className="font-semibold text-lg">
                             {delay.projectName}
                           </h3>
                           <Badge
@@ -287,33 +288,29 @@ const BankGuaranteeMonitor: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span>
-                              Retard: {delay.delayDays} jours (
-                              {delay.delayPercentage}%)
+                              {t('bank_guarantee.delay_label')}: {delay.delayDays} {t('bank_guarantee.days_label')} ({delay.delayPercentage}%)
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <span>Entrepreneur: {delay.contractorName}</span>
+                            <span>{t('bank_guarantee.contractor_label')}: {delay.contractorName}</span>
                           </div>
                         </div>
 
                         <div className="mt-3 p-3 bg-muted rounded-lg">
                           <p className="text-sm text-muted-foreground">
-                            <strong>Date prévue:</strong>{" "}
-                            {new Date(delay.plannedEndDate).toLocaleDateString(
-                              "fr-FR"
-                            )}
+                            <strong>{t('bank_guarantee.planned_date_label')}:</strong>{" "}
+                            {new Date(delay.plannedEndDate).toLocaleDateString("fr-FR")}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            <strong>Jalons manqués:</strong>{" "}
+                            <strong>{t('bank_guarantee.milestones_missed_label')}:</strong>{" "}
                             {delay.milestonesMissed}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-                        {delay.delayPercentage >=
-                          DELAY_THRESHOLDS.BANK_NOTIFICATION && (
+                        {delay.delayPercentage >= DELAY_THRESHOLDS.BANK_NOTIFICATION && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -322,9 +319,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                             className="flex items-center gap-2"
                           >
                             <Send className="h-4 w-4" />
-                            {processing === delay.projectId
-                              ? "Envoi..."
-                              : "Notifier Banque"}
+                            {processing === delay.projectId ? t('bank_guarantee.notify_sending') : t('bank_guarantee.notify_bank')}
                           </Button>
                         )}
 
@@ -334,7 +329,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                             className="flex items-center gap-2"
                           >
                             <ExternalLink className="h-4 w-4" />
-                            Voir Projet
+                            {t('bank_guarantee.view_project')}
                           </Link>
                         </Button>
 
@@ -370,32 +365,32 @@ const BankGuaranteeMonitor: React.FC = () => {
       {/* Seuils d'escalade */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Seuils d'Escalade</CardTitle>
+          <CardTitle className="text-sm">{t('bank_guarantee.escalation_thresholds_title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
-              <div className="font-medium">Alerte Retard</div>
+              <div className="font-medium">{t('bank_guarantee.severity.delay_alert')}</div>
               <div className="text-muted-foreground">
-                ≥ {DELAY_THRESHOLDS.WARNING}% de retard
+                ≥ {DELAY_THRESHOLDS.WARNING}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
             <div className="p-2 bg-orange-50 rounded border-l-4 border-orange-400">
-              <div className="font-medium">Notification Bancaire</div>
+              <div className="font-medium">{t('bank_guarantee.severity.bank_notification')}</div>
               <div className="text-muted-foreground">
-                ≥ {DELAY_THRESHOLDS.BANK_NOTIFICATION}% de retard
+                ≥ {DELAY_THRESHOLDS.BANK_NOTIFICATION}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
             <div className="p-2 bg-red-50 rounded border-l-4 border-red-400">
-              <div className="font-medium">Déclenchement Garantie</div>
+              <div className="font-medium">{t('bank_guarantee.severity.guarantee_trigger')}</div>
               <div className="text-muted-foreground">
-                ≥ {DELAY_THRESHOLDS.GUARANTEE_TRIGGER}% de retard
+                ≥ {DELAY_THRESHOLDS.GUARANTEE_TRIGGER}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
             <div className="p-2 bg-gray-50 rounded border-l-4 border-gray-400">
-              <div className="font-medium">Escalade Juridique</div>
+              <div className="font-medium">{t('bank_guarantee.escalation.legal')}</div>
               <div className="text-muted-foreground">
-                ≥ {DELAY_THRESHOLDS.LEGAL_ESCALATION}% de retard
+                ≥ {DELAY_THRESHOLDS.LEGAL_ESCALATION}% {t('bank_guarantee.delay_percentage_suffix')}
               </div>
             </div>
           </div>

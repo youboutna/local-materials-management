@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
@@ -112,6 +113,7 @@ const PaymentCrud: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<PaymentFormData>({
     project_id: '',
@@ -300,7 +302,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de charger les paiements",
         variant: "destructive",
       });
@@ -443,7 +445,7 @@ const PaymentCrud: React.FC = () => {
     
     if (!formData.project_id || !formData.contractor_name || !formData.amount) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
@@ -481,7 +483,7 @@ const PaymentCrud: React.FC = () => {
         if (error) throw error;
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement mis à jour avec succès",
         });
       } else {
@@ -564,7 +566,7 @@ const PaymentCrud: React.FC = () => {
         }
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement créé avec succès",
         });
       }
@@ -575,7 +577,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Database error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Une erreur est survenue lors de l'enregistrement",
         variant: "destructive",
       });
@@ -655,14 +657,14 @@ const PaymentCrud: React.FC = () => {
         if (error) throw error;
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement supprimé avec succès",
         });
         fetchPayments(); // Refresh the list
       } catch (error) {
         console.error('Delete error:', error);
         toast({
-          title: "Erreur",
+          title: t('common.error'),
           description: "Erreur lors de la suppression",
           variant: "destructive",
         });
@@ -737,7 +739,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du téléchargement du document",
         variant: "destructive"
       });
@@ -813,7 +815,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du téléchargement de la facture",
         variant: "destructive"
       });

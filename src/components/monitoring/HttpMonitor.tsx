@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,6 +20,8 @@ interface HttpMetrics {
 }
 
 const HttpMonitor: React.FC = () => {
+  const { t } = useLanguage();
+
   const [metrics, setMetrics] = useState<HttpMetrics>({
     totalRequests: 0,
     successRequests: 0,
@@ -58,10 +61,10 @@ const HttpMonitor: React.FC = () => {
   };
 
   const getStatusText = (status: number) => {
-    if (status >= 200 && status < 300) return 'Succès';
-    if (status >= 300 && status < 400) return 'Redirection';
-    if (status >= 400 && status < 500) return 'Erreur Client';
-    return 'Erreur Serveur';
+    if (status >= 200 && status < 300) return t('dashboard.monitoring.status_success');
+    if (status >= 300 && status < 400) return t('dashboard.monitoring.status_redirect');
+    if (status >= 400 && status < 500) return t('dashboard.monitoring.status_client_error');
+    return t('dashboard.monitoring.status_server_error');
   };
 
   return (
@@ -70,7 +73,7 @@ const HttpMonitor: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Requêtes totales</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.total_requests')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -80,7 +83,7 @@ const HttpMonitor: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux de succès</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.success_rate')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -94,7 +97,7 @@ const HttpMonitor: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux d'erreur</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.error_rate')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -104,7 +107,7 @@ const HttpMonitor: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Temps de réponse moyen</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.monitoring.avg_response_time')}</CardTitle>
             <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -118,8 +121,7 @@ const HttpMonitor: React.FC = () => {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Taux d'erreur élevé détecté ({metrics.errorRate.toFixed(1)}%). 
-            Vérifiez la connectivité réseau et l'état des services.
+            {t('dashboard.monitoring.error_alert_message')} ({metrics.errorRate.toFixed(1)}%).
           </AlertDescription>
         </Alert>
       )}
@@ -129,15 +131,15 @@ const HttpMonitor: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Erreurs récentes
+            {t('dashboard.monitoring.recent_errors')}
           </CardTitle>
           <CardDescription>
-            Dernières erreurs HTTP détectées dans l'application
+            {t('dashboard.monitoring.recent_errors_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {metrics.recentErrors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune erreur récente</p>
+            <p className="text-sm text-muted-foreground">{t('dashboard.monitoring.no_recent_errors')}</p>
           ) : (
             <div className="space-y-3">
               {metrics.recentErrors.slice(0, 10).map((error, index) => (

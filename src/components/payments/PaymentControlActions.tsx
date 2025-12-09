@@ -28,6 +28,7 @@ import {
   Target
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import UserSelector from '@/components/selectors/UserSelector';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,6 +69,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { createNotification } = useNotifications();
 
   const form = useForm<z.infer<typeof actionFormSchema>>({
@@ -174,7 +176,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
     } catch (error) {
       console.error('Error executing action:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors de l'exécution de l'action",
         variant: "destructive"
       });
