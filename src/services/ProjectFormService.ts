@@ -204,7 +204,7 @@ export class ProjectFormService {
           }
           break;
 
-        case 4: // Phases
+        case 4: // Phases with steps and tasks
           if (data.phases?.length) {
             // Delete existing phases and insert new ones
             await supabase.from('project_phases').delete().eq('project_id', projectId);
@@ -217,7 +217,22 @@ export class ProjectFormService {
               status: phase.status || 'pending',
               estimated_cost: phase.budget || phase.estimated_cost || 0,
               progress: phase.progress || 0,
-              order_index: index
+              estimated_duration: phase.estimatedDuration || null,
+              notes: phase.notes || null,
+              construction_phase: phase.phase || null,
+              construction_stage: phase.stage || null,
+              location: phase.location || null,
+              materials: phase.materials || null,
+              human_resources: phase.humanResources || null,
+              suppliers: phase.suppliers || null,
+              // Store custom phase data with steps and tasks
+              custom_phase_data: phase.customPhase ? {
+                id: phase.customPhase.id,
+                name: phase.customPhase.name,
+                number: phase.customPhase.number,
+                description: phase.customPhase.description,
+                customStages: phase.customPhase.customStages || []
+              } : null
             }));
             await supabase.from('project_phases').insert(phasesToInsert);
           }
@@ -332,7 +347,27 @@ export class ProjectFormService {
         endDate: this.formatDateForInput(phase.end_date),
         status: phase.status,
         budget: phase.estimated_cost || 0,
-        progress: phase.progress || 0
+        progress: phase.progress || 0,
+        estimatedDuration: phase.estimated_duration || 30,
+        notes: phase.notes || '',
+        phase: phase.construction_phase || undefined,
+        stage: phase.construction_stage || undefined,
+        location: phase.location || '',
+        materials: phase.materials || [],
+        humanResources: phase.human_resources || [],
+        suppliers: phase.suppliers || [],
+        actualCost: phase.actual_cost || 0,
+        // Load custom phase data with steps and tasks
+        customPhase: phase.custom_phase_data ? (() => {
+          const customData = phase.custom_phase_data as Record<string, any>;
+          return {
+            id: customData.id,
+            name: customData.name,
+            number: customData.number,
+            description: customData.description || '',
+            customStages: customData.customStages || []
+          };
+        })() : undefined
       })) || [];
 
       // Load materials
