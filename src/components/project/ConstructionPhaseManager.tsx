@@ -364,7 +364,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     }
   };
 
-  // Generate phases from referential template
+  // Generate phases, steps and tasks from referential template
   const handleGeneratePhasesFromReferential = () => {
     if (!selectedReferential) {
       toast({
@@ -378,41 +378,127 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     checkAuthenticationAndProceed(() => {
       const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
       
-      // Filter out phases that already exist based on title
-      const existingPhaseTitles = new Set(phases.map(p => p.title));
-      const phasesToAdd = referentialPhases.filter(refPhase => !existingPhaseTitles.has(refPhase.label));
+      if (referentialPhases.length === 0) {
+        toast({
+          title: "Aucune phase",
+          description: "Ce référentiel ne contient pas de phases configurées",
+          variant: "destructive",
+        });
+        return;
+      }
       
-      if (phasesToAdd.length === 0) {
+      // Generate phases with their steps and tasks as nested structure
+      const newPhases: PhaseData[] = [];
+      let phaseIndex = 0;
+      let cumulativeStartDays = 0;
+      
+      for (const refPhase of referentialPhases) {
+        // Check if this phase already exists
+        const phaseExists = phases.some(p => p.title === refPhase.label);
+        if (phaseExists) continue;
+        
+        // Calculate total duration for this phase based on steps/tasks
+        let phaseDuration = 0;
+        const stepsInfo: string[] = [];
+        
+        for (const step of refPhase.steps || []) {
+          let stepDuration = 0;
+          const taskLabels: string[] = [];
+          
+          for (const task of step.tasks || []) {
+            stepDuration += task.estimatedDurationDays || 7;
+            taskLabels.push(`• ${task.label}`);
+          }
+          
+          if (stepDuration === 0) stepDuration = 14; // Default step duration
+          phaseDuration += stepDuration;
+          
+          stepsInfo.push(`**${step.label}**\n${taskLabels.join('\n')}`);
+        }
+        
+        if (phaseDuration === 0) phaseDuration = 30; // Default phase duration
+        
+        // Calculate dates based on cumulative duration
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + cumulativeStartDays);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + phaseDuration);
+        
+        // Build description with steps and tasks
+        const description = refPhase.description 
+          ? `${refPhase.description}\n\n${stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : ''}`
+          : stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : '';
+        
+        // Create custom phase with stages from referential steps
+        const customStages = (refPhase.steps || []).map((step, stepIdx) => ({
+          id: `step-${Date.now()}-${phaseIndex}-${stepIdx}`,
+          name: step.label,
+          order: step.order || stepIdx + 1,
+          tasks: (step.tasks || []).map((task, taskIdx) => ({
+            id: `task-${Date.now()}-${phaseIndex}-${stepIdx}-${taskIdx}`,
+            name: task.label,
+            description: task.description || '',
+            estimatedDurationDays: task.estimatedDurationDays || 7,
+            requiresInspection: task.requiresInspection || false,
+            requiresEngineerApproval: task.requiresEngineerApproval || false,
+            status: 'not_started'
+          }))
+        }));
+
+        const newPhase: PhaseData = {
+          id: `ref-${Date.now()}-${phaseIndex}`,
+          title: refPhase.label,
+          description: description.trim(),
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+          estimatedDuration: phaseDuration,
+          status: 'not_started' as const,
+          budget: Math.floor(projectBudget / referentialPhases.length),
+          actualCost: 0,
+          progress: 0,
+          materials: [],
+          humanResources: [],
+          suppliers: [],
+          location: '',
+          notes: `Référentiel: ${selectedReferential}\nCode phase: ${refPhase.code}`,
+          customPhase: {
+            id: `custom-${Date.now()}-${phaseIndex}`,
+            name: refPhase.label,
+            number: refPhase.order || phaseIndex + 1,
+            customStages: customStages,
+            description: refPhase.description || '',
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            budget: Math.floor(projectBudget / referentialPhases.length),
+            status: 'not_started',
+            progress: 0
+          }
+        };
+        
+        newPhases.push(newPhase);
+        cumulativeStartDays += phaseDuration;
+        phaseIndex++;
+      }
+
+      if (newPhases.length === 0) {
         toast({
           title: "Aucune nouvelle phase",
           description: "Toutes les phases du référentiel sont déjà présentes",
         });
         return;
       }
-      
-      const newPhases: PhaseData[] = phasesToAdd.map((refPhase, index) => ({
-        id: `ref-${Date.now()}-${index}`,
-        title: refPhase.label,
-        description: refPhase.description || '',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        estimatedDuration: 30,
-        status: 'not_started' as const,
-        budget: Math.floor(projectBudget / referentialPhases.length),
-        actualCost: 0,
-        progress: 0,
-        materials: [],
-        humanResources: [],
-        suppliers: [],
-        location: '',
-        notes: ''
-      }));
 
-      // Add new phases to existing phases instead of replacing
+      // Add new phases to existing phases
       onChange([...phases, ...newPhases]);
+      
+      // Count total steps and tasks
+      const totalSteps = newPhases.reduce((sum, p) => sum + (p.customPhase?.customStages?.length || 0), 0);
+      const totalTasks = newPhases.reduce((sum, p) => 
+        sum + (p.customPhase?.customStages?.reduce((s, stage) => s + ((stage as any).tasks?.length || 0), 0) || 0), 0);
+      
       toast({
-        title: "Phases ajoutées",
-        description: `${newPhases.length} nouvelle(s) phase(s) ajoutée(s) depuis le référentiel ${selectedReferential}`,
+        title: "Phases générées",
+        description: `${newPhases.length} phase(s), ${totalSteps} étape(s) et ${totalTasks} tâche(s) ajoutées depuis le référentiel`,
       });
     }, 'générer les phases');
   };
