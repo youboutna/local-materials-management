@@ -7,6 +7,7 @@ import { customStandardReferential } from './custom-standard.referential';
 import { distributionRuraleReferential } from './distribution-rurale.referential';
 import { mauritanianPublicProcurementReferential } from './mauritanian-public-procurement.referential';
 import { pndsReferential } from './pnds.referential';
+import { sdauReferential } from './snat-nouakchot.referential';
 import { MultiLanguageLabel, ProjectReferential, somelecReferential } from './somelec.referential';
 
 export type ReferentialType = 
@@ -14,7 +15,8 @@ export type ReferentialType =
   | 'MR_PUBLIC_PROCUREMENT' 
   | 'CUSTOM_STANDARD' 
   | 'DISTRIBUTION_RURALE' 
-  |'PNDS_MAURITANIA_2021_2030';
+  |'PNDS_MAURITANIA_2021_2030'
+  | 'SDAU_NOUAKCHOTT_2018_2040';
 
 /**
  * Registry of all available project referentials
@@ -25,6 +27,7 @@ export const REFERENTIAL_REGISTRY: Record<ReferentialType, ProjectReferential> =
   CUSTOM_STANDARD: customStandardReferential,
   DISTRIBUTION_RURALE: distributionRuraleReferential,
   PNDS_MAURITANIA_2021_2030 : pndsReferential,
+  SDAU_NOUAKCHOTT_2018_2040  : sdauReferential,
 };
 
 /**
@@ -90,7 +93,7 @@ export const getPhasesForReferential = (referentialCode: ReferentialType, langua
 /**
  * Export types and interfaces
  */
-export { customStandardReferential, distributionRuraleReferential, mauritanianPublicProcurementReferential, pndsReferential, somelecReferential };
+export { customStandardReferential, distributionRuraleReferential, mauritanianPublicProcurementReferential, pndsReferential, sdauReferential, somelecReferential };
 export type { MultiLanguageLabel, ProjectReferential };
 
 /**
