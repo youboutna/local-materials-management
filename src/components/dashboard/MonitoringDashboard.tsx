@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
+import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
+import HttpMonitor from '@/components/monitoring/HttpMonitor';
+import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Activity, Shield, AlertTriangle, TrendingUp } from 'lucide-react';
-import HttpMonitor from '@/components/monitoring/HttpMonitor';
-import BankGuaranteeMonitor from '@/components/alerts/BankGuaranteeMonitor';
-import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaymentBlockingInterface';
-import RoleBasedInspectionMonitoring from '@/components/inspections/RoleBasedInspectionMonitoring';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Activity, AlertTriangle, Shield, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 
 const MonitoringDashboard: React.FC = () => {
@@ -16,6 +16,12 @@ const MonitoringDashboard: React.FC = () => {
     payments: { count: 0, status: `0 ${t('dashboard.monitoring.overdue')}` },
     inspections: { count: 0, status: `0 ${t('dashboard.monitoring.overdue')}` }
   });
+  const [httpMetrics, setHttpMetrics] = useState<{
+    totalRequests: number;
+    errorRate: number;
+    recentErrorsCount: number;
+    lastChecked?: string;
+  }>({ totalRequests: 0, errorRate: 0, recentErrorsCount: 0 });
 
   useEffect(() => {
     const loadStats = async () => {
@@ -68,12 +74,53 @@ const MonitoringDashboard: React.FC = () => {
             status: inspections?.length ? `${inspections.length} ${t('dashboard.monitoring.overdue')}` : t('dashboard.monitoring.active')
           }
         });
+
+        // Load http metrics from localStorage (kept by HttpMonitor)
+        try {
+          const raw = localStorage.getItem('httpMetrics');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const recentErrors = Array.isArray(parsed.recentErrors) ? parsed.recentErrors : [];
+            setHttpMetrics({
+              totalRequests: parsed.totalRequests || 0,
+              errorRate: parsed.errorRate || 0,
+              recentErrorsCount: recentErrors.length,
+              lastChecked: new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.warn('Unable to read httpMetrics from localStorage', err);
+        }
       } catch (error) {
         console.error('Error loading monitoring stats:', error);
       }
     };
 
     loadStats();
+  }, [t]);
+
+  // Poll localStorage for httpMetrics so the HTTP card stays live
+  useEffect(() => {
+    const collect = () => {
+      try {
+        const raw = localStorage.getItem('httpMetrics');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const recentErrors = Array.isArray(parsed.recentErrors) ? parsed.recentErrors : [];
+        setHttpMetrics({
+          totalRequests: parsed.totalRequests || 0,
+          errorRate: parsed.errorRate || 0,
+          recentErrorsCount: recentErrors.length,
+          lastChecked: new Date().toISOString()
+        });
+      } catch (err) {
+        // ignore parse errors
+      }
+    };
+
+    collect();
+    const id = window.setInterval(collect, 5000);
+    return () => window.clearInterval(id);
   }, []);
 
   return (
@@ -85,8 +132,43 @@ const MonitoringDashboard: React.FC = () => {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{t('dashboard.monitoring.active')}</div>
-            <p className="text-xs text-muted-foreground">{t('dashboard.monitoring.real_time_monitoring')}</p>
+            {(() => {
+              const rate = httpMetrics.errorRate || 0;
+              let color = 'text-green-600';
+              let statusText = t('dashboard.monitoring.active');
+              if (rate >= 10) {
+                color = 'text-red-600';
+                statusText = t('dashboard.monitoring.critical');
+              } else if (rate >= 5) {
+                color = 'text-yellow-600';
+                statusText = t('dashboard.monitoring.degraded');
+              }
+
+              return (
+                <div>
+                  <div className={`text-2xl font-bold ${color}`}>{statusText}</div>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.monitoring.real_time_monitoring')}</p>
+
+                  <div className="mt-2 text-sm text-muted-foreground flex items-center gap-4">
+                    <div>
+                      <strong className="block text-base text-foreground">{httpMetrics.totalRequests}</strong>
+                      <span className="text-xs">{t('dashboard.monitoring.total_requests')}</span>
+                    </div>
+                    <div>
+                      <strong className="block text-base text-foreground">{httpMetrics.errorRate.toFixed(1)}%</strong>
+                      <span className="text-xs">{t('dashboard.monitoring.error_rate')}</span>
+                    </div>
+                    <div>
+                      <strong className="block text-base text-foreground">{httpMetrics.recentErrorsCount}</strong>
+                      <span className="text-xs">{t('dashboard.monitoring.recent_errors')}</span>
+                    </div>
+                    {httpMetrics.lastChecked && (
+                      <div className="ml-auto text-xs text-muted-foreground">{new Date(httpMetrics.lastChecked).toLocaleTimeString()}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 

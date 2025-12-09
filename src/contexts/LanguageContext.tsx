@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 export type Language = 'fr' | 'ar' | 'en';
 
@@ -250,6 +250,11 @@ export const translations = {
                 http_status: "Statut HTTP",
                 active: "Actif",
                 real_time_monitoring: "Surveillance en temps réel",
+                critical: "Critique",
+                degraded: "Dégradé",
+                total_requests: "Requêtes totales",
+                error_rate: "Taux d'erreur",
+                recent_errors: "Erreurs récentes",
                 guarantees: "Garanties Bancaires",
                 alerts_count: "Alertes",
                 expiring_soon: "Garanties expirant bientôt",
@@ -1612,6 +1617,11 @@ export const translations = {
                 http_status: "حالة HTTP",
                 active: "نشط",
                 real_time_monitoring: "المراقبة في الوقت الفعلي",
+                critical: "حرجة",
+                degraded: "متدهور",
+                total_requests: "إجمالي الطلبات",
+                error_rate: "معدل الأخطاء",
+                recent_errors: "الأخطاء الأخيرة",
                 guarantees: "الضمانات المصرفية",
                 alerts_count: "تنبيهات",
                 expiring_soon: "الضمانات المنتهية قريباً",
@@ -2936,6 +2946,11 @@ export const translations = {
                 http_status: "HTTP Status",
                 active: "Active",
                 real_time_monitoring: "Real-time monitoring",
+                critical: "Critical",
+                degraded: "Degraded",
+                total_requests: "Total requests",
+                error_rate: "Error rate",
+                recent_errors: "Recent errors",
                 guarantees: "Bank Guarantees",
                 alerts_count: "Alerts",
                 expiring_soon: "Expiring soon guarantees",
