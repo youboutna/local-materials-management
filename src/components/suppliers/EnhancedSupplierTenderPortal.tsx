@@ -27,6 +27,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PublicTender {
   id: string;
@@ -128,6 +129,7 @@ const EnhancedSupplierTenderPortal = () => {
   const [accessGrantedTenderId, setAccessGrantedTenderId] = useState<string | null>(null);
   const [supplierEmailFromSecret, setSupplierEmailFromSecret] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
 
@@ -258,8 +260,8 @@ const EnhancedSupplierTenderPortal = () => {
       }, 3000);
       
       toast({
-        title: 'Soumission envoyée avec succès',
-        description: 'Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé.',
+        title: t('supplier_tender.submit_success'),
+        description: t('supplier_tender.submit_success_desc'),
       });
     },
     onError: (error) => {
@@ -281,7 +283,7 @@ const EnhancedSupplierTenderPortal = () => {
       setSubmissionError(message);
       
       toast({
-        title: 'Erreur',
+        title: t('common.error'),
         description: message,
         variant: 'destructive',
       });
@@ -344,24 +346,22 @@ const EnhancedSupplierTenderPortal = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Portail Fournisseurs - Appels d'Offres</h1>
-            <p className="text-muted-foreground mt-2">
-              Consultez et soumissionnez aux appels d'offres publics
-            </p>
+            <h1 className="text-3xl font-bold">{t('supplier_tender.title')}</h1>
+            <p className="text-muted-foreground mt-2">{t('supplier_tender.subtitle')}</p>
             {hasAccessToTender && supplierEmailFromSecret && (
               <Badge variant="outline" className="mt-2">
-                Accès autorisé pour: {supplierEmailFromSecret}
+                {t('supplier_tender.access_granted_for')} {supplierEmailFromSecret}
               </Badge>
             )}
           </div>
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="browse">Parcourir</TabsTrigger>
-          <TabsTrigger value="documents">Documents Partagés</TabsTrigger>
-          <TabsTrigger value="submit">Soumissionner</TabsTrigger>
-          <TabsTrigger value="estimate">Devis</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="browse">{t('supplier_tender.tabs.browse')}</TabsTrigger>
+          <TabsTrigger value="documents">{t('supplier_tender.tabs.documents')}</TabsTrigger>
+          <TabsTrigger value="submit">{t('supplier_tender.tabs.submit')}</TabsTrigger>
+          <TabsTrigger value="estimate">{t('supplier_tender.tabs.estimate')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
@@ -386,9 +386,7 @@ const EnhancedSupplierTenderPortal = () => {
                       )}
                       
                       <div className="flex items-center justify-between">
-                        <Badge variant="default">
-                          Appel de soumissions
-                        </Badge>
+                        <Badge variant="default">{t('supplier_tender.title')}</Badge>
                         <Button 
                           onClick={() => {
                             setSelectedTender(tender);
@@ -396,7 +394,7 @@ const EnhancedSupplierTenderPortal = () => {
                           }}
                           size="sm"
                         >
-                          Soumissionner
+                          {t('supplier_tender.actions.submit')}
                         </Button>
                       </div>
                       
@@ -420,7 +418,7 @@ const EnhancedSupplierTenderPortal = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Aucun appel d'offres disponible</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('supplier_tender.empty.no_tenders')}</h3>
                 <p className="text-muted-foreground mb-4">
                   Les appels d'offres sont affichés uniquement s'ils répondent aux critères suivants :
                 </p>
@@ -445,10 +443,7 @@ const EnhancedSupplierTenderPortal = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Documents mis à disposition par l'organisme pour cette phase
-                  </p>
-                  
+                  <p className="text-muted-foreground mb-4">{t('supplier_tender.subtitle')}</p>
                   {sharedDocuments && sharedDocuments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {sharedDocuments.map((doc) => (
@@ -467,7 +462,7 @@ const EnhancedSupplierTenderPortal = () => {
                               onClick={() => window.open(doc.file_url, '_blank')}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              Télécharger
+                              {t('supplier_tender.actions.download')}
                             </Button>
                           </div>
                         </Card>
@@ -486,11 +481,9 @@ const EnhancedSupplierTenderPortal = () => {
               <CardContent className="p-6 text-center">
                 <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
-                <p className="text-muted-foreground mb-4">
-                  Choisissez un appel d'offres pour voir les documents partagés.
-                </p>
+                  <p className="text-muted-foreground mb-4">{t('supplier_tender.empty.select_tender')}</p>
                 <Button onClick={() => setActiveTab('browse')}>
-                  Parcourir les appels d'offres
+                  {t('supplier_tender.tabs.browse')}
                 </Button>
               </CardContent>
             </Card>

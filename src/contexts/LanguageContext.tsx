@@ -29,6 +29,132 @@ export const translations = {
             ,loading: "Chargement...",
             load_data: "Charger les données"
         },
+        supplier_portal: {
+            title: "Supplier Portal",
+            subtitle: "Manage your documents, tenders and payment requests",
+            linked_profile: "Profile linked",
+            profile_linked_desc: "Your supplier profile has been linked to your account.",
+            profile_created: "Profile created",
+            profile_created_desc: "Your supplier profile was created automatically.",
+            upload: {
+                title: "Upload a document",
+                placeholder_title: "Document title",
+                placeholder_description: "Description (optional)",
+                upload_button: "Upload"
+            },
+            tabs: {
+                shared: "Shared Documents",
+                uploaded: "My Documents",
+                payments: "Payments",
+                inspections: "Inspections"
+            }
+        },
+        supplier_tender: {
+            title: "Supplier Tender Portal",
+            subtitle: "Browse and submit to public tenders",
+            access_granted_for: "Access granted for:",
+            tabs: {
+                browse: "Browse",
+                documents: "Shared Documents",
+                submit: "Submit",
+                estimate: "Estimate"
+            },
+            empty: {
+                no_tenders: "No tenders available",
+                no_documents: "No shared documents at the moment",
+                select_tender: "Select a tender to view documents"
+            },
+            actions: {
+                submit: "Submit",
+                download: "Download"
+            },
+            submit_success: "Submission sent successfully",
+            submit_success_desc: "Your bid package has been submitted. A confirmation email with your secret code has been sent."
+        },
+        supplier_portal: {
+            title: "بوابة المورد",
+            subtitle: "إدارة مستنداتك، العطاءات وطلبات الدفع",
+            linked_profile: "تم ربط الملف",
+            profile_linked_desc: "تم ربط ملف المورد الخاص بك بحسابك.",
+            profile_created: "تم إنشاء الملف",
+            profile_created_desc: "تم إنشاء ملف المورد تلقائيًا.",
+            upload: {
+                title: "رفع مستند",
+                placeholder_title: "عنوان المستند",
+                placeholder_description: "الوصف (اختياري)",
+                upload_button: "رفع"
+            },
+            tabs: {
+                shared: "المستندات المشتركة",
+                uploaded: "مستنداتي",
+                payments: "المدفوعات",
+                inspections: "التفتيشات"
+            }
+        },
+        supplier_tender: {
+            title: "بوابة المورد - العطاءات",
+            subtitle: "اطلع وقدم عطاءاتك",
+            access_granted_for: "تم منح الوصول لـ:",
+            tabs: {
+                browse: "تصفح",
+                documents: "المستندات المشتركة",
+                submit: "تقديم",
+                estimate: "التقدير"
+            },
+            empty: {
+                no_tenders: "لا توجد عطاءات متاحة",
+                no_documents: "لا توجد مستندات مشتركة حاليًا",
+                select_tender: "اختر عطاء لعرض المستندات"
+            },
+            actions: {
+                submit: "تقديم",
+                download: "تنزيل"
+            },
+            submit_success: "تم إرسال العرض بنجاح",
+            submit_success_desc: "تم تقديم ملف الترشيح. تم إرسال بريد إلكتروني بتأكيد ورمزك السري."
+        },
+        supplier_portal: {
+            title: "Portail Fournisseur",
+            subtitle: "Gérez vos documents, soumissions et demandes de paiement",
+            linked_profile: "Profil lié",
+            profile_linked_desc: "Votre profil fournisseur a été lié à votre compte.",
+            profile_created: "Profil créé",
+            profile_created_desc: "Votre profil fournisseur a été créé automatiquement.",
+            upload: {
+                title: "Téléverser un document",
+                placeholder_title: "Titre du document",
+                placeholder_description: "Description (optionnelle)",
+                upload_button: "Téléverser"
+            },
+            tabs: {
+                shared: "Documents Partagés",
+                uploaded: "Mes Documents",
+                payments: "Paiements",
+                inspections: "Inspections"
+            }
+        },
+        supplier_tender: {
+            title: "Portail Fournisseurs - Appels d'Offres",
+            subtitle: "Consultez et soumettez des offres",
+            access_granted_for: "Accès autorisé pour:",
+            tabs: {
+                browse: "Parcourir",
+                documents: "Documents Partagés",
+                submit: "Soumissionner",
+                estimate: "Devis"
+            },
+            empty: {
+                no_tenders: "Aucun appel d'offres disponible",
+                no_documents: "Aucun document partagé pour le moment",
+                select_tender: "Sélectionnez un appel d'offres"
+            },
+            actions: {
+                submit: "Soumissionner",
+                download: "Télécharger"
+            },
+            submit_success: "Soumission envoyée avec succès",
+            submit_success_desc: "Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé."
+        },
         app: {
             name: "HadraTech-GPI"
         },
