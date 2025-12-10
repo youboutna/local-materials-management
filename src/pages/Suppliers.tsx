@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Edit, Trash2, Star, Send, FileText, Mail, Share2 } from 'lucide-react';
-import { sendSupplierNotification, generateSupplierPasswordReset } from '@/services/supplierNotificationService';
 import EnhancedDocumentSharing from '@/components/suppliers/EnhancedDocumentSharing';
 import SupplierDocumentUpload from '@/components/suppliers/SupplierDocumentUpload';
 import SupplierDocumentsList from '@/components/suppliers/SupplierDocumentsList';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { generateSupplierPasswordReset, sendSupplierNotification } from '@/services/supplierNotificationService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
 
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type Document = Database['public']['Tables']['documents']['Row'];
@@ -39,6 +40,7 @@ const Suppliers = () => {
     commerce_register_ref: ''
   });
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const { data: suppliers, isLoading } = useQuery({
@@ -65,12 +67,12 @@ const Suppliers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur créé avec succès." });
+      toast({ title: t('common.success'), description: "Fournisseur créé avec succès." });
       resetForm();
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -87,12 +89,12 @@ const Suppliers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur mis à jour avec succès." });
+      toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
       resetForm();
     },
     onError: (error: Error) => {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -109,7 +111,7 @@ const Suppliers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur supprimé avec succès." });
+      toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
     },
     onError: (error: Error) => {
       toast({

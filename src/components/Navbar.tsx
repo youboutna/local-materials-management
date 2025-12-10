@@ -1,22 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Menu,
-  X,
-  User,
-  LogOut,
-  FileText,
-  Home,
-  Briefcase,
-  Package,
-  Settings as SettingsIcon,
-  Users as UsersIcon,
-  ClipboardList,
-  Upload,
-} from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,9 +9,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
+import {
+  Briefcase,
+  ClipboardList,
+  FileText,
+  Home,
+  LogOut,
+  Menu,
+  Package,
+  Settings as SettingsIcon,
+  Upload,
+  User,
+  Users as UsersIcon,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -95,7 +95,7 @@ const Navbar = () => {
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <span className="text-lg sm:text-xl font-bold text-adrar-900 font-serif hidden sm:block">
-             HadraTech-GPI
+             {t('app.name') || 'HadraTech-GPI'}
             </span>
           </Link>
 
@@ -250,13 +250,13 @@ const Navbar = () => {
                         <div className="flex space-x-2">
                           <Button size="sm" variant="outline" asChild className="flex-1">
                             <Link to="/profile" onClick={() => setIsOpen(false)}>
-                              <User className="h-4 w-4 mr-2" />
-                              Profile
+                                <User className="h-4 w-4 mr-2" />
+                                  {t('nav.profile')}
                             </Link>
                           </Button>
                           <Button size="sm" variant="outline" onClick={handleLogout} className="flex-1">
                             <LogOut className="h-4 w-4 mr-2" />
-                            Logout
+                            {t('auth.logout')}
                           </Button>
                         </div>
                       </div>

@@ -1,37 +1,33 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import UserSelector from '@/components/selectors/UserSelector';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { 
-  Bell, 
-  Users, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  Send, 
-  AlertTriangle, 
-  CheckCircle,
-  Clock,
-  FileText,
-  Shield,
-  UserCheck,
-  Briefcase,
-  Target
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
-import UserSelector from '@/components/selectors/UserSelector';
+import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+    AlertTriangle,
+    Bell,
+    Briefcase,
+    Mail,
+    MessageSquare,
+    Phone,
+    Send,
+    Shield,
+    Target,
+    Users
+} from 'lucide-react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -166,7 +162,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       }
 
       toast({
-        title: "Action exécutée",
+        title: t('common.success'),
         description: `${actionTypes.find(t => t.value === values.actionType)?.label} envoyée avec succès`
       });
 

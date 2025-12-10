@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import MaterialAvailabilityCard from '@/components/materials/MaterialAvailabilityCard';
+import MaterialLocationMap from '@/components/materials/MaterialLocationMap';
+import WarehouseShapeTracer from '@/components/materials/WarehouseShapeTracer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import ProjectMap, { MapLocation } from '@/components/ProjectMap';
-import MaterialLocationMap from '@/components/materials/MaterialLocationMap';
-import MaterialAvailabilityCard from '@/components/materials/MaterialAvailabilityCard';
-import WarehouseShapeTracer from '@/components/materials/WarehouseShapeTracer';
-import { ArrowLeft, MapPin, Package, Warehouse, Info, Edit } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Edit, Info, MapPin, Package, Warehouse } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useParams } from 'react-router-dom';
 
 interface MaterialDetail {
   id: string;
@@ -91,7 +90,7 @@ const MaterialDetail = () => {
     } catch (error) {
       console.error('Error fetching material:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de charger les détails du matériau.",
         variant: "destructive",
       });

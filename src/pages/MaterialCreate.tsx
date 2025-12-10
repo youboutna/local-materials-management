@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EnhancedMaterialForm from '@/components/materials/EnhancedMaterialForm';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Package } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const MaterialCreate = () => {
   const { t } = useLanguage();
@@ -19,7 +19,7 @@ const MaterialCreate = () => {
   const handleSubmit = async (materialData: any) => {
     if (!materialData.name || !materialData.category) {
       toast({
-        title: "Erreur de validation",
+        title: t('common.error'),
         description: "Le nom et la catégorie sont requis.",
         variant: "destructive",
       });
@@ -59,7 +59,7 @@ const MaterialCreate = () => {
       if (error) throw error;
 
       toast({
-        title: "Matériau créé",
+        title: t('common.success'),
         description: "Le matériau a été créé avec succès.",
       });
 
@@ -67,7 +67,7 @@ const MaterialCreate = () => {
     } catch (error) {
       console.error('Error creating material:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de créer le matériau.",
         variant: "destructive",
       });

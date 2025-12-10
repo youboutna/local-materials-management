@@ -1,30 +1,28 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell
-} from '@/components/ui/table';
+import RoleBadge, { RoleType } from '@/components/RoleBadge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { UserPlus, Search, User, Edit, Ban, CheckCircle } from 'lucide-react';
-import { DEV_MODE } from '@/config/constants';
-import RoleBadge, { RoleType } from '@/components/RoleBadge';
-import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow
+} from '@/components/ui/table';
 import UserManagementDialog from '@/components/users/UserManagementDialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { supabase } from '@/integrations/supabase/client';
+import { motion } from 'framer-motion';
+import { Ban, CheckCircle, Edit, Search, User, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Define user profile type with roles array and email
 type UserProfile = {
@@ -95,7 +93,7 @@ const Users = () => {
     if (!user && !isDevelopmentMode) {
       navigate('/auth?mode=login');
       toast({
-        title: "Accès restreint",
+        title: t('common.error'),
         description: "Veuillez vous connecter pour accéder à cette page.",
         variant: "destructive"
       });
@@ -151,7 +149,7 @@ const Users = () => {
       } catch (error: any) {
         console.error('Error fetching profiles:', error);
         toast({
-          title: "Erreur",
+            title: t('common.error'),
           description: `Impossible de récupérer les utilisateurs: ${error.message}`,
           variant: "destructive"
         });
@@ -200,13 +198,13 @@ const Users = () => {
       ));
 
       toast({
-        title: newStatus ? "Utilisateur activé" : "Utilisateur désactivé",
+        title: t('common.success'),
         description: `Le compte de ${profile.full_name} a été ${newStatus ? 'activé' : 'désactivé'}.`
       });
     } catch (error) {
       console.error('Error toggling user status:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de modifier le statut de l'utilisateur",
         variant: "destructive"
       });

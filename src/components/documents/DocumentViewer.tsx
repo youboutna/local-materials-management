@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen, ExternalLink, ZoomIn, RotateCw } from 'lucide-react';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { Separator } from '@/components/ui/separator';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { Building2, Calendar, Camera, ClipboardList, Download, ExternalLink, FileBarChart, FileCheck, FileText, FolderOpen, RotateCw, User, Users, ZoomIn } from 'lucide-react';
+import { useState } from 'react';
 
 interface Document {
   id: string;
@@ -30,6 +31,7 @@ interface DocumentViewerProps {
 const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const { downloadFile, downloading } = useDocumentStorage();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [imageRotation, setImageRotation] = useState(0);
 
@@ -95,7 +97,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
       
       if (result.success) {
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Fichier téléchargé avec succès.",
         });
       } else {
@@ -104,7 +106,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
     } catch (error) {
       console.error('Download error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de télécharger le fichier.",
         variant: "destructive"
       });
@@ -209,7 +211,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             title={document.title}
             onError={() => {
               toast({
-                title: "Erreur de prévisualisation",
+                title: t('common.error'),
                 description: "Impossible de charger le PDF. Vous pouvez le télécharger pour le consulter.",
                 variant: "destructive"
               });
@@ -228,7 +230,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             className="w-full max-h-96"
             onError={() => {
               toast({
-                title: "Erreur de prévisualisation",
+                title: t('common.error'),
                 description: "Impossible de charger la vidéo. Vous pouvez la télécharger pour la consulter.",
                 variant: "destructive"
               });

@@ -29,6 +29,9 @@ export const translations = {
             ,loading: "Chargement...",
             load_data: "Charger les données"
         },
+        app: {
+            name: "HadraTech-GPI"
+        },
         locale: "Langue",
         currency: {
             mru: "MRU"
@@ -60,6 +63,9 @@ export const translations = {
             supplier_portal: "Portail Fournisseur",
             supplier_tender_portal: "Portail Fournisseur/soumissionaire",
             supplier_dashboard: "Tableau Fournisseur",
+            supplier_access: "Accès Fournisseur",
+            evaluation_access: "Accès Évaluation",
+            access_secure: "Accès Sécurisé",
             suppliers: "Fournisseurs"
 
         },
@@ -114,6 +120,37 @@ export const translations = {
                 title: "Documents",
                 unknown_date: "Date inconnue",
                 empty: "Aucun document."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "Accès Sécurisé Fournisseur",
+                description: "Entrez votre code de partage pour accéder aux documents de l'appel d'offres",
+                input_placeholder: "CODE-DE-PARTAGE",
+                format_note: "Format: 12 caractères alphanumériques",
+                validate_button: "Accéder aux documents",
+                validating: "Validation...",
+                access_granted: "Accès autorisé",
+                access_denied: "Accès refusé",
+                invalid_code_desc: "Veuillez entrer un code valide",
+                validate_error_desc: "Erreur lors de la validation du code",
+                security_title: "Sécurité et confidentialité",
+                security_items: {
+                    secure_connection: "Connexion sécurisée et chiffrée",
+                    audit_logs: "Tous les accès sont enregistrés",
+                    compliant: "Conforme aux normes mauritaniennes"
+                },
+                documents: {
+                    title: "Documents accessibles",
+                    description: "Documents partagés pour cette soumission",
+                    none: "Aucun document disponible",
+                    download: "Télécharger"
+                },
+                disconnect: "Déconnexion",
+                warning: {
+                    title: "Rappel important",
+                    text: "Les documents accessibles via ce code sont strictement confidentiels. Toute utilisation non autorisée ou partage avec des tiers est interdit et peut entraîner des sanctions selon le code des marchés publics mauritanien."
+                }
             }
         },
         user: {
@@ -233,7 +270,39 @@ export const translations = {
                 actions: "Actions Management",
                 overview: "Vue d'ensemble",
                 monitoring: "Monitoring",
-                alerts: "Alertes"
+                    alerts: {
+                        total: "Total Alerts",
+                        critical: "Critical",
+                        high: "High",
+                        medium: "Medium",
+                        low: "Low",
+                        tabs: {
+                            all: "All",
+                            delay: "Delays",
+                            payment: "Payments",
+                            inspection: "Inspections",
+                            guarantee: "Guarantees"
+                        },
+                        delay_title: "Project Delay",
+                        delay_desc_prefix: "Delay of",
+                        delay_desc_suffix: "detected",
+                        payment_blocked: "Payment Blocked",
+                        payment_blocked_desc_prefix: "Payment of",
+                        payment_blocked_desc_suffix: "blocked",
+                        validation_required: "Validation required",
+                        inspection_overdue: "Inspection Overdue",
+                        inspection_overdue_desc_prefix: "Inspection not completed for",
+                        days: "days",
+                        none: "No alerts found",
+                        acknowledge: "Acknowledge",
+                        guarantee_expiring: "Expiring Bank Guarantee",
+                        guarantee_expiring_desc_prefix: "Guarantee of",
+                        guarantee_expiring_desc_suffix: "will expire in",
+                        load_error: "Failed to load alerts",
+                        acknowledge_success: "Alert acknowledged",
+                        acknowledge_description: "The alert has been marked as acknowledged",
+                        project_label: "Project"
+                    },
             },
             cards: {
                 active_projects: "Projets Actifs",
@@ -298,37 +367,39 @@ export const translations = {
             recent_projects: "Projets récents",
             pending_tasks: "Tâches en attente",
             notifications: "Notifications",
-            alerts: "Alertes",
-            system_status: "État du système",
-            performance: "Performance",
-            analytics: "Analyses",
-            reports: "Rapports",
-            export_data: "Exporter les données",
-            refresh: "Actualiser",
-            loading_dashboard: "Chargement du tableau de bord...",
-            no_data: "Aucune donnée disponible",
-            error_loading: "Erreur lors du chargement des données",
-            active_projects: "Projets actifs",
-            status_overview: "Vue d'ensemble du statut",
-            active_projects_label: "projets actifs",
-            total_budget: "Budget total",
-            financial_resources: "Ressources financières",
-            team: "Équipe",
-            project_staff: "Personnel de projet",
-            members: "membres",
-            materials: "Matériaux",
-            available_resources: "Ressources disponibles",
-            types: "types",
-            project_progress: "Progression du projet",
-            view_all: "Voir tout",
-            no_projects: "Aucun projet",
-            distribution_by_region: "Répartition par région",
-            project_distribution: "Répartition des projets",
-            no_geolocated_projects: "Aucun projet géolocalisé",
-            map_no_data: "Aucune donnée géolocalisée à afficher",
-            legend_title: "Légende",
-            material_label: "Matériau",
-            materials_label: "Matériaux",
+                alerts: {
+                        total: "Total Alertes",
+                        critical: "Critique",
+                        high: "Élevée",
+                        medium: "Moyenne",
+                        low: "Faible",
+                        tabs: {
+                            all: "Toutes",
+                            delay: "Retards",
+                            payment: "Paiements",
+                            inspection: "Inspections",
+                            guarantee: "Garanties"
+                        },
+                        delay_title: "Retard Projet",
+                        delay_desc_prefix: "Retard de",
+                        delay_desc_suffix: "détecté",
+                        payment_blocked: "Paiement Bloqué",
+                        payment_blocked_desc_prefix: "Paiement de",
+                        payment_blocked_desc_suffix: "bloqué",
+                        validation_required: "Validation requise",
+                        inspection_overdue: "Inspection en retard",
+                        inspection_overdue_desc_prefix: "Inspection non complétée pour",
+                        days: "jours",
+                        guarantee_expiring: "Garantie Bancaire expirante",
+                        guarantee_expiring_desc_prefix: "Garantie de",
+                        guarantee_expiring_desc_suffix: "va expirer dans",
+                        load_error: "Impossible de charger les alertes",
+                        acknowledge: "Acquitter",
+                        acknowledge_success: "Alerte acquittée",
+                        acknowledge_description: "L'alerte a été marquée comme acquittée",
+                        none: "Aucune alerte trouvée",
+                        project_label: "Projet"
+                    },
             start_label: "Début",
             end_label: "Fin",
             dev_mode: "Mode développement"
@@ -729,9 +800,16 @@ export const translations = {
                 overview: "Vue d'ensemble",
                 materials: "Matériaux",
                 payments: "Paiements",
+                supplier_portal: "Supplier Portal",
+                supplier_tender_portal: "Supplier Tender Portal",
+                supplier_access: "Supplier Document Access",
+                evaluation_access: "Evaluation Access",
+                access_secure: "Secure Access",
+                access_evaluation: "Evaluation Access",
                 inspections: "Inspections",
                 workflow: "Flux de travail",
                 documents: "Documents",
+                login: "Log In",
                 takeoffs: "Métrés"
             },
             takeoffs: {
@@ -1500,7 +1578,13 @@ export const translations = {
             supplier_portal: "بوابة المورد",
             supplier_tender_portal: "/soumissionaire/ بوابة المورد",
             supplier_dashboard: "لوحة المورد",
+            supplier_access: "الوصول للمورد",
+            evaluation_access: "وصول التقييم",
+            access_secure: "وصول آمن",
             suppliers: "الموردون"
+        },
+        app: {
+            name: "HadraTech-GPI"
         },
         role_based_route: {
             loading: "جاري التحميل...",
@@ -1553,6 +1637,37 @@ export const translations = {
                 title: "الوثائق",
                 unknown_date: "تاريخ غير معروف",
                 empty: "لا توجد وثائق."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "بوابة الوصول الآمن للمورد",
+                description: "أدخل رمز المشاركة للوصول إلى مستندات العطاء",
+                input_placeholder: "رمز-المشاركة",
+                format_note: "التنسيق: 12 حرفًا أبجديًا رقميًا",
+                validate_button: "الوصول إلى المستندات",
+                validating: "جارٍ التحقق...",
+                access_granted: "تم منح الوصول",
+                access_denied: "تم رفض الوصول",
+                invalid_code_desc: "الرجاء إدخال رمز صالح",
+                validate_error_desc: "حدث خطأ أثناء التحقق من الرمز",
+                security_title: "الأمان والخصوصية",
+                security_items: {
+                    secure_connection: "اتصال آمن ومشفّر",
+                    audit_logs: "يتم تسجيل جميع عمليات الوصول",
+                    compliant: "متوافق مع المعايير الموريتانية"
+                },
+                documents: {
+                    title: "المستندات المتاحة",
+                    description: "المستندات المشتركة لهذه المشاركة",
+                    none: "لا توجد مستندات متاحة",
+                    download: "تنزيل"
+                },
+                disconnect: "تسجيل الخروج",
+                warning: {
+                    title: "تذكير مهم",
+                    text: "المستندات المتاحة عبر هذا الرمز سرية تمامًا. أي استخدام غير مصرح به أو مشاركة مع طرف ثالث غير مسموح وقد يؤدي إلى عقوبات وفقًا لقانون المناقصات العمومية الموريتاني."
+                }
             }
         },
         user: {
@@ -1667,11 +1782,43 @@ export const translations = {
             no_role_assigned: "لم يتم تعيين دور",
             back_to_projects: "العودة إلى المشاريع",
             management_tabs: {
-                actions: "إدارة الإجراءات",
-                overview: "نظرة عامة",
-                monitoring: "المراقبة",
-                alerts: "التنبيهات"
-            },
+                    actions: "إدارة الإجراءات",
+                    overview: "نظرة عامة",
+                    monitoring: "المراقبة",
+                    alerts: {
+                        total: "إجمالي التنبيهات",
+                        critical: "حرج",
+                        high: "عالي",
+                        medium: "متوسط",
+                        low: "منخفض",
+                        tabs: {
+                            all: "الكل",
+                            delay: "تأخيرات",
+                            payment: "المدفوعات",
+                            inspection: "التفتيشات",
+                            guarantee: "الضمانات"
+                        },
+                        delay_title: "تأخر المشروع",
+                        delay_desc_prefix: "تأخير في",
+                        delay_desc_suffix: "تم اكتشافه",
+                        payment_blocked: "المدفوعات محتجزة",
+                        payment_blocked_desc_prefix: "دفع بمقدار",
+                        payment_blocked_desc_suffix: "محجوز",
+                        validation_required: "مطلوب تحقق",
+                        inspection_overdue: "تفتيش متأخر",
+                        inspection_overdue_desc_prefix: "التفتيش لم يكتمل لـ",
+                        days: "أيام",
+                        guarantee_expiring: "ضمان بنكي على وشك الانتهاء",
+                        guarantee_expiring_desc_prefix: "ضمان بمقدار",
+                        guarantee_expiring_desc_suffix: "سينتهي بعد",
+                        load_error: "فشل في تحميل التنبيهات",
+                        acknowledge: "تأكيد الاستلام",
+                        acknowledge_success: "تم تأكيد التنبيه",
+                        acknowledge_description: "تم وضع علامة على التنبيه كمؤكد",
+                        none: "لا توجد تنبيهات",
+                        project_label: "المشروع"
+                    }
+                },
             cards: {
                 active_projects: "المشاريع النشطة",
                 in_progress_description: "قيد التنفيذ",
@@ -2802,6 +2949,9 @@ export const translations = {
             loading: "Loading...",
             load_data: "Load data"
         },
+        app: {
+            name: "HadraTech-GPI"
+        },
         employee: {
             add: "Ajouter un employé",
             add_title: "Ajouter un nouvel employé",
@@ -2910,6 +3060,37 @@ export const translations = {
                 title: "Documents",
                 unknown_date: "Unknown date",
                 empty: "No documents."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "Supplier Secure Access",
+                description: "Enter your sharing code to access tender documents",
+                input_placeholder: "SHARE-CODE",
+                format_note: "Format: 12 alphanumeric characters",
+                validate_button: "Access Documents",
+                validating: "Validating...",
+                access_granted: "Access Granted",
+                access_denied: "Access Denied",
+                invalid_code_desc: "Please enter a valid code",
+                validate_error_desc: "Error validating the code",
+                security_title: "Security and Privacy",
+                security_items: {
+                    secure_connection: "Secure, encrypted connection",
+                    audit_logs: "All accesses are recorded",
+                    compliant: "Compliant with Mauritanian standards"
+                },
+                documents: {
+                    title: "Accessible Documents",
+                    description: "Documents shared for this submission",
+                    none: "No documents available",
+                    download: "Download"
+                },
+                disconnect: "Sign out",
+                warning: {
+                    title: "Important reminder",
+                    text: "Documents accessed via this code are strictly confidential. Any unauthorized use or sharing with third parties is prohibited and may result in penalties under the Mauritanian public procurement code."
+                }
             }
         },
         user: {
@@ -4175,11 +4356,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     const t = (key: string): string => {
         const keys = key.split('.');
-        let value: any = translations[language];
+        type Nested = Record<string, unknown>;
+        let value: unknown = (translations as Record<string, Nested>)[language];
 
         for (const k of keys) {
-            if (value && typeof value === 'object' && k in value) {
-                value = value[k];
+            if (value && typeof value === 'object' && k in (value as Nested)) {
+                value = (value as Nested)[k];
             } else {
                 console.warn(`Translation key "${key}" not found for language "${language}"`);
                 return key;

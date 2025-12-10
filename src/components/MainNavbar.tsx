@@ -64,7 +64,7 @@ const MainNavbar = () => {
     <header className="bg-adrar-700 text-white py-4 fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link to="/" className="text-xl font-bold">
-         HadraTech-GPI
+         {t('app.name') || 'HadraTech-GPI'}
           {DEV_MODE && (
             <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded">
               DEV
@@ -108,13 +108,13 @@ const MainNavbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/supplier-access" className="flex items-center px-4 py-3 text-gray-900 bg-primary/5">
                           <Shield className="h-5 w-5 mr-3 text-primary" />
-                          <span>Accès Documents (Fournisseur)</span>
+                          <span>{t('nav.supplier_access') || 'Supplier Document Access'}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/evaluation-access" className="flex items-center px-4 py-3 text-gray-900 bg-amber-50">
                           <Lock className="h-5 w-5 mr-3 text-amber-600" />
-                          <span>Accès Évaluation (Commission)</span>
+                          <span>{t('nav.evaluation_access') || 'Evaluation Access'}</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -219,7 +219,7 @@ const MainNavbar = () => {
           isSupplierOnly ? (
             <NavigationMenu className="hidden md:flex z-50">
               <NavigationMenuList className="gap-2">
-                <NavigationMenuItem>
+                      <NavigationMenuItem>
                   <Button 
                     variant="ghost" 
                     className="text-white hover:text-gray-200 hover:bg-adrar-600"
@@ -250,9 +250,9 @@ const MainNavbar = () => {
                     size="sm"
                     asChild
                   >
-                    <Link to="/supplier-access" className="flex items-center gap-2">
+                        <Link to="/supplier-access" className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-primary" />
-                      <span>Accès Sécurisé</span>
+                      <span>{t('nav.access_secure') || 'Secure Access'}</span>
                     </Link>
                   </Button>
                 </NavigationMenuItem>
@@ -320,9 +320,9 @@ const MainNavbar = () => {
                           to="/insurance-management"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >
-                          <div className="text-sm font-medium leading-none">🛡️ Gestion Assurances</div>
+                          <div className="text-sm font-medium leading-none">{t('insurance_management.title') || 'Insurance Management'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Suivi des attestations et alertes d'expiration
+                            {t('insurance_management.subtitle') || 'Automated monitoring of insurance certificates and expiry alerts'}
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -331,9 +331,9 @@ const MainNavbar = () => {
                           to="/bank-guarantee-monitor"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >
-                          <div className="text-sm font-medium leading-none">🏦 Garanties Bancaires</div>
+                          <div className="text-sm font-medium leading-none">{t('bank_guarantee.title') || 'Bank Guarantee Monitoring'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Surveillance automatisée et déclenchement des garanties
+                            {t('bank_guarantee.subtitle') || 'Automated system for detecting delays and triggering bank guarantees'}
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -342,9 +342,9 @@ const MainNavbar = () => {
                           to="/inspection-monitoring"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >
-                          <div className="text-sm font-medium leading-none">🔍 Inspections</div>
+                          <div className="text-sm font-medium leading-none">{t('inspection_monitoring.title') || 'Inspection Monitoring'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Gestion digitale des inspections et rapports
+                            {t('inspection_monitoring.subtitle') || 'Inspection management and reporting'}
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -353,9 +353,9 @@ const MainNavbar = () => {
                           to="/notifications-center"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >
-                          <div className="text-sm font-medium leading-none">📬 Centre Notifications</div>
+                          <div className="text-sm font-medium leading-none">{t('notifications_center.title') || 'Notifications Center'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Centre de notifications basé sur les rôles
+                            {t('notifications_center.subtitle') || 'Centralized role-based notifications center'}
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -364,9 +364,9 @@ const MainNavbar = () => {
                           to="/payment-control"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-gray-900"
                         >
-                          <div className="text-sm font-medium leading-none">💰 Contrôle Paiements</div>
+                          <div className="text-sm font-medium leading-none">{t('payment_control.title') || 'Payment Control'}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Blocage automatique si garanties expirées
+                            {t('payment_control.subtitle') || 'Payment management and validation with real-time notifications'}
                           </p>
                         </Link>
                        </NavigationMenuLink>
