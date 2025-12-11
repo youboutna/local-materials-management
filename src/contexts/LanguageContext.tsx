@@ -5,7 +5,7 @@ export type Language = 'fr' | 'ar' | 'en';
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -20,98 +20,53 @@ export const useLanguage = () => {
 export const translations = {
     fr: {
         common: {
+            yes: "Oui",
+            no: "Non",
+            cancel: "Annuler",
+            save: "Enregistrer",
+            delete: "Supprimer",
+            edit: "Modifier",
+            update: "Mettre à jour",
+            loading: "Chargement...",
+            load_data: "Charger les données",
             error: "Erreur",
             success: "Succès",
             info: "Information",
+            back: "Retour",
+            search: "Rechercher",
+            filter: "Filtrer",
+            reset: "Réinitialiser",
+            submit: "Soumettre",
+            close: "Fermer",
+            confirm: "Confirmer",
+            optional: "Optionnel",
+            required: "Requis",
             confirm_delete: "Confirmer la suppression",
-            yes: "Oui",
-            no: "Non"
-            ,loading: "Chargement...",
-            load_data: "Charger les données"
-        },
-        supplier_portal: {
-            title: "Supplier Portal",
-            subtitle: "Manage your documents, tenders and payment requests",
-            linked_profile: "Profile linked",
-            profile_linked_desc: "Your supplier profile has been linked to your account.",
-            profile_created: "Profile created",
-            profile_created_desc: "Your supplier profile was created automatically.",
-            upload: {
-                title: "Upload a document",
-                placeholder_title: "Document title",
-                placeholder_description: "Description (optional)",
-                upload_button: "Upload"
-            },
-            tabs: {
-                shared: "Shared Documents",
-                uploaded: "My Documents",
-                payments: "Payments",
-                inspections: "Inspections"
-            }
-        },
-        supplier_tender: {
-            title: "Supplier Tender Portal",
-            subtitle: "Browse and submit to public tenders",
-            access_granted_for: "Access granted for:",
-            tabs: {
-                browse: "Browse",
-                documents: "Shared Documents",
-                submit: "Submit",
-                estimate: "Estimate"
-            },
-            empty: {
-                no_tenders: "No tenders available",
-                no_documents: "No shared documents at the moment",
-                select_tender: "Select a tender to view documents"
-            },
-            actions: {
-                submit: "Submit",
-                download: "Download"
-            },
-            submit_success: "Submission sent successfully",
-            submit_success_desc: "Your bid package has been submitted. A confirmation email with your secret code has been sent."
-        },
-        supplier_portal: {
-            title: "بوابة المورد",
-            subtitle: "إدارة مستنداتك، العطاءات وطلبات الدفع",
-            linked_profile: "تم ربط الملف",
-            profile_linked_desc: "تم ربط ملف المورد الخاص بك بحسابك.",
-            profile_created: "تم إنشاء الملف",
-            profile_created_desc: "تم إنشاء ملف المورد تلقائيًا.",
-            upload: {
-                title: "رفع مستند",
-                placeholder_title: "عنوان المستند",
-                placeholder_description: "الوصف (اختياري)",
-                upload_button: "رفع"
-            },
-            tabs: {
-                shared: "المستندات المشتركة",
-                uploaded: "مستنداتي",
-                payments: "المدفوعات",
-                inspections: "التفتيشات"
-            }
-        },
-        supplier_tender: {
-            title: "بوابة المورد - العطاءات",
-            subtitle: "اطلع وقدم عطاءاتك",
-            access_granted_for: "تم منح الوصول لـ:",
-            tabs: {
-                browse: "تصفح",
-                documents: "المستندات المشتركة",
-                submit: "تقديم",
-                estimate: "التقدير"
-            },
-            empty: {
-                no_tenders: "لا توجد عطاءات متاحة",
-                no_documents: "لا توجد مستندات مشتركة حاليًا",
-                select_tender: "اختر عطاء لعرض المستندات"
-            },
-            actions: {
-                submit: "تقديم",
-                download: "تنزيل"
-            },
-            submit_success: "تم إرسال العرض بنجاح",
-            submit_success_desc: "تم تقديم ملف الترشيح. تم إرسال بريد إلكتروني بتأكيد ورمزك السري."
+            yes_delete: "Oui, supprimer",
+            no_cancel: "Non, annuler",
+            create: "Créer",
+            add: "Ajouter",
+            view: "Voir",
+            details: "Détails",
+            actions: "Actions",
+            status: "Statut",
+            date: "Date",
+            description: "Description",
+            title: "Titre",
+            name: "Nom",
+            email: "Email",
+            phone: "Téléphone",
+            address: "Adresse",
+            all: "Tous",
+            none: "Aucun",
+            none_available: "Aucun disponible",
+            no_data: "Aucune donnée disponible",
+            error_loading: "Erreur lors du chargement",
+            created_successfully: "Créé avec succès",
+            updated_successfully: "Mis à jour avec succès",
+            deleted_successfully: "Supprimé avec succès",
+            next: "Suivant",
+            previous: "Précédent"
         },
         supplier_portal: {
             title: "Portail Fournisseur",
@@ -1153,53 +1108,6 @@ export const translations = {
             quick_links: "Liens rapides",
             legal: "Légal"
         },
-        common: {
-            yes: "Oui",
-            no: "Non",
-            cancel: "Annuler",
-            save: "Enregistrer",
-            delete: "Supprimer",
-            edit: "Modifier",
-            update: "Mettre à jour",
-            loading: "Chargement...",
-            error: "Erreur",
-            success: "Succès",
-            back: "Retour",
-            search: "Rechercher",
-            filter: "Filtrer",
-            reset: "Réinitialiser",
-            submit: "Soumettre",
-            close: "Fermer",
-            confirm: "Confirmer",
-            optional: "Optionnel",
-            required: "Requis",
-            yes_delete: "Oui, supprimer",
-            no_cancel: "Non, annuler",
-            create: "Créer",
-            add: "Ajouter",
-            view: "Voir",
-            details: "Détails",
-            actions: "Actions",
-            status: "Statut",
-            date: "Date",
-            description: "Description",
-            title: "Titre",
-            name: "Nom",
-            email: "Email",
-            phone: "Téléphone",
-            address: "Adresse",
-            all: "Tous",
-            none: "Aucun",
-            none_available: "Aucun disponible",
-            no_data: "Aucune donnée disponible",
-            error_loading: "Erreur lors du chargement",
-            created_successfully: "Créé avec succès",
-            updated_successfully: "Mis à jour avec succès",
-            deleted_successfully: "Supprimé avec succès",
-            confirm_delete: "Êtes-vous sûr de vouloir supprimer cet élément ?",
-            next: "Suivant",
-            previous: "Précédent"
-        },
         notfound: {
             message: "Page non trouvée",
             return_home: "Retour à l'accueil"
@@ -1636,14 +1544,53 @@ export const translations = {
 
     ar: {
         common: {
+            yes: "نعم",
+            no: "لا",
+            cancel: "إلغاء",
+            save: "حفظ",
+            delete: "حذف",
+            edit: "تعديل",
+            update: "تحديث",
+            loading: "جاري التحميل...",
+            load_data: "تحميل البيانات",
             error: "خطأ",
             success: "نجاح",
             info: "معلومات",
+            back: "عودة",
+            search: "بحث",
+            filter: "تصفية",
+            reset: "إعادة تعيين",
+            submit: "إرسال",
+            close: "إغلاق",
+            confirm: "تأكيد",
+            optional: "اختياري",
+            required: "مطلوب",
             confirm_delete: "تأكيد الحذف",
-            yes: "نعم",
-            no: "لا",
-            loading: "جار التحميل...",
-            load_data: "تحميل البيانات"
+            yes_delete: "نعم، احذف",
+            no_cancel: "لا، إلغاء",
+            create: "إنشاء",
+            add: "إضافة",
+            view: "عرض",
+            details: "تفاصيل",
+            actions: "إجراءات",
+            status: "الحالة",
+            date: "التاريخ",
+            description: "الوصف",
+            title: "العنوان",
+            name: "الاسم",
+            email: "البريد الإلكتروني",
+            phone: "الهاتف",
+            address: "العنوان",
+            all: "الكل",
+            none: "لا شيء",
+            none_available: "لا يوجد متاح",
+            no_data: "لا توجد بيانات متاحة",
+            error_loading: "خطأ في التحميل",
+            created_successfully: "تم الإنشاء بنجاح",
+            updated_successfully: "تم التحديث بنجاح",
+            deleted_successfully: "تم الحذف بنجاح",
+            next: "التالي",
+            previous: "السابق"
         },
         employee: {
                 add: "إضافة موظف",
@@ -2583,53 +2530,6 @@ export const translations = {
             quick_links: "روابط سريعة",
             legal: "قانوني"
         },
-        common: {
-            yes: "نعم",
-            no: "لا",
-            cancel: "إلغاء",
-            save: "حفظ",
-            delete: "حذف",
-            edit: "تعديل",
-            update: "تحديث",
-            loading: "جاري التحميل...",
-            error: "خطأ",
-            success: "نجاح",
-            back: "عودة",
-            search: "بحث",
-            filter: "تصفية",
-            reset: "إعادة تعيين",
-            submit: "إرسال",
-            close: "إغلاق",
-            confirm: "تأكيد",
-            optional: "اختياري",
-            required: "مطلوب",
-            yes_delete: "نعم، احذف",
-            no_cancel: "لا، إلغاء",
-            create: "إنشاء",
-            add: "إضافة",
-            view: "عرض",
-            details: "تفاصيل",
-            actions: "إجراءات",
-            status: "الحالة",
-            date: "التاريخ",
-            description: "الوصف",
-            title: "العنوان",
-            name: "الاسم",
-            email: "البريد الإلكتروني",
-            phone: "الهاتف",
-            address: "العنوان",
-            all: "الكل",
-            none: "لا شيء",
-            none_available: "لا يوجد متاح",
-            no_data: "لا توجد بيانات متاحة",
-            error_loading: "خطأ في التحميل",
-            created_successfully: "تم الإنشاء بنجاح",
-            updated_successfully: "تم التحديث بنجاح",
-            deleted_successfully: "تم الحذف بنجاح",
-            confirm_delete: "هل أنت متأكد من حذف هذا العنصر؟",
-            next: "التالي",
-            previous: "السابق"
-        },
         notfound: {
             message: "الصفحة غير موجودة",
             return_home: "العودة للرئيسية"
@@ -3066,14 +2966,53 @@ export const translations = {
 
     en: {
         common: {
+            yes: "Yes",
+            no: "No",
+            cancel: "Cancel",
+            save: "Save",
+            delete: "Delete",
+            edit: "Edit",
+            update: "Update",
+            loading: "Loading...",
+            load_data: "Load data",
             error: "Error",
             success: "Success",
             info: "Information",
+            back: "Back",
+            search: "Search",
+            filter: "Filter",
+            reset: "Reset",
+            submit: "Submit",
+            close: "Close",
+            confirm: "Confirm",
+            optional: "Optional",
+            required: "Required",
             confirm_delete: "Confirm delete",
-            yes: "Yes",
-            no: "No",
-            loading: "Loading...",
-            load_data: "Load data"
+            yes_delete: "Yes, delete",
+            no_cancel: "No, cancel",
+            create: "Create",
+            add: "Add",
+            view: "View",
+            details: "Details",
+            actions: "Actions",
+            status: "Status",
+            date: "Date",
+            description: "Description",
+            title: "Title",
+            name: "Name",
+            email: "Email",
+            phone: "Phone",
+            address: "Address",
+            all: "All",
+            none: "None",
+            none_available: "None available",
+            no_data: "No data available",
+            error_loading: "Error loading",
+            created_successfully: "Created successfully",
+            updated_successfully: "Updated successfully",
+            deleted_successfully: "Deleted successfully",
+            next: "Next",
+            previous: "Previous"
         },
         app: {
             name: "HadraTech-GPI"
@@ -4004,53 +3943,6 @@ export const translations = {
             quick_links: "Quick Links",
             legal: "Legal"
         },
-        common: {
-            yes: "Yes",
-            no: "No",
-            cancel: "Cancel",
-            save: "Save",
-            delete: "Delete",
-            edit: "Edit",
-            update: "Update",
-            loading: "Loading...",
-            error: "Error",
-            success: "Success",
-            back: "Back",
-            search: "Search",
-            filter: "Filter",
-            reset: "Reset",
-            submit: "Submit",
-            close: "Close",
-            confirm: "Confirm",
-            optional: "Optional",
-            required: "Required",
-            yes_delete: "Yes, delete",
-            no_cancel: "No, cancel",
-            create: "Create",
-            add: "Add",
-            view: "View",
-            details: "Details",
-            actions: "Actions",
-            status: "Status",
-            date: "Date",
-            description: "Description",
-            title: "Title",
-            name: "Name",
-            email: "Email",
-            phone: "Phone",
-            address: "Address",
-            all: "All",
-            none: "None",
-            none_available: "None available",
-            no_data: "No data available",
-            error_loading: "Error loading",
-            created_successfully: "Created successfully",
-            updated_successfully: "Updated successfully",
-            deleted_successfully: "Deleted successfully",
-            confirm_delete: "Are you sure you want to delete this item?",
-            next: "Next",
-            previous: "Previous"
-        },
         notfound: {
             message: "Page not found",
             return_home: "Return home"
@@ -4480,7 +4372,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         localStorage.setItem('language', lang);
     };
 
-    const t = (key: string): string => {
+    const t = (key: string, params?: Record<string, string | number>): string => {
         const keys = key.split('.');
         type Nested = Record<string, unknown>;
         let value: unknown = (translations as Record<string, Nested>)[language];
@@ -4494,7 +4386,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             }
         }
 
-        return typeof value === 'string' ? value : key;
+        let result = typeof value === 'string' ? value : key;
+        
+        // Handle interpolation with params like {title}
+        if (params && typeof result === 'string') {
+            Object.entries(params).forEach(([paramKey, paramValue]) => {
+                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+            });
+        }
+
+        return result;
     };
 
     return (
