@@ -35,17 +35,60 @@ export interface ProjectPhaseEntity {
   phase_name?: string;
   construction_phase?: string;
   construction_stage?: string;
+  description?: string;
   start_date?: string;
   end_date?: string;
+  actual_start_date?: string;
+  actual_end_date?: string;
   status?: string;
   progress?: number;
   actual_cost?: number;
   estimated_cost?: number;
-  dependencies?: any;
-  custom_phase_data?: any;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  order_index?: number;
+  dependencies?: string[];
+  custom_phase_data?: PhaseCustomData;
   created_at: string;
   updated_at: string;
   created_by?: string;
+}
+
+/**
+ * Structure for custom_phase_data JSON column
+ */
+export interface PhaseCustomData {
+  steps?: PhaseStepData[];
+}
+
+export interface PhaseStepData {
+  id: string;
+  name: string;
+  description?: string;
+  status?: string;
+  progress?: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  order_index: number;
+  tasks?: PhaseTaskData[];
+}
+
+export interface PhaseTaskData {
+  id: string;
+  name: string;
+  description?: string;
+  status?: string;
+  progress?: number;
+  estimated_duration_days?: number;
+  actual_duration_days?: number;
+  start_date?: string;
+  end_date?: string;
+  assigned_to?: string[];
+  dependencies?: string[];
+  weight?: number;
+  order_index: number;
 }
 
 export interface ProjectRiskEntity {
