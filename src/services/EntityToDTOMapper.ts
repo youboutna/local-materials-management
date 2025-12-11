@@ -1,6 +1,7 @@
 // Mapping between database entities and DTOs
-import { ProjectEntity, ProjectRiskEntity, TaskAssignmentEntity, InspectionEntity, PaymentEntity } from '@/types/entities';
+import { ProjectEntity, ProjectRiskEntity, TaskAssignmentEntity, InspectionEntity, PaymentEntity, ProjectPhaseEntity, PhaseStepData, PhaseTaskData } from '@/types/entities';
 import { ProjectDTO, ProjectDetailDTO, ProjectSummaryDTO, ProjectListItemDTO, TaskDTO, InspectionDTO, PaymentDTO, RiskDTO } from '@/types/dto';
+import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO, PhaseStatus, PhaseFormDTO } from '@/types/phase-dto';
 import { ProjectStatus } from '@/types/project';
 
 export class EntityToDTOMapper {
@@ -201,7 +202,202 @@ export class EntityToDTOMapper {
     };
   }
 
-  // ============= Inspection Mapping =============
+  // ============= Phase Mappings =============
+
+  /**
+   * Map PhaseTaskData to PhaseTaskDTO
+   */
+  static phaseTaskDataToDTO(task: PhaseTaskData): PhaseTaskDTO {
+    return {
+      id: task.id,
+      name: task.name,
+      description: task.description,
+      status: (task.status as PhaseStatus) || 'pending',
+      progress: task.progress || 0,
+      estimated_duration_days: task.estimated_duration_days,
+      actual_duration_days: task.actual_duration_days,
+      start_date: task.start_date,
+      end_date: task.end_date,
+      assigned_to: task.assigned_to || [],
+      dependencies: task.dependencies || [],
+      weight: task.weight,
+      order_index: task.order_index || 0
+    };
+  }
+
+  /**
+   * Map PhaseStepData to PhaseStepDTO
+   */
+  static phaseStepDataToDTO(step: PhaseStepData): PhaseStepDTO {
+    return {
+      id: step.id,
+      name: step.name,
+      description: step.description,
+      status: (step.status as PhaseStatus) || 'pending',
+      progress: step.progress || 0,
+      estimated_duration_days: step.estimated_duration_days,
+      actual_duration_days: step.actual_duration_days,
+      start_date: step.start_date,
+      end_date: step.end_date,
+      order_index: step.order_index || 0,
+      tasks: (step.tasks || []).map(task => this.phaseTaskDataToDTO(task))
+    };
+  }
+
+  /**
+   * Map ProjectPhaseEntity to PhaseDTO
+   */
+  static phaseEntityToDTO(entity: ProjectPhaseEntity): PhaseDTO {
+    const customData = entity.custom_phase_data || {};
+    const steps = (customData.steps || []).map(step => this.phaseStepDataToDTO(step));
+    
+    return {
+      id: entity.id,
+      project_id: entity.project_id,
+      phase_name: entity.phase_name || '',
+      construction_phase: entity.construction_phase,
+      construction_stage: entity.construction_stage,
+      description: entity.description,
+      status: (entity.status as PhaseStatus) || 'pending',
+      progress: entity.progress || 0,
+      estimated_cost: entity.estimated_cost,
+      actual_cost: entity.actual_cost,
+      estimated_duration_days: entity.estimated_duration_days,
+      actual_duration_days: entity.actual_duration_days,
+      start_date: entity.start_date,
+      end_date: entity.end_date,
+      actual_start_date: entity.actual_start_date,
+      actual_end_date: entity.actual_end_date,
+      order_index: entity.order_index || 0,
+      dependencies: entity.dependencies || [],
+      steps,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at
+    };
+  }
+
+  /**
+   * Map ProjectPhaseEntity to PhaseSummaryDTO (without nested data)
+   */
+  static phaseEntityToSummaryDTO(entity: ProjectPhaseEntity): PhaseSummaryDTO {
+    const customData = entity.custom_phase_data || {};
+    const steps = customData.steps || [];
+    const allTasks = steps.flatMap(s => s.tasks || []);
+    const completedTasks = allTasks.filter(t => t.status === 'completed').length;
+
+    return {
+      id: entity.id,
+      project_id: entity.project_id,
+      phase_name: entity.phase_name || '',
+      status: (entity.status as PhaseStatus) || 'pending',
+      progress: entity.progress || 0,
+      steps_count: steps.length,
+      tasks_count: allTasks.length,
+      completed_tasks: completedTasks,
+      start_date: entity.start_date,
+      end_date: entity.end_date,
+      order_index: entity.order_index || 0
+    };
+  }
+
+  /**
+   * Map PhaseFormDTO to ProjectPhaseEntity (for insert/update)
+   */
+  static phaseFormToEntity(
+    formData: PhaseFormDTO, 
+    projectId: string
+  ): Omit<ProjectPhaseEntity, 'id' | 'created_at' | 'updated_at'> {
+    const steps: PhaseStepData[] = (formData.steps || []).map((step, stepIndex) => ({
+      id: crypto.randomUUID(),
+      name: step.name,
+      description: step.description,
+      status: 'pending',
+      progress: 0,
+      estimated_duration_days: step.estimated_duration_days,
+      order_index: step.order_index ?? stepIndex,
+      tasks: (step.tasks || []).map((task, taskIndex) => ({
+        id: crypto.randomUUID(),
+        name: task.name,
+        description: task.description,
+        status: 'pending',
+        progress: 0,
+        estimated_duration_days: task.estimated_duration_days,
+        assigned_to: task.assigned_to || [],
+        order_index: task.order_index ?? taskIndex
+      }))
+    }));
+
+    return {
+      project_id: projectId,
+      phase_name: formData.phase_name,
+      description: formData.description,
+      construction_phase: formData.construction_phase,
+      construction_stage: formData.construction_stage,
+      estimated_cost: formData.estimated_cost,
+      estimated_duration_days: formData.estimated_duration_days,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      status: 'pending',
+      progress: 0,
+      order_index: formData.order_index ?? 0,
+      custom_phase_data: { steps }
+    };
+  }
+
+  /**
+   * Map PhaseDTO back to entity format (for updates)
+   */
+  static phaseDTOToEntity(dto: PhaseDTO): Partial<ProjectPhaseEntity> {
+    const steps: PhaseStepData[] = dto.steps.map(step => ({
+      id: step.id,
+      name: step.name,
+      description: step.description,
+      status: step.status,
+      progress: step.progress,
+      estimated_duration_days: step.estimated_duration_days,
+      actual_duration_days: step.actual_duration_days,
+      start_date: step.start_date,
+      end_date: step.end_date,
+      order_index: step.order_index,
+      tasks: step.tasks.map(task => ({
+        id: task.id,
+        name: task.name,
+        description: task.description,
+        status: task.status,
+        progress: task.progress,
+        estimated_duration_days: task.estimated_duration_days,
+        actual_duration_days: task.actual_duration_days,
+        start_date: task.start_date,
+        end_date: task.end_date,
+        assigned_to: task.assigned_to,
+        dependencies: task.dependencies,
+        weight: task.weight,
+        order_index: task.order_index
+      }))
+    }));
+
+    return {
+      id: dto.id,
+      project_id: dto.project_id,
+      phase_name: dto.phase_name,
+      description: dto.description,
+      construction_phase: dto.construction_phase,
+      construction_stage: dto.construction_stage,
+      status: dto.status,
+      progress: dto.progress,
+      estimated_cost: dto.estimated_cost,
+      actual_cost: dto.actual_cost,
+      estimated_duration_days: dto.estimated_duration_days,
+      actual_duration_days: dto.actual_duration_days,
+      start_date: dto.start_date,
+      end_date: dto.end_date,
+      actual_start_date: dto.actual_start_date,
+      actual_end_date: dto.actual_end_date,
+      order_index: dto.order_index,
+      dependencies: dto.dependencies,
+      custom_phase_data: { steps }
+    };
+  }
 
   /**
    * Map InspectionEntity to InspectionDTO with optional project info
