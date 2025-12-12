@@ -249,6 +249,70 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: colors.dark,
   },
+  // EVM/KPI Section styles
+  evmGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginBottom: 4,
+  },
+  evmItem: {
+    width: '23%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    backgroundColor: colors.light,
+    borderRadius: 2,
+  },
+  evmLabel: {
+    fontSize: 5,
+    color: colors.muted,
+  },
+  evmValue: {
+    fontSize: 6,
+    fontWeight: 'bold',
+    color: colors.dark,
+  },
+  kpiSection: {
+    marginTop: 6,
+    padding: 6,
+    backgroundColor: '#f0f9ff',
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+  },
+  kpiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  kpiItem: {
+    width: '22%',
+    alignItems: 'center',
+    padding: 4,
+    backgroundColor: colors.white,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  kpiValue: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: 2,
+  },
+  kpiLabel: {
+    fontSize: 5,
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  statusBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 3,
+    fontSize: 6,
+  },
 });
 
 interface CompactProjectPDFDocumentProps {
@@ -314,12 +378,40 @@ export function CompactProjectPDFDocument({
 
   const formatBudget = (budget: number) => {
     if (budget >= 1000000000) {
-      return `${(budget / 1000000000).toFixed(0)} Md MRU`;
+      return `${(budget / 1000000000).toFixed(2)} Md MRU`;
     }
     if (budget >= 1000000) {
-      return `${(budget / 1000000).toFixed(0)} M MRU`;
+      return `${(budget / 1000000).toFixed(2)} M MRU`;
     }
     return `${budget.toLocaleString('fr-FR')} MRU`;
+  };
+
+  const formatDecimal = (value: number) => {
+    return value.toFixed(2);
+  };
+
+  const getPerformanceColor = (value: number, isIndex: boolean = false) => {
+    if (isIndex) {
+      if (value >= 1) return colors.success;
+      if (value >= 0.9) return colors.warning;
+      return colors.danger;
+    }
+    if (value >= 0) return colors.success;
+    return colors.danger;
+  };
+
+  const getGlobalStatus = (spi: number, cpi: number) => {
+    if (spi >= 1 && cpi >= 1) return { text: 'Excellent', color: colors.success };
+    if (spi >= 0.9 && cpi >= 0.9) return { text: 'Bon', color: '#22c55e' };
+    if (spi >= 0.8 && cpi >= 0.8) return { text: 'Attention', color: colors.warning };
+    return { text: 'Critique', color: colors.danger };
+  };
+
+  const getTrendIcon = (spi: number, cpi: number) => {
+    const avg = (spi + cpi) / 2;
+    if (avg >= 1) return '↑ Positive';
+    if (avg >= 0.9) return '→ Stable';
+    return '↓ Négative';
   };
 
   const getCurrentPhase = (phases: any[]) => {
@@ -531,6 +623,136 @@ export function CompactProjectPDFDocument({
                       </Text>
                     </View>
                   </View>
+                </View>
+              </View>
+            </View>
+
+            {/* EVM Section - Analyse Valeur Acquise */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Analyse EVM (Earned Value Management)</Text>
+              <View style={styles.evmGrid}>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>PV (Valeur Planifiée)</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.plannedValue || 0)}</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>EV (Valeur Acquise)</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.earnedValue || 0)}</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>AC (Coût Réel)</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.actualCost || 0)}</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>SPI</Text>
+                  <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true) }]}>
+                    {formatDecimal(evmMetrics?.schedulePerformanceIndex || 0)}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.evmGrid}>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>SV (Écart délai)</Text>
+                  <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.scheduleVariance || 0) }]}>
+                    {formatBudget(evmMetrics?.scheduleVariance || 0)}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>CV (Écart coût)</Text>
+                  <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.costVariance || 0) }]}>
+                    {formatBudget(evmMetrics?.costVariance || 0)}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>CPI</Text>
+                  <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
+                    {formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>BAC</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.budgetAtCompletion || project.budget || 0)}</Text>
+                </View>
+              </View>
+              <View style={styles.evmGrid}>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>EAC (Est. achèvement)</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.estimateAtCompletion || 0)}</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>ETC (Est. restant)</Text>
+                  <Text style={styles.evmValue}>{formatBudget(evmMetrics?.estimateToComplete || 0)}</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>VAC (Variance)</Text>
+                  <Text style={[styles.evmValue, { color: getPerformanceColor(evmMetrics?.varianceAtCompletion || 0) }]}>
+                    {formatBudget(evmMetrics?.varianceAtCompletion || 0)}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Phase actuelle</Text>
+                  <Text style={styles.evmValue}>{getCurrentPhase(phases).substring(0, 15)}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* KPI Section */}
+            <View style={styles.kpiSection}>
+              <Text style={[styles.sectionTitle, { backgroundColor: 'transparent', borderLeftWidth: 0, marginBottom: 6 }]}>
+                Indicateurs de Performance (KPI)
+              </Text>
+              <View style={styles.kpiGrid}>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true) }]}>
+                    {formatDecimal(evmMetrics?.schedulePerformanceIndex || 0)}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Indice SPI</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true) }]}>
+                    {formatDecimal(evmMetrics?.costPerformanceIndex || 0)}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Indice CPI</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costVariance || 0) }]}>
+                    {formatDecimal(((evmMetrics?.costVariance || 0) / (project.budget || 1)) * 100)}%
+                  </Text>
+                  <Text style={styles.kpiLabel}>Écart Budget</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: colors.primary }]}>
+                    {project.progress || 0}%
+                  </Text>
+                  <Text style={styles.kpiLabel}>Progression</Text>
+                </View>
+              </View>
+              <View style={[styles.kpiGrid, { marginTop: 4 }]}>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.schedulePerformanceIndex || 0, true), fontSize: 8 }]}>
+                    {(evmMetrics?.schedulePerformanceIndex || 0) >= 1 ? 'En avance' : (evmMetrics?.schedulePerformanceIndex || 0) >= 0.9 ? 'À temps' : 'En retard'}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Perf. délai</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { color: getPerformanceColor(evmMetrics?.costPerformanceIndex || 0, true), fontSize: 8 }]}>
+                    {(evmMetrics?.costPerformanceIndex || 0) >= 1 ? 'Sous budget' : (evmMetrics?.costPerformanceIndex || 0) >= 0.9 ? 'Dans budget' : 'Dépassement'}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Perf. coût</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <Text style={[styles.kpiValue, { fontSize: 8 }]}>
+                    {getTrendIcon(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0)}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Tendance</Text>
+                </View>
+                <View style={styles.kpiItem}>
+                  <View style={[styles.statusBadge, { backgroundColor: getGlobalStatus(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0).color + '20' }]}>
+                    <Text style={[styles.kpiValue, { color: getGlobalStatus(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0).color, fontSize: 8 }]}>
+                      {getGlobalStatus(evmMetrics?.schedulePerformanceIndex || 0, evmMetrics?.costPerformanceIndex || 0).text}
+                    </Text>
+                  </View>
+                  <Text style={styles.kpiLabel}>Statut global</Text>
                 </View>
               </View>
             </View>
