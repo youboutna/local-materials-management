@@ -171,6 +171,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [phasesSource]);
 
+  // Calculate current phase and stage dynamically from phases
+  const currentPhaseInfo = useMemo(() => {
+    if (!phasesSource || phasesSource.length === 0) {
+      return { currentPhase: null, currentStage: null };
+    }
+    
+    // Find the first phase that is "in_progress"
+    const inProgressPhase = phasesSource.find((p: any) => p.status === 'in_progress');
+    if (inProgressPhase) {
+      return {
+        currentPhase: inProgressPhase.phase_name || inProgressPhase.construction_phase || inProgressPhase.name,
+        currentStage: inProgressPhase.construction_stage || null
+      };
+    }
+    
+    // If no in_progress phase, find the first "pending" or "not_started"
+    const pendingPhase = phasesSource.find((p: any) => 
+      p.status === 'pending' || p.status === 'not_started' || p.status === 'planned'
+    );
+    if (pendingPhase) {
+      return {
+        currentPhase: pendingPhase.phase_name || pendingPhase.construction_phase || pendingPhase.name,
+        currentStage: pendingPhase.construction_stage || null
+      };
+    }
+    
+    // All phases completed - show last one
+    const lastPhase = phasesSource[phasesSource.length - 1];
+    return {
+      currentPhase: lastPhase?.phase_name || lastPhase?.construction_phase || lastPhase?.name || null,
+      currentStage: lastPhase?.construction_stage || null
+    };
+  }, [phasesSource]);
+
+  // Calculate project methodology
+  const projectMethodology = useMemo(() => {
+    if (projectDetail?.methodology) {
+      return projectDetail.methodology === 'waterfall' ? 'Standard (Cascade)' :
+             projectDetail.methodology === 'agile' ? 'Agile' :
+             projectDetail.methodology === 'hybrid' ? 'Hybride' : 'Standard';
+    }
+    return 'Standard';
+  }, [projectDetail?.methodology]);
+
   // Compute derived data from DTO
   const [resources, setResources] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -457,15 +501,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Phase actuelle</span>
-                  <Badge variant="outline">{project.currentPhase || 'Non définie'}</Badge>
+                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"}>
+                    {currentPhaseInfo.currentPhase || 'Aucune phase définie'}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Étape actuelle</span>
-                  <Badge variant="outline">{project.currentStage || 'Non définie'}</Badge>
+                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"}>
+                    {currentPhaseInfo.currentStage || 'N/A'}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Méthodologie</span>
-                  <Badge variant="outline">Standard</Badge>
+                  <Badge variant="outline">{projectMethodology}</Badge>
                 </div>
                 <Progress value={calculatedProgress} className="mt-4" />
                 <p className="text-xs text-center text-muted-foreground">
