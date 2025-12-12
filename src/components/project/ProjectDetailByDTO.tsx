@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ProjectService } from '@/services/ProjectService';
 import { ProjectAnalyticsService } from '@/services/ProjectAnalyticsService';
 import { ProjectSummaryDTO, ProjectDetailDTO } from '@/types/dto';
 import { ReportManager } from '@/components/reports/ReportManager';
+import { CompactProjectReportGenerator } from '@/components/reports/CompactProjectReportGenerator';
 import FinancialOverview from '@/components/project/FinaancialOverview';
 import PhaseList from '@/components/project/PhaseList';
 import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
@@ -34,7 +36,8 @@ import {
   Clock,
   Layers,
   BarChart3,
-  Shield
+  Shield,
+  FileDown
 } from 'lucide-react';
 
 interface ProjectDetailByDTOProps {
@@ -272,6 +275,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     calculateProgress();
   }, [projectDetail?.id, projectDetail?.plannedPhases, projectDetail?.tasks, projectDetail?.inspections]);
 
+  // Convert project data for compact report generator
+  const projectDataForReport = useMemo(() => {
+    if (!project) return null;
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description || '',
+      status: project.status || 'en cours',
+      progress: calculatedProgress || project.progress || 0,
+      budget: project.budget || 0,
+      location: project.location || '',
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      resources: resources,
+      tasks: tasksSource,
+      risks: risksSource.map((r: any) => ({
+        id: r.id,
+        title: r.title || r.description,
+        description: r.description || '',
+        probability: r.probability || 50,
+        impact: r.impact || 50,
+        mitigationPlan: r.mitigationPlan || '',
+        status: r.status || 'identified',
+        relatedTasks: r.relatedTasks || []
+      })),
+      contacts: projectDetail?.mainContractor ? [{
+        id: 'contractor-1',
+        name: projectDetail.mainContractor,
+        role: 'contractor',
+        email: '',
+        isPrimary: true
+      }] : [],
+      stakeholders: projectDetail?.financingSource ? [{
+        name: projectDetail.financingSource,
+        email: '',
+        phone: '',
+        role: 'bailleur',
+        organization: projectDetail.financingSource,
+        isPrimary: true
+      }] : [],
+      methodology: projectDetail?.methodology || 'waterfall'
+    } as any;
+  }, [project, projectDetail, calculatedProgress, resources, tasksSource, risksSource]);
+
   // Use data from DTO for all tabs
   const payments = paymentsSource;
   const documentsData: any[] = [];
@@ -372,6 +419,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileDown className="h-4 w-4" />
+                Rapport compact
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              {projectDataForReport && (
+                <CompactProjectReportGenerator project={projectDataForReport} />
+              )}
+            </DialogContent>
+          </Dialog>
           {onEdit && (
             <Button onClick={onEdit} variant="outline">
               Modifier
