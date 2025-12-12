@@ -757,20 +757,75 @@ export function CompactProjectPDFDocument({
               </View>
             </View>
 
+            {/* PERT Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Analyse PERT</Text>
+              <View style={styles.evmGrid}>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Durée attendue</Text>
+                  <Text style={styles.evmValue}>
+                    {formatDecimal(pertAnalysis?.totalExpectedDuration || 0)} j
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Variance totale</Text>
+                  <Text style={styles.evmValue}>
+                    {formatDecimal(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0))}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Écart-type</Text>
+                  <Text style={styles.evmValue}>
+                    {formatDecimal(Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))}
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Chemin critique</Text>
+                  <Text style={styles.evmValue}>
+                    {pertAnalysis?.criticalPath?.length || 0} tâches
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.evmGrid}>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Prob. 95%</Text>
+                  <Text style={styles.evmValue}>
+                    {formatDecimal((pertAnalysis?.totalExpectedDuration || 0) + 1.65 * Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))} j
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Prob. 99%</Text>
+                  <Text style={styles.evmValue}>
+                    {formatDecimal((pertAnalysis?.totalExpectedDuration || 0) + 2.33 * Math.sqrt(Object.values(pertAnalysis?.variances || {}).reduce((sum, v) => sum + v, 0)))} j
+                  </Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Gantt</Text>
+                  <Text style={[styles.evmValue, { color: colors.success }]}>À jour</Text>
+                </View>
+                <View style={styles.evmItem}>
+                  <Text style={styles.evmLabel}>Phase actuelle</Text>
+                  <Text style={styles.evmValue}>{getCurrentPhase(phases).substring(0, 12)}</Text>
+                </View>
+              </View>
+            </View>
+
             {/* Footer Section */}
             <View style={styles.footerSection}>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Phase actuelle:</Text>
+                <Text style={styles.footerLabel}>Phase:</Text>
                 <Text style={styles.footerValue}>{getCurrentPhase(phases)}</Text>
               </View>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Diagramme de Gantt:</Text>
-                <Text style={[styles.footerValue, { color: colors.success }]}>À jour</Text>
+                <Text style={styles.footerLabel}>Durée PERT:</Text>
+                <Text style={[styles.footerValue, { color: pertAnalysis?.totalExpectedDuration && pertAnalysis.totalExpectedDuration > 0 ? colors.primary : colors.muted }]}>
+                  {formatDecimal(pertAnalysis?.totalExpectedDuration || 0)} jours
+                </Text>
               </View>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>PERT:</Text>
-                <Text style={[styles.footerValue, { color: pertAnalysis?.totalExpectedDuration && pertAnalysis.totalExpectedDuration > 0 ? colors.warning : colors.success }]}>
-                  {pertAnalysis?.totalExpectedDuration ? `${pertAnalysis.totalExpectedDuration} jours estimés` : 'Non calculé'}
+                <Text style={styles.footerLabel}>Criticité:</Text>
+                <Text style={[styles.footerValue, { color: (pertAnalysis?.criticalPath?.length || 0) > 3 ? colors.warning : colors.success }]}>
+                  {pertAnalysis?.criticalPath?.length || 0} tâches critiques
                 </Text>
               </View>
             </View>
