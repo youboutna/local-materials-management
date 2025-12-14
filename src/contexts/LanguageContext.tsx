@@ -42,31 +42,94 @@ export const translations = {
             optional: "Optionnel",
             required: "Requis",
             confirm_delete: "Confirmer la suppression",
-            yes_delete: "Oui, supprimer",
-            no_cancel: "Non, annuler",
-            create: "Créer",
-            add: "Ajouter",
-            view: "Voir",
-            details: "Détails",
-            actions: "Actions",
-            status: "Statut",
-            date: "Date",
-            description: "Description",
-            title: "Titre",
-            name: "Nom",
-            email: "Email",
-            phone: "Téléphone",
-            address: "Adresse",
-            all: "Tous",
-            none: "Aucun",
-            none_available: "Aucun disponible",
-            no_data: "Aucune donnée disponible",
-            error_loading: "Erreur lors du chargement",
-            created_successfully: "Créé avec succès",
-            updated_successfully: "Mis à jour avec succès",
-            deleted_successfully: "Supprimé avec succès",
-            next: "Suivant",
-            previous: "Précédent"
+            yes: "Oui",
+            no: "Non"
+            ,loading: "Chargement...",
+            load_data: "Charger les données"
+        },
+        supplier_portal: {
+            title: "Supplier Portal",
+            subtitle: "Manage your documents, tenders and payment requests",
+            linked_profile: "Profile linked",
+            profile_linked_desc: "Your supplier profile has been linked to your account.",
+            profile_created: "Profile created",
+            profile_created_desc: "Your supplier profile was created automatically.",
+            upload: {
+                title: "Upload a document",
+                placeholder_title: "Document title",
+                placeholder_description: "Description (optional)",
+                upload_button: "Upload"
+            },
+            tabs: {
+                shared: "Shared Documents",
+                uploaded: "My Documents",
+                payments: "Payments",
+                inspections: "Inspections"
+            }
+        },
+        supplier_tender: {
+            title: "Supplier Tender Portal",
+            subtitle: "Browse and submit to public tenders",
+            access_granted_for: "Access granted for:",
+            tabs: {
+                browse: "Browse",
+                documents: "Shared Documents",
+                submit: "Submit",
+                estimate: "Estimate"
+            },
+            empty: {
+                no_tenders: "No tenders available",
+                no_documents: "No shared documents at the moment",
+                select_tender: "Select a tender to view documents"
+            },
+            actions: {
+                submit: "Submit",
+                download: "Download"
+            },
+            submit_success: "Submission sent successfully",
+            submit_success_desc: "Your bid package has been submitted. A confirmation email with your secret code has been sent."
+        },
+        supplier_portal: {
+            title: "بوابة المورد",
+            subtitle: "إدارة مستنداتك، العطاءات وطلبات الدفع",
+            linked_profile: "تم ربط الملف",
+            profile_linked_desc: "تم ربط ملف المورد الخاص بك بحسابك.",
+            profile_created: "تم إنشاء الملف",
+            profile_created_desc: "تم إنشاء ملف المورد تلقائيًا.",
+            upload: {
+                title: "رفع مستند",
+                placeholder_title: "عنوان المستند",
+                placeholder_description: "الوصف (اختياري)",
+                upload_button: "رفع"
+            },
+            tabs: {
+                shared: "المستندات المشتركة",
+                uploaded: "مستنداتي",
+                payments: "المدفوعات",
+                inspections: "التفتيشات"
+            }
+        },
+        supplier_tender: {
+            title: "بوابة المورد - العطاءات",
+            subtitle: "اطلع وقدم عطاءاتك",
+            access_granted_for: "تم منح الوصول لـ:",
+            tabs: {
+                browse: "تصفح",
+                documents: "المستندات المشتركة",
+                submit: "تقديم",
+                estimate: "التقدير"
+            },
+            empty: {
+                no_tenders: "لا توجد عطاءات متاحة",
+                no_documents: "لا توجد مستندات مشتركة حاليًا",
+                select_tender: "اختر عطاء لعرض المستندات"
+            },
+            actions: {
+                submit: "تقديم",
+                download: "تنزيل"
+            },
+            submit_success: "تم إرسال العرض بنجاح",
+            submit_success_desc: "تم تقديم ملف الترشيح. تم إرسال بريد إلكتروني بتأكيد ورمزك السري."
         },
         supplier_portal: {
             title: "Portail Fournisseur",
@@ -109,6 +172,70 @@ export const translations = {
             },
             submit_success: "Soumission envoyée avec succès",
             submit_success_desc: "Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé."
+            ,
+            project_label: "Projet",
+            location_label: "Lieu",
+            launched_on: "Lancé le",
+            deadline_label: "Limite",
+            criteria_intro: "Les appels d'offres sont affichés uniquement s'ils répondent aux critères suivants :",
+            criteria: {
+                status: "Statut : Publié",
+                phase: "Phase : Phase 2 (Appel de soumissions)",
+                deadline: "Date limite : Dans le futur"
+            },
+            documents_shared_for: "Documents partagés pour",
+            shared_on: "Partagé le",
+            select_tender_prompt: "Sélectionnez un appel d'offres pour préparer votre dossier de candidature.",
+            submission_for: "Soumission",
+            phase_active: "Phase de soumission active",
+            phase_closed: "Phase de soumission fermée",
+            submitted_on: "Soumis le",
+            status_label: "Statut",
+            status_under_review: "En cours d'évaluation",
+            document_categories: {
+                administrative: "Documents Administratifs",
+                technical: "Documents Techniques",
+                financial: "Documents Financiers"
+            },
+            required_documents: {
+                administrative: {
+                    registre_commerce: "Registre de commerce",
+                    statuts_societe: "Statuts de la société",
+                    declaration_fiscale: "Déclaration fiscale",
+                    certificat_conformite: "Certificat de conformité",
+                    attestation_assurance: "Attestation d'assurance"
+                },
+                technical: {
+                    cv_references: "CV et références techniques",
+                    certificats_qualification: "Certificats de qualification",
+                    plan_realisation: "Plan de réalisation",
+                    methodologie: "Méthodologie",
+                    planning_previsionnel: "Planning prévisionnel"
+                },
+                financial: {
+                    devis_quantitatif: "Devis quantitatif estimatif",
+                    garantie_bancaire: "Garantie bancaire",
+                    bilan_financier: "Bilan financier",
+                    references_bancaires: "Références bancaires",
+                    caution_soumission: "Caution de soumission"
+                }
+            },
+            replace: "Remplacer",
+            choose: "Choisir",
+            notes_label: "Notes supplémentaires (optionnel)",
+            notes_placeholder: "Ajoutez des informations complémentaires...",
+            files_selected: "Fichiers sélectionnés",
+            dossier_complete: "Dossier complet",
+            submitting: "Soumission en cours...",
+            submit_button: "Soumettre le dossier",
+            browse_button: "Parcourir les appels d'offres",
+            estimate_select_prompt: "Choisissez un appel d'offres pour créer votre devis quantitatif estimatif.",
+            errors: {
+                invalid_deadline: "Date limite de soumission invalide",
+                deadline_passed: "La date limite de soumission est dépassée",
+                submit_failed: "Erreur lors de la soumission du dossier.",
+                already_submitted: "Vous avez déjà soumis un dossier pour cet appel d'offres."
+            }
         },
         app: {
             name: "HadraTech-GPI"
