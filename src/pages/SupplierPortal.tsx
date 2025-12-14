@@ -1,24 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import BusinessDocuments from '@/components/documents/BusinessDocuments';
+import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
+import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Upload, Download, Eye, LogIn, LogOut, User, Key, CheckCircle, MessageCircle, Clock, Send, Share2, Plus } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { Supplier, SupplierNotification, DocumentWithViewStatus } from '@/types/supplier';
-import { DocumentType } from '@/types/document';
-import BusinessDocuments from '@/components/documents/BusinessDocuments';
-import SupplierPaymentRequest from '@/components/suppliers/SupplierPaymentRequest';
-import { SupplierInspectionsList } from '@/components/supplier/SupplierInspectionsList';
 import { useSupplierInspections } from '@/hooks/useSupplierInspections';
+import { supabase } from '@/integrations/supabase/client';
+import { DocumentWithViewStatus, Supplier, SupplierNotification } from '@/types/supplier';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { CheckCircle, Clock, Download, Eye, FileText, LogIn, LogOut, MessageCircle, Plus, Send, Share2, Upload, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const SupplierPortal = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -44,6 +44,7 @@ const SupplierPortal = () => {
   const [selectedDocumentForShare, setSelectedDocumentForShare] = useState<string | null>(null);
   const [documentType, setDocumentType] = useState<string>('supplier_info');
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
   
   // Use the custom hook for inspections with proper service layer
@@ -149,8 +150,8 @@ const SupplierPortal = () => {
         } else {
           setSupplierProfile(updatedData as Supplier);
           toast({
-            title: 'Profil lié',
-            description: 'Votre profil fournisseur a été lié à votre compte.',
+            title: t('supplier_portal.linked_profile'),
+            description: t('supplier_portal.profile_linked_desc'),
           });
           return;
         }
@@ -452,15 +453,15 @@ const SupplierPortal = () => {
         if (error.message === 'Invalid login credentials') {
           errorMessage = 'Email ou mot de passe incorrect';
         }
-        toast({
-          title: "Erreur",
+          toast({
+          title: t('common.error'),
           description: errorMessage,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Connexion réussie",
-          description: "Bienvenue sur le portail fournisseur",
+          title: t('common.success'),
+          description: t('supplier_portal.subtitle') || 'Bienvenue sur le portail fournisseur',
         });
       }
     } catch (error) {
@@ -483,14 +484,14 @@ const SupplierPortal = () => {
 
       if (error) {
         toast({
-          title: "Erreur d'inscription",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Inscription réussie",
-          description: "Vérifiez votre email pour confirmer votre compte",
+          title: t('common.success'),
+          description: t('supplier_portal.profile_created_desc') || 'Vérifiez votre email pour confirmer votre compte',
         });
       }
     } catch (error) {

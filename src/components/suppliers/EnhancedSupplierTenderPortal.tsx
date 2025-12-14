@@ -27,6 +27,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PublicTender {
   id: string;
@@ -83,32 +84,33 @@ interface SharedDocument {
 }
 
 const DOCUMENT_CATEGORIES = {
-  administrative: 'Documents Administratifs',
-  technical: 'Documents Techniques', 
-  financial: 'Documents Financiers'
+  administrative: 'administrative',
+  technical: 'technical', 
+  financial: 'financial'
 } as const;
 
+// Use keys for required documents so translations can be applied at render time
 const REQUIRED_DOCUMENTS = {
   administrative: [
-    'Registre de commerce',
-    'Statuts de la société',
-    'Déclaration fiscale',
-    'Certificat de conformité',
-    'Attestation d\'assurance'
+    'registre_commerce',
+    'statuts_societe',
+    'declaration_fiscale',
+    'certificat_conformite',
+    'attestation_assurance'
   ],
   technical: [
-    'CV et références techniques',
-    'Certificats de qualification',
-    'Plan de réalisation',
-    'Méthodologie',
-    'Planning prévisionnel'
+    'cv_references',
+    'certificats_qualification',
+    'plan_realisation',
+    'methodologie',
+    'planning_previsionnel'
   ],
   financial: [
-    'Devis quantitatif estimatif',
-    'Garantie bancaire',
-    'Bilan financier',
-    'Références bancaires',
-    'Caution de soumission'
+    'devis_quantitatif',
+    'garantie_bancaire',
+    'bilan_financier',
+    'references_bancaires',
+    'caution_soumission'
   ]
 };
 
@@ -128,6 +130,7 @@ const EnhancedSupplierTenderPortal = () => {
   const [accessGrantedTenderId, setAccessGrantedTenderId] = useState<string | null>(null);
   const [supplierEmailFromSecret, setSupplierEmailFromSecret] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
 
@@ -197,11 +200,11 @@ const EnhancedSupplierTenderPortal = () => {
         const now = new Date();
         
         if (isNaN(deadline.getTime())) {
-          throw new Error('Date limite de soumission invalide');
+          throw new Error(t('supplier_tender.errors.invalid_deadline'));
         }
         
         if (now > deadline) {
-          throw new Error('La date limite de soumission est dépassée');
+          throw new Error(t('supplier_tender.errors.deadline_passed'));
         }
       }
       
@@ -258,22 +261,22 @@ const EnhancedSupplierTenderPortal = () => {
       }, 3000);
       
       toast({
-        title: 'Soumission envoyée avec succès',
-        description: 'Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé.',
+        title: t('supplier_tender.submit_success'),
+        description: t('supplier_tender.submit_success_desc'),
       });
     },
     onError: (error) => {
       setSubmissionStep('error');
       console.error('Submit bid error:', error);
       
-      let message = 'Erreur lors de la soumission du dossier.';
+      let message = t('supplier_tender.errors.submit_failed');
       if (
         error instanceof Error &&
         (error.message.includes('already exists') ||
          error.message.includes('duplicate') ||
          error.message.includes('unique constraint'))
       ) {
-        message = 'Vous avez déjà soumis un dossier pour cet appel d\'offres.';
+        message = t('supplier_tender.errors.already_submitted');
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -281,7 +284,7 @@ const EnhancedSupplierTenderPortal = () => {
       setSubmissionError(message);
       
       toast({
-        title: 'Erreur',
+        title: t('common.error'),
         description: message,
         variant: 'destructive',
       });
@@ -292,8 +295,9 @@ const EnhancedSupplierTenderPortal = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
         const key = `${category}-${documentType}`;
         setSelectedFiles(prev => ({ ...prev, [key]: file }));
@@ -344,24 +348,22 @@ const EnhancedSupplierTenderPortal = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Portail Fournisseurs - Appels d'Offres</h1>
-            <p className="text-muted-foreground mt-2">
-              Consultez et soumissionnez aux appels d'offres publics
-            </p>
+            <h1 className="text-3xl font-bold">{t('supplier_tender.title')}</h1>
+            <p className="text-muted-foreground mt-2">{t('supplier_tender.subtitle')}</p>
             {hasAccessToTender && supplierEmailFromSecret && (
               <Badge variant="outline" className="mt-2">
-                Accès autorisé pour: {supplierEmailFromSecret}
+                {t('supplier_tender.access_granted_for')} {supplierEmailFromSecret}
               </Badge>
             )}
           </div>
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="browse">Parcourir</TabsTrigger>
-          <TabsTrigger value="documents">Documents Partagés</TabsTrigger>
-          <TabsTrigger value="submit">Soumissionner</TabsTrigger>
-          <TabsTrigger value="estimate">Devis</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="browse">{t('supplier_tender.tabs.browse')}</TabsTrigger>
+          <TabsTrigger value="documents">{t('supplier_tender.tabs.documents')}</TabsTrigger>
+          <TabsTrigger value="submit">{t('supplier_tender.tabs.submit')}</TabsTrigger>
+          <TabsTrigger value="estimate">{t('supplier_tender.tabs.estimate')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
@@ -378,17 +380,15 @@ const EnhancedSupplierTenderPortal = () => {
                       
                       {tender.project && (
                         <div className="bg-muted/50 p-3 rounded">
-                          <p className="text-sm font-medium">Projet: {tender.project.title}</p>
+                          <p className="text-sm font-medium">{t('supplier_tender.project_label')}: {tender.project.title}</p>
                           {tender.project.location && (
-                            <p className="text-xs text-muted-foreground">Lieu: {tender.project.location}</p>
+                            <p className="text-xs text-muted-foreground">{t('supplier_tender.location_label')}: {tender.project.location}</p>
                           )}
                         </div>
                       )}
                       
                       <div className="flex items-center justify-between">
-                        <Badge variant="default">
-                          Appel de soumissions
-                        </Badge>
+                        <Badge variant="default">{t('supplier_tender.title')}</Badge>
                         <Button 
                           onClick={() => {
                             setSelectedTender(tender);
@@ -396,18 +396,18 @@ const EnhancedSupplierTenderPortal = () => {
                           }}
                           size="sm"
                         >
-                          Soumissionner
+                          {t('supplier_tender.actions.submit')}
                         </Button>
                       </div>
                       
                       <div className="text-xs text-muted-foreground space-y-1">
                         {tender.launch_date && (
-                          <p>Lancé le {new Date(tender.launch_date).toLocaleDateString()}</p>
+                          <p>{t('supplier_tender.launched_on')} {new Date(tender.launch_date).toLocaleDateString()}</p>
                         )}
                         {tender.deadline_date && (
                           <p className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Limite: {new Date(tender.deadline_date).toLocaleDateString()}
+                            {t('supplier_tender.deadline_label')}: {new Date(tender.deadline_date).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -418,16 +418,16 @@ const EnhancedSupplierTenderPortal = () => {
             </div>
           ) : (
             <Card>
-              <CardContent className="p-8 text-center">
+                <CardContent className="p-8 text-center">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Aucun appel d'offres disponible</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('supplier_tender.empty.no_tenders')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Les appels d'offres sont affichés uniquement s'ils répondent aux critères suivants :
+                  {t('supplier_tender.criteria_intro')}
                 </p>
                 <ul className="text-sm text-muted-foreground space-y-1 text-left max-w-md mx-auto">
-                  <li>• Statut : Publié</li>
-                  <li>• Phase : Phase 2 (Appel de soumissions)</li>
-                  <li>• Date limite : Dans le futur</li>
+                  <li>• {t('supplier_tender.criteria.status')}</li>
+                  <li>• {t('supplier_tender.criteria.phase')}</li>
+                  <li>• {t('supplier_tender.criteria.deadline')}</li>
                 </ul>
               </CardContent>
             </Card>
@@ -445,10 +445,7 @@ const EnhancedSupplierTenderPortal = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Documents mis à disposition par l'organisme pour cette phase
-                  </p>
-                  
+                  <p className="text-muted-foreground mb-4">{t('supplier_tender.subtitle')}</p>
                   {sharedDocuments && sharedDocuments.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {sharedDocuments.map((doc) => (
@@ -467,7 +464,7 @@ const EnhancedSupplierTenderPortal = () => {
                               onClick={() => window.open(doc.file_url, '_blank')}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              Télécharger
+                              {t('supplier_tender.actions.download')}
                             </Button>
                           </div>
                         </Card>
@@ -486,11 +483,9 @@ const EnhancedSupplierTenderPortal = () => {
               <CardContent className="p-6 text-center">
                 <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">Sélectionnez un appel d'offres</h3>
-                <p className="text-muted-foreground mb-4">
-                  Choisissez un appel d'offres pour voir les documents partagés.
-                </p>
+                  <p className="text-muted-foreground mb-4">{t('supplier_tender.empty.select_tender')}</p>
                 <Button onClick={() => setActiveTab('browse')}>
-                  Parcourir les appels d'offres
+                  {t('supplier_tender.tabs.browse')}
                 </Button>
               </CardContent>
             </Card>

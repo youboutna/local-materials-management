@@ -716,6 +716,56 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          subject: string
+          template_key: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject: string
+          template_key: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject?: string
+          template_key?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           certifications: Json | null
@@ -1044,6 +1094,57 @@ export type Database = {
           },
         ]
       }
+      form_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string
+          description: string
+          fields: Json
+          id: string
+          is_active: boolean
+          is_public: boolean
+          name: string
+          sections: Json | null
+          template_type: string
+          updated_at: string | null
+          usage_count: number
+          version: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by: string
+          description: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name: string
+          sections?: Json | null
+          template_type: string
+          updated_at?: string | null
+          usage_count?: number
+          version?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          name?: string
+          sections?: Json | null
+          template_type?: string
+          updated_at?: string | null
+          usage_count?: number
+          version?: string
+        }
+        Relationships: []
+      }
       health_claims: {
         Row: {
           act_reimbursement_rates: Json | null
@@ -1103,6 +1204,96 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hse_evaluations: {
+        Row: {
+          category: string
+          corrective_actions: string[] | null
+          created_at: string | null
+          deadline: string | null
+          documents: string[] | null
+          environment_score: number | null
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name: string | null
+          findings: string
+          id: string
+          inspection_type: string
+          location_details: string
+          non_conformities: string[] | null
+          observations: string
+          overall_score: number | null
+          photos: string[] | null
+          recommendations: string
+          review_date: string | null
+          review_notes: string | null
+          reviewed_by: string | null
+          risk_level: string
+          safety_score: number | null
+          station_id: string | null
+          station_name: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          corrective_actions?: string[] | null
+          created_at?: string | null
+          deadline?: string | null
+          documents?: string[] | null
+          environment_score?: number | null
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name?: string | null
+          findings: string
+          id?: string
+          inspection_type: string
+          location_details: string
+          non_conformities?: string[] | null
+          observations: string
+          overall_score?: number | null
+          photos?: string[] | null
+          recommendations: string
+          review_date?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          risk_level: string
+          safety_score?: number | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          corrective_actions?: string[] | null
+          created_at?: string | null
+          deadline?: string | null
+          documents?: string[] | null
+          environment_score?: number | null
+          evaluation_date?: string
+          evaluator_id?: string
+          evaluator_name?: string | null
+          findings?: string
+          id?: string
+          inspection_type?: string
+          location_details?: string
+          non_conformities?: string[] | null
+          observations?: string
+          overall_score?: number | null
+          photos?: string[] | null
+          recommendations?: string
+          review_date?: string | null
+          review_notes?: string | null
+          reviewed_by?: string | null
+          risk_level?: string
+          safety_score?: number | null
+          station_id?: string | null
+          station_name?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       inspections: {
         Row: {
@@ -1726,6 +1917,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      monitoring_alerts: {
+        Row: {
+          alert_type: string
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          priority: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          station_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          station_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          station_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -3166,9 +3408,11 @@ export type Database = {
         Row: {
           adresse: Json | null
           allows_initial_payment: boolean | null
+          area_sqm: number | null
           attribution_date: string | null
           budget: number
           check_schedule_last_run: Json | null
+          client_id: string | null
           completion_date: string | null
           coordinates_latitude: number | null
           coordinates_longitude: number | null
@@ -3178,7 +3422,9 @@ export type Database = {
           current_phase: string | null
           current_stage: string | null
           description: string
+          donor_organization: string | null
           end_date: string | null
+          engineering_consultant_id: string | null
           environmental_constraints: string | null
           estimated_days: number | null
           financing_source: string | null
@@ -3211,20 +3457,26 @@ export type Database = {
           retention_percentage: number | null
           sector: string | null
           selection_mode: string | null
+          site_details: string | null
           start_date: string
           status: string
+          supervisor_id: string | null
           team_size: number
+          technical_manager_id: string | null
           terrain_type: string | null
           thumbnail: string
           title: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           adresse?: Json | null
           allows_initial_payment?: boolean | null
+          area_sqm?: number | null
           attribution_date?: string | null
           budget: number
           check_schedule_last_run?: Json | null
+          client_id?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3234,7 +3486,9 @@ export type Database = {
           current_phase?: string | null
           current_stage?: string | null
           description: string
+          donor_organization?: string | null
           end_date?: string | null
+          engineering_consultant_id?: string | null
           environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
@@ -3267,20 +3521,26 @@ export type Database = {
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
+          site_details?: string | null
           start_date: string
           status: string
+          supervisor_id?: string | null
           team_size: number
+          technical_manager_id?: string | null
           terrain_type?: string | null
           thumbnail?: string
           title: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           adresse?: Json | null
           allows_initial_payment?: boolean | null
+          area_sqm?: number | null
           attribution_date?: string | null
           budget?: number
           check_schedule_last_run?: Json | null
+          client_id?: string | null
           completion_date?: string | null
           coordinates_latitude?: number | null
           coordinates_longitude?: number | null
@@ -3290,7 +3550,9 @@ export type Database = {
           current_phase?: string | null
           current_stage?: string | null
           description?: string
+          donor_organization?: string | null
           end_date?: string | null
+          engineering_consultant_id?: string | null
           environmental_constraints?: string | null
           estimated_days?: number | null
           financing_source?: string | null
@@ -3323,21 +3585,67 @@ export type Database = {
           retention_percentage?: number | null
           sector?: string | null
           selection_mode?: string | null
+          site_details?: string | null
           start_date?: string
           status?: string
+          supervisor_id?: string | null
           team_size?: number
+          technical_manager_id?: string | null
           terrain_type?: string | null
           thumbnail?: string
           title?: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "user_full"
             referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "projects_engineering_consultant_id_fkey"
+            columns: ["engineering_consultant_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_project_responsable_id_fkey"
+            columns: ["project_responsable_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_technical_manager_id_fkey"
+            columns: ["technical_manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3647,6 +3955,263 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stock_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          current_value: number | null
+          description: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          stock_id: string
+          threshold_id: string | null
+          threshold_value: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          stock_id: string
+          threshold_id?: string | null
+          threshold_value?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          stock_id?: string
+          threshold_id?: string | null
+          threshold_value?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_threshold_id_fkey"
+            columns: ["threshold_id"]
+            isOneToOne: false
+            referencedRelation: "stock_thresholds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          destination: string | null
+          id: string
+          movement_date: string
+          movement_type: string
+          notes: string | null
+          quantity: number
+          recorded_by: string | null
+          reference: string | null
+          stock_id: string
+          supplier: string | null
+          total_value: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          movement_date?: string
+          movement_type: string
+          notes?: string | null
+          quantity: number
+          recorded_by?: string | null
+          reference?: string | null
+          stock_id: string
+          supplier?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          destination?: string | null
+          id?: string
+          movement_date?: string
+          movement_type?: string
+          notes?: string | null
+          quantity?: number
+          recorded_by?: string | null
+          reference?: string | null
+          stock_id?: string
+          supplier?: string | null
+          total_value?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_thresholds: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          depot: string | null
+          id: string
+          is_active: boolean | null
+          notification_enabled: boolean | null
+          product: string | null
+          stock_id: string | null
+          threshold_type: string
+          threshold_unit: string
+          threshold_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          depot?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_enabled?: boolean | null
+          product?: string | null
+          stock_id?: string | null
+          threshold_type: string
+          threshold_unit?: string
+          threshold_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          depot?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_enabled?: boolean | null
+          product?: string | null
+          stock_id?: string | null
+          threshold_type?: string
+          threshold_unit?: string
+          threshold_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_thresholds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_full"
+            referencedColumns: ["auth_id"]
+          },
+          {
+            foreignKeyName: "stock_thresholds_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stocks: {
+        Row: {
+          capacity: number
+          created_at: string
+          current_stock: number
+          depot: string
+          id: string
+          last_update: string | null
+          notes: string | null
+          product: string
+          rotation_rate: number | null
+          status: string
+          trend: string | null
+          updated_at: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          current_stock?: number
+          depot: string
+          id?: string
+          last_update?: string | null
+          notes?: string | null
+          product: string
+          rotation_rate?: number | null
+          status?: string
+          trend?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          current_stock?: number
+          depot?: string
+          id?: string
+          last_update?: string | null
+          notes?: string | null
+          product?: string
+          rotation_rate?: number | null
+          status?: string
+          trend?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       submission_access_logs: {
         Row: {
@@ -5768,6 +6333,10 @@ export type Database = {
       has_role: {
         Args: { role_name: string; user_id: string }
         Returns: boolean
+      }
+      increment_template_usage: {
+        Args: { template_id: string }
+        Returns: undefined
       }
       is_current_user_admin: { Args: never; Returns: boolean }
       search_projects_autocomplete: {

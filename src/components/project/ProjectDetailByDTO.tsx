@@ -1,43 +1,44 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { ProjectService } from "@/services/ProjectService";
-import { ProjectAnalyticsService } from "@/services/ProjectAnalyticsService";
-import { ProjectSummaryDTO, ProjectDetailDTO } from "@/types/dto";
-import { ReportManager } from "@/components/reports/ReportManager";
-import FinancialOverview from "@/components/project/FinaancialOverview";
-import PhaseList from "@/components/project/PhaseList";
-import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
-import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
-import TeamOverview from "@/components/project/TeamOverview";
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
-import ProjectGantt from "@/components/project/ProjectGantt";
+import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
+import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
+import EnhancedTaskManager from '@/components/project/EnhancedTaskManager';
+import FinancialOverview from '@/components/project/FinaancialOverview';
+import PhaseList from '@/components/project/PhaseList';
+import ProjectGantt from '@/components/project/ProjectGantt';
+import TeamOverview from '@/components/project/TeamOverview';
+import { ReportManager } from '@/components/reports/ReportManager';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from '@/hooks/use-toast';
+import { ProjectAnalyticsService } from '@/services/ProjectAnalyticsService';
+import { ProjectService } from '@/services/ProjectService';
+import { ProjectDetailDTO, ProjectSummaryDTO } from '@/types/dto';
+import { Dialog, DialogContent, DialogTrigger } from '@radix-ui/react-dialog';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  MapPin,
-  Users,
   AlertTriangle,
-  TrendingUp,
-  Package,
-  Target,
-  FileText,
+  ArrowLeft,
+  BarChart3,
+  Calendar,
   CheckCircle,
   Clock,
-  Layers,
-  BarChart3,
+  DollarSign,
+  FileDown,
+  FileText,
+  MapPin,
+  Package,
   Shield,
+  Target,
+  TrendingUp,
+  Users
 } from "lucide-react";
-import { ProgressCalculationService } from "@/services/ProgressCalculationService";
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ElectricSpinner } from "../loading-page";
-import { toast } from "sonner";
+import { CompactProjectReportGenerator } from '../reports/CompactProjectReportGenerator';
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -187,6 +188,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [phasesSource]);
 
+  // Calculate current phase and stage dynamically from phases
+  const currentPhaseInfo = useMemo(() => {
+    if (!phasesSource || phasesSource.length === 0) {
+      return { currentPhase: null, currentStage: null };
+    }
+    
+    // Find the first phase that is "in_progress"
+    const inProgressPhase = phasesSource.find((p: any) => p.status === 'in_progress');
+    if (inProgressPhase) {
+      return {
+        currentPhase: inProgressPhase.phase_name || inProgressPhase.construction_phase || inProgressPhase.name,
+        currentStage: inProgressPhase.construction_stage || null
+      };
+    }
+    
+    // If no in_progress phase, find the first "pending" or "not_started"
+    const pendingPhase = phasesSource.find((p: any) => 
+      p.status === 'pending' || p.status === 'not_started' || p.status === 'planned'
+    );
+    if (pendingPhase) {
+      return {
+        currentPhase: pendingPhase.phase_name || pendingPhase.construction_phase || pendingPhase.name,
+        currentStage: pendingPhase.construction_stage || null
+      };
+    }
+    
+    // All phases completed - show last one
+    const lastPhase = phasesSource[phasesSource.length - 1];
+    return {
+      currentPhase: lastPhase?.phase_name || lastPhase?.construction_phase || lastPhase?.name || null,
+      currentStage: lastPhase?.construction_stage || null
+    };
+  }, [phasesSource]);
+
+  // Calculate project methodology
+  const projectMethodology = useMemo(() => {
+    if (projectDetail?.methodology) {
+      return projectDetail.methodology === 'waterfall' ? 'Standard (Cascade)' :
+             projectDetail.methodology === 'agile' ? 'Agile' :
+             projectDetail.methodology === 'hybrid' ? 'Hybride' : 'Standard';
+    }
+    return 'Standard';
+  }, [projectDetail?.methodology]);
+
   // Compute derived data from DTO
   const [resources, setResources] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -242,6 +287,50 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     };
     calculateProgress();
   }, [projectDetail]);
+
+  // Convert project data for compact report generator
+  const projectDataForReport = useMemo(() => {
+    if (!project) return null;
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description || '',
+      status: project.status || 'en cours',
+      progress: calculatedProgress || project.progress || 0,
+      budget: project.budget || 0,
+      location: project.location || '',
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      resources: resources,
+      tasks: tasksSource,
+      risks: risksSource.map((r: any) => ({
+        id: r.id,
+        title: r.title || r.description,
+        description: r.description || '',
+        probability: r.probability || 50,
+        impact: r.impact || 50,
+        mitigationPlan: r.mitigationPlan || '',
+        status: r.status || 'identified',
+        relatedTasks: r.relatedTasks || []
+      })),
+      contacts: projectDetail?.mainContractor ? [{
+        id: 'contractor-1',
+        name: projectDetail.mainContractor,
+        role: 'contractor',
+        email: '',
+        isPrimary: true
+      }] : [],
+      stakeholders: projectDetail?.financingSource ? [{
+        name: projectDetail.financingSource,
+        email: '',
+        phone: '',
+        role: 'bailleur',
+        organization: projectDetail.financingSource,
+        isPrimary: true
+      }] : [],
+      methodology: projectDetail?.methodology || 'waterfall'
+    } as any;
+  }, [project, projectDetail, calculatedProgress, resources, tasksSource, risksSource]);
 
   // Use data from DTO for all tabs
   const payments = paymentsSource;
@@ -334,10 +423,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       }
 
       // Show success message
-      toast.success(`Le projet est supprimé avec succès`);
+      toast({
+        title: "Succès",
+        description: "Le projet est supprimé avec succès",
+      });
     } catch (error) {
       console.error("Error deleting projects:", error);
-      toast.error("Erreur lors de la suppression de projet");
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression de projet",
+      });
     }
   };
   return (
@@ -383,6 +478,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileDown className="h-4 w-4" />
+                Rapport compact
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              {projectDataForReport && (
+                <CompactProjectReportGenerator project={projectDataForReport} />
+              )}
+            </DialogContent>
+          </Dialog>
           <ReportManager data={{ project }} reportType="project" />
           {onEdit && (
             <Button onClick={onEdit} variant="outline">
@@ -545,19 +653,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Phase actuelle</span>
-                  <Badge variant="outline">
-                    {project.currentPhase || "Non définie"}
+                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"}>
+                    {currentPhaseInfo.currentPhase || 'Aucune phase définie'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Étape actuelle</span>
-                  <Badge variant="outline">
-                    {project.currentStage || "Non définie"}
+                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"}>
+                    {currentPhaseInfo.currentStage || 'N/A'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Méthodologie</span>
-                  <Badge variant="outline">Standard</Badge>
+                  <Badge variant="outline">{projectMethodology}</Badge>
                 </div>
                 <Progress value={calculatedProgress} className="mt-4" />
                 <p className="text-xs text-center text-muted-foreground">

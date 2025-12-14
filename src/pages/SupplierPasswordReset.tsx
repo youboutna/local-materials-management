@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const SupplierPasswordReset = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,7 @@ const SupplierPasswordReset = () => {
   const [checking, setChecking] = useState(true);
 
   const token = searchParams.get('token');
+  const { t } = useLanguage();
 
   useEffect(() => {
     validateToken();
@@ -27,7 +29,7 @@ const SupplierPasswordReset = () => {
   const validateToken = async () => {
     if (!token) {
       toast({
-        title: "Lien invalide",
+        title: t('common.error'),
         description: "Le lien de réinitialisation est invalide ou manquant.",
         variant: "destructive",
       });
@@ -47,7 +49,7 @@ const SupplierPasswordReset = () => {
 
       if (error || !data) {
         toast({
-          title: "Lien expiré",
+          title: t('common.error'),
           description: "Ce lien de réinitialisation a expiré ou a déjà été utilisé.",
           variant: "destructive",
         });
@@ -59,7 +61,7 @@ const SupplierPasswordReset = () => {
     } catch (error) {
       console.error('Error validating token:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de valider le lien de réinitialisation.",
         variant: "destructive",
       });
@@ -74,7 +76,7 @@ const SupplierPasswordReset = () => {
 
     if (password !== confirmPassword) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Les mots de passe ne correspondent pas.",
         variant: "destructive",
       });
@@ -83,7 +85,7 @@ const SupplierPasswordReset = () => {
 
     if (password.length < 6) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Le mot de passe doit contenir au moins 6 caractères.",
         variant: "destructive",
       });
@@ -92,7 +94,7 @@ const SupplierPasswordReset = () => {
 
     if (!token) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Token invalide.",
         variant: "destructive",
       });
@@ -144,7 +146,7 @@ const SupplierPasswordReset = () => {
         .eq('reset_token', token);
 
       toast({
-        title: "Succès",
+        title: t('common.success'),
         description: "Votre mot de passe a été défini avec succès. Vous pouvez maintenant vous connecter.",
       });
 
@@ -153,7 +155,7 @@ const SupplierPasswordReset = () => {
     } catch (error: any) {
       console.error('Error setting password:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: error.message || "Impossible de définir le mot de passe.",
         variant: "destructive",
       });

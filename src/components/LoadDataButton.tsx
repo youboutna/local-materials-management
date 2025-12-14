@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { loadProjectsToSupabase } from '@/scripts/loadDataToSupabase';
 import { DatabaseIcon, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { USE_TYPEORM } from '@/hooks/projects/constants';
 
 interface LoadDataButtonProps {
@@ -20,13 +21,14 @@ const LoadDataButton = ({
 }: LoadDataButtonProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleLoadData = async () => {
     setLoading(true);
     try {
       if (USE_TYPEORM) {
         toast({
-          title: "Information",
+          title: t('common.info'),
           description: "TypeORM n'est pas compatible avec l'environnement du navigateur. Utilisation de Supabase à la place.",
           variant: "default",
         });
@@ -37,13 +39,13 @@ const LoadDataButton = ({
       
       if (result > 0) {
         toast({
-          title: "Données chargées",
+          title: t('common.success'),
           description: `${result} projets ont été ajoutés avec succès à Supabase.`,
           className: "bg-adrar-100 border-adrar-300 text-adrar-800",
         });
       } else {
         toast({
-          title: "Information",
+          title: t('common.info'),
           description: "Aucun nouveau projet n'a été ajouté à la base de données.",
           variant: "default",
         });
@@ -56,7 +58,7 @@ const LoadDataButton = ({
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Une erreur s'est produite lors du chargement des données.",
         variant: "destructive",
       });
@@ -76,12 +78,12 @@ const LoadDataButton = ({
       {loading ? (
         <>
           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-          Chargement...
+          {t('common.loading')}
         </>
       ) : (
         <>
           <DatabaseIcon className="mr-2 h-4 w-4" />
-          Charger les données
+          {t('common.load_data')}
         </>
       )}
     </Button>

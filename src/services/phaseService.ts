@@ -1,7 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
+import { ProjectPhaseEntity, PhaseStepData, PhaseTaskData } from '@/types/entities';
+import { PhaseDTO, PhaseSummaryDTO, PhaseFormDTO, PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from '@/types/phase-dto';
+import { EntityToDTOMapper } from './EntityToDTOMapper';
 import { DEV_MODE } from '@/config/constants';
 
+// Legacy interface - kept for backward compatibility
 export interface PhaseData {
   id: string;
   phase?: ConstructionPhase;
@@ -67,6 +71,7 @@ export interface DatabasePhase {
   human_resources?: any;
   suppliers?: any;
   location?: string | null;
+  order_index?: number | null;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -295,5 +300,239 @@ export class PhaseService {
       console.error('Error deleting phase:', error);
       throw error;
     }
+  }
+
+  // ============= New DTO-based methods =============
+
+  /**
+   * Get all phases as DTOs for a project
+   */
+  static async getPhasesDTOByProject(projectId: string): Promise<PhaseDTO[]> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching phases:', error);
+      throw error;
+    }
+
+    return (data || []).map(entity => 
+      EntityToDTOMapper.phaseEntityToDTO(entity as unknown as ProjectPhaseEntity)
+    );
+  }
+
+  /**
+   * Get phase summaries (without nested data)
+   */
+  static async getPhaseSummaries(projectId: string): Promise<PhaseSummaryDTO[]> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching phase summaries:', error);
+      throw error;
+    }
+
+    return (data || []).map(entity => 
+      EntityToDTOMapper.phaseEntityToSummaryDTO(entity as unknown as ProjectPhaseEntity)
+    );
+  }
+
+  /**
+   * Get a single phase as DTO
+   */
+  static async getPhaseDTOById(phaseId: string): Promise<PhaseDTO | null> {
+    const { data, error } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('id', phaseId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      console.error('Error fetching phase:', error);
+      throw error;
+    }
+
+    return EntityToDTOMapper.phaseEntityToDTO(data as unknown as ProjectPhaseEntity);
+  }
+
+  /**
+   * Create a new phase from form DTO
+   */
+  static async createPhaseFromDTO(projectId: string, formData: PhaseFormDTO): Promise<PhaseDTO> {
+    const entity = EntityToDTOMapper.phaseFormToEntity(formData, projectId);
+    
+    const { data, error } = await supabase
+      .from('project_phases')
+      .insert(entity as any)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating phase:', error);
+      throw error;
+    }
+
+    return EntityToDTOMapper.phaseEntityToDTO(data as unknown as ProjectPhaseEntity);
+  }
+
+  /**
+   * Update phase from DTO
+   */
+  static async updatePhaseFromDTO(phaseId: string, updates: Partial<PhaseDTO>): Promise<PhaseDTO> {
+    const entityUpdates = updates.steps 
+      ? EntityToDTOMapper.phaseDTOToEntity(updates as PhaseDTO)
+      : {
+          phase_name: updates.phase_name,
+          description: updates.description,
+          construction_phase: updates.construction_phase,
+          construction_stage: updates.construction_stage,
+          status: updates.status,
+          progress: updates.progress,
+          estimated_cost: updates.estimated_cost,
+          actual_cost: updates.actual_cost,
+          start_date: updates.start_date,
+          end_date: updates.end_date,
+          order_index: updates.order_index
+        };
+
+    const { data, error } = await supabase
+      .from('project_phases')
+      .update(entityUpdates as any)
+      .eq('id', phaseId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating phase:', error);
+      throw error;
+    }
+
+    return EntityToDTOMapper.phaseEntityToDTO(data as unknown as ProjectPhaseEntity);
+  }
+
+  /**
+   * Update task status within a phase
+   */
+  static async updateTaskStatus(
+    phaseId: string, 
+    stepId: string, 
+    taskId: string, 
+    status: string, 
+    progress: number
+  ): Promise<PhaseDTO> {
+    const phase = await this.getPhaseDTOById(phaseId);
+    if (!phase) throw new Error('Phase not found');
+
+    const updatedSteps = phase.steps.map(step => {
+      if (step.id === stepId) {
+        return {
+          ...step,
+          tasks: step.tasks.map(task => {
+            if (task.id === taskId) {
+              return { ...task, status: status as PhaseStatus, progress };
+            }
+            return task;
+          })
+        };
+      }
+      return step;
+    });
+
+    // Recalculate progress
+    const stepsWithProgress = updatedSteps.map(step => {
+      const totalTasks = step.tasks.length;
+      const stepProgress = totalTasks > 0 
+        ? Math.round(step.tasks.reduce((sum, t) => sum + t.progress, 0) / totalTasks)
+        : 0;
+      return { ...step, progress: stepProgress };
+    });
+
+    const totalSteps = stepsWithProgress.length;
+    const phaseProgress = totalSteps > 0
+      ? Math.round(stepsWithProgress.reduce((sum, s) => sum + s.progress, 0) / totalSteps)
+      : 0;
+
+    return this.updatePhaseFromDTO(phaseId, {
+      ...phase,
+      progress: phaseProgress,
+      steps: stepsWithProgress
+    });
+  }
+
+  /**
+   * Bulk create phases from referential
+   */
+  static async createPhasesFromReferential(
+    projectId: string, 
+    referentialPhases: PhaseFormDTO[]
+  ): Promise<PhaseDTO[]> {
+    const entities = referentialPhases.map((phase, index) => ({
+      ...EntityToDTOMapper.phaseFormToEntity(phase, projectId),
+      order_index: phase.order_index ?? index
+    }));
+
+    const { data, error } = await supabase
+      .from('project_phases')
+      .insert(entities as any)
+      .select();
+
+    if (error) {
+      console.error('Error creating phases from referential:', error);
+      throw error;
+    }
+
+    return (data || []).map(entity => 
+      EntityToDTOMapper.phaseEntityToDTO(entity as unknown as ProjectPhaseEntity)
+    );
+  }
+
+  /**
+   * Calculate overall project progress from phases
+   */
+  static calculateProjectProgress(phases: PhaseDTO[]): number {
+    if (phases.length === 0) return 0;
+    const totalProgress = phases.reduce((sum, phase) => sum + phase.progress, 0);
+    return Math.round(totalProgress / phases.length);
+  }
+
+  /**
+   * Convert legacy PhaseData to PhaseDTO
+   */
+  static legacyPhaseDataToDTO(phaseData: PhaseData, projectId: string): PhaseDTO {
+    return {
+      id: phaseData.id,
+      project_id: projectId,
+      phase_name: phaseData.title,
+      construction_phase: phaseData.phase,
+      construction_stage: phaseData.stage,
+      description: phaseData.description,
+      status: phaseData.status === 'not_started' ? 'pending' : phaseData.status as PhaseStatus,
+      progress: phaseData.progress,
+      estimated_cost: phaseData.budget,
+      actual_cost: phaseData.actualCost,
+      estimated_duration_days: phaseData.estimatedDuration,
+      start_date: phaseData.startDate,
+      end_date: phaseData.endDate,
+      order_index: 0,
+      steps: phaseData.customPhase?.customStages?.map((stage, idx) => ({
+        id: stage.id,
+        name: stage.name,
+        description: '',
+        status: 'pending' as PhaseStatus,
+        progress: 0,
+        order_index: stage.order,
+        tasks: []
+      })) || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 }

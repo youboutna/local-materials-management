@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 type AuthContextType = {
   user: User | null;
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     console.log('🔧 Setting up auth state listener...');
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         toast({
-          title: "Erreur de connexion",
+          title: t('common.error'),
           description: errorMessage,
           variant: "destructive"
         });
@@ -86,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Sign in successful:', data.user?.email);
       toast({
-        title: "Connexion réussie",
+        title: t('common.success'),
         description: "Bienvenue sur la plateforme.",
       });
     } catch (error) {
@@ -126,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         toast({
-          title: "Erreur d'inscription",
+          title: t('common.error'),
           description: errorMessage,
           variant: "destructive"
         });
@@ -137,12 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (data.user && !data.user.email_confirmed_at) {
         toast({
-          title: "Inscription réussie",
+          title: t('common.success'),
           description: "Veuillez vérifier votre email pour confirmer votre compte.",
         });
       } else {
         toast({
-          title: "Inscription réussie",
+          title: t('common.success'),
           description: "Votre compte a été créé avec succès.",
         });
       }
@@ -164,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ Sign out error:', error);
         toast({
-          title: "Erreur de déconnexion",
+          title: t('common.error'),
           description: "Une erreur est survenue lors de la déconnexion.",
           variant: "destructive"
         });
@@ -173,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('✅ Sign out successful');
       toast({
-        title: "Déconnexion réussie",
+        title: t('common.success'),
         description: "Vous avez été déconnecté avec succès.",
       });
     } catch (error) {
@@ -199,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ Google sign in error:', error);
         toast({
-          title: "Erreur de connexion Google",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive"
         });
@@ -225,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ Phone sign in error:', error);
         toast({
-          title: "Erreur de connexion",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive"
         });
@@ -233,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       toast({
-        title: "Code envoyé",
+        title: t('common.success'),
         description: "Un code de vérification a été envoyé à votre numéro de téléphone.",
       });
       
@@ -260,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('❌ OTP verification error:', error);
         toast({
-          title: "Erreur de vérification",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive"
         });
@@ -268,7 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       toast({
-        title: "Vérification réussie",
+        title: t('common.success'),
         description: "Vous êtes maintenant connecté.",
       });
     } catch (error) {
@@ -298,7 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!profile) {
         toast({
-          title: "ID National non trouvé",
+          title: t('common.error'),
           description: "Aucun compte associé à cet ID national.",
           variant: "destructive"
         });
@@ -308,7 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Get user email from auth.users table would require a function
       // For now, suggest user to use email login
       toast({
-        title: "ID National vérifié",
+        title: t('common.success'),
         description: "Veuillez vous connecter avec votre email et mot de passe.",
       });
     } catch (error) {

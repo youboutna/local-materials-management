@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload, ExternalLink, Download } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
@@ -72,6 +73,8 @@ const EnhancedBankGuaranteeCrud = () => {
     supporting_documents: [],
     notes: ''
   });
+  
+  const { t } = useLanguage();
 
   const guaranteeTypes = [
     { value: 'performance', label: 'Garantie de Bonne Exécution' },
@@ -118,14 +121,14 @@ const EnhancedBankGuaranteeCrud = () => {
       setGuarantees(transformedGuarantees);
       
       toast({
-        title: 'Succès',
+        title: t('common.success'),
         description: `${transformedGuarantees.length} garantie(s) chargée(s)`,
       });
       
     } catch (error: any) {
       console.error('Error loading bank guarantees:', error);
       toast({
-        title: 'Erreur',
+        title: t('common.error'),
         description: `Impossible de charger les garanties bancaires: ${error?.message || 'Erreur inconnue'}`,
         variant: 'destructive'
       });
@@ -200,7 +203,7 @@ const EnhancedBankGuaranteeCrud = () => {
     
     if (!formData.project_id || !formData.contractor_name || !formData.bank_name || !formData.guarantee_amount) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
@@ -229,7 +232,7 @@ const EnhancedBankGuaranteeCrud = () => {
 
         await loadGuarantees();
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Garantie bancaire mise à jour avec succès",
         });
       } else {
@@ -251,7 +254,7 @@ const EnhancedBankGuaranteeCrud = () => {
 
         await loadGuarantees();
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Garantie bancaire créée avec succès",
         });
       }
@@ -261,7 +264,7 @@ const EnhancedBankGuaranteeCrud = () => {
     } catch (error) {
       console.error('Error saving guarantee:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Une erreur est survenue lors de la sauvegarde",
         variant: "destructive",
       });
@@ -280,13 +283,13 @@ const EnhancedBankGuaranteeCrud = () => {
 
         await loadGuarantees();
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Garantie bancaire supprimée avec succès",
         });
       } catch (error) {
         console.error('Error deleting guarantee:', error);
         toast({
-          title: "Erreur",
+          title: t('common.error'),
           description: "Erreur lors de la suppression",
           variant: "destructive",
         });

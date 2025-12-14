@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { detectProjectDelays } from "@/services/BankGuaranteeService";
+import { DELAY_THRESHOLDS } from "@/types/project";
 import {
   AlertTriangle,
+  Bell,
   Clock,
   DollarSign,
   Shield,
   TrendingDown,
-  Bell,
 } from "lucide-react";
-import { detectProjectDelays } from "@/services/bankGuaranteeService";
-import { DELAY_THRESHOLDS } from "@/types/project";
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useEffect, useState } from "react";
 
 interface AlertData {
   id: string;
@@ -40,11 +41,13 @@ const AlertsDashboard: React.FC = () => {
     total: 0,
   });
 
+  const { t } = useLanguage();
+
   useEffect(() => {
     loadAlerts();
     const interval = setInterval(loadAlerts, 300000); // Check every 5 minutes
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   const loadAlerts = async () => {
     try {
@@ -58,8 +61,8 @@ const AlertsDashboard: React.FC = () => {
           id: `delay-${delay.projectId}`,
           type: "delay" as const,
           severity: getSeverity(delay.delayPercentage),
-          title: `Retard Projet: ${delay.projectName}`,
-          description: `Retard de ${delay.delayPercentage.toFixed(1)}% détecté`,
+          title: `${t('alerts.delay_title')}: ${delay.projectName}`,
+          description: `${t('alerts.delay_desc_prefix')} ${delay.delayPercentage.toFixed(1)}% ${t('alerts.delay_desc_suffix')}`,
           projectId: delay.projectId,
           projectName: delay.projectName,
           timestamp: new Date(),
@@ -80,13 +83,13 @@ const AlertsDashboard: React.FC = () => {
 
       if (blockedPayments) {
         blockedPayments.forEach((block) => {
-          allAlerts.push({
+            allAlerts.push({
             id: `payment-block-${block.id}`,
             type: "payment",
             severity: "high",
-            title: "Paiement Bloqué",
-            description: `Paiement de ${block.amount.toLocaleString()} MRO bloqué - ${
-              block.notes || "Validation requise"
+            title: t('alerts.payment_blocked'),
+            description: `${t('alerts.payment_blocked_desc_prefix')} ${block.amount.toLocaleString()} ${t('alerts.payment_blocked_desc_suffix')} - ${
+              block.notes || t('alerts.validation_required')
             }`,
             projectId: (block.projects as any)?.id,
             projectName: (block.projects as any)?.title,
@@ -118,8 +121,8 @@ const AlertsDashboard: React.FC = () => {
             id: `inspection-overdue-${inspection.id}`,
             type: "inspection",
             severity: daysPast > 7 ? "high" : "medium",
-            title: "Inspection en Retard",
-            description: `Inspection non réalisée depuis ${daysPast} jours`,
+            title: t('alerts.inspection_overdue'),
+            description: `${t('alerts.inspection_overdue_desc_prefix')} ${daysPast} ${t('alerts.days')}`,
             projectId: (inspection.projects as any)?.id,
             projectName: (inspection.projects as any)?.title,
             timestamp: new Date(inspection.date),
@@ -154,8 +157,8 @@ const AlertsDashboard: React.FC = () => {
             type: "guarantee",
             severity:
               daysLeft <= 7 ? "critical" : daysLeft <= 14 ? "high" : "medium",
-            title: "Garantie Bancaire Expirant",
-            description: `Garantie de ${guarantee.guarantee_amount.toLocaleString()} MRO expire dans ${daysLeft} jours`,
+            title: t('alerts.guarantee_expiring'),
+            description: `${t('alerts.guarantee_expiring_desc_prefix')} ${guarantee.guarantee_amount.toLocaleString()} ${t('alerts.guarantee_expiring_desc_suffix')} ${daysLeft} ${t('alerts.days')}`,
             projectId: (guarantee.projects as any)?.id,
             projectName: (guarantee.projects as any)?.title,
             timestamp: new Date(),
@@ -179,8 +182,8 @@ const AlertsDashboard: React.FC = () => {
     } catch (error) {
       console.error("Error loading alerts:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les alertes",
+        title: t('common.error'),
+        description: t('dashboard.management_tabs.alerts.load_error'),
         variant: "destructive",
       });
     } finally {
@@ -232,8 +235,8 @@ const AlertsDashboard: React.FC = () => {
       )
     );
     toast({
-      title: "Alerte Acquittée",
-      description: "L'alerte a été marquée comme acquittée",
+      title: t('dashboard.management_tabs.alerts.acknowledge_success'),
+      description: t('dashboard.management_tabs.alerts.acknowledge_description'),
     });
   };
 
@@ -256,7 +259,7 @@ const AlertsDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Alertes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.total')}</CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -266,7 +269,7 @@ const AlertsDashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Critiques</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.critical')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -278,7 +281,7 @@ const AlertsDashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Élevées</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.high')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -290,7 +293,7 @@ const AlertsDashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Moyennes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.medium')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -302,7 +305,7 @@ const AlertsDashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faibles</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dashboard.management_tabs.alerts.low')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -314,22 +317,21 @@ const AlertsDashboard: React.FC = () => {
       {/* Alerts Tabs */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="delay">Retards</TabsTrigger>
-          <TabsTrigger value="payment">Paiements</TabsTrigger>
-          <TabsTrigger value="inspection">Inspections</TabsTrigger>
-          <TabsTrigger value="guarantee">Garanties</TabsTrigger>
+          <TabsTrigger value="all">{t('dashboard.management_tabs.alerts.tabs.all')}</TabsTrigger>
+          <TabsTrigger value="delay">{t('dashboard.management_tabs.alerts.tabs.delay')}</TabsTrigger>
+          <TabsTrigger value="payment">{t('dashboard.management_tabs.alerts.tabs.payment')}</TabsTrigger>
+          <TabsTrigger value="inspection">{t('dashboard.management_tabs.alerts.tabs.inspection')}</TabsTrigger>
+          <TabsTrigger value="guarantee">{t('dashboard.management_tabs.alerts.tabs.guarantee')}</TabsTrigger>
         </TabsList>
 
         {["all", "delay", "payment", "inspection", "guarantee"].map((type) => (
           <TabsContent key={type} value={type} className="mt-6">
             <div className="space-y-4">
-              {filterAlertsByType(type).length === 0 ? (
+                {filterAlertsByType(type).length === 0 ? (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground">
-                      Aucune alerte {type !== "all" ? `de type ${type}` : ""}{" "}
-                      trouvée
+                      {t('dashboard.management_tabs.alerts.none')}
                     </div>
                   </CardContent>
                 </Card>
@@ -365,7 +367,7 @@ const AlertsDashboard: React.FC = () => {
                               variant="outline"
                               onClick={() => acknowledgeAlert(alert.id)}
                             >
-                              Acquitter
+                              {t('dashboard.management_tabs.alerts.acknowledge')}
                             </Button>
                           )}
                         </div>

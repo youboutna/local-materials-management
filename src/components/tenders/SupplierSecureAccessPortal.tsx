@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { TenderSharingService } from '@/services/TenderSharingService';
-import { Shield, Lock, FileText, Download, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { TenderSharingService } from '@/services/TenderSharingService';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, CheckCircle, Download, FileText, Lock, Shield } from 'lucide-react';
+import { useState } from 'react';
 
 export const SupplierSecureAccessPortal = () => {
   const [secretCode, setSecretCode] = useState('');
   const [validatedSecret, setValidatedSecret] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Fetch tender and documents after validation
   const { data: tenderData, isLoading: tenderLoading } = useQuery({
@@ -59,8 +61,8 @@ export const SupplierSecureAccessPortal = () => {
   const handleValidateCode = async () => {
     if (!secretCode || secretCode.length < 8) {
       toast({
-        title: 'Code invalide',
-        description: 'Veuillez entrer un code valide',
+        title: t('common.error'),
+        description: t('tenders.supplierSecure.invalid_code_desc'),
         variant: 'destructive'
       });
       return;
@@ -82,20 +84,20 @@ export const SupplierSecureAccessPortal = () => {
         });
         
         toast({
-          title: 'Accès autorisé',
+          title: t('common.success'),
           description: result.message
         });
       } else {
         toast({
-          title: 'Accès refusé',
+          title: t('common.error'),
           description: result.message,
           variant: 'destructive'
         });
       }
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la validation du code',
+        title: t('common.error'),
+        description: t('tenders.supplierSecure.validate_error_desc'),
         variant: 'destructive'
       });
     } finally {
@@ -125,22 +127,22 @@ export const SupplierSecureAccessPortal = () => {
             <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Accès Sécurisé Fournisseur</CardTitle>
+            <CardTitle className="text-2xl">{t('tenders.supplierSecure.title')}</CardTitle>
             <CardDescription>
-              Entrez votre code de partage pour accéder aux documents de l'appel d'offres
+              {t('tenders.supplierSecure.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Input
-                placeholder="CODE-DE-PARTAGE"
+                placeholder={t('tenders.supplierSecure.input_placeholder')}
                 value={secretCode}
                 onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
                 className="text-center text-lg font-mono tracking-wider"
                 maxLength={12}
               />
               <p className="text-xs text-muted-foreground text-center">
-                Format: 12 caractères alphanumériques
+                {t('tenders.supplierSecure.format_note')}
               </p>
             </div>
             
@@ -149,27 +151,27 @@ export const SupplierSecureAccessPortal = () => {
               disabled={isValidating || !secretCode}
               className="w-full"
             >
-              {isValidating ? 'Validation...' : 'Accéder aux documents'}
+              {isValidating ? t('tenders.supplierSecure.validating') : t('tenders.supplierSecure.validate_button')}
             </Button>
 
             <Card className="bg-muted/50">
               <CardContent className="p-4 space-y-2">
                 <h4 className="font-medium text-sm flex items-center gap-2">
                   <Lock className="h-4 w-4" />
-                  Sécurité et confidentialité
+                  {t('tenders.supplierSecure.security_title')}
                 </h4>
                 <ul className="text-xs text-muted-foreground space-y-1">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>Connexion sécurisée et chiffrée</span>
+                    <span>{t('tenders.supplierSecure.security_items.secure_connection')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>Tous les accès sont enregistrés</span>
+                    <span>{t('tenders.supplierSecure.security_items.audit_logs')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>Conforme aux normes mauritaniennes</span>
+                    <span>{t('tenders.supplierSecure.security_items.compliant')}</span>
                   </li>
                 </ul>
               </CardContent>
@@ -191,7 +193,7 @@ export const SupplierSecureAccessPortal = () => {
                 <div className="flex items-center gap-2">
                   <Badge variant="default" className="gap-1">
                     <CheckCircle className="h-3 w-3" />
-                    Accès autorisé
+                    {t('tenders.supplierSecure.access_granted')}
                   </Badge>
                   <Badge variant="outline">{secretCode}</Badge>
                 </div>
@@ -208,7 +210,7 @@ export const SupplierSecureAccessPortal = () => {
                 )}
               </div>
               <Button variant="outline" onClick={() => setValidatedSecret(null)}>
-                Déconnexion
+                {t('tenders.supplierSecure.disconnect')}
               </Button>
             </div>
           </CardContent>
@@ -219,10 +221,10 @@ export const SupplierSecureAccessPortal = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Documents accessibles
+              {t('tenders.supplierSecure.documents.title')}
             </CardTitle>
             <CardDescription>
-              Documents partagés pour cette soumission
+              {t('tenders.supplierSecure.documents.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -265,7 +267,7 @@ export const SupplierSecureAccessPortal = () => {
                               onClick={() => handleDownload(doc)}
                             >
                               <Download className="h-4 w-4 mr-2" />
-                              Télécharger
+                              {t('tenders.supplierSecure.documents.download')}
                             </Button>
                           )}
                         </div>
@@ -277,7 +279,7 @@ export const SupplierSecureAccessPortal = () => {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>Aucun document disponible</p>
+                <p>{t('tenders.supplierSecure.documents.none')}</p>
               </div>
             )}
           </CardContent>
@@ -288,12 +290,8 @@ export const SupplierSecureAccessPortal = () => {
           <CardContent className="p-4 flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-amber-900">
-              <p className="font-medium">Rappel important</p>
-              <p className="mt-1">
-                Les documents accessibles via ce code sont strictement confidentiels. 
-                Toute utilisation non autorisée ou partage avec des tiers est interdit 
-                et peut entraîner des sanctions selon le code des marchés publics mauritanien.
-              </p>
+              <p className="font-medium">{t('tenders.supplierSecure.warning.title')}</p>
+              <p className="mt-1">{t('tenders.supplierSecure.warning.text')}</p>
             </div>
           </CardContent>
         </Card>

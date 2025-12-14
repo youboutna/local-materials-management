@@ -1,43 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { 
-  Bell, 
-  Eye, 
-  EyeOff, 
-  Clock, 
-  AlertTriangle, 
-  DollarSign, 
-  FileText, 
-  Users,
-  Search,
-  Filter,
-  Settings,
-  TrendingUp,
-  CheckCircle,
-  Calendar,
-  Shield,
-  Wrench,
-  CreditCard,
-  Share,
-  Download,
-  Upload,
-  PlayCircle,
-  CheckSquare,
-  ExternalLink,
-  Send
-} from 'lucide-react';
 import RoleBasedNotificationCenter from '@/components/alerts/RoleBasedNotificationCenter';
 import NotificationCrud from '@/components/notifications/NotificationCrud';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import {
+    AlertTriangle,
+    Bell,
+    Calendar,
+    CheckCircle,
+    CheckSquare,
+    Clock,
+    CreditCard,
+    DollarSign,
+    Download,
+    ExternalLink,
+    Eye,
+    EyeOff,
+    FileText,
+    Filter,
+    PlayCircle,
+    Search,
+    Send,
+    Settings,
+    Share,
+    Shield,
+    TrendingUp,
+    Upload,
+    Users,
+    Wrench
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface NotificationData {
   id: string;
@@ -64,6 +65,7 @@ const NotificationsCenterPage = () => {
   const { notifications, unreadCount } = useNotifications();
   const { hasAnyRole } = useCurrentUserRoles();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchAllNotifications();
@@ -155,7 +157,7 @@ const NotificationsCenterPage = () => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de charger les notifications",
         variant: "destructive",
       });
@@ -177,7 +179,7 @@ const NotificationsCenterPage = () => {
       if (error) throw error;
 
       toast({
-        title: "Succès",
+        title: t('common.success'),
         description: "Toutes les notifications ont été marquées comme lues",
       });
 
@@ -185,7 +187,7 @@ const NotificationsCenterPage = () => {
     } catch (error) {
       console.error('Error marking notifications as read:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de marquer les notifications comme lues",
         variant: "destructive",
       });

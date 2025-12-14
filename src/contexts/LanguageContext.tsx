@@ -5,7 +5,7 @@ export type Language = 'fr' | 'ar' | 'en';
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -19,6 +19,243 @@ export const useLanguage = () => {
 };
 export const translations = {
     fr: {
+        common: {
+            yes: "Oui",
+            no: "Non",
+            cancel: "Annuler",
+            save: "Enregistrer",
+            delete: "Supprimer",
+            edit: "Modifier",
+            update: "Mettre à jour",
+            loading: "Chargement...",
+            load_data: "Charger les données",
+            error: "Erreur",
+            success: "Succès",
+            info: "Information",
+            back: "Retour",
+            search: "Rechercher",
+            filter: "Filtrer",
+            reset: "Réinitialiser",
+            submit: "Soumettre",
+            close: "Fermer",
+            confirm: "Confirmer",
+            optional: "Optionnel",
+            required: "Requis",
+            confirm_delete: "Confirmer la suppression",
+            yes: "Oui",
+            no: "Non"
+            ,loading: "Chargement...",
+            load_data: "Charger les données"
+        },
+        supplier_portal: {
+            title: "Supplier Portal",
+            subtitle: "Manage your documents, tenders and payment requests",
+            linked_profile: "Profile linked",
+            profile_linked_desc: "Your supplier profile has been linked to your account.",
+            profile_created: "Profile created",
+            profile_created_desc: "Your supplier profile was created automatically.",
+            upload: {
+                title: "Upload a document",
+                placeholder_title: "Document title",
+                placeholder_description: "Description (optional)",
+                upload_button: "Upload"
+            },
+            tabs: {
+                shared: "Shared Documents",
+                uploaded: "My Documents",
+                payments: "Payments",
+                inspections: "Inspections"
+            }
+        },
+        supplier_tender: {
+            title: "Supplier Tender Portal",
+            subtitle: "Browse and submit to public tenders",
+            access_granted_for: "Access granted for:",
+            tabs: {
+                browse: "Browse",
+                documents: "Shared Documents",
+                submit: "Submit",
+                estimate: "Estimate"
+            },
+            empty: {
+                no_tenders: "No tenders available",
+                no_documents: "No shared documents at the moment",
+                select_tender: "Select a tender to view documents"
+            },
+            actions: {
+                submit: "Submit",
+                download: "Download"
+            },
+            submit_success: "Submission sent successfully",
+            submit_success_desc: "Your bid package has been submitted. A confirmation email with your secret code has been sent."
+        },
+        supplier_portal: {
+            title: "بوابة المورد",
+            subtitle: "إدارة مستنداتك، العطاءات وطلبات الدفع",
+            linked_profile: "تم ربط الملف",
+            profile_linked_desc: "تم ربط ملف المورد الخاص بك بحسابك.",
+            profile_created: "تم إنشاء الملف",
+            profile_created_desc: "تم إنشاء ملف المورد تلقائيًا.",
+            upload: {
+                title: "رفع مستند",
+                placeholder_title: "عنوان المستند",
+                placeholder_description: "الوصف (اختياري)",
+                upload_button: "رفع"
+            },
+            tabs: {
+                shared: "المستندات المشتركة",
+                uploaded: "مستنداتي",
+                payments: "المدفوعات",
+                inspections: "التفتيشات"
+            }
+        },
+        supplier_tender: {
+            title: "بوابة المورد - العطاءات",
+            subtitle: "اطلع وقدم عطاءاتك",
+            access_granted_for: "تم منح الوصول لـ:",
+            tabs: {
+                browse: "تصفح",
+                documents: "المستندات المشتركة",
+                submit: "تقديم",
+                estimate: "التقدير"
+            },
+            empty: {
+                no_tenders: "لا توجد عطاءات متاحة",
+                no_documents: "لا توجد مستندات مشتركة حاليًا",
+                select_tender: "اختر عطاء لعرض المستندات"
+            },
+            actions: {
+                submit: "تقديم",
+                download: "تنزيل"
+            },
+            submit_success: "تم إرسال العرض بنجاح",
+            submit_success_desc: "تم تقديم ملف الترشيح. تم إرسال بريد إلكتروني بتأكيد ورمزك السري."
+        },
+        supplier_portal: {
+            title: "Portail Fournisseur",
+            subtitle: "Gérez vos documents, soumissions et demandes de paiement",
+            linked_profile: "Profil lié",
+            profile_linked_desc: "Votre profil fournisseur a été lié à votre compte.",
+            profile_created: "Profil créé",
+            profile_created_desc: "Votre profil fournisseur a été créé automatiquement.",
+            upload: {
+                title: "Téléverser un document",
+                placeholder_title: "Titre du document",
+                placeholder_description: "Description (optionnelle)",
+                upload_button: "Téléverser"
+            },
+            tabs: {
+                shared: "Documents Partagés",
+                uploaded: "Mes Documents",
+                payments: "Paiements",
+                inspections: "Inspections"
+            }
+        },
+        supplier_tender: {
+            title: "Portail Fournisseurs - Appels d'Offres",
+            subtitle: "Consultez et soumettez des offres",
+            access_granted_for: "Accès autorisé pour:",
+            tabs: {
+                browse: "Parcourir",
+                documents: "Documents Partagés",
+                submit: "Soumissionner",
+                estimate: "Devis"
+            },
+            empty: {
+                no_tenders: "Aucun appel d'offres disponible",
+                no_documents: "Aucun document partagé pour le moment",
+                select_tender: "Sélectionnez un appel d'offres"
+            },
+            actions: {
+                submit: "Soumissionner",
+                download: "Télécharger"
+            },
+            submit_success: "Soumission envoyée avec succès",
+            submit_success_desc: "Votre dossier de candidature a été soumis. Un email de confirmation avec votre code secret vous a été envoyé."
+            ,
+            project_label: "Projet",
+            location_label: "Lieu",
+            launched_on: "Lancé le",
+            deadline_label: "Limite",
+            criteria_intro: "Les appels d'offres sont affichés uniquement s'ils répondent aux critères suivants :",
+            criteria: {
+                status: "Statut : Publié",
+                phase: "Phase : Phase 2 (Appel de soumissions)",
+                deadline: "Date limite : Dans le futur"
+            },
+            documents_shared_for: "Documents partagés pour",
+            shared_on: "Partagé le",
+            select_tender_prompt: "Sélectionnez un appel d'offres pour préparer votre dossier de candidature.",
+            submission_for: "Soumission",
+            phase_active: "Phase de soumission active",
+            phase_closed: "Phase de soumission fermée",
+            submitted_on: "Soumis le",
+            status_label: "Statut",
+            status_under_review: "En cours d'évaluation",
+            document_categories: {
+                administrative: "Documents Administratifs",
+                technical: "Documents Techniques",
+                financial: "Documents Financiers"
+            },
+            required_documents: {
+                administrative: {
+                    registre_commerce: "Registre de commerce",
+                    statuts_societe: "Statuts de la société",
+                    declaration_fiscale: "Déclaration fiscale",
+                    certificat_conformite: "Certificat de conformité",
+                    attestation_assurance: "Attestation d'assurance"
+                },
+                technical: {
+                    cv_references: "CV et références techniques",
+                    certificats_qualification: "Certificats de qualification",
+                    plan_realisation: "Plan de réalisation",
+                    methodologie: "Méthodologie",
+                    planning_previsionnel: "Planning prévisionnel"
+                },
+                financial: {
+                    devis_quantitatif: "Devis quantitatif estimatif",
+                    garantie_bancaire: "Garantie bancaire",
+                    bilan_financier: "Bilan financier",
+                    references_bancaires: "Références bancaires",
+                    caution_soumission: "Caution de soumission"
+                }
+            },
+            replace: "Remplacer",
+            choose: "Choisir",
+            notes_label: "Notes supplémentaires (optionnel)",
+            notes_placeholder: "Ajoutez des informations complémentaires...",
+            files_selected: "Fichiers sélectionnés",
+            dossier_complete: "Dossier complet",
+            submitting: "Soumission en cours...",
+            submit_button: "Soumettre le dossier",
+            browse_button: "Parcourir les appels d'offres",
+            estimate_select_prompt: "Choisissez un appel d'offres pour créer votre devis quantitatif estimatif.",
+            errors: {
+                invalid_deadline: "Date limite de soumission invalide",
+                deadline_passed: "La date limite de soumission est dépassée",
+                submit_failed: "Erreur lors de la soumission du dossier.",
+                already_submitted: "Vous avez déjà soumis un dossier pour cet appel d'offres."
+            }
+        },
+        project: {
+            errors: {
+                missing_id: "ID du projet manquant",
+                not_found: "Projet non trouvé"
+            },
+            labels: {
+                project_manager: "Chef de projet",
+                main_contractor: "Contractant principal"
+            },
+            phase_label: "Phase",
+            methodology: {
+                standard: "Standard (Cascade)",
+                agile: "Agile",
+                hybrid: "Hybride"
+            }
+        },
+        app: {
+            name: "HadraTech-GPI"
+        },
         locale: "Langue",
         currency: {
             mru: "MRU"
@@ -50,6 +287,9 @@ export const translations = {
             supplier_portal: "Portail Fournisseur",
             supplier_tender_portal: "Portail Fournisseur/soumissionaire",
             supplier_dashboard: "Tableau Fournisseur",
+            supplier_access: "Accès Fournisseur",
+            evaluation_access: "Accès Évaluation",
+            access_secure: "Accès Sécurisé",
             suppliers: "Fournisseurs"
 
         },
@@ -104,6 +344,37 @@ export const translations = {
                 title: "Documents",
                 unknown_date: "Date inconnue",
                 empty: "Aucun document."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "Accès Sécurisé Fournisseur",
+                description: "Entrez votre code de partage pour accéder aux documents de l'appel d'offres",
+                input_placeholder: "CODE-DE-PARTAGE",
+                format_note: "Format: 12 caractères alphanumériques",
+                validate_button: "Accéder aux documents",
+                validating: "Validation...",
+                access_granted: "Accès autorisé",
+                access_denied: "Accès refusé",
+                invalid_code_desc: "Veuillez entrer un code valide",
+                validate_error_desc: "Erreur lors de la validation du code",
+                security_title: "Sécurité et confidentialité",
+                security_items: {
+                    secure_connection: "Connexion sécurisée et chiffrée",
+                    audit_logs: "Tous les accès sont enregistrés",
+                    compliant: "Conforme aux normes mauritaniennes"
+                },
+                documents: {
+                    title: "Documents accessibles",
+                    description: "Documents partagés pour cette soumission",
+                    none: "Aucun document disponible",
+                    download: "Télécharger"
+                },
+                disconnect: "Déconnexion",
+                warning: {
+                    title: "Rappel important",
+                    text: "Les documents accessibles via ce code sont strictement confidentiels. Toute utilisation non autorisée ou partage avec des tiers est interdit et peut entraîner des sanctions selon le code des marchés publics mauritanien."
+                }
             }
         },
         user: {
@@ -223,7 +494,39 @@ export const translations = {
                 actions: "Actions Management",
                 overview: "Vue d'ensemble",
                 monitoring: "Monitoring",
-                alerts: "Alertes"
+                    alerts: {
+                        total: "Total Alerts",
+                        critical: "Critical",
+                        high: "High",
+                        medium: "Medium",
+                        low: "Low",
+                        tabs: {
+                            all: "All",
+                            delay: "Delays",
+                            payment: "Payments",
+                            inspection: "Inspections",
+                            guarantee: "Guarantees"
+                        },
+                        delay_title: "Project Delay",
+                        delay_desc_prefix: "Delay of",
+                        delay_desc_suffix: "detected",
+                        payment_blocked: "Payment Blocked",
+                        payment_blocked_desc_prefix: "Payment of",
+                        payment_blocked_desc_suffix: "blocked",
+                        validation_required: "Validation required",
+                        inspection_overdue: "Inspection Overdue",
+                        inspection_overdue_desc_prefix: "Inspection not completed for",
+                        days: "days",
+                        none: "No alerts found",
+                        acknowledge: "Acknowledge",
+                        guarantee_expiring: "Expiring Bank Guarantee",
+                        guarantee_expiring_desc_prefix: "Guarantee of",
+                        guarantee_expiring_desc_suffix: "will expire in",
+                        load_error: "Failed to load alerts",
+                        acknowledge_success: "Alert acknowledged",
+                        acknowledge_description: "The alert has been marked as acknowledged",
+                        project_label: "Project"
+                    },
             },
             cards: {
                 active_projects: "Projets Actifs",
@@ -250,6 +553,20 @@ export const translations = {
                 http_status: "Statut HTTP",
                 active: "Actif",
                 real_time_monitoring: "Surveillance en temps réel",
+                critical: "Critique",
+                degraded: "Dégradé",
+                total_requests: "Requêtes totales",
+                error_rate: "Taux d'erreur",
+                recent_errors: "Erreurs récentes",
+                success_rate: "Taux de succès",
+                avg_response_time: "Temps de réponse moyen",
+                recent_errors_desc: "Dernières erreurs HTTP détectées dans l'application",
+                no_recent_errors: "Aucune erreur récente",
+                error_alert_message: "Taux d'erreur élevé détecté. Vérifiez la connectivité réseau et l'état des services.",
+                status_success: "Succès",
+                status_redirect: "Redirection",
+                status_client_error: "Erreur Client",
+                status_server_error: "Erreur Serveur",
                 guarantees: "Garanties Bancaires",
                 alerts_count: "Alertes",
                 expiring_soon: "Garanties expirant bientôt",
@@ -274,33 +591,41 @@ export const translations = {
             recent_projects: "Projets récents",
             pending_tasks: "Tâches en attente",
             notifications: "Notifications",
-            alerts: "Alertes",
-            system_status: "État du système",
-            performance: "Performance",
-            analytics: "Analyses",
-            reports: "Rapports",
-            export_data: "Exporter les données",
-            refresh: "Actualiser",
-            loading_dashboard: "Chargement du tableau de bord...",
-            no_data: "Aucune donnée disponible",
-            error_loading: "Erreur lors du chargement des données",
-            active_projects: "Projets actifs",
-            status_overview: "Vue d'ensemble du statut",
-            active_projects_label: "projets actifs",
-            total_budget: "Budget total",
-            financial_resources: "Ressources financières",
-            team: "Équipe",
-            project_staff: "Personnel de projet",
-            members: "membres",
-            materials: "Matériaux",
-            available_resources: "Ressources disponibles",
-            types: "types",
-            project_progress: "Progression du projet",
-            view_all: "Voir tout",
-            no_projects: "Aucun projet",
-            distribution_by_region: "Répartition par région",
-            project_distribution: "Répartition des projets",
-            no_geolocated_projects: "Aucun projet géolocalisé",
+                alerts: {
+                        total: "Total Alertes",
+                        critical: "Critique",
+                        high: "Élevée",
+                        medium: "Moyenne",
+                        low: "Faible",
+                        tabs: {
+                            all: "Toutes",
+                            delay: "Retards",
+                            payment: "Paiements",
+                            inspection: "Inspections",
+                            guarantee: "Garanties"
+                        },
+                        delay_title: "Retard Projet",
+                        delay_desc_prefix: "Retard de",
+                        delay_desc_suffix: "détecté",
+                        payment_blocked: "Paiement Bloqué",
+                        payment_blocked_desc_prefix: "Paiement de",
+                        payment_blocked_desc_suffix: "bloqué",
+                        validation_required: "Validation requise",
+                        inspection_overdue: "Inspection en retard",
+                        inspection_overdue_desc_prefix: "Inspection non complétée pour",
+                        days: "jours",
+                        guarantee_expiring: "Garantie Bancaire expirante",
+                        guarantee_expiring_desc_prefix: "Garantie de",
+                        guarantee_expiring_desc_suffix: "va expirer dans",
+                        load_error: "Impossible de charger les alertes",
+                        acknowledge: "Acquitter",
+                        acknowledge_success: "Alerte acquittée",
+                        acknowledge_description: "L'alerte a été marquée comme acquittée",
+                        none: "Aucune alerte trouvée",
+                        project_label: "Projet"
+                    },
+            start_label: "Début",
+            end_label: "Fin",
             dev_mode: "Mode développement"
         },
         management_actions: {
@@ -358,6 +683,51 @@ export const translations = {
             acknowledge: "Acquitter",
             acknowledged_note: "Pris en compte depuis le monitoring",
             loading_project: "Chargement du projet et de l'organisation..."
+            ,
+            load_delays_error: "Impossible de charger les retards de projet",
+            not_found_for_project: "Aucune garantie bancaire trouvée pour ce projet",
+            bank_notified_prefix: "La banque a été notifiée du retard sur",
+            internal_notifications_sent: "notifications internes envoyées",
+            notification_send_failed: "Échec de l'envoi de la notification bancaire",
+            project_not_found: "Projet introuvable",
+            critical_projects: "projet(s) en retard critique",
+            critical_alerts_desc: "Des retards dépassent les seuils contractuels. Action immédiate requise.",
+            no_critical_delays_title: "Aucun retard critique détecté",
+            no_critical_delays_desc: "Tous les projets respectent les délais contractuels.",
+            notify_sending: "Envoi...",
+            notify_bank: "Notifier Banque",
+            view_project: "Voir Projet",
+            delay_label: "Retard",
+            days_label: "jours",
+            contractor_label: "Entrepreneur",
+            planned_date_label: "Date prévue",
+            milestones_missed_label: "Jalons manqués",
+            escalation_thresholds_title: "Seuils d'Escalade",
+            delay_percentage_suffix: "de retard",
+            severity_labels: {
+                delay_alert: "Alerte Retard",
+                bank_notification: "Notification Bancaire",
+                guarantee_trigger: "Déclenchement Garantie"
+            },
+            escalation: {
+                legal: "Escalade Juridique"
+            },
+            actions: {
+                task_assignment_title: "Gestion retard projet",
+                task_assignment_msg_prefix: "Veuillez traiter le retard de",
+                hierarchy_notification_title: "Alerte retard critique",
+                hierarchy_notification_msg_prefix: "Le projet",
+                sms_title: "SMS retard projet",
+                sms_msg_prefix: "SMS: Retard",
+                call_title: "Appel retard projet",
+                call_msg_prefix: "Appel concernant le retard du projet",
+                email_title: "Email retard projet",
+                email_msg_prefix: "Email concernant le retard du projet",
+                mail_title: "Courrier retard projet",
+                mail_msg_prefix: "Courrier concernant le retard du projet"
+            },
+            unknown_action_type: "Type d'action non reconnu",
+            action_created_success: "{title} créée avec succès",
         },
         insurance_management: {
             title: "Gestion des Assurances",
@@ -654,9 +1024,16 @@ export const translations = {
                 overview: "Vue d'ensemble",
                 materials: "Matériaux",
                 payments: "Paiements",
+                supplier_portal: "Supplier Portal",
+                supplier_tender_portal: "Supplier Tender Portal",
+                supplier_access: "Supplier Document Access",
+                evaluation_access: "Evaluation Access",
+                access_secure: "Secure Access",
+                access_evaluation: "Evaluation Access",
                 inspections: "Inspections",
                 workflow: "Flux de travail",
                 documents: "Documents",
+                login: "Log In",
                 takeoffs: "Métrés"
             },
             takeoffs: {
@@ -873,53 +1250,6 @@ export const translations = {
             by_hadratech: "Développé par HadraTech",
             quick_links: "Liens rapides",
             legal: "Légal"
-        },
-        common: {
-            yes: "Oui",
-            no: "Non",
-            cancel: "Annuler",
-            save: "Enregistrer",
-            delete: "Supprimer",
-            edit: "Modifier",
-            update: "Mettre à jour",
-            loading: "Chargement...",
-            error: "Erreur",
-            success: "Succès",
-            back: "Retour",
-            search: "Rechercher",
-            filter: "Filtrer",
-            reset: "Réinitialiser",
-            submit: "Soumettre",
-            close: "Fermer",
-            confirm: "Confirmer",
-            optional: "Optionnel",
-            required: "Requis",
-            yes_delete: "Oui, supprimer",
-            no_cancel: "Non, annuler",
-            create: "Créer",
-            add: "Ajouter",
-            view: "Voir",
-            details: "Détails",
-            actions: "Actions",
-            status: "Statut",
-            date: "Date",
-            description: "Description",
-            title: "Titre",
-            name: "Nom",
-            email: "Email",
-            phone: "Téléphone",
-            address: "Adresse",
-            all: "Tous",
-            none: "Aucun",
-            none_available: "Aucun disponible",
-            no_data: "Aucune donnée disponible",
-            error_loading: "Erreur lors du chargement",
-            created_successfully: "Créé avec succès",
-            updated_successfully: "Mis à jour avec succès",
-            deleted_successfully: "Supprimé avec succès",
-            confirm_delete: "Êtes-vous sûr de vouloir supprimer cet élément ?",
-            next: "Suivant",
-            previous: "Précédent"
         },
         notfound: {
             message: "Page non trouvée",
@@ -1385,6 +1715,55 @@ export const translations = {
     },
 
     ar: {
+        common: {
+            yes: "نعم",
+            no: "لا",
+            cancel: "إلغاء",
+            save: "حفظ",
+            delete: "حذف",
+            edit: "تعديل",
+            update: "تحديث",
+            loading: "جاري التحميل...",
+            load_data: "تحميل البيانات",
+            error: "خطأ",
+            success: "نجاح",
+            info: "معلومات",
+            back: "عودة",
+            search: "بحث",
+            filter: "تصفية",
+            reset: "إعادة تعيين",
+            submit: "إرسال",
+            close: "إغلاق",
+            confirm: "تأكيد",
+            optional: "اختياري",
+            required: "مطلوب",
+            confirm_delete: "تأكيد الحذف",
+            yes_delete: "نعم، احذف",
+            no_cancel: "لا، إلغاء",
+            create: "إنشاء",
+            add: "إضافة",
+            view: "عرض",
+            details: "تفاصيل",
+            actions: "إجراءات",
+            status: "الحالة",
+            date: "التاريخ",
+            description: "الوصف",
+            title: "العنوان",
+            name: "الاسم",
+            email: "البريد الإلكتروني",
+            phone: "الهاتف",
+            address: "العنوان",
+            all: "الكل",
+            none: "لا شيء",
+            none_available: "لا يوجد متاح",
+            no_data: "لا توجد بيانات متاحة",
+            error_loading: "خطأ في التحميل",
+            created_successfully: "تم الإنشاء بنجاح",
+            updated_successfully: "تم التحديث بنجاح",
+            deleted_successfully: "تم الحذف بنجاح",
+            next: "التالي",
+            previous: "السابق"
+        },
         employee: {
                 add: "إضافة موظف",
                 add_title: "إضافة موظف جديد",
@@ -1444,7 +1823,29 @@ export const translations = {
             supplier_portal: "بوابة المورد",
             supplier_tender_portal: "/soumissionaire/ بوابة المورد",
             supplier_dashboard: "لوحة المورد",
+            supplier_access: "الوصول للمورد",
+            evaluation_access: "وصول التقييم",
+            access_secure: "وصول آمن",
             suppliers: "الموردون"
+        },
+        app: {
+            name: "HadraTech-GPI"
+        },
+        project: {
+            errors: {
+                missing_id: "معرّف المشروع مفقود",
+                not_found: "المشروع غير موجود"
+            },
+            labels: {
+                project_manager: "مدير المشروع",
+                main_contractor: "المقاول الرئيسي"
+            },
+            phase_label: "المرحلة",
+            methodology: {
+                standard: "قياسي (تتابعي)",
+                agile: "أجايل",
+                hybrid: "مختلط"
+            }
         },
         role_based_route: {
             loading: "جاري التحميل...",
@@ -1497,6 +1898,37 @@ export const translations = {
                 title: "الوثائق",
                 unknown_date: "تاريخ غير معروف",
                 empty: "لا توجد وثائق."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "بوابة الوصول الآمن للمورد",
+                description: "أدخل رمز المشاركة للوصول إلى مستندات العطاء",
+                input_placeholder: "رمز-المشاركة",
+                format_note: "التنسيق: 12 حرفًا أبجديًا رقميًا",
+                validate_button: "الوصول إلى المستندات",
+                validating: "جارٍ التحقق...",
+                access_granted: "تم منح الوصول",
+                access_denied: "تم رفض الوصول",
+                invalid_code_desc: "الرجاء إدخال رمز صالح",
+                validate_error_desc: "حدث خطأ أثناء التحقق من الرمز",
+                security_title: "الأمان والخصوصية",
+                security_items: {
+                    secure_connection: "اتصال آمن ومشفّر",
+                    audit_logs: "يتم تسجيل جميع عمليات الوصول",
+                    compliant: "متوافق مع المعايير الموريتانية"
+                },
+                documents: {
+                    title: "المستندات المتاحة",
+                    description: "المستندات المشتركة لهذه المشاركة",
+                    none: "لا توجد مستندات متاحة",
+                    download: "تنزيل"
+                },
+                disconnect: "تسجيل الخروج",
+                warning: {
+                    title: "تذكير مهم",
+                    text: "المستندات المتاحة عبر هذا الرمز سرية تمامًا. أي استخدام غير مصرح به أو مشاركة مع طرف ثالث غير مسموح وقد يؤدي إلى عقوبات وفقًا لقانون المناقصات العمومية الموريتاني."
+                }
             }
         },
         user: {
@@ -1611,11 +2043,43 @@ export const translations = {
             no_role_assigned: "لم يتم تعيين دور",
             back_to_projects: "العودة إلى المشاريع",
             management_tabs: {
-                actions: "إدارة الإجراءات",
-                overview: "نظرة عامة",
-                monitoring: "المراقبة",
-                alerts: "التنبيهات"
-            },
+                    actions: "إدارة الإجراءات",
+                    overview: "نظرة عامة",
+                    monitoring: "المراقبة",
+                    alerts: {
+                        total: "إجمالي التنبيهات",
+                        critical: "حرج",
+                        high: "عالي",
+                        medium: "متوسط",
+                        low: "منخفض",
+                        tabs: {
+                            all: "الكل",
+                            delay: "تأخيرات",
+                            payment: "المدفوعات",
+                            inspection: "التفتيشات",
+                            guarantee: "الضمانات"
+                        },
+                        delay_title: "تأخر المشروع",
+                        delay_desc_prefix: "تأخير في",
+                        delay_desc_suffix: "تم اكتشافه",
+                        payment_blocked: "المدفوعات محتجزة",
+                        payment_blocked_desc_prefix: "دفع بمقدار",
+                        payment_blocked_desc_suffix: "محجوز",
+                        validation_required: "مطلوب تحقق",
+                        inspection_overdue: "تفتيش متأخر",
+                        inspection_overdue_desc_prefix: "التفتيش لم يكتمل لـ",
+                        days: "أيام",
+                        guarantee_expiring: "ضمان بنكي على وشك الانتهاء",
+                        guarantee_expiring_desc_prefix: "ضمان بمقدار",
+                        guarantee_expiring_desc_suffix: "سينتهي بعد",
+                        load_error: "فشل في تحميل التنبيهات",
+                        acknowledge: "تأكيد الاستلام",
+                        acknowledge_success: "تم تأكيد التنبيه",
+                        acknowledge_description: "تم وضع علامة على التنبيه كمؤكد",
+                        none: "لا توجد تنبيهات",
+                        project_label: "المشروع"
+                    }
+                },
             cards: {
                 active_projects: "المشاريع النشطة",
                 in_progress_description: "قيد التنفيذ",
@@ -1641,6 +2105,20 @@ export const translations = {
                 http_status: "حالة HTTP",
                 active: "نشط",
                 real_time_monitoring: "المراقبة في الوقت الفعلي",
+                critical: "حرجة",
+                degraded: "متدهور",
+                total_requests: "إجمالي الطلبات",
+                error_rate: "معدل الأخطاء",
+                recent_errors: "الأخطاء الأخيرة",
+                success_rate: "معدل النجاح",
+                avg_response_time: "متوسط زمن الاستجابة",
+                recent_errors_desc: "آخر أخطاء HTTP المكتشفة في التطبيق",
+                no_recent_errors: "لا توجد أخطاء حديثة",
+                error_alert_message: "تم اكتشاف معدل أخطاء مرتفع. تحقق من اتصال الشبكة وحالة الخدمات.",
+                status_success: "نجاح",
+                status_redirect: "إعادة توجيه",
+                status_client_error: "خطأ من العميل",
+                status_server_error: "خطأ من الخادم",
                 guarantees: "الضمانات المصرفية",
                 alerts_count: "تنبيهات",
                 expiring_soon: "الضمانات المنتهية قريباً",
@@ -1692,8 +2170,15 @@ export const translations = {
             distribution_by_region: "التوزيع حسب المنطقة",
             project_distribution: "توزيع المشاريع",
             no_geolocated_projects: "لا توجد مشاريع محددة جغرافياً",
+            map_no_data: "لا توجد بيانات جغرافية للعرض",
+            legend_title: "وسيلة إيضاح",
+            material_label: "مادة",
+            materials_label: "مواد",
+            start_label: "بداية",
+            end_label: "نهاية",
             dev_mode: "وضع التطوير"
         },
+        
         management_actions: {
             loading: "جاري التحميل...",
             error_title: "خطأ",
@@ -2233,53 +2718,6 @@ export const translations = {
             quick_links: "روابط سريعة",
             legal: "قانوني"
         },
-        common: {
-            yes: "نعم",
-            no: "لا",
-            cancel: "إلغاء",
-            save: "حفظ",
-            delete: "حذف",
-            edit: "تعديل",
-            update: "تحديث",
-            loading: "جاري التحميل...",
-            error: "خطأ",
-            success: "نجاح",
-            back: "عودة",
-            search: "بحث",
-            filter: "تصفية",
-            reset: "إعادة تعيين",
-            submit: "إرسال",
-            close: "إغلاق",
-            confirm: "تأكيد",
-            optional: "اختياري",
-            required: "مطلوب",
-            yes_delete: "نعم، احذف",
-            no_cancel: "لا، إلغاء",
-            create: "إنشاء",
-            add: "إضافة",
-            view: "عرض",
-            details: "تفاصيل",
-            actions: "إجراءات",
-            status: "الحالة",
-            date: "التاريخ",
-            description: "الوصف",
-            title: "العنوان",
-            name: "الاسم",
-            email: "البريد الإلكتروني",
-            phone: "الهاتف",
-            address: "العنوان",
-            all: "الكل",
-            none: "لا شيء",
-            none_available: "لا يوجد متاح",
-            no_data: "لا توجد بيانات متاحة",
-            error_loading: "خطأ في التحميل",
-            created_successfully: "تم الإنشاء بنجاح",
-            updated_successfully: "تم التحديث بنجاح",
-            deleted_successfully: "تم الحذف بنجاح",
-            confirm_delete: "هل أنت متأكد من حذف هذا العنصر؟",
-            next: "التالي",
-            previous: "السابق"
-        },
         notfound: {
             message: "الصفحة غير موجودة",
             return_home: "العودة للرئيسية"
@@ -2743,6 +3181,74 @@ procurement_features: {
     },
 
     en: {
+        common: {
+            yes: "Yes",
+            no: "No",
+            cancel: "Cancel",
+            save: "Save",
+            delete: "Delete",
+            edit: "Edit",
+            update: "Update",
+            loading: "Loading...",
+            load_data: "Load data",
+            error: "Error",
+            success: "Success",
+            info: "Information",
+            back: "Back",
+            search: "Search",
+            filter: "Filter",
+            reset: "Reset",
+            submit: "Submit",
+            close: "Close",
+            confirm: "Confirm",
+            optional: "Optional",
+            required: "Required",
+            confirm_delete: "Confirm delete",
+            yes_delete: "Yes, delete",
+            no_cancel: "No, cancel",
+            create: "Create",
+            add: "Add",
+            view: "View",
+            details: "Details",
+            actions: "Actions",
+            status: "Status",
+            date: "Date",
+            description: "Description",
+            title: "Title",
+            name: "Name",
+            email: "Email",
+            phone: "Phone",
+            address: "Address",
+            all: "All",
+            none: "None",
+            none_available: "None available",
+            no_data: "No data available",
+            error_loading: "Error loading",
+            created_successfully: "Created successfully",
+            updated_successfully: "Updated successfully",
+            deleted_successfully: "Deleted successfully",
+            next: "Next",
+            previous: "Previous"
+        },
+        app: {
+            name: "HadraTech-GPI"
+        },
+        project: {
+            errors: {
+                missing_id: "Project ID missing",
+                not_found: "Project not found"
+            },
+            labels: {
+                project_manager: "Project Manager",
+                main_contractor: "Main Contractor"
+            },
+            phase_label: "Phase",
+            methodology: {
+                standard: "Standard (Cascade)",
+                agile: "Agile",
+                hybrid: "Hybrid"
+            }
+        },
         employee: {
             add: "Ajouter un employé",
             add_title: "Ajouter un nouvel employé",
@@ -2851,6 +3357,37 @@ procurement_features: {
                 title: "Documents",
                 unknown_date: "Unknown date",
                 empty: "No documents."
+            }
+        },
+        tenders: {
+            supplierSecure: {
+                title: "Supplier Secure Access",
+                description: "Enter your sharing code to access tender documents",
+                input_placeholder: "SHARE-CODE",
+                format_note: "Format: 12 alphanumeric characters",
+                validate_button: "Access Documents",
+                validating: "Validating...",
+                access_granted: "Access Granted",
+                access_denied: "Access Denied",
+                invalid_code_desc: "Please enter a valid code",
+                validate_error_desc: "Error validating the code",
+                security_title: "Security and Privacy",
+                security_items: {
+                    secure_connection: "Secure, encrypted connection",
+                    audit_logs: "All accesses are recorded",
+                    compliant: "Compliant with Mauritanian standards"
+                },
+                documents: {
+                    title: "Accessible Documents",
+                    description: "Documents shared for this submission",
+                    none: "No documents available",
+                    download: "Download"
+                },
+                disconnect: "Sign out",
+                warning: {
+                    title: "Important reminder",
+                    text: "Documents accessed via this code are strictly confidential. Any unauthorized use or sharing with third parties is prohibited and may result in penalties under the Mauritanian public procurement code."
+                }
             }
         },
         user: {
@@ -2993,6 +3530,20 @@ procurement_features: {
                 http_status: "HTTP Status",
                 active: "Active",
                 real_time_monitoring: "Real-time monitoring",
+                critical: "Critical",
+                degraded: "Degraded",
+                total_requests: "Total requests",
+                error_rate: "Error rate",
+                recent_errors: "Recent errors",
+                success_rate: "Success rate",
+                avg_response_time: "Average response time",
+                recent_errors_desc: "Latest HTTP errors detected in the application",
+                no_recent_errors: "No recent errors",
+                error_alert_message: "High error rate detected. Check network connectivity and service health.",
+                status_success: "Success",
+                status_redirect: "Redirect",
+                status_client_error: "Client Error",
+                status_server_error: "Server Error",
                 guarantees: "Bank Guarantees",
                 alerts_count: "Alerts",
                 expiring_soon: "Expiring soon guarantees",
@@ -3044,6 +3595,12 @@ procurement_features: {
             distribution_by_region: "Distribution by Region",
             project_distribution: "Project Distribution",
             no_geolocated_projects: "No geolocated projects",
+            map_no_data: "No geolocated data to display",
+            legend_title: "Legend",
+            material_label: "Material",
+            materials_label: "Materials",
+            start_label: "Start",
+            end_label: "End",
             dev_mode: "Development Mode"
         },
         management_actions: {
@@ -3100,7 +3657,51 @@ procurement_features: {
             type: "Type",
             acknowledge: "Acknowledge",
             acknowledged_note: "Acknowledged from monitoring",
-            loading_project: "Loading project and organization..."
+            loading_project: "Loading project and organization...",
+            load_delays_error: "Failed to load project delays",
+            not_found_for_project: "No bank guarantee found for this project",
+            bank_notified_prefix: "Bank has been notified of delay on",
+            internal_notifications_sent: "internal notifications sent",
+            notification_send_failed: "Failed to send bank notification",
+            project_not_found: "Project not found",
+            critical_projects: "critical delayed project(s)",
+            critical_alerts_desc: "Delays exceed contractual thresholds. Immediate action required.",
+            no_critical_delays_title: "No critical delays detected",
+            no_critical_delays_desc: "All projects comply with contractual deadlines.",
+            notify_sending: "Sending...",
+            notify_bank: "Notify Bank",
+            view_project: "View Project",
+            delay_label: "Delay",
+            days_label: "days",
+            contractor_label: "Contractor",
+            planned_date_label: "Planned date",
+            milestones_missed_label: "Milestones missed",
+            escalation_thresholds_title: "Escalation Thresholds",
+            delay_percentage_suffix: "% delay",
+            severity_labels: {
+                delay_alert: "Delay Alert",
+                bank_notification: "Bank Notification",
+                guarantee_trigger: "Guarantee Trigger"
+            },
+            escalation: {
+                legal: "Legal Escalation"
+            },
+            actions: {
+                task_assignment_title: "Project delay handling",
+                task_assignment_msg_prefix: "Please handle the delay of",
+                hierarchy_notification_title: "Critical delay alert",
+                hierarchy_notification_msg_prefix: "The project",
+                sms_title: "Project delay SMS",
+                sms_msg_prefix: "SMS: Delay",
+                call_title: "Project delay call",
+                call_msg_prefix: "Call regarding project delay",
+                email_title: "Project delay email",
+                email_msg_prefix: "Email regarding project delay",
+                mail_title: "Project delay mail",
+                mail_msg_prefix: "Mail regarding project delay"
+            },
+            unknown_action_type: "Unknown action type",
+            action_created_success: "{title} created successfully",
         },
         insurance_management: {
             title: "Insurance Management",
@@ -3574,53 +4175,6 @@ procurement_features: {
             quick_links: "Quick Links",
             legal: "Legal"
         },
-        common: {
-            yes: "Yes",
-            no: "No",
-            cancel: "Cancel",
-            save: "Save",
-            delete: "Delete",
-            edit: "Edit",
-            update: "Update",
-            loading: "Loading...",
-            error: "Error",
-            success: "Success",
-            back: "Back",
-            search: "Search",
-            filter: "Filter",
-            reset: "Reset",
-            submit: "Submit",
-            close: "Close",
-            confirm: "Confirm",
-            optional: "Optional",
-            required: "Required",
-            yes_delete: "Yes, delete",
-            no_cancel: "No, cancel",
-            create: "Create",
-            add: "Add",
-            view: "View",
-            details: "Details",
-            actions: "Actions",
-            status: "Status",
-            date: "Date",
-            description: "Description",
-            title: "Title",
-            name: "Name",
-            email: "Email",
-            phone: "Phone",
-            address: "Address",
-            all: "All",
-            none: "None",
-            none_available: "None available",
-            no_data: "No data available",
-            error_loading: "Error loading",
-            created_successfully: "Created successfully",
-            updated_successfully: "Updated successfully",
-            deleted_successfully: "Deleted successfully",
-            confirm_delete: "Are you sure you want to delete this item?",
-            next: "Next",
-            previous: "Previous"
-        },
         notfound: {
             message: "Page not found",
             return_home: "Return home"
@@ -4078,20 +4632,30 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         localStorage.setItem('language', lang);
     };
 
-    const t = (key: string): string => {
+    const t = (key: string, params?: Record<string, string | number>): string => {
         const keys = key.split('.');
-        let value: any = translations[language];
+        type Nested = Record<string, unknown>;
+        let value: unknown = (translations as Record<string, Nested>)[language];
 
         for (const k of keys) {
-            if (value && typeof value === 'object' && k in value) {
-                value = value[k];
+            if (value && typeof value === 'object' && k in (value as Nested)) {
+                value = (value as Nested)[k];
             } else {
                 console.warn(`Translation key "${key}" not found for language "${language}"`);
                 return key;
             }
         }
 
-        return typeof value === 'string' ? value : key;
+        let result = typeof value === 'string' ? value : key;
+        
+        // Handle interpolation with params like {title}
+        if (params && typeof result === 'string') {
+            Object.entries(params).forEach(([paramKey, paramValue]) => {
+                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+            });
+        }
+
+        return result;
     };
 
     return (

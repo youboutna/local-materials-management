@@ -1,45 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Download, 
-  Shield, 
-  Calendar,
-  DollarSign,
-  Settings,
-  Users,
-  MessageSquare,
-  Phone,
-  Mail,
-  FileText,
-  Upload,
-  Ban,
-  CreditCard,
-  ExternalLink
-} from 'lucide-react';
-import { createPaymentControlAction } from '@/services/paymentControlActionService';
+import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import DocumentSection from '@/components/common/DocumentSection';
+import DocumentSelector from '@/components/selectors/DocumentSelector';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
-import DocumentSelector from '@/components/selectors/DocumentSelector';
-import DocumentUpload from '@/components/documents/DocumentUpload';
-import DocumentViewer from '@/components/documents/DocumentViewer';
-import DocumentSection from '@/components/common/DocumentSection';
-import { ActionsDropdown } from '@/components/actions/ActionsDropdown';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { createPaymentControlAction } from '@/services/paymentControlActionService';
+import {
+    Ban,
+    CreditCard,
+    Edit,
+    Eye,
+    FileText,
+    Plus,
+    Trash2,
+    Upload
+} from 'lucide-react';
+import React, { useState } from 'react';
 
 interface Payment {
   id: string;
@@ -112,6 +99,7 @@ const PaymentCrud: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<PaymentFormData>({
     project_id: '',
@@ -224,13 +212,13 @@ const PaymentCrud: React.FC = () => {
       });
 
       toast({
-        title: 'Action créée',
+        title: t('common.success'),
         description: `${title} créée avec succès`,
       });
     } catch (error) {
       console.error('Error creating payment action:', error);
       toast({
-        title: 'Erreur',
+        title: t('common.error'),
         description: 'Impossible de créer l\'action',
         variant: 'destructive'
       });
@@ -300,7 +288,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de charger les paiements",
         variant: "destructive",
       });
@@ -443,7 +431,7 @@ const PaymentCrud: React.FC = () => {
     
     if (!formData.project_id || !formData.contractor_name || !formData.amount) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
@@ -481,7 +469,7 @@ const PaymentCrud: React.FC = () => {
         if (error) throw error;
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement mis à jour avec succès",
         });
       } else {
@@ -564,7 +552,7 @@ const PaymentCrud: React.FC = () => {
         }
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement créé avec succès",
         });
       }
@@ -575,7 +563,7 @@ const PaymentCrud: React.FC = () => {
     } catch (error) {
       console.error('Database error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Une erreur est survenue lors de l'enregistrement",
         variant: "destructive",
       });
@@ -655,14 +643,14 @@ const PaymentCrud: React.FC = () => {
         if (error) throw error;
 
         toast({
-          title: "Succès",
+          title: t('common.success'),
           description: "Paiement supprimé avec succès",
         });
         fetchPayments(); // Refresh the list
       } catch (error) {
         console.error('Delete error:', error);
         toast({
-          title: "Erreur",
+          title: t('common.error'),
           description: "Erreur lors de la suppression",
           variant: "destructive",
         });
@@ -691,7 +679,7 @@ const PaymentCrud: React.FC = () => {
     }));
     setIsUploadDialogOpen(false);
     toast({
-      title: "Document ajouté",
+      title: t('common.success'),
       description: "Le document justificatif a été ajouté au paiement"
     });
   };
@@ -731,13 +719,13 @@ const PaymentCrud: React.FC = () => {
       }));
 
       toast({
-        title: "Document téléchargé",
+        title: t('common.success'),
         description: `${type === 'purchase_order' ? 'Bon de commande' : type === 'quote' ? 'Devis' : 'Facture'} téléchargé avec succès`
       });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du téléchargement du document",
         variant: "destructive"
       });
@@ -807,13 +795,13 @@ const PaymentCrud: React.FC = () => {
       }));
 
       toast({
-        title: "Facture téléchargée",
+        title: t('common.success'),
         description: "Facture téléchargée et analysée avec succès"
       });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors du téléchargement de la facture",
         variant: "destructive"
       });

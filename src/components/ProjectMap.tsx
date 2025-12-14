@@ -1,6 +1,7 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import React, { useEffect, useState } from "react";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { ProjectData } from "@/types/project";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   interactive = true,
 }) => {
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (locations) {
@@ -128,7 +130,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
     return (
       <div className={`relative ${className}`} style={{ height }}>
         <div className="h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg">
-          Aucune donnée géolocalisée à afficher
+          {t('dashboard.map_no_data')}
         </div>
       </div>
     );
@@ -175,18 +177,18 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 )}
                 {location.type === "material" && (
                   <Badge className="bg-orange-500 text-white text-xs mb-1">
-                    MATÉRIAU
+                    {t('dashboard.material_label').toUpperCase()}
                   </Badge>
                 )}
                 {location.startDate && (
                   <p className="text-xs">
-                    Début:{" "}
+                    {t('dashboard.start_label')}: {" "}
                     {new Date(location.startDate).toLocaleDateString("fr-FR")}
                   </p>
                 )}
                 {location.endDate && (
                   <p className="text-xs">
-                    Fin:{" "}
+                    {t('dashboard.end_label')}: {" "}
                     {new Date(location.endDate).toLocaleDateString("fr-FR")}
                   </p>
                 )}
@@ -198,14 +200,14 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 
       {uniqueStatuses.length > 0 && (
         <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border max-w-xs z-[1000]">
-          <h4 className="font-semibold text-sm mb-2">Légende</h4>
+          <h4 className="font-semibold text-sm mb-2">{t('dashboard.legend_title')}</h4>
           <div className="grid grid-cols-1 gap-1 text-xs">
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
               <div
                 className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
                 style={{ backgroundColor: "#e67e22" }}
               />
-              <span className="truncate">Matériaux</span>
+              <span className="truncate">{t('dashboard.materials_label')}</span>
             </div>
             {uniqueStatuses.map((status) => (
               <div key={status} className="flex items-center gap-2">

@@ -84,10 +84,9 @@ const Dashboard: React.FC = () => {
 
       if (!hasRequiredRole) {
         toast({
-          title: "Accès refusé",
-          description:
-            "Vous n'avez pas les permissions nécessaires pour accéder au tableau de bord de gestion.",
-          variant: "destructive",
+          title: t('dashboard.access_denied_title'),
+          description: t('dashboard.access_restricted'),
+          variant: 'destructive'
         });
       }
     } catch (error) {
@@ -340,18 +339,10 @@ const Dashboard: React.FC = () => {
           >
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">
-                  {t("dashboard.management_tabs.overview")}
-                </TabsTrigger>
-                <TabsTrigger value="actions">
-                  {t("dashboard.management_tabs.actions")}
-                </TabsTrigger>
-                <TabsTrigger value="monitoring">
-                  {t("dashboard.management_tabs.monitoring")}
-                </TabsTrigger>
-                <TabsTrigger value="alerts">
-                  {t("dashboard.management_tabs.alerts")}
-                </TabsTrigger>
+                <TabsTrigger value="overview">{t('dashboard.management_tabs.overview')}</TabsTrigger>
+                <TabsTrigger value="actions">{t('dashboard.management_tabs.actions')}</TabsTrigger>
+                <TabsTrigger value="monitoring">{t('dashboard.management_tabs.monitoring')}</TabsTrigger>
+                <TabsTrigger value="alerts">{t('dashboard.management_tabs.alerts')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="actions" className="mt-6">
@@ -411,40 +402,26 @@ const Dashboard: React.FC = () => {
 
                     <Card className="border-l-4 border-l-blue-500">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">
-                          {t("dashboard.cards.teams")}
-                        </CardTitle>
-                        <CardDescription>Personnel affecté</CardDescription>
+                        <CardTitle className="text-lg font-medium">{t('dashboard.cards.teams')}</CardTitle>
+                        <CardDescription>{t('dashboard.cards.staff_assigned')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline">
-                          <span className="text-3xl font-bold">
-                            {stats.teamMembers}
-                          </span>
-                          <span className="ml-2 text-sm text-muted-foreground">
-                            membres
-                          </span>
+                          <span className="text-3xl font-bold">{stats.teamMembers}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.members_label')}</span>
                         </div>
                       </CardContent>
                     </Card>
 
                     <Card className="border-l-4 border-l-orange-500">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg font-medium">
-                          Matériaux
-                        </CardTitle>
-                        <CardDescription>
-                          Ressources disponibles
-                        </CardDescription>
+                        <CardTitle className="text-lg font-medium">{t('dashboard.cards.materials_title')}</CardTitle>
+                        <CardDescription>{t('dashboard.cards.available_resources')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-baseline">
-                          <span className="text-3xl font-bold">
-                            {stats.materials}
-                          </span>
-                          <span className="ml-2 text-sm text-muted-foreground">
-                            types
-                          </span>
+                          <span className="text-3xl font-bold">{stats.materials}</span>
+                          <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.types_label')}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -456,7 +433,7 @@ const Dashboard: React.FC = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center text-xl">
                           <BarChart3 className="h-5 w-5 mr-2" />
-                          Progression des Projets
+                          {t('dashboard.cards.project_progress')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="h-80">
@@ -466,9 +443,7 @@ const Dashboard: React.FC = () => {
                           />
                         ) : (
                           <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
-                            <span className="text-muted-foreground text-sm font-medium">
-                              Aucune donnée disponible
-                            </span>
+                            <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_data')}</span>
                           </div>
                         )}
                       </CardContent>
@@ -477,13 +452,13 @@ const Dashboard: React.FC = () => {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between text-xl">
-                          <div className="flex items-center">
+                            <div className="flex items-center">
                             <CheckSquare className="h-5 w-5 mr-2" />
-                            Projets Récents
+                            {t('dashboard.recent_projects')}
                           </div>
                           <Link to="/projects">
                             <Button variant="ghost" size="sm" className="-mr-2">
-                              <span className="text-xs mr-1">Voir tout</span>
+                              <span className="text-xs mr-1">{t('dashboard.view_all')}</span>
                               <ArrowRight className="h-3 w-3" />
                             </Button>
                           </Link>
@@ -524,7 +499,7 @@ const Dashboard: React.FC = () => {
                             ))}
                           {(!projects || projects.length === 0) && (
                             <div className="text-center py-4 text-muted-foreground">
-                              Aucun projet trouvé
+                              {t('dashboard.no_projects')}
                             </div>
                           )}
                         </div>
@@ -537,8 +512,8 @@ const Dashboard: React.FC = () => {
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center text-xl">
-                          <Users className="h-5 w-5 mr-2" />
-                          Distribution par Région
+                            <Users className="h-5 w-5 mr-2" />
+                          {t('dashboard.distribution_by_region')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -548,9 +523,7 @@ const Dashboard: React.FC = () => {
                           />
                         ) : (
                           <div className="h-64 w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
-                            <span className="text-muted-foreground text-sm font-medium">
-                              Aucune donnée disponible
-                            </span>
+                            <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_data')}</span>
                           </div>
                         )}
                       </CardContent>
@@ -560,7 +533,7 @@ const Dashboard: React.FC = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center text-xl">
                           <MapPin className="h-5 w-5 mr-2" />
-                          Localisation des Projets
+                          {t('dashboard.project_distribution')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="h-80">
@@ -574,9 +547,7 @@ const Dashboard: React.FC = () => {
                           />
                         ) : (
                           <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
-                            <span className="text-muted-foreground text-sm font-medium">
-                              Aucun projet géolocalisé
-                            </span>
+                            <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_geolocated_projects')}</span>
                           </div>
                         )}
                       </CardContent>

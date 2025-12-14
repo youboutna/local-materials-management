@@ -1,8 +1,9 @@
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useAuth } from './AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 interface Profile {
   id: string;
@@ -34,6 +35,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [error, setError] = useState<string | null>(null);
   
   const isAuthenticated = !!user;
+  const { t } = useLanguage();
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -90,7 +92,7 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (existingProfile) {
         toast({
-          title: "Erreur",
+          title: t('common.error'),
           description: "Un profil avec ce numéro d'identification existe déjà.",
           variant: "destructive",
         });
@@ -119,14 +121,14 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (newProfile && (newProfile as any).id) {
         setProfile(newProfile as any);
         toast({
-          title: "Profil créé",
+          title: t('common.success'),
           description: "Votre profil a été créé avec succès.",
         });
       }
     } catch (err) {
       console.error('Error creating profile:', err);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de créer le profil. Veuillez réessayer plus tard.",
         variant: "destructive",
       });
@@ -163,14 +165,14 @@ export const KeycloakAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (updatedProfile && (updatedProfile as any).id) {
         setProfile(updatedProfile as any);
         toast({
-          title: "Profil mis à jour",
+          title: t('common.success'),
           description: "Votre profil a été mis à jour avec succès.",
         });
       }
     } catch (err) {
       console.error('Error updating profile:', err);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Impossible de mettre à jour le profil. Veuillez réessayer plus tard.",
         variant: "destructive",
       });

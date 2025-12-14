@@ -1,19 +1,19 @@
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, Loader2 } from 'lucide-react';
-import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { DEV_MODE } from '@/config/constants';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { useDocumentStorage } from '@/hooks/useDocumentStorage';
+import { supabase } from '@/integrations/supabase/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FileText, Loader2, Upload } from 'lucide-react';
+import { useState } from 'react';
 
 type Project = { id: string; title: string };
 
@@ -27,6 +27,7 @@ const DocumentUpload = () => {
   });
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
   const { user } = useAuth();
@@ -114,10 +115,10 @@ const DocumentUpload = () => {
 
       return data;
     },
-    onSuccess: () => {
+      onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       toast({
-        title: "Succès",
+        title: t('common.success'),
         description: "Document créé avec succès.",
       });
 
@@ -134,7 +135,7 @@ const DocumentUpload = () => {
     onError: (error: Error) => {
       console.error('Upload error:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: error.message || "Une erreur inattendue s'est produite.",
         variant: "destructive"
       });
@@ -155,9 +156,9 @@ const DocumentUpload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.document_type) {
+      if (!formData.title || !formData.document_type) {
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Veuillez remplir tous les champs obligatoires.",
         variant: "destructive"
       });

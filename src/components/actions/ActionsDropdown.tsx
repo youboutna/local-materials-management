@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Users, Send, Phone, Mail, FileText, Download, Shield, Settings } from 'lucide-react';
-import { ActionFormDialog, ActionFormData } from './ActionFormDialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Download, FileText, Mail, Phone, Send, Settings, Shield, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
@@ -46,6 +47,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   className,
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [selectedActionType, setSelectedActionType] = useState<ActionFormData['actionType']>('task_assignment');
   const [availableEmployees, setAvailableEmployees] = useState<Array<{ id: string; full_name: string; email?: string; position?: string; }>>([]);
@@ -177,7 +179,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
       }
 
       toast({
-        title: "Succès",
+        title: t('common.success'),
         description: `Action "${actionLabels[formData.actionType]}" exécutée avec succès`,
       });
 
@@ -186,7 +188,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     } catch (error) {
       console.error('Error executing action:', error);
       toast({
-        title: "Erreur",
+        title: t('common.error'),
         description: "Erreur lors de l'exécution de l'action",
         variant: "destructive",
       });
