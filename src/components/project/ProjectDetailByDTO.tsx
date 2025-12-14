@@ -74,12 +74,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-summary", projectId],
     queryFn: async () => {
       console.log("🔍 Query function starting for projectId:", projectId);
-      if (!projectId) throw new Error("ID du projet manquant");
+      if (!projectId) throw new Error(t('project.errors.missing_id'));
 
       console.log("🔍 Calling ProjectService.getProjectSummary...");
       const result = await projectService.getProjectSummary(projectId);
       console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
-      if (!result) throw new Error("Projet non trouvé");
+      if (!result) throw new Error(t('project.errors.not_found'));
       return result;
     },
     enabled: !!projectId,
@@ -174,7 +174,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     const normalize = (p: any) => ({
       id: p.id,
       phase:
-        p.phase_name || p.phase || p.name || p.construction_stage || "Phase",
+        p.phase_name || p.phase || p.name || p.construction_stage || t('project.phase_label'),
       status: p.status || "planned",
       progress: p.progress || 0,
       startDate: p.start_date || p.startDate || p.start || "",
@@ -186,7 +186,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         : [],
     });
     return (phasesSource || []).map(normalize);
-  }, [phasesSource]);
+  }, [phasesSource, t]);
 
   // Calculate current phase and stage dynamically from phases
   const currentPhaseInfo = useMemo(() => {
@@ -230,7 +230,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
              projectDetail.methodology === 'hybrid' ? 'Hybride' : 'Standard';
     }
     return 'Standard';
-  }, [projectDetail?.methodology]);
+  }, [projectDetail?.methodology, t]);
 
   // Compute derived data from DTO
   const [resources, setResources] = useState<any[]>([]);
@@ -268,7 +268,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       setTasks(tasksSource);
       setRisks(risksSource);
     }
-  }, [projectDetail, risksSource, tasksSource]);
+  }, [projectDetail, risksSource, tasksSource, t]);
 
   // Calculate realistic progress
   const [calculatedProgress, setCalculatedProgress] = useState<number>(0);
