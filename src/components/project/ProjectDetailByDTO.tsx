@@ -485,7 +485,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 Rapport compact
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
               {projectDataForReport && (
                 <CompactProjectReportGenerator project={projectDataForReport} />
               )}

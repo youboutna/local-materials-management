@@ -1,8 +1,8 @@
-import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
 import { ProjectReportDTO } from '@/types/reportTypes';
+import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 // Register fonts
 Font.register({
@@ -21,6 +21,15 @@ const colors = {
   white: '#ffffff',
   dark: '#1f2937',
   border: '#e5e7eb',
+  mapWater: '#dbeafe',
+  mapLand: '#f8fafc',
+  mapStreet: '#e5e7eb',
+  mapMajorStreet: '#d1d5db',
+  mapBuilding: '#f3f4f6',
+  mapBorder: '#93c5fd',
+  mapPin: '#dc2626',
+  mapPark: '#dcfce7',
+  mapText: '#4b5563',
 };
 
 const styles = StyleSheet.create({
@@ -30,24 +39,137 @@ const styles = StyleSheet.create({
     fontSize: 8,
     backgroundColor: colors.white,
   },
-  // Header styles
+  // Company Header styles
+  companyHeader: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#2563eb',
+    paddingBottom: 5,
+    marginBottom: 5,
+    pageBreakInside: 'avoid',
+  },
+  companyHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  companyInfo: {
+    flex: 1,
+  },
+  companyName: {
+    color: '#2563eb',
+    fontSize: 12,
+    marginBottom:5 ,
+    fontWeight: 'bold',
+  },
+  companyDetail: {
+    marginVertical: 2,
+    fontSize: 12,
+    color: '#666666',
+  },
+  companyLogo: {
+    maxHeight: 20,
+    maxWidth: 50,
+  },
+  // Report Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
     paddingBottom: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: colors.primary,
+    flex: 1,
   },
   headerDate: {
     fontSize: 9,
     color: colors.muted,
+  },
+  // Mini map styles - Updated for street map
+  mapContainer: {
+    width: 100,
+    height: 60,
+    borderWidth: 1,
+    borderColor: colors.mapBorder,
+    borderRadius: 4,
+    backgroundColor: colors.mapLand,
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+    overflow: 'hidden',
+  },
+  mapContent: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
+  // Street map elements
+  streetHorizontal: {
+    position: 'absolute',
+    height: 2,
+    backgroundColor: colors.mapStreet,
+  },
+  streetVertical: {
+    position: 'absolute',
+    width: 2,
+    backgroundColor: colors.mapStreet,
+  },
+  majorStreetHorizontal: {
+    position: 'absolute',
+    height: 3,
+    backgroundColor: colors.mapMajorStreet,
+  },
+  majorStreetVertical: {
+    position: 'absolute',
+    width: 3,
+    backgroundColor: colors.mapMajorStreet,
+  },
+  building: {
+    position: 'absolute',
+    backgroundColor: colors.mapBuilding,
+    borderWidth: 0.5,
+    borderColor: colors.mapBorder,
+  },
+  park: {
+    position: 'absolute',
+    backgroundColor: colors.mapPark,
+    borderWidth: 0.5,
+    borderColor: colors.success,
+  },
+  water: {
+    position: 'absolute',
+    backgroundColor: colors.mapWater,
+  },
+  mapPin: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.mapPin,
+    borderWidth: 1,
+    borderColor: colors.white,
+    zIndex: 10,
+  },
+  mapLabel: {
+    fontSize: 5,
+    color: colors.mapText,
+    marginTop: 2,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  mapCoordinates: {
+    fontSize: 4,
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  noMap: {
+    fontSize: 6,
+    color: colors.muted,
+    textAlign: 'center',
   },
   // Project title section
   projectTitle: {
@@ -321,6 +443,14 @@ interface CompactProjectPDFDocumentProps {
   enrichedDataMap?: Map<string, ProjectReportDTO>;
   evmMetricsMap?: Map<string, EVMMetrics>;
   pertAnalysisMap?: Map<string, PERTAnalysis>;
+  includeCompanyHeader?: boolean;
+  company?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    logo?: string;
+  };
 }
 
 export function CompactProjectPDFDocument({
@@ -329,8 +459,21 @@ export function CompactProjectPDFDocument({
   enrichedDataMap,
   evmMetricsMap,
   pertAnalysisMap,
+  includeCompanyHeader = true,
+  company,
 }: CompactProjectPDFDocumentProps) {
   const currentDate = format(new Date(), 'dd/MM/yyyy', { locale: fr });
+
+  // Default company information
+  const defaultCompany = {
+    name: 'Société Mauritanienne d\'Électricité (SOMELEC)',
+    address: 'Avenue Gamal Abdel Nasser, BP 355, Nouakchott, Mauritanie',
+    phone: '+222 45 25 25 25',
+    email: 'contact@somelec.mr',
+    logo: undefined
+  };
+
+  const companyInfo = company || defaultCompany;
 
   const getStatusColor = (status: string) => {
     const statusColors: Record<string, string> = {
@@ -425,6 +568,81 @@ export function CompactProjectPDFDocument({
     return `Phase ${completed}/${phases.length}`;
   };
 
+  // Helper function to render street map
+  const renderStreetMap = (project: ProjectData) => {
+    const hasCoordinates = project.coordinates?.latitude && project.coordinates?.longitude;
+    
+    // Generate a pseudo-random but consistent position based on project id
+    const projectHash = project.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const pinX = 30 + (projectHash % 40);
+    const pinY = 20 + ((projectHash * 7) % 30);
+    
+    return (
+      <View style={styles.mapContainer}>
+        <View style={styles.mapContent}>
+          {/* Street grid */}
+          <View style={[styles.majorStreetHorizontal, { top: 15, left: 0, width: '100%' }]} />
+          <View style={[styles.majorStreetHorizontal, { top: 45, left: 0, width: '100%' }]} />
+          <View style={[styles.majorStreetVertical, { left: 25, top: 0, height: '100%' }]} />
+          <View style={[styles.majorStreetVertical, { left: 75, top: 0, height: '100%' }]} />
+          
+          {/* Minor streets */}
+          <View style={[styles.streetHorizontal, { top: 30, left: 0, width: '100%' }]} />
+          <View style={[styles.streetVertical, { left: 50, top: 0, height: '100%' }]} />
+          
+          {/* Buildings */}
+          <View style={[styles.building, { left: 5, top: 5, width: 15, height: 10 }]} />
+          <View style={[styles.building, { left: 80, top: 5, width: 15, height: 10 }]} />
+          <View style={[styles.building, { left: 5, top: 35, width: 15, height: 10 }]} />
+          <View style={[styles.building, { left: 80, top: 35, width: 15, height: 10 }]} />
+          <View style={[styles.building, { left: 30, top: 20, width: 15, height: 10 }]} />
+          <View style={[styles.building, { left: 55, top: 20, width: 15, height: 10 }]} />
+          
+          {/* Park */}
+          <View style={[styles.park, { left: 30, top: 35, width: 40, height: 15 }]} />
+          
+          {/* Water feature */}
+          <View style={[styles.water, { left: 70, top: 50, width: 10, height: 5 }]} />
+          
+          {/* Project location pin */}
+          <View style={[styles.mapPin, { left: pinX, top: pinY }]} />
+          
+          {/* Map label */}
+          <View style={{ position: 'absolute', bottom: 2, left: 0, right: 0, alignItems: 'center' }}>
+            <Text style={styles.mapLabel}>
+              {project.location ? (project.location.length > 15 ? project.location.substring(0, 15) + '...' : project.location) : 'Localisation'}
+            </Text>
+            {hasCoordinates && (
+              <Text style={styles.mapCoordinates}>
+                {project.coordinates.latitude?.toFixed(2)}, {project.coordinates.longitude?.toFixed(2)}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  // Company Header Component
+  const CompanyHeader = () => (
+    <View style={styles.companyHeader}>
+      <View style={styles.companyHeaderContent}>
+        <View style={styles.companyInfo}>
+          <Text style={styles.companyName}>{companyInfo.name}</Text>
+          <Text style={styles.companyDetail}>{companyInfo.address}</Text>
+          <Text style={styles.companyDetail}>Tél: {companyInfo.phone}</Text>
+          <Text style={styles.companyDetail}>Email: {companyInfo.email}</Text>
+        </View>
+        {companyInfo.logo ? (
+          <Image 
+            src={companyInfo.logo} 
+            style={styles.companyLogo} 
+          />
+        ) : null}
+      </View>
+    </View>
+  );
+
   return (
     <Document>
       {projects.map((project, index) => {
@@ -438,9 +656,16 @@ export function CompactProjectPDFDocument({
 
         return (
           <Page key={project.id} size="A4" style={styles.page}>
-            {/* Header */}
+            {/* Company Header - Conditionally rendered */}
+            {includeCompanyHeader && <CompanyHeader />}
+
+            {/* Report Header */}
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>{reportTitle} - Généré le {currentDate}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headerTitle}>{reportTitle} - Généré le {currentDate}</Text>
+              </View>
+              {/* Mini map preview: top-right header */}
+              {renderStreetMap(project)}
             </View>
 
             {/* Project Title */}
@@ -849,6 +1074,14 @@ interface SingleCompactProjectPDFProps {
   enrichedData?: ProjectReportDTO;
   evmMetrics?: EVMMetrics;
   pertAnalysis?: PERTAnalysis;
+  includeCompanyHeader?: boolean;
+  company?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    logo?: string;
+  };
 }
 
 export function SingleCompactProjectPDF({
@@ -857,6 +1090,8 @@ export function SingleCompactProjectPDF({
   enrichedData,
   evmMetrics,
   pertAnalysis,
+  includeCompanyHeader = true,
+  company,
 }: SingleCompactProjectPDFProps) {
   const enrichedDataMap = new Map<string, ProjectReportDTO>();
   const evmMetricsMap = new Map<string, EVMMetrics>();
@@ -873,6 +1108,8 @@ export function SingleCompactProjectPDF({
       enrichedDataMap={enrichedDataMap}
       evmMetricsMap={evmMetricsMap}
       pertAnalysisMap={pertAnalysisMap}
+      includeCompanyHeader={includeCompanyHeader}
+      company={company}
     />
   );
 }
