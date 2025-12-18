@@ -485,10 +485,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 Rapport compact
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              {projectDataForReport && (
-                <CompactProjectReportGenerator project={projectDataForReport} />
-              )}
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+              <div className="overflow-y-auto pr-1 max-h-[85vh]">
+                {projectDataForReport && (
+                  <CompactProjectReportGenerator project={projectDataForReport} />
+                )}
+              </div>
             </DialogContent>
           </Dialog>
           <ReportManager data={{ project }} reportType="project" />
