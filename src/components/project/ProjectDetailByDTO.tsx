@@ -1,23 +1,23 @@
-import InteractiveMapGIS from '@/components/materials/InteractiveMapGIS';
-import EnhancedRiskManager from '@/components/project/EnhancedRiskManager';
-import EnhancedTaskManager from '@/components/project/EnhancedTaskManager';
-import FinancialOverview from '@/components/project/FinaancialOverview';
-import PhaseList from '@/components/project/PhaseList';
-import ProjectGantt from '@/components/project/ProjectGantt';
-import TeamOverview from '@/components/project/TeamOverview';
-import { ReportManager } from '@/components/reports/ReportManager';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { toast } from '@/hooks/use-toast';
-import { ProjectAnalyticsService } from '@/services/ProjectAnalyticsService';
-import { ProjectService } from '@/services/ProjectService';
-import { ProjectDetailDTO, ProjectSummaryDTO } from '@/types/dto';
-import { Dialog, DialogContent, DialogTrigger } from '@radix-ui/react-dialog';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
+import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
+import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
+import FinancialOverview from "@/components/project/FinaancialOverview";
+import PhaseList from "@/components/project/PhaseList";
+import ProjectGantt from "@/components/project/ProjectGantt";
+import TeamOverview from "@/components/project/TeamOverview";
+import { ReportManager } from "@/components/reports/ReportManager";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { toast } from "@/hooks/use-toast";
+import { ProjectAnalyticsService } from "@/services/ProjectAnalyticsService";
+import { ProjectService } from "@/services/ProjectService";
+import { ProjectDetailDTO, ProjectSummaryDTO } from "@/types/dto";
+import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -33,19 +33,49 @@ import {
   Shield,
   Target,
   TrendingUp,
-  Users
+  Users,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ElectricSpinner } from "../loading-page";
-import { CompactProjectReportGenerator } from '../reports/CompactProjectReportGenerator';
+import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
+import { referentialService, ReferentialType } from "@/config/referentials";
+import {
+  Dialog as DialogUI,
+  DialogContent as DialogContentUI,
+  DialogHeader as DialogHeaderUI,
+  DialogTitle as DialogTitleUI,
+} from "@/components/ui/dialog";
+import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from "../ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
   onEdit?: () => void;
   onClose?: () => void;
 }
-
+interface PhaseToSave {
+  project_id: string;
+  phase_name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  estimated_duration: number;
+  estimated_cost: number;
+  status: string;
+  progress: number;
+  phase_type: string;
+  construction_phase: string;
+  custom_phase_data: any;
+}
 const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   projectId: propProjectId,
   onEdit,
@@ -55,7 +85,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const navigate = useNavigate();
   const { t } = useLanguage();
   const projectId = propProjectId || routeProjectId;
-
+  const [selectedReferential, setSelectedReferential] =
+    useState<ReferentialType | null>(null);
+  const [showPhaseManager, setShowPhaseManager] = useState(false);
+  const [phases, setPhases] = useState<any[]>([]);
   console.log("🔍 ProjectDetailByDTO render - projectId:", projectId);
 
   const [error, setError] = useState<string | null>(null);
@@ -74,12 +107,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     queryKey: ["project-summary", projectId],
     queryFn: async () => {
       console.log("🔍 Query function starting for projectId:", projectId);
-      if (!projectId) throw new Error(t('project.errors.missing_id'));
+      if (!projectId) throw new Error(t("project.errors.missing_id"));
 
       console.log("🔍 Calling ProjectService.getProjectSummary...");
       const result = await projectService.getProjectSummary(projectId);
       console.log("🔍 ProjectService result:", result ? "SUCCESS" : "NULL");
-      if (!result) throw new Error(t('project.errors.not_found'));
+      if (!result) throw new Error(t("project.errors.not_found"));
       return result;
     },
     enabled: !!projectId,
@@ -169,67 +202,67 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const inspectionsSource = projectDetail?.inspections || [];
   const paymentsSource = projectDetail?.inspections || []; // TODO: Add payments to DTO
 
-  // Normalized phases for UI
-  const computedPhases = useMemo(() => {
-    const normalize = (p: any) => ({
-      id: p.id,
-      phase:
-        p.phase_name || p.phase || p.name || p.construction_stage || t('project.phase_label'),
-      status: p.status || "planned",
-      progress: p.progress || 0,
-      startDate: p.start_date || p.startDate || p.start || "",
-      endDate: p.end_date || p.endDate || p.end || "",
-      stages: Array.isArray(p.stages)
-        ? p.stages
-        : p.construction_stage
-        ? [{ name: p.construction_stage, status: p.status || "planned" }]
-        : [],
-    });
-    return (phasesSource || []).map(normalize);
-  }, [phasesSource, t]);
-
   // Calculate current phase and stage dynamically from phases
   const currentPhaseInfo = useMemo(() => {
     if (!phasesSource || phasesSource.length === 0) {
       return { currentPhase: null, currentStage: null };
     }
-    
+
     // Find the first phase that is "in_progress"
-    const inProgressPhase = phasesSource.find((p: any) => p.status === 'in_progress');
+    const inProgressPhase = phasesSource.find(
+      (p: any) => p.status === "in_progress"
+    );
     if (inProgressPhase) {
       return {
-        currentPhase: inProgressPhase.phase_name || inProgressPhase.construction_phase || inProgressPhase.name,
-        currentStage: inProgressPhase.construction_stage || null
+        currentPhase:
+          inProgressPhase.phase_name ||
+          inProgressPhase.construction_phase ||
+          inProgressPhase.name,
+        currentStage: inProgressPhase.construction_stage || null,
       };
     }
-    
+
     // If no in_progress phase, find the first "pending" or "not_started"
-    const pendingPhase = phasesSource.find((p: any) => 
-      p.status === 'pending' || p.status === 'not_started' || p.status === 'planned'
+    const pendingPhase = phasesSource.find(
+      (p: any) =>
+        p.status === "pending" ||
+        p.status === "not_started" ||
+        p.status === "planned"
     );
     if (pendingPhase) {
       return {
-        currentPhase: pendingPhase.phase_name || pendingPhase.construction_phase || pendingPhase.name,
-        currentStage: pendingPhase.construction_stage || null
+        currentPhase:
+          pendingPhase.phase_name ||
+          pendingPhase.construction_phase ||
+          pendingPhase.name,
+        currentStage: pendingPhase.construction_stage || null,
       };
     }
-    
+
     // All phases completed - show last one
     const lastPhase = phasesSource[phasesSource.length - 1];
     return {
-      currentPhase: lastPhase?.phase_name || lastPhase?.construction_phase || lastPhase?.name || null,
-      currentStage: lastPhase?.construction_stage || null
+      currentPhase:
+        lastPhase?.phase_name ||
+        lastPhase?.construction_phase ||
+        lastPhase?.name ||
+        null,
+      currentStage: lastPhase?.construction_stage || null,
     };
   }, [phasesSource]);
 
   // Calculate project methodology
   const projectMethodology = useMemo(() => {
     if (projectDetail?.methodology) {
-      return projectDetail.methodology === 'waterfall' ? 'Standard (Cascade)' :
-             projectDetail.methodology === 'agile' ? 'Agile' :
-             projectDetail.methodology === 'hybrid' ? 'Hybride' : 'Standard';
+      return projectDetail.methodology === "waterfall"
+        ? "Standard (Cascade)"
+        : projectDetail.methodology === "agile"
+        ? "Agile"
+        : projectDetail.methodology === "hybrid"
+        ? "Hybride"
+        : "Standard";
     }
-    return 'Standard';
+    return "Standard";
   }, [projectDetail?.methodology, t]);
 
   // Compute derived data from DTO
@@ -294,49 +327,250 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return {
       id: project.id,
       title: project.title,
-      description: project.description || '',
-      status: project.status || 'en cours',
+      description: project.description || "",
+      status: project.status || "en cours",
       progress: calculatedProgress || project.progress || 0,
       budget: project.budget || 0,
-      location: project.location || '',
-      startDate: project.startDate || '',
-      endDate: project.endDate || '',
+      location: project.location || "",
+      startDate: project.startDate || "",
+      endDate: project.endDate || "",
       resources: resources,
       tasks: tasksSource,
       risks: risksSource.map((r: any) => ({
         id: r.id,
         title: r.title || r.description,
-        description: r.description || '',
+        description: r.description || "",
         probability: r.probability || 50,
         impact: r.impact || 50,
-        mitigationPlan: r.mitigationPlan || '',
-        status: r.status || 'identified',
-        relatedTasks: r.relatedTasks || []
+        mitigationPlan: r.mitigationPlan || "",
+        status: r.status || "identified",
+        relatedTasks: r.relatedTasks || [],
       })),
-      contacts: projectDetail?.mainContractor ? [{
-        id: 'contractor-1',
-        name: projectDetail.mainContractor,
-        role: 'contractor',
-        email: '',
-        isPrimary: true
-      }] : [],
-      stakeholders: projectDetail?.financingSource ? [{
-        name: projectDetail.financingSource,
-        email: '',
-        phone: '',
-        role: 'bailleur',
-        organization: projectDetail.financingSource,
-        isPrimary: true
-      }] : [],
-      methodology: projectDetail?.methodology || 'waterfall'
+      contacts: projectDetail?.mainContractor
+        ? [
+            {
+              id: "contractor-1",
+              name: projectDetail.mainContractor,
+              role: "contractor",
+              email: "",
+              isPrimary: true,
+            },
+          ]
+        : [],
+      stakeholders: projectDetail?.financingSource
+        ? [
+            {
+              name: projectDetail.financingSource,
+              email: "",
+              phone: "",
+              role: "bailleur",
+              organization: projectDetail.financingSource,
+              isPrimary: true,
+            },
+          ]
+        : [],
+      methodology: projectDetail?.methodology || "waterfall",
     } as any;
-  }, [project, projectDetail, calculatedProgress, resources, tasksSource, risksSource]);
+  }, [
+    project,
+    projectDetail,
+    calculatedProgress,
+    resources,
+    tasksSource,
+    risksSource,
+  ]);
 
   // Use data from DTO for all tabs
   const payments = paymentsSource;
   const documentsData: any[] = [];
   const bankGuaranteesData: any[] = [];
   const insuranceCertificatesData: any[] = [];
+
+  const handleGeneratePhasesFromReferential = async () => {
+    if (!selectedReferential || !projectId) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un référentiel",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const referentialPhases =
+        referentialService.getPhasesForReferential(selectedReferential);
+
+      if (referentialPhases.length === 0) {
+        toast({
+          title: "Aucune phase",
+          description: "Ce référentiel ne contient pas de phases configurées",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create typed array of phases to save
+      const phasesToSave: PhaseToSave[] = [];
+      let cumulativeStartDays = 0;
+
+      for (const refPhase of referentialPhases) {
+        // Calculate duration
+        let phaseDuration = 0;
+
+        for (const step of refPhase.steps || []) {
+          let stepDuration = 0;
+          for (const task of step.tasks || []) {
+            stepDuration += task.estimatedDurationDays || 7;
+          }
+          if (stepDuration === 0) stepDuration = 14;
+          phaseDuration += stepDuration;
+        }
+
+        if (phaseDuration === 0) phaseDuration = 30;
+
+        // Calculate dates
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + cumulativeStartDays);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + phaseDuration);
+
+        // Create custom phase data
+        const customStages = (refPhase.steps || []).map((step, stepIdx) => ({
+          id: `step-${Date.now()}-${stepIdx}`,
+          name: step.label,
+          order: step.order || stepIdx + 1,
+          tasks: (step.tasks || []).map((task, taskIdx) => ({
+            id: `task-${Date.now()}-${stepIdx}-${taskIdx}`,
+            name: task.label,
+            description: task.description || "",
+            estimatedDurationDays: task.estimatedDurationDays || 7,
+            requiresInspection: task.requiresInspection || false,
+            requiresEngineerApproval: task.requiresEngineerApproval || false,
+            status: "not_started",
+          })),
+        }));
+
+        const phaseToSave: PhaseToSave = {
+          project_id: projectId,
+          phase_name: refPhase.label,
+          description: refPhase.description || `Phase ${refPhase.label}`,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+          estimated_duration: phaseDuration,
+          estimated_cost: Math.floor(
+            (project?.budget || 0) / referentialPhases.length
+          ),
+          status: "not_started",
+          progress: 0,
+          phase_type: "custom",
+          construction_phase:
+            refPhase.code || refPhase.label.toLowerCase().replace(/ /g, "_"),
+          custom_phase_data: {
+            id: `custom-${Date.now()}-${phasesToSave.length}`,
+            name: refPhase.label,
+            number: refPhase.order || phasesToSave.length + 1,
+            customStages: customStages,
+            description: refPhase.description || "",
+            startDate: startDate.toISOString().split("T")[0],
+            endDate: endDate.toISOString().split("T")[0],
+            budget: Math.floor(
+              (project?.budget || 0) / referentialPhases.length
+            ),
+            status: "not_started",
+            progress: 0,
+          },
+        };
+
+        phasesToSave.push(phaseToSave);
+        cumulativeStartDays += phaseDuration;
+      }
+
+      // Save all phases to database
+      const { data: savedPhases, error } = await supabase
+        .from("project_phases")
+        .insert(phasesToSave as any) // Cast to any to bypass type issues
+        .select();
+
+      if (error) throw error;
+
+      // Refetch phases and project detail
+      await refetchPhases();
+      await queryClient.invalidateQueries({
+        queryKey: ["project-detail", projectId],
+      });
+
+      toast({
+        title: "Phases générées avec succès",
+        description: `${phasesToSave.length} phase(s) ajoutées depuis le référentiel`,
+      });
+    } catch (error) {
+      console.error("Error generating phases:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer les phases",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const { data: projectPhases, refetch: refetchPhases } = useQuery({
+    queryKey: ["project-phases", projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+
+      try {
+        // Try to fetch phases from the project_phases table
+        const { data: phasesData, error } = await supabase
+          .from("project_phases")
+          .select("*")
+          .eq("project_id", projectId)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        return phasesData || [];
+      } catch (error) {
+        console.error("Error fetching phases:", error);
+        return [];
+      }
+    },
+    enabled: !!projectId,
+  });
+
+  // Normalized phases for UI
+  const computedPhases = useMemo(() => {
+    // Use directly fetched phases first, then fallback to plannedPhases
+    const phasesSource = projectPhases || projectDetail?.plannedPhases || [];
+
+    const normalize = (p: any) => ({
+      id: p.id,
+      phase:
+        p.phase_name ||
+        p.phase ||
+        p.name ||
+        p.construction_stage ||
+        t("project.phase_label"),
+      phase_name: p.phase_name || p.phase || p.name,
+      status: p.status || "planned",
+      progress: p.progress || 0,
+      startDate: p.start_date || p.startDate || p.start || "",
+      endDate: p.end_date || p.endDate || p.end || "",
+      description: p.description,
+      budget: p.estimated_cost || p.budget,
+      stages: Array.isArray(p.stages)
+        ? p.stages
+        : p.custom_phase_data?.customStages
+        ? p.custom_phase_data.customStages.map((s: any) => ({
+            name: s.name,
+            status: s.status || "pending",
+            order: s.order,
+          }))
+        : p.construction_stage
+        ? [{ name: p.construction_stage, status: p.status || "planned" }]
+        : [],
+    });
+
+    return (phasesSource || []).map(normalize);
+  }, [projectPhases, projectDetail?.plannedPhases, t]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -488,7 +722,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
               <div className="overflow-y-auto pr-1 max-h-[85vh]">
                 {projectDataForReport && (
-                  <CompactProjectReportGenerator project={projectDataForReport} />
+                  <CompactProjectReportGenerator
+                    project={projectDataForReport}
+                  />
                 )}
               </div>
             </DialogContent>
@@ -655,14 +891,22 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Phase actuelle</span>
-                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"}>
-                    {currentPhaseInfo.currentPhase || 'Aucune phase définie'}
+                  <Badge
+                    variant={
+                      currentPhaseInfo.currentPhase ? "default" : "outline"
+                    }
+                  >
+                    {currentPhaseInfo.currentPhase || "Aucune phase définie"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Étape actuelle</span>
-                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"}>
-                    {currentPhaseInfo.currentStage || 'N/A'}
+                  <Badge
+                    variant={
+                      currentPhaseInfo.currentStage ? "secondary" : "outline"
+                    }
+                  >
+                    {currentPhaseInfo.currentStage || "N/A"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -742,7 +986,97 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="phases" className="mt-6">
-          <PhaseList phases={computedPhases} projectId={projectId!} />
+          <div className="space-y-4">
+            {/* Phase generation controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Génération des phases</span>
+                  <Button
+                    onClick={() => setShowPhaseManager(true)}
+                    variant="outline"
+                  >
+                    Gestion avancée des phases
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label>Référentiel</Label>
+                    <Select
+                      value={selectedReferential || ""}
+                      onValueChange={(value) =>
+                        setSelectedReferential(value as ReferentialType)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un référentiel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {referentialService
+                          .getReferentialOptions()
+                          .map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="pt-8">
+                    <Button
+                      onClick={handleGeneratePhasesFromReferential}
+                      disabled={!selectedReferential}
+                    >
+                      Générer les phases
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="text-sm text-muted-foreground">
+                  <p>
+                    • Sélectionnez un référentiel pour générer automatiquement
+                    les phases du projet
+                  </p>
+                  <p>
+                    • Les phases incluront les étapes et tâches définies dans le
+                    référentiel
+                  </p>
+                  <p>
+                    • Vous pouvez également utiliser la gestion avancée des
+                    phases pour un contrôle manuel
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Display existing phases */}
+            <PhaseList
+              phases={computedPhases}
+              projectId={projectId!}
+              onPhaseUpdate={() => {
+                refetchPhases();
+                queryClient.invalidateQueries({
+                  queryKey: ["project-detail", projectId],
+                });
+              }}
+            />{" "}
+          </div>
+
+          {/* Enhanced Phase Manager Dialog */}
+          <DialogUI open={showPhaseManager} onOpenChange={setShowPhaseManager}>
+            <DialogContentUI className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeaderUI>
+                <DialogTitleUI>Gestion avancée des phases</DialogTitleUI>
+              </DialogHeaderUI>
+              <ConstructionPhaseManager
+                phases={phases}
+                onChange={setPhases}
+                projectBudget={project?.budget || 0}
+                projectId={projectId}
+              />
+            </DialogContentUI>
+          </DialogUI>
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
