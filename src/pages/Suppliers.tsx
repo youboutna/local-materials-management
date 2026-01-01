@@ -16,6 +16,7 @@ import { generateSupplierPasswordReset, sendSupplierNotification } from '@/servi
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Supplier = Database["public"]["Tables"]["suppliers"]["Row"];
 type Document = Database["public"]["Tables"]["documents"]["Row"];

@@ -89,7 +89,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
 }
 
 export interface ProjectFormDTO {
-  id : string;
+  id?: string;
   title: string;
   description: string;
   location: string;

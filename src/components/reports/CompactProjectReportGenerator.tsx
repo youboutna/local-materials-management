@@ -291,8 +291,8 @@ export function CompactProjectReportGenerator({
                     {proj.progress || 0}%
                   </Badge>
                   <Badge 
-                    variant={proj.status === 'terminé' || proj.status === 'completed' ? 'default' : 
-                            proj.status === 'en cours' || proj.status === 'in_progress' ? 'secondary' : 
+                    variant={proj.status === 'terminé' || proj.status === 'en clôture' ? 'default' : 
+                            proj.status === 'en cours' || proj.status === 'en construction' ? 'secondary' : 
                             'outline'}
                     className="text-xs font-medium px-2"
                   >
