@@ -612,7 +612,7 @@ export function CompactProjectPDFDocument({
             <Text style={styles.mapLabel}>
               {project.location ? (project.location.length > 15 ? project.location.substring(0, 15) + '...' : project.location) : 'Localisation'}
             </Text>
-            {hasCoordinates && (
+          {hasCoordinates && project.coordinates && (
               <Text style={styles.mapCoordinates}>
                 {project.coordinates.latitude?.toFixed(2)}, {project.coordinates.longitude?.toFixed(2)}
               </Text>
