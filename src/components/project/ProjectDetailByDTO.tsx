@@ -712,23 +712,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </div>
         <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileDown className="h-4 w-4" />
-                Rapport compact
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-              <div className="overflow-y-auto pr-1 max-h-[85vh]">
-                {projectDataForReport && (
-                  <CompactProjectReportGenerator
-                    project={projectDataForReport}
-                  />
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <ReportManager data={{ project }} reportType="compact" />
+
           <ReportManager data={{ project }} reportType="project" />
           {onEdit && (
             <Button onClick={onEdit} variant="outline">

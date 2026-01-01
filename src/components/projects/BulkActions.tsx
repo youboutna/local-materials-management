@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
 import { ProjectData } from "@/types/project";
+import { ReportManager } from "../reports/ReportManager";
 
 interface BulkActionsProps {
   selectedProjects: Set<string>;
@@ -16,6 +17,8 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   onDelete,
   onClearSelection,
 }) => {
+  const [reportOpen, setReportOpen] = useState(false);
+
   if (selectedProjects.size === 0) {
     return null;
   }
@@ -28,7 +31,9 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   const selectedProjectNames = projects
     .filter((project) => selectedProjects.has(project.id))
     .map((project) => project.title);
-
+  const selectedProjectObjects = projects.filter((project) =>
+    selectedProjects.has(project.id)
+  );
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between">
@@ -59,6 +64,11 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             <Trash2 className="h-4 w-4" />
             Supprimer ({selectedProjects.size})
           </Button>
+          {/* 
+          <ReportManager
+            data={{ projects: selectedProjectObjects }}
+            reportType="compact"
+          /> */}
 
           <Button
             variant="outline"

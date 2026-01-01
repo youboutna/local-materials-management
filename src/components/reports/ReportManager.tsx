@@ -1,22 +1,30 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ProjectReportGenerator } from './ProjectReportGenerator';
-import { TenderReportGenerator } from './TenderReportGenerator';
-import { InspectionReportGenerator } from './InspectionReportGenerator';
-import { SupplierPaymentReportGenerator } from './SupplierPaymentReportGenerator';
-import { FileText, FileBarChart, CheckCircle, DollarSign } from 'lucide-react';
-import { ProjectData } from '@/types/project';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ProjectReportGenerator } from "./ProjectReportGenerator";
+import { TenderReportGenerator } from "./TenderReportGenerator";
+import { InspectionReportGenerator } from "./InspectionReportGenerator";
+import { SupplierPaymentReportGenerator } from "./SupplierPaymentReportGenerator";
 
+import { NewCompactProjectReportGenerator } from "./pdf/NewCompactProjectReportGenerator"; // OR: './CompactProjectReportGenerator' if you replaced the file
+import { FileText, FileBarChart, CheckCircle, DollarSign } from "lucide-react";
+import { ProjectData } from "@/types/project";
 interface ReportManagerProps {
   data: {
     project?: ProjectData;
+    projects?: ProjectData[]; // Add this for multiple projects
     tender?: any;
     inspection?: any;
     supplier?: any;
     payments?: any[];
   };
-  reportType: 'project' | 'tender' | 'inspection' | 'payment';
+  reportType: "project" | "tender" | "inspection" | "payment" | "compact"; // Add 'compact' type
 }
 
 export function ReportManager({ data, reportType }: ReportManagerProps) {
@@ -24,13 +32,15 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
 
   const getReportIcon = () => {
     switch (reportType) {
-      case 'project':
+      case "project":
         return <FileBarChart className="h-4 w-4" />;
-      case 'tender':
+      case "compact":
         return <FileText className="h-4 w-4" />;
-      case 'inspection':
+      case "tender":
+        return <FileText className="h-4 w-4" />;
+      case "inspection":
         return <CheckCircle className="h-4 w-4" />;
-      case 'payment':
+      case "payment":
         return <DollarSign className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
@@ -39,59 +49,82 @@ export function ReportManager({ data, reportType }: ReportManagerProps) {
 
   const getReportTitle = () => {
     switch (reportType) {
-      case 'project':
-        return 'Générer Rapport de Projet';
-      case 'tender':
-        return 'Générer Rapport d\'Appel d\'Offres';
-      case 'inspection':
-        return 'Générer Rapport d\'Inspection';
-      case 'payment':
-        return 'Générer Rapport de Paiements';
+      case "project":
+        return "Générer Rapport de Projet";
+      case "compact": // Add title for compact
+        return "Générer Rapport Compact";
+      case "tender":
+        return "Générer Rapport d'Appel d'Offres";
+      case "inspection":
+        return "Générer Rapport d'Inspection";
+      case "payment":
+        return "Générer Rapport de Paiements";
       default:
-        return 'Générer Rapport';
+        return "Générer Rapport";
     }
   };
 
   const renderReportGenerator = () => {
     switch (reportType) {
-      case 'project':
+      case "project":
         return data.project ? (
-          <ProjectReportGenerator 
-            project={data.project} 
-            onClose={() => setIsOpen(false)} 
+          <ProjectReportGenerator
+            project={data.project}
+            onClose={() => setIsOpen(false)}
           />
         ) : null;
-      
-      case 'tender':
+      case "compact": // Add compact report option
+        if (data.projects && data.projects.length > 0) {
+          return (
+            <NewCompactProjectReportGenerator
+              projects={data.projects}
+              onClose={() => setIsOpen(false)}
+            />
+          );
+        } else if (data.project) {
+          return (
+            <NewCompactProjectReportGenerator
+              project={data.project}
+              onClose={() => setIsOpen(false)}
+            />
+          );
+        }
+        return (
+          <div className="p-8 text-center text-muted-foreground">
+            Aucun projet disponible pour le rapport
+          </div>
+        );
+
+      case "tender":
         return data.tender ? (
-          <TenderReportGenerator 
-            tender={data.tender} 
-            onClose={() => setIsOpen(false)} 
+          <TenderReportGenerator
+            tender={data.tender}
+            onClose={() => setIsOpen(false)}
           />
         ) : null;
-      
-      case 'inspection':
+
+      case "inspection":
         return data.inspection ? (
-          <InspectionReportGenerator 
+          <InspectionReportGenerator
             inspection={data.inspection}
             project={data.project}
-            onClose={() => setIsOpen(false)} 
+            onClose={() => setIsOpen(false)}
           />
         ) : null;
-      
-      case 'payment':
+
+      case "payment":
         return data.supplier && data.payments ? (
-          <SupplierPaymentReportGenerator 
+          <SupplierPaymentReportGenerator
             supplier={data.supplier}
             payments={data.payments}
             dateRange={{
               startDate: new Date(new Date().getFullYear(), 0, 1), // Start of year
-              endDate: new Date()
+              endDate: new Date(),
             }}
-            onClose={() => setIsOpen(false)} 
+            onClose={() => setIsOpen(false)}
           />
         ) : null;
-      
+
       default:
         return null;
     }

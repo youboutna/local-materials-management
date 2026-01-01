@@ -1,18 +1,25 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { EnhancedReportingService } from '@/services/enhancedReportingService';
-import { EVMMetrics, PERTAnalysis, ProjectData } from '@/types/project';
-import { ProjectReportDTO } from '@/types/reportTypes';
-import { ReportCalculations } from '@/utils/reportCalculations';
-import { pdf } from '@react-pdf/renderer';
-import { saveAs } from 'file-saver';
-import { Download, FileText, Loader2, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { EnhancedReportingService } from "@/services/enhancedReportingService";
+import { EVMMetrics, PERTAnalysis, ProjectData } from "@/types/project";
+import { ProjectReportDTO } from "@/types/reportTypes";
+import { ReportCalculations } from "@/utils/reportCalculations";
+import { pdf } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import { Download, FileText, Loader2, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  CompactProjectPDFDocument,
+  SingleCompactProjectPDF,
+} from "./pdf/CompactProjectPDFDocument";
+import {
+  NewCompactProjectPDF,
+  NewCompactProjectsPDF,
+} from "./pdf/NewCompactProjectPDF";
 
 interface CompactProjectReportGeneratorProps {
   project?: ProjectData;
@@ -20,24 +27,34 @@ interface CompactProjectReportGeneratorProps {
   onClose?: () => void;
 }
 
-export function CompactProjectReportGenerator({ 
-  project, 
-  projects, 
-  onClose 
+export function CompactProjectReportGenerator({
+  project,
+  projects,
+  onClose,
 }: CompactProjectReportGeneratorProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
-  
+  const [reportTitle, setReportTitle] = useState("Rapport des Projets SOMELEC");
+
   // Data maps for multiple projects
-  const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectReportDTO>>(new Map());
-  const [evmMetricsMap, setEvmMetricsMap] = useState<Map<string, EVMMetrics>>(new Map());
-  const [pertAnalysisMap, setPertAnalysisMap] = useState<Map<string, PERTAnalysis>>(new Map());
-  
+  const [enrichedDataMap, setEnrichedDataMap] = useState<
+    Map<string, ProjectReportDTO>
+  >(new Map());
+  const [evmMetricsMap, setEvmMetricsMap] = useState<Map<string, EVMMetrics>>(
+    new Map()
+  );
+  const [pertAnalysisMap, setPertAnalysisMap] = useState<
+    Map<string, PERTAnalysis>
+  >(new Map());
+
   // Single project data
-  const [singleEnrichedData, setSingleEnrichedData] = useState<ProjectReportDTO | null>(null);
-  const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
-  const [singlePertAnalysis, setSinglePertAnalysis] = useState<PERTAnalysis | null>(null);
+  const [singleEnrichedData, setSingleEnrichedData] =
+    useState<ProjectReportDTO | null>(null);
+  const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(
+    null
+  );
+  const [singlePertAnalysis, setSinglePertAnalysis] =
+    useState<PERTAnalysis | null>(null);
 
   const projectList = projects || (project ? [project] : []);
   const isSingleProject = !projects && project;
@@ -45,62 +62,72 @@ export function CompactProjectReportGenerator({
   useEffect(() => {
     const loadData = async () => {
       if (projectList.length === 0) return;
-      
+
       setLoading(true);
       try {
         if (isSingleProject && project) {
           // Load single project data
-          const completeReport = await EnhancedReportingService.generateCompleteProjectReport(project);
+          const completeReport =
+            await EnhancedReportingService.generateCompleteProjectReport(
+              project
+            );
           setSingleEnrichedData(completeReport.reportDTO);
-          
+
           const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
             project,
             completeReport.costCalculation.actualCost,
             completeReport.reportDTO.phases
           );
           setSingleEvmMetrics(evmMetricsResult);
-          
+
           const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
             completeReport.reportDTO.phases,
             project.tasks || []
           );
           setSinglePertAnalysis(pertAnalysisResult);
-          
+
           setReportTitle(`Rapport - ${project.title}`);
         } else {
           // Load multiple projects data
           const enrichedMap = new Map<string, ProjectReportDTO>();
           const evmMap = new Map<string, EVMMetrics>();
           const pertMap = new Map<string, PERTAnalysis>();
-          
+
           for (const proj of projectList) {
             try {
-              const completeReport = await EnhancedReportingService.generateCompleteProjectReport(proj);
+              const completeReport =
+                await EnhancedReportingService.generateCompleteProjectReport(
+                  proj
+                );
               enrichedMap.set(proj.id, completeReport.reportDTO);
-              
+
               const evmMetricsResult = ReportCalculations.calculateEVMMetrics(
                 proj,
                 completeReport.costCalculation.actualCost,
                 completeReport.reportDTO.phases
               );
               evmMap.set(proj.id, evmMetricsResult);
-              
-              const pertAnalysisResult = ReportCalculations.calculatePERTAnalysis(
-                completeReport.reportDTO.phases,
-                proj.tasks || []
-              );
+
+              const pertAnalysisResult =
+                ReportCalculations.calculatePERTAnalysis(
+                  completeReport.reportDTO.phases,
+                  proj.tasks || []
+                );
               pertMap.set(proj.id, pertAnalysisResult);
             } catch (error) {
-              console.error(`Error loading data for project ${proj.id}:`, error);
+              console.error(
+                `Error loading data for project ${proj.id}:`,
+                error
+              );
             }
           }
-          
+
           setEnrichedDataMap(enrichedMap);
           setEvmMetricsMap(evmMap);
           setPertAnalysisMap(pertMap);
         }
       } catch (error) {
-        console.error('Error loading report data:', error);
+        console.error("Error loading report data:", error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les données du rapport.",
@@ -126,41 +153,45 @@ export function CompactProjectReportGenerator({
 
     try {
       setLoading(true);
-      
+
       let pdfDoc;
-      
+
       if (isSingleProject && project) {
+        // Use the new single project PDF
         pdfDoc = (
-          <SingleCompactProjectPDF
+          <NewCompactProjectPDF
             project={project}
-            reportTitle={reportTitle}
             enrichedData={singleEnrichedData || undefined}
             evmMetrics={singleEvmMetrics || undefined}
             pertAnalysis={singlePertAnalysis || undefined}
+            reportTitle={reportTitle}
           />
         );
       } else {
+        // Use the new multi-project PDF
         pdfDoc = (
-          <CompactProjectPDFDocument
+          <NewCompactProjectsPDF
             projects={projectList}
-            reportTitle={reportTitle}
             enrichedDataMap={enrichedDataMap}
             evmMetricsMap={evmMetricsMap}
             pertAnalysisMap={pertAnalysisMap}
+            reportTitle={reportTitle}
           />
         );
       }
 
       const blob = await pdf(pdfDoc).toBlob();
-      const fileName = `${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `${reportTitle
+        .replace(/[^a-z0-9]/gi, "_")
+        .toLowerCase()}_${new Date().toISOString().split("T")[0]}.pdf`;
       saveAs(blob, fileName);
-      
+
       toast({
         title: "Succès",
         description: `Rapport généré avec ${projectList.length} projet(s).`,
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("Error generating PDF:", error);
       toast({
         title: "Erreur",
         description: "Impossible de générer le rapport PDF.",
@@ -171,12 +202,71 @@ export function CompactProjectReportGenerator({
     }
   };
 
+  // const generatePDF = async () => {
+  //   if (projectList.length === 0) {
+  //     toast({
+  //       title: "Erreur",
+  //       description: "Aucun projet à exporter.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     let pdfDoc;
+
+  //     if (isSingleProject && project) {
+  //       pdfDoc = (
+  //         <SingleCompactProjectPDF
+  //           project={project}
+  //           reportTitle={reportTitle}
+  //           enrichedData={singleEnrichedData || undefined}
+  //           evmMetrics={singleEvmMetrics || undefined}
+  //           pertAnalysis={singlePertAnalysis || undefined}
+  //         />
+  //       );
+  //     } else {
+  //       pdfDoc = (
+  //         <CompactProjectPDFDocument
+  //           projects={projectList}
+  //           reportTitle={reportTitle}
+  //           enrichedDataMap={enrichedDataMap}
+  //           evmMetricsMap={evmMetricsMap}
+  //           pertAnalysisMap={pertAnalysisMap}
+  //         />
+  //       );
+  //     }
+
+  //     const blob = await pdf(pdfDoc).toBlob();
+  //     const fileName = `${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+  //     saveAs(blob, fileName);
+
+  //     toast({
+  //       title: "Succès",
+  //       description: `Rapport généré avec ${projectList.length} projet(s).`,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error generating PDF:', error);
+  //     toast({
+  //       title: "Erreur",
+  //       description: "Impossible de générer le rapport PDF.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   // Format coordinates for display
   const formatCoordinates = (project: ProjectData) => {
     if (project.coordinates?.latitude && project.coordinates?.longitude) {
-      return `${project.coordinates.latitude.toFixed(6)}, ${project.coordinates.longitude.toFixed(6)}`;
+      return `${project.coordinates.latitude.toFixed(
+        6
+      )}, ${project.coordinates.longitude.toFixed(6)}`;
     }
-    return 'Non définies';
+    return "Non définies";
   };
 
   if (loading && enrichedDataMap.size === 0 && !singleEnrichedData) {
@@ -186,7 +276,8 @@ export function CompactProjectReportGenerator({
         <div className="text-center">
           <p className="font-medium">Chargement des données du rapport...</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Préparation des données pour {projectList.length} projet{projectList.length > 1 ? 's' : ''}
+            Préparation des données pour {projectList.length} projet
+            {projectList.length > 1 ? "s" : ""}
           </p>
         </div>
       </div>
@@ -198,7 +289,9 @@ export function CompactProjectReportGenerator({
       <CardHeader className="flex flex-row items-start justify-between gap-4 pb-4">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
-          <CardTitle className="m-0 text-lg">Rapport Compact (Un projet par page)</CardTitle>
+          <CardTitle className="m-0 text-lg">
+            Rapport Compact (Un projet par page)
+          </CardTitle>
         </div>
 
         {/* Mini map preview: top-right header */}
@@ -213,7 +306,7 @@ export function CompactProjectReportGenerator({
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-2">
-                  {project.location || 'Non définie'}
+                  {project.location || "Non définie"}
                 </p>
                 {project.coordinates && (
                   <p className="text-xs text-gray-600 dark:text-gray-400 font-mono">
@@ -231,15 +324,15 @@ export function CompactProjectReportGenerator({
             <div className="h-full w-full flex flex-col items-center justify-center p-4">
               <MapPin className="h-6 w-6 text-muted-foreground mb-2" />
               <p className="text-xs text-muted-foreground text-center">
-                {projectList.length > 1 
+                {projectList.length > 1
                   ? `${projectList.length} projets sélectionnés`
-                  : 'Aucun projet spécifique'}
+                  : "Aucun projet spécifique"}
               </p>
             </div>
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Report Title */}
         <div className="space-y-2">
@@ -260,14 +353,14 @@ export function CompactProjectReportGenerator({
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">Projets à inclure</span>
             <Badge variant="secondary" className="font-medium">
-              {projectList.length} projet{projectList.length > 1 ? 's' : ''}
+              {projectList.length} projet{projectList.length > 1 ? "s" : ""}
             </Badge>
           </div>
-          
+
           <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
             {projectList.map((proj) => (
-              <div 
-                key={proj.id} 
+              <div
+                key={proj.id}
                 className="flex items-center justify-between p-3 bg-background rounded-lg border hover:bg-muted/50 transition-colors"
               >
                 <div className="flex-1 min-w-0">
@@ -284,16 +377,17 @@ export function CompactProjectReportGenerator({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs font-medium px-2"
-                  >
+                  <Badge variant="outline" className="text-xs font-medium px-2">
                     {proj.progress || 0}%
                   </Badge>
-                  <Badge 
-                    variant={proj.status === 'terminé' || proj.status === 'completed' ? 'default' : 
-                            proj.status === 'en cours' || proj.status === 'in_progress' ? 'secondary' : 
-                            'outline'}
+                  <Badge
+                    variant={
+                      proj.status === "terminé"
+                        ? "default"
+                        : proj.status === "en cours"
+                        ? "secondary"
+                        : "outline"
+                    }
                     className="text-xs font-medium px-2"
                   >
                     {proj.status}
@@ -311,8 +405,9 @@ export function CompactProjectReportGenerator({
             Format compact
           </p>
           <p className="mb-2">
-            Chaque projet sera affiché sur une seule page A4 avec un résumé des informations clés :
-            budget, progression, risques, dépenses, conformité et indicateurs de performance.
+            Chaque projet sera affiché sur une seule page A4 avec un résumé des
+            informations clés : budget, progression, risques, dépenses,
+            conformité et indicateurs de performance.
           </p>
           <div className="text-xs space-y-1 mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
             <p className="font-medium">Contenu inclus :</p>
@@ -330,8 +425,8 @@ export function CompactProjectReportGenerator({
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <Button 
-            onClick={generatePDF} 
+          <Button
+            onClick={generatePDF}
             disabled={loading || projectList.length === 0}
             className="flex-1"
             size="lg"
@@ -348,7 +443,7 @@ export function CompactProjectReportGenerator({
               </>
             )}
           </Button>
-          
+
           {onClose && (
             <Button
               onClick={onClose}
@@ -360,12 +455,13 @@ export function CompactProjectReportGenerator({
             </Button>
           )}
         </div>
-        
+
         {/* Technical Note */}
         <div className="text-xs text-muted-foreground pt-2 border-t">
           <p>
-            <strong>Note :</strong> Une miniature de carte schématique est incluse dans chaque page de projet.
-            Les coordonnées GPS sont affichées textuellement si disponibles.
+            <strong>Note :</strong> Une miniature de carte schématique est
+            incluse dans chaque page de projet. Les coordonnées GPS sont
+            affichées textuellement si disponibles.
           </p>
         </div>
       </CardContent>
