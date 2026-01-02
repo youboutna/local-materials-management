@@ -51,7 +51,8 @@ export class ProgressCalculationService {
       (taskProgress * weights.tasks) +
       (inspectionProgress * weights.inspections);
 
-    return Math.round(globalProgress * 100) / 100; // Arrondi à 2 décimales
+    // globalProgress est un ratio (0..1). En base et dans l'UI, on stocke/affiche un pourcentage (0..100).
+    return Math.max(0, Math.min(100, Math.round(globalProgress * 100)));
   }
 
   /**
