@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
-import React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
-import { SupplierConfirmationEmail } from './_templates/supplier-confirmation.tsx';
-import { AdminNotificationEmail } from './_templates/admin-notification.tsx';
+import {
+  renderSupplierConfirmationEmail,
+} from "./_templates/supplier-confirmation.tsx";
+import {
+  renderAdminNotificationEmail,
+} from "./_templates/admin-notification.tsx";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -45,14 +47,12 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Render supplier confirmation email
-    const supplierHtml = await renderAsync(
-      React.createElement(SupplierConfirmationEmail, {
-        supplier_name,
-        tender_title,
-        submission_id,
-        secret_code,
-      })
-    );
+    const supplierHtml = renderSupplierConfirmationEmail({
+      supplier_name,
+      tender_title,
+      submission_id,
+      secret_code,
+    });
 
     // Email to supplier (confirmation)
     const supplierEmailResponse = await resend.emails.send({
@@ -65,14 +65,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Supplier email sent:", supplierEmailResponse);
 
     // Render admin notification email
-    const adminHtml = await renderAsync(
-      React.createElement(AdminNotificationEmail, {
-        tender_title,
-        supplier_name,
-        supplier_email,
-        submission_id,
-      })
-    );
+    const adminHtml = renderAdminNotificationEmail({
+      tender_title,
+      supplier_name,
+      supplier_email,
+      submission_id,
+    });
 
     // Email to administrators (notification of new submission)
     const adminEmailPromises = admin_emails.map(admin_email =>

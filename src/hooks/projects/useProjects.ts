@@ -46,8 +46,23 @@ export const useProjects = () => {
       if (projectData.location !== undefined)
         dbData.location = projectData.location;
       if (projectData.status !== undefined) dbData.status = projectData.status;
-      if (projectData.progress !== undefined)
-        dbData.progress = projectData.progress;
+
+      const normalizeProgress = (value: unknown): number | undefined => {
+        if (value === null || value === undefined) return undefined;
+        const n = typeof value === "number" ? value : Number(value);
+        if (!Number.isFinite(n)) return undefined;
+
+        // Certaines parties de l'app envoient une fraction (0..1).
+        // En base, `projects.progress` est un INTEGER (%).
+        const percent = n > 0 && n <= 1 ? n * 100 : n;
+        return Math.max(0, Math.min(100, Math.round(percent)));
+      };
+
+      if (projectData.progress !== undefined) {
+        const normalized = normalizeProgress(projectData.progress);
+        if (normalized !== undefined) dbData.progress = normalized;
+      }
+
       if (projectData.budget !== undefined) dbData.budget = projectData.budget;
       if (projectData.startDate !== undefined)
         dbData.start_date = projectData.startDate;
