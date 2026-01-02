@@ -1,14 +1,12 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Section,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
-import * as React from 'npm:react@18.3.1'
+// Templates HTML (sans dépendances npm externes) pour l'edge function.
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 interface AdminNotificationProps {
   tender_title: string;
@@ -17,153 +15,76 @@ interface AdminNotificationProps {
   submission_id: string;
 }
 
-export const AdminNotificationEmail = ({
-  tender_title,
-  supplier_name,
-  supplier_email,
-  submission_id,
-}: AdminNotificationProps) => {
-  const currentDate = new Date().toLocaleDateString('fr-FR', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+export const renderAdminNotificationEmail = (props: AdminNotificationProps) => {
+  const tenderTitle = escapeHtml(props.tender_title);
+  const supplierName = escapeHtml(props.supplier_name);
+  const supplierEmail = escapeHtml(props.supplier_email);
+  const submissionId = escapeHtml(props.submission_id);
 
-  return (
-    <Html>
-      <Head />
-      <Preview>Nouvelle soumission - {tender_title}</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <div style={header}>
-            <Heading style={h1}>📨 Nouvelle Soumission</Heading>
-          </div>
-          <Section style={content}>
-            <Text style={text}>Bonjour,</Text>
-            
-            <Text style={text}>
-              Une nouvelle soumission a été enregistrée pour l'appel d'offres :
-            </Text>
-            
-            <div style={infoBox}>
-              <div style={detailRow}>
-                <span style={detailLabel}><strong>Appel d'offres:</strong></span>
-                <span style={detailValue}>{tender_title}</span>
-              </div>
-              <div style={detailRow}>
-                <span style={detailLabel}><strong>Fournisseur:</strong></span>
-                <span style={detailValue}>{supplier_name}</span>
-              </div>
-              <div style={detailRow}>
-                <span style={detailLabel}><strong>Email:</strong></span>
-                <span style={detailValue}>{supplier_email}</span>
-              </div>
-              <div style={detailRow}>
-                <span style={detailLabel}><strong>ID Soumission:</strong></span>
-                <span style={detailValue}>{submission_id}</span>
-              </div>
-              <div style={{ ...detailRow, borderBottom: 'none' }}>
-                <span style={detailLabel}><strong>Date:</strong></span>
-                <span style={detailValue}>{currentDate}</span>
-              </div>
-            </div>
-
-            <Text style={text}><strong>Actions requises :</strong></Text>
-            <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
-              <li>Vérifier la complétude du dossier</li>
-              <li>Procéder à l'évaluation selon les critères définis</li>
-              <li>Utiliser le code secret pour accéder aux documents</li>
-            </ul>
-
-            <Text style={text}>
-              Connectez-vous à la plateforme pour consulter les détails de la soumission.
-            </Text>
-          </Section>
-          <div style={footer}>
-            <Text style={footerText}>
-              Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-            </Text>
-          </div>
-        </Container>
-      </Body>
-    </Html>
+  const currentDate = escapeHtml(
+    new Date().toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   );
-};
 
-export default AdminNotificationEmail;
+  return `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nouvelle soumission</title>
+</head>
+<body style="margin:0;background:#ffffff;font-family:Arial, sans-serif;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;padding:30px;border-radius:10px 10px 0 0;text-align:center;">
+      <h1 style="margin:0;font-size:24px;">📨 Nouvelle Soumission</h1>
+    </div>
 
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: 'Arial, sans-serif',
-};
+    <div style="background:#f9fafb;padding:30px;border:1px solid #e5e7eb;border-top:none;">
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Bonjour,</p>
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Une nouvelle soumission a été enregistrée pour l'appel d'offres :</p>
 
-const container = {
-  margin: '0 auto',
-  maxWidth: '600px',
-};
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+          <span><strong>Appel d'offres:</strong></span>
+          <span>${tenderTitle}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+          <span><strong>Fournisseur:</strong></span>
+          <span>${supplierName}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+          <span><strong>Email:</strong></span>
+          <span>${supplierEmail}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+          <span><strong>ID Soumission:</strong></span>
+          <span>${submissionId}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;">
+          <span><strong>Date:</strong></span>
+          <span>${currentDate}</span>
+        </div>
+      </div>
 
-const header = {
-  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-  color: 'white',
-  padding: '30px',
-  borderRadius: '10px 10px 0 0',
-  textAlign: 'center' as const,
-};
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;"><strong>Actions requises :</strong></p>
+      <ul style="margin:10px 0;padding-left:20px;font-size:14px;line-height:1.6;color:#333;">
+        <li>Vérifier la complétude du dossier</li>
+        <li>Procéder à l'évaluation selon les critères définis</li>
+        <li>Utiliser le code secret pour accéder aux documents</li>
+      </ul>
 
-const h1 = {
-  color: 'white',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '0',
-  padding: '0',
-};
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Connectez-vous à la plateforme pour consulter les détails de la soumission.</p>
+    </div>
 
-const content = {
-  backgroundColor: '#f9fafb',
-  padding: '30px',
-  border: '1px solid #e5e7eb',
-  borderTop: 'none',
-};
-
-const text = {
-  color: '#333',
-  fontSize: '14px',
-  lineHeight: '1.6',
-  margin: '16px 0',
-};
-
-const infoBox = {
-  backgroundColor: 'white',
-  border: '1px solid #e5e7eb',
-  borderRadius: '8px',
-  padding: '20px',
-  margin: '20px 0',
-};
-
-const detailRow = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  padding: '8px 0',
-  borderBottom: '1px solid #e5e7eb',
-};
-
-const detailLabel = {
-  fontSize: '14px',
-};
-
-const detailValue = {
-  fontSize: '14px',
-};
-
-const footer = {
-  textAlign: 'center' as const,
-  padding: '20px',
-};
-
-const footerText = {
-  color: '#6b7280',
-  fontSize: '12px',
-  margin: '0',
+    <div style="text-align:center;padding:20px;">
+      <p style="color:#6b7280;font-size:12px;margin:0;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 };

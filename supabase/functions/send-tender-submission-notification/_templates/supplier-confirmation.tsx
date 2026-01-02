@@ -1,15 +1,12 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
-import * as React from 'npm:react@18.3.1'
+// Templates HTML (sans dépendances npm externes) pour l'edge function.
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 interface SupplierConfirmationProps {
   supplier_name: string;
@@ -18,166 +15,68 @@ interface SupplierConfirmationProps {
   secret_code: string;
 }
 
-export const SupplierConfirmationEmail = ({
-  supplier_name,
-  tender_title,
-  submission_id,
-  secret_code,
-}: SupplierConfirmationProps) => {
-  const formatSecretCode = (code: string): string => {
-    if (code.length >= 6) {
-      return `${code.substring(0, 6)}-${code.substring(6)}`;
-    }
-    return code;
-  };
+const formatSecretCode = (code: string): string =>
+  code.length >= 6 ? `${code.substring(0, 6)}-${code.substring(6)}` : code;
 
-  const formattedSecret = formatSecretCode(secret_code);
+export const renderSupplierConfirmationEmail = (props: SupplierConfirmationProps) => {
+  const supplierName = escapeHtml(props.supplier_name);
+  const tenderTitle = escapeHtml(props.tender_title);
+  const submissionId = escapeHtml(props.submission_id);
+  const secret = escapeHtml(formatSecretCode(props.secret_code));
 
-  return (
-    <Html>
-      <Head />
-      <Preview>Confirmation de soumission - {tender_title}</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <div style={header}>
-            <Heading style={h1}>✅ Soumission Confirmée</Heading>
-          </div>
-          <Section style={content}>
-            <Text style={text}>
-              Bonjour <strong>{supplier_name}</strong>,
-            </Text>
-            
-            <Text style={text}>
-              Nous confirmons la réception de votre dossier de candidature pour l'appel d'offres :
-            </Text>
-            
-            <div style={infoBox}>
-              <strong>📋 {tender_title}</strong><br />
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                ID de soumission: {submission_id}
-              </span>
-            </div>
+  return `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmation de soumission</title>
+</head>
+<body style="margin:0;background:#ffffff;font-family:Arial, sans-serif;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:30px;border-radius:10px 10px 0 0;text-align:center;">
+      <h1 style="margin:0;font-size:24px;">✅ Soumission Confirmée</h1>
+    </div>
 
-            <Text style={text}>
-              Votre dossier a été enregistré avec succès. Un code secret a été généré pour permettre 
-              à la commission d'évaluation d'accéder à vos documents.
-            </Text>
+    <div style="background:#f9fafb;padding:30px;border:1px solid #e5e7eb;border-top:none;">
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Bonjour <strong>${supplierName}</strong>,</p>
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Nous confirmons la réception de votre dossier de candidature pour l'appel d'offres :</p>
 
-            <div style={secretBox}>
-              <Text style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>
-                Code Secret
-              </Text>
-              <div style={secretCode}>{formattedSecret}</div>
-              <Text style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#6b7280' }}>
-                Conservez précieusement ce code
-              </Text>
-            </div>
+      <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:15px;margin:20px 0;font-size:14px;">
+        <strong>📋 ${tenderTitle}</strong><br />
+        <span style="font-size:12px;color:#6b7280;">ID de soumission: ${submissionId}</span>
+      </div>
 
-            <div style={infoBox}>
-              <strong>📌 Instructions importantes :</strong>
-              <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
-                <li>Ce code est strictement confidentiel</li>
-                <li>Partagez-le uniquement avec la commission d'évaluation officielle</li>
-                <li>Le code permet d'accéder à l'ensemble de vos documents</li>
-                <li>Vous pouvez le régénérer si nécessaire depuis votre espace fournisseur</li>
-              </ul>
-            </div>
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Votre dossier a été enregistré avec succès. Un code secret a été généré pour permettre à la commission d'évaluation d'accéder à vos documents.</p>
 
-            <Text style={text}><strong>Prochaines étapes :</strong></Text>
-            <ol style={{ margin: '10px 0', paddingLeft: '20px' }}>
-              <li>La commission d'évaluation utilisera ce code pour accéder à votre dossier</li>
-              <li>Vous serez notifié de l'avancement du processus d'évaluation</li>
-              <li>Les résultats seront communiqués selon le calendrier de l'appel d'offres</li>
-            </ol>
+      <div style="background:#fff;border:2px dashed #667eea;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+        <div style="margin:0;font-size:14px;color:#6b7280;">Code Secret</div>
+        <div style="font-size:28px;font-weight:bold;font-family:'Courier New', monospace;color:#667eea;letter-spacing:2px;margin:10px 0;">${secret}</div>
+        <div style="margin-top:10px;font-size:12px;color:#6b7280;">Conservez précieusement ce code</div>
+      </div>
 
-            <Text style={text}>Merci pour votre candidature !</Text>
-          </Section>
-          <div style={footer}>
-            <Text style={footerText}>
-              Cet email a été envoyé automatiquement, merci de ne pas y répondre.
-            </Text>
-          </div>
-        </Container>
-      </Body>
-    </Html>
-  );
-};
+      <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:15px;margin:20px 0;font-size:14px;">
+        <strong>📌 Instructions importantes :</strong>
+        <ul style="margin:10px 0;padding-left:20px;">
+          <li>Ce code est strictement confidentiel</li>
+          <li>Partagez-le uniquement avec la commission d'évaluation officielle</li>
+          <li>Le code permet d'accéder à l'ensemble de vos documents</li>
+        </ul>
+      </div>
 
-export default SupplierConfirmationEmail;
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;"><strong>Prochaines étapes :</strong></p>
+      <ol style="margin:10px 0;padding-left:20px;font-size:14px;line-height:1.6;color:#333;">
+        <li>La commission d'évaluation utilisera ce code pour accéder à votre dossier</li>
+        <li>Vous serez notifié de l'avancement du processus d'évaluation</li>
+        <li>Les résultats seront communiqués selon le calendrier de l'appel d'offres</li>
+      </ol>
 
-const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: 'Arial, sans-serif',
-};
+      <p style="color:#333;font-size:14px;line-height:1.6;margin:16px 0;">Merci pour votre candidature !</p>
+    </div>
 
-const container = {
-  margin: '0 auto',
-  maxWidth: '600px',
-};
-
-const header = {
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  color: 'white',
-  padding: '30px',
-  borderRadius: '10px 10px 0 0',
-  textAlign: 'center' as const,
-};
-
-const h1 = {
-  color: 'white',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '0',
-  padding: '0',
-};
-
-const content = {
-  backgroundColor: '#f9fafb',
-  padding: '30px',
-  border: '1px solid #e5e7eb',
-  borderTop: 'none',
-};
-
-const text = {
-  color: '#333',
-  fontSize: '14px',
-  lineHeight: '1.6',
-  margin: '16px 0',
-};
-
-const infoBox = {
-  backgroundColor: '#eff6ff',
-  borderLeft: '4px solid #3b82f6',
-  padding: '15px',
-  margin: '20px 0',
-  fontSize: '14px',
-};
-
-const secretBox = {
-  backgroundColor: 'white',
-  border: '2px dashed #667eea',
-  borderRadius: '8px',
-  padding: '20px',
-  margin: '20px 0',
-  textAlign: 'center' as const,
-};
-
-const secretCode = {
-  fontSize: '28px',
-  fontWeight: 'bold',
-  fontFamily: "'Courier New', monospace",
-  color: '#667eea',
-  letterSpacing: '2px',
-  margin: '10px 0',
-};
-
-const footer = {
-  textAlign: 'center' as const,
-  padding: '20px',
-};
-
-const footerText = {
-  color: '#6b7280',
-  fontSize: '12px',
-  margin: '0',
+    <div style="text-align:center;padding:20px;">
+      <p style="color:#6b7280;font-size:12px;margin:0;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 };
