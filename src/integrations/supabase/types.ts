@@ -3906,47 +3906,138 @@ export type Database = {
       service_stations: {
         Row: {
           address: string
+          authorization_id: string | null
+          capacity_essence: number | null
+          capacity_gasoil: number | null
+          capacity_gpl: number | null
+          capacity_sp98: number | null
           closing_hours: string | null
+          company_nif: string | null
           created_at: string
+          employees_count: number | null
           essence_price: string
+          fuel_types: string[] | null
           gasoil_price: string
+          has_car_wash: boolean | null
+          has_convenience_store: boolean | null
+          has_restaurant: boolean | null
+          has_tire_service: boolean | null
           id: string
+          last_inspection_date: string | null
           latitude: number
           longitude: number
+          manager_name: string | null
+          manager_phone: string | null
+          notes: string | null
+          number_of_pumps: number | null
+          opening_date: string | null
           opening_hours: string | null
+          owner_email: string | null
+          owner_name: string | null
+          owner_national_id: string | null
+          owner_phone: string | null
+          owner_type: string | null
+          parcel_area: number | null
+          parcel_reference: string | null
           sp98_price: string | null
+          station_code: string | null
+          station_name: string | null
+          status: string | null
           territory_id: string | null
           updated_at: string
         }
         Insert: {
           address: string
+          authorization_id?: string | null
+          capacity_essence?: number | null
+          capacity_gasoil?: number | null
+          capacity_gpl?: number | null
+          capacity_sp98?: number | null
           closing_hours?: string | null
+          company_nif?: string | null
           created_at?: string
+          employees_count?: number | null
           essence_price: string
+          fuel_types?: string[] | null
           gasoil_price: string
+          has_car_wash?: boolean | null
+          has_convenience_store?: boolean | null
+          has_restaurant?: boolean | null
+          has_tire_service?: boolean | null
           id?: string
+          last_inspection_date?: string | null
           latitude: number
           longitude: number
+          manager_name?: string | null
+          manager_phone?: string | null
+          notes?: string | null
+          number_of_pumps?: number | null
+          opening_date?: string | null
           opening_hours?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_national_id?: string | null
+          owner_phone?: string | null
+          owner_type?: string | null
+          parcel_area?: number | null
+          parcel_reference?: string | null
           sp98_price?: string | null
+          station_code?: string | null
+          station_name?: string | null
+          status?: string | null
           territory_id?: string | null
           updated_at?: string
         }
         Update: {
           address?: string
+          authorization_id?: string | null
+          capacity_essence?: number | null
+          capacity_gasoil?: number | null
+          capacity_gpl?: number | null
+          capacity_sp98?: number | null
           closing_hours?: string | null
+          company_nif?: string | null
           created_at?: string
+          employees_count?: number | null
           essence_price?: string
+          fuel_types?: string[] | null
           gasoil_price?: string
+          has_car_wash?: boolean | null
+          has_convenience_store?: boolean | null
+          has_restaurant?: boolean | null
+          has_tire_service?: boolean | null
           id?: string
+          last_inspection_date?: string | null
           latitude?: number
           longitude?: number
+          manager_name?: string | null
+          manager_phone?: string | null
+          notes?: string | null
+          number_of_pumps?: number | null
+          opening_date?: string | null
           opening_hours?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_national_id?: string | null
+          owner_phone?: string | null
+          owner_type?: string | null
+          parcel_area?: number | null
+          parcel_reference?: string | null
           sp98_price?: string | null
+          station_code?: string | null
+          station_name?: string | null
+          status?: string | null
           territory_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_stations_authorization_id_fkey"
+            columns: ["authorization_id"]
+            isOneToOne: false
+            referencedRelation: "authorization_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_stations_territory_id_fkey"
             columns: ["territory_id"]
@@ -6209,6 +6300,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_station_from_authorization: {
+        Args: { auth_id: string; territory_id_param?: string }
+        Returns: string
+      }
       create_supplier_payment_request: {
         Args: {
           amount_param: number
@@ -6235,6 +6330,7 @@ export type Database = {
         }[]
       }
       generate_request_number: { Args: never; Returns: string }
+      generate_station_code: { Args: never; Returns: string }
       generate_submission_secret_code: { Args: never; Returns: string }
       generate_supplier_reset_token: {
         Args: { supplier_email: string }
