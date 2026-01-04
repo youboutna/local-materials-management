@@ -15,6 +15,7 @@ import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
+import { PhaseMilestonesSection } from '@/components/project/milestones';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
 import { 
   ArrowLeft, 
@@ -225,8 +226,9 @@ const PhaseDetailByDTO: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="milestones">Jalons</TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -325,6 +327,16 @@ const PhaseDetailByDTO: React.FC = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="milestones">
+          <PhaseMilestonesSection
+            projectId={projectId!}
+            phaseId={phaseId!}
+            phaseName={phase.phase || phase.phase_name || 'Phase'}
+            constructionPhase={phase.construction_phase || phase.constructionPhase}
+            phaseStartDate={phase.startDate || phase.start_date}
+          />
         </TabsContent>
         
         <TabsContent value="materials">
