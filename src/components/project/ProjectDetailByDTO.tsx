@@ -5,6 +5,7 @@ import FinancialOverview from "@/components/project/FinaancialOverview";
 import PhaseList from "@/components/project/PhaseList";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
+import { ProjectMilestoneTimeline } from "@/components/project/milestones";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -925,6 +926,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </CardContent>
             </Card>
           </div>
+
+          {/* Project Milestones Timeline */}
+          <ProjectMilestoneTimeline 
+            projectId={projectId!}
+            onMilestoneClick={(milestoneId, phaseId) => {
+              if (phaseId) {
+                navigate(`/projects/${projectId}/phases/${phaseId}`);
+              }
+            }}
+          />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

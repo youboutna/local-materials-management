@@ -13,6 +13,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Target, 
   Plus, 
@@ -21,11 +28,22 @@ import {
   AlertTriangle,
   Sparkles,
   Trash2,
-  Edit
+  Edit,
+  ShieldCheck,
+  Package,
+  Flag,
+  CheckSquare
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
 import { getMilestoneTemplates } from '@/data/referential-milestones';
-import { MilestoneDTO, MilestoneProgressDTO } from '@/types/milestone-dto';
+import { 
+  MilestoneDTO, 
+  MilestoneProgressDTO,
+  MilestoneType,
+  MilestonePriority,
+  MILESTONE_TYPES,
+  MILESTONE_PRIORITIES
+} from '@/types/milestone-dto';
 import { format, parseISO, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -58,7 +76,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     description: '',
     target_date: '',
     weight: 0.2,
-    notes: ''
+    notes: '',
+    type: 'checkpoint' as MilestoneType,
+    priority: 'normal' as MilestonePriority
   });
 
   // Check if referential templates are available
@@ -182,7 +202,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       description: milestone.description || '',
       target_date: milestone.target_date,
       weight: milestone.weight,
-      notes: milestone.notes || ''
+      notes: milestone.notes || '',
+      type: milestone.type || 'checkpoint',
+      priority: milestone.priority || 'normal'
     });
     setIsDialogOpen(true);
   };
@@ -194,7 +216,9 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       description: '',
       target_date: phaseStartDate || '',
       weight: 0.2,
-      notes: ''
+      notes: '',
+      type: 'checkpoint',
+      priority: 'normal'
     });
   };
 
@@ -209,6 +233,16 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       return { icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-100' };
     }
     return { icon: Clock, color: 'text-blue-500', bg: 'bg-blue-100' };
+  };
+
+  const getTypeIcon = (type: MilestoneType) => {
+    switch (type) {
+      case 'gate': return ShieldCheck;
+      case 'deliverable': return Package;
+      case 'event': return Flag;
+      case 'checkpoint':
+      default: return CheckSquare;
+    }
   };
 
   if (loading) {
@@ -256,7 +290,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   Ajouter
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>
                     {editingMilestone ? 'Modifier le jalon' : 'Nouveau jalon'}
@@ -281,6 +315,43 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       placeholder="Description optionnelle"
                     />
                   </div>
+                  
+                  {/* Type and Priority */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="type">Type</Label>
+                      <Select
+                        value={formData.type}
+                        onValueChange={(value) => setFormData({ ...formData, type: value as MilestoneType })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(MILESTONE_TYPES).map(([key, { label }]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="priority">Priorité</Label>
+                      <Select
+                        value={formData.priority}
+                        onValueChange={(value) => setFormData({ ...formData, priority: value as MilestonePriority })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(MILESTONE_PRIORITIES).map(([key, { label }]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="target_date">Date cible</Label>
@@ -329,14 +400,35 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
       </CardHeader>
 
       <CardContent>
-        {/* Progress bar */}
+        {/* Progress bar with SPI indicator */}
         {progress && milestones.length > 0 && (
-          <div className="mb-4 space-y-1">
+          <div className="mb-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progression</span>
-              <span className="font-medium">{progress.weighted_progress}%</span>
+              <span className="text-muted-foreground">Progression des jalons</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{progress.weighted_progress}%</span>
+                {progress.schedule_performance_index !== undefined && (
+                  <Badge 
+                    variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                    className="text-xs"
+                  >
+                    SPI: {progress.schedule_performance_index}
+                  </Badge>
+                )}
+              </div>
             </div>
             <Progress value={progress.weighted_progress} className="h-2" />
+            {progress.critical_path_status !== 'on_track' && (
+              <div className="flex items-center gap-2 text-xs">
+                <AlertTriangle className={cn(
+                  "h-3 w-3",
+                  progress.critical_path_status === 'delayed' ? 'text-red-500' : 'text-orange-500'
+                )} />
+                <span className={progress.critical_path_status === 'delayed' ? 'text-red-600' : 'text-orange-600'}>
+                  Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -355,13 +447,15 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
             {milestones.map((milestone) => {
               const status = getStatusInfo(milestone);
               const StatusIcon = status.icon;
+              const TypeIcon = getTypeIcon(milestone.type);
 
               return (
                 <div
                   key={milestone.id}
                   className={cn(
                     "flex items-start gap-3 p-3 rounded-lg border",
-                    milestone.status === 'completed' && "bg-muted/50"
+                    milestone.status === 'completed' && "bg-muted/50",
+                    milestone.priority === 'critical' && milestone.status !== 'completed' && "border-red-200"
                   )}
                 >
                   <div className={cn("p-1.5 rounded-full", status.bg)}>
@@ -371,18 +465,21 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className={cn(
-                          "font-medium",
-                          milestone.status === 'completed' && "line-through text-muted-foreground"
-                        )}>
-                          {milestone.title}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className={cn(
+                            "font-medium",
+                            milestone.status === 'completed' && "line-through text-muted-foreground"
+                          )}>
+                            {milestone.title}
+                          </p>
+                          <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
                         {milestone.description && (
                           <p className="text-sm text-muted-foreground mt-0.5">
                             {milestone.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                           <span>
                             Cible: {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
                           </span>
@@ -390,6 +487,14 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                             <span className="text-green-600">
                               ✓ {format(parseISO(milestone.completed_date), 'd MMM', { locale: fr })}
                             </span>
+                          )}
+                          <Badge variant="outline" className="text-xs">
+                            {MILESTONE_TYPES[milestone.type]?.label || 'Checkpoint'}
+                          </Badge>
+                          {milestone.priority === 'critical' && (
+                            <Badge variant="destructive" className="text-xs">
+                              Critique
+                            </Badge>
                           )}
                           {milestone.is_from_template && (
                             <Badge variant="secondary" className="text-xs">

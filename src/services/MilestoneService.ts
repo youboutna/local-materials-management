@@ -4,10 +4,12 @@ import {
   MilestoneSummaryDTO, 
   MilestoneFormDTO,
   MilestoneProgressDTO,
-  MilestoneTemplateDTO
+  MilestoneType,
+  MilestonePriority,
+  CriticalPathDTO
 } from '@/types/milestone-dto';
 import { getMilestoneTemplates } from '@/data/referential-milestones';
-import { addDays, format, parseISO, isBefore } from 'date-fns';
+import { addDays, format, parseISO, isBefore, differenceInDays } from 'date-fns';
 
 export class MilestoneService {
   /**
@@ -42,12 +44,12 @@ export class MilestoneService {
   }
 
   /**
-   * Get milestones summary for timeline view
+   * Get milestones summary for timeline view (Gantt compatible)
    */
   static async getProjectMilestonesSummary(projectId: string): Promise<MilestoneSummaryDTO[]> {
     const { data: milestones, error: mError } = await supabase
       .from('enhanced_project_milestones')
-      .select('id, title, target_date, completed_date, status, phase_id, weight')
+      .select('id, title, target_date, completed_date, status, phase_id, weight, dependencies')
       .eq('project_id', projectId)
       .order('target_date', { ascending: true });
 
@@ -69,20 +71,27 @@ export class MilestoneService {
       }, {} as Record<string, string>);
     }
 
-    return (milestones || []).map(m => ({
-      id: m.id,
-      title: m.title,
-      target_date: m.target_date,
-      completed_date: m.completed_date || undefined,
-      status: m.status as MilestoneSummaryDTO['status'],
-      phase_id: m.phase_id || undefined,
-      phase_name: m.phase_id ? phaseMap[m.phase_id] : undefined,
-      weight: m.weight || 0.1
-    }));
+    return (milestones || []).map(m => {
+      const deps = m.dependencies as any;
+      return {
+        id: m.id,
+        title: m.title,
+        target_date: m.target_date,
+        completed_date: m.completed_date || undefined,
+        status: m.status as MilestoneSummaryDTO['status'],
+        type: deps?.type || 'checkpoint',
+        priority: deps?.priority || 'normal',
+        phase_id: m.phase_id || undefined,
+        phase_name: m.phase_id ? phaseMap[m.phase_id] : undefined,
+        weight: m.weight || 0.1,
+        is_critical: deps?.is_critical || false,
+        float_days: deps?.float_days
+      };
+    });
   }
 
   /**
-   * Calculate milestone progress for a phase or project
+   * Calculate milestone progress with PM metrics (EVM-inspired)
    */
   static async getMilestoneProgress(projectId: string, phaseId?: string): Promise<MilestoneProgressDTO> {
     const query = supabase
@@ -108,32 +117,60 @@ export class MilestoneService {
       isBefore(parseISO(m.target_date), today)
     );
 
+    // Weighted progress calculation
     const totalWeight = milestones.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const completedWeight = completed.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const weightedProgress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 
+    // Calculate SPI (Schedule Performance Index)
+    const plannedToDate = milestones.filter(m => 
+      m.target_date && isBefore(parseISO(m.target_date), today)
+    );
+    const plannedWeight = plannedToDate.reduce((sum, m) => sum + (m.weight || 0.1), 0);
+    const earnedWeight = plannedToDate.filter(m => m.status === 'completed')
+      .reduce((sum, m) => sum + (m.weight || 0.1), 0);
+    const spi = plannedWeight > 0 ? earnedWeight / plannedWeight : 1;
+
+    // Critical path analysis
+    const criticalMilestones = milestones.filter(m => {
+      const deps = m.dependencies as any;
+      return deps?.is_critical || deps?.priority === 'critical';
+    });
+    
+    const criticalDelayed = criticalMilestones.filter(m => 
+      m.status !== 'completed' && 
+      m.target_date && 
+      isBefore(parseISO(m.target_date), today)
+    );
+
+    let criticalPathStatus: 'on_track' | 'at_risk' | 'delayed' = 'on_track';
+    if (criticalDelayed.length > 0) {
+      criticalPathStatus = 'delayed';
+    } else if (spi < 0.9) {
+      criticalPathStatus = 'at_risk';
+    }
+
+    // Next milestone and upcoming (14 days)
     const pending = milestones.filter(m => m.status !== 'completed');
-    const nextMilestone = pending.length > 0 ? {
-      id: pending[0].id,
-      title: pending[0].title,
-      target_date: pending[0].target_date,
-      status: pending[0].status as MilestoneSummaryDTO['status'],
-      weight: pending[0].weight || 0.1
-    } : undefined;
+    const upcoming = pending.filter(m => {
+      const targetDate = parseISO(m.target_date);
+      const daysUntil = differenceInDays(targetDate, today);
+      return daysUntil >= 0 && daysUntil <= 14;
+    });
+
+    const nextMilestone = pending.length > 0 ? this.mapToSummary(pending[0]) : undefined;
 
     return {
       total_milestones: milestones.length,
       completed_milestones: completed.length,
       delayed_milestones: delayed.length,
       weighted_progress: Math.round(weightedProgress),
+      schedule_performance_index: Math.round(spi * 100) / 100,
+      critical_path_status: criticalPathStatus,
+      critical_path_float_days: criticalDelayed.length > 0 ? -differenceInDays(today, parseISO(criticalDelayed[0].target_date)) : undefined,
       next_milestone: nextMilestone,
-      overdue_milestones: delayed.map(m => ({
-        id: m.id,
-        title: m.title,
-        target_date: m.target_date,
-        status: 'delayed' as const,
-        weight: m.weight || 0.1
-      }))
+      overdue_milestones: delayed.map(m => this.mapToSummary(m)),
+      upcoming_milestones: upcoming.map(m => this.mapToSummary(m))
     };
   }
 
@@ -157,8 +194,14 @@ export class MilestoneService {
         weight: data.weight,
         notes: data.notes || null,
         status: 'pending',
-        // Store template info in dependencies JSON for tracking
-        dependencies: isFromTemplate ? { from_template: true, template_id: templateId } : null
+        dependencies: {
+          from_template: isFromTemplate,
+          template_id: templateId,
+          type: data.type || 'checkpoint',
+          priority: data.priority || 'normal',
+          deliverables: data.deliverables || [],
+          predecessor_ids: data.dependencies || []
+        }
       })
       .select()
       .single();
@@ -170,6 +213,7 @@ export class MilestoneService {
 
   /**
    * Generate milestones from referential template for a phase
+   * Includes full PM metadata (type, priority, dependencies)
    */
   static async generateFromReferential(
     projectId: string,
@@ -196,7 +240,13 @@ export class MilestoneService {
       dependencies: { 
         from_template: true, 
         template_id: template.id,
-        is_critical: template.is_critical 
+        is_critical: template.is_critical,
+        type: template.type,
+        priority: template.priority,
+        deliverables: template.deliverables || [],
+        approval_requirements: template.approval_requirements || [],
+        predecessor_ids: template.predecessor_ids || [],
+        tags: template.tags || []
       }
     }));
 
@@ -211,12 +261,61 @@ export class MilestoneService {
   }
 
   /**
+   * Calculate critical path for project milestones (CPM)
+   */
+  static async calculateCriticalPath(projectId: string): Promise<CriticalPathDTO> {
+    const milestones = await this.getProjectMilestones(projectId);
+    
+    // Simple critical path: milestones marked as critical, sorted by date
+    const criticalMilestones = milestones
+      .filter(m => m.is_on_critical_path || m.priority === 'critical')
+      .sort((a, b) => new Date(a.target_date).getTime() - new Date(b.target_date).getTime());
+
+    const allSorted = milestones.sort((a, b) => 
+      new Date(a.target_date).getTime() - new Date(b.target_date).getTime()
+    );
+
+    const lastMilestone = allSorted[allSorted.length - 1];
+    const firstMilestone = allSorted[0];
+
+    const totalDuration = lastMilestone && firstMilestone 
+      ? differenceInDays(parseISO(lastMilestone.target_date), parseISO(firstMilestone.target_date))
+      : 0;
+
+    // Find near-critical paths (milestones with float < 5 days)
+    const nearCritical = milestones.filter(m => {
+      const floatDays = m.float_days ?? 5;
+      return floatDays > 0 && floatDays < 5 && !m.is_on_critical_path;
+    });
+
+    return {
+      project_id: projectId,
+      critical_path_milestones: criticalMilestones.map(m => m.id),
+      total_duration_days: totalDuration,
+      estimated_end_date: lastMilestone?.target_date || format(new Date(), 'yyyy-MM-dd'),
+      near_critical_paths: nearCritical.length > 0 ? [{
+        milestones: nearCritical.map(m => m.id),
+        float_days: Math.min(...nearCritical.map(m => m.float_days ?? 5))
+      }] : []
+    };
+  }
+
+  /**
    * Update a milestone
    */
   static async updateMilestone(
     milestoneId: string, 
     data: Partial<MilestoneFormDTO> & { status?: string; completed_date?: string | null }
   ): Promise<MilestoneDTO> {
+    // First get current data to preserve dependencies metadata
+    const { data: current } = await supabase
+      .from('enhanced_project_milestones')
+      .select('dependencies')
+      .eq('id', milestoneId)
+      .single();
+
+    const currentDeps = (current?.dependencies as any) || {};
+    
     const updateData: any = {};
     
     if (data.title !== undefined) updateData.title = data.title;
@@ -226,6 +325,17 @@ export class MilestoneService {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.completed_date !== undefined) updateData.completed_date = data.completed_date;
+    
+    // Update dependencies metadata if provided
+    if (data.type || data.priority || data.deliverables || data.dependencies) {
+      updateData.dependencies = {
+        ...currentDeps,
+        ...(data.type && { type: data.type }),
+        ...(data.priority && { priority: data.priority }),
+        ...(data.deliverables && { deliverables: data.deliverables }),
+        ...(data.dependencies && { predecessor_ids: data.dependencies })
+      };
+    }
 
     const { data: result, error } = await supabase
       .from('enhanced_project_milestones')
@@ -243,7 +353,6 @@ export class MilestoneService {
    * Toggle milestone completion status
    */
   static async toggleComplete(milestoneId: string): Promise<MilestoneDTO> {
-    // Get current status
     const { data: current, error: fetchError } = await supabase
       .from('enhanced_project_milestones')
       .select('status')
@@ -258,6 +367,39 @@ export class MilestoneService {
       status: isCompleted ? 'pending' : 'completed',
       completed_date: isCompleted ? null : format(new Date(), 'yyyy-MM-dd')
     });
+  }
+
+  /**
+   * Approve a gate milestone
+   */
+  static async approveGate(milestoneId: string, approvedBy: string): Promise<MilestoneDTO> {
+    const { data: current } = await supabase
+      .from('enhanced_project_milestones')
+      .select('dependencies')
+      .eq('id', milestoneId)
+      .single();
+
+    const currentDeps = (current?.dependencies as any) || {};
+
+    const { data: result, error } = await supabase
+      .from('enhanced_project_milestones')
+      .update({
+        status: 'completed',
+        completed_date: format(new Date(), 'yyyy-MM-dd'),
+        dependencies: {
+          ...currentDeps,
+          approval_status: 'approved',
+          approved_by: approvedBy,
+          approval_date: format(new Date(), 'yyyy-MM-dd')
+        }
+      })
+      .eq('id', milestoneId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return this.mapToDTO(result);
   }
 
   /**
@@ -276,7 +418,6 @@ export class MilestoneService {
    * Delete all template-generated milestones for a phase
    */
   static async deleteTemplateMilestones(phaseId: string): Promise<void> {
-    // Get milestones with template markers
     const { data, error: fetchError } = await supabase
       .from('enhanced_project_milestones')
       .select('id, dependencies')
@@ -307,15 +448,41 @@ export class MilestoneService {
       title: data.title,
       description: data.description || undefined,
       target_date: data.target_date,
+      early_start_date: deps?.early_start_date,
+      late_finish_date: deps?.late_finish_date,
       completed_date: data.completed_date || undefined,
       status: data.status || 'pending',
+      type: deps?.type || 'checkpoint',
+      priority: deps?.priority || 'normal',
       weight: data.weight || 0.1,
       notes: data.notes || undefined,
       is_from_template: deps?.from_template || false,
       template_id: deps?.template_id,
-      dependencies: deps && !deps.from_template ? deps : undefined,
+      dependencies: deps?.predecessor_ids,
+      float_days: deps?.float_days,
+      is_on_critical_path: deps?.is_critical || deps?.priority === 'critical',
+      deliverables: deps?.deliverables,
+      approval_status: deps?.approval_status,
+      approved_by: deps?.approved_by,
+      approval_date: deps?.approval_date,
       created_at: data.created_at,
       updated_at: data.updated_at
+    };
+  }
+
+  private static mapToSummary(data: any): MilestoneSummaryDTO {
+    const deps = data.dependencies as any;
+    return {
+      id: data.id,
+      title: data.title,
+      target_date: data.target_date,
+      completed_date: data.completed_date || undefined,
+      status: data.status as MilestoneSummaryDTO['status'],
+      type: deps?.type || 'checkpoint',
+      priority: deps?.priority || 'normal',
+      weight: data.weight || 0.1,
+      is_critical: deps?.is_critical || false,
+      float_days: deps?.float_days
     };
   }
 }

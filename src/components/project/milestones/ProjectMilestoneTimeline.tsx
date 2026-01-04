@@ -10,11 +10,23 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Calendar
+  Calendar,
+  ShieldCheck,
+  Package,
+  Flag,
+  CheckSquare,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneProgressDTO } from '@/types/milestone-dto';
-import { format, parseISO, isBefore, isAfter, differenceInDays } from 'date-fns';
+import { 
+  MilestoneSummaryDTO, 
+  MilestoneProgressDTO,
+  MilestoneType,
+  MILESTONE_TYPES,
+  MILESTONE_PRIORITIES
+} from '@/types/milestone-dto';
+import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -93,6 +105,16 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
     };
   };
 
+  const getTypeIcon = (type: MilestoneType) => {
+    switch (type) {
+      case 'gate': return ShieldCheck;
+      case 'deliverable': return Package;
+      case 'event': return Flag;
+      case 'checkpoint':
+      default: return CheckSquare;
+    }
+  };
+
   // Group milestones by phase
   const groupedMilestones = milestones.reduce((acc, m) => {
     const key = m.phase_name || 'Projet global';
@@ -138,7 +160,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Jalons du Projet
+            Jalons du Projet (Timeline)
             {progress && (
               <Badge variant="outline" className="ml-2">
                 {progress.completed_milestones}/{progress.total_milestones}
@@ -154,21 +176,54 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
           </Button>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar with PM metrics */}
         {progress && (
-          <div className="mt-4 space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="mt-4 space-y-3">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Progression des jalons</span>
-              <span className="font-medium">{progress.weighted_progress}%</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{progress.weighted_progress}%</span>
+                {progress.schedule_performance_index !== undefined && (
+                  <Badge 
+                    variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
+                    className="text-xs flex items-center gap-1"
+                  >
+                    {progress.schedule_performance_index >= 1 ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3" />
+                    )}
+                    SPI: {progress.schedule_performance_index}
+                  </Badge>
+                )}
+              </div>
             </div>
             <Progress value={progress.weighted_progress} className="h-2" />
             
-            {progress.overdue_milestones && progress.overdue_milestones.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-red-600">
-                <AlertTriangle className="h-4 w-4" />
-                {progress.overdue_milestones.length} jalon(s) en retard
-              </div>
-            )}
+            {/* Status indicators */}
+            <div className="flex flex-wrap gap-4 text-sm">
+              {progress.overdue_milestones && progress.overdue_milestones.length > 0 && (
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  {progress.overdue_milestones.length} jalon(s) en retard
+                </div>
+              )}
+              {progress.upcoming_milestones && progress.upcoming_milestones.length > 0 && (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <Clock className="h-4 w-4" />
+                  {progress.upcoming_milestones.length} jalon(s) à venir (14j)
+                </div>
+              )}
+              {progress.critical_path_status !== 'on_track' && (
+                <div className={cn(
+                  "flex items-center gap-2",
+                  progress.critical_path_status === 'delayed' ? 'text-red-600' : 'text-orange-600'
+                )}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Chemin critique {progress.critical_path_status === 'delayed' ? 'en retard' : 'à risque'}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </CardHeader>
@@ -187,16 +242,18 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
                   
                   <div className="space-y-4">
-                    {phaseMilestones.map((milestone, index) => {
+                    {phaseMilestones.map((milestone) => {
                       const status = getStatusInfo(milestone);
                       const StatusIcon = status.icon;
+                      const TypeIcon = getTypeIcon(milestone.type);
 
                       return (
                         <div 
                           key={milestone.id}
                           className={cn(
                             "relative pl-10 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors",
-                            milestone.status === 'completed' && "opacity-60"
+                            milestone.status === 'completed' && "opacity-60",
+                            milestone.is_critical && milestone.status !== 'completed' && "border-l-2 border-red-400"
                           )}
                           onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
                         >
@@ -210,13 +267,21 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
 
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
-                              <p className={cn(
-                                "font-medium",
-                                milestone.status === 'completed' && "line-through"
-                              )}>
-                                {milestone.title}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2">
+                                <p className={cn(
+                                  "font-medium",
+                                  milestone.status === 'completed' && "line-through"
+                                )}>
+                                  {milestone.title}
+                                </p>
+                                <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                {milestone.is_critical && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Critique
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                                 <Calendar className="h-3 w-3" />
                                 <span>
                                   {format(parseISO(milestone.target_date), 'd MMM yyyy', { locale: fr })}
@@ -229,6 +294,9 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                     </span>
                                   </>
                                 )}
+                                <Badge variant="outline" className="text-xs">
+                                  {MILESTONE_TYPES[milestone.type]?.label || 'Checkpoint'}
+                                </Badge>
                               </div>
                             </div>
                             
