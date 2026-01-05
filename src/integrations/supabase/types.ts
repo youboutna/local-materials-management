@@ -3123,6 +3123,7 @@ export type Database = {
           materials: Json | null
           milestones: Json | null
           notes: string | null
+          order_index: number | null
           phase_name: string
           phase_type: string
           progress: number | null
@@ -3151,6 +3152,7 @@ export type Database = {
           materials?: Json | null
           milestones?: Json | null
           notes?: string | null
+          order_index?: number | null
           phase_name: string
           phase_type?: string
           progress?: number | null
@@ -3179,6 +3181,7 @@ export type Database = {
           materials?: Json | null
           milestones?: Json | null
           notes?: string | null
+          order_index?: number | null
           phase_name?: string
           phase_type?: string
           progress?: number | null
