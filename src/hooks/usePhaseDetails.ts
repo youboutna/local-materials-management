@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PhaseService, PhaseData } from '@/services/phaseService';
 import { WorkflowPhaseService } from '@/services/WorkflowPhaseService';
 import { referentialService } from '@/services/ReferentialService';
-import { PhaseDTO, PhaseStatus } from '@/types/phase-dto';
+import { PhaseDTO, PhaseStatus, PhaseStepDTO, PhaseTaskDTO } from '@/types/phase-dto';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -215,6 +215,189 @@ export function usePhaseDetails(phaseId: string | undefined) {
     },
   });
 
+  // Add step mutation
+  const addStepMutation = useMutation({
+    mutationFn: async (step: Omit<PhaseStepDTO, 'id'>) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const newStep: PhaseStepDTO = {
+        ...step,
+        id: crypto.randomUUID(),
+      };
+      
+      const updatedSteps = [...phaseQuery.data.steps, newStep];
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      toast({
+        title: 'Étape ajoutée',
+        description: 'L\'étape a été ajoutée avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update step mutation
+  const updateStepMutation = useMutation({
+    mutationFn: async ({ stepId, updates }: { stepId: string; updates: Partial<PhaseStepDTO> }) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const updatedSteps = phaseQuery.data.steps.map(step => 
+        step.id === stepId ? { ...step, ...updates } : step
+      );
+      
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete step mutation
+  const deleteStepMutation = useMutation({
+    mutationFn: async (stepId: string) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const updatedSteps = phaseQuery.data.steps.filter(step => step.id !== stepId);
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      toast({
+        title: 'Étape supprimée',
+        description: 'L\'étape a été supprimée avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Add task mutation
+  const addTaskMutation = useMutation({
+    mutationFn: async ({ stepId, task }: { stepId: string; task: Omit<PhaseTaskDTO, 'id'> }) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const newTask: PhaseTaskDTO = {
+        ...task,
+        id: crypto.randomUUID(),
+      };
+      
+      const updatedSteps = phaseQuery.data.steps.map(step => 
+        step.id === stepId 
+          ? { ...step, tasks: [...step.tasks, newTask] }
+          : step
+      );
+      
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      toast({
+        title: 'Tâche ajoutée',
+        description: 'La tâche a été ajoutée avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ 
+      stepId, 
+      taskId, 
+      updates 
+    }: { 
+      stepId: string; 
+      taskId: string; 
+      updates: Partial<PhaseTaskDTO> 
+    }) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const updatedSteps = phaseQuery.data.steps.map(step => 
+        step.id === stepId 
+          ? { 
+              ...step, 
+              tasks: step.tasks.map(task => 
+                task.id === taskId ? { ...task, ...updates } : task
+              )
+            }
+          : step
+      );
+      
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async ({ stepId, taskId }: { stepId: string; taskId: string }) => {
+      if (!phaseId || !phaseQuery.data) throw new Error('Phase data is required');
+      
+      const updatedSteps = phaseQuery.data.steps.map(step => 
+        step.id === stepId 
+          ? { ...step, tasks: step.tasks.filter(task => task.id !== taskId) }
+          : step
+      );
+      
+      return PhaseService.updatePhaseFromDTO(phaseId, { steps: updatedSteps });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      toast({
+        title: 'Tâche supprimée',
+        description: 'La tâche a été supprimée avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Get workflow hierarchy for the project
   const getWorkflowHierarchy = async (projectId: string) => {
     return workflowService.getProjectPhaseHierarchy(projectId);
@@ -228,8 +411,26 @@ export function usePhaseDetails(phaseId: string | undefined) {
     metricsLoading: metricsQuery.isLoading,
     updatePhase: updatePhaseMutation.mutate,
     updatePhaseAsync: updatePhaseMutation.mutateAsync,
-    isUpdating: updatePhaseMutation.isPending,
+    isUpdating: updatePhaseMutation.isPending || 
+                addStepMutation.isPending || 
+                updateStepMutation.isPending || 
+                deleteStepMutation.isPending ||
+                addTaskMutation.isPending ||
+                updateTaskMutation.isPending ||
+                deleteTaskMutation.isPending,
     updateTaskStatus: updateTaskStatusMutation.mutate,
+    // Step operations
+    addStep: addStepMutation.mutateAsync,
+    updateStep: (stepId: string, updates: Partial<PhaseStepDTO>) => 
+      updateStepMutation.mutateAsync({ stepId, updates }),
+    deleteStep: deleteStepMutation.mutateAsync,
+    // Task operations
+    addTask: (stepId: string, task: Omit<PhaseTaskDTO, 'id'>) => 
+      addTaskMutation.mutateAsync({ stepId, task }),
+    updateTask: (stepId: string, taskId: string, updates: Partial<PhaseTaskDTO>) => 
+      updateTaskMutation.mutateAsync({ stepId, taskId, updates }),
+    deleteTask: (stepId: string, taskId: string) => 
+      deleteTaskMutation.mutateAsync({ stepId, taskId }),
     getReferentialInfo,
     getWorkflowHierarchy,
     refetch: phaseQuery.refetch,

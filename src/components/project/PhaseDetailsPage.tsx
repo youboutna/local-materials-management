@@ -62,6 +62,7 @@ import PhaseInspections from "./PhaseInspections";
 import PhaseTasks from "./PhaseTasks";
 import PhaseCompliance from "./PhaseCompliance";
 import UnifiedPhaseMonitoring from "./monitoring/UnifiedPhaseMonitoring";
+import PhaseStepsManager from "./phase/PhaseStepsManager";
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -347,6 +348,12 @@ const PhaseDetailsPage: React.FC = () => {
     updatePhase,
     isUpdating,
     getReferentialInfo,
+    addStep,
+    updateStep,
+    deleteStep,
+    addTask,
+    updateTask,
+    deleteTask,
   } = usePhaseDetails(phaseId);
 
   // Get referential info for this phase
@@ -865,7 +872,7 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsContent>
 
 
-        {/* Steps Tab - Enhanced */}
+        {/* Steps Tab - With Full Management */}
         <TabsContent value="steps">
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent">
@@ -875,9 +882,9 @@ const PhaseDetailsPage: React.FC = () => {
                     <Layers className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <span>Étapes de la phase</span>
+                    <span>Gestion des étapes</span>
                     <p className="text-sm font-normal text-muted-foreground mt-0.5">
-                      {phase.phase_name}
+                      {phase.phase_name} • Ajoutez, modifiez ou supprimez des étapes et tâches
                     </p>
                   </div>
                 </CardTitle>
@@ -893,7 +900,16 @@ const PhaseDetailsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <PhaseStepsView steps={phase.steps} onStepClick={(stepId) => console.log('Step clicked:', stepId)} />
+              <PhaseStepsManager
+                steps={phase.steps}
+                onAddStep={addStep}
+                onUpdateStep={updateStep}
+                onDeleteStep={deleteStep}
+                onAddTask={addTask}
+                onUpdateTask={updateTask}
+                onDeleteTask={deleteTask}
+                isUpdating={isUpdating}
+              />
             </CardContent>
           </Card>
         </TabsContent>
