@@ -1,6 +1,8 @@
 /**
  * InspectionFormWithContext - Formulaire d'inspection enrichi avec contexte
  * Pré-remplit les champs grâce au CheckpointActionContextService
+ * Harmonisé avec les types d'inspection de AdvancedInspectionScheduler
+ * Envoie des notifications après création
  */
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clipboard, CheckSquare, AlertTriangle, Info, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clipboard, CheckSquare, AlertTriangle, Info, Loader2, Bell } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -26,6 +28,18 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { NotificationService } from '@/services/NotificationService';
+
+// Types d'inspection harmonisés avec AdvancedInspectionScheduler
+const INSPECTION_TYPES = [
+  { value: 'quality', label: 'Contrôle Qualité' },
+  { value: 'safety', label: 'Sécurité' },
+  { value: 'progress', label: 'Avancement des Travaux' },
+  { value: 'compliance', label: 'Conformité Réglementaire' },
+  { value: 'materials', label: 'Contrôle Matériaux' },
+  { value: 'structural', label: 'Contrôle Structurel' },
+  { value: 'final', label: 'Réception Définitive' }
+];
 
 interface InspectionFormWithContextProps {
   projectId: string;
@@ -57,14 +71,23 @@ export function InspectionFormWithContext({
   const [inspectorId, setInspectorId] = useState('');
   const [inspectorName, setInspectorName] = useState('');
   const [status, setStatus] = useState<InspectionStatus>('pending');
+  const [inspectionType, setInspectionType] = useState('progress');
   const [comments, setComments] = useState('');
   const [progress, setProgress] = useState(0);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [notifyHierarchy, setNotifyHierarchy] = useState(true);
 
   // Pre-fill form when context is loaded
   useEffect(() => {
     if (context) {
       setProgress(context.suggestedProgress || context.project.progress);
+      // Auto-select inspection type based on context
+      if (context.inspectionType) {
+        const mappedType = context.inspectionType === 'technical' ? 'structural' : 
+                          context.inspectionType === 'regulatory' ? 'compliance' : 
+                          context.inspectionType;
+        setInspectionType(mappedType);
+      }
     }
   }, [context]);
 
@@ -100,14 +123,15 @@ export function InspectionFormWithContext({
     setIsSubmitting(true);
 
     try {
-      // Build comments with checklist items
-      let fullComments = comments;
+      // Build comments with checklist items and inspection type
+      const inspectionTypeLabel = INSPECTION_TYPES.find(t => t.value === inspectionType)?.label || inspectionType;
+      let fullComments = `Type: ${inspectionTypeLabel}\n\n${comments}`;
       if (checkedItems.size > 0) {
         const checklistSummary = Array.from(checkedItems).map(item => `✓ ${item}`).join('\n');
-        fullComments = `${comments}\n\n--- Points de contrôle validés ---\n${checklistSummary}`;
+        fullComments = `${fullComments}\n\n--- Points de contrôle validés ---\n${checklistSummary}`;
       }
 
-      const { error } = await supabase
+      const { data: inspection, error } = await supabase
         .from('inspections')
         .insert({
           project_id: projectId,
@@ -117,7 +141,10 @@ export function InspectionFormWithContext({
           progress_at_inspection: progress,
           comments: fullComments || null,
           phase_id: context?.linkedPhase?.id || milestoneContext?.phaseId || null,
-        } as any);
+          payment_type: inspectionType, // Store inspection type
+        } as any)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -132,9 +159,33 @@ export function InspectionFormWithContext({
           .eq('id', milestoneContext.milestoneId);
       }
 
+      // Send notification if enabled
+      if (notifyHierarchy && inspection) {
+        try {
+          await NotificationService.createNotification({
+            recipient_id: inspectorId,
+            title: 'Nouvelle inspection créée',
+            message: `Inspection ${inspectionTypeLabel} programmée pour le ${format(date, 'dd/MM/yyyy')} - Projet: ${context?.project.title || projectId}`,
+            type: 'inspection_scheduled',
+            related_id: inspection.id,
+            metadata: {
+              project_id: projectId,
+              inspection_type: inspectionType,
+              inspection_date: format(date, 'yyyy-MM-dd'),
+              progress: progress,
+              milestone_id: milestoneContext?.milestoneId
+            }
+          });
+        } catch (notifError) {
+          console.warn('Failed to send notification:', notifError);
+        }
+      }
+
       toast({
         title: "Inspection créée",
-        description: "L'inspection a été enregistrée avec succès",
+        description: notifyHierarchy 
+          ? "L'inspection a été enregistrée et une notification a été envoyée" 
+          : "L'inspection a été enregistrée avec succès",
       });
 
       onClose();
@@ -151,11 +202,17 @@ export function InspectionFormWithContext({
     }
   };
 
-  const inspectionTypeLabels = {
+  // Map context inspection types for display
+  const inspectionTypeLabelsMap: Record<string, string> = {
     technical: 'Technique',
     quality: 'Qualité',
     safety: 'Sécurité',
-    regulatory: 'Réglementaire'
+    regulatory: 'Réglementaire',
+    progress: 'Avancement',
+    compliance: 'Conformité',
+    materials: 'Matériaux',
+    structural: 'Structurel',
+    final: 'Réception'
   };
 
   return (
@@ -211,7 +268,7 @@ export function InspectionFormWithContext({
                       <div>
                         <span className="text-muted-foreground">Type:</span>
                         <Badge variant="outline" className="ml-1">
-                          {inspectionTypeLabels[context.inspectionType]}
+                          {inspectionTypeLabelsMap[context.inspectionType] || context.inspectionType}
                         </Badge>
                       </div>
                     )}
@@ -272,6 +329,23 @@ export function InspectionFormWithContext({
                 placeholder="Sélectionner un inspecteur"
               />
 
+              {/* Inspection Type */}
+              <div>
+                <Label htmlFor="inspectionType">Type d'inspection</Label>
+                <Select value={inspectionType} onValueChange={setInspectionType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INSPECTION_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Status */}
               <div>
                 <Label htmlFor="status">Statut</Label>
@@ -281,6 +355,7 @@ export function InspectionFormWithContext({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="scheduled">Programmée</SelectItem>
                     <SelectItem value="approved">Approuvé</SelectItem>
                     <SelectItem value="requires_changes">Modifications requises</SelectItem>
                     <SelectItem value="rejected">Rejeté</SelectItem>
@@ -367,6 +442,22 @@ export function InspectionFormWithContext({
                   placeholder="Observations et remarques..."
                   rows={3}
                 />
+              </div>
+
+              {/* Notify option */}
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="notifyHierarchy"
+                  checked={notifyHierarchy}
+                  onCheckedChange={(checked) => setNotifyHierarchy(checked === true)}
+                />
+                <label
+                  htmlFor="notifyHierarchy"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                >
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  Envoyer une notification à l'inspecteur
+                </label>
               </div>
             </div>
 

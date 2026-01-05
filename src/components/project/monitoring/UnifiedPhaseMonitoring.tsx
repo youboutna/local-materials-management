@@ -35,14 +35,10 @@ import {
   Clock,
   Calendar,
   ExternalLink,
-  Bell,
-  Play,
-  CalendarPlus,
   ArrowRight,
   Layers,
   GitBranch,
   List,
-  BarChart3,
   ShieldCheck,
   Package,
   Flag,
@@ -270,55 +266,6 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
 
   const handleNavigateToPayment = () => {
     navigate('/payment-control');
-    setActionDialog({ open: false, milestone: null, action: null });
-  };
-
-  const handleScheduleInspection = () => {
-    const milestone = actionDialog.milestone;
-    if (milestone) {
-      toast({
-        title: "Programmation d'inspection",
-        description: `Une notification sera envoyée pour programmer l'inspection du jalon "${milestone.title}".`,
-      });
-      // Navigate to inspections with pre-filled context
-      navigate(`/inspection-monitoring?schedule=true&milestone=${milestone.id}&phase=${phaseId}`);
-    }
-    setActionDialog({ open: false, milestone: null, action: null });
-  };
-
-  const handleExecuteInspection = () => {
-    const milestone = actionDialog.milestone;
-    if (milestone) {
-      toast({
-        title: "Exécution d'inspection",
-        description: `Redirection vers le service d'inspection pour exécuter l'inspection programmée.`,
-      });
-      navigate(`/inspection-monitoring?execute=true&phase=${phaseId}`);
-    }
-    setActionDialog({ open: false, milestone: null, action: null });
-  };
-
-  const handleSchedulePayment = () => {
-    const milestone = actionDialog.milestone;
-    if (milestone) {
-      toast({
-        title: "Programmation de paiement",
-        description: `Une notification sera envoyée pour programmer le paiement du jalon "${milestone.title}".`,
-      });
-      navigate(`/payment-control?schedule=true&milestone=${milestone.id}&phase=${phaseId}`);
-    }
-    setActionDialog({ open: false, milestone: null, action: null });
-  };
-
-  const handleExecutePayment = () => {
-    const milestone = actionDialog.milestone;
-    if (milestone) {
-      toast({
-        title: "Traitement de paiement",
-        description: `Redirection vers le contrôle des paiements.`,
-      });
-      navigate(`/payment-control?execute=true&phase=${phaseId}`);
-    }
     setActionDialog({ open: false, milestone: null, action: null });
   };
 
@@ -610,32 +557,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <Card className="shadow-md">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2">
                     <Target className="h-5 w-5 text-primary" />
                     Points de contrôle actionnables
                   </CardTitle>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => navigate('/inspection-monitoring')}
-                    >
-                      <ClipboardCheck className="h-4 w-4" />
-                      Service Inspections
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={() => navigate('/payment-control')}
-                    >
-                      <DollarSign className="h-4 w-4" />
-                      Contrôle Paiements
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -759,21 +684,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           {activeSection === 'inspections' && (
             <Card className="shadow-md">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5 text-orange-600" />
-                    Inspections de la phase
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-2"
-                    onClick={() => navigate('/inspection-monitoring')}
-                  >
-                    Voir le service complet
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5 text-orange-600" />
+                  Inspections de la phase
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <PhaseInspections phaseId={phaseId} projectId={projectId} />
@@ -784,21 +698,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           {activeSection === 'payments' && (
             <Card className="shadow-md">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    Paiements de la phase
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-2"
-                    onClick={() => navigate('/payment-control')}
-                  >
-                    Voir le contrôle paiements
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Paiements de la phase
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <PhasePayments phaseId={phaseId} projectId={projectId} />
@@ -964,38 +867,6 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-4"
-                  onClick={handleScheduleInspection}
-                >
-                  <div className="p-2.5 bg-blue-100 rounded-xl">
-                    <CalendarPlus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Programmer une inspection</p>
-                    <p className="text-xs text-muted-foreground">
-                      Envoyer une notification pour planifier l'inspection
-                    </p>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-4"
-                  onClick={handleExecuteInspection}
-                >
-                  <div className="p-2.5 bg-orange-100 rounded-xl">
-                    <Play className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Exécuter une inspection programmée</p>
-                    <p className="text-xs text-muted-foreground">
-                      Aller au service inspection pour exécuter
-                    </p>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-4"
                   onClick={handleNavigateToInspection}
                 >
                   <div className="p-2.5 bg-gray-100 rounded-xl">
@@ -1004,7 +875,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   <div className="text-left">
                     <p className="font-semibold">Accéder au service inspection</p>
                     <p className="text-xs text-muted-foreground">
-                      Navigation vers /inspection-monitoring
+                      Programmer ou exécuter via /inspection-monitoring
                     </p>
                   </div>
                 </Button>
@@ -1041,38 +912,6 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-4"
-                  onClick={handleSchedulePayment}
-                >
-                  <div className="p-2.5 bg-blue-100 rounded-xl">
-                    <Bell className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Programmer un paiement</p>
-                    <p className="text-xs text-muted-foreground">
-                      Envoyer une notification pour planifier le paiement
-                    </p>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-4"
-                  onClick={handleExecutePayment}
-                >
-                  <div className="p-2.5 bg-green-100 rounded-xl">
-                    <Play className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold">Effectuer le paiement</p>
-                    <p className="text-xs text-muted-foreground">
-                      Aller au contrôle des paiements
-                    </p>
-                  </div>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-4"
                   onClick={handleNavigateToPayment}
                 >
                   <div className="p-2.5 bg-gray-100 rounded-xl">
@@ -1081,7 +920,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   <div className="text-left">
                     <p className="font-semibold">Accéder au contrôle paiements</p>
                     <p className="text-xs text-muted-foreground">
-                      Navigation vers /payment-control
+                      Valider et exécuter via /payment-control
                     </p>
                   </div>
                 </Button>
