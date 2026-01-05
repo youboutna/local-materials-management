@@ -82,6 +82,41 @@ export class PhaseService {
    * Convert UI PhaseData to Database format
    */
   static mapPhaseToDatabase(phase: PhaseData, projectId: string): Omit<DatabasePhase, 'id' | 'created_at' | 'updated_at'> {
+    // Convert customStages from ConstructionPhaseManager format to steps format for PhaseDTO
+    let customPhaseData: any = null;
+    
+    if (phase.customPhase) {
+      const customStages = phase.customPhase.customStages || [];
+      
+      // Convert customStages to steps format expected by EntityToDTOMapper
+      const steps = customStages.map((stage: any, stageIndex: number) => ({
+        id: stage.id || crypto.randomUUID(),
+        name: stage.name,
+        description: stage.description || '',
+        status: stage.status || 'pending',
+        progress: stage.progress || 0,
+        estimated_duration_days: stage.estimatedDurationDays || null,
+        order_index: stage.order || stageIndex,
+        tasks: (stage.tasks || []).map((task: any, taskIndex: number) => ({
+          id: task.id || crypto.randomUUID(),
+          name: task.name,
+          description: task.description || '',
+          status: task.status || 'pending',
+          progress: task.progress || 0,
+          estimated_duration_days: task.estimatedDurationDays || null,
+          order_index: taskIndex,
+          assigned_to: task.assignedTo || [],
+          requires_inspection: task.requiresInspection || false,
+          requires_engineer_approval: task.requiresEngineerApproval || false
+        }))
+      }));
+      
+      customPhaseData = {
+        ...phase.customPhase,
+        steps // Add the converted steps for PhaseDTO compatibility
+      };
+    }
+    
     return {
       project_id: projectId,
       phase_name: phase.title,
@@ -97,7 +132,7 @@ export class PhaseService {
       notes: phase.notes || null,
       construction_phase: phase.phase || null,
       construction_stage: phase.stage || null,
-      custom_phase_data: phase.customPhase ? JSON.stringify(phase.customPhase) : null,
+      custom_phase_data: customPhaseData ? JSON.stringify(customPhaseData) : null,
       materials: JSON.stringify(phase.materials || []),
       human_resources: JSON.stringify(phase.humanResources || []),
       suppliers: JSON.stringify(phase.suppliers || []),

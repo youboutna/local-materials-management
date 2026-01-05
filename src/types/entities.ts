@@ -56,9 +56,52 @@ export interface ProjectPhaseEntity {
 
 /**
  * Structure for custom_phase_data JSON column
+ * Supports both new 'steps' format and legacy 'customStages' format from ConstructionPhaseManager
  */
 export interface PhaseCustomData {
   steps?: PhaseStepData[];
+  // Legacy format from ConstructionPhaseManager
+  customStages?: CustomStageData[];
+  // Other fields from customPhase object
+  id?: string;
+  name?: string;
+  number?: number;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  status?: string;
+  progress?: number;
+  milestones?: any[];
+}
+
+/**
+ * Legacy custom stage format from ConstructionPhaseManager
+ */
+export interface CustomStageData {
+  id?: string;
+  name: string;
+  description?: string;
+  order?: number;
+  status?: string;
+  progress?: number;
+  estimatedDurationDays?: number;
+  tasks?: CustomTaskData[];
+}
+
+/**
+ * Legacy custom task format from ConstructionPhaseManager
+ */
+export interface CustomTaskData {
+  id?: string;
+  name: string;
+  description?: string;
+  estimatedDurationDays?: number;
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
+  status?: string;
+  progress?: number;
+  assignedTo?: string[];
 }
 
 export interface PhaseStepData {

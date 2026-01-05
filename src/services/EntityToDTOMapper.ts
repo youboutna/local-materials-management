@@ -246,10 +246,46 @@ export class EntityToDTOMapper {
 
   /**
    * Map ProjectPhaseEntity to PhaseDTO
+   * Supports multiple data sources: steps, customStages, or parsed from description
    */
   static phaseEntityToDTO(entity: ProjectPhaseEntity): PhaseDTO {
     const customData = entity.custom_phase_data || {};
-    const steps = (customData.steps || []).map(step => this.phaseStepDataToDTO(step));
+    
+    // Try to get steps from different sources
+    let steps: PhaseStepDTO[] = [];
+    
+    // Priority 1: Direct steps array in custom_phase_data
+    if (customData.steps && customData.steps.length > 0) {
+      steps = customData.steps.map((step: PhaseStepData) => this.phaseStepDataToDTO(step));
+    }
+    // Priority 2: customStages array (from ConstructionPhaseManager format)
+    else if (customData.customStages && customData.customStages.length > 0) {
+      steps = customData.customStages.map((stage: any, stageIndex: number) => ({
+        id: stage.id || `stage-${stageIndex}`,
+        name: stage.name,
+        description: stage.description || '',
+        status: (stage.status as PhaseStatus) || 'pending',
+        progress: stage.progress || 0,
+        estimated_duration_days: stage.estimatedDurationDays || null,
+        order_index: stage.order || stageIndex,
+        tasks: (stage.tasks || []).map((task: any, taskIndex: number) => ({
+          id: task.id || `task-${stageIndex}-${taskIndex}`,
+          name: task.name,
+          description: task.description || '',
+          status: (task.status as PhaseStatus) || 'pending',
+          progress: task.progress || 0,
+          estimated_duration_days: task.estimatedDurationDays || null,
+          order_index: taskIndex,
+          assigned_to: task.assignedTo || [],
+          dependencies: [],
+          weight: 1
+        }))
+      }));
+    }
+    // Priority 3: Parse from description (legacy data format)
+    else if (entity.description && entity.description.includes('Étapes:')) {
+      steps = this.parseStepsFromDescription(entity.description);
+    }
     
     return {
       id: entity.id,
@@ -277,12 +313,79 @@ export class EntityToDTOMapper {
   }
 
   /**
+   * Parse steps from description text (legacy format support)
+   * Format: **StepName**\n• Task1\n• Task2
+   */
+  static parseStepsFromDescription(description: string): PhaseStepDTO[] {
+    const steps: PhaseStepDTO[] = [];
+    
+    // Extract the part after "Étapes:"
+    const stepsSection = description.split('Étapes:')[1]?.split('Jalons clés:')[0] || '';
+    if (!stepsSection.trim()) return steps;
+    
+    // Split by step headers (marked with **)
+    const stepMatches = stepsSection.split(/\*\*([^*]+)\*\*/);
+    
+    let stepIndex = 0;
+    for (let i = 1; i < stepMatches.length; i += 2) {
+      const stepName = stepMatches[i]?.trim();
+      const tasksText = stepMatches[i + 1] || '';
+      
+      if (!stepName) continue;
+      
+      // Parse tasks (lines starting with •)
+      const tasks: PhaseTaskDTO[] = [];
+      const taskLines = tasksText.split('\n').filter(line => line.trim().startsWith('•'));
+      
+      taskLines.forEach((line, taskIndex) => {
+        const taskName = line.replace('•', '').trim();
+        if (taskName) {
+          tasks.push({
+            id: `parsed-task-${stepIndex}-${taskIndex}`,
+            name: taskName,
+            description: '',
+            status: 'pending',
+            progress: 0,
+            order_index: taskIndex,
+            assigned_to: [],
+            dependencies: [],
+            weight: 1
+          });
+        }
+      });
+      
+      steps.push({
+        id: `parsed-step-${stepIndex}`,
+        name: stepName,
+        description: '',
+        status: 'pending',
+        progress: 0,
+        order_index: stepIndex,
+        tasks
+      });
+      
+      stepIndex++;
+    }
+    
+    return steps;
+  }
+
+  /**
    * Map ProjectPhaseEntity to PhaseSummaryDTO (without nested data)
    */
   static phaseEntityToSummaryDTO(entity: ProjectPhaseEntity): PhaseSummaryDTO {
     const customData = entity.custom_phase_data || {};
-    const steps = customData.steps || [];
-    const allTasks = steps.flatMap(s => s.tasks || []);
+    
+    // Try multiple sources for steps count
+    let steps: any[] = customData.steps || [];
+    if (steps.length === 0 && customData.customStages) {
+      steps = customData.customStages;
+    }
+    if (steps.length === 0 && entity.description?.includes('Étapes:')) {
+      steps = this.parseStepsFromDescription(entity.description);
+    }
+    
+    const allTasks = steps.flatMap((s: any) => s.tasks || []);
     const completedTasks = allTasks.filter(t => t.status === 'completed').length;
 
     return {
