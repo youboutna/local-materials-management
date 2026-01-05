@@ -61,7 +61,7 @@ import { EvaluationAccessPortal } from "./components/tenders/EvaluationAccessPor
 import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissionDashboard";
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
-import PhaseDetailsPage from "./components/project/PhaseDetailsPage";
+import PhaseDetailByDTO from "./pages/PhaseDetailByDTO";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,7 +181,7 @@ function App() {
                       />
                       <Route
                         path="/projects/:projectId/phases/:phaseId"
-                        element={<PhaseDetailsPage />}
+                        element={<PhaseDetailByDTO />}
                       />
                       <Route
                         path="/projects/:id/edit/phases/detail"
