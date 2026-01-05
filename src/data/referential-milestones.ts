@@ -265,7 +265,7 @@ export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
       type: 'deliverable',
       priority: 'critical',
       tags: ['plomberie', 'électricité', 'réseaux'],
-      predecessor_ids: ['so_1'],
+      predecessor_ids: ['so_1', 'elec_dist_1'],
       deliverables: ['PV passage réseaux', 'Plans de récolement']
     },
     {
@@ -323,15 +323,27 @@ export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
     },
     {
       id: 'fin_3',
+      name: 'Appareillages électriques terminés',
+      description: 'Checkpoint: Prises, interrupteurs et commandes installés',
+      relative_offset_days: 18,
+      weight: 0.25,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'high',
+      tags: ['appareillages', 'finitions'],
+      predecessor_ids: ['fin_1', 'elec_dist_3']
+    },
+    {
+      id: 'fin_4',
       name: 'Nettoyage fin de chantier',
       description: 'Checkpoint: Chantier nettoyé et prêt pour pré-réception',
       relative_offset_days: 25,
-      weight: 0.45,
+      weight: 0.2,
       is_critical: true,
       type: 'checkpoint',
       priority: 'critical',
       tags: ['nettoyage', 'préparation'],
-      predecessor_ids: ['fin_2']
+      predecessor_ids: ['fin_2', 'fin_3']
     }
   ],
 
@@ -347,7 +359,8 @@ export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
       type: 'checkpoint',
       priority: 'critical',
       tags: ['pré-réception', 'réserves'],
-      deliverables: ['Liste des réserves', 'Planning levée réserves']
+      predecessor_ids: ['elec_test_3'],
+      deliverables: ['Liste des réserves', 'Planning levée réserves', 'Copie attestation Consuel']
     },
     {
       id: 'rec_2',
@@ -523,6 +536,302 @@ export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
       predecessor_ids: ['ass_3'],
       approval_requirements: ['Rapport inspection caméra', 'Tests étanchéité conformes']
     }
+  ],
+
+  // ============= RÉSEAU ÉLECTRIQUE - ALIMENTATION =============
+  'reseau_electrique_alimentation': [
+    {
+      id: 'elec_alim_0',
+      name: 'Dossier technique électrique validé',
+      description: 'Validation des plans et schémas électriques par bureau de contrôle',
+      relative_offset_days: 0,
+      weight: 0.1,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['plans', 'schémas', 'validation'],
+      deliverables: ['Plans électriques', 'Schémas unifilaires', 'Calculs de section', 'Avis bureau de contrôle']
+    },
+    {
+      id: 'elec_alim_1',
+      name: 'Demande de raccordement déposée',
+      description: 'Dossier complet déposé auprès du gestionnaire de réseau (ENEDIS, etc.)',
+      relative_offset_days: 10,
+      weight: 0.2,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['raccordement', 'dossier', 'gestionnaire'],
+      predecessor_ids: ['elec_alim_0'],
+      deliverables: ['Dossier de raccordement', 'Accusé réception']
+    },
+    {
+      id: 'elec_alim_2',
+      name: 'Devis de raccordement reçu',
+      description: 'Proposition technique et financière du gestionnaire de réseau validée',
+      relative_offset_days: 30,
+      weight: 0.15,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['devis', 'proposition', 'validation'],
+      predecessor_ids: ['elec_alim_1'],
+      deliverables: ['Devis gestionnaire', 'Planning travaux raccordement']
+    },
+    {
+      id: 'elec_alim_3',
+      name: 'Travaux de raccordement BT/HT terminés',
+      description: 'Installation des câbles d\'alimentation depuis le réseau public',
+      relative_offset_days: 60,
+      weight: 0.3,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['câbles', 'alimentation', 'tranchées'],
+      predecessor_ids: ['elec_alim_2'],
+      deliverables: ['PV de pose', 'Plan de récolement', 'Mesures de terre']
+    },
+    {
+      id: 'elec_alim_4',
+      name: 'Poste de transformation installé',
+      description: 'Poste HTA/BT ou transformateur installé et testé',
+      relative_offset_days: 75,
+      weight: 0.25,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['poste', 'transfo', 'HTA/BT'],
+      predecessor_ids: ['elec_alim_3'],
+      deliverables: ['Fiche de vie transformateur', 'Tests diélectriques', 'Rapport de mise en service']
+    }
+  ],
+
+  // ============= RÉSEAU ÉLECTRIQUE - DISTRIBUTION =============
+  'reseau_electrique_distribution': [
+    {
+      id: 'elec_dist_0',
+      name: 'Tableaux électriques installés',
+      description: 'Tableaux divisionnaires et général posés et fixés',
+      relative_offset_days: 0,
+      weight: 0.2,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'high',
+      tags: ['tableaux', 'divisionnaires', 'général'],
+      deliverables: ['Plans d\'implantation', 'PV d\'installation']
+    },
+    {
+      id: 'elec_dist_1',
+      name: 'Gaines et chemins de câbles posés',
+      description: 'Infrastructure de distribution (goulottes, chemins, fourreaux) installée',
+      relative_offset_days: 15,
+      weight: 0.25,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'high',
+      tags: ['gaines', 'chemins', 'fourreaux'],
+      predecessor_ids: ['elec_dist_0'],
+      deliverables: ['Plan de récolement réseaux']
+    },
+    {
+      id: 'elec_dist_2',
+      name: 'Tirage des câbles terminé',
+      description: 'Câblage complet de tous les circuits',
+      relative_offset_days: 30,
+      weight: 0.3,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['câblage', 'circuits', 'tirage'],
+      predecessor_ids: ['elec_dist_1'],
+      deliverables: ['PV tirage câbles', 'Marquage circuits']
+    },
+    {
+      id: 'elec_dist_3',
+      name: 'Raccordement aux appareillages',
+      description: 'Connexion aux prises, interrupteurs, luminaires et équipements',
+      relative_offset_days: 40,
+      weight: 0.25,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'high',
+      tags: ['raccordement', 'prises', 'interrupteurs'],
+      predecessor_ids: ['elec_dist_2'],
+      deliverables: ['Tests de continuité', 'Marquage des phases']
+    }
+  ],
+
+  // ============= RÉSEAU ÉLECTRIQUE - ESSAIS ET MISE EN SERVICE =============
+  'reseau_electrique_essais': [
+    {
+      id: 'elec_test_0',
+      name: 'Mesures de terre et isolement',
+      description: 'Contrôles réglementaires des installations',
+      relative_offset_days: 0,
+      weight: 0.25,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'critical',
+      tags: ['terre', 'isolement', 'mesures'],
+      deliverables: [
+        'Rapport de mesure de terre',
+        'Contrôle d\'isolement',
+        'Mesure de continuité'
+      ]
+    },
+    {
+      id: 'elec_test_1',
+      name: 'Tests de fonctionnement',
+      description: 'Vérification du bon fonctionnement de tous les circuits',
+      relative_offset_days: 5,
+      weight: 0.3,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'critical',
+      tags: ['tests', 'fonctionnement', 'circuits'],
+      predecessor_ids: ['elec_test_0'],
+      deliverables: [
+        'Protocole de test',
+        'Liste des anomalies',
+        'Rapport de mise sous tension'
+      ]
+    },
+    {
+      id: 'elec_test_2',
+      name: 'Essais de sécurité',
+      description: 'Vérification des dispositifs de protection',
+      relative_offset_days: 8,
+      weight: 0.25,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'critical',
+      tags: ['sécurité', 'disjoncteurs', 'DDR'],
+      predecessor_ids: ['elec_test_1'],
+      deliverables: [
+        'Test différentiels',
+        'Calibrage disjoncteurs',
+        'Vérification sectionneurs'
+      ]
+    },
+    {
+      id: 'elec_test_3',
+      name: 'Consuel obtenu',
+      description: 'Attestation de conformité électrique délivrée',
+      relative_offset_days: 12,
+      weight: 0.2,
+      is_critical: true,
+      type: 'gate',
+      priority: 'critical',
+      tags: ['consuel', 'conformité', 'attestation', 'gate'],
+      predecessor_ids: ['elec_test_2'],
+      approval_requirements: [
+        'Visite contrôleur',
+        'Dossier technique complet',
+        'Rapports de mesures conformes'
+      ],
+      deliverables: ['Attestation Consuel', 'Certificat de conformité']
+    }
+  ],
+
+  // ============= RÉSEAU ÉLECTRIQUE - ÉCLAIRAGE =============
+  'reseau_eclairage': [
+    {
+      id: 'ecl_0',
+      name: 'Luminaires installés',
+      description: 'Pose de tous les luminaires intérieurs et extérieurs',
+      relative_offset_days: 0,
+      weight: 0.4,
+      is_critical: false,
+      type: 'deliverable',
+      priority: 'normal',
+      tags: ['luminaires', 'éclairage', 'pose'],
+      deliverables: ['Plan d\'implantation', 'Fiches techniques']
+    },
+    {
+      id: 'ecl_1',
+      name: 'Système de gestion installé',
+      description: 'Installation des automates et systèmes de gestion d\'éclairage',
+      relative_offset_days: 10,
+      weight: 0.3,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'high',
+      tags: ['gestion', 'automation', 'DALI'],
+      predecessor_ids: ['ecl_0'],
+      deliverables: ['Programmation automate', 'Notice de fonctionnement']
+    },
+    {
+      id: 'ecl_2',
+      name: 'Tests d\'éclairement',
+      description: 'Vérification des niveaux d\'éclairement conformes aux normes',
+      relative_offset_days: 15,
+      weight: 0.3,
+      is_critical: false,
+      type: 'checkpoint',
+      priority: 'normal',
+      tags: ['éclairement', 'mesures', 'normes'],
+      predecessor_ids: ['ecl_1'],
+      deliverables: ['Rapport d\'éclairement', 'Vérification normes EN 12464']
+    }
+  ],
+
+  // ============= RÉSEAU ÉLECTRIQUE - COURANT FAIBLE =============
+  'courant_faible': [
+    {
+      id: 'cf_0',
+      name: 'Infrastructure courant faible installée',
+      description: 'Pose des baies, chemins de câbles et fourreaux dédiés',
+      relative_offset_days: 0,
+      weight: 0.2,
+      is_critical: false,
+      type: 'deliverable',
+      priority: 'normal',
+      tags: ['baies', 'chemins', 'infrastructure'],
+      deliverables: ['Plan d\'implantation']
+    },
+    {
+      id: 'cf_1',
+      name: 'Câblage télécom/data terminé',
+      description: 'Tirage et connexion des câbles réseau et téléphoniques',
+      relative_offset_days: 20,
+      weight: 0.3,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'high',
+      tags: ['réseau', 'télécom', 'fibre'],
+      predecessor_ids: ['cf_0'],
+      deliverables: ['Plan de brassage', 'Certification câbles']
+    },
+    {
+      id: 'cf_2',
+      name: 'Système de sécurité installé',
+      description: 'Installation alarme, contrôle d\'accès et vidéosurveillance',
+      relative_offset_days: 30,
+      weight: 0.25,
+      is_critical: true,
+      type: 'deliverable',
+      priority: 'critical',
+      tags: ['alarme', 'contrôle accès', 'vidéo'],
+      predecessor_ids: ['cf_1'],
+      deliverables: ['Programmation système', 'Codes d\'accès']
+    },
+    {
+      id: 'cf_3',
+      name: 'Tests et certification',
+      description: 'Validation des performances des réseaux courant faible',
+      relative_offset_days: 35,
+      weight: 0.25,
+      is_critical: true,
+      type: 'checkpoint',
+      priority: 'high',
+      tags: ['tests', 'certification', 'performance'],
+      predecessor_ids: ['cf_2'],
+      deliverables: [
+        'Rapport de tests réseaux',
+        'Certification fibre optique',
+        'Rapport de couverture WiFi'
+      ]
+    }
   ]
 };
 
@@ -558,3 +867,14 @@ export function getPhaseStatistics(constructionPhase: string): {
     deliverables: templates.filter(t => t.type === 'deliverable').length
   };
 }
+
+/**
+ * Electrical phases for easy reference
+ */
+export const ELECTRICAL_PHASES = [
+  'reseau_electrique_alimentation',
+  'reseau_electrique_distribution', 
+  'reseau_electrique_essais',
+  'reseau_eclairage',
+  'courant_faible'
+];
