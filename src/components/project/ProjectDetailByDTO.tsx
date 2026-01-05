@@ -8,6 +8,7 @@ import TeamOverview from "@/components/project/TeamOverview";
 import { UnifiedMilestoneManager } from "@/components/project/milestones";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
+import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -940,12 +941,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </Card>
           </div>
 
-          {/* Project Milestones Summary */}
-          <UnifiedMilestoneManager 
+          {/* Actionable Project Milestones */}
+          <ActionableProjectMilestones
             projectId={projectId!}
-            compact={true}
-            defaultView="timeline"
-            showNavigation={false}
+            maxItems={6}
+            showHeader={true}
             onMilestoneClick={(milestoneId, phaseId) => {
               if (phaseId) {
                 navigate(`/projects/${projectId}/phases/${phaseId}`);
