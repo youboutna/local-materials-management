@@ -15,7 +15,7 @@ import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
-import { PhaseMilestonesSection } from '@/components/project/milestones';
+import { UnifiedMilestoneManager } from '@/components/project/milestones';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
 import { 
   ArrowLeft, 
@@ -330,12 +330,14 @@ const PhaseDetailByDTO: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="milestones">
-          <PhaseMilestonesSection
+          <UnifiedMilestoneManager
             projectId={projectId!}
             phaseId={phaseId!}
             phaseName={phase.phase || phase.phase_name || 'Phase'}
-            constructionPhase={phase.construction_phase || phase.constructionPhase}
-            phaseStartDate={phase.startDate || phase.start_date}
+            defaultView="timeline"
+            onMilestoneClick={(milestoneId) => {
+              console.log('Milestone clicked:', milestoneId);
+            }}
           />
         </TabsContent>
         
