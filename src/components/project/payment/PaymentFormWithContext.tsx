@@ -1,6 +1,8 @@
 /**
  * PaymentFormWithContext - Formulaire de paiement enrichi avec contexte
  * Pré-remplit les champs grâce au CheckpointActionContextService
+ * Harmonisé avec EnhancedPaymentBlockingInterface
+ * Envoie des notifications après création
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { DollarSign, Info, Loader2, Building, CreditCard, Smartphone, Banknote, AlertTriangle, CheckCircle } from 'lucide-react';
+import { DollarSign, Info, Loader2, Building, CreditCard, Smartphone, Banknote, AlertTriangle, CheckCircle, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { usePaymentActionContext } from '@/hooks/useCheckpointActionContext';
@@ -19,8 +21,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
+import { NotificationService } from '@/services/NotificationService';
 
 interface PaymentFormWithContextProps {
   projectId: string;
@@ -69,6 +73,7 @@ export function PaymentFormWithContext({
   const [mobileNumber, setMobileNumber] = useState('');
   const [mobileOperator, setMobileOperator] = useState('');
   const [receiverName, setReceiverName] = useState('');
+  const [notifyContractor, setNotifyContractor] = useState(true);
 
   // Pre-fill form when context is loaded
   useEffect(() => {
@@ -140,6 +145,36 @@ export function PaymentFormWithContext({
           mobileOperator: paymentMethod === 'mobile' ? mobileOperator : undefined,
           receiverName: ['cheque', 'especes'].includes(paymentMethod) ? receiverName : undefined,
         }
+      });
+
+      // Send notification if enabled
+      if (notifyContractor && contractorId) {
+        try {
+          const paymentMethodLabel = paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod;
+          await NotificationService.createNotification({
+            recipient_id: contractorId,
+            title: 'Paiement effectué',
+            message: `Un paiement de ${amount.toLocaleString()} MRU a été effectué par ${paymentMethodLabel} - Projet: ${context?.project.title || projectId}`,
+            type: 'payment_processed',
+            related_id: projectId,
+            metadata: {
+              project_id: projectId,
+              amount: amount,
+              payment_method: paymentMethod,
+              payment_date: paymentDate,
+              milestone_id: milestoneContext?.milestoneId
+            }
+          });
+        } catch (notifError) {
+          console.warn('Failed to send notification:', notifError);
+        }
+      }
+
+      toast({
+        title: "Paiement effectué",
+        description: notifyContractor 
+          ? `Paiement de ${amount.toLocaleString()} MRU enregistré. Notification envoyée.`
+          : `Paiement de ${amount.toLocaleString()} MRU enregistré avec succès.`,
       });
 
       onClose();
@@ -394,6 +429,22 @@ export function PaymentFormWithContext({
                   />
                 </div>
               )}
+
+              {/* Notify option */}
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="notifyContractor"
+                  checked={notifyContractor}
+                  onCheckedChange={(checked) => setNotifyContractor(checked === true)}
+                />
+                <label
+                  htmlFor="notifyContractor"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                >
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  Envoyer une notification au contractant
+                </label>
+              </div>
             </div>
 
             <DialogFooter>
