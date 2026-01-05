@@ -538,7 +538,7 @@ export class CheckpointActionContextService {
       .eq('project_id', projectId)
       .order('payment_date', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (payment) {
       return {
