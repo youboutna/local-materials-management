@@ -302,10 +302,10 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                       Déclenchement demande de paiement (≥{SYNC_THRESHOLDS.PAYMENT_TRIGGER}%)
                     </li>
                   )}
-                  {parseInt(newProgress) >= SYNC_THRESHOLDS.GUARANTEE_RELEASE && (
+                  {parseInt(newProgress) >= SYNC_THRESHOLDS.PHASE_RELEASE && (
                     <li className="flex items-center gap-1">
                       <Shield className="h-3 w-3" />
-                      Demande mainlevée garanties bancaires (100%)
+                      Demande mainlevée garanties/assurances (100%)
                     </li>
                   )}
                 </ul>
@@ -342,16 +342,16 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                     <Badge variant="outline">Jalons</Badge>
                     <span>{syncResult.milestonesUpdated} mis à jour</span>
                   </div>
-                  {syncResult.guaranteesReleased > 0 && (
+                  {(syncResult.phaseGuaranteesReleased > 0 || syncResult.projectGuaranteesReleased > 0) && (
                     <div className="flex items-center gap-2 text-green-700">
                       <Shield className="h-4 w-4" />
-                      <span>{syncResult.guaranteesReleased} garantie(s) - mainlevée</span>
+                      <span>{syncResult.phaseGuaranteesReleased + syncResult.projectGuaranteesReleased} garantie(s) - mainlevée</span>
                     </div>
                   )}
-                  {syncResult.insurancesReleased > 0 && (
+                  {(syncResult.phaseInsurancesReleased > 0 || syncResult.projectInsurancesReleased > 0) && (
                     <div className="flex items-center gap-2 text-green-700">
                       <FileText className="h-4 w-4" />
-                      <span>{syncResult.insurancesReleased} assurance(s) - libérée(s)</span>
+                      <span>{syncResult.phaseInsurancesReleased + syncResult.projectInsurancesReleased} assurance(s) - libérée(s)</span>
                     </div>
                   )}
                   {syncResult.paymentTriggered && (
