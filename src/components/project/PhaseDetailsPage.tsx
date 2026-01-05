@@ -56,7 +56,8 @@ import PhasePayments from "./PhasePayments";
 import PhaseInspections from "./PhaseInspections";
 import PhaseTasks from "./PhaseTasks";
 import PhaseCompliance from "./PhaseCompliance";
-import PhaseMilestones from "./PhaseMilestones";
+import UnifiedMilestoneManager from "./milestones/UnifiedMilestoneManager";
+import PhaseMonitoringDashboard from "./monitoring/PhaseMonitoringDashboard";
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -378,14 +379,16 @@ const PhaseDetailsPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="steps">Étapes</TabsTrigger>
           <TabsTrigger value="metrics">Métriques</TabsTrigger>
           <TabsTrigger value="resources">Ressources</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="monitoring">Suivi</TabsTrigger>
-          <TabsTrigger value="advanced">Avancé</TabsTrigger>
+          <TabsTrigger value="monitoring" className="flex items-center gap-1">
+            <Target className="h-4 w-4" />
+            Suivi & Jalons
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -633,21 +636,28 @@ const PhaseDetailsPage: React.FC = () => {
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        {/* Monitoring Tab */}
-        <TabsContent value="monitoring">
-          <div className="space-y-6">
-            <PhaseTasks phaseId={phaseId!} projectId={projectId!} />
-            <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
-            <PhasePayments phaseId={phaseId!} projectId={projectId!} />
-          </div>
-        </TabsContent>
+        {/* Monitoring & Milestones Tab */}
+        <TabsContent value="monitoring" className="space-y-6">
+          {/* Unified Milestone Manager - Reference Model */}
+          <UnifiedMilestoneManager
+            projectId={projectId!}
+            phaseId={phaseId!}
+            phaseName={phase.phase_name || 'Phase'}
+            defaultView="timeline"
+            onMilestoneClick={(milestoneId) => {
+              console.log('Milestone clicked:', milestoneId);
+            }}
+          />
 
-        {/* Advanced Tab */}
-        <TabsContent value="advanced">
-          <div className="space-y-6">
-            <PhaseCompliance phaseId={phaseId!} projectId={projectId!} />
-            <PhaseMilestones phaseId={phaseId!} projectId={projectId!} />
-          </div>
+          {/* Phase Monitoring Dashboard */}
+          <PhaseMonitoringDashboard 
+            phaseId={phaseId!} 
+            projectId={projectId!}
+            phaseName={phase.phase_name || undefined}
+          />
+
+          {/* Compliance */}
+          <PhaseCompliance phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
       </Tabs>
 
