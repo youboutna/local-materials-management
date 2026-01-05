@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -17,62 +18,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import {
-  ArrowLeft,
-  Calendar,
-  DollarSign,
-  Package,
-  CheckCircle,
-  Clock,
   AlertTriangle,
-  Layers,
+  ArrowLeft,
   BarChart,
   Building,
-  Edit,
-  Download,
-  MapPin,
-  Target,
-  ListChecks,
-  GitBranch,
-  RefreshCw,
-  TrendingUp,
-  Users,
-  FileText,
+  Calendar,
+  CheckCircle,
+  ClipboardCheck,
+  Clock,
   CreditCard,
-  Shield,
+  DollarSign,
+  Download,
+  Edit,
+  FileText,
+  GitBranch,
   Info,
+  Layers,
+  ListChecks,
+  Package,
+  RefreshCw,
+  Shield,
+  Target,
+  TrendingUp,
+  Users
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Services and hooks
-import { usePhaseDetails, PhaseMetrics } from "@/hooks/usePhaseDetails";
-import { useQuery } from "@tanstack/react-query";
-import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
+import { usePhaseDetails } from "@/hooks/usePhaseDetails";
 import { MilestoneService } from "@/services/MilestoneService";
-import { validateCompletionReadiness, formatPendingCheckpoints, getCompletionBlockReasons } from "@/utils/completionValidation";
+import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
+import { getCompletionBlockReasons, validateCompletionReadiness } from "@/utils/completionValidation";
+import { useQuery } from "@tanstack/react-query";
 
 // Import existing components
-import PhaseMaterials from "./PhaseMaterials";
-import PhaseEmployees from "./PhaseEmployees";
-import PhaseDocuments from "./PhaseDocuments";
-import PhasePayments from "./PhasePayments";
-import PhaseInspections from "./PhaseInspections";
-import PhaseTasks from "./PhaseTasks";
 import PhaseCompliance from "./PhaseCompliance";
-import UnifiedPhaseMonitoring from "./monitoring/UnifiedPhaseMonitoring";
+import PhaseDocuments from "./PhaseDocuments";
+import PhaseEmployees from "./PhaseEmployees";
+import PhaseInspections from "./PhaseInspections";
+import PhaseMaterials from "./PhaseMaterials";
+import PhasePayments from "./PhasePayments";
+import PhaseTasks from "./PhaseTasks";
 import PhaseStepsManager from "./phase/PhaseStepsManager";
+
+// Import the new Unified Workflow Component
+import UnifiedPhaseWorkflow from "./workflow/UnifiedPhaseWorkflow";
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -384,7 +386,6 @@ const PhaseDetailsPage: React.FC = () => {
     return getReferentialInfo(phase.construction_phase);
   }, [phase?.construction_phase, getReferentialInfo]);
 
-
   // Initialize edit form when phase loads
   React.useEffect(() => {
     if (phase) {
@@ -513,7 +514,7 @@ const PhaseDetailsPage: React.FC = () => {
           <CardContent className="py-3">
             <div className="flex items-center gap-4">
               <GitBranch className="h-5 w-5 text-primary" />
-            <div>
+              <div>
                 <p className="text-sm font-medium">
                   Référentiel: {referentialInfo.referential.name?.fr || referentialInfo.referential.code}
                 </p>
@@ -535,7 +536,7 @@ const PhaseDetailsPage: React.FC = () => {
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="monitoring" className="flex items-center gap-1">
             <Target className="h-4 w-4" />
-            Suivi & Jalons
+            Workflow & Suivi
           </TabsTrigger>
         </TabsList>
 
@@ -893,7 +894,6 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-
         {/* Steps Tab - With Full Management */}
         <TabsContent value="steps">
           <Card className="border-0 shadow-lg overflow-hidden">
@@ -949,17 +949,83 @@ const PhaseDetailsPage: React.FC = () => {
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        {/* Monitoring & Milestones Tab - Unified View */}
+        {/* Workflow & Monitoring Tab - Unified View */}
         <TabsContent value="monitoring" className="space-y-6">
-          {/* Unified Phase Monitoring - Combines Dashboard + Milestones */}
-          <UnifiedPhaseMonitoring
+          {/* Unified Phase Workflow - Combines Dashboard + Milestones + Inspections */}
+          <UnifiedPhaseWorkflow
             projectId={projectId!}
             phaseId={phaseId!}
             phaseName={phase.phase_name || 'Phase'}
+            phaseProgress={phase.progress}
+            phaseBudget={phase.estimated_cost}
+            stages={phase.steps.map(step => ({
+              id: step.id,
+              name: step.name,
+              description: step.description,
+              status: step.status,
+              progress: step.progress
+            }))}
+            onPhasesUpdate={(updatedPhases) => {
+              // Handle phase updates if needed
+              console.log('Phases updated:', updatedPhases);
+            }}
+            onReferentialChange={(referentialId) => {
+              // Handle referential change if needed
+              console.log('Referential changed to:', referentialId);
+            }}
           />
 
-          {/* Compliance */}
-          <PhaseCompliance phaseId={phaseId!} projectId={projectId!} />
+          {/* Sous-tabs pour les vues détaillées */}
+          <Card className="border-0 shadow-md overflow-hidden">
+            <Tabs defaultValue="tasks" className="w-full">
+              <TabsList className="grid grid-cols-4 bg-muted/50 p-1 m-2 rounded-lg">
+                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <ListChecks className="h-4 w-4" />
+                  <span>Tâches</span>
+                </TabsTrigger>
+                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span>Inspections</span>
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Paiements</span>
+                </TabsTrigger>
+                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Shield className="h-4 w-4" />
+                  <span>Conformité</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tasks" className="p-6">
+                <PhaseTasks 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="inspections" className="p-6">
+                <PhaseInspections 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="payments" className="p-6">
+                <PhasePayments 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="compliance" className="p-6">
+                <PhaseCompliance 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+            </Tabs>
+          </Card>
         </TabsContent>
       </Tabs>
 
