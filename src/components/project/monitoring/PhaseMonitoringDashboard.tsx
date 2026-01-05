@@ -234,43 +234,42 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
         </CardContent>
       </Card>
 
-      {/* Milestone Checkpoint Actions - Replaced old filter with actionable checkpoints */}
-      {milestones.length > 0 && (
-        <MilestoneCheckpointActions
-          milestones={milestones}
-          projectId={projectId}
-          phaseId={phaseId}
-          onAddInspection={(milestoneId, title) => {
+      {/* Milestone Checkpoint Actions */}
+      <MilestoneCheckpointActions
+        milestones={milestones}
+        projectId={projectId}
+        phaseId={phaseId}
+        onAddInspection={(milestoneId, title) => {
+          toast({
+            title: "Inspection à créer",
+            description: `Créez une inspection pour le jalon "${title}"`,
+          });
+          setActiveTab('inspections');
+        }}
+        onAddPayment={(milestoneId, title) => {
+          toast({
+            title: "Paiement à enregistrer", 
+            description: `Enregistrez un paiement pour le jalon "${title}"`,
+          });
+          setActiveTab('payments');
+        }}
+        onMilestoneComplete={async (milestoneId) => {
+          try {
+            await MilestoneService.updateMilestone(milestoneId, { status: 'completed' });
+            queryClient.invalidateQueries({ queryKey: ['phase-milestones-monitoring'] });
             toast({
-              title: "Inspection à créer",
-              description: `Créez une inspection pour le jalon "${title}"`,
+              title: "Jalon terminé",
+              description: "Le jalon a été marqué comme terminé",
             });
-            setActiveTab('inspections');
-          }}
-          onAddPayment={(milestoneId, title) => {
+          } catch (error) {
             toast({
-              title: "Paiement à enregistrer", 
-              description: `Enregistrez un paiement pour le jalon "${title}"`,
+              title: "Erreur",
+              description: "Impossible de marquer le jalon comme terminé",
+              variant: "destructive",
             });
-            setActiveTab('payments');
-          }}
-          onMilestoneComplete={async (milestoneId) => {
-            try {
-              await MilestoneService.updateMilestone(milestoneId, { status: 'completed' });
-              toast({
-                title: "Jalon terminé",
-                description: "Le jalon a été marqué comme terminé",
-              });
-            } catch (error) {
-              toast({
-                title: "Erreur",
-                description: "Impossible de marquer le jalon comme terminé",
-                variant: "destructive",
-              });
-            }
-          }}
-        />
-      )}
+          }
+        }}
+      />
 
       {/* Tab Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
