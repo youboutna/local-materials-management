@@ -535,15 +535,31 @@ export function getSomelceAvailablePhases(): string[] {
 /**
  * Map SOMELEC referential phases to milestone phases
  */
-export const SOMELEC_PHASE_MAPPING = {
+export const SOMELEC_PHASE_MAPPING: Record<string, string> = {
   'PRE_FEASIBILITY': 'pre_faisabilite',
+  'PRE_FAIS': 'pre_faisabilite',
   'DESIGN_DAO': 'conception_dao',
+  'CONCEPTION_DAO': 'conception_dao',
+  'PREPARATION_MOBILISATION': 'preparation_mobilisation',
   'EXECUTION_GENIE_CIVIL': 'execution_genie_civil',
   'EXECUTION_RESEAU': 'execution_reseau',
   'ESSAIS_COMMISSIONING': 'essais_commissioning',
   'PROVISIONAL_ACCEPTANCE': 'reception_provisoire',
+  'RECEPTION_PROVISOIRE': 'reception_provisoire',
   'FINAL_ACCEPTANCE': 'reception_definitive',
-  'POST_PROJECT': 'suivi_post_projet'
+  'RECEPTION_DEFINITIVE': 'reception_definitive',
+  'POST_PROJECT': 'suivi_post_projet',
+  'SUIVI_POST_PROJET': 'suivi_post_projet',
+  // Additional mappings for referential phase codes
+  'etudes_prefaisabilite': 'pre_faisabilite',
+  'conception_dao': 'conception_dao',
+  'preparation_mobilisation': 'preparation_mobilisation',
+  'execution_gc': 'execution_genie_civil',
+  'execution_elec': 'execution_reseau',
+  'essais_mise_en_service': 'essais_commissioning',
+  'reception_provisoire': 'reception_provisoire',
+  'reception_definitive': 'reception_definitive',
+  'exploitation_maintenance': 'suivi_post_projet'
 };
 
 /**

@@ -99,5 +99,18 @@ export type { MultiLanguageLabel, ProjectReferential };
 /**
  * Re-export the ReferentialService
  */
-  export { ReferentialService, referentialService } from '@/services/ReferentialService';
+export { ReferentialService, referentialService } from '@/services/ReferentialService';
+
+/**
+ * Re-export milestone referential utilities
+ */
+export { getMilestoneTemplates, getAvailablePhases, REFERENTIAL_MILESTONES } from './milestones.referential';
+export { 
+  getSomelceMilestoneTemplates, 
+  getSomelceAvailablePhases, 
+  SOMELEC_PHASE_MAPPING, 
+  SOMELEC_ELECTRICAL_MILESTONES,
+  getCompleteReferential,
+  getReferentialType
+} from './milestones-elec.referential';
 

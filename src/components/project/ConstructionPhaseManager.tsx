@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Plus, 
   Edit, 
@@ -22,13 +23,18 @@ import {
   Building,
   Settings,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Flag,
+  Zap,
+  ClipboardCheck
 } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/types/project';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
 import { referentialService, ReferentialType } from '@/config/referentials';
+import { getPhaseGeneratorService, GeneratedPhaseData } from '@/services/PhaseGeneratorService';
+import { getMilestoneGeneratorService, GeneratedMilestoneDTO } from '@/services/MilestoneGeneratorService';
 
 // Define types for procurement phases and stages
 export type ProcurementPhase =
@@ -154,6 +160,15 @@ interface CustomPhase {
     id: string;
     name: string;
     order: number;
+    tasks?: Array<{
+      id: string;
+      name: string;
+      description?: string;
+      estimatedDurationDays: number;
+      requiresInspection?: boolean;
+      requiresEngineerApproval?: boolean;
+      status: string;
+    }>;
   }>;
   description?: string;
   startDate?: string;
@@ -162,6 +177,7 @@ interface CustomPhase {
   materials?: Array<{ materialId: string; quantity: number; name?: string }>;
   humanResources?: Array<{ roleId: string; quantity: number; role?: string }>;
   suppliers?: Array<{ supplierId: string; name?: string; contact?: string }>;
+  milestones?: GeneratedMilestoneDTO[];
   location?: string;
   status: 'not_started' | 'in_progress' | 'completed' | 'delayed';
   progress: number;
@@ -211,6 +227,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
   const [editingPhase, setEditingPhase] = useState<PhaseData | null>(null);
   const [phaseType, setPhaseType] = useState<'standard' | 'custom' | 'procurement'>('standard');
   const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(referentialType || null);
+  const [generateMilestones, setGenerateMilestones] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const phaseGeneratorService = getPhaseGeneratorService();
+  const milestoneGeneratorService = getMilestoneGeneratorService();
 
   // Authentication check - same as project forms
   const checkAuthenticationAndProceed = (action: () => void, actionName: string) => {
@@ -364,8 +385,8 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     }
   };
 
-  // Generate phases, steps and tasks from referential template
-  const handleGeneratePhasesFromReferential = () => {
+  // Generate phases, steps, tasks and milestones from referential template
+  const handleGeneratePhasesFromReferential = async () => {
     if (!selectedReferential) {
       toast({
         title: "Erreur",
@@ -375,133 +396,187 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       return;
     }
 
-    checkAuthenticationAndProceed(() => {
-      const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
+    checkAuthenticationAndProceed(async () => {
+      setIsGenerating(true);
       
-      if (referentialPhases.length === 0) {
-        toast({
-          title: "Aucune phase",
-          description: "Ce référentiel ne contient pas de phases configurées",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Generate phases with their steps and tasks as nested structure
-      const newPhases: PhaseData[] = [];
-      let phaseIndex = 0;
-      let cumulativeStartDays = 0;
-      
-      for (const refPhase of referentialPhases) {
-        // Check if this phase already exists
-        const phaseExists = phases.some(p => p.title === refPhase.label);
-        if (phaseExists) continue;
+      try {
+        // Get summary first
+        const summary = phaseGeneratorService.getGenerationSummary(selectedReferential);
         
-        // Calculate total duration for this phase based on steps/tasks
-        let phaseDuration = 0;
-        const stepsInfo: string[] = [];
+        if (summary.totalPhases === 0) {
+          toast({
+            title: "Aucune phase",
+            description: "Ce référentiel ne contient pas de phases configurées",
+            variant: "destructive",
+          });
+          setIsGenerating(false);
+          return;
+        }
+
+        const referentialPhases = referentialService.getPhasesForReferential(selectedReferential);
         
-        for (const step of refPhase.steps || []) {
-          let stepDuration = 0;
-          const taskLabels: string[] = [];
+        // Generate phases with their steps, tasks and milestones
+        const newPhases: PhaseData[] = [];
+        let phaseIndex = 0;
+        let cumulativeStartDays = 0;
+        let totalMilestones = 0;
+        
+        for (const refPhase of referentialPhases) {
+          // Check if this phase already exists
+          const phaseExists = phases.some(p => p.title === refPhase.label);
+          if (phaseExists) continue;
           
-          for (const task of step.tasks || []) {
-            stepDuration += task.estimatedDurationDays || 7;
-            taskLabels.push(`• ${task.label}`);
+          // Calculate total duration for this phase based on steps/tasks
+          let phaseDuration = 0;
+          const stepsInfo: string[] = [];
+          
+          for (const step of refPhase.steps || []) {
+            let stepDuration = 0;
+            const taskLabels: string[] = [];
+            
+            for (const task of step.tasks || []) {
+              stepDuration += task.estimatedDurationDays || 7;
+              taskLabels.push(`• ${task.label}`);
+            }
+            
+            if (stepDuration === 0) stepDuration = 14;
+            phaseDuration += stepDuration;
+            
+            stepsInfo.push(`**${step.label}**\n${taskLabels.join('\n')}`);
           }
           
-          if (stepDuration === 0) stepDuration = 14; // Default step duration
-          phaseDuration += stepDuration;
+          if (phaseDuration === 0) phaseDuration = 30;
           
-          stepsInfo.push(`**${step.label}**\n${taskLabels.join('\n')}`);
-        }
-        
-        if (phaseDuration === 0) phaseDuration = 30; // Default phase duration
-        
-        // Calculate dates based on cumulative duration
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() + cumulativeStartDays);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + phaseDuration);
-        
-        // Build description with steps and tasks
-        const description = refPhase.description 
-          ? `${refPhase.description}\n\n${stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : ''}`
-          : stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : '';
-        
-        // Create custom phase with stages from referential steps
-        const customStages = (refPhase.steps || []).map((step, stepIdx) => ({
-          id: `step-${Date.now()}-${phaseIndex}-${stepIdx}`,
-          name: step.label,
-          order: step.order || stepIdx + 1,
-          tasks: (step.tasks || []).map((task, taskIdx) => ({
-            id: `task-${Date.now()}-${phaseIndex}-${stepIdx}-${taskIdx}`,
-            name: task.label,
-            description: task.description || '',
-            estimatedDurationDays: task.estimatedDurationDays || 7,
-            requiresInspection: task.requiresInspection || false,
-            requiresEngineerApproval: task.requiresEngineerApproval || false,
-            status: 'not_started'
-          }))
-        }));
+          // Calculate dates based on cumulative duration
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() + cumulativeStartDays);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + phaseDuration);
+          
+          const phaseId = `ref-${Date.now()}-${phaseIndex}`;
+          
+          // Generate milestones for this phase if enabled
+          let phaseMilestones: GeneratedMilestoneDTO[] = [];
+          if (generateMilestones) {
+            phaseMilestones = milestoneGeneratorService.generateMilestonesForPhase({
+              referentialType: selectedReferential,
+              phaseCode: refPhase.code,
+              phaseStartDate: startDate.toISOString().split('T')[0],
+              projectId: projectId || 'temp',
+              phaseId
+            });
+            totalMilestones += phaseMilestones.length;
+          }
+          
+          // Build description with steps and milestones info
+          let description = refPhase.description 
+            ? `${refPhase.description}\n\n${stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : ''}`
+            : stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : '';
+          
+          if (phaseMilestones.length > 0) {
+            const milestoneInfo = phaseMilestones
+              .filter(m => m.priority === 'critical' || m.type === 'gate')
+              .map(m => `🎯 ${m.title} (${m.target_date})`)
+              .join('\n');
+            if (milestoneInfo) {
+              description += `\n\nJalons clés:\n${milestoneInfo}`;
+            }
+          }
+          
+          // Create custom phase with stages from referential steps
+          const customStages = (refPhase.steps || []).map((step, stepIdx) => ({
+            id: `step-${Date.now()}-${phaseIndex}-${stepIdx}`,
+            name: step.label,
+            order: step.order || stepIdx + 1,
+            tasks: (step.tasks || []).map((task, taskIdx) => ({
+              id: `task-${Date.now()}-${phaseIndex}-${stepIdx}-${taskIdx}`,
+              name: task.label,
+              description: task.description || '',
+              estimatedDurationDays: task.estimatedDurationDays || 7,
+              requiresInspection: task.requiresInspection || false,
+              requiresEngineerApproval: task.requiresEngineerApproval || false,
+              status: 'not_started'
+            }))
+          }));
 
-        const newPhase: PhaseData = {
-          id: `ref-${Date.now()}-${phaseIndex}`,
-          title: refPhase.label,
-          description: description.trim(),
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-          estimatedDuration: phaseDuration,
-          status: 'not_started' as const,
-          budget: Math.floor(projectBudget / referentialPhases.length),
-          actualCost: 0,
-          progress: 0,
-          materials: [],
-          humanResources: [],
-          suppliers: [],
-          location: '',
-          notes: `Référentiel: ${selectedReferential}\nCode phase: ${refPhase.code}`,
-          customPhase: {
-            id: `custom-${Date.now()}-${phaseIndex}`,
-            name: refPhase.label,
-            number: refPhase.order || phaseIndex + 1,
-            customStages: customStages,
-            description: refPhase.description || '',
+          const newPhase: PhaseData = {
+            id: phaseId,
+            title: refPhase.label,
+            description: description.trim(),
             startDate: startDate.toISOString().split('T')[0],
             endDate: endDate.toISOString().split('T')[0],
+            estimatedDuration: phaseDuration,
+            status: 'not_started' as const,
             budget: Math.floor(projectBudget / referentialPhases.length),
-            status: 'not_started',
-            progress: 0
-          }
-        };
+            actualCost: 0,
+            progress: 0,
+            materials: [],
+            humanResources: [],
+            suppliers: [],
+            location: '',
+            notes: `Référentiel: ${selectedReferential}\nCode phase: ${refPhase.code}${generateMilestones ? `\nJalons: ${phaseMilestones.length}` : ''}`,
+            customPhase: {
+              id: `custom-${Date.now()}-${phaseIndex}`,
+              name: refPhase.label,
+              number: refPhase.order || phaseIndex + 1,
+              customStages: customStages,
+              description: refPhase.description || '',
+              startDate: startDate.toISOString().split('T')[0],
+              endDate: endDate.toISOString().split('T')[0],
+              budget: Math.floor(projectBudget / referentialPhases.length),
+              status: 'not_started',
+              progress: 0,
+              // Store milestones metadata for later persistence
+              milestones: phaseMilestones as any
+            }
+          };
+          
+          newPhases.push(newPhase);
+          cumulativeStartDays += phaseDuration;
+          phaseIndex++;
+        }
+
+        if (newPhases.length === 0) {
+          toast({
+            title: "Aucune nouvelle phase",
+            description: "Toutes les phases du référentiel sont déjà présentes",
+          });
+          setIsGenerating(false);
+          return;
+        }
+
+        // Add new phases to existing phases
+        onChange([...phases, ...newPhases]);
         
-        newPhases.push(newPhase);
-        cumulativeStartDays += phaseDuration;
-        phaseIndex++;
-      }
-
-      if (newPhases.length === 0) {
+        // Count total steps and tasks
+        const totalSteps = newPhases.reduce((sum, p) => sum + (p.customPhase?.customStages?.length || 0), 0);
+        const totalTasks = newPhases.reduce((sum, p) => 
+          sum + (p.customPhase?.customStages?.reduce((s, stage) => s + ((stage as any).tasks?.length || 0), 0) || 0), 0);
+        
         toast({
-          title: "Aucune nouvelle phase",
-          description: "Toutes les phases du référentiel sont déjà présentes",
+          title: "Structure générée",
+          description: `${newPhases.length} phase(s), ${totalSteps} étape(s), ${totalTasks} tâche(s)${generateMilestones ? ` et ${totalMilestones} jalon(s)` : ''} ajoutés depuis le référentiel ${selectedReferential}`,
         });
-        return;
+      } catch (error) {
+        console.error('Error generating phases:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la génération",
+          variant: "destructive",
+        });
+      } finally {
+        setIsGenerating(false);
       }
-
-      // Add new phases to existing phases
-      onChange([...phases, ...newPhases]);
-      
-      // Count total steps and tasks
-      const totalSteps = newPhases.reduce((sum, p) => sum + (p.customPhase?.customStages?.length || 0), 0);
-      const totalTasks = newPhases.reduce((sum, p) => 
-        sum + (p.customPhase?.customStages?.reduce((s, stage) => s + ((stage as any).tasks?.length || 0), 0) || 0), 0);
-      
-      toast({
-        title: "Phases générées",
-        description: `${newPhases.length} phase(s), ${totalSteps} étape(s) et ${totalTasks} tâche(s) ajoutées depuis le référentiel`,
-      });
     }, 'générer les phases');
   };
+
+  // Get generation preview
+  const getGenerationPreview = () => {
+    if (!selectedReferential) return null;
+    return phaseGeneratorService.getGenerationSummary(selectedReferential);
+  };
+
+  const generationPreview = getGenerationPreview();
 
   return (
     <Card>
@@ -554,28 +629,75 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
             </Dialog>
           </div>
           
-          {/* Referential selector */}
-          <div className="flex items-center gap-4">
-            <Label>Référentiel du projet:</Label>
-            <Select value={selectedReferential || ''} onValueChange={(value) => setSelectedReferential(value as ReferentialType)}>
-              <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder="Sélectionner un référentiel" />
-              </SelectTrigger>
-              <SelectContent>
-                {referentialService.getReferentialOptions().map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              onClick={handleGeneratePhasesFromReferential}
-              disabled={!selectedReferential || (!user && !DEV_MODE)}
-              variant="outline"
-            >
-              Générer les phases
-            </Button>
+          {/* Referential selector with milestone generation option */}
+          <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg border">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Label className="whitespace-nowrap">Référentiel:</Label>
+                <Select value={selectedReferential || ''} onValueChange={(value) => setSelectedReferential(value as ReferentialType)}>
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Sélectionner un référentiel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {referentialService.getReferentialOptions().map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="generateMilestones" 
+                  checked={generateMilestones}
+                  onCheckedChange={(checked) => setGenerateMilestones(checked as boolean)}
+                />
+                <Label htmlFor="generateMilestones" className="flex items-center gap-1 cursor-pointer">
+                  <Flag className="h-4 w-4 text-primary" />
+                  Générer jalons
+                </Label>
+              </div>
+              
+              <Button 
+                onClick={handleGeneratePhasesFromReferential}
+                disabled={!selectedReferential || (!user && !DEV_MODE) || isGenerating}
+                variant="default"
+                className="gap-2"
+              >
+                <Zap className="h-4 w-4" />
+                {isGenerating ? 'Génération...' : 'Générer structure'}
+              </Button>
+            </div>
+            
+            {/* Generation preview */}
+            {generationPreview && selectedReferential && (
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Building className="h-4 w-4" />
+                  {generationPreview.totalPhases} phases
+                </span>
+                <span className="flex items-center gap-1">
+                  <ClipboardCheck className="h-4 w-4" />
+                  {generationPreview.totalSteps} étapes
+                </span>
+                <span className="flex items-center gap-1">
+                  <Package className="h-4 w-4" />
+                  {generationPreview.totalTasks} tâches
+                </span>
+                {generateMilestones && (
+                  <span className="flex items-center gap-1 text-primary font-medium">
+                    <Flag className="h-4 w-4" />
+                    {generationPreview.totalMilestones} jalons
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  ~{generationPreview.estimatedDurationDays} jours
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -676,7 +798,46 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                         <p className="text-sm">{(phase.humanResources || []).length} rôles</p>
                       </div>
                     </div>
+                    
+                    {/* Milestones indicator */}
+                    {phase.customPhase?.milestones && phase.customPhase.milestones.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Flag className="h-4 w-4 text-primary" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Jalons</p>
+                          <p className="text-sm">{phase.customPhase.milestones.length} jalons</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Milestones preview */}
+                  {phase.customPhase?.milestones && phase.customPhase.milestones.length > 0 && (
+                    <div className="mt-3 p-2 bg-muted/50 rounded-md">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                        <Flag className="h-3 w-3" /> Jalons clés
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {phase.customPhase.milestones
+                          .filter(m => m.priority === 'critical' || m.type === 'gate')
+                          .slice(0, 3)
+                          .map((m, idx) => (
+                            <Badge 
+                              key={idx} 
+                              variant={m.priority === 'critical' ? 'destructive' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {m.type === 'gate' ? '🚪' : '🎯'} {m.title}
+                            </Badge>
+                          ))}
+                        {phase.customPhase.milestones.filter(m => m.priority === 'critical' || m.type === 'gate').length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{phase.customPhase.milestones.filter(m => m.priority === 'critical' || m.type === 'gate').length - 3} autres
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Progress bar */}
                   <div className="mt-4">
@@ -686,7 +847,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
                         style={{ width: `${phase.progress}%` }}
                       />
                     </div>
