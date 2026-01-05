@@ -504,10 +504,9 @@ const PhaseDetailsPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="steps">Étapes</TabsTrigger>
-          <TabsTrigger value="metrics">Métriques</TabsTrigger>
           <TabsTrigger value="resources">Ressources</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="monitoring" className="flex items-center gap-1">
@@ -699,41 +698,102 @@ const PhaseDetailsPage: React.FC = () => {
                 </Card>
               )}
 
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-transparent">
-                  <div className="flex items-center gap-2">
-                    <ListChecks className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs text-muted-foreground">Tâches</span>
+              {/* Detailed Metrics Section - Merged from Metrics Tab */}
+              <Card className="border-0 shadow-md overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-indigo-500/5 to-transparent">
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart className="h-5 w-5 text-indigo-600" />
+                    Métriques détaillées
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-6">
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/30 border border-blue-100">
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <ListChecks className="h-4 w-4 text-blue-600" />
+                        <span className="text-xs font-medium text-blue-600">Tâches</span>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-700">
+                        {metrics.completedTasks}/{metrics.totalTasks}
+                      </p>
+                      <Progress value={metrics.taskCompletionRate} className="mt-2 h-1.5" />
+                    </div>
+                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100/30 border border-green-100">
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <Shield className="h-4 w-4 text-green-600" />
+                        <span className="text-xs font-medium text-green-600">Inspections</span>
+                      </div>
+                      <p className="text-2xl font-bold text-green-700">
+                        {metrics.passedInspections}/{metrics.totalInspections}
+                      </p>
+                      <Progress value={metrics.inspectionPassRate} className="mt-2 h-1.5" />
+                    </div>
+                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-100">
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <Package className="h-4 w-4 text-amber-600" />
+                        <span className="text-xs font-medium text-amber-600">Matériaux</span>
+                      </div>
+                      <p className="text-2xl font-bold text-amber-700">{metrics.totalMaterials}</p>
+                      <p className="text-xs text-amber-600/80 mt-1">
+                        {formatCurrency(metrics.materialCost)}
+                      </p>
+                    </div>
+                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/30 border border-purple-100">
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <Users className="h-4 w-4 text-purple-600" />
+                        <span className="text-xs font-medium text-purple-600">Employés</span>
+                      </div>
+                      <p className="text-2xl font-bold text-purple-700">{metrics.totalEmployees}</p>
+                      <p className="text-xs text-purple-600/80 mt-1">assignés</p>
+                    </div>
                   </div>
-                  <p className="text-lg font-bold mt-1">
-                    {metrics.completedTasks}/{metrics.totalTasks}
-                  </p>
-                </Card>
-                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-green-50 to-transparent">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <span className="text-xs text-muted-foreground">Inspections</span>
+
+                  {/* Financial & Progress Summary */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-transparent border border-emerald-100">
+                      <h4 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        Performance financière
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Total des paiements</span>
+                          <span className="font-semibold">{formatCurrency(metrics.totalPaymentAmount)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Nombre de paiements</span>
+                          <span className="font-semibold">{metrics.totalPayments}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Documents attachés</span>
+                          <span className="font-semibold">{metrics.totalDocuments}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-transparent border border-violet-100">
+                      <h4 className="text-sm font-semibold text-violet-700 mb-3 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Progression des étapes
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progression totale</span>
+                          <span className="font-semibold">{phase.progress}%</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Étapes terminées</span>
+                          <span className="font-semibold">{metrics.completedSteps}/{metrics.stepsCount}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progression étapes</span>
+                          <span className="font-semibold">{metrics.milestoneProgress.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-lg font-bold mt-1">
-                    {metrics.passedInspections}/{metrics.totalInspections}
-                  </p>
-                </Card>
-                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-transparent">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-orange-600" />
-                    <span className="text-xs text-muted-foreground">Paiements</span>
-                  </div>
-                  <p className="text-lg font-bold mt-1">{metrics.totalPayments}</p>
-                </Card>
-                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-transparent">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-600" />
-                    <span className="text-xs text-muted-foreground">Employés</span>
-                  </div>
-                  <p className="text-lg font-bold mt-1">{metrics.totalEmployees}</p>
-                </Card>
-              </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Right Column - Enhanced Info Cards */}
@@ -839,101 +899,6 @@ const PhaseDetailsPage: React.FC = () => {
             </CardHeader>
             <CardContent className="p-6">
               <PhaseStepsView steps={phase.steps} onStepClick={(stepId) => console.log('Step clicked:', stepId)} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Metrics Tab */}
-        <TabsContent value="metrics">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5" />
-                Métriques détaillées
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 border rounded-lg">
-                    <p className="text-2xl font-bold">
-                      {metrics.completedTasks}/{metrics.totalTasks}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Tâches</p>
-                    <Progress value={metrics.taskCompletionRate} className="mt-2" />
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <p className="text-2xl font-bold">
-                      {metrics.passedInspections}/{metrics.totalInspections}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Inspections</p>
-                    <Progress value={metrics.inspectionPassRate} className="mt-2" />
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <p className="text-2xl font-bold">{metrics.totalMaterials}</p>
-                    <p className="text-sm text-muted-foreground">Matériaux</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatCurrency(metrics.materialCost)}
-                    </p>
-                  </div>
-                  <div className="text-center p-4 border rounded-lg">
-                    <p className="text-2xl font-bold">{metrics.totalEmployees}</p>
-                    <p className="text-sm text-muted-foreground">Employés</p>
-                    <p className="text-xs text-muted-foreground">assignés</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Performance financière</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span>Total des paiements</span>
-                          <span className="font-semibold">
-                            {formatCurrency(metrics.totalPaymentAmount)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Nombre de paiements</span>
-                          <span className="font-semibold">{metrics.totalPayments}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Documents attachés</span>
-                          <span className="font-semibold">{metrics.totalDocuments}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Progression des étapes</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span>Progression totale</span>
-                          <span className="font-semibold">{phase.progress}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Étapes terminées</span>
-                          <span className="font-semibold">
-                            {metrics.completedSteps}/{metrics.stepsCount}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Progression étapes</span>
-                          <span className="font-semibold">
-                            {metrics.milestoneProgress.toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
