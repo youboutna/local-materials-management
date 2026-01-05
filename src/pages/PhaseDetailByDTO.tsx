@@ -9,13 +9,12 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
-import PhasePayments from '@/components/project/PhasePayments';
-import PhaseInspections from '@/components/project/PhaseInspections';
 import { UnifiedMilestoneManager } from '@/components/project/milestones';
+import { PhaseMonitoringDashboard } from '@/components/project/monitoring';
+import { PhaseAdvancedConfig } from '@/components/project/advanced';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
 import { MilestoneService } from '@/services/MilestoneService';
 import { 
@@ -245,7 +244,6 @@ const PhaseDetailByDTO: React.FC = () => {
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="stages">Étapes</TabsTrigger>
           <TabsTrigger value="milestones">Jalons</TabsTrigger>
-          <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -463,165 +461,20 @@ const PhaseDetailByDTO: React.FC = () => {
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        <TabsContent value="tasks">
-          <PhaseTasks phaseId={phaseId!} projectId={projectId!} />
-        </TabsContent>
-
         <TabsContent value="monitoring">
-          <div className="space-y-6">
-            <PhasePayments phaseId={phaseId!} projectId={projectId!} />
-            <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
-          </div>
+          <PhaseMonitoringDashboard 
+            phaseId={phaseId!} 
+            projectId={projectId!}
+            phaseName={phase.phase || phase.phase_name}
+          />
         </TabsContent>
 
-        <TabsContent value="advanced" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Milestone Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Statistiques des jalons
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {milestoneProgress ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-muted rounded-lg text-center">
-                        <p className="text-2xl font-bold text-primary">{milestoneProgress.total_milestones}</p>
-                        <p className="text-xs text-muted-foreground">Total jalons</p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-600">{milestoneProgress.completed_milestones}</p>
-                        <p className="text-xs text-muted-foreground">Terminés</p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-lg text-center">
-                        <p className="text-2xl font-bold text-orange-600">{milestoneProgress.delayed_milestones}</p>
-                        <p className="text-xs text-muted-foreground">En retard</p>
-                      </div>
-                      <div className="p-3 bg-muted rounded-lg text-center">
-                        <p className={`text-2xl font-bold ${(milestoneProgress.schedule_performance_index ?? 0) >= 1 ? 'text-green-600' : 'text-destructive'}`}>
-                          {milestoneProgress.schedule_performance_index ?? 'N/A'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">SPI</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Progression pondérée</span>
-                        <span className="font-medium">{milestoneProgress.weighted_progress}%</span>
-                      </div>
-                      <Progress value={milestoneProgress.weighted_progress} />
-                    </div>
-                    {milestoneProgress.critical_path_status && (
-                      <Badge 
-                        variant={milestoneProgress.critical_path_status === 'on_track' ? 'default' : 'destructive'}
-                        className="w-full justify-center"
-                      >
-                        Chemin critique: {
-                          milestoneProgress.critical_path_status === 'on_track' ? 'Dans les temps' :
-                          milestoneProgress.critical_path_status === 'at_risk' ? 'À risque' : 'En retard'
-                        }
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Aucune donnée de jalons</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Phase Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Configuration de la phase
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">Durée estimée</span>
-                    <span className="font-medium">{phase.estimatedDuration || 'N/A'} jours</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">Budget alloué</span>
-                    <span className="font-medium">{phase.budget?.toLocaleString() || 'N/A'} MRU</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">Coût réel</span>
-                    <span className="font-medium">{actualCost.toLocaleString()} MRU</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">Date de début</span>
-                    <span className="font-medium">{phase.startDate || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between p-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">Date de fin</span>
-                    <span className="font-medium">{phase.endDate || 'N/A'}</span>
-                  </div>
-                  {phase.location && (
-                    <div className="flex justify-between p-2 bg-muted/50 rounded">
-                      <span className="text-sm text-muted-foreground">Localisation</span>
-                      <span className="font-medium">{phase.location}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Upcoming Milestones */}
-          {milestoneProgress?.upcoming_milestones && milestoneProgress.upcoming_milestones.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Jalons à venir (14 jours)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {milestoneProgress.upcoming_milestones.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between p-2 border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{m.title}</span>
-                      </div>
-                      <Badge variant="outline">{m.target_date}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Overdue Milestones */}
-          {milestoneProgress?.overdue_milestones && milestoneProgress.overdue_milestones.length > 0 && (
-            <Card className="border-destructive/50">
-              <CardHeader>
-                <CardTitle className="text-base text-destructive flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Jalons en retard
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {milestoneProgress.overdue_milestones.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between p-2 border border-destructive/30 rounded-lg bg-destructive/5">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
-                        <span className="font-medium">{m.title}</span>
-                      </div>
-                      <Badge variant="destructive">{m.target_date}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="advanced">
+          <PhaseAdvancedConfig
+            phase={phase}
+            milestoneProgress={milestoneProgress ?? null}
+            actualCost={actualCost}
+          />
         </TabsContent>
       </Tabs>
     </div>
