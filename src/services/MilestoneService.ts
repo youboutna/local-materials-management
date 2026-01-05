@@ -1,16 +1,32 @@
+/**
+ * MilestoneService - Facade for backward compatibility
+ * 
+ * This service delegates to UnifiedMilestoneService and Repository pattern
+ * Kept for compatibility with existing components
+ * 
+ * Architecture:
+ * - MilestoneService (facade) -> UnifiedMilestoneService -> Repository -> Adapter
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   MilestoneDTO, 
   MilestoneSummaryDTO, 
   MilestoneFormDTO,
   MilestoneProgressDTO,
-  MilestoneType,
-  MilestonePriority,
   CriticalPathDTO
 } from '@/types/milestone-dto';
 import { getMilestoneTemplates } from '@/data/referential-milestones';
 import { addDays, format, parseISO, isBefore, differenceInDays } from 'date-fns';
 
+// Re-export for convenience
+export { getMilestoneService, UnifiedMilestoneService } from './UnifiedMilestoneService';
+export { getGanttPertService, GanttPertDataService } from './GanttPertDataService';
+
+/**
+ * MilestoneService class - Legacy API for backward compatibility
+ * New code should use UnifiedMilestoneService or getMilestoneService()
+ */
 export class MilestoneService {
   /**
    * Get all milestones for a project
@@ -55,7 +71,6 @@ export class MilestoneService {
 
     if (mError) throw mError;
 
-    // Get phase names for context
     const phaseIds = [...new Set((milestones || []).filter(m => m.phase_id).map(m => m.phase_id as string))];
     
     let phaseMap: Record<string, string> = {};
@@ -91,7 +106,7 @@ export class MilestoneService {
   }
 
   /**
-   * Calculate milestone progress with PM metrics (EVM-inspired)
+   * Calculate milestone progress with PM metrics
    */
   static async getMilestoneProgress(projectId: string, phaseId?: string): Promise<MilestoneProgressDTO> {
     const query = supabase
@@ -117,12 +132,10 @@ export class MilestoneService {
       isBefore(parseISO(m.target_date), today)
     );
 
-    // Weighted progress calculation
     const totalWeight = milestones.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const completedWeight = completed.reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const weightedProgress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 
-    // Calculate SPI (Schedule Performance Index)
     const plannedToDate = milestones.filter(m => 
       m.target_date && isBefore(parseISO(m.target_date), today)
     );
@@ -131,7 +144,6 @@ export class MilestoneService {
       .reduce((sum, m) => sum + (m.weight || 0.1), 0);
     const spi = plannedWeight > 0 ? earnedWeight / plannedWeight : 1;
 
-    // Critical path analysis
     const criticalMilestones = milestones.filter(m => {
       const deps = m.dependencies as any;
       return deps?.is_critical || deps?.priority === 'critical';
@@ -150,7 +162,6 @@ export class MilestoneService {
       criticalPathStatus = 'at_risk';
     }
 
-    // Next milestone and upcoming (14 days)
     const pending = milestones.filter(m => m.status !== 'completed');
     const upcoming = pending.filter(m => {
       const targetDate = parseISO(m.target_date);
@@ -212,8 +223,7 @@ export class MilestoneService {
   }
 
   /**
-   * Generate milestones from referential template for a phase
-   * Includes full PM metadata (type, priority, dependencies)
+   * Generate milestones from referential template
    */
   static async generateFromReferential(
     projectId: string,
@@ -261,12 +271,11 @@ export class MilestoneService {
   }
 
   /**
-   * Calculate critical path for project milestones (CPM)
+   * Calculate critical path
    */
   static async calculateCriticalPath(projectId: string): Promise<CriticalPathDTO> {
     const milestones = await this.getProjectMilestones(projectId);
     
-    // Simple critical path: milestones marked as critical, sorted by date
     const criticalMilestones = milestones
       .filter(m => m.is_on_critical_path || m.priority === 'critical')
       .sort((a, b) => new Date(a.target_date).getTime() - new Date(b.target_date).getTime());
@@ -282,7 +291,6 @@ export class MilestoneService {
       ? differenceInDays(parseISO(lastMilestone.target_date), parseISO(firstMilestone.target_date))
       : 0;
 
-    // Find near-critical paths (milestones with float < 5 days)
     const nearCritical = milestones.filter(m => {
       const floatDays = m.float_days ?? 5;
       return floatDays > 0 && floatDays < 5 && !m.is_on_critical_path;
@@ -307,7 +315,6 @@ export class MilestoneService {
     milestoneId: string, 
     data: Partial<MilestoneFormDTO> & { status?: string; completed_date?: string | null }
   ): Promise<MilestoneDTO> {
-    // First get current data to preserve dependencies metadata
     const { data: current } = await supabase
       .from('enhanced_project_milestones')
       .select('dependencies')
@@ -315,7 +322,6 @@ export class MilestoneService {
       .single();
 
     const currentDeps = (current?.dependencies as any) || {};
-    
     const updateData: any = {};
     
     if (data.title !== undefined) updateData.title = data.title;
@@ -326,7 +332,6 @@ export class MilestoneService {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.completed_date !== undefined) updateData.completed_date = data.completed_date;
     
-    // Update dependencies metadata if provided
     if (data.type || data.priority || data.deliverables || data.dependencies) {
       updateData.dependencies = {
         ...currentDeps,
@@ -350,7 +355,7 @@ export class MilestoneService {
   }
 
   /**
-   * Toggle milestone completion status
+   * Toggle milestone completion
    */
   static async toggleComplete(milestoneId: string): Promise<MilestoneDTO> {
     const { data: current, error: fetchError } = await supabase
@@ -415,7 +420,7 @@ export class MilestoneService {
   }
 
   /**
-   * Delete all template-generated milestones for a phase
+   * Delete template milestones for a phase
    */
   static async deleteTemplateMilestones(phaseId: string): Promise<void> {
     const { data, error: fetchError } = await supabase
