@@ -25,9 +25,11 @@ import {
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
 import { MilestoneSummaryDTO } from '@/types/milestone-dto';
-import { MilestoneCheckpointActions } from '@/components/project/milestones';
+import { MilestoneCheckpointActions, MilestoneActionContext } from '@/components/project/milestones';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { InspectionFormWithContext } from '@/components/project/inspection';
+import { PaymentFormWithContext } from '@/components/project/payment';
 
 // Import existing components
 import PhaseTasks from '@/components/project/PhaseTasks';
@@ -52,6 +54,9 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
   phaseName
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedMilestoneContext, setSelectedMilestoneContext] = useState<MilestoneActionContext | undefined>(undefined);
   const queryClient = useQueryClient();
 
   // Fetch phase milestones
@@ -239,19 +244,13 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
         milestones={milestones}
         projectId={projectId}
         phaseId={phaseId}
-        onAddInspection={(milestoneId, title) => {
-          toast({
-            title: "Inspection à créer",
-            description: `Créez une inspection pour le jalon "${title}"`,
-          });
-          setActiveTab('inspections');
+        onAddInspection={(context) => {
+          setSelectedMilestoneContext(context);
+          setInspectionDialogOpen(true);
         }}
-        onAddPayment={(milestoneId, title) => {
-          toast({
-            title: "Paiement à enregistrer", 
-            description: `Enregistrez un paiement pour le jalon "${title}"`,
-          });
-          setActiveTab('payments');
+        onAddPayment={(context) => {
+          setSelectedMilestoneContext(context);
+          setPaymentDialogOpen(true);
         }}
         onMilestoneComplete={async (milestoneId) => {
           try {
@@ -516,6 +515,36 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Inspection Dialog with Context */}
+      <InspectionFormWithContext
+        projectId={projectId}
+        milestoneContext={selectedMilestoneContext}
+        isOpen={inspectionDialogOpen}
+        onClose={() => {
+          setInspectionDialogOpen(false);
+          setSelectedMilestoneContext(undefined);
+        }}
+        onInspectionCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['phase-inspections'] });
+          queryClient.invalidateQueries({ queryKey: ['phase-milestones-monitoring'] });
+        }}
+      />
+
+      {/* Payment Dialog with Context */}
+      <PaymentFormWithContext
+        projectId={projectId}
+        milestoneContext={selectedMilestoneContext}
+        isOpen={paymentDialogOpen}
+        onClose={() => {
+          setPaymentDialogOpen(false);
+          setSelectedMilestoneContext(undefined);
+        }}
+        onPaymentCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['phase-payments'] });
+          queryClient.invalidateQueries({ queryKey: ['phase-milestones-monitoring'] });
+        }}
+      />
     </div>
   );
 };

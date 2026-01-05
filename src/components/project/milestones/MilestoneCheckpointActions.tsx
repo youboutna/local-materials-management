@@ -1,6 +1,7 @@
 /**
  * MilestoneCheckpointActions - Actions disponibles sur les checkpoints des jalons
  * Permet de déclencher des inspections et paiements directement depuis les jalons
+ * Utilise CheckpointActionContextService pour récupérer le contexte complet
  */
 
 import React, { useState } from 'react';
@@ -31,19 +32,44 @@ import {
   Flag,
   CheckSquare,
   ChevronRight,
-  Play
+  Play,
+  Loader2,
+  Info
 } from 'lucide-react';
 import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES } from '@/types/milestone-dto';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { usePaymentActionContext, useInspectionActionContext } from '@/hooks/useCheckpointActionContext';
+import { Separator } from '@/components/ui/separator';
+
+/**
+ * Contexte enrichi pour les actions
+ */
+export interface MilestoneActionContext {
+  milestoneId: string;
+  milestoneTitle: string;
+  milestoneType: MilestoneType;
+  phaseId?: string;
+  phaseName?: string;
+  stepId?: string;
+  stepName?: string;
+  suggestedAmount?: number;
+  maxAllowedAmount?: number;
+  suggestedProgress?: number;
+  contractorId?: string;
+  contractorName?: string;
+  contractorContact?: string;
+  inspectionType?: 'technical' | 'quality' | 'safety' | 'regulatory';
+  checklistItems?: string[];
+}
 
 interface MilestoneCheckpointActionsProps {
   milestones: MilestoneSummaryDTO[];
   projectId: string;
   phaseId?: string;
-  onAddInspection?: (milestoneId: string, milestoneTitle: string) => void;
-  onAddPayment?: (milestoneId: string, milestoneTitle: string) => void;
+  onAddInspection?: (context: MilestoneActionContext) => void;
+  onAddPayment?: (context: MilestoneActionContext) => void;
   onMilestoneComplete?: (milestoneId: string) => void;
 }
 
@@ -133,6 +159,20 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
     m.type === 'gate' || m.type === 'checkpoint'
   );
 
+  // Fetch payment context when milestone is selected
+  const { data: paymentContext, isLoading: paymentLoading } = usePaymentActionContext(
+    dialogOpen && selectedMilestone ? projectId : undefined,
+    selectedMilestone?.id,
+    phaseId
+  );
+
+  // Fetch inspection context when milestone is selected
+  const { data: inspectionContext, isLoading: inspectionLoading } = useInspectionActionContext(
+    dialogOpen && selectedMilestone ? projectId : undefined,
+    selectedMilestone?.id,
+    phaseId
+  );
+
   const handleOpenActions = (milestone: MilestoneSummaryDTO) => {
     setSelectedMilestone(milestone);
     setDialogOpen(true);
@@ -140,14 +180,38 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
 
   const handleTriggerInspection = () => {
     if (selectedMilestone && onAddInspection) {
-      onAddInspection(selectedMilestone.id, selectedMilestone.title);
+      const context: MilestoneActionContext = {
+        milestoneId: selectedMilestone.id,
+        milestoneTitle: selectedMilestone.title,
+        milestoneType: selectedMilestone.type,
+        phaseId: inspectionContext?.linkedPhase?.id,
+        phaseName: inspectionContext?.linkedPhase?.name,
+        stepId: inspectionContext?.linkedStep?.id,
+        stepName: inspectionContext?.linkedStep?.name,
+        suggestedProgress: inspectionContext?.suggestedProgress,
+        inspectionType: inspectionContext?.inspectionType,
+        checklistItems: inspectionContext?.checklistItems
+      };
+      onAddInspection(context);
       setDialogOpen(false);
     }
   };
 
   const handleTriggerPayment = () => {
     if (selectedMilestone && onAddPayment) {
-      onAddPayment(selectedMilestone.id, selectedMilestone.title);
+      const context: MilestoneActionContext = {
+        milestoneId: selectedMilestone.id,
+        milestoneTitle: selectedMilestone.title,
+        milestoneType: selectedMilestone.type,
+        phaseId: paymentContext?.linkedPhase?.id,
+        phaseName: paymentContext?.linkedPhase?.name,
+        suggestedAmount: paymentContext?.suggestedAmount,
+        maxAllowedAmount: paymentContext?.maxAllowedAmount,
+        contractorId: paymentContext?.mainContractor?.id,
+        contractorName: paymentContext?.mainContractor?.name,
+        contractorContact: paymentContext?.mainContractor?.contact
+      };
+      onAddPayment(context);
       setDialogOpen(false);
     }
   };
@@ -174,6 +238,8 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
       </Card>
     );
   }
+
+  const isLoadingContext = paymentLoading || inspectionLoading;
 
   return (
     <>
@@ -244,7 +310,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
 
       {/* Actions Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
@@ -258,60 +324,107 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-4">
-            {/* Trigger Inspection */}
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3"
-              onClick={handleTriggerInspection}
-            >
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <ClipboardCheck className="h-4 w-4 text-orange-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium">Déclencher une inspection</p>
-                <p className="text-xs text-muted-foreground">
-                  Créer une inspection liée à ce jalon
-                </p>
-              </div>
-            </Button>
+          {isLoadingContext ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">Chargement du contexte...</span>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {/* Context Summary */}
+              {(paymentContext || inspectionContext) && (
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Info className="h-4 w-4 text-primary" />
+                    Contexte du projet
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Progression:</span>
+                      <span className="ml-1 font-medium">{paymentContext?.project.progress || inspectionContext?.project.progress}%</span>
+                    </div>
+                    {paymentContext?.linkedPhase && (
+                      <div>
+                        <span className="text-muted-foreground">Phase:</span>
+                        <span className="ml-1 font-medium">{paymentContext.linkedPhase.name}</span>
+                      </div>
+                    )}
+                    {paymentContext?.mainContractor && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Contractant:</span>
+                        <span className="ml-1 font-medium">{paymentContext.mainContractor.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            {/* Trigger Payment */}
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3"
-              onClick={handleTriggerPayment}
-            >
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium">Effectuer un paiement</p>
-                <p className="text-xs text-muted-foreground">
-                  Enregistrer un paiement lié à ce jalon
-                </p>
-              </div>
-            </Button>
+              <Separator />
 
-            {/* Mark as Complete */}
-            {selectedMilestone?.status !== 'completed' && (
+              {/* Trigger Inspection */}
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-auto py-3 border-success/50 hover:bg-success/10"
-                onClick={handleMarkComplete}
+                className="w-full justify-start gap-3 h-auto py-3"
+                onClick={handleTriggerInspection}
               >
-                <div className="p-2 bg-success/20 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-success" />
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <ClipboardCheck className="h-4 w-4 text-orange-600" />
                 </div>
-                <div className="text-left">
-                  <p className="font-medium">Marquer comme terminé</p>
+                <div className="text-left flex-1">
+                  <p className="font-medium">Déclencher une inspection</p>
                   <p className="text-xs text-muted-foreground">
-                    Valider ce point de contrôle
+                    {inspectionContext?.inspectionType ? `Type: ${inspectionContext.inspectionType}` : 'Créer une inspection liée à ce jalon'}
                   </p>
+                  {inspectionContext?.suggestedProgress !== undefined && (
+                    <p className="text-xs text-primary">
+                      Progression suggérée: {inspectionContext.suggestedProgress}%
+                    </p>
+                  )}
                 </div>
               </Button>
-            )}
-          </div>
+
+              {/* Trigger Payment */}
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3 h-auto py-3"
+                onClick={handleTriggerPayment}
+              >
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-medium">Effectuer un paiement</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enregistrer un paiement lié à ce jalon
+                  </p>
+                  {paymentContext?.suggestedAmount !== undefined && paymentContext.suggestedAmount > 0 && (
+                    <p className="text-xs text-green-600">
+                      Montant suggéré: {paymentContext.suggestedAmount.toLocaleString()} MRU
+                    </p>
+                  )}
+                </div>
+              </Button>
+
+              {/* Mark as Complete */}
+              {selectedMilestone?.status !== 'completed' && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3 h-auto py-3 border-success/50 hover:bg-success/10"
+                  onClick={handleMarkComplete}
+                >
+                  <div className="p-2 bg-success/20 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium">Marquer comme terminé</p>
+                    <p className="text-xs text-muted-foreground">
+                      Valider ce point de contrôle
+                    </p>
+                  </div>
+                </Button>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
