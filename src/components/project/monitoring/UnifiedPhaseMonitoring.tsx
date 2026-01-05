@@ -2,6 +2,7 @@
  * UnifiedPhaseMonitoring - Dashboard unifié fusionnant Suivi + Jalons
  * Navigation vers services /inspection-monitoring et /payment-control
  * Notifications pour programmer/exécuter inspections et paiements
+ * Intégration des formulaires contextuels pour inspection et paiement
  */
 
 import React, { useState } from 'react';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -43,7 +45,8 @@ import {
   BarChart3,
   ShieldCheck,
   Package,
-  Flag
+  Flag,
+  PlusCircle
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
 import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES, MilestoneProgressDTO } from '@/types/milestone-dto';
@@ -57,6 +60,11 @@ import { getDefaultPhaseMilestones, getDefaultProjectMilestones } from '@/config
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhasePayments from '@/components/project/PhasePayments';
+
+// Import context-aware forms
+import { InspectionFormWithContext } from '@/components/project/inspection';
+import { PaymentFormWithContext } from '@/components/project/payment';
+import { MilestoneActionContext } from '@/components/project/milestones';
 
 interface UnifiedPhaseMonitoringProps {
   phaseId: string;
@@ -87,6 +95,22 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     milestone: null,
     action: null
   });
+
+  // Context-aware form dialogs
+  const [inspectionFormOpen, setInspectionFormOpen] = useState(false);
+  const [paymentFormOpen, setPaymentFormOpen] = useState(false);
+  const [selectedMilestoneContext, setSelectedMilestoneContext] = useState<MilestoneActionContext | undefined>(undefined);
+
+  // Build milestone context from action dialog
+  const buildMilestoneContext = (milestone: MilestoneSummaryDTO): MilestoneActionContext => {
+    return {
+      milestoneId: milestone.id,
+      milestoneTitle: milestone.title,
+      milestoneType: milestone.type,
+      phaseId: phaseId,
+      suggestedProgress: progress?.weighted_progress || 0,
+    };
+  };
 
   // Fetch milestones
   const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
@@ -912,6 +936,31 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           <div className="space-y-3 py-4">
             {actionDialog.action === 'inspection' && (
               <>
+                {/* NEW: Create directly button */}
+                <Button
+                  variant="default"
+                  className="w-full justify-start gap-3 h-auto py-4 bg-orange-600 hover:bg-orange-700"
+                  onClick={() => {
+                    if (actionDialog.milestone) {
+                      setSelectedMilestoneContext(buildMilestoneContext(actionDialog.milestone));
+                      setActionDialog({ open: false, milestone: null, action: null });
+                      setInspectionFormOpen(true);
+                    }
+                  }}
+                >
+                  <div className="p-2.5 bg-white/20 rounded-xl">
+                    <PlusCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="text-left text-white">
+                    <p className="font-semibold">Créer une inspection maintenant</p>
+                    <p className="text-xs opacity-80">
+                      Formulaire pré-rempli avec le contexte du jalon
+                    </p>
+                  </div>
+                </Button>
+
+                <Separator className="my-3" />
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-4"
@@ -964,6 +1013,31 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
 
             {actionDialog.action === 'payment' && (
               <>
+                {/* NEW: Create directly button */}
+                <Button
+                  variant="default"
+                  className="w-full justify-start gap-3 h-auto py-4 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    if (actionDialog.milestone) {
+                      setSelectedMilestoneContext(buildMilestoneContext(actionDialog.milestone));
+                      setActionDialog({ open: false, milestone: null, action: null });
+                      setPaymentFormOpen(true);
+                    }
+                  }}
+                >
+                  <div className="p-2.5 bg-white/20 rounded-xl">
+                    <PlusCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="text-left text-white">
+                    <p className="font-semibold">Effectuer un paiement maintenant</p>
+                    <p className="text-xs opacity-80">
+                      Formulaire pré-rempli avec le contexte du jalon
+                    </p>
+                  </div>
+                </Button>
+
+                <Separator className="my-3" />
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-4"
@@ -1040,6 +1114,46 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Context-aware Inspection Form */}
+      <InspectionFormWithContext
+        projectId={projectId}
+        milestoneContext={selectedMilestoneContext}
+        isOpen={inspectionFormOpen}
+        onClose={() => {
+          setInspectionFormOpen(false);
+          setSelectedMilestoneContext(undefined);
+        }}
+        onInspectionCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['unified-milestones'] });
+          queryClient.invalidateQueries({ queryKey: ['milestone-progress'] });
+          queryClient.invalidateQueries({ queryKey: ['phase-inspections-summary'] });
+          toast({
+            title: "Inspection créée",
+            description: "L'inspection a été ajoutée avec succès."
+          });
+        }}
+      />
+
+      {/* Context-aware Payment Form */}
+      <PaymentFormWithContext
+        projectId={projectId}
+        milestoneContext={selectedMilestoneContext}
+        isOpen={paymentFormOpen}
+        onClose={() => {
+          setPaymentFormOpen(false);
+          setSelectedMilestoneContext(undefined);
+        }}
+        onPaymentCreated={() => {
+          queryClient.invalidateQueries({ queryKey: ['unified-milestones'] });
+          queryClient.invalidateQueries({ queryKey: ['milestone-progress'] });
+          queryClient.invalidateQueries({ queryKey: ['phase-payments-summary'] });
+          toast({
+            title: "Paiement effectué",
+            description: "Le paiement a été enregistré avec succès."
+          });
+        }}
+      />
     </div>
   );
 };
