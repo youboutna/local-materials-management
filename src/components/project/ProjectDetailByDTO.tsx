@@ -18,6 +18,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { ProjectAnalyticsService } from "@/services/ProjectAnalyticsService";
 import { ProjectService } from "@/services/ProjectService";
+import { MilestoneService } from "@/services/MilestoneService";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/types/dto";
 import { Dialog, DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -195,6 +196,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       return ProjectCalculationService.generateGanttChart(projectDetail);
     },
     enabled: !!projectId && !!projectDetail,
+    staleTime: 30_000,
+  });
+
+  // Milestone count for dashboard
+  const { data: milestoneProgress } = useQuery({
+    queryKey: ["milestone-progress", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      return await MilestoneService.getMilestoneProgress(projectId);
+    },
+    enabled: !!projectId,
     staleTime: 30_000,
   });
 
@@ -973,8 +985,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   <div>
                     <p className="text-sm font-medium">Jalons</p>
                     <p className="text-lg font-bold">
-                      {computedPhases.length || 0}
+                      {milestoneProgress?.total_milestones || 0}
                     </p>
+                    {milestoneProgress && milestoneProgress.total_milestones > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {milestoneProgress.completed_milestones}/{milestoneProgress.total_milestones} terminés
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>

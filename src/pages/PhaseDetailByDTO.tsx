@@ -17,6 +17,7 @@ import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import { UnifiedMilestoneManager } from '@/components/project/milestones';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
+import { MilestoneService } from '@/services/MilestoneService';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -28,7 +29,11 @@ import {
   CheckCircle, 
   Clock,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Target,
+  Layers,
+  Settings,
+  BarChart3
 } from 'lucide-react';
 
 const PhaseDetailByDTO: React.FC = () => {
@@ -49,6 +54,16 @@ const PhaseDetailByDTO: React.FC = () => {
       return await ProjectDataTransformer.getProjectById(projectId);
     },
     enabled: !!projectId,
+  });
+
+  // Milestone progress for phase
+  const { data: milestoneProgress } = useQuery({
+    queryKey: ['phase-milestone-progress', projectId, phaseId],
+    queryFn: async () => {
+      if (!projectId || !phaseId) return null;
+      return await MilestoneService.getMilestoneProgress(projectId, phaseId);
+    },
+    enabled: !!projectId && !!phaseId,
   });
 
   // Calculate phase metrics when project data is loaded
@@ -226,28 +241,99 @@ const PhaseDetailByDTO: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="stages">Étapes</TabsTrigger>
           <TabsTrigger value="milestones">Jalons</TabsTrigger>
+          <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="monitoring">Suivi</TabsTrigger>
+          <TabsTrigger value="advanced">Avancé</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Phase Status Integration */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Statut Phase Actuelle</h4>
-            <div className="flex items-center gap-4">
-              <Badge className={getStatusColor(phase.status)}>
-                {getStatusIcon(phase.status)} {phase.status}
-              </Badge>
-              <span className="text-sm">Progression: {phase.progress || 0}%</span>
-              <span className="text-sm">Étapes: {phase.stages?.length || 0}</span>
-            </div>
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Layers className="h-6 w-6 text-blue-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Étapes</p>
+                    <p className="text-lg font-bold">{phase.stages?.length || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Target className="h-6 w-6 text-green-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Jalons</p>
+                    <p className="text-lg font-bold">{milestoneProgress?.total_milestones || 0}</p>
+                    {milestoneProgress && milestoneProgress.total_milestones > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {milestoneProgress.completed_milestones} terminés
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Package className="h-6 w-6 text-orange-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Matériaux</p>
+                    <p className="text-lg font-bold">{materialsCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Users className="h-6 w-6 text-purple-600" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Équipe</p>
+                    <p className="text-lg font-bold">{employeesCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+
+          {/* Phase Status Integration */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Statut de la phase</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-4">
+                <Badge className={getStatusColor(phase.status)}>
+                  {getStatusIcon(phase.status)} {phase.status === 'completed' ? 'Terminée' : 
+                   phase.status === 'in_progress' ? 'En cours' : 
+                   phase.status === 'delayed' ? 'En retard' : 'Non commencée'}
+                </Badge>
+                <div className="flex-1 min-w-48">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Progression</span>
+                    <span className="font-medium">{phase.progress || 0}%</span>
+                  </div>
+                  <Progress value={phase.progress || 0} />
+                </div>
+                {milestoneProgress?.schedule_performance_index !== undefined && (
+                  <Badge variant={milestoneProgress.schedule_performance_index >= 1 ? 'default' : 'destructive'}>
+                    SPI: {milestoneProgress.schedule_performance_index}
+                  </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Materials Summary */}
@@ -300,33 +386,57 @@ const PhaseDetailByDTO: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
 
-          {/* Stages Summary */}
-          {phase.stages && phase.stages.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Étapes de la phase</CardTitle>
-              </CardHeader>
-              <CardContent>
+        <TabsContent value="stages" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                Étapes de la phase ({phase.stages?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {phase.stages && phase.stages.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {phase.stages.map((stage: any, index: number) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <h4 className="font-medium">{stage.name}</h4>
-                      <div className="flex items-center justify-between mt-2">
+                    <div key={index} className="p-4 border rounded-lg hover:shadow-sm transition-shadow">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium">{stage.name}</h4>
                         <Badge variant="outline" className="text-xs">
-                          {stage.status}
+                          {stage.status === 'completed' ? 'Terminé' : 
+                           stage.status === 'in_progress' ? 'En cours' : 'À faire'}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {stage.progress || 0}%
-                        </span>
                       </div>
-                      <Progress value={stage.progress || 0} className="mt-2" />
+                      {stage.description && (
+                        <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
+                      )}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span>Progression</span>
+                          <span className="font-medium">{stage.progress || 0}%</span>
+                        </div>
+                        <Progress value={stage.progress || 0} className="h-1.5" />
+                      </div>
+                      {stage.tasks && stage.tasks.length > 0 && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {stage.tasks.length} tâche(s)
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="text-center py-8">
+                  <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                  <h3 className="text-lg font-medium mb-2">Aucune étape définie</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Les étapes seront créées lors de la configuration de la phase depuis un référentiel.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="milestones">
@@ -362,6 +472,156 @@ const PhaseDetailByDTO: React.FC = () => {
             <PhasePayments phaseId={phaseId!} projectId={projectId!} />
             <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="advanced" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Milestone Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Statistiques des jalons
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {milestoneProgress ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-primary">{milestoneProgress.total_milestones}</p>
+                        <p className="text-xs text-muted-foreground">Total jalons</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-green-600">{milestoneProgress.completed_milestones}</p>
+                        <p className="text-xs text-muted-foreground">Terminés</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className="text-2xl font-bold text-orange-600">{milestoneProgress.delayed_milestones}</p>
+                        <p className="text-xs text-muted-foreground">En retard</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg text-center">
+                        <p className={`text-2xl font-bold ${(milestoneProgress.schedule_performance_index ?? 0) >= 1 ? 'text-green-600' : 'text-destructive'}`}>
+                          {milestoneProgress.schedule_performance_index ?? 'N/A'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">SPI</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Progression pondérée</span>
+                        <span className="font-medium">{milestoneProgress.weighted_progress}%</span>
+                      </div>
+                      <Progress value={milestoneProgress.weighted_progress} />
+                    </div>
+                    {milestoneProgress.critical_path_status && (
+                      <Badge 
+                        variant={milestoneProgress.critical_path_status === 'on_track' ? 'default' : 'destructive'}
+                        className="w-full justify-center"
+                      >
+                        Chemin critique: {
+                          milestoneProgress.critical_path_status === 'on_track' ? 'Dans les temps' :
+                          milestoneProgress.critical_path_status === 'at_risk' ? 'À risque' : 'En retard'
+                        }
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Aucune donnée de jalons</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Phase Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Configuration de la phase
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm text-muted-foreground">Durée estimée</span>
+                    <span className="font-medium">{phase.estimatedDuration || 'N/A'} jours</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm text-muted-foreground">Budget alloué</span>
+                    <span className="font-medium">{phase.budget?.toLocaleString() || 'N/A'} MRU</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm text-muted-foreground">Coût réel</span>
+                    <span className="font-medium">{actualCost.toLocaleString()} MRU</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm text-muted-foreground">Date de début</span>
+                    <span className="font-medium">{phase.startDate || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                    <span className="text-sm text-muted-foreground">Date de fin</span>
+                    <span className="font-medium">{phase.endDate || 'N/A'}</span>
+                  </div>
+                  {phase.location && (
+                    <div className="flex justify-between p-2 bg-muted/50 rounded">
+                      <span className="text-sm text-muted-foreground">Localisation</span>
+                      <span className="font-medium">{phase.location}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Upcoming Milestones */}
+          {milestoneProgress?.upcoming_milestones && milestoneProgress.upcoming_milestones.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Jalons à venir (14 jours)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {milestoneProgress.upcoming_milestones.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between p-2 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{m.title}</span>
+                      </div>
+                      <Badge variant="outline">{m.target_date}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Overdue Milestones */}
+          {milestoneProgress?.overdue_milestones && milestoneProgress.overdue_milestones.length > 0 && (
+            <Card className="border-destructive/50">
+              <CardHeader>
+                <CardTitle className="text-base text-destructive flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Jalons en retard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {milestoneProgress.overdue_milestones.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between p-2 border border-destructive/30 rounded-lg bg-destructive/5">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <span className="font-medium">{m.title}</span>
+                      </div>
+                      <Badge variant="destructive">{m.target_date}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

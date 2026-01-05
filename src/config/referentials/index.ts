@@ -104,7 +104,16 @@ export { ReferentialService, referentialService } from '@/services/ReferentialSe
 /**
  * Re-export milestone referential utilities
  */
-export { getMilestoneTemplates, getAvailablePhases, REFERENTIAL_MILESTONES } from './milestones.referential';
+export { 
+  getMilestoneTemplates, 
+  getAvailablePhases, 
+  REFERENTIAL_MILESTONES,
+  getDefaultProjectMilestones,
+  getDefaultPhaseMilestones,
+  getMilestoneTemplatesWithDefaults,
+  DEFAULT_PROJECT_MILESTONES,
+  DEFAULT_PHASE_MILESTONES
+} from './milestones.referential';
 export { 
   getSomelceMilestoneTemplates, 
   getSomelceAvailablePhases, 

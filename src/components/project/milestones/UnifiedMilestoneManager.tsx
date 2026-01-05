@@ -27,7 +27,8 @@ import {
   ShieldCheck,
   Package,
   Flag,
-  CheckSquare
+  CheckSquare,
+  Plus
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
 import { 
@@ -36,9 +37,11 @@ import {
   MilestoneType,
   MILESTONE_TYPES
 } from '@/types/milestone-dto';
-import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
+import { getDefaultProjectMilestones, getDefaultPhaseMilestones } from '@/config/referentials/milestones.referential';
+import { format, parseISO, isBefore, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 // View modes for the component
 type ViewMode = 'timeline' | 'list' | 'gantt';
@@ -166,16 +169,59 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
     );
   }
 
-  // Empty state
+  // Generate default milestones
+  const generateDefaultMilestones = async () => {
+    try {
+      const templates = phaseId ? getDefaultPhaseMilestones() : getDefaultProjectMilestones();
+      const startDate = new Date();
+      
+      for (const template of templates) {
+        const targetDate = addDays(startDate, template.relative_offset_days);
+        await MilestoneService.createMilestone(projectId, {
+          title: template.name,
+          description: template.description,
+          target_date: format(targetDate, 'yyyy-MM-dd'),
+          type: template.type,
+          priority: template.priority,
+          weight: template.weight,
+          deliverables: template.deliverables,
+          phase_id: phaseId
+        }, true, template.id);
+      }
+      
+      toast({
+        title: "Jalons créés",
+        description: `${templates.length} jalons par défaut ont été créés.`
+      });
+      
+      loadData();
+    } catch (error) {
+      console.error('Error generating default milestones:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer les jalons par défaut.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Empty state with option to generate defaults
   if (milestones.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="p-8 text-center">
           <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
           <h3 className="text-lg font-medium mb-2">Aucun jalon défini</h3>
-          <p className="text-sm text-muted-foreground">
-            Les jalons seront créés automatiquement lors de l'ajout de phases depuis les référentiels.
+          <p className="text-sm text-muted-foreground mb-4">
+            {phaseId 
+              ? "Créez des jalons par défaut (démarrage, point d'avancement, achèvement) pour cette phase."
+              : "Créez des jalons par défaut (démarrage projet, réception provisoire, réception définitive) pour ce projet."
+            }
           </p>
+          <Button onClick={generateDefaultMilestones} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Créer les jalons par défaut
+          </Button>
         </CardContent>
       </Card>
     );
