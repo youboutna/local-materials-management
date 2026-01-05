@@ -56,8 +56,7 @@ import PhasePayments from "./PhasePayments";
 import PhaseInspections from "./PhaseInspections";
 import PhaseTasks from "./PhaseTasks";
 import PhaseCompliance from "./PhaseCompliance";
-import UnifiedMilestoneManager from "./milestones/UnifiedMilestoneManager";
-import PhaseMonitoringDashboard from "./monitoring/PhaseMonitoringDashboard";
+import UnifiedPhaseMonitoring from "./monitoring/UnifiedPhaseMonitoring";
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -636,24 +635,13 @@ const PhaseDetailsPage: React.FC = () => {
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        {/* Monitoring & Milestones Tab */}
+        {/* Monitoring & Milestones Tab - Unified View */}
         <TabsContent value="monitoring" className="space-y-6">
-          {/* Unified Milestone Manager - Reference Model */}
-          <UnifiedMilestoneManager
+          {/* Unified Phase Monitoring - Combines Dashboard + Milestones */}
+          <UnifiedPhaseMonitoring
             projectId={projectId!}
             phaseId={phaseId!}
             phaseName={phase.phase_name || 'Phase'}
-            defaultView="timeline"
-            onMilestoneClick={(milestoneId) => {
-              console.log('Milestone clicked:', milestoneId);
-            }}
-          />
-
-          {/* Phase Monitoring Dashboard */}
-          <PhaseMonitoringDashboard 
-            phaseId={phaseId!} 
-            projectId={projectId!}
-            phaseName={phase.phase_name || undefined}
           />
 
           {/* Compliance */}
