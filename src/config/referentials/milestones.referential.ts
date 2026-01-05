@@ -7,8 +7,97 @@ import { MilestoneTemplateDTO } from '@/types/milestone-dto';
  * Each phase follows the standard project lifecycle:
  * 1. Initiation Gate → 2. Progress Checkpoints → 3. Deliverable → 4. Phase Gate
  */
-export const 
-REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
+
+/**
+ * DEFAULT MILESTONES - Always present on every project
+ * These are the fundamental project lifecycle milestones
+ */
+export const DEFAULT_PROJECT_MILESTONES: MilestoneTemplateDTO[] = [
+  {
+    id: 'default_project_start',
+    name: 'Démarrage du projet',
+    description: 'Lancement officiel du projet - réunion de kick-off',
+    relative_offset_days: 0,
+    weight: 0.05,
+    is_critical: true,
+    type: 'event',
+    priority: 'critical',
+    tags: ['démarrage', 'lancement', 'kickoff'],
+    deliverables: ['Note de lancement', 'Planning initial']
+  },
+  {
+    id: 'default_provisional_reception',
+    name: 'Réception provisoire',
+    description: 'Réception provisoire des travaux avec établissement des réserves',
+    relative_offset_days: 90, // Will be calculated based on project duration
+    weight: 0.40,
+    is_critical: true,
+    type: 'gate',
+    priority: 'critical',
+    tags: ['réception', 'provisoire', 'gate'],
+    approval_requirements: ['Validation MOE', 'Validation MOA', 'Liste des réserves'],
+    deliverables: ['PV de réception provisoire', 'Liste des réserves']
+  },
+  {
+    id: 'default_definitive_reception',
+    name: 'Réception définitive',
+    description: 'Réception définitive après levée des réserves et période de garantie',
+    relative_offset_days: 365, // 1 year after provisional
+    weight: 0.55,
+    is_critical: true,
+    type: 'gate',
+    priority: 'critical',
+    tags: ['réception', 'définitive', 'gate', 'final'],
+    predecessor_ids: ['default_provisional_reception'],
+    approval_requirements: ['Levée des réserves', 'Fin garantie parfait achèvement'],
+    deliverables: ['PV de réception définitive', 'DOE', 'DIUO', 'Attestations garanties']
+  }
+];
+
+/**
+ * DEFAULT PHASE MILESTONES - Always present on every phase
+ */
+export const DEFAULT_PHASE_MILESTONES: MilestoneTemplateDTO[] = [
+  {
+    id: 'default_phase_start',
+    name: 'Démarrage de la phase',
+    description: 'Lancement officiel de la phase de travaux',
+    relative_offset_days: 0,
+    weight: 0.15,
+    is_critical: true,
+    type: 'event',
+    priority: 'high',
+    tags: ['démarrage', 'phase'],
+    deliverables: ['Planning phase']
+  },
+  {
+    id: 'default_phase_checkpoint',
+    name: 'Point d\'avancement',
+    description: 'Point de contrôle intermédiaire de la phase',
+    relative_offset_days: 15, // Mid-phase
+    weight: 0.35,
+    is_critical: false,
+    type: 'checkpoint',
+    priority: 'normal',
+    tags: ['avancement', 'contrôle'],
+    predecessor_ids: ['default_phase_start']
+  },
+  {
+    id: 'default_phase_completion',
+    name: 'Achèvement de la phase',
+    description: 'Validation de la fin de phase et passage à la suivante',
+    relative_offset_days: 30, // End of phase
+    weight: 0.50,
+    is_critical: true,
+    type: 'gate',
+    priority: 'critical',
+    tags: ['achèvement', 'gate', 'validation'],
+    predecessor_ids: ['default_phase_checkpoint'],
+    deliverables: ['PV fin de phase']
+  }
+];
+
+export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
   // ============= ÉTUDES PRÉLIMINAIRES =============
   'etudes_preliminaires': [
     {
@@ -867,6 +956,35 @@ export function getPhaseStatistics(constructionPhase: string): {
     gates: templates.filter(t => t.type === 'gate').length,
     deliverables: templates.filter(t => t.type === 'deliverable').length
   };
+}
+
+/**
+ * Get default project milestones
+ */
+export function getDefaultProjectMilestones(): MilestoneTemplateDTO[] {
+  return DEFAULT_PROJECT_MILESTONES;
+}
+
+/**
+ * Get default phase milestones
+ */
+export function getDefaultPhaseMilestones(): MilestoneTemplateDTO[] {
+  return DEFAULT_PHASE_MILESTONES;
+}
+
+/**
+ * Get milestones for a phase, with defaults if no specific templates exist
+ */
+export function getMilestoneTemplatesWithDefaults(constructionPhase: string): MilestoneTemplateDTO[] {
+  const specific = getMilestoneTemplates(constructionPhase);
+  
+  // If specific templates exist, return them
+  if (specific.length > 0) {
+    return specific;
+  }
+  
+  // Otherwise, return default phase milestones
+  return DEFAULT_PHASE_MILESTONES;
 }
 
 /**
