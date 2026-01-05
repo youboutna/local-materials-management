@@ -8,13 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import { UnifiedMilestoneManager } from '@/components/project/milestones';
 import { PhaseMonitoringDashboard } from '@/components/project/monitoring';
-import { PhaseAdvancedConfig } from '@/components/project/advanced';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
 import { MilestoneService } from '@/services/MilestoneService';
 import { 
@@ -24,15 +22,12 @@ import {
   MapPin, 
   Users, 
   Package, 
-  FileText, 
   CheckCircle, 
   Clock,
   AlertTriangle,
   TrendingUp,
   Target,
-  Layers,
-  Settings,
-  BarChart3
+  Layers
 } from 'lucide-react';
 
 const PhaseDetailByDTO: React.FC = () => {
@@ -243,12 +238,13 @@ const PhaseDetailByDTO: React.FC = () => {
         <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="stages">Étapes</TabsTrigger>
-          <TabsTrigger value="milestones">Jalons</TabsTrigger>
+          <TabsTrigger value="monitoring">
+            <Target className="h-4 w-4 mr-1" />
+            Suivi & Jalons
+          </TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="monitoring">Suivi</TabsTrigger>
-          <TabsTrigger value="advanced">Avancé</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -437,7 +433,9 @@ const PhaseDetailByDTO: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="milestones">
+        {/* Unified Monitoring & Milestones Tab */}
+        <TabsContent value="monitoring" className="space-y-6">
+          {/* Milestone Manager - Reference Model */}
           <UnifiedMilestoneManager
             projectId={projectId!}
             phaseId={phaseId!}
@@ -446,6 +444,13 @@ const PhaseDetailByDTO: React.FC = () => {
             onMilestoneClick={(milestoneId) => {
               console.log('Milestone clicked:', milestoneId);
             }}
+          />
+
+          {/* Monitoring Dashboard integrated below milestones */}
+          <PhaseMonitoringDashboard 
+            phaseId={phaseId!} 
+            projectId={projectId!}
+            phaseName={phase.phase || phase.phase_name}
           />
         </TabsContent>
         
@@ -459,22 +464,6 @@ const PhaseDetailByDTO: React.FC = () => {
 
         <TabsContent value="documents">
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
-        </TabsContent>
-
-        <TabsContent value="monitoring">
-          <PhaseMonitoringDashboard 
-            phaseId={phaseId!} 
-            projectId={projectId!}
-            phaseName={phase.phase || phase.phase_name}
-          />
-        </TabsContent>
-
-        <TabsContent value="advanced">
-          <PhaseAdvancedConfig
-            phase={phase}
-            milestoneProgress={milestoneProgress ?? null}
-            actualCost={actualCost}
-          />
         </TabsContent>
       </Tabs>
     </div>
