@@ -347,6 +347,7 @@ export class PhaseService {
       .from('project_phases')
       .select('*')
       .eq('project_id', projectId)
+      .order('order_index', { ascending: true })
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -367,6 +368,7 @@ export class PhaseService {
       .from('project_phases')
       .select('*')
       .eq('project_id', projectId)
+      .order('order_index', { ascending: true })
       .order('created_at', { ascending: true });
 
     if (error) {
