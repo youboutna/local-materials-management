@@ -61,7 +61,7 @@ import { usePhaseDetails, PhaseMetrics } from "@/hooks/usePhaseDetails";
 import { useQuery } from "@tanstack/react-query";
 import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
 import { MilestoneService } from "@/services/MilestoneService";
-import { validateCompletionReadiness, formatPendingCheckpoints } from "@/utils/completionValidation";
+import { validateCompletionReadiness, formatPendingCheckpoints, getCompletionBlockReasons } from "@/utils/completionValidation";
 
 // Import existing components
 import PhaseMaterials from "./PhaseMaterials";
@@ -373,10 +373,10 @@ const PhaseDetailsPage: React.FC = () => {
     enabled: !!projectId && !!phaseId,
   });
 
-  // Validate if phase can be marked as completed
+  // Validate if phase can be marked as completed (checkpoints + progress)
   const completionValidation = useMemo(() => {
-    return validateCompletionReadiness(milestones);
-  }, [milestones]);
+    return validateCompletionReadiness(milestones, phase?.progress ?? 0, { progressThreshold: 100 });
+  }, [milestones, phase?.progress]);
 
   // Get referential info for this phase
   const referentialInfo = useMemo(() => {
@@ -1116,16 +1116,19 @@ const PhaseDetailsPage: React.FC = () => {
               </div>
               
               {/* Completion Validation Warning */}
-              {!completionValidation.canComplete && completionValidation.totalCheckpoints > 0 && (
+              {!completionValidation.canComplete && (
                 <Alert className="ml-6 border-warning/50 bg-warning/5">
                   <AlertTriangle className="h-4 w-4 text-warning" />
                   <AlertDescription className="text-sm">
                     <span className="font-medium">Impossible de marquer comme terminé</span>
-                    <br />
-                    <span className="text-muted-foreground">
-                      {completionValidation.completedCount} sur {completionValidation.totalCheckpoints} points de contrôle terminés.
-                      Complétez tous les checkpoints depuis l'onglet "Suivi & Jalons".
-                    </span>
+                    <ul className="mt-1 space-y-1 text-muted-foreground">
+                      {getCompletionBlockReasons(completionValidation).map((reason, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <span className="h-1 w-1 rounded-full bg-warning" />
+                          {reason}
+                        </li>
+                      ))}
+                    </ul>
                   </AlertDescription>
                 </Alert>
               )}
@@ -1136,8 +1139,8 @@ const PhaseDetailsPage: React.FC = () => {
                   <Select
                     value={editForm.status || "pending"}
                     onValueChange={(value) => {
-                      // Prevent selecting 'completed' if checkpoints are not done
-                      if (value === 'completed' && !completionValidation.canComplete && completionValidation.totalCheckpoints > 0) {
+                      // Prevent selecting 'completed' if validation fails
+                      if (value === 'completed' && !completionValidation.canComplete) {
                         return;
                       }
                       setEditForm({ ...editForm, status: value as PhaseStatus });
@@ -1161,7 +1164,7 @@ const PhaseDetailsPage: React.FC = () => {
                       </SelectItem>
                       <SelectItem 
                         value="completed"
-                        disabled={!completionValidation.canComplete && completionValidation.totalCheckpoints > 0}
+                        disabled={!completionValidation.canComplete}
                       >
                         <TooltipProvider>
                           <Tooltip>
@@ -1169,22 +1172,24 @@ const PhaseDetailsPage: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 <div className={cn(
                                   "h-2 w-2 rounded-full",
-                                  !completionValidation.canComplete && completionValidation.totalCheckpoints > 0 
+                                  !completionValidation.canComplete 
                                     ? "bg-gray-300" 
                                     : "bg-green-500"
                                 )} />
                                 Terminé
-                                {!completionValidation.canComplete && completionValidation.totalCheckpoints > 0 && (
+                                {!completionValidation.canComplete && (
                                   <Info className="h-3 w-3 text-muted-foreground" />
                                 )}
                               </div>
                             </TooltipTrigger>
-                            {!completionValidation.canComplete && completionValidation.totalCheckpoints > 0 && (
+                            {!completionValidation.canComplete && (
                               <TooltipContent side="right" className="max-w-xs">
-                                <p className="font-medium mb-1">Checkpoints requis</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Complétez tous les points de contrôle avant de marquer cette phase comme terminée.
-                                </p>
+                                <p className="font-medium mb-1">Conditions requises</p>
+                                <ul className="text-xs text-muted-foreground space-y-1">
+                                  {getCompletionBlockReasons(completionValidation).map((reason, idx) => (
+                                    <li key={idx}>• {reason}</li>
+                                  ))}
+                                </ul>
                               </TooltipContent>
                             )}
                           </Tooltip>
