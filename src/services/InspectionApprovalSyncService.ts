@@ -24,19 +24,25 @@ export interface SyncResult {
   projectProgressUpdated: number;
   phaseProgressUpdated?: number;
   milestonesUpdated: number;
-  guaranteesReleased: number;
-  insurancesReleased: number;
+  // Mainlevée niveau phase
+  phaseGuaranteesReleased: number;
+  phaseInsurancesReleased: number;
+  // Mainlevée niveau projet (toutes phases à 100%)
+  projectGuaranteesReleased: number;
+  projectInsurancesReleased: number;
   paymentTriggered: boolean;
   paymentAmount?: number;
   errors: string[];
   actions: string[];
 }
 
+export type ReleaseLevel = 'phase' | 'project';
+
 // Seuils de progression pour les actions automatiques
 export const SYNC_THRESHOLDS = {
   MILESTONE_COMPLETION: 100,       // % pour marquer un jalon terminé
-  GUARANTEE_RELEASE: 100,          // % pour demander mainlevée garantie
-  INSURANCE_RELEASE: 100,          // % pour demander mainlevée assurance
+  PHASE_RELEASE: 100,              // % phase pour mainlevée niveau phase
+  PROJECT_RELEASE: 100,            // % projet pour mainlevée niveau projet
   PAYMENT_TRIGGER: 25,             // % minimum pour déclencher paiement
   PHASE_COMPLETION: 95,            // % pour marquer phase terminée
 };
@@ -56,8 +62,10 @@ export class InspectionApprovalSyncService {
       success: false,
       projectProgressUpdated: 0,
       milestonesUpdated: 0,
-      guaranteesReleased: 0,
-      insurancesReleased: 0,
+      phaseGuaranteesReleased: 0,
+      phaseInsurancesReleased: 0,
+      projectGuaranteesReleased: 0,
+      projectInsurancesReleased: 0,
       paymentTriggered: false,
       errors: [],
       actions: [],
@@ -74,8 +82,9 @@ export class InspectionApprovalSyncService {
       result.actions.push(`Progression projet synchronisée: ${newProgress}%`);
 
       // 3. Mettre à jour la phase si applicable
+      let phaseProgress = 0;
       if (context.phaseId) {
-        const phaseProgress = await this.updatePhaseProgress(context.phaseId, context.progressAtInspection);
+        phaseProgress = await this.updatePhaseProgress(context.phaseId, context.progressAtInspection);
         result.phaseProgressUpdated = phaseProgress;
         result.actions.push(`Progression phase mise à jour: ${phaseProgress}%`);
       }
@@ -87,21 +96,34 @@ export class InspectionApprovalSyncService {
         result.actions.push(`${milestonesUpdated} jalon(s) mis à jour`);
       }
 
-      // 5. Vérifier et déclencher mainlevée garanties si progression >= seuil
-      if (context.progressAtInspection >= SYNC_THRESHOLDS.GUARANTEE_RELEASE) {
-        const guaranteesReleased = await this.processGuaranteeRelease(context.projectId);
-        result.guaranteesReleased = guaranteesReleased;
-        if (guaranteesReleased > 0) {
-          result.actions.push(`${guaranteesReleased} garantie(s) bancaire(s) - demande de mainlevée initiée`);
+      // 5. MAINLEVÉE NIVEAU PHASE : si progression phase >= 100%
+      if (context.phaseId && phaseProgress >= SYNC_THRESHOLDS.PHASE_RELEASE) {
+        const phaseGuarantees = await this.processGuaranteeRelease(context.projectId, 'phase', context.phaseId);
+        result.phaseGuaranteesReleased = phaseGuarantees;
+        if (phaseGuarantees > 0) {
+          result.actions.push(`[PHASE] ${phaseGuarantees} garantie(s) bancaire(s) - mainlevée phase initiée`);
+        }
+
+        const phaseInsurances = await this.processInsuranceRelease(context.projectId, 'phase', context.phaseId);
+        result.phaseInsurancesReleased = phaseInsurances;
+        if (phaseInsurances > 0) {
+          result.actions.push(`[PHASE] ${phaseInsurances} certificat(s) d'assurance - libération phase initiée`);
         }
       }
 
-      // 6. Vérifier et déclencher mainlevée assurances si progression >= seuil
-      if (context.progressAtInspection >= SYNC_THRESHOLDS.INSURANCE_RELEASE) {
-        const insurancesReleased = await this.processInsuranceRelease(context.projectId);
-        result.insurancesReleased = insurancesReleased;
-        if (insurancesReleased > 0) {
-          result.actions.push(`${insurancesReleased} certificat(s) d'assurance - demande de libération initiée`);
+      // 6. MAINLEVÉE NIVEAU PROJET : si TOUTES les phases sont à 100%
+      const allPhasesComplete = await this.checkAllPhasesComplete(context.projectId);
+      if (allPhasesComplete) {
+        const projectGuarantees = await this.processGuaranteeRelease(context.projectId, 'project');
+        result.projectGuaranteesReleased = projectGuarantees;
+        if (projectGuarantees > 0) {
+          result.actions.push(`[PROJET] ${projectGuarantees} garantie(s) bancaire(s) - mainlevée projet initiée`);
+        }
+
+        const projectInsurances = await this.processInsuranceRelease(context.projectId, 'project');
+        result.projectInsurancesReleased = projectInsurances;
+        if (projectInsurances > 0) {
+          result.actions.push(`[PROJET] ${projectInsurances} certificat(s) d'assurance - libération projet initiée`);
         }
       }
 
@@ -125,6 +147,23 @@ export class InspectionApprovalSyncService {
     }
 
     return result;
+  }
+
+  /**
+   * Vérifier si TOUTES les phases du projet sont complètes (100%)
+   */
+  private async checkAllPhasesComplete(projectId: string): Promise<boolean> {
+    const { data: phases, error } = await supabase
+      .from('project_phases')
+      .select('id, progress, status')
+      .eq('project_id', projectId);
+
+    if (error || !phases || phases.length === 0) return false;
+
+    // Toutes les phases doivent avoir une progression >= 100 ou status 'completed'
+    return phases.every(phase => 
+      (phase.progress ?? 0) >= SYNC_THRESHOLDS.PROJECT_RELEASE || phase.status === 'completed'
+    );
   }
 
   /**
@@ -226,24 +265,36 @@ export class InspectionApprovalSyncService {
 
   /**
    * Traiter la mainlevée des garanties bancaires
+   * @param level - 'phase' pour mainlevée phase, 'project' pour mainlevée projet global
+   * @param phaseId - requis si level='phase'
    */
-  private async processGuaranteeRelease(projectId: string): Promise<number> {
+  private async processGuaranteeRelease(
+    projectId: string, 
+    level: ReleaseLevel, 
+    phaseId?: string
+  ): Promise<number> {
+    // Récupérer les garanties actives ou partiellement libérées
+    const statusFilter = level === 'phase' 
+      ? ['active'] // Phase: seulement les actives
+      : ['active', 'phase_released']; // Projet: actives + déjà libérées au niveau phase
+
     const { data: guarantees, error: fetchError } = await supabase
       .from('bank_guarantees')
       .select('*')
       .eq('project_id', projectId)
-      .eq('status', 'active');
+      .in('status', statusFilter);
 
     if (fetchError || !guarantees) return 0;
 
     let releasedCount = 0;
+    const newStatus = level === 'phase' ? 'phase_released' : 'project_released';
+    const levelLabel = level === 'phase' ? 'phase' : 'projet complet';
 
     for (const guarantee of guarantees) {
-      // Marquer la garantie comme "release_requested"
       const { error: updateError } = await supabase
         .from('bank_guarantees')
         .update({
-          status: 'release_requested',
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', guarantee.id);
@@ -254,14 +305,16 @@ export class InspectionApprovalSyncService {
         // Créer une notification pour la mainlevée
         await supabase.from('notifications').insert({
           recipient_id: guarantee.contractor_id,
-          title: 'Demande de mainlevée - Garantie bancaire',
-          message: `La garantie bancaire de ${guarantee.guarantee_amount.toLocaleString()} MRU peut être libérée suite à la validation du projet.`,
+          title: `Mainlevée ${level === 'phase' ? 'Phase' : 'Projet'} - Garantie bancaire`,
+          message: `La garantie bancaire de ${guarantee.guarantee_amount.toLocaleString()} MRU peut être libérée suite à la validation du ${levelLabel}.`,
           type: 'guarantee_release',
           related_id: guarantee.id,
           metadata: {
             guarantee_type: guarantee.guarantee_type,
             bank_name: guarantee.bank_name,
             amount: guarantee.guarantee_amount,
+            release_level: level,
+            phase_id: phaseId,
           },
         });
       }
@@ -272,24 +325,36 @@ export class InspectionApprovalSyncService {
 
   /**
    * Traiter la libération des certificats d'assurance
+   * @param level - 'phase' pour libération phase, 'project' pour libération projet global
+   * @param phaseId - requis si level='phase'
    */
-  private async processInsuranceRelease(projectId: string): Promise<number> {
+  private async processInsuranceRelease(
+    projectId: string, 
+    level: ReleaseLevel, 
+    phaseId?: string
+  ): Promise<number> {
+    // Récupérer les assurances actives ou partiellement libérées
+    const statusFilter = level === 'phase' 
+      ? ['active'] 
+      : ['active', 'phase_released'];
+
     const { data: insurances, error: fetchError } = await supabase
       .from('insurance_certificates')
       .select('*')
       .eq('project_id', projectId)
-      .eq('status', 'active');
+      .in('status', statusFilter);
 
     if (fetchError || !insurances) return 0;
 
     let releasedCount = 0;
+    const newStatus = level === 'phase' ? 'phase_released' : 'project_released';
+    const levelLabel = level === 'phase' ? 'phase' : 'projet complet';
 
     for (const insurance of insurances) {
-      // Marquer l'assurance comme "release_requested"
       const { error: updateError } = await supabase
         .from('insurance_certificates')
         .update({
-          status: 'release_requested',
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', insurance.id);
@@ -300,14 +365,16 @@ export class InspectionApprovalSyncService {
         // Créer une notification pour la libération
         await supabase.from('notifications').insert({
           recipient_id: insurance.contractor_id,
-          title: 'Libération certificat d\'assurance',
-          message: `Le certificat d'assurance (${insurance.coverage_type}) peut être libéré suite à la validation du projet.`,
+          title: `Libération ${level === 'phase' ? 'Phase' : 'Projet'} - Assurance`,
+          message: `Le certificat d'assurance (${insurance.coverage_type}) peut être libéré suite à la validation du ${levelLabel}.`,
           type: 'insurance_release',
           related_id: insurance.id,
           metadata: {
             coverage_type: insurance.coverage_type,
             insurance_company: insurance.insurance_company,
             coverage_amount: insurance.coverage_amount,
+            release_level: level,
+            phase_id: phaseId,
           },
         });
       }
@@ -391,17 +458,23 @@ export class InspectionApprovalSyncService {
         .eq('id', context.projectId)
         .single();
 
+      const totalGuarantees = result.phaseGuaranteesReleased + result.projectGuaranteesReleased;
+      const totalInsurances = result.phaseInsurancesReleased + result.projectInsurancesReleased;
+
       await supabase.from('notifications').insert([{
         recipient_id: context.inspector,
         title: 'Synchronisation complète - Inspection approuvée',
-        message: `Projet "${project?.title}": Progression ${result.projectProgressUpdated}%, ${result.milestonesUpdated} jalon(s) mis à jour, ${result.guaranteesReleased} garantie(s) en mainlevée`,
+        message: `Projet "${project?.title}": Progression ${result.projectProgressUpdated}%, ${result.milestonesUpdated} jalon(s), ${totalGuarantees} garantie(s), ${totalInsurances} assurance(s)`,
         type: 'inspection_sync',
         related_id: context.inspectionId,
         metadata: {
           projectProgressUpdated: result.projectProgressUpdated,
+          phaseProgressUpdated: result.phaseProgressUpdated,
           milestonesUpdated: result.milestonesUpdated,
-          guaranteesReleased: result.guaranteesReleased,
-          insurancesReleased: result.insurancesReleased,
+          phaseGuaranteesReleased: result.phaseGuaranteesReleased,
+          projectGuaranteesReleased: result.projectGuaranteesReleased,
+          phaseInsurancesReleased: result.phaseInsurancesReleased,
+          projectInsurancesReleased: result.projectInsurancesReleased,
           paymentTriggered: result.paymentTriggered,
           inspectionId: context.inspectionId,
         },
@@ -423,13 +496,13 @@ export class InspectionApprovalSyncService {
     };
     guaranteeStatus: {
       active: number;
-      releaseRequested: number;
-      released: number;
+      phaseReleased: number;
+      projectReleased: number;
     };
     insuranceStatus: {
       active: number;
-      releaseRequested: number;
-      released: number;
+      phaseReleased: number;
+      projectReleased: number;
     };
     pendingPayments: number;
   }> {
@@ -450,8 +523,8 @@ export class InspectionApprovalSyncService {
 
     const guaranteeStatus = {
       active: guarantees?.filter(g => g.status === 'active').length || 0,
-      releaseRequested: guarantees?.filter(g => g.status === 'release_requested').length || 0,
-      released: guarantees?.filter(g => g.status === 'released').length || 0,
+      phaseReleased: guarantees?.filter(g => g.status === 'phase_released').length || 0,
+      projectReleased: guarantees?.filter(g => g.status === 'project_released').length || 0,
     };
 
     // Statut assurances
@@ -462,8 +535,8 @@ export class InspectionApprovalSyncService {
 
     const insuranceStatus = {
       active: insurances?.filter(i => i.status === 'active').length || 0,
-      releaseRequested: insurances?.filter(i => i.status === 'release_requested').length || 0,
-      released: insurances?.filter(i => i.status === 'released').length || 0,
+      phaseReleased: insurances?.filter(i => i.status === 'phase_released').length || 0,
+      projectReleased: insurances?.filter(i => i.status === 'project_released').length || 0,
     };
 
     // Paiements en attente
