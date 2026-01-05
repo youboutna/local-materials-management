@@ -51,7 +51,6 @@ import { cn } from "@/lib/utils";
 
 // Services and hooks
 import { usePhaseDetails, PhaseMetrics } from "@/hooks/usePhaseDetails";
-import { referentialService } from "@/services/ReferentialService";
 import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
 
 // Import existing components
@@ -356,10 +355,6 @@ const PhaseDetailsPage: React.FC = () => {
     return getReferentialInfo(phase.construction_phase);
   }, [phase?.construction_phase, getReferentialInfo]);
 
-  // Get referential options for dropdown
-  const referentialOptions = useMemo(() => {
-    return referentialService.getReferentialOptions();
-  }, []);
 
   // Initialize edit form when phase loads
   React.useEffect(() => {
@@ -930,160 +925,301 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog - Improved Design */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Modifier la phase: {phase.phase_name}</DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Edit className="h-5 w-5 text-primary" />
+              </div>
+              Modifier la phase
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Modifiez les informations de la phase "{phase.phase_name}"
+            </p>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nom de la phase *</Label>
-              <Input
-                value={editForm.phase_name || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, phase_name: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={editForm.description || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, description: e.target.value })
-                }
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Date de début</Label>
-                <Input
-                  type="date"
-                  value={editForm.start_date || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, start_date: e.target.value })
-                  }
-                />
+          
+          <div className="space-y-6 py-4">
+            {/* Section: Informations générales */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Building className="h-4 w-4" />
+                Informations générales
               </div>
-              <div>
-                <Label>Date de fin</Label>
-                <Input
-                  type="date"
-                  value={editForm.end_date || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, end_date: e.target.value })
-                  }
-                />
+              
+              <div className="grid gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Nom de la phase <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    value={editForm.phase_name || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, phase_name: e.target.value })
+                    }
+                    placeholder="Ex: Fondations et terrassement"
+                    className="h-10"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    value={editForm.description || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, description: e.target.value })
+                    }
+                    placeholder="Décrivez les objectifs et le contenu de cette phase..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Coût estimé (MRU)</Label>
-                <Input
-                  type="number"
-                  value={editForm.estimated_cost || ""}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      estimated_cost: parseFloat(e.target.value) || undefined,
-                    })
-                  }
-                />
+
+            <Separator />
+
+            {/* Section: Planification */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                Planification
               </div>
-              <div>
-                <Label>Durée estimée (jours)</Label>
-                <Input
-                  type="number"
-                  value={editForm.estimated_duration_days || ""}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      estimated_duration_days: parseInt(e.target.value) || undefined,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Statut</Label>
-                <Select
-                  value={editForm.status || "pending"}
-                  onValueChange={(value) =>
-                    setEditForm({ ...editForm, status: value as PhaseStatus })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="in_progress">En cours</SelectItem>
-                    <SelectItem value="completed">Terminé</SelectItem>
-                    <SelectItem value="delayed">En retard</SelectItem>
-                    <SelectItem value="cancelled">Annulé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Progression (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={editForm.progress || 0}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      progress: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
+              
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Date de début</Label>
+                  <Input
+                    type="date"
+                    value={editForm.start_date || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, start_date: e.target.value })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Date de fin</Label>
+                  <Input
+                    type="date"
+                    value={editForm.end_date || ""}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, end_date: e.target.value })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Durée estimée</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={editForm.estimated_duration_days || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          estimated_duration_days: parseInt(e.target.value) || undefined,
+                        })
+                      }
+                      className="h-10 pr-14"
+                      placeholder="30"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                      jours
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Phase de construction</Label>
-                <Select
-                  value={editForm.construction_phase || ""}
-                  onValueChange={(value) =>
-                    setEditForm({ ...editForm, construction_phase: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {referentialOptions.map((ref) => (
-                      <SelectItem key={ref.value} value={ref.value}>
-                        {ref.label}
+
+            <Separator />
+
+            {/* Section: Budget */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <DollarSign className="h-4 w-4" />
+                Budget
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Coût estimé</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editForm.estimated_cost || ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          estimated_cost: parseFloat(e.target.value) || undefined,
+                        })
+                      }
+                      className="h-10 pr-14"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                      MRU
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Section: État et progression */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Target className="h-4 w-4" />
+                État et progression
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Statut</Label>
+                  <Select
+                    value={editForm.status || "pending"}
+                    onValueChange={(value) =>
+                      setEditForm({ ...editForm, status: value as PhaseStatus })
+                    }
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                          En attente
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Étape de construction</Label>
-                <Input
-                  value={editForm.construction_stage || ""}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, construction_stage: e.target.value })
-                  }
-                  placeholder="Ex: Fondation, Structure..."
-                />
+                      <SelectItem value="in_progress">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-blue-500" />
+                          En cours
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="completed">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-green-500" />
+                          Terminé
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="delayed">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-red-500" />
+                          En retard
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="cancelled">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-gray-500" />
+                          Annulé
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Progression: {editForm.progress || 0}%
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={editForm.progress || 0}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          progress: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="h-2 flex-1"
+                    />
+                    <span className={cn(
+                      "text-sm font-bold min-w-[3rem] text-right",
+                      (editForm.progress || 0) === 100 && "text-green-600",
+                      (editForm.progress || 0) > 0 && (editForm.progress || 0) < 100 && "text-primary",
+                      (editForm.progress || 0) === 0 && "text-muted-foreground"
+                    )}>
+                      {editForm.progress || 0}%
+                    </span>
+                  </div>
+                  <Progress value={editForm.progress || 0} className="h-2" />
+                </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleSave} disabled={isUpdating}>
-                {isUpdating ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </div>
+
+            {/* Section: Classification (optionnel) */}
+            {(phase.construction_phase || phase.construction_stage) && (
+              <>
+                <Separator />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Layers className="h-4 w-4" />
+                    Classification
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 pl-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Code de phase</Label>
+                      <Input
+                        value={editForm.construction_phase || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, construction_phase: e.target.value })
+                        }
+                        placeholder="Ex: PRE_FEASIBILITY"
+                        className="h-10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Étape</Label>
+                      <Input
+                        value={editForm.construction_stage || ""}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, construction_stage: e.target.value })
+                        }
+                        placeholder="Ex: Étude préliminaire"
+                        className="h-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditing(false)}
+              className="min-w-[100px]"
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={isUpdating || !editForm.phase_name?.trim()}
+              className="min-w-[120px]"
+            >
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Sauvegarde...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Sauvegarder
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
