@@ -6,6 +6,8 @@ import PhaseList from "@/components/project/PhaseList";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
 import { ProjectMilestoneTimeline } from "@/components/project/milestones";
+import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
+import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1712,126 +1714,89 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="gantt" className="mt-6">
-          <ProjectGantt
-            project={project as any}
-            phases={(computedPhases || []).map((p: any) => ({
-              id: p.id,
-              name: p.phase,
-              startDate: new Date(p.startDate || new Date()),
-              endDate: new Date(p.endDate || new Date()),
-              progress: p.progress || 0,
-              status: (p.status || "planned") as any,
-            }))}
-          />
+          {projectDetail ? (
+            <UnifiedGanttChart
+              projectId={projectId!}
+              projectDetail={projectDetail}
+              onMilestoneClick={(milestoneId, phaseId) => {
+                if (phaseId) {
+                  navigate(`/projects/${projectId}/phases/${phaseId}`);
+                }
+              }}
+            />
+          ) : (
+            <ProjectGantt
+              project={project as any}
+              phases={(computedPhases || []).map((p: any) => ({
+                id: p.id,
+                name: p.phase,
+                startDate: new Date(p.startDate || new Date()),
+                endDate: new Date(p.endDate || new Date()),
+                progress: p.progress || 0,
+                status: (p.status || "planned") as any,
+              }))}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="pert" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analyse PERT</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pertAnalysis ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Durée attendue totale
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Écart-type total
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.variances
-                          ? Math.sqrt(
-                              Object.values(pertAnalysis.variances).reduce(
-                                (sum: number, variance: number) =>
-                                  sum + variance,
-                                0
-                              )
-                            ).toFixed(1)
-                          : "0.0"}{" "}
-                        jours
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Tâches sur chemin critique
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.criticalPath?.length || 0}
-                      </p>
+          {projectDetail ? (
+            <UnifiedPERTAnalysis
+              projectId={projectId!}
+              projectDetail={projectDetail}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Analyse PERT</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pertAnalysis ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Durée attendue totale
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Écart-type total
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {pertAnalysis.variances
+                            ? Math.sqrt(
+                                Object.values(pertAnalysis.variances).reduce(
+                                  (sum: number, variance: number) =>
+                                    sum + variance,
+                                  0
+                                )
+                              ).toFixed(1)
+                            : "0.0"}{" "}
+                          jours
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Tâches sur chemin critique
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {pertAnalysis.criticalPath?.length || 0}
+                        </p>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Activities Table */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Activités PERT
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-2">Activité</th>
-                            <th className="text-right p-2">Optimiste</th>
-                            <th className="text-right p-2">Probable</th>
-                            <th className="text-right p-2">Pessimiste</th>
-                            <th className="text-right p-2">Estimation PERT</th>
-                            <th className="text-right p-2">Écart-type</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pertAnalysis.activities
-                            .slice(0, 10)
-                            .map((activity, index) => (
-                              <tr
-                                key={index}
-                                className="border-b hover:bg-muted/50"
-                              >
-                                <td className="p-2 font-medium">
-                                  {activity.name}
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.optimistic.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.mostLikely.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.pessimistic.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right font-semibold">
-                                  {activity.pertEstimate.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.standardDeviation.toFixed(2)}j
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {pertAnalysis.activities.length > 10 && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Affichage de 10 activités sur{" "}
-                        {pertAnalysis.activities.length}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  Chargement de l'analyse PERT...
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Chargement de l'analyse PERT...
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
