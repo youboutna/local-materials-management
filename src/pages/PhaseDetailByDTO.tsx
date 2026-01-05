@@ -11,8 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
-import { UnifiedMilestoneManager } from '@/components/project/milestones';
-import { PhaseMonitoringDashboard } from '@/components/project/monitoring';
+import UnifiedPhaseWorkflow from '@/components/project/monitoring/UnifiedPhaseWorkflow';
 import { ProjectDataTransformer } from '@/services/projectDataTransformer';
 import { MilestoneService } from '@/services/MilestoneService';
 import { 
@@ -237,10 +236,9 @@ const PhaseDetailByDTO: React.FC = () => {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="stages">Étapes</TabsTrigger>
-          <TabsTrigger value="monitoring">
+          <TabsTrigger value="workflow">
             <Target className="h-4 w-4 mr-1" />
-            Suivi & Jalons
+            Suivi & Étapes
           </TabsTrigger>
           <TabsTrigger value="materials">Matériaux</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
@@ -382,75 +380,21 @@ const PhaseDetailByDTO: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="stages" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5" />
-                Étapes de la phase ({phase.stages?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {phase.stages && phase.stages.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {phase.stages.map((stage: any, index: number) => (
-                    <div key={index} className="p-4 border rounded-lg hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium">{stage.name}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {stage.status === 'completed' ? 'Terminé' : 
-                           stage.status === 'in_progress' ? 'En cours' : 'À faire'}
-                        </Badge>
-                      </div>
-                      {stage.description && (
-                        <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
-                      )}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
-                          <span>Progression</span>
-                          <span className="font-medium">{stage.progress || 0}%</span>
-                        </div>
-                        <Progress value={stage.progress || 0} className="h-1.5" />
-                      </div>
-                      {stage.tasks && stage.tasks.length > 0 && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {stage.tasks.length} tâche(s)
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Layers className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-medium mb-2">Aucune étape définie</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Les étapes seront créées lors de la configuration de la phase depuis un référentiel.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Unified Monitoring & Milestones Tab */}
-        <TabsContent value="monitoring" className="space-y-6">
-          {/* Milestone Manager - Reference Model */}
-          <UnifiedMilestoneManager
+        {/* Unified Workflow Tab - Merges Stages and Monitoring */}
+        <TabsContent value="workflow" className="space-y-6">
+          <UnifiedPhaseWorkflow
             projectId={projectId!}
             phaseId={phaseId!}
             phaseName={phase.phase || phase.phase_name || 'Phase'}
-            defaultView="timeline"
-            onMilestoneClick={(milestoneId) => {
-              console.log('Milestone clicked:', milestoneId);
-            }}
-          />
-
-          {/* Monitoring Dashboard integrated below milestones */}
-          <PhaseMonitoringDashboard 
-            phaseId={phaseId!} 
-            projectId={projectId!}
-            phaseName={phase.phase || phase.phase_name}
+            stages={phase.stages?.map((stage: any, index: number) => ({
+              id: stage.id || `stage-${index}`,
+              name: stage.name,
+              description: stage.description,
+              status: stage.status || 'pending',
+              progress: stage.progress || 0
+            })) || []}
+            phaseProgress={phase.progress || 0}
+            phaseBudget={phase.budget || 0}
           />
         </TabsContent>
         
