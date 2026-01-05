@@ -35,7 +35,6 @@ import {
   Building,
   Calendar,
   CheckCircle,
-  ClipboardCheck,
   Clock,
   CreditCard,
   DollarSign,
@@ -67,14 +66,10 @@ import { useQuery } from "@tanstack/react-query";
 import PhaseCompliance from "./PhaseCompliance";
 import PhaseDocuments from "./PhaseDocuments";
 import PhaseEmployees from "./PhaseEmployees";
-import PhaseInspections from "./PhaseInspections";
 import PhaseMaterials from "./PhaseMaterials";
-import PhasePayments from "./PhasePayments";
-import PhaseTasks from "./PhaseTasks";
+import UnifiedPhaseMonitoring from "./monitoring/UnifiedPhaseMonitoring";
 import PhaseStepsManager from "./phase/PhaseStepsManager";
 
-// Import the new Unified Workflow Component
-import UnifiedPhaseWorkflow from "./workflow/UnifiedPhaseWorkflow";
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -386,6 +381,7 @@ const PhaseDetailsPage: React.FC = () => {
     return getReferentialInfo(phase.construction_phase);
   }, [phase?.construction_phase, getReferentialInfo]);
 
+
   // Initialize edit form when phase loads
   React.useEffect(() => {
     if (phase) {
@@ -514,7 +510,7 @@ const PhaseDetailsPage: React.FC = () => {
           <CardContent className="py-3">
             <div className="flex items-center gap-4">
               <GitBranch className="h-5 w-5 text-primary" />
-              <div>
+            <div>
                 <p className="text-sm font-medium">
                   Référentiel: {referentialInfo.referential.name?.fr || referentialInfo.referential.code}
                 </p>
@@ -536,7 +532,7 @@ const PhaseDetailsPage: React.FC = () => {
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="monitoring" className="flex items-center gap-1">
             <Target className="h-4 w-4" />
-            Workflow & Suivi
+            Suivi & Jalons
           </TabsTrigger>
         </TabsList>
 
@@ -894,6 +890,7 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
+
         {/* Steps Tab - With Full Management */}
         <TabsContent value="steps">
           <Card className="border-0 shadow-lg overflow-hidden">
@@ -949,83 +946,17 @@ const PhaseDetailsPage: React.FC = () => {
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        {/* Workflow & Monitoring Tab - Unified View */}
+        {/* Monitoring & Milestones Tab - Unified View */}
         <TabsContent value="monitoring" className="space-y-6">
-          {/* Unified Phase Workflow - Combines Dashboard + Milestones + Inspections */}
-          <UnifiedPhaseWorkflow
+          {/* Unified Phase Monitoring - Combines Dashboard + Milestones */}
+          <UnifiedPhaseMonitoring
             projectId={projectId!}
             phaseId={phaseId!}
             phaseName={phase.phase_name || 'Phase'}
-            phaseProgress={phase.progress}
-            phaseBudget={phase.estimated_cost}
-            stages={phase.steps.map(step => ({
-              id: step.id,
-              name: step.name,
-              description: step.description,
-              status: step.status,
-              progress: step.progress
-            }))}
-            onPhasesUpdate={(updatedPhases) => {
-              // Handle phase updates if needed
-              console.log('Phases updated:', updatedPhases);
-            }}
-            onReferentialChange={(referentialId) => {
-              // Handle referential change if needed
-              console.log('Referential changed to:', referentialId);
-            }}
           />
 
-          {/* Sous-tabs pour les vues détaillées */}
-          <Card className="border-0 shadow-md overflow-hidden">
-            <Tabs defaultValue="tasks" className="w-full">
-              <TabsList className="grid grid-cols-4 bg-muted/50 p-1 m-2 rounded-lg">
-                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <ListChecks className="h-4 w-4" />
-                  <span>Tâches</span>
-                </TabsTrigger>
-                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <ClipboardCheck className="h-4 w-4" />
-                  <span>Inspections</span>
-                </TabsTrigger>
-                <TabsTrigger value="payments" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Paiements</span>
-                </TabsTrigger>
-                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <Shield className="h-4 w-4" />
-                  <span>Conformité</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="tasks" className="p-6">
-                <PhaseTasks 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="inspections" className="p-6">
-                <PhaseInspections 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="payments" className="p-6">
-                <PhasePayments 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="compliance" className="p-6">
-                <PhaseCompliance 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-            </Tabs>
-          </Card>
+          {/* Compliance */}
+          <PhaseCompliance phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
       </Tabs>
 
