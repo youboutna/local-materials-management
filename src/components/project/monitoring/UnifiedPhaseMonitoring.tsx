@@ -303,8 +303,10 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     if (milestone) {
       try {
         await MilestoneService.updateMilestone(milestone.id, { status: 'completed' });
+        // Invalidate all related queries including validation cache
         queryClient.invalidateQueries({ queryKey: ['unified-milestones'] });
         queryClient.invalidateQueries({ queryKey: ['milestone-progress'] });
+        queryClient.invalidateQueries({ queryKey: ['phase-milestones-validation'] });
         toast({
           title: "Jalon terminé",
           description: `Le jalon "${milestone.title}" a été marqué comme terminé.`,
