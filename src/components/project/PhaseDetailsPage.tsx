@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -35,35 +36,41 @@ import {
   Building,
   Calendar,
   CheckCircle,
+  ChevronRight,
   ClipboardCheck,
   Clock,
   CreditCard,
   DollarSign,
   Download,
   Edit,
+  Eye,
   FileText,
   GitBranch,
   Info,
   Layers,
   ListChecks,
   Package,
+  PieChart,
   RefreshCw,
   Shield,
   Target,
   TrendingUp,
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 // Services and hooks
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
 import { MilestoneService } from "@/services/MilestoneService";
-import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
+
+import { PhaseDTO, PhaseStatus } from "@/types/phase-dto";
 import { getCompletionBlockReasons, validateCompletionReadiness } from "@/utils/completionValidation";
 import { useQuery } from "@tanstack/react-query";
 
 // Import existing components
+import { ProjectDataCalculations } from "../../utils/projectDataCalculations";
 import PhaseCompliance from "./PhaseCompliance";
 import PhaseDocuments from "./PhaseDocuments";
 import PhaseEmployees from "./PhaseEmployees";
@@ -73,9 +80,6 @@ import PhasePayments from "./PhasePayments";
 import PhaseTasks from "./PhaseTasks";
 import UnifiedPhaseWorkflow from "./monitoring/UnifiedPhaseWorkflow";
 import PhaseStepsManager from "./phase/PhaseStepsManager";
-
-// Import the new Unified Workflow Component
-
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -152,191 +156,207 @@ const calculateRemainingDays = (endDate?: string | null) => {
   }
 };
 
-// Phase Steps Component - Enhanced Design
-const PhaseStepsView: React.FC<{ 
-  steps: PhaseStepDTO[];
-  onStepClick?: (stepId: string) => void;
-}> = ({ steps, onStepClick }) => {
-  if (!steps || steps.length === 0) {
+const getFinancialHealthColor = (health: string) => {
+  switch (health) {
+    case 'excellent': return 'text-green-600 bg-green-100 border-green-200';
+    case 'good': return 'text-emerald-600 bg-emerald-100 border-emerald-200';
+    case 'warning': return 'text-amber-600 bg-amber-100 border-amber-200';
+    case 'critical': return 'text-red-600 bg-red-100 border-red-200';
+    default: return 'text-gray-600 bg-gray-100 border-gray-200';
+  }
+};
+
+const getFinancialHealthLabel = (health: string) => {
+  switch (health) {
+    case 'excellent': return 'Excellent';
+    case 'good': return 'Bon';
+    case 'warning': return 'Attention';
+    case 'critical': return 'Critique';
+    default: return 'Inconnu';
+  }
+};
+
+const getFinancialHealthIcon = (health: string) => {
+  switch (health) {
+    case 'excellent': return <CheckCircle className="h-4 w-4" />;
+    case 'good': return <TrendingUp className="h-4 w-4" />;
+    case 'warning': return <AlertTriangle className="h-4 w-4" />;
+    case 'critical': return <AlertTriangle className="h-4 w-4" />;
+    default: return <Info className="h-4 w-4" />;
+  }
+};
+
+// Financial Analysis Component
+const FinancialAnalysisCard: React.FC<{ phaseId: string; projectId: string }> = ({ phaseId, projectId }) => {
+  const { data: phaseCosts, isLoading: loadingCosts } = useQuery({
+    queryKey: ['phase-costs', projectId, phaseId],
+    queryFn: () => ProjectDataCalculations.calculatePhaseCosts(projectId, phaseId),
+    enabled: !!projectId && !!phaseId,
+  });
+
+  if (loadingCosts) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-          <Layers className="h-8 w-8 text-muted-foreground/50" />
-        </div>
-        <p className="text-muted-foreground">Aucune étape définie pour cette phase</p>
-        <p className="text-sm text-muted-foreground/70 mt-1">
-          Ajoutez des étapes depuis un référentiel ou manuellement
-        </p>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-2 w-full" />
+        </CardContent>
+      </Card>
     );
   }
 
-  const completedCount = steps.filter(s => s.status === 'completed').length;
-  const totalProgress = steps.reduce((sum, s) => sum + s.progress, 0) / steps.length;
+  if (!phaseCosts) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Aucune donnée financière disponible
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Summary Header */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary/10">
-            <Layers className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-lg font-semibold">{steps.length} Étapes</p>
-            <p className="text-sm text-muted-foreground">
-              {completedCount} terminées • {Math.round(totalProgress)}% progression moyenne
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            {completedCount}
-          </Badge>
-          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
-            <RefreshCw className="h-3 w-3 mr-1" />
-            {steps.filter(s => s.status === 'in_progress').length}
-          </Badge>
-          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
-            <Clock className="h-3 w-3 mr-1" />
-            {steps.filter(s => s.status === 'pending').length}
-          </Badge>
-        </div>
-      </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium flex items-center justify-between">
+          <span>Analyse financière</span>
 
-      {/* Timeline View */}
-      <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-muted" />
-        
-        <div className="space-y-4">
-          {steps.map((step, index) => {
-            const isCompleted = step.status === 'completed';
-            const isInProgress = step.status === 'in_progress';
-            const isDelayed = step.status === 'delayed';
-            
-            return (
-              <div 
-                key={step.id} 
-                className="relative pl-16 cursor-pointer group"
-                onClick={() => onStepClick?.(step.id)}
-              >
-                {/* Step indicator */}
-                <div className={cn(
-                  "absolute left-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-all",
-                  isCompleted && "bg-green-500 text-white shadow-lg shadow-green-500/30",
-                  isInProgress && "bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-primary/20",
-                  isDelayed && "bg-destructive text-white shadow-lg shadow-destructive/30",
-                  !isCompleted && !isInProgress && !isDelayed && "bg-muted text-muted-foreground border-2 border-muted-foreground/30"
-                )}>
-                  {isCompleted ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                
-                {/* Step Card */}
-                <Card className={cn(
-                  "transition-all border-2 group-hover:shadow-lg group-hover:scale-[1.01]",
-                  isCompleted && "border-green-200 bg-green-50/50",
-                  isInProgress && "border-primary/40 bg-primary/5",
-                  isDelayed && "border-destructive/40 bg-destructive/5",
-                  !isCompleted && !isInProgress && !isDelayed && "border-transparent hover:border-muted-foreground/20"
-                )}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold truncate">{step.name}</h4>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "shrink-0",
-                              getStatusColor(step.status)
-                            )}
-                          >
-                            {getStatusIcon(step.status)}
-                            <span className="ml-1">{getStatusLabel(step.status)}</span>
-                          </Badge>
-                        </div>
-                        {step.description && (
-                          <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
-                        )}
-                        
-                        {/* Progress bar */}
-                        <div className="flex items-center gap-3">
-                          <Progress value={step.progress} className="flex-1 h-2" />
-                          <span className={cn(
-                            "text-sm font-bold min-w-[3rem] text-right",
-                            step.progress === 100 && "text-green-600",
-                            step.progress > 0 && step.progress < 100 && "text-primary",
-                            step.progress === 0 && "text-muted-foreground"
-                          )}>
-                            {step.progress}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Tasks */}
-                    {step.tasks.length > 0 && (
-                      <div className="mt-4 pt-4 border-t space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">
-                          {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
-                        </p>
-                        <div className="grid gap-2">
-                          {step.tasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className={cn(
-                                "flex items-center justify-between p-2.5 rounded-lg transition-colors",
-                                task.status === 'completed' 
-                                  ? "bg-green-100/50" 
-                                  : task.status === 'in_progress'
-                                  ? "bg-blue-100/50"
-                                  : "bg-muted/50"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                {task.status === "completed" ? (
-                                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
-                                ) : task.status === "in_progress" ? (
-                                  <RefreshCw className="h-4 w-4 text-primary shrink-0" />
-                                ) : (
-                                  <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 shrink-0" />
-                                )}
-                                <span className={cn(
-                                  "text-sm truncate",
-                                  task.status === 'completed' && "line-through text-muted-foreground"
-                                )}>
-                                  {task.name}
-                                </span>
-                              </div>
-                              <Badge 
-                                variant="outline" 
-                                className={cn(
-                                  "text-xs shrink-0 ml-2",
-                                  task.status === 'completed' && "border-green-300 text-green-700",
-                                  task.status === 'in_progress' && "border-blue-300 text-blue-700"
-                                )}
-                              >
-                                {getStatusLabel(task.status)}
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })}
+          
+          <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
+            {getFinancialHealthIcon(phaseCosts.financialHealth)}
+            <span className="ml-1">{getFinancialHealthLabel(phaseCosts.financialHealth)}</span>
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Budget estimé</span>
+            <span className="font-medium">{formatCurrency(phaseCosts.estimatedCost)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Total dépensé</span>
+            <span className={cn(
+              "font-medium",
+              phaseCosts.isOverBudget ? "text-red-600" : "text-green-600"
+            )}>
+              {formatCurrency(phaseCosts.totalSpent)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Écart budgétaire</span>
+            <span className={cn(
+              "font-medium",
+              phaseCosts.costVariance > 0 ? "text-red-600" : "text-green-600"
+            )}>
+              {phaseCosts.costVariance > 0 ? "+" : ""}{formatCurrency(phaseCosts.costVariance)}
+            </span>
+          </div>
         </div>
-      </div>
-    </div>
+        
+        <Progress 
+          value={Math.min(100, phaseCosts.budgetUtilization)} 
+          className={cn(
+            "h-2",
+            phaseCosts.budgetUtilization > 90 
+              ? "bg-red-100 [&>div]:bg-red-600" 
+              : phaseCosts.budgetUtilization > 75
+              ? "bg-amber-100 [&>div]:bg-amber-600"
+              : "bg-green-100 [&>div]:bg-green-600"
+          )}
+        />
+        
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Utilisation: {phaseCosts.budgetUtilization.toFixed(1)}%</span>
+          <span>Restant: {formatCurrency(phaseCosts.remainingBudget)}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Resource Utilization Card
+const ResourceUtilizationCard: React.FC<{ phaseId: string; projectId: string }> = ({ phaseId, projectId }) => {
+  const { data: resources, isLoading } = useQuery({
+    queryKey: ['phase-resources', projectId, phaseId],
+    queryFn: () => ProjectDataCalculations.calculatePhaseResourceUtilization(projectId, phaseId),
+    enabled: !!projectId && !!phaseId,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!resources) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Aucune donnée de ressources disponible
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium">Équipe</span>
+            </div>
+            <p className="text-2xl font-bold">{resources.totalEmployees}</p>
+            <p className="text-xs text-muted-foreground">personnes assignées</p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-medium">Matériaux</span>
+            </div>
+            <p className="text-2xl font-bold">{resources.totalMaterials}</p>
+            <p className="text-xs text-muted-foreground">unités utilisées</p>
+          </div>
+        </div>
+        
+        {resources.hasResourceIssues && (
+          <Alert variant="warning" className="py-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-xs">
+              Ressources limitées détectées
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -376,6 +396,27 @@ const PhaseDetailsPage: React.FC = () => {
     enabled: !!projectId && !!phaseId,
   });
 
+  // Fetch phase financial data
+  const { data: phaseCosts, isLoading: loadingCosts } = useQuery({
+    queryKey: ['phase-costs', projectId, phaseId],
+    queryFn: () => ProjectDataCalculations.calculatePhaseCosts(projectId!, phaseId!),
+    enabled: !!projectId && !!phaseId,
+  });
+
+  // Fetch phase resource utilization
+  const { data: phaseResources, isLoading: loadingResources } = useQuery({
+    queryKey: ['phase-resources', projectId, phaseId],
+    queryFn: () => ProjectDataCalculations.calculatePhaseResourceUtilization(projectId!, phaseId!),
+    enabled: !!projectId && !!phaseId,
+  });
+
+  // Fetch phase progress metrics
+  const { data: progressMetrics } = useQuery({
+    queryKey: ['phase-progress-metrics', phaseId],
+    queryFn: () => ProjectDataCalculations.calculatePhaseProgressMetrics(phaseId!),
+    enabled: !!phaseId,
+  });
+
   // Validate if phase can be marked as completed (checkpoints + progress)
   const completionValidation = useMemo(() => {
     return validateCompletionReadiness(milestones, phase?.progress ?? 0, { progressThreshold: 100 });
@@ -388,7 +429,7 @@ const PhaseDetailsPage: React.FC = () => {
   }, [phase?.construction_phase, getReferentialInfo]);
 
   // Initialize edit form when phase loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (phase) {
       setEditForm({
         phase_name: phase.phase_name,
@@ -425,7 +466,7 @@ const PhaseDetailsPage: React.FC = () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Impossible de charger les détails de la phase. Phase non trouvée
-        </AlertDescription>
+          </AlertDescription>
         </Alert>
         <Button
           onClick={() => navigate(`/projects/${projectId}`)}
@@ -448,22 +489,33 @@ const PhaseDetailsPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => navigate(`/projects/${projectId}`)}
+              className="shrink-0"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au projet
             </Button>
-            <div className="flex items-center gap-2">
-              <Building className="h-5 w-5 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold">Phase: {phase.phase_name}</h1>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                <Building className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold truncate">Phase: {phase.phase_name}</h1>
+                  {phaseCosts?.isOverBudget && (
+                    <Badge variant="destructive" className="animate-pulse shrink-0">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Dépassement budgétaire
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground truncate">
                   {referentialInfo?.referential?.name?.fr || phase.construction_phase || "Standard"} 
                   • ID: {phase.id.slice(0, 8)}
                 </p>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Exporter
@@ -476,9 +528,9 @@ const PhaseDetailsPage: React.FC = () => {
         </div>
 
         {/* Status and Progress Bar */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gradient-to-r from-muted/30 to-transparent rounded-lg border">
           <div className="flex items-center gap-4 flex-wrap">
-            <Badge className={`${getStatusColor(phase.status)} flex items-center gap-1`}>
+            <Badge className={`${getStatusColor(phase.status)} flex items-center gap-1 shrink-0`}>
               {getStatusIcon(phase.status)}
               {getStatusLabel(phase.status)}
             </Badge>
@@ -493,13 +545,19 @@ const PhaseDetailsPage: React.FC = () => {
               <span>{formatCurrency(phase.estimated_cost)}</span>
             </div>
             {phase.steps.length > 0 && (
-              <Badge variant="outline" className="flex items-center gap-1">
+              <Badge variant="outline" className="flex items-center gap-1 shrink-0">
                 <Layers className="h-3 w-3" />
                 {phase.steps.length} étapes
               </Badge>
             )}
+            {phaseCosts?.financialHealth && (
+              <Badge variant="outline" className={cn(getFinancialHealthColor(phaseCosts.financialHealth), "shrink-0")}>
+                {getFinancialHealthIcon(phaseCosts.financialHealth)}
+                <span className="ml-1">{getFinancialHealthLabel(phaseCosts.financialHealth)}</span>
+              </Badge>
+            )}
           </div>
-          <div className="w-48">
+          <div className="w-full md:w-48">
             <div className="flex justify-between text-sm mb-1">
               <span>Progression</span>
               <span>{phase.progress}%</span>
@@ -529,24 +587,43 @@ const PhaseDetailsPage: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="steps">Étapes</TabsTrigger>
-          <TabsTrigger value="resources">Ressources</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="monitoring" className="flex items-center gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-6">
+          <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5">
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Vue d'ensemble</span>
+          </TabsTrigger>
+          <TabsTrigger value="steps" className="flex items-center gap-1.5 py-2.5">
+            <Layers className="h-4 w-4" />
+            <span className="hidden sm:inline">Étapes</span>
+          </TabsTrigger>
+          <TabsTrigger value="resources" className="flex items-center gap-1.5 py-2.5">
+            <Package className="h-4 w-4" />
+            <span className="hidden sm:inline">Ressources</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-1.5 py-2.5">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Documents</span>
+          </TabsTrigger>
+          <TabsTrigger value="finances" className="flex items-center gap-1.5 py-2.5 relative">
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">Finances</span>
+            {phaseCosts?.isOverBudget && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-ping"></span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="monitoring" className="flex items-center gap-1.5 py-2.5">
             <Target className="h-4 w-4" />
-            Workflow & Suivi
+            <span className="hidden sm:inline">Suivi</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab - Enhanced Design */}
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 animate-in fade-in duration-300">
           {/* Key Metrics Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Progress Card */}
-            <Card className="overflow-hidden border-0 shadow-md">
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
               <div className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                 <div className="flex items-center justify-between">
                   <div className="p-2 rounded-xl bg-primary/10">
@@ -557,35 +634,98 @@ const PhaseDetailsPage: React.FC = () => {
                   </Badge>
                 </div>
                 <div className="mt-3">
-                  <p className="text-3xl font-bold">{phase.progress}%</p>
-                  <p className="text-sm text-muted-foreground">Progression</p>
+                  <p className="text-3xl font-bold">{progressMetrics?.overallProgress || phase.progress}%</p>
+                  <p className="text-sm text-muted-foreground">Progression globale</p>
                 </div>
-                <Progress value={phase.progress} className="h-1.5 mt-3" />
-              </div>
-            </Card>
-
-            {/* Budget Card */}
-            <Card className="overflow-hidden border-0 shadow-md">
-              <div className="p-4 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-xl bg-green-500/10">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
-                  <p className="text-sm text-muted-foreground">Budget estimé</p>
-                </div>
-                {phase.actual_cost !== undefined && phase.actual_cost > 0 && (
-                  <p className="text-xs text-green-600 mt-2">
-                    Réel: {formatCurrency(phase.actual_cost)}
+                <Progress value={progressMetrics?.overallProgress || phase.progress} className="h-1.5 mt-3" />
+                {progressMetrics && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {progressMetrics.completedSteps}/{progressMetrics.totalSteps} étapes • {progressMetrics.completedTasks}/{progressMetrics.totalTasks} tâches
                   </p>
                 )}
               </div>
             </Card>
 
+            {/* Budget Card - Enhanced with Real Costs */}
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
+              <div className="p-4 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-green-500/10">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                  </div>
+                  {loadingCosts ? (
+                    <Skeleton className="h-5 w-16" />
+                  ) : phaseCosts?.costVariance !== 0 && (
+                    <Badge variant={phaseCosts?.costVariance > 0 ? "destructive" : "default"}>
+                      {phaseCosts?.costVariance > 0 ? "+" : ""}
+                      {formatCurrency(phaseCosts?.costVariance)}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="mt-3">
+                  <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
+                  <p className="text-sm text-muted-foreground">Budget estimé</p>
+                </div>
+                
+                {/* Real Costs Breakdown */}
+                {loadingCosts ? (
+                  <div className="mt-3 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : phaseCosts ? (
+                  <div className="mt-3 pt-3 border-t border-green-200/30 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Payé aux contractants:</span>
+                      <span className="font-medium text-blue-600">
+                        {formatCurrency(phaseCosts.totalPayments)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Dépenses internes:</span>
+                      <span className="font-medium text-orange-600">
+                        {formatCurrency(phaseCosts.totalExpenses)}
+                      </span>
+                    </div>
+                    
+                    <Separator className="my-1" />
+                    
+                    <div className="flex justify-between font-medium">
+                      <span>Total dépensé:</span>
+                      <span className={cn(
+                        "font-bold",
+                        phaseCosts.totalSpent > (phase.estimated_cost || 0) 
+                          ? "text-red-600" 
+                          : "text-green-600"
+                      )}>
+                        {formatCurrency(phaseCosts.totalSpent)}
+                      </span>
+                    </div>
+                    
+                    {phase.estimated_cost && phase.estimated_cost > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Utilisation budget:</span>
+                        <span className={cn(
+                          "font-medium",
+                          (phaseCosts.totalSpent / phase.estimated_cost) > 1 
+                            ? "text-red-600" 
+                            : "text-green-600"
+                        )}>
+                          {((phaseCosts.totalSpent / phase.estimated_cost) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-3">Aucune donnée financière disponible</p>
+                )}
+              </div>
+            </Card>
+
             {/* Timeline Card */}
-            <Card className="overflow-hidden border-0 shadow-md">
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
               <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent">
                 <div className="flex items-center justify-between">
                   <div className="p-2 rounded-xl bg-blue-500/10">
@@ -604,7 +744,7 @@ const PhaseDetailsPage: React.FC = () => {
 
             {/* Steps Card */}
             <Card 
-              className="overflow-hidden border-0 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+              className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setActiveTab("steps")}
             >
               <div className="p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
@@ -612,6 +752,7 @@ const PhaseDetailsPage: React.FC = () => {
                   <div className="p-2 rounded-xl bg-purple-500/10">
                     <Layers className="h-5 w-5 text-purple-600" />
                   </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="mt-3">
                   <p className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</p>
@@ -637,7 +778,7 @@ const PhaseDetailsPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
                     {phase.description || "Aucune description disponible pour cette phase."}
                   </p>
                 </CardContent>
@@ -652,9 +793,15 @@ const PhaseDetailsPage: React.FC = () => {
                         <Layers className="h-5 w-5 text-purple-600" />
                         Aperçu des étapes
                       </CardTitle>
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                        {metrics.completedSteps}/{metrics.stepsCount}
-                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveTab("steps")}
+                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      >
+                        Voir toutes
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4">
@@ -667,15 +814,16 @@ const PhaseDetailsPage: React.FC = () => {
                           <div
                             key={step.id}
                             className={cn(
-                              "flex items-center justify-between p-3 rounded-xl border-2 transition-all hover:shadow-sm",
+                              "flex items-center justify-between p-3 rounded-xl border-2 transition-all hover:shadow-sm cursor-pointer",
                               isCompleted && "bg-green-50/50 border-green-200",
                               isInProgress && "bg-blue-50/50 border-blue-200",
                               !isCompleted && !isInProgress && "bg-muted/30 border-transparent"
                             )}
+                            onClick={() => setActiveTab("steps")}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
                                 isCompleted && "bg-green-500 text-white",
                                 isInProgress && "bg-blue-500 text-white",
                                 !isCompleted && !isInProgress && "bg-muted text-muted-foreground"
@@ -686,8 +834,8 @@ const PhaseDetailsPage: React.FC = () => {
                                   index + 1
                                 )}
                               </div>
-                              <div>
-                                <span className="text-sm font-medium">{step.name}</span>
+                              <div className="min-w-0">
+                                <span className="text-sm font-medium truncate">{step.name}</span>
                                 {step.tasks.length > 0 && (
                                   <p className="text-xs text-muted-foreground">
                                     {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
@@ -695,7 +843,7 @@ const PhaseDetailsPage: React.FC = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                               <div className="w-16">
                                 <Progress value={step.progress} className="h-1.5" />
                               </div>
@@ -724,7 +872,7 @@ const PhaseDetailsPage: React.FC = () => {
                 </Card>
               )}
 
-              {/* Detailed Metrics Section - Merged from Metrics Tab */}
+              {/* Detailed Metrics Section */}
               <Card className="border-0 shadow-md overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-indigo-500/5 to-transparent">
                   <CardTitle className="flex items-center gap-2">
@@ -760,9 +908,9 @@ const PhaseDetailsPage: React.FC = () => {
                         <Package className="h-4 w-4 text-amber-600" />
                         <span className="text-xs font-medium text-amber-600">Matériaux</span>
                       </div>
-                      <p className="text-2xl font-bold text-amber-700">{metrics.totalMaterials}</p>
+                      <p className="text-2xl font-bold text-amber-700">{phaseResources?.totalMaterials || metrics.totalMaterials}</p>
                       <p className="text-xs text-amber-600/80 mt-1">
-                        {formatCurrency(metrics.materialCost)}
+                        {formatCurrency(phaseResources?.materialCost || metrics.materialCost)}
                       </p>
                     </div>
                     <div className="text-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/30 border border-purple-100">
@@ -770,7 +918,7 @@ const PhaseDetailsPage: React.FC = () => {
                         <Users className="h-4 w-4 text-purple-600" />
                         <span className="text-xs font-medium text-purple-600">Employés</span>
                       </div>
-                      <p className="text-2xl font-bold text-purple-700">{metrics.totalEmployees}</p>
+                      <p className="text-2xl font-bold text-purple-700">{phaseResources?.totalEmployees || metrics.totalEmployees}</p>
                       <p className="text-xs text-purple-600/80 mt-1">assignés</p>
                     </div>
                   </div>
@@ -785,16 +933,24 @@ const PhaseDetailsPage: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Total des paiements</span>
-                          <span className="font-semibold">{formatCurrency(metrics.totalPaymentAmount)}</span>
+                          <span className="font-semibold">{formatCurrency(phaseCosts?.totalPayments || metrics.totalPaymentAmount)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Nombre de paiements</span>
-                          <span className="font-semibold">{metrics.totalPayments}</span>
+                          <span className="text-muted-foreground">Dépenses internes</span>
+                          <span className="font-semibold">{formatCurrency(phaseCosts?.totalExpenses || 0)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Documents attachés</span>
                           <span className="font-semibold">{metrics.totalDocuments}</span>
                         </div>
+                        {phaseCosts && (
+                          <div className="flex justify-between text-sm pt-2 border-t">
+                            <span className="text-muted-foreground">Transactions</span>
+                            <span className="font-semibold">
+                              {phaseCosts.paymentsCount + phaseCosts.expensesCount} total
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-transparent border border-violet-100">
@@ -815,6 +971,14 @@ const PhaseDetailsPage: React.FC = () => {
                           <span className="text-muted-foreground">Progression étapes</span>
                           <span className="font-semibold">{metrics.milestoneProgress.toFixed(1)}%</span>
                         </div>
+                        {progressMetrics && (
+                          <div className="flex justify-between text-sm pt-2 border-t">
+                            <span className="text-muted-foreground">Tâches terminées</span>
+                            <span className="font-semibold">
+                              {progressMetrics.completedTasks}/{progressMetrics.totalTasks}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -845,6 +1009,20 @@ const PhaseDetailsPage: React.FC = () => {
                     <span className="text-sm text-muted-foreground">Budget</span>
                     <span className="font-medium text-green-600">{formatCurrency(phase.estimated_cost)}</span>
                   </div>
+                  {phaseCosts && (
+                    <>
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="text-sm text-muted-foreground">Dépensé</span>
+                        <span className="font-medium text-amber-600">{formatCurrency(phaseCosts.totalSpent)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="text-sm text-muted-foreground">Santé financière</span>
+                        <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
+                          {getFinancialHealthLabel(phaseCosts.financialHealth)}
+                        </Badge>
+                      </div>
+                    </>
+                  )}
                   {referentialInfo && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">Référentiel</span>
@@ -891,26 +1069,30 @@ const PhaseDetailsPage: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Analysis Cards */}
+              <FinancialAnalysisCard phaseId={phaseId!} projectId={projectId!} />
+              <ResourceUtilizationCard phaseId={phaseId!} projectId={projectId!} />
             </div>
           </div>
         </TabsContent>
 
-        {/* Steps Tab - With Full Management */}
-        <TabsContent value="steps">
+        {/* Steps Tab */}
+        <TabsContent value="steps" className="animate-in fade-in duration-300">
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-purple-500/10">
                     <Layers className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <span>Gestion des étapes</span>
-                    <p className="text-sm font-normal text-muted-foreground mt-0.5">
+                    <CardTitle className="text-xl">Gestion des étapes</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {phase.phase_name} • Ajoutez, modifiez ou supprimez des étapes et tâches
                     </p>
                   </div>
-                </CardTitle>
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
                     <CheckCircle className="h-3 w-3 mr-1" />
@@ -938,7 +1120,7 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsContent>
 
         {/* Resources Tab */}
-        <TabsContent value="resources">
+        <TabsContent value="resources" className="animate-in fade-in duration-300">
           <div className="space-y-6">
             <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
             <PhaseEmployees phaseId={phaseId!} />
@@ -946,13 +1128,354 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsContent>
 
         {/* Documents Tab */}
-        <TabsContent value="documents">
+        <TabsContent value="documents" className="animate-in fade-in duration-300">
           <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
-        {/* Workflow & Monitoring Tab - Unified View */}
-        <TabsContent value="monitoring" className="space-y-6">
-          {/* Unified Phase Workflow - Combines Dashboard + Milestones + Inspections */}
+        {/* Finances Tab - Nouvel onglet */}
+        <TabsContent value="finances" className="space-y-6 animate-in fade-in duration-300">
+          {/* Financial Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Estimated vs Actual */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Budget vs Réel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingCosts ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ) : phaseCosts ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Estimé:</span>
+                      <span className="font-medium">{formatCurrency(phase.estimated_cost)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Engagé:</span>
+                      <span className="font-medium text-amber-600">
+                        {formatCurrency(phaseCosts.totalSpent)}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold">
+                      <span>Écart:</span>
+                      <span className={cn(
+                        phaseCosts.costVariance > 0 
+                          ? "text-red-600" 
+                          : "text-green-600"
+                      )}>
+                        {formatCurrency(phaseCosts.costVariance)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Budget restant:</span>
+                      <span className="font-medium text-green-600">
+                        {formatCurrency(phaseCosts.remainingBudget)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée financière</p>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Cost Breakdown */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Répartition coûts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingCosts ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                ) : phaseCosts ? (
+                  <div className="space-y-3">
+                    {phaseCosts.totalPayments > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-blue-500" />
+                            <span className="text-sm">Contractants</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{formatCurrency(phaseCosts.totalPayments)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {phaseCosts.totalSpent > 0 
+                                ? `${((phaseCosts.totalPayments / phaseCosts.totalSpent) * 100).toFixed(1)}%`
+                                : '0%'}
+                            </span>
+                          </div>
+                        </div>
+                        <Progress 
+                          value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalPayments / phaseCosts.totalSpent) * 100 : 0} 
+                          className="h-1 bg-blue-100 [&>div]:bg-blue-500"
+                        />
+                      </div>
+                    )}
+                    
+                    {phaseCosts.totalExpenses > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-orange-500" />
+                            <span className="text-sm">Dépenses internes</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{formatCurrency(phaseCosts.totalExpenses)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {phaseCosts.totalSpent > 0 
+                                ? `${((phaseCosts.totalExpenses / phaseCosts.totalSpent) * 100).toFixed(1)}%`
+                                : '0%'}
+                            </span>
+                          </div>
+                        </div>
+                        <Progress 
+                          value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalExpenses / phaseCosts.totalSpent) * 100 : 0} 
+                          className="h-1 bg-orange-100 [&>div]:bg-orange-500"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Transactions:</span>
+                        <span className="font-medium">
+                          {phaseCosts.paymentsCount + phaseCosts.expensesCount} total
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Aucune répartition disponible</p>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Financial Health */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Santé financière</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingCosts ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-2 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : phaseCosts ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Utilisation budget:</span>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "font-medium",
+                          phaseCosts.budgetUtilization > 90 
+                            ? "text-red-600" 
+                            : phaseCosts.budgetUtilization > 75
+                            ? "text-amber-600"
+                            : "text-green-600"
+                        )}>
+                          {phaseCosts.budgetUtilization.toFixed(1)}%
+                        </span>
+                        <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
+                          {getFinancialHealthLabel(phaseCosts.financialHealth)}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <Progress 
+                      value={Math.min(100, phaseCosts.budgetUtilization)}
+                      className={cn(
+                        "h-2",
+                        phaseCosts.budgetUtilization > 90 
+                          ? "bg-red-100 [&>div]:bg-red-600" 
+                          : phaseCosts.budgetUtilization > 75
+                          ? "bg-amber-100 [&>div]:bg-amber-600"
+                          : "bg-green-100 [&>div]:bg-green-600"
+                      )}
+                    />
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Statut:</span>
+                        <span className={cn(
+                          "font-medium",
+                          phaseCosts.isOverBudget ? "text-red-600" : "text-green-600"
+                        )}>
+                          {phaseCosts.isOverBudget ? "Dépassement" : "Dans le budget"}
+                        </span>
+                      </div>
+                      {phaseCosts.remainingBudget > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Disponible:</span>
+                          <span className="font-medium text-green-600">
+                            {formatCurrency(phaseCosts.remainingBudget)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Aucune analyse disponible</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Detailed Cost Analysis */}
+          {(phaseCosts && (phaseCosts.paymentsCount > 0 || phaseCosts.expensesCount > 0)) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Payment Distribution */}
+              {Object.keys(phaseCosts.paymentDistribution).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-blue-600" />
+                      Distribution par contractant
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(phaseCosts.paymentDistribution)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 5)
+                        .map(([contractorId, amount]) => (
+                          <div key={contractorId} className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              <span className="text-sm truncate">Contractant {contractorId.slice(0, 8)}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium text-sm">{formatCurrency(amount)}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {((amount / phaseCosts.totalPayments) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Expense Distribution */}
+              {Object.keys(phaseCosts.expenseDistribution).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <PieChart className="h-4 w-4 text-orange-600" />
+                      Dépenses par catégorie
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(phaseCosts.expenseDistribution)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 5)
+                        .map(([category, amount]) => (
+                          <div key={category} className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-orange-500" />
+                              <span className="text-sm truncate">{category}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium text-sm">{formatCurrency(amount)}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {((amount / phaseCosts.totalExpenses) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+          
+          {/* Resource Cost Analysis */}
+          {phaseResources && (phaseResources.totalEmployees > 0 || phaseResources.materialCost > 0) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Coûts des ressources</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Employees Analysis */}
+                  {phaseResources.totalEmployees > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <Users className="h-4 w-4 text-purple-600" />
+                        Équipe ({phaseResources.totalEmployees} personnes)
+                      </h4>
+                      <div className="space-y-2">
+                        {Object.entries(phaseResources.employeesByPosition)
+                          .sort(([,a], [,b]) => b - a)
+                          .slice(0, 5)
+                          .map(([position, count]) => (
+                            <div key={position} className="flex justify-between items-center">
+                              <span className="text-sm truncate">{position}</span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">{count}</Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {((count / phaseResources.totalEmployees) * 100).toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Materials Analysis */}
+                  {phaseResources.totalMaterials > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                        <Package className="h-4 w-4 text-amber-600" />
+                        Matériaux ({phaseResources.totalMaterials} unités)
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Coût total matériaux</span>
+                          <span className="font-medium text-amber-600">
+                            {formatCurrency(phaseResources.materialCost)}
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {Object.entries(phaseResources.materialsByCategory)
+                            .sort(([,a], [,b]) => b - a)
+                            .slice(0, 5)
+                            .map(([category, quantity]) => (
+                              <div key={category} className="flex justify-between items-center">
+                                <span className="text-sm truncate">{category}</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">{quantity}</Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {((quantity / phaseResources.totalMaterials) * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Workflow & Monitoring Tab */}
+        <TabsContent value="monitoring" className="space-y-6 animate-in fade-in duration-300">
           <UnifiedPhaseWorkflow
             projectId={projectId!}
             phaseId={phaseId!}
@@ -1084,7 +1607,7 @@ const PhaseDetailsPage: React.FC = () => {
                 Planification
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pl-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Date de début</Label>
                   <Input
@@ -1107,7 +1630,7 @@ const PhaseDetailsPage: React.FC = () => {
                     className="h-10"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 sm:col-span-2">
                   <Label className="text-sm font-medium">Durée estimée</Label>
                   <div className="relative">
                     <Input
@@ -1140,7 +1663,7 @@ const PhaseDetailsPage: React.FC = () => {
                 Budget
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pl-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Coût estimé</Label>
                   <div className="relative">
@@ -1192,7 +1715,7 @@ const PhaseDetailsPage: React.FC = () => {
                 </Alert>
               )}
               
-              <div className="grid grid-cols-2 gap-4 pl-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Statut</Label>
                   <Select
@@ -1311,7 +1834,7 @@ const PhaseDetailsPage: React.FC = () => {
                     Classification
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 pl-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Code de phase</Label>
                       <Input
