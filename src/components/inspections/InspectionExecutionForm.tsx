@@ -5,10 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
+import { Upload, CheckCircle, AlertTriangle, FileText, Shield, Banknote, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { 
+  getInspectionApprovalSyncService, 
+  InspectionApprovalContext,
+  SyncResult,
+  SYNC_THRESHOLDS 
+} from '@/services/InspectionApprovalSyncService';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface InspectionExecutionFormProps {
   inspection: {
@@ -19,9 +26,10 @@ interface InspectionExecutionFormProps {
     comments?: string | null;
     inspector: string;
     date: string;
+    phase_id?: string | null;
   };
   projectTitle: string;
-  onUpdate: (inspectionId: string, status: string, progress?: number, documents?: File[]) => void;
+  onUpdate: (inspectionId: string, status: string, progress?: number, documents?: File[], syncResult?: SyncResult) => void;
 }
 
 const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
@@ -34,12 +42,17 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
   const [comments, setComments] = useState(inspection.comments || '');
   const [documents, setDocuments] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
+    setSyncResult(null);
     
     try {
+      const uploadedDocs: Array<{ name: string; url: string; uploadedAt: string }> = [];
+      
       // Upload service fait documents
       if (documents.length > 0) {
         for (const file of documents) {
@@ -51,6 +64,12 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
 
           const { data: { publicUrl } } = supabase.storage.from('project-documents').getPublicUrl(filePath);
           
+          uploadedDocs.push({
+            name: file.name,
+            url: publicUrl,
+            uploadedAt: new Date().toISOString()
+          });
+
           // Insert document with proper type casting
           const { error: insertError } = await supabase.from('documents').insert({
             title: `Service Fait - ${file.name}`,
@@ -70,13 +89,41 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
         }
       }
       
-      onUpdate(inspection.id, newStatus, parseInt(newProgress), documents.length > 0 ? documents : undefined);
-      toast.success('Inspection mise à jour');
+      // Si le statut est "approved", déclencher la synchronisation complète
+      if (newStatus === 'approved') {
+        setIsSyncing(true);
+        const syncService = getInspectionApprovalSyncService();
+        const context: InspectionApprovalContext = {
+          inspectionId: inspection.id,
+          projectId: inspection.project_id,
+          phaseId: inspection.phase_id,
+          status: newStatus,
+          progressAtInspection: parseInt(newProgress),
+          inspector: inspection.inspector,
+          validationDocuments: uploadedDocs.length > 0 ? uploadedDocs : undefined,
+        };
+        
+        const result = await syncService.synchronizeOnApproval(context);
+        setSyncResult(result);
+        setIsSyncing(false);
+        
+        if (result.success) {
+          toast.success('Inspection approuvée et synchronisation complète effectuée');
+        } else {
+          toast.warning('Inspection mise à jour avec des erreurs de synchronisation');
+        }
+        
+        onUpdate(inspection.id, newStatus, parseInt(newProgress), documents.length > 0 ? documents : undefined, result);
+      } else {
+        onUpdate(inspection.id, newStatus, parseInt(newProgress), documents.length > 0 ? documents : undefined);
+        toast.success('Inspection mise à jour');
+      }
     } catch (error) {
       console.error('Error updating inspection:', error);
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsUploading(false);
+      setIsSyncing(false);
     }
   };
 
@@ -215,14 +262,20 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
                   type="submit"
                   variant="default"
                   className="gap-2"
+                  disabled={isUploading || isSyncing}
                 >
-                  <CheckCircle className="h-4 w-4" />
-                  Enregistrer et mettre à jour
+                  {isSyncing ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  {isSyncing ? 'Synchronisation...' : 'Enregistrer et mettre à jour'}
                 </Button>
                 <Button 
                   type="button" 
                   variant="destructive"
                   className="gap-2"
+                  disabled={isUploading || isSyncing}
                   onClick={() => {
                     setNewStatus('failed');
                     onUpdate(inspection.id, 'failed', undefined, documents.length > 0 ? documents : undefined);
@@ -235,10 +288,88 @@ const InspectionExecutionForm: React.FC<InspectionExecutionFormProps> = ({
             )}
           </div>
 
+          {/* Indicateur seuils automatiques */}
+          {newStatus === 'approved' && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <RefreshCw className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>Actions automatiques à l'approbation :</strong>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>• Synchronisation progression projet/phase/jalons</li>
+                  {parseInt(newProgress) >= SYNC_THRESHOLDS.PAYMENT_TRIGGER && (
+                    <li className="flex items-center gap-1">
+                      <Banknote className="h-3 w-3" />
+                      Déclenchement demande de paiement (≥{SYNC_THRESHOLDS.PAYMENT_TRIGGER}%)
+                    </li>
+                  )}
+                  {parseInt(newProgress) >= SYNC_THRESHOLDS.GUARANTEE_RELEASE && (
+                    <li className="flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Demande mainlevée garanties bancaires (100%)
+                    </li>
+                  )}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {newStatus === 'completed' && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
               ✅ La progression du projet sera automatiquement mise à jour lors de l'enregistrement
             </div>
+          )}
+
+          {/* Résultat de synchronisation */}
+          {syncResult && (
+            <Alert className={syncResult.success ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
+              <CheckCircle className={`h-4 w-4 ${syncResult.success ? 'text-green-600' : 'text-amber-600'}`} />
+              <AlertDescription>
+                <strong className={syncResult.success ? 'text-green-800' : 'text-amber-800'}>
+                  {syncResult.success ? 'Synchronisation réussie' : 'Synchronisation partielle'}
+                </strong>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Projet</Badge>
+                    <span>{syncResult.projectProgressUpdated}%</span>
+                  </div>
+                  {syncResult.phaseProgressUpdated !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">Phase</Badge>
+                      <span>{syncResult.phaseProgressUpdated}%</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Jalons</Badge>
+                    <span>{syncResult.milestonesUpdated} mis à jour</span>
+                  </div>
+                  {syncResult.guaranteesReleased > 0 && (
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Shield className="h-4 w-4" />
+                      <span>{syncResult.guaranteesReleased} garantie(s) - mainlevée</span>
+                    </div>
+                  )}
+                  {syncResult.insurancesReleased > 0 && (
+                    <div className="flex items-center gap-2 text-green-700">
+                      <FileText className="h-4 w-4" />
+                      <span>{syncResult.insurancesReleased} assurance(s) - libérée(s)</span>
+                    </div>
+                  )}
+                  {syncResult.paymentTriggered && (
+                    <div className="flex items-center gap-2 text-blue-700 col-span-2">
+                      <Banknote className="h-4 w-4" />
+                      <span>Paiement demandé: {syncResult.paymentAmount?.toLocaleString()} MRU</span>
+                    </div>
+                  )}
+                </div>
+                {syncResult.errors.length > 0 && (
+                  <div className="mt-2 text-red-600 text-xs">
+                    {syncResult.errors.map((err, i) => (
+                      <div key={i}>⚠️ {err}</div>
+                    ))}
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
         </form>
       </CardContent>

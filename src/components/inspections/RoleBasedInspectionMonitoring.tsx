@@ -266,6 +266,7 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
       }
 
       // Upload validation documents if any
+      const uploadedDocs: Array<{ name: string; url: string; uploadedAt: string }> = [];
       if (documents && documents.length > 0) {
         const uploadPromises = documents.map(async (file) => {
           const fileExt = file.name.split('.').pop();
@@ -289,10 +290,11 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
           };
         });
 
-        const uploadedDocs = await Promise.all(uploadPromises);
+        const docs = await Promise.all(uploadPromises);
+        uploadedDocs.push(...docs);
         updateData.documents = {
           ...(inspection.documents || {}),
-          validation_documents: uploadedDocs
+          validation_documents: docs
         };
       }
 
@@ -303,26 +305,55 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
 
       if (error) throw error;
 
-      // Synchronize project progress
-      const { ProjectService } = await import('@/services/ProjectService');
-      const projectService = new ProjectService();
-      await projectService.synchronizeProjectProgress(inspection.project_id);
-
-      // Send notification to project manager
-      await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: 'project_manager_id', // Would be dynamic in real app
-          title: 'Statut d\'inspection mis à jour',
-          message: `L'inspection ${inspectionId} a été mise à jour: ${status}`,
-          type: 'inspection_update',
-          related_id: inspectionId
+      // Si le statut est "approved", utiliser le service de synchronisation complet
+      if (status === 'approved') {
+        const { getInspectionApprovalSyncService } = await import('@/services/InspectionApprovalSyncService');
+        const syncService = getInspectionApprovalSyncService();
+        
+        const syncResult = await syncService.synchronizeOnApproval({
+          inspectionId,
+          projectId: inspection.project_id,
+          phaseId: inspection.phase_id,
+          status,
+          progressAtInspection: progress ?? inspection.progress_at_inspection,
+          inspector: inspection.inspector,
+          validationDocuments: uploadedDocs.length > 0 ? uploadedDocs : undefined,
         });
 
-      toast({
-        title: "Succès",
-        description: "Statut mis à jour, progression synchronisée et notification envoyée",
-      });
+        if (syncResult.success) {
+          toast({
+            title: "Inspection approuvée",
+            description: `Synchronisation complète: ${syncResult.actions.length} action(s) effectuée(s)`,
+          });
+        } else {
+          toast({
+            title: "Approbation partielle",
+            description: `Attention: ${syncResult.errors.join(', ')}`,
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Synchronisation simple pour les autres statuts
+        const { ProjectService } = await import('@/services/ProjectService');
+        const projectService = new ProjectService();
+        await projectService.synchronizeProjectProgress(inspection.project_id);
+
+        // Send notification to project manager
+        await supabase
+          .from('notifications')
+          .insert([{
+            recipient_id: inspection.inspector,
+            title: 'Statut d\'inspection mis à jour',
+            message: `L'inspection a été mise à jour: ${status}`,
+            type: 'inspection_update',
+            related_id: inspectionId
+          }]);
+
+        toast({
+          title: "Succès",
+          description: "Statut mis à jour et progression synchronisée",
+        });
+      }
 
       fetchData();
     } catch (error) {
