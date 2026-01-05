@@ -5,7 +5,7 @@ import FinancialOverview from "@/components/project/FinaancialOverview";
 import PhaseList from "@/components/project/PhaseList";
 import ProjectGantt from "@/components/project/ProjectGantt";
 import TeamOverview from "@/components/project/TeamOverview";
-import { ProjectMilestoneTimeline } from "@/components/project/milestones";
+import { UnifiedMilestoneManager } from "@/components/project/milestones";
 import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
@@ -834,18 +834,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-12">
+        <TabsList className="grid w-full grid-cols-11">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
+          <TabsTrigger value="milestones">Jalons</TabsTrigger>
           <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="risks">Risques</TabsTrigger>
           <TabsTrigger value="resources">Équipe</TabsTrigger>
           <TabsTrigger value="payments">Paiements</TabsTrigger>
           <TabsTrigger value="kpis">KPIs</TabsTrigger>
           <TabsTrigger value="compliance">Conformité</TabsTrigger>
-          <TabsTrigger value="gantt">Gantt</TabsTrigger>
-          <TabsTrigger value="pert">PERT</TabsTrigger>
           <TabsTrigger value="map">Carte</TabsTrigger>
         </TabsList>
 
@@ -929,12 +928,17 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             </Card>
           </div>
 
-          {/* Project Milestones Timeline */}
-          <ProjectMilestoneTimeline 
+          {/* Project Milestones Summary */}
+          <UnifiedMilestoneManager 
             projectId={projectId!}
+            compact={true}
+            defaultView="timeline"
+            showNavigation={false}
             onMilestoneClick={(milestoneId, phaseId) => {
               if (phaseId) {
                 navigate(`/projects/${projectId}/phases/${phaseId}`);
+              } else {
+                setActiveTab('milestones');
               }
             }}
           />
@@ -1090,6 +1094,115 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               />
             </DialogContentUI>
           </DialogUI>
+        </TabsContent>
+
+        {/* Unified Milestones Tab with Gantt & PERT */}
+        <TabsContent value="milestones" className="mt-6">
+          <Tabs defaultValue="timeline" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
+              <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
+              <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="timeline">
+              <UnifiedMilestoneManager 
+                projectId={projectId!}
+                defaultView="timeline"
+                onMilestoneClick={(milestoneId, phaseId) => {
+                  if (phaseId) {
+                    navigate(`/projects/${projectId}/phases/${phaseId}`);
+                  }
+                }}
+              />
+            </TabsContent>
+
+            <TabsContent value="gantt">
+              {projectDetail ? (
+                <UnifiedGanttChart
+                  projectId={projectId!}
+                  projectDetail={projectDetail}
+                  onMilestoneClick={(milestoneId, phaseId) => {
+                    if (phaseId) {
+                      navigate(`/projects/${projectId}/phases/${phaseId}`);
+                    }
+                  }}
+                />
+              ) : (
+                <ProjectGantt
+                  project={project as any}
+                  phases={(computedPhases || []).map((p: any) => ({
+                    id: p.id,
+                    name: p.phase,
+                    startDate: new Date(p.startDate || new Date()),
+                    endDate: new Date(p.endDate || new Date()),
+                    progress: p.progress || 0,
+                    status: (p.status || "planned") as any,
+                  }))}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="pert">
+              {projectDetail ? (
+                <UnifiedPERTAnalysis
+                  projectId={projectId!}
+                  projectDetail={projectDetail}
+                />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Analyse PERT</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {pertAnalysis ? (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              Durée attendue totale
+                            </p>
+                            <p className="text-2xl font-bold">
+                              {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              Écart-type total
+                            </p>
+                            <p className="text-2xl font-bold">
+                              {pertAnalysis.variances
+                                ? Math.sqrt(
+                                    Object.values(pertAnalysis.variances).reduce(
+                                      (sum: number, variance: number) =>
+                                        sum + variance,
+                                      0
+                                    )
+                                  ).toFixed(1)
+                                : "0.0"}{" "}
+                              jours
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              Tâches sur chemin critique
+                            </p>
+                            <p className="text-2xl font-bold">
+                              {pertAnalysis.criticalPath?.length || 0}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Chargement de l'analyse PERT...
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-6">
@@ -1713,91 +1826,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="gantt" className="mt-6">
-          {projectDetail ? (
-            <UnifiedGanttChart
-              projectId={projectId!}
-              projectDetail={projectDetail}
-              onMilestoneClick={(milestoneId, phaseId) => {
-                if (phaseId) {
-                  navigate(`/projects/${projectId}/phases/${phaseId}`);
-                }
-              }}
-            />
-          ) : (
-            <ProjectGantt
-              project={project as any}
-              phases={(computedPhases || []).map((p: any) => ({
-                id: p.id,
-                name: p.phase,
-                startDate: new Date(p.startDate || new Date()),
-                endDate: new Date(p.endDate || new Date()),
-                progress: p.progress || 0,
-                status: (p.status || "planned") as any,
-              }))}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="pert" className="mt-6">
-          {projectDetail ? (
-            <UnifiedPERTAnalysis
-              projectId={projectId!}
-              projectDetail={projectDetail}
-            />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Analyse PERT</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {pertAnalysis ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Durée attendue totale
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Écart-type total
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {pertAnalysis.variances
-                            ? Math.sqrt(
-                                Object.values(pertAnalysis.variances).reduce(
-                                  (sum: number, variance: number) =>
-                                    sum + variance,
-                                  0
-                                )
-                              ).toFixed(1)
-                            : "0.0"}{" "}
-                          jours
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Tâches sur chemin critique
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {pertAnalysis.criticalPath?.length || 0}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">
-                    Chargement de l'analyse PERT...
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
       </Tabs>
     </div>
   );
