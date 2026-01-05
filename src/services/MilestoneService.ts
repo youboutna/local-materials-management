@@ -8,20 +8,20 @@
  * - MilestoneService (facade) -> UnifiedMilestoneService -> Repository -> Adapter
  */
 
+import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  MilestoneDTO, 
-  MilestoneSummaryDTO, 
+import {
+  CriticalPathDTO,
+  MilestoneDTO,
   MilestoneFormDTO,
   MilestoneProgressDTO,
-  CriticalPathDTO
+  MilestoneSummaryDTO
 } from '@/types/milestone-dto';
-import { getMilestoneTemplates } from '@/data/referential-milestones';
-import { addDays, format, parseISO, isBefore, differenceInDays } from 'date-fns';
+import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns';
 
 // Re-export for convenience
+export { GanttPertDataService, getGanttPertService } from './GanttPertDataService';
 export { getMilestoneService, UnifiedMilestoneService } from './UnifiedMilestoneService';
-export { getGanttPertService, GanttPertDataService } from './GanttPertDataService';
 
 /**
  * MilestoneService class - Legacy API for backward compatibility

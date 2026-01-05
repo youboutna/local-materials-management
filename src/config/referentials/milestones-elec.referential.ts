@@ -1,3 +1,7 @@
+import { MilestoneTemplateDTO } from "../../types/milestone-dto";
+import { REFERENTIAL_MILESTONES } from "./milestones.referential";
+import { somelecReferential } from "./somelec.referential";
+
 /**
  * Milestone templates for SOMELEC electrical infrastructure projects
  * Based on the SOMELEC referential with donor funding and engineering consultants

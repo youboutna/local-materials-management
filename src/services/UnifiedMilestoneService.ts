@@ -6,16 +6,16 @@
  * Architecture: Service -> Repository -> Adapter -> Data Source
  */
 
-import { 
-  MilestoneDTO, 
-  MilestoneFormDTO, 
-  MilestoneProgressDTO, 
-  MilestoneSummaryDTO,
-  CriticalPathDTO
-} from '@/types/milestone-dto';
+import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { getMilestoneRepositorySingleton, IMilestoneRepository } from '@/repositories';
-import { getMilestoneTemplates } from '@/data/referential-milestones';
-import { addDays, format, parseISO, isBefore, differenceInDays } from 'date-fns';
+import {
+  CriticalPathDTO,
+  MilestoneDTO,
+  MilestoneFormDTO,
+  MilestoneProgressDTO,
+  MilestoneSummaryDTO
+} from '@/types/milestone-dto';
+import { addDays, differenceInDays, format, isBefore, parseISO } from 'date-fns';
 
 export class UnifiedMilestoneService {
   private repository: IMilestoneRepository;

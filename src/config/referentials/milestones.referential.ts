@@ -1,4 +1,4 @@
-import { MilestoneTemplateDTO, MilestoneType, MilestonePriority } from '@/types/milestone-dto';
+import { MilestoneTemplateDTO } from '@/types/milestone-dto';
 
 /**
  * Milestone templates by construction phase (referential)
@@ -7,7 +7,8 @@ import { MilestoneTemplateDTO, MilestoneType, MilestonePriority } from '@/types/
  * Each phase follows the standard project lifecycle:
  * 1. Initiation Gate → 2. Progress Checkpoints → 3. Deliverable → 4. Phase Gate
  */
-export const REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
+export const 
+REFERENTIAL_MILESTONES: Record<string, MilestoneTemplateDTO[]> = {
   // ============= ÉTUDES PRÉLIMINAIRES =============
   'etudes_preliminaires': [
     {

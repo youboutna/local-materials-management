@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -20,34 +18,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Target, 
-  Plus, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle,
-  Sparkles,
-  Trash2,
-  Edit,
-  ShieldCheck,
-  Package,
-  Flag,
-  CheckSquare
-} from 'lucide-react';
-import { MilestoneService } from '@/services/MilestoneService';
-import { getMilestoneTemplates } from '@/data/referential-milestones';
-import { 
-  MilestoneDTO, 
-  MilestoneProgressDTO,
-  MilestoneType,
-  MilestonePriority,
-  MILESTONE_TYPES,
-  MILESTONE_PRIORITIES
-} from '@/types/milestone-dto';
-import { format, parseISO, isBefore } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Textarea } from '@/components/ui/textarea';
+import { getMilestoneTemplates } from '@/config/referentials/milestones.referential';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { MilestoneService } from '@/services/MilestoneService';
+import {
+  MILESTONE_PRIORITIES,
+  MILESTONE_TYPES,
+  MilestoneDTO,
+  MilestonePriority,
+  MilestoneProgressDTO,
+  MilestoneType
+} from '@/types/milestone-dto';
+import { format, isBefore, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import {
+  AlertTriangle,
+  CheckCircle,
+  CheckSquare,
+  Clock,
+  Edit,
+  Flag,
+  Package,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Trash2
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface PhaseMilestonesSectionProps {
   projectId: string;

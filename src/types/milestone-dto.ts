@@ -47,6 +47,7 @@ export interface MilestoneTemplateDTO {
   deliverables?: string[];
   /** Approval requirements for gate milestones */
   approval_requirements?: string[];
+   requiresInspection?: true,
 }
 
 /**
