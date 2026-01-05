@@ -41,7 +41,13 @@ import {
   ListChecks,
   GitBranch,
   RefreshCw,
+  TrendingUp,
+  Users,
+  FileText,
+  CreditCard,
+  Shield,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Services and hooks
 import { usePhaseDetails, PhaseMetrics } from "@/hooks/usePhaseDetails";
@@ -133,70 +139,190 @@ const calculateRemainingDays = (endDate?: string | null) => {
   }
 };
 
-// Phase Steps Component
-const PhaseStepsView: React.FC<{ steps: PhaseStepDTO[] }> = ({ steps }) => {
+// Phase Steps Component - Enhanced Design
+const PhaseStepsView: React.FC<{ 
+  steps: PhaseStepDTO[];
+  onStepClick?: (stepId: string) => void;
+}> = ({ steps, onStepClick }) => {
   if (!steps || steps.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        Aucune étape définie pour cette phase
+      <div className="text-center py-12">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+          <Layers className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="text-muted-foreground">Aucune étape définie pour cette phase</p>
+        <p className="text-sm text-muted-foreground/70 mt-1">
+          Ajoutez des étapes depuis un référentiel ou manuellement
+        </p>
       </div>
     );
   }
 
+  const completedCount = steps.filter(s => s.status === 'completed').length;
+  const totalProgress = steps.reduce((sum, s) => sum + s.progress, 0) / steps.length;
+
   return (
-    <div className="space-y-4">
-      {steps.map((step, index) => (
-        <Card key={step.id} className="border-l-4 border-l-primary">
-          <CardHeader className="py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold">
-                  {index + 1}
-                </span>
-                <div>
-                  <CardTitle className="text-base">{step.name}</CardTitle>
-                  {step.description && (
-                    <p className="text-sm text-muted-foreground">{step.description}</p>
+    <div className="space-y-6">
+      {/* Summary Header */}
+      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-primary/10">
+            <Layers className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-lg font-semibold">{steps.length} Étapes</p>
+            <p className="text-sm text-muted-foreground">
+              {completedCount} terminées • {Math.round(totalProgress)}% progression moyenne
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            {completedCount}
+          </Badge>
+          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+            <RefreshCw className="h-3 w-3 mr-1" />
+            {steps.filter(s => s.status === 'in_progress').length}
+          </Badge>
+          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
+            <Clock className="h-3 w-3 mr-1" />
+            {steps.filter(s => s.status === 'pending').length}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Timeline View */}
+      <div className="relative">
+        {/* Vertical line */}
+        <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-muted" />
+        
+        <div className="space-y-4">
+          {steps.map((step, index) => {
+            const isCompleted = step.status === 'completed';
+            const isInProgress = step.status === 'in_progress';
+            const isDelayed = step.status === 'delayed';
+            
+            return (
+              <div 
+                key={step.id} 
+                className="relative pl-16 cursor-pointer group"
+                onClick={() => onStepClick?.(step.id)}
+              >
+                {/* Step indicator */}
+                <div className={cn(
+                  "absolute left-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-all",
+                  isCompleted && "bg-green-500 text-white shadow-lg shadow-green-500/30",
+                  isInProgress && "bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-primary/20",
+                  isDelayed && "bg-destructive text-white shadow-lg shadow-destructive/30",
+                  !isCompleted && !isInProgress && !isDelayed && "bg-muted text-muted-foreground border-2 border-muted-foreground/30"
+                )}>
+                  {isCompleted ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    index + 1
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge className={getStatusColor(step.status)}>
-                  {getStatusLabel(step.status)}
-                </Badge>
-                <div className="w-24">
-                  <Progress value={step.progress} className="h-2" />
-                </div>
-                <span className="text-sm font-medium">{step.progress}%</span>
-              </div>
-            </div>
-          </CardHeader>
-          {step.tasks.length > 0 && (
-            <CardContent className="py-2 border-t">
-              <div className="space-y-2">
-                {step.tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-2 rounded-md bg-muted/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      {task.status === "completed" ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
-                      )}
-                      <span className="text-sm">{task.name}</span>
+                
+                {/* Step Card */}
+                <Card className={cn(
+                  "transition-all border-2 group-hover:shadow-lg group-hover:scale-[1.01]",
+                  isCompleted && "border-green-200 bg-green-50/50",
+                  isInProgress && "border-primary/40 bg-primary/5",
+                  isDelayed && "border-destructive/40 bg-destructive/5",
+                  !isCompleted && !isInProgress && !isDelayed && "border-transparent hover:border-muted-foreground/20"
+                )}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold truncate">{step.name}</h4>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "shrink-0",
+                              getStatusColor(step.status)
+                            )}
+                          >
+                            {getStatusIcon(step.status)}
+                            <span className="ml-1">{getStatusLabel(step.status)}</span>
+                          </Badge>
+                        </div>
+                        {step.description && (
+                          <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
+                        )}
+                        
+                        {/* Progress bar */}
+                        <div className="flex items-center gap-3">
+                          <Progress value={step.progress} className="flex-1 h-2" />
+                          <span className={cn(
+                            "text-sm font-bold min-w-[3rem] text-right",
+                            step.progress === 100 && "text-green-600",
+                            step.progress > 0 && step.progress < 100 && "text-primary",
+                            step.progress === 0 && "text-muted-foreground"
+                          )}>
+                            {step.progress}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {getStatusLabel(task.status)}
-                    </Badge>
-                  </div>
-                ))}
+                    
+                    {/* Tasks */}
+                    {step.tasks.length > 0 && (
+                      <div className="mt-4 pt-4 border-t space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
+                        </p>
+                        <div className="grid gap-2">
+                          {step.tasks.map((task) => (
+                            <div
+                              key={task.id}
+                              className={cn(
+                                "flex items-center justify-between p-2.5 rounded-lg transition-colors",
+                                task.status === 'completed' 
+                                  ? "bg-green-100/50" 
+                                  : task.status === 'in_progress'
+                                  ? "bg-blue-100/50"
+                                  : "bg-muted/50"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {task.status === "completed" ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                                ) : task.status === "in_progress" ? (
+                                  <RefreshCw className="h-4 w-4 text-primary shrink-0" />
+                                ) : (
+                                  <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 shrink-0" />
+                                )}
+                                <span className={cn(
+                                  "text-sm truncate",
+                                  task.status === 'completed' && "line-through text-muted-foreground"
+                                )}>
+                                  {task.name}
+                                </span>
+                              </div>
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "text-xs shrink-0 ml-2",
+                                  task.status === 'completed' && "border-green-300 text-green-700",
+                                  task.status === 'in_progress' && "border-blue-300 text-blue-700"
+                                )}
+                              >
+                                {getStatusLabel(task.status)}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
@@ -390,120 +516,291 @@ const PhaseDetailsPage: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
+        {/* Overview Tab - Enhanced Design */}
         <TabsContent value="overview" className="space-y-6">
+          {/* Key Metrics Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Progress Card */}
+            <Card className="overflow-hidden border-0 shadow-md">
+              <div className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <Badge variant="outline" className={getStatusColor(phase.status)}>
+                    {getStatusLabel(phase.status)}
+                  </Badge>
+                </div>
+                <div className="mt-3">
+                  <p className="text-3xl font-bold">{phase.progress}%</p>
+                  <p className="text-sm text-muted-foreground">Progression</p>
+                </div>
+                <Progress value={phase.progress} className="h-1.5 mt-3" />
+              </div>
+            </Card>
+
+            {/* Budget Card */}
+            <Card className="overflow-hidden border-0 shadow-md">
+              <div className="p-4 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-green-500/10">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
+                  <p className="text-sm text-muted-foreground">Budget estimé</p>
+                </div>
+                {phase.actual_cost !== undefined && phase.actual_cost > 0 && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Réel: {formatCurrency(phase.actual_cost)}
+                  </p>
+                )}
+              </div>
+            </Card>
+
+            {/* Timeline Card */}
+            <Card className="overflow-hidden border-0 shadow-md">
+              <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-blue-500/10">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</p>
+                  <p className="text-sm text-muted-foreground">Jours restants</p>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  Fin: {formatDate(phase.end_date)}
+                </p>
+              </div>
+            </Card>
+
+            {/* Steps Card */}
+            <Card 
+              className="overflow-hidden border-0 shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveTab("steps")}
+            >
+              <div className="p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 rounded-xl bg-purple-500/10">
+                    <Layers className="h-5 w-5 text-purple-600" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</p>
+                  <p className="text-sm text-muted-foreground">Étapes</p>
+                </div>
+                <Progress 
+                  value={metrics.stepsCount > 0 ? (metrics.completedSteps / metrics.stepsCount) * 100 : 0} 
+                  className="h-1.5 mt-3" 
+                />
+              </div>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
               {/* Phase Description */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Description détaillée</CardTitle>
+              <Card className="border-0 shadow-md">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    Description
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">
-                    {phase.description || "Aucune description."}
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {phase.description || "Aucune description disponible pour cette phase."}
                   </p>
                 </CardContent>
               </Card>
 
-              {/* Quick Steps Preview */}
+              {/* Quick Steps Preview - Enhanced */}
               {phase.steps.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <ListChecks className="h-5 w-5" />
-                      Aperçu des étapes ({metrics.completedSteps}/{metrics.stepsCount})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {phase.steps.slice(0, 3).map((step, index) => (
-                        <div
-                          key={step.id}
-                          className="flex items-center justify-between p-2 border rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{index + 1}.</span>
-                            <span className="text-sm">{step.name}</span>
-                          </div>
-                          <Badge variant={step.status === "completed" ? "default" : "outline"}>
-                            {step.progress}%
-                          </Badge>
-                        </div>
-                      ))}
-                      {phase.steps.length > 3 && (
-                        <Button
-                          variant="link"
-                          className="w-full"
-                          onClick={() => setActiveTab("steps")}
-                        >
-                          Voir toutes les étapes ({phase.steps.length})
-                        </Button>
-                      )}
+                <Card className="border-0 shadow-md overflow-hidden">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-purple-500/5 to-transparent">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-purple-600" />
+                        Aperçu des étapes
+                      </CardTitle>
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                        {metrics.completedSteps}/{metrics.stepsCount}
+                      </Badge>
                     </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      {phase.steps.slice(0, 4).map((step, index) => {
+                        const isCompleted = step.status === 'completed';
+                        const isInProgress = step.status === 'in_progress';
+                        
+                        return (
+                          <div
+                            key={step.id}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-xl border-2 transition-all hover:shadow-sm",
+                              isCompleted && "bg-green-50/50 border-green-200",
+                              isInProgress && "bg-blue-50/50 border-blue-200",
+                              !isCompleted && !isInProgress && "bg-muted/30 border-transparent"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                                isCompleted && "bg-green-500 text-white",
+                                isInProgress && "bg-blue-500 text-white",
+                                !isCompleted && !isInProgress && "bg-muted text-muted-foreground"
+                              )}>
+                                {isCompleted ? (
+                                  <CheckCircle className="h-4 w-4" />
+                                ) : (
+                                  index + 1
+                                )}
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium">{step.name}</span>
+                                {step.tasks.length > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16">
+                                <Progress value={step.progress} className="h-1.5" />
+                              </div>
+                              <span className={cn(
+                                "text-sm font-bold w-10 text-right",
+                                isCompleted && "text-green-600",
+                                isInProgress && "text-blue-600"
+                              )}>
+                                {step.progress}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {phase.steps.length > 4 && (
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-4"
+                        onClick={() => setActiveTab("steps")}
+                      >
+                        Voir toutes les étapes ({phase.steps.length})
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               )}
+
+              {/* Quick Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-blue-50 to-transparent">
+                  <div className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4 text-blue-600" />
+                    <span className="text-xs text-muted-foreground">Tâches</span>
+                  </div>
+                  <p className="text-lg font-bold mt-1">
+                    {metrics.completedTasks}/{metrics.totalTasks}
+                  </p>
+                </Card>
+                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-green-50 to-transparent">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <span className="text-xs text-muted-foreground">Inspections</span>
+                  </div>
+                  <p className="text-lg font-bold mt-1">
+                    {metrics.passedInspections}/{metrics.totalInspections}
+                  </p>
+                </Card>
+                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-orange-50 to-transparent">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-orange-600" />
+                    <span className="text-xs text-muted-foreground">Paiements</span>
+                  </div>
+                  <p className="text-lg font-bold mt-1">{metrics.totalPayments}</p>
+                </Card>
+                <Card className="p-3 border-0 shadow-sm bg-gradient-to-br from-purple-50 to-transparent">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    <span className="text-xs text-muted-foreground">Employés</span>
+                  </div>
+                  <p className="text-lg font-bold mt-1">{metrics.totalEmployees}</p>
+                </Card>
+              </div>
             </div>
 
-            {/* Right Column */}
+            {/* Right Column - Enhanced Info Cards */}
             <div className="space-y-6">
               {/* Phase Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations</CardTitle>
+              <Card className="border-0 shadow-md overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-muted/50 to-transparent">
+                  <CardTitle className="text-base">Informations clés</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Statut</p>
-                    <div className="flex items-center gap-2 mt-1">
+                <CardContent className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Statut</span>
+                    <Badge className={getStatusColor(phase.status)}>
                       {getStatusIcon(phase.status)}
-                      <span>{getStatusLabel(phase.status)}</span>
-                    </div>
+                      <span className="ml-1">{getStatusLabel(phase.status)}</span>
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Durée estimée</p>
-                    <p>{phase.estimated_duration_days || "Non définie"} jours</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Durée estimée</span>
+                    <span className="font-medium">{phase.estimated_duration_days || "N/A"} jours</span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Coût estimé</p>
-                    <p>{formatCurrency(phase.estimated_cost)}</p>
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Budget</span>
+                    <span className="font-medium text-green-600">{formatCurrency(phase.estimated_cost)}</span>
                   </div>
-                  {phase.actual_cost !== undefined && phase.actual_cost > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Coût réel</p>
-                      <p>{formatCurrency(phase.actual_cost)}</p>
+                  {referentialInfo && (
+                    <div className="flex items-center justify-between py-2 border-b">
+                      <span className="text-sm text-muted-foreground">Référentiel</span>
+                      <Badge variant="outline">{referentialInfo.referential.name?.fr || referentialInfo.referential.code}</Badge>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Date de création</p>
-                    <p className="text-sm">{formatDate(phase.created_at)}</p>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-muted-foreground">Créée le</span>
+                    <span className="text-sm">{formatDate(phase.created_at)}</span>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Échéancier</CardTitle>
+              {/* Timeline Card - Enhanced */}
+              <Card className="border-0 shadow-md overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-blue-500/5 to-transparent">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    Échéancier
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Début</span>
-                      <span className="text-sm font-medium">{formatDate(phase.start_date)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Fin prévue</span>
-                      <span className="text-sm font-medium">{formatDate(phase.end_date)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-sm">Jours restants</span>
-                      <span className="text-sm font-medium">
-                        {calculateRemainingDays(phase.end_date)} jours
-                      </span>
+                <CardContent className="pt-4">
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-3 top-3 bottom-3 w-0.5 bg-gradient-to-b from-green-500 via-blue-500 to-muted" />
+                    
+                    <div className="space-y-4">
+                      <div className="relative pl-8">
+                        <div className="absolute left-1.5 w-3 h-3 rounded-full bg-green-500 ring-4 ring-green-100" />
+                        <p className="text-xs text-muted-foreground">Début</p>
+                        <p className="font-medium">{formatDate(phase.start_date)}</p>
+                      </div>
+                      <div className="relative pl-8">
+                        <div className="absolute left-1.5 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-100" />
+                        <p className="text-xs text-muted-foreground">Fin prévue</p>
+                        <p className="font-medium">{formatDate(phase.end_date)}</p>
+                      </div>
+                      <div className="relative pl-8">
+                        <div className="absolute left-1.5 w-3 h-3 rounded-full bg-muted ring-4 ring-muted/50" />
+                        <p className="text-xs text-muted-foreground">Restant</p>
+                        <p className="font-bold text-lg text-primary">{calculateRemainingDays(phase.end_date)} jours</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -512,17 +809,36 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Steps Tab */}
+
+        {/* Steps Tab - Enhanced */}
         <TabsContent value="steps">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5" />
-                Étapes et tâches de la phase
-              </CardTitle>
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-500/10">
+                    <Layers className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <span>Étapes de la phase</span>
+                    <p className="text-sm font-normal text-muted-foreground mt-0.5">
+                      {phase.phase_name}
+                    </p>
+                  </div>
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {metrics.completedSteps} terminées
+                  </Badge>
+                  <Badge variant="outline">
+                    {metrics.stepsCount} total
+                  </Badge>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <PhaseStepsView steps={phase.steps} />
+            <CardContent className="p-6">
+              <PhaseStepsView steps={phase.steps} onStepClick={(stepId) => console.log('Step clicked:', stepId)} />
             </CardContent>
           </Card>
         </TabsContent>
