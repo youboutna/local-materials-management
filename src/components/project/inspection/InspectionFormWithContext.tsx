@@ -141,8 +141,7 @@ export function InspectionFormWithContext({
           progress_at_inspection: progress,
           comments: fullComments || null,
           phase_id: context?.linkedPhase?.id || milestoneContext?.phaseId || null,
-          payment_type: inspectionType, // Store inspection type
-        } as any)
+        })
         .select()
         .single();
 
