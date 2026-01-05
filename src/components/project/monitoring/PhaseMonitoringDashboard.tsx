@@ -1,16 +1,15 @@
 /**
  * PhaseMonitoringDashboard - Dashboard unifié pour le suivi de phase
- * Affiche Tâches, Inspections et Paiements avec liaison aux jalons
+ * Affiche Tâches, Inspections et Paiements avec liaison aux jalons (checkpoints)
  */
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   CheckSquare, 
   ClipboardCheck, 
@@ -18,15 +17,17 @@ import {
   Target,
   Plus,
   TrendingUp,
-  Calendar,
   AlertTriangle,
-  Users,
   Eye,
-  Link2
+  Play,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
 import { MilestoneSummaryDTO } from '@/types/milestone-dto';
+import { MilestoneCheckpointActions } from '@/components/project/milestones';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 // Import existing components
 import PhaseTasks from '@/components/project/PhaseTasks';
@@ -51,7 +52,7 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
   phaseName
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedMilestone, setSelectedMilestone] = useState<string>('all');
+  const queryClient = useQueryClient();
 
   // Fetch phase milestones
   const { data: milestones = [] } = useQuery({
@@ -233,35 +234,42 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
         </CardContent>
       </Card>
 
-      {/* Milestone Filter */}
+      {/* Milestone Checkpoint Actions - Replaced old filter with actionable checkpoints */}
       {milestones.length > 0 && (
-        <Card>
-          <CardContent className="py-3">
-            <div className="flex items-center gap-3">
-              <Link2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtrer par jalon:</span>
-              <Select value={selectedMilestone} onValueChange={setSelectedMilestone}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Tous les jalons" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les jalons</SelectItem>
-                  {milestones.map(m => (
-                    <SelectItem key={m.id} value={m.id}>
-                      <div className="flex items-center gap-2">
-                        <Target className="h-3 w-3" />
-                        {m.title}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span className="text-xs text-muted-foreground ml-auto">
-                Liez vos tâches, inspections et paiements aux jalons pour un meilleur suivi
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <MilestoneCheckpointActions
+          milestones={milestones}
+          projectId={projectId}
+          phaseId={phaseId}
+          onAddInspection={(milestoneId, title) => {
+            toast({
+              title: "Inspection à créer",
+              description: `Créez une inspection pour le jalon "${title}"`,
+            });
+            setActiveTab('inspections');
+          }}
+          onAddPayment={(milestoneId, title) => {
+            toast({
+              title: "Paiement à enregistrer", 
+              description: `Enregistrez un paiement pour le jalon "${title}"`,
+            });
+            setActiveTab('payments');
+          }}
+          onMilestoneComplete={async (milestoneId) => {
+            try {
+              await MilestoneService.updateMilestone(milestoneId, { status: 'completed' });
+              toast({
+                title: "Jalon terminé",
+                description: "Le jalon a été marqué comme terminé",
+              });
+            } catch (error) {
+              toast({
+                title: "Erreur",
+                description: "Impossible de marquer le jalon comme terminé",
+                variant: "destructive",
+              });
+            }
+          }}
+        />
       )}
 
       {/* Tab Content */}
@@ -461,7 +469,7 @@ const PhaseMonitoringDashboard: React.FC<PhaseMonitoringDashboardProps> = ({
                           <div>
                             <p className="font-medium">{milestone.title}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
+                              <Clock className="h-3 w-3" />
                               {milestone.target_date}
                               {milestone.priority === 'critical' && (
                                 <Badge variant="destructive" className="text-xs h-4">Critique</Badge>
