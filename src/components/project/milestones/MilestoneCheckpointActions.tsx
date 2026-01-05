@@ -2,9 +2,13 @@
  * MilestoneCheckpointActions - Actions disponibles sur les checkpoints des jalons
  * Permet de déclencher des inspections et paiements directement depuis les jalons
  * Utilise CheckpointActionContextService pour récupérer le contexte complet
+ * 
+ * Logique d'activation:
+ * - Les boutons sont actifs tant qu'il n'y a pas d'inspection approuvée avec un seuil de progression atteint
+ * - Déclenchement automatique de paiement après approbation d'une inspection
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,14 +38,19 @@ import {
   ChevronRight,
   Play,
   Loader2,
-  Info
+  Info,
+  Zap
 } from 'lucide-react';
 import { MilestoneSummaryDTO, MilestoneType, MILESTONE_TYPES } from '@/types/milestone-dto';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { usePaymentActionContext, useInspectionActionContext } from '@/hooks/useCheckpointActionContext';
+import { usePaymentActionContext, useInspectionActionContext, useProjectActionContext } from '@/hooks/useCheckpointActionContext';
 import { Separator } from '@/components/ui/separator';
+import { DEFAULT_COMPLETION_PROGRESS_THRESHOLD } from '@/utils/completionValidation';
+
+// Seuil de progression minimum pour déclencher automatiquement un paiement après inspection approuvée
+const AUTO_PAYMENT_PROGRESS_THRESHOLD = 25;
 
 /**
  * Contexte enrichi pour les actions
@@ -68,25 +77,85 @@ interface MilestoneCheckpointActionsProps {
   milestones: MilestoneSummaryDTO[];
   projectId: string;
   phaseId?: string;
+  progressThreshold?: number; // Seuil de progression pour activer les actions (défaut: 25%)
   onAddInspection?: (context: MilestoneActionContext) => void;
   onAddPayment?: (context: MilestoneActionContext) => void;
   onMilestoneComplete?: (milestoneId: string) => void;
+  onAutoPaymentTriggered?: (context: MilestoneActionContext) => void; // Callback pour paiement automatique après inspection
 }
 
 const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
   milestones,
   projectId,
   phaseId,
+  progressThreshold = AUTO_PAYMENT_PROGRESS_THRESHOLD,
   onAddInspection,
   onAddPayment,
-  onMilestoneComplete
+  onMilestoneComplete,
+  onAutoPaymentTriggered
 }) => {
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneSummaryDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [autoPaymentPending, setAutoPaymentPending] = useState(false);
+
+  // Fetch project context to check inspection status
+  const { data: projectContext } = useProjectActionContext(projectId);
+
+  /**
+   * Vérifie si une inspection approuvée avec le seuil de progression atteint existe
+   */
+  const hasApprovedInspectionWithProgress = (): boolean => {
+    if (!projectContext?.latestInspection) return false;
+    
+    const { latestInspection, project } = projectContext;
+    return (
+      latestInspection.status === 'approved' &&
+      latestInspection.progressAtInspection >= progressThreshold
+    );
+  };
+
+  /**
+   * Vérifie si les actions doivent être actives
+   * Actif tant qu'il n'y a pas d'inspection approuvée avec le seuil atteint
+   */
+  const areActionsEnabled = (): boolean => {
+    return !hasApprovedInspectionWithProgress();
+  };
+
+  /**
+   * Détecte l'approbation d'une inspection et déclenche le paiement automatique
+   */
+  useEffect(() => {
+    if (
+      projectContext?.latestInspection?.status === 'approved' &&
+      projectContext.latestInspection.progressAtInspection >= progressThreshold &&
+      !autoPaymentPending &&
+      onAutoPaymentTriggered &&
+      projectContext.mainContractor
+    ) {
+      // Déclencher automatiquement une demande de paiement
+      setAutoPaymentPending(true);
+      
+      const paymentContext: MilestoneActionContext = {
+        milestoneId: '',
+        milestoneTitle: `Paiement suite à inspection approuvée (${projectContext.latestInspection.progressAtInspection}%)`,
+        milestoneType: 'checkpoint',
+        phaseId: projectContext.latestInspection.phaseId,
+        phaseName: projectContext.currentPhase?.name,
+        suggestedProgress: projectContext.latestInspection.progressAtInspection,
+        contractorId: projectContext.mainContractor.id,
+        contractorName: projectContext.mainContractor.name,
+        contractorContact: projectContext.mainContractor.contact
+      };
+      
+      onAutoPaymentTriggered(paymentContext);
+    }
+  }, [projectContext?.latestInspection?.status, projectContext?.latestInspection?.progressAtInspection, progressThreshold, autoPaymentPending, onAutoPaymentTriggered]);
 
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.target_date);
+    const actionsEnabled = areActionsEnabled();
     
     if (milestone.status === 'completed') {
       return { 
@@ -95,6 +164,18 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
         bgColor: 'bg-success/10',
         borderColor: 'border-success',
         label: 'Terminé',
+        canTrigger: false
+      };
+    }
+
+    // Si inspection approuvée avec seuil atteint, désactiver les actions
+    if (!actionsEnabled) {
+      return { 
+        icon: CheckCircle, 
+        color: 'text-success', 
+        bgColor: 'bg-success/10',
+        borderColor: 'border-success',
+        label: 'Inspection validée',
         canTrigger: false
       };
     }
@@ -140,7 +221,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
       bgColor: 'bg-muted',
       borderColor: 'border-muted-foreground/30',
       label: 'À venir',
-      canTrigger: false
+      canTrigger: true // Actif tant qu'il n'y a pas d'inspection validée
     };
   };
 
@@ -355,7 +436,32 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                         <span className="ml-1 font-medium">{paymentContext.mainContractor.name}</span>
                       </div>
                     )}
+                    {projectContext?.latestInspection && (
+                      <div className="col-span-2 flex items-center gap-2">
+                        <span className="text-muted-foreground">Dernière inspection:</span>
+                        <Badge 
+                          variant={projectContext.latestInspection.status === 'approved' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {projectContext.latestInspection.status === 'approved' ? 'Approuvée' : 
+                           projectContext.latestInspection.status === 'rejected' ? 'Rejetée' : 'En attente'}
+                        </Badge>
+                        <span className="text-muted-foreground">
+                          ({projectContext.latestInspection.progressAtInspection}%)
+                        </span>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Auto-payment indicator */}
+                  {hasApprovedInspectionWithProgress() && (
+                    <div className="mt-2 p-2 bg-success/10 rounded-md flex items-center gap-2 text-xs">
+                      <Zap className="h-3 w-3 text-success" />
+                      <span className="text-success font-medium">
+                        Paiement automatique déclenché suite à l'inspection approuvée
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -364,8 +470,12 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
               {/* Trigger Inspection */}
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-auto py-3"
+                className={cn(
+                  "w-full justify-start gap-3 h-auto py-3",
+                  hasApprovedInspectionWithProgress() && "opacity-50 cursor-not-allowed"
+                )}
                 onClick={handleTriggerInspection}
+                disabled={hasApprovedInspectionWithProgress()}
               >
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <ClipboardCheck className="h-4 w-4 text-orange-600" />
@@ -373,9 +483,12 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 <div className="text-left flex-1">
                   <p className="font-medium">Déclencher une inspection</p>
                   <p className="text-xs text-muted-foreground">
-                    {inspectionContext?.inspectionType ? `Type: ${inspectionContext.inspectionType}` : 'Créer une inspection liée à ce jalon'}
+                    {hasApprovedInspectionWithProgress() 
+                      ? 'Inspection déjà approuvée avec seuil atteint'
+                      : (inspectionContext?.inspectionType ? `Type: ${inspectionContext.inspectionType}` : 'Créer une inspection liée à ce jalon')
+                    }
                   </p>
-                  {inspectionContext?.suggestedProgress !== undefined && (
+                  {!hasApprovedInspectionWithProgress() && inspectionContext?.suggestedProgress !== undefined && (
                     <p className="text-xs text-primary">
                       Progression suggérée: {inspectionContext.suggestedProgress}%
                     </p>
@@ -386,8 +499,12 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
               {/* Trigger Payment */}
               <Button
                 variant="outline"
-                className="w-full justify-start gap-3 h-auto py-3"
+                className={cn(
+                  "w-full justify-start gap-3 h-auto py-3",
+                  hasApprovedInspectionWithProgress() && "opacity-50 cursor-not-allowed"
+                )}
                 onClick={handleTriggerPayment}
+                disabled={hasApprovedInspectionWithProgress()}
               >
                 <div className="p-2 bg-green-100 rounded-lg">
                   <DollarSign className="h-4 w-4 text-green-600" />
@@ -395,9 +512,12 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 <div className="text-left flex-1">
                   <p className="font-medium">Effectuer un paiement</p>
                   <p className="text-xs text-muted-foreground">
-                    Enregistrer un paiement lié à ce jalon
+                    {hasApprovedInspectionWithProgress()
+                      ? 'Paiement automatique en cours'
+                      : 'Enregistrer un paiement lié à ce jalon'
+                    }
                   </p>
-                  {paymentContext?.suggestedAmount !== undefined && paymentContext.suggestedAmount > 0 && (
+                  {!hasApprovedInspectionWithProgress() && paymentContext?.suggestedAmount !== undefined && paymentContext.suggestedAmount > 0 && (
                     <p className="text-xs text-green-600">
                       Montant suggéré: {paymentContext.suggestedAmount.toLocaleString()} MRU
                     </p>
@@ -409,8 +529,12 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
               {selectedMilestone?.status !== 'completed' && (
                 <Button
                   variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-3 border-success/50 hover:bg-success/10"
+                  className={cn(
+                    "w-full justify-start gap-3 h-auto py-3 border-success/50 hover:bg-success/10",
+                    !hasApprovedInspectionWithProgress() && "opacity-50"
+                  )}
                   onClick={handleMarkComplete}
+                  disabled={!hasApprovedInspectionWithProgress()}
                 >
                   <div className="p-2 bg-success/20 rounded-lg">
                     <CheckCircle className="h-4 w-4 text-success" />
@@ -418,7 +542,10 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                   <div className="text-left">
                     <p className="font-medium">Marquer comme terminé</p>
                     <p className="text-xs text-muted-foreground">
-                      Valider ce point de contrôle
+                      {hasApprovedInspectionWithProgress()
+                        ? 'Valider ce point de contrôle'
+                        : 'Nécessite une inspection approuvée'
+                      }
                     </p>
                   </div>
                 </Button>
