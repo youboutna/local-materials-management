@@ -348,9 +348,9 @@ const ResourceUtilizationCard: React.FC<{ phaseId: string; projectId: string }> 
         </div>
         
         {resources.hasResourceIssues && (
-          <Alert variant="warning" className="py-2">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
+          <Alert className="py-2 border-amber-200 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-xs text-amber-700">
               Ressources limitées détectées
             </AlertDescription>
           </Alert>
@@ -588,22 +588,22 @@ const PhaseDetailsPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5">
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">Vue d'ensemble</span>
           </TabsTrigger>
-          <TabsTrigger value="steps" className="flex items-center gap-1.5 py-2.5">
-            <Layers className="h-4 w-4" />
-            <span className="hidden sm:inline">Étapes</span>
+          <TabsTrigger value="workflow" className="flex items-center gap-1.5 py-2.5 relative">
+            <Target className="h-4 w-4" />
+            <span className="hidden sm:inline">Workflow Unifié</span>
+            {/* Indicator for active workflow */}
+            {metrics.completedSteps < phase.steps.length && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="resources" className="flex items-center gap-1.5 py-2.5">
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Ressources</span>
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="flex items-center gap-1.5 py-2.5">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Documents</span>
           </TabsTrigger>
           <TabsTrigger value="finances" className="flex items-center gap-1.5 py-2.5 relative">
             <CreditCard className="h-4 w-4" />
@@ -612,9 +612,9 @@ const PhaseDetailsPage: React.FC = () => {
               <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-ping"></span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="monitoring" className="flex items-center gap-1.5 py-2.5">
-            <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Suivi</span>
+          <TabsTrigger value="documents" className="flex items-center gap-1.5 py-2.5">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Documents</span>
           </TabsTrigger>
         </TabsList>
 
@@ -655,10 +655,10 @@ const PhaseDetailsPage: React.FC = () => {
                   </div>
                   {loadingCosts ? (
                     <Skeleton className="h-5 w-16" />
-                  ) : phaseCosts?.costVariance !== 0 && (
-                    <Badge variant={phaseCosts?.costVariance > 0 ? "destructive" : "default"}>
-                      {phaseCosts?.costVariance > 0 ? "+" : ""}
-                      {formatCurrency(phaseCosts?.costVariance)}
+                ) : phaseCosts?.costVariance !== undefined && phaseCosts.costVariance !== 0 && (
+                    <Badge variant={(phaseCosts.costVariance ?? 0) > 0 ? "destructive" : "default"}>
+                      {(phaseCosts.costVariance ?? 0) > 0 ? "+" : ""}
+                      {formatCurrency(phaseCosts.costVariance)}
                     </Badge>
                   )}
                 </div>
@@ -742,21 +742,21 @@ const PhaseDetailsPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Steps Card */}
+            {/* Workflow Card (formerly Steps) */}
             <Card 
               className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setActiveTab("steps")}
+              onClick={() => setActiveTab("workflow")}
             >
               <div className="p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
                 <div className="flex items-center justify-between">
                   <div className="p-2 rounded-xl bg-purple-500/10">
-                    <Layers className="h-5 w-5 text-purple-600" />
+                    <Target className="h-5 w-5 text-purple-600" />
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="mt-3">
                   <p className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</p>
-                  <p className="text-sm text-muted-foreground">Étapes</p>
+                  <p className="text-sm text-muted-foreground">Workflow</p>
                 </div>
                 <Progress 
                   value={metrics.stepsCount > 0 ? (metrics.completedSteps / metrics.stepsCount) * 100 : 0} 
@@ -791,15 +791,15 @@ const PhaseDetailsPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Layers className="h-5 w-5 text-purple-600" />
-                        Aperçu des étapes
+                        Aperçu du Workflow
                       </CardTitle>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setActiveTab("steps")}
+                        onClick={() => setActiveTab("workflow")}
                         className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                       >
-                        Voir toutes
+                        Ouvrir Workflow
                         <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
@@ -819,7 +819,7 @@ const PhaseDetailsPage: React.FC = () => {
                               isInProgress && "bg-blue-50/50 border-blue-200",
                               !isCompleted && !isInProgress && "bg-muted/30 border-transparent"
                             )}
-                            onClick={() => setActiveTab("steps")}
+                            onClick={() => setActiveTab("workflow")}
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className={cn(
@@ -863,9 +863,9 @@ const PhaseDetailsPage: React.FC = () => {
                       <Button
                         variant="ghost"
                         className="w-full mt-4"
-                        onClick={() => setActiveTab("steps")}
+                        onClick={() => setActiveTab("workflow")}
                       >
-                        Voir toutes les étapes ({phase.steps.length})
+                        Voir workflow complet ({phase.steps.length} étapes)
                       </Button>
                     )}
                   </CardContent>
@@ -910,7 +910,7 @@ const PhaseDetailsPage: React.FC = () => {
                       </div>
                       <p className="text-2xl font-bold text-amber-700">{phaseResources?.totalMaterials || metrics.totalMaterials}</p>
                       <p className="text-xs text-amber-600/80 mt-1">
-                        {formatCurrency(phaseResources?.materialCost || metrics.materialCost)}
+                        {formatCurrency((phaseResources?.materialMetrics?.estimatedCost) || 0)}
                       </p>
                     </div>
                     <div className="text-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/30 border border-purple-100">
@@ -1077,8 +1077,58 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Steps Tab */}
-        <TabsContent value="steps" className="animate-in fade-in duration-300">
+        {/* Unified Workflow Tab - Fusion des Étapes et Suivi */}
+        <TabsContent value="workflow" className="space-y-6 animate-in fade-in duration-300">
+          {/* Workflow Summary Header */}
+          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Workflow Unifié</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Planification • Exécution • Validation • Documentation
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {metrics.completedSteps}/{metrics.stepsCount} étapes
+                  </Badge>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <ClipboardCheck className="h-3 w-3 mr-1" />
+                    {metrics.passedInspections}/{metrics.totalInspections} inspections
+                  </Badge>
+                  <Badge variant="outline">
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    {formatCurrency(metrics.totalPaymentAmount)}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Unified Workflow Component with Milestone & Stage Integration */}
+          <UnifiedPhaseWorkflow
+            projectId={projectId!}
+            phaseId={phaseId!}
+            phaseName={phase.phase_name || 'Phase'}
+            stages={phase.steps?.map((stage: any, index: number) => ({
+              id: stage.id || `stage-${index}`,
+              name: stage.name || stage.step_name || `Étape ${index + 1}`,
+              description: stage.description || stage.step_description,
+              status: stage.status || 'pending',
+              progress: stage.progress || 0
+            })) || []}
+            phaseProgress={phase.progress || 0}
+            phaseBudget={phase.estimated_cost || 0}
+          />
+
+          {/* Gestion des étapes intégrée */}
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1087,20 +1137,11 @@ const PhaseDetailsPage: React.FC = () => {
                     <Layers className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">Gestion des étapes</CardTitle>
+                    <CardTitle className="text-lg">Gestion des Étapes</CardTitle>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      {phase.phase_name} • Ajoutez, modifiez ou supprimez des étapes et tâches
+                      Ajoutez, modifiez ou supprimez des étapes et tâches
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {metrics.completedSteps} terminées
-                  </Badge>
-                  <Badge variant="outline">
-                    {metrics.stepsCount} total
-                  </Badge>
                 </div>
               </div>
             </CardHeader>
@@ -1116,6 +1157,58 @@ const PhaseDetailsPage: React.FC = () => {
                 isUpdating={isUpdating}
               />
             </CardContent>
+          </Card>
+
+          {/* Sous-sections pour détails (Tâches, Inspections, Paiements, Conformité) */}
+          <Card className="border-0 shadow-md overflow-hidden">
+            <Tabs defaultValue="tasks" className="w-full">
+              <TabsList className="grid grid-cols-4 bg-muted/50 p-1 m-2 rounded-lg">
+                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <ListChecks className="h-4 w-4" />
+                  <span className="hidden sm:inline">Tâches</span>
+                </TabsTrigger>
+                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">Inspections</span>
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Paiements</span>
+                </TabsTrigger>
+                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Conformité</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tasks" className="p-6">
+                <PhaseTasks 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="inspections" className="p-6">
+                <PhaseInspections 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="payments" className="p-6">
+                <PhasePayments 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="compliance" className="p-6">
+                <PhaseCompliance 
+                  phaseId={phaseId!} 
+                  projectId={projectId!} 
+                />
+              </TabsContent>
+            </Tabs>
           </Card>
         </TabsContent>
 
@@ -1345,7 +1438,7 @@ const PhaseDetailsPage: React.FC = () => {
                   <CardContent>
                     <div className="space-y-3">
                       {Object.entries(phaseCosts.paymentDistribution)
-                        .sort(([,a], [,b]) => b - a)
+                        .sort(([,a], [,b]) => (b as number) - (a as number))
                         .slice(0, 5)
                         .map(([contractorId, amount]) => (
                           <div key={contractorId} className="flex justify-between items-center">
@@ -1354,9 +1447,9 @@ const PhaseDetailsPage: React.FC = () => {
                               <span className="text-sm truncate">Contractant {contractorId.slice(0, 8)}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-medium text-sm">{formatCurrency(amount)}</span>
+                              <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
                               <span className="text-xs text-muted-foreground">
-                                {((amount / phaseCosts.totalPayments) * 100).toFixed(1)}%
+                                {(((amount as number) / phaseCosts.totalPayments) * 100).toFixed(1)}%
                               </span>
                             </div>
                           </div>
@@ -1378,7 +1471,7 @@ const PhaseDetailsPage: React.FC = () => {
                   <CardContent>
                     <div className="space-y-3">
                       {Object.entries(phaseCosts.expenseDistribution)
-                        .sort(([,a], [,b]) => b - a)
+                        .sort(([,a], [,b]) => (b as number) - (a as number))
                         .slice(0, 5)
                         .map(([category, amount]) => (
                           <div key={category} className="flex justify-between items-center">
@@ -1387,9 +1480,9 @@ const PhaseDetailsPage: React.FC = () => {
                               <span className="text-sm truncate">{category}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-medium text-sm">{formatCurrency(amount)}</span>
+                              <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
                               <span className="text-xs text-muted-foreground">
-                                {((amount / phaseCosts.totalExpenses) * 100).toFixed(1)}%
+                                {(((amount as number) / phaseCosts.totalExpenses) * 100).toFixed(1)}%
                               </span>
                             </div>
                           </div>
@@ -1402,7 +1495,7 @@ const PhaseDetailsPage: React.FC = () => {
           )}
           
           {/* Resource Cost Analysis */}
-          {phaseResources && (phaseResources.totalEmployees > 0 || phaseResources.materialCost > 0) && (
+          {phaseResources && (phaseResources.totalEmployees > 0 || (phaseResources.materialMetrics?.estimatedCost ?? 0) > 0) && (
             <Card>
               <CardHeader>
                 <CardTitle>Coûts des ressources</CardTitle>
@@ -1418,15 +1511,15 @@ const PhaseDetailsPage: React.FC = () => {
                       </h4>
                       <div className="space-y-2">
                         {Object.entries(phaseResources.employeesByPosition)
-                          .sort(([,a], [,b]) => b - a)
+                          .sort(([,a], [,b]) => (b as number) - (a as number))
                           .slice(0, 5)
                           .map(([position, count]) => (
                             <div key={position} className="flex justify-between items-center">
                               <span className="text-sm truncate">{position}</span>
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline">{count}</Badge>
+                                <Badge variant="outline">{count as number}</Badge>
                                 <span className="text-xs text-muted-foreground">
-                                  {((count / phaseResources.totalEmployees) * 100).toFixed(0)}%
+                                  {(((count as number) / phaseResources.totalEmployees) * 100).toFixed(0)}%
                                 </span>
                               </div>
                             </div>
@@ -1446,20 +1539,20 @@ const PhaseDetailsPage: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm">Coût total matériaux</span>
                           <span className="font-medium text-amber-600">
-                            {formatCurrency(phaseResources.materialCost)}
+                            {formatCurrency(phaseResources.materialMetrics?.estimatedCost ?? 0)}
                           </span>
                         </div>
                         <div className="space-y-2">
                           {Object.entries(phaseResources.materialsByCategory)
-                            .sort(([,a], [,b]) => b - a)
+                            .sort(([,a], [,b]) => (b as number) - (a as number))
                             .slice(0, 5)
                             .map(([category, quantity]) => (
                               <div key={category} className="flex justify-between items-center">
                                 <span className="text-sm truncate">{category}</span>
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{quantity}</Badge>
+                                  <Badge variant="outline">{quantity as number}</Badge>
                                   <span className="text-xs text-muted-foreground">
-                                    {((quantity / phaseResources.totalMaterials) * 100).toFixed(0)}%
+                                    {(((quantity as number) / phaseResources.totalMaterials) * 100).toFixed(0)}%
                                   </span>
                                 </div>
                               </div>
@@ -1474,75 +1567,6 @@ const PhaseDetailsPage: React.FC = () => {
           )}
         </TabsContent>
 
-        {/* Workflow & Monitoring Tab */}
-        <TabsContent value="monitoring" className="space-y-6 animate-in fade-in duration-300">
-          <UnifiedPhaseWorkflow
-            projectId={projectId!}
-            phaseId={phaseId!}
-            phaseName={phase.phase_name || phase.phase || 'Phase'}
-            stages={phase.steps?.map((stage: any, index: number) => ({
-              id: stage.id || `stage-${index}`,
-              name: stage.name || stage.step_name || `Étape ${index + 1}`,
-              description: stage.description || stage.step_description,
-              status: stage.status || 'pending',
-              progress: stage.progress || 0
-            })) || []}
-            phaseProgress={phase.progress || 0}
-            phaseBudget={phase.estimated_cost || phase.budget || 0}
-          />
-
-          {/* Sous-tabs pour les vues détaillées */}
-          <Card className="border-0 shadow-md overflow-hidden">
-            <Tabs defaultValue="tasks" className="w-full">
-              <TabsList className="grid grid-cols-4 bg-muted/50 p-1 m-2 rounded-lg">
-                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <ListChecks className="h-4 w-4" />
-                  <span>Tâches</span>
-                </TabsTrigger>
-                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <ClipboardCheck className="h-4 w-4" />
-                  <span>Inspections</span>
-                </TabsTrigger>
-                <TabsTrigger value="payments" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <CreditCard className="h-4 w-4" />
-                  <span>Paiements</span>
-                </TabsTrigger>
-                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <Shield className="h-4 w-4" />
-                  <span>Conformité</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="tasks" className="p-6">
-                <PhaseTasks 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="inspections" className="p-6">
-                <PhaseInspections 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="payments" className="p-6">
-                <PhasePayments 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-              
-              <TabsContent value="compliance" className="p-6">
-                <PhaseCompliance 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
-              </TabsContent>
-            </Tabs>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Edit Dialog - Improved Design */}

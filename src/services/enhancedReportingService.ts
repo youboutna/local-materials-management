@@ -29,19 +29,22 @@ export class EnhancedReportingService {
       const [
         reportDTO,
         realCosts,
-        resourceUtilization,
         phases,
         inspections
       ] = await Promise.all([
         this.transformProjectForReport(project),
         ProjectDataCalculations.calculateRealProjectCosts(project.id),
-        ProjectDataCalculations.calculateResourceUtilization(project.id),
         supabase.from('project_phases').select('*').eq('project_id', project.id),
         supabase.from('inspections').select('*').eq('project_id', project.id)
       ]);
 
       const phasesData = phases.data || [];
       const inspectionsData = inspections.data || [];
+      
+      // Calculate resource utilization for the first phase if available
+      const resourceUtilization = phasesData.length > 0 
+        ? await ProjectDataCalculations.calculatePhaseResourceUtilization(project.id, phasesData[0].id)
+        : null;
 
       // Calculate comprehensive cost data
       const costCalculation: CostCalculation = {
