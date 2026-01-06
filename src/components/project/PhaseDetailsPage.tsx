@@ -46,6 +46,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { referentialService } from "@/config/referentials";
 
 // Import existing components
 import PhaseMaterials from "./PhaseMaterials";
@@ -110,11 +112,26 @@ const PhaseDetailsPage: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t, language } = useLanguage();
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<PhaseDetails>>({});
   const [parsedMilestones, setParsedMilestones] = useState<any>(null);
+  const [referentialLabels, setReferentialLabels] = useState<{
+    phaseType: string;
+    constructionPhase: string;
+  }>({
+    phaseType: "",
+    constructionPhase: "",
+  });
+
+  // Mettre à jour la langue du service référentiel
+  useEffect(() => {
+    if (language) {
+      referentialService.setLanguage(language);
+    }
+  }, [language]);
 
   // Fetch phase details
   const {
@@ -148,6 +165,60 @@ const PhaseDetailsPage: React.FC = () => {
         console.error("Error parsing milestones:", error);
         setParsedMilestones(null);
       }
+    }
+  }, [phase]);
+
+  // Récupérer les labels du référentiel pour la phase
+  useEffect(() => {
+    if (phase) {
+      // Récupérer le label du type de phase
+      const phaseTypeLabel = getPhaseTypeLabel(phase.phase_type);
+
+      // Récupérer le label de la phase de construction si disponible
+      let constructionPhaseLabel = phase.construction_phase || "";
+
+      // Si nous avons un code de phase de construction, essayer de le traduire via le référentiel
+      if (phase.construction_phase) {
+        try {
+          // Chercher dans les référentiels disponibles pour une correspondance
+          const referentials = referentialService.getAllReferentials();
+
+          for (const referential of referentials) {
+            const phases = referentialService.getPhasesForReferential(
+              referential.code as any
+            );
+            const matchedPhase = phases.find(
+              (p) =>
+                p.code === phase.construction_phase ||
+                p.label.toLowerCase().replace(/ /g, "_") ===
+                  phase.construction_phase?.toLowerCase()
+            );
+
+            if (matchedPhase) {
+              // Vérifier si matchedPhase.label est un MultiLanguageLabel ou une string
+              if (typeof matchedPhase.label === "string") {
+                constructionPhaseLabel = matchedPhase.label;
+              } else if (
+                matchedPhase.label &&
+                typeof matchedPhase.label === "object"
+              ) {
+                // C'est un MultiLanguageLabel, utiliser getLabel
+                constructionPhaseLabel = referentialService.getLabel(
+                  matchedPhase.label
+                );
+              }
+              break;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching referential label:", error);
+        }
+      }
+
+      setReferentialLabels({
+        phaseType: phaseTypeLabel,
+        constructionPhase: constructionPhaseLabel,
+      });
     }
   }, [phase]);
 
@@ -454,13 +525,46 @@ const PhaseDetailsPage: React.FC = () => {
   const getPhaseTypeLabel = (type?: string | null) => {
     switch (type) {
       case "construction":
-        return "Construction";
+        return t("referentials.phase_type.construction") || "Construction";
       case "procurement":
-        return "Marché Public";
+        return t("referentials.phase_type.procurement") || "Marché Public";
       case "custom":
-        return "Personnalisé";
+        return t("referentials.phase_type.custom") || "Personnalisé";
       default:
-        return type || "Non défini";
+        return type || t("common.undefined") || "Non défini";
+    }
+  };
+
+  // Fonction pour obtenir les options de phase de construction depuis le référentiel
+  const getConstructionPhaseOptions = () => {
+    try {
+      const referentials = referentialService.getAllReferentials();
+      const options: Array<{ value: string; label: string }> = [];
+
+      referentials.forEach((referential) => {
+        const phases = referentialService.getPhasesForReferential(
+          referential.code as any
+        );
+        phases.forEach((phase) => {
+          // Vérifier le type de label
+          let labelText = "";
+          if (typeof phase.label === "string") {
+            labelText = phase.label;
+          } else if (phase.label && typeof phase.label === "object") {
+            labelText = referentialService.getLabel(phase.label);
+          }
+
+          options.push({
+            value: phase.code,
+            label: labelText,
+          });
+        });
+      });
+
+      return options;
+    } catch (error) {
+      console.error("Error getting construction phase options:", error);
+      return [];
     }
   };
 
@@ -495,6 +599,7 @@ const PhaseDetailsPage: React.FC = () => {
   const statusInfo = getStatusLabel(phase.status);
   const statusIcon = getStatusIcon(phase.status);
   const statusColor = getStatusColor(phase.status);
+  const constructionPhaseOptions = getConstructionPhaseOptions();
 
   return (
     <div className="container mx-auto mt-14 py-6 space-y-6">
@@ -517,8 +622,7 @@ const PhaseDetailsPage: React.FC = () => {
                   Phase: {phase.phase_name}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {getPhaseTypeLabel(phase.phase_type)} • ID:{" "}
-                  {phase.id.slice(0, 8)}
+                  {referentialLabels.phaseType} • ID: {phase.id.slice(0, 8)}
                 </p>
               </div>
             </div>
@@ -556,9 +660,12 @@ const PhaseDetailsPage: React.FC = () => {
               <MapPin className="h-4 w-4" />
               <span>{phase.location || "Non spécifiée"}</span>
             </div>
-            {phase.phase_type && (
-              <Badge variant="outline">
-                {getPhaseTypeLabel(phase.phase_type)}
+            {referentialLabels.phaseType && (
+              <Badge variant="outline">{referentialLabels.phaseType}</Badge>
+            )}
+            {referentialLabels.constructionPhase && (
+              <Badge variant="secondary">
+                {referentialLabels.constructionPhase}
               </Badge>
             )}
           </div>
@@ -690,6 +797,20 @@ const PhaseDetailsPage: React.FC = () => {
                     </p>
                     <p>{formatCurrency(phase.estimated_cost)}</p>
                   </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Type de phase
+                    </p>
+                    <p>{referentialLabels.phaseType}</p>
+                  </div>
+                  {referentialLabels.constructionPhase && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Phase de construction
+                      </p>
+                      <p>{referentialLabels.constructionPhase}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Date de création
@@ -996,24 +1117,55 @@ const PhaseDetailsPage: React.FC = () => {
                 />
               </div>
             </div>
-          <div>
-  <Label>Type de phase</Label>
-  <Select
-    value={editForm.phase_type || "construction"} // Ensure it's never null
-    onValueChange={(value) =>
-      setEditForm({ ...editForm, phase_type: value })
-    }
-  >
-    <SelectTrigger>
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="construction">Construction</SelectItem>
-      <SelectItem value="procurement">Marché Public</SelectItem>
-      <SelectItem value="custom">Personnalisé</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
+            <div>
+              <Label>Type de phase</Label>
+              <Select
+                value={editForm.phase_type || "construction"}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, phase_type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="construction">
+                    {t("referentials.phase_type.construction") ||
+                      "Construction"}
+                  </SelectItem>
+                  <SelectItem value="procurement">
+                    {t("referentials.phase_type.procurement") ||
+                      "Marché Public"}
+                  </SelectItem>
+                  <SelectItem value="custom">
+                    {t("referentials.phase_type.custom") || "Personnalisé"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Phase de construction (Référentiel)</Label>
+              <Select
+                value={editForm.construction_phase || ""}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, construction_phase: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une phase de construction" />
+                </SelectTrigger>
+                <SelectContent>
+                  {constructionPhaseOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sélectionnez une phase standardisée depuis le référentiel
+              </p>
+            </div>
             <div>
               <Label>Localisation</Label>
               <Input

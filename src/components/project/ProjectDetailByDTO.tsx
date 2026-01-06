@@ -56,6 +56,10 @@ import {
   SelectContent,
 } from "../ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import GanttSidebar from "./GanttSidebar";
+import { ganttCalculations } from "@/types/ganttCalculations";
+import { differenceInDays } from "date-fns";
+import EnhancedPERTAnalysis from "./EnhancedPERTAnalysis";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -76,6 +80,20 @@ interface PhaseToSave {
   construction_phase: string;
   custom_phase_data: any;
 }
+const getPhaseColor = (status: string) => {
+  switch (status) {
+    case "completed":
+      return "#10b981"; // green
+    case "in_progress":
+      return "#3b82f6"; // blue
+    case "delayed":
+      return "#ef4444"; // red
+    case "on_hold":
+      return "#f59e0b"; // amber
+    default:
+      return "#6b7280"; // gray
+  }
+};
 const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   projectId: propProjectId,
   onEdit,
@@ -572,6 +590,41 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [projectPhases, projectDetail?.plannedPhases, t]);
 
+  const timelineMetrics = useMemo(() => {
+    if (!computedPhases || computedPhases.length === 0) {
+      return {
+        totalDuration: 0,
+        completedDuration: 0,
+        delayedPhases: 0,
+        upcomingMilestones: 0,
+      };
+    }
+
+    // Calculate metrics
+    let totalDuration = 0;
+    let completedDuration = 0;
+    let delayedPhases = 0;
+    let upcomingMilestones = 0;
+
+    computedPhases.forEach((phase: any) => {
+      const start = new Date(phase.startDate || phase.start_date);
+      const end = new Date(phase.endDate || phase.end_date);
+      const duration = Math.max(0, differenceInDays(end, start));
+
+      totalDuration += duration;
+      completedDuration += (duration * (phase.progress || 0)) / 100;
+
+      if (phase.status === "delayed") delayedPhases++;
+      if (phase.status === "in_progress") upcomingMilestones++;
+    });
+
+    return {
+      totalDuration: Math.round(totalDuration),
+      completedDuration: Math.round(completedDuration),
+      delayedPhases,
+      upcomingMilestones,
+    };
+  }, [computedPhases]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -1686,126 +1739,83 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         <TabsContent value="gantt" className="mt-6">
-          <ProjectGantt
-            project={project as any}
-            phases={(computedPhases || []).map((p: any) => ({
-              id: p.id,
-              name: p.phase,
-              startDate: new Date(p.startDate || new Date()),
-              endDate: new Date(p.endDate || new Date()),
-              progress: p.progress || 0,
-              status: (p.status || "planned") as any,
-            }))}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <ProjectGantt
+                project={project as any}
+                phases={computedPhases.map((phase: any) => ({
+                  id: phase.id,
+                  name: phase.phase_name || phase.name,
+                  startDate: phase.start_date || phase.startDate,
+                  endDate: phase.end_date || phase.endDate,
+                  progress: phase.progress || 0,
+                  status: phase.status || "planned",
+                  budget: phase.budget || phase.estimated_cost,
+                  actual_cost: phase.actual_cost,
+                  dependencies: phase.dependencies || [],
+                  milestones: phase.milestones || [],
+                  isCritical: phase.isCritical || false,
+                }))}
+              />
+            </div>
+            <div>
+              <GanttSidebar
+                phases={computedPhases.map((phase: any) => ({
+                  ...phase,
+                  startDate: phase.start_date || phase.startDate,
+                  endDate: phase.end_date || phase.endDate,
+                  progress: phase.progress || 0,
+                  status: phase.status || "planned",
+                  resourceAllocation: 50, // Default value or calculate
+                }))}
+                timelineMetrics={timelineMetrics}
+                onAnalyzeCriticalPath={() => {
+                  toast({
+                    title: "Analyse du chemin critique",
+                    description: "Analyse en cours...",
+                  });
+                }}
+                onOptimizeSchedule={() => {
+                  toast({
+                    title: "Optimisation du planning",
+                    description: "Calcul des optimisations...",
+                  });
+                }}
+                onResourceLeveling={() => {
+                  toast({
+                    title: "Nivellement des ressources",
+                    description: "Répartition en cours...",
+                  });
+                }}
+              />
+            </div>
+          </div>
         </TabsContent>
-
         <TabsContent value="pert" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analyse PERT</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pertAnalysis ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Durée attendue totale
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.totalExpectedDuration.toFixed(1)} jours
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Écart-type total
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.variances
-                          ? Math.sqrt(
-                              Object.values(pertAnalysis.variances).reduce(
-                                (sum: number, variance: number) =>
-                                  sum + variance,
-                                0
-                              )
-                            ).toFixed(1)
-                          : "0.0"}{" "}
-                        jours
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Tâches sur chemin critique
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {pertAnalysis.criticalPath?.length || 0}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Activities Table */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Activités PERT
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-2">Activité</th>
-                            <th className="text-right p-2">Optimiste</th>
-                            <th className="text-right p-2">Probable</th>
-                            <th className="text-right p-2">Pessimiste</th>
-                            <th className="text-right p-2">Estimation PERT</th>
-                            <th className="text-right p-2">Écart-type</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pertAnalysis.activities
-                            .slice(0, 10)
-                            .map((activity, index) => (
-                              <tr
-                                key={index}
-                                className="border-b hover:bg-muted/50"
-                              >
-                                <td className="p-2 font-medium">
-                                  {activity.name}
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.optimistic.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.mostLikely.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.pessimistic.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right font-semibold">
-                                  {activity.pertEstimate.toFixed(1)}j
-                                </td>
-                                <td className="p-2 text-right">
-                                  {activity.standardDeviation.toFixed(2)}j
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    {pertAnalysis.activities.length > 10 && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Affichage de 10 activités sur{" "}
-                        {pertAnalysis.activities.length}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  Chargement de l'analyse PERT...
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <EnhancedPERTAnalysis
+            project={project}
+            phases={computedPhases.map((phase: any) => ({
+              id: phase.id,
+              name: phase.phase_name || phase.name,
+              startDate: phase.start_date || phase.startDate,
+              endDate: phase.end_date || phase.endDate,
+              progress: phase.progress || 0,
+              status: phase.status || "planned",
+              budget: phase.budget || phase.estimated_cost,
+              estimatedDuration:
+                Math.ceil(
+                  (new Date(phase.end_date || phase.endDate).getTime() -
+                    new Date(phase.start_date || phase.startDate).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                ) || 30,
+            }))}
+            tasks={tasksSource}
+            compact={false}
+            onAnalysisComplete={(analysis) => {
+              console.log("PERT Analysis Complete:", analysis);
+              // You could save this analysis to state or database
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

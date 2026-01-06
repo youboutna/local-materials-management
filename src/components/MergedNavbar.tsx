@@ -27,6 +27,7 @@ import {
   Globe,
   ChevronDown,
   MoreHorizontal,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -107,7 +108,7 @@ const MergedNavbar = () => {
 
   // Core navigation items (always visible)
   const coreNavItems = [
-    { name: t("dashboard.title"), href: "/dashboard", icon: Home },
+    { name: t("dashboard.title"), href: "/dashboard", icon: LayoutDashboard },
     { name: t("nav.projects"), href: "/projects", icon: Briefcase },
     { name: t("nav.materials"), href: "/materials", icon: Package },
   ];
