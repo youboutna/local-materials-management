@@ -1,40 +1,63 @@
 import { useState, useCallback } from "react";
+import { ProjectData } from "@/types/project";
+import { toast } from "sonner";
 
-export const useBulkSelection = () => {
+interface UseBulkSelectionReturn {
+  selectedProjects: Set<string>;
+  toggleProjectSelection: (projectId: string) => void;
+  selectAllOnPage: (projectIds: string[]) => void;
+  deselectAllOnPage: (projectIds: string[]) => void;
+  selectAll: (projectIds: string[]) => void;
+  clearSelection: () => void;
+  isProjectSelected: (projectId: string) => boolean;
+  getSelectedProjects: (projects: ProjectData[]) => ProjectData[];
+  getSelectedProjectsCount: () => number;
+  bulkUpdateProjects: (
+    projectIds: string[],
+    updates: Partial<ProjectData>
+  ) => Promise<void>;
+  selectProjectsByFilter: (
+    filterFn: (project: ProjectData) => boolean,
+    projects: ProjectData[]
+  ) => void;
+}
+
+export const useBulkSelection = (): UseBulkSelectionReturn => {
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
     new Set()
   );
 
   const toggleProjectSelection = useCallback((projectId: string) => {
     setSelectedProjects((prev) => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(projectId)) {
-        newSelection.delete(projectId);
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
       } else {
-        newSelection.add(projectId);
+        newSet.add(projectId);
       }
-      return newSelection;
+      return newSet;
     });
   }, []);
 
   const selectAllOnPage = useCallback((projectIds: string[]) => {
     setSelectedProjects((prev) => {
-      const newSelection = new Set(prev);
-      projectIds.forEach((id) => newSelection.add(id));
-      return newSelection;
+      const newSet = new Set(prev);
+      projectIds.forEach((id) => newSet.add(id));
+      return newSet;
     });
   }, []);
 
   const deselectAllOnPage = useCallback((projectIds: string[]) => {
     setSelectedProjects((prev) => {
-      const newSelection = new Set(prev);
-      projectIds.forEach((id) => newSelection.delete(id));
-      return newSelection;
+      const newSet = new Set(prev);
+      projectIds.forEach((id) => newSet.delete(id));
+      return newSet;
     });
   }, []);
 
-  const selectAll = useCallback((allProjectIds: string[]) => {
-    setSelectedProjects(new Set(allProjectIds));
+  const selectAll = useCallback((projectIds: string[]) => {
+    setSelectedProjects(new Set(projectIds));
+    toast.success(`${projectIds.length} projet(s) sélectionné(s)`);
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -48,6 +71,47 @@ export const useBulkSelection = () => {
     [selectedProjects]
   );
 
+  const getSelectedProjects = useCallback(
+    (projects: ProjectData[]): ProjectData[] => {
+      return projects.filter((project) => selectedProjects.has(project.id));
+    },
+    [selectedProjects]
+  );
+
+  const getSelectedProjectsCount = useCallback(() => {
+    return selectedProjects.size;
+  }, [selectedProjects]);
+
+  const bulkUpdateProjects = useCallback(
+    async (projectIds: string[], updates: Partial<ProjectData>) => {
+      try {
+        // Here you would call your API to update multiple projects
+        console.log("Updating projects:", projectIds, "with:", updates);
+
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // In a real app, you would update the projects in your state/backend
+        toast.success(`${projectIds.length} projet(s) mis à jour`);
+      } catch (error) {
+        console.error("Error updating projects:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const selectProjectsByFilter = useCallback(
+    (filterFn: (project: ProjectData) => boolean, projects: ProjectData[]) => {
+      const filteredIds = projects.filter(filterFn).map((p) => p.id);
+      setSelectedProjects(new Set(filteredIds));
+      toast.success(
+        `${filteredIds.length} projet(s) sélectionné(s) par filtre`
+      );
+    },
+    []
+  );
+
   return {
     selectedProjects,
     toggleProjectSelection,
@@ -56,5 +120,9 @@ export const useBulkSelection = () => {
     selectAll,
     clearSelection,
     isProjectSelected,
+    getSelectedProjects,
+    getSelectedProjectsCount,
+    bulkUpdateProjects,
+    selectProjectsByFilter,
   };
 };

@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Map, Grid, Filter } from "lucide-react";
+import { Map, Grid, Filter, CheckSquare, Square } from "lucide-react";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
 import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
-import InteractiveMap from "@/components/map/InteractiveMap";
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import InteractiveMapFilters from "@/components/projects/InteractiveMapFilters";
 import InteractiveProjectsList from "@/components/projects/InteractiveProjectsList";
 import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap";
 import { useProjects } from "@/hooks/useProjects";
 import { usePagination } from "@/hooks/usePagination";
-import { ProjectData } from "@/types/project";
+import { ProjectData, ProjectStatus } from "@/types/project";
 import { MapLocation } from "@/components/ProjectMap";
-import Navbar from "@/components/Navbar";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 import { ElectricSpinner } from "@/components/loading-page";
@@ -25,6 +22,7 @@ import BulkActions from "@/components/projects/BulkActions";
 import { Button } from "@/components/ui/button";
 import { ProjectService } from "@/services/ProjectService";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const Projects: React.FC = () => {
   const { projects, loading: isLoading, error } = useProjects();
@@ -36,6 +34,7 @@ const Projects: React.FC = () => {
   >([]);
   const [interactiveFilteredProjects, setInteractiveFilteredProjects] =
     useState<ProjectData[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const projectService = new ProjectService();
 
   // Use the projects filter hook
@@ -71,7 +70,7 @@ const Projects: React.FC = () => {
     itemsPerPage: 20,
   });
 
-  // Add bulk selection
+  // Add bulk selection with enhanced functionality
   const {
     selectedProjects,
     toggleProjectSelection,
@@ -80,7 +79,14 @@ const Projects: React.FC = () => {
     selectAll,
     clearSelection,
     isProjectSelected,
+    getSelectedProjects,
+    getSelectedProjectsCount,
+    bulkUpdateProjects,
+    selectProjectsByFilter,
   } = useBulkSelection();
+
+  // Get selected project details
+  const selectedProjectDetails = getSelectedProjects(projects || []);
 
   // Add delete handler
   const handleBulkDelete = async (projectIds: string[]) => {
@@ -111,6 +117,29 @@ const Projects: React.FC = () => {
     } catch (error) {
       console.error("Error deleting projects:", error);
       toast.error("Erreur lors de la suppression des projets");
+    }
+  };
+
+  // Handle bulk status update
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    const projectIds = Array.from(selectedProjects);
+
+    if (
+      !confirm(
+        `Mettre à jour le statut de ${projectIds.length} projet(s) en "${newStatus}" ?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await bulkUpdateProjects(projectIds, {
+        status: newStatus as ProjectStatus,
+      });
+      toast.success(`Statut mis à jour pour ${projectIds.length} projet(s)`);
+    } catch (error) {
+      console.error("Error updating project status:", error);
+      toast.error("Erreur lors de la mise à jour des statuts");
     }
   };
 
@@ -170,6 +199,7 @@ const Projects: React.FC = () => {
     setStatusFilter("all");
     setRegionFilter("all");
     setSortOption("newest");
+    clearSelection();
   };
 
   const handleMapFilterChange = (filteredLocations: MapLocation[]) => {
@@ -191,16 +221,23 @@ const Projects: React.FC = () => {
         "Map filter - Updated grid projects:",
         matchingProjects.length
       );
-      // Note: filteredProjects is handled by the hook
     }
   };
+
   const handleSearchChange = (query: string) => {
     setLocalSearchQuery(query);
-    setSearchQuery(query); // This will trigger the debounced search
+    setSearchQuery(query);
   };
+
+  // Select all projects matching current filters
+  const handleSelectAllFiltered = () => {
+    const allFilteredIds = filteredProjects.map((p) => p.id);
+    selectAll(allFilteredIds);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center ">
+      <div className="min-h-screen flex items-center justify-center">
         <ElectricSpinner />
       </div>
     );
@@ -217,9 +254,14 @@ const Projects: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8  ">
+    <div className="container mx-auto px-4 py-8">
       <div className="mt-10 space-y-6">
-        <ProjectsHeader />
+        <ProjectsHeader
+          totalProjects={projects?.length || 0}
+          activeProjects={
+            projects?.filter((p) => p.status === "en cours").length || 0
+          }
+        />
 
         <Tabs defaultValue="grid" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -245,64 +287,98 @@ const Projects: React.FC = () => {
           </TabsList>
 
           <TabsContent value="grid" className="space-y-6">
-            {/* Add Bulk Actions Component */}
+            {/* Bulk Actions Component */}
             <BulkActions
               selectedProjects={selectedProjects}
               projects={projects || []}
               onDelete={handleBulkDelete}
               onClearSelection={clearSelection}
+              onBulkStatusUpdate={handleBulkStatusUpdate}
             />
 
-            {/* Selection Options - Separate from ProjectFilters */}
-            {selectedProjects.size > 0 && (
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600">
-                  {selectedProjects.size} élément(s) sélectionné(s) sur{" "}
-                  {filteredProjects.length}
+            {/* Project Filters with Bulk Selection Options */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {/* Selection Stats */}
+                  {selectedProjects.size > 0 && (
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center",
+                            selectedProjects.size > 0
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          )}
+                        >
+                          {selectedProjects.size > 0 ? (
+                            <CheckSquare className="h-5 w-5" />
+                          ) : (
+                            <Square className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {selectedProjects.size} projet
+                            {selectedProjects.size > 1 ? "s" : ""} sélectionné
+                            {selectedProjects.size > 1 ? "s" : ""}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            sur {filteredProjects.length} visible
+                            {filteredProjects.length > 1 ? "s" : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            selectAllOnPage(paginatedProjects.map((p) => p.id))
+                          }
+                        >
+                          Sélectionner la page
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSelectAllFiltered}
+                        >
+                          Tout sélectionner (filtre)
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearSelection}
+                        >
+                          Tout désélectionner
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Project Filters */}
+                  <ProjectFilters
+                    searchQuery={localSearchQuery}
+                    onSearchChange={handleSearchChange}
+                    onSearchSubmit={performSearch}
+                    statusFilter={statusFilter}
+                    onStatusChange={setStatusFilter}
+                    regionFilter={regionFilter}
+                    onRegionChange={setRegionFilter}
+                    sortOption={sortOption}
+                    onSortChange={setSortOption}
+                    availableStatuses={availableStatuses}
+                    availableRegions={availableRegions}
+                    onReset={handleReset}
+                    resultCount={filteredProjects.length}
+                  />
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      selectAllOnPage(paginatedProjects.map((p) => p.id))
-                    }
-                  >
-                    Sélectionner la page
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => selectAll(projects?.map((p) => p.id) || [])}
-                  >
-                    Tout sélectionner
-                  </Button>
-
-                  <Button variant="outline" size="sm" onClick={clearSelection}>
-                    Tout désélectionner
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <ProjectFilters
-              searchQuery={localSearchQuery}
-              onSearchChange={handleSearchChange}
-              onSearchSubmit={performSearch}
-              statusFilter={statusFilter}
-              onStatusChange={setStatusFilter}
-              regionFilter={regionFilter}
-              onRegionChange={setRegionFilter}
-              sortOption={sortOption}
-              onSortChange={setSortOption}
-              availableStatuses={availableStatuses}
-              availableRegions={availableRegions}
-              onReset={handleReset}
-              resultCount={filteredProjects.length}
-            />
-
+            {/* Projects Grid with Pagination and Selection */}
             <ProjectsGridPaginated
               projects={paginatedProjects}
               currentPage={currentPage}
@@ -314,6 +390,9 @@ const Projects: React.FC = () => {
               onProjectSelect={toggleProjectSelection}
               onSelectAllOnPage={selectAllOnPage}
               onDeselectAllOnPage={deselectAllOnPage}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              allVisibleProjectsCount={filteredProjects.length}
             />
           </TabsContent>
 
