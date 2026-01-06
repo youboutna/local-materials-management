@@ -10,7 +10,8 @@ export class ProjectDataCalculations {
   static async calculateRealProjectCosts(projectId: string) {
     try {
       // Get project detail with all related data using ProjectService
-      const projectDetail = await ProjectService.getProjectDetail(projectId);
+      const projectService = new ProjectService();
+      const projectDetail = await projectService.getProjectDetail(projectId);
       if (!projectDetail) {
         throw new Error('Project not found');
       }
@@ -18,9 +19,9 @@ export class ProjectDataCalculations {
       // Get project phases using PhaseService
       const phases = await PhaseService.getPhasesDTOByProject(projectId);
       
-      // Calculate costs from payments
-      const totalPayments = projectDetail.payments?.reduce((sum, payment) => 
-        sum + (payment.amount || 0), 0) || 0;
+      // Calculate costs from expenses (payments are not in ProjectDetailDTO, use expenses instead)
+      const totalPayments = projectDetail.expenses?.reduce((sum: number, expense: any) => 
+        sum + (expense.amount || 0), 0) || 0;
       
       // Note: Expenses would need to be fetched through a separate service
       // For now, we'll estimate based on phase costs
@@ -65,7 +66,8 @@ export class ProjectDataCalculations {
       }
 
       // Get project detail for payments data
-      const projectDetail = ProjectService.getProjectDetail(projectId);
+      const projectService = new ProjectService();
+      const projectDetail = await projectService.getProjectDetail(projectId);
       
       // Calculate costs from project data and phase information
       const costs = await this.extractPhaseCostsFromProjectData(projectDetail, phase);
@@ -147,7 +149,7 @@ export class ProjectDataCalculations {
       const utilizationMetrics = this.calculateResourceUtilizationMetrics({
         employees: resourceData.employees.length,
         materials: resourceData.totalMaterials,
-        equipment: resourceData.equipment.length,
+        equipment: resourceData.equipmentMetrics.count,
         phaseDuration: phase.estimated_duration_days || 30,
         phaseProgress: phase.progress || 0,
         budgetUtilization: await this.calculatePhaseBudgetUtilization(phaseId)
@@ -206,7 +208,8 @@ export class ProjectDataCalculations {
       const progressMetrics = this.calculateDetailedProgressMetrics(phase, steps);
       
       // Get project analytics for additional context
-      const projectAnalytics = ProjectService.getProjectAnalytics(phase.project_id);
+      const projectService = new ProjectService();
+      const projectAnalytics = await projectService.getProjectAnalytics(phase.project_id);
       
       // Calculate performance indicators
       const performanceIndicators = this.calculatePerformanceIndicators(
@@ -258,7 +261,7 @@ export class ProjectDataCalculations {
           estimatedDuration: step.estimated_duration_days,
           startDate: step.start_date,
           endDate: step.end_date,
-          criticalPath: step.critical_path || false
+          criticalPath: false // Critical path not available in PhaseStepDTO
         })),
         
         // Critical path analysis

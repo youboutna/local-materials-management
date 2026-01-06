@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        supplier_email_sent: supplierEmailResponse.id,
+        supplier_email_sent: (supplierEmailResponse as any).id || 'sent',
         admin_emails_sent: adminEmailResults.filter(r => r.status === 'fulfilled').length,
         admin_emails_failed: adminEmailResults.filter(r => r.status === 'rejected').length
       }),
