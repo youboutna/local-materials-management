@@ -63,6 +63,7 @@ import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 import PhaseDetailsPage from "./components/project/PhaseDetailsPage";
 
+// Force rebuild - updated 2026-01-07
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
