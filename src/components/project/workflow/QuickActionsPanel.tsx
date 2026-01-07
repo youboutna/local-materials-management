@@ -39,6 +39,7 @@ interface QuickActionsPanelProps {
   onRequestDecompte: () => void;
   onUpdateGuarantee: () => void;
   formatCurrency: (amount: number) => string;
+  compact?: boolean;
 }
 
 const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
@@ -54,7 +55,28 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
   onRequestDecompte,
   onUpdateGuarantee,
   formatCurrency,
+  compact = false,
 }) => {
+  if (compact) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="py-3">
+          <CardTitle className="text-sm flex items-center gap-2">Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 space-y-2">
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="flex-1" onClick={onScheduleInspection} disabled={!workflowMetrics.canScheduleInspection}>
+              Inspection
+            </Button>
+            <Button size="sm" variant={workflowMetrics.canRequestPayment ? 'default' : 'outline'} className="flex-1" onClick={onRequestDecompte} disabled={!workflowMetrics.canRequestPayment}>
+              Paiement
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground">{workflowMetrics.pendingActions.length} actions requises</div>
+        </CardContent>
+      </Card>
+    );
+  }
   const getStageIcon = (stage: WorkflowStage) => {
     switch (stage) {
       case 'payment_available':

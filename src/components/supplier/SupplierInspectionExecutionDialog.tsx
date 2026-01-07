@@ -13,6 +13,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DocumentService } from '@/services/DocumentService';
+import { StorageFactory } from '@/services/storage/StorageFactory';
+import { InspectionService } from '@/services/InspectionService';
+import { generatePVPDF } from '@/lib/pvGenerator';
 import { InspectionDTO } from '@/types/inspection.dto';
 import { Upload, FileText, X, CheckCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -69,65 +73,129 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
     setIsSubmitting(true);
 
     try {
-      // Upload documents to storage
+      // Use storage provider + DocumentService to upload documents (loose coupling)
+      const storage = StorageFactory.createProvider();
       const uploadedDocs: any[] = [];
+
       for (const file of documents) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${inspection.id}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `inspections/${inspection.project_id}/${fileName}`;
+        const destPath = `inspections/${inspection.project_id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, file);
+        const uploadRes = await storage.upload(file, destPath);
+        if (!uploadRes.success) throw new Error(uploadRes.error || 'Upload failed');
 
-        if (uploadError) throw uploadError;
+        const publicUrl = uploadRes.url || '';
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath);
-
+        // Create document record via DocumentService
+        try {
+          const docRecord = await DocumentService.createDocument({
+            title: `Service fait - ${file.name}`,
+            description: comments || undefined,
+            document_type: 'inspection',
+            file_name: file.name,
+            mime_type: file.type,
+            file_size: file.size,
+            project_id: inspection.project_id,
+            status: 'active',
+            inspection_id: inspection.id,
+            supplier_id: supplierId,
+            uploaded_by: supplierId,
+            file_url: publicUrl,
+          } as any);
+          // attach returned document id/url for notifications
+          if (docRecord) {
+            uploadedDocs.push({
+              id: docRecord.id,
+              file_name: file.name,
+              file_url: publicUrl,
+              file_path: destPath,
+              mime_type: file.type,
+              file_size: file.size,
+            });
+            continue;
+          }
+        } catch (docErr) {
+          console.error('DocumentService.createDocument error:', docErr);
+        }
+        // fallback when createDocument didn't return record
         uploadedDocs.push({
           file_name: file.name,
           file_url: publicUrl,
-          file_path: filePath,
-          mime_type: file.type,
-          file_size: file.size
-        });
-
-        // Insert document metadata
-        const documentData = {
-          title: `Service fait - ${file.name}`,
-          file_url: publicUrl,
-          file_name: file.name,
+          file_path: destPath,
           mime_type: file.type,
           file_size: file.size,
-          document_type: 'inspection' as any,
-          project_id: inspection.project_id,
-          inspection_id: inspection.id,
-          supplier_id: supplierId,
-          uploaded_by: supplierId
-        };
-        
-        const { error: docError } = await supabase
-          .from('documents')
-          .insert(documentData);
-        
-        if (docError) console.error('Error inserting document:', docError);
+        });
       }
 
-      // Update inspection
-      const { error: updateError } = await supabase
-        .from('inspections')
-        .update({
-          status: 'approved',
-          progress_at_inspection: progress,
-          comments: comments,
-          documents: uploadedDocs,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', inspection.id);
+      // Generate and upload PV (procès-verbal) PDF and persist via DocumentService
+      try {
+        const pvResult = await generatePVPDF({
+          title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+          phaseName: inspection.projects?.title || inspection.project_id,
+          decompte: { netPayable: 0, payablePercentage: progress },
+          autoSave: false,
+        });
 
-      if (updateError) throw updateError;
+        if (pvResult && pvResult.blob) {
+          const pdfFile = new File([pvResult.blob], pvResult.fileName, { type: 'application/pdf' });
+          const pvPath = `inspections/${inspection.project_id}/${pvResult.fileName}`;
+          const pvUpload = await storage.upload(pdfFile, pvPath);
+
+          if (pvUpload.success) {
+            const pvUrl = pvUpload.url || '';
+            try {
+              const pvDocRecord = await DocumentService.createDocument({
+                title: `PV - Inspection ${new Date(inspection.date).toLocaleDateString('fr-FR')}`,
+                description: `Procès-verbal généré lors de la validation de l'inspection`,
+                document_type: 'pv_inspection',
+                file_name: pvResult.fileName,
+                mime_type: 'application/pdf',
+                file_size: pvResult.arrayBuffer ? pvResult.arrayBuffer.byteLength : 0,
+                project_id: inspection.project_id,
+                status: 'active',
+                inspection_id: inspection.id,
+                supplier_id: supplierId,
+                uploaded_by: supplierId,
+                file_url: pvUrl,
+              } as any);
+
+              if (pvDocRecord) {
+                uploadedDocs.push({
+                  id: pvDocRecord.id,
+                  file_name: pvResult.fileName,
+                  file_url: pvUrl,
+                  file_path: pvPath,
+                  mime_type: 'application/pdf',
+                  file_size: pvResult.arrayBuffer ? pvResult.arrayBuffer.byteLength : 0,
+                });
+              } else {
+                uploadedDocs.push({
+                  file_name: pvResult.fileName,
+                  file_url: pvUrl,
+                  file_path: pvPath,
+                  mime_type: 'application/pdf',
+                  file_size: pvResult.arrayBuffer ? pvResult.arrayBuffer.byteLength : 0,
+                });
+              }
+            } catch (pvDocErr) {
+              console.error('Error saving PV document record:', pvDocErr);
+            }
+          }
+        }
+      } catch (pvErr) {
+        console.error('PV generation/upload error:', pvErr);
+      }
+
+      // Update inspection through InspectionService (keeps separation of concerns)
+      const updatedInspection = await InspectionService.updateInspection(inspection.id, {
+        status: 'approved',
+        progress_at_inspection: progress,
+        comments: comments,
+        documents: uploadedDocs,
+      } as any);
+
+      if (!updatedInspection) throw new Error('Failed to update inspection');
 
       // Get project manager for notification
       const { data: projectData } = await supabase
@@ -144,7 +212,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           `L'inspection du ${new Date(inspection.date).toLocaleDateString('fr-FR')} a été complétée avec un taux d'avancement de ${progress}%`,
           'inspection',
           inspection.id,
-          { progress, project_id: inspection.project_id }
+          { progress, project_id: inspection.project_id, documents: uploadedDocs }
         );
       }
 
@@ -173,7 +241,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
                 `Inspection complétée: ${inspection.projects?.title} - ${progress}% d'avancement`,
                 'inspection',
                 inspection.id,
-                { progress, project_id: inspection.project_id }
+                { progress, project_id: inspection.project_id, documents: uploadedDocs }
               );
             }
           }

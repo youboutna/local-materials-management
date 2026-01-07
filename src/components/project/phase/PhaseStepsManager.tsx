@@ -58,9 +58,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhaseStepDTO, PhaseTaskDTO, PhaseStatus } from "@/types/phase-dto";
+import { StepItem } from '@/types/unified-workflow';
 
 interface PhaseStepsManagerProps {
-  steps: PhaseStepDTO[];
+  // Accept legacy PhaseStepDTO[] or unified StepItem[]
+  steps: PhaseStepDTO[] | StepItem[];
   onAddStep: (step: Omit<PhaseStepDTO, 'id'>) => Promise<unknown>;
   onUpdateStep: (stepId: string, updates: Partial<PhaseStepDTO>) => Promise<unknown>;
   onDeleteStep: (stepId: string) => Promise<unknown>;
@@ -646,6 +648,37 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
   onDeleteTask,
   isUpdating,
 }) => {
+  // Normalize incoming steps to PhaseStepDTO[] so component logic remains unchanged
+  const normalizedSteps: PhaseStepDTO[] = React.useMemo(() => {
+    if (!Array.isArray(steps)) return [];
+    return (steps as Array<any>).map((s) => {
+      // If it's already a PhaseStepDTO (has 'tasks' or 'order_index'), assume shape
+      if ((s as PhaseStepDTO).tasks !== undefined || (s as PhaseStepDTO).order_index !== undefined) {
+        return s as PhaseStepDTO;
+      }
+      // Otherwise treat as unified StepItem and map fields
+      const si = s as StepItem;
+      const mapStatus = (st?: string) => {
+        if (!st) return 'pending' as PhaseStatus;
+        if (st === 'approved' || st === 'completed') return 'completed' as PhaseStatus;
+        if (st === 'in_progress') return 'in_progress' as PhaseStatus;
+        if (st === 'delayed') return 'delayed' as PhaseStatus;
+        return (st as PhaseStatus) || 'pending';
+      };
+      return {
+        id: si.id,
+        name: si.name,
+        description: si.description || '',
+        status: mapStatus(si.status as string),
+        progress: si.progress ?? 0,
+        estimated_duration_days: (si.metadata && (si.metadata.estimated_duration_days as number)) || undefined,
+        start_date: undefined,
+        end_date: undefined,
+        order_index: si.order ?? 0,
+        tasks: [],
+      } as PhaseStepDTO;
+    });
+  }, [steps]);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [editingStep, setEditingStep] = useState<PhaseStepDTO | null>(null);
   const [isAddingStep, setIsAddingStep] = useState(false);
@@ -653,9 +686,9 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
   const [addingTaskStepId, setAddingTaskStepId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'step' | 'task'; stepId: string; taskId?: string } | null>(null);
 
-  const completedCount = steps.filter(s => s.status === 'completed').length;
-  const totalProgress = steps.length > 0 
-    ? steps.reduce((sum, s) => sum + s.progress, 0) / steps.length 
+  const completedCount = normalizedSteps.filter(s => s.status === 'completed').length;
+  const totalProgress = normalizedSteps.length > 0 
+    ? normalizedSteps.reduce((sum, s) => sum + s.progress, 0) / normalizedSteps.length 
     : 0;
 
   const toggleExpand = (stepId: string) => {
@@ -679,7 +712,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
       estimated_duration_days: data.estimated_duration_days,
       start_date: data.start_date,
       end_date: data.end_date,
-      order_index: steps.length,
+      order_index: normalizedSteps.length,
       tasks: [],
     });
   };
@@ -689,7 +722,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
   };
 
   const handleAddTask = async (stepId: string, data: Partial<PhaseTaskDTO>) => {
-    const step = steps.find(s => s.id === stepId);
+    const step = normalizedSteps.find(s => s.id === stepId);
     await onAddTask(stepId, {
       name: data.name || '',
       description: data.description,
@@ -711,7 +744,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
     setDeleteConfirm(null);
   };
 
-  if (steps.length === 0) {
+  if (normalizedSteps.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
@@ -745,7 +778,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
             <Layers className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="text-lg font-semibold">{steps.length} Étapes</p>
+            <p className="text-lg font-semibold">{normalizedSteps.length} Étapes</p>
             <p className="text-sm text-muted-foreground">
               {completedCount} terminées • {Math.round(totalProgress)}% progression moyenne
             </p>
@@ -756,9 +789,9 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
             <CheckCircle className="h-3 w-3 mr-1" />
             {completedCount}
           </Badge>
-          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
             <RefreshCw className="h-3 w-3 mr-1" />
-            {steps.filter(s => s.status === 'in_progress').length}
+            {normalizedSteps.filter(s => s.status === 'in_progress').length}
           </Badge>
           <Button onClick={() => setIsAddingStep(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
@@ -772,7 +805,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
         <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-muted" />
         
         <div className="space-y-4">
-          {steps.map((step, index) => (
+          {normalizedSteps.map((step, index) => (
             <StepCard
               key={step.id}
               step={step}

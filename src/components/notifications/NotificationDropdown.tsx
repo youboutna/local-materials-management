@@ -103,6 +103,21 @@ export function NotificationDropdown() {
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
                       {notification.message}
                     </p>
+                    {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                          <a
+                            key={i}
+                            href={d.file_url || d.fileUrl || d.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-blue-600 hover:underline block"
+                          >
+                            {d.file_name || d.name || `Document ${i + 1}`}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(notification.created_at), { 

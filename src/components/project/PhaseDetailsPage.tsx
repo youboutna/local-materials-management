@@ -65,9 +65,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
 import { MilestoneService } from "@/services/MilestoneService";
 
-import { PhaseDTO, PhaseStatus } from "@/types/phase-dto";
+import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
 import { getCompletionBlockReasons, validateCompletionReadiness } from "@/utils/completionValidation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Import existing components
 import { ProjectDataCalculations } from "../../utils/projectDataCalculations";
@@ -78,8 +78,25 @@ import PhaseInspections from "./PhaseInspections";
 import PhaseMaterials from "./PhaseMaterials";
 import PhasePayments from "./PhasePayments";
 import PhaseTasks from "./PhaseTasks";
-import UnifiedPhaseWorkflow from "./monitoring/UnifiedPhaseWorkflow";
+// New centralized workflow components
 import PhaseStepsManager from "./phase/PhaseStepsManager";
+import StepDashboard from './StepDashboard';
+import { useAuditEntries } from '@/hooks/useAuditEntries';
+// Workflow extensions
+import { WorkflowKanban, PaymentCalculator, QuickActionsPanel, } from "@/components/project/workflow";
+import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
+import UnifiedPhaseWorkflow from '@/components/project/UnifiedPhaseWorkflow';
+import PhaseWorkflowContainer from '@/components/project/PhaseWorkflowContainer';
+import DecomptePreviewDialog from '@/components/project/DecomptePreviewDialog';
+import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
+import { SupplierInspectionExecutionDialog } from '@/components/supplier/SupplierInspectionExecutionDialog';
+import { PaymentDialog } from '@/components/project/PaymentDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { generatePVPDF } from '@/lib/pvGenerator';
+import { StorageFactory } from '@/services/storage/StorageFactory';
+import { DocumentService, DocumentCreateDTO } from '@/services/DocumentService';
+import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Helper functions
 const getStatusColor = (status: PhaseStatus | string) => {
@@ -417,6 +434,50 @@ const PhaseDetailsPage: React.FC = () => {
     enabled: !!phaseId,
   });
 
+  // Unified workflow hook (manages inspections, payments, decompte calculations)
+  const {
+    inspections,
+    payments: workflowPayments,
+    latestApprovedInspection,
+    workflowMetrics,
+    calculateDecompte,
+    getStepWorkflowStatus,
+    scheduleInspection,
+    updateStepProgress,
+    isLoading: workflowLoading,
+    refetch: refetchWorkflow,
+  } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
+
+  // Audit entries for this phase/project (shown in StepDashboard)
+  const { auditEntries } = useAuditEntries(phaseId, projectId);
+
+  const { mutateAsync: createPayment } = useCreateProjectPayment();
+  // Workflow-specific handlers (scheduling, payments, PV generation, reorder)
+  // have been moved to `PhaseWorkflowContainer` to reduce dispersed logic in this page.
+
+  const { toast } = useToast();
+  const { createNotification } = useNotifications();
+
+  const queryClient = useQueryClient();
+
+  const refreshWorkflowAndPhase = () => {
+    try {
+      if (typeof refetchWorkflow === 'function') refetchWorkflow();
+    } catch (e) {
+      // ignore
+    }
+    if (phaseId) {
+      queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-inspections', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-payments', phaseId] });
+    }
+  };
+
+  // PV generation moved into PhaseWorkflowContainer
+
+  // Reorder, dialogs and decompte persistence moved to PhaseWorkflowContainer when applicable
+
   // Validate if phase can be marked as completed (checkpoints + progress)
   const completionValidation = useMemo(() => {
     return validateCompletionReadiness(milestones, phase?.progress ?? 0, { progressThreshold: 100 });
@@ -588,33 +649,28 @@ const PhaseDetailsPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5">
             <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Vue d'ensemble</span>
+            <span className="hidden sm:inline">Tableau de bord</span>
           </TabsTrigger>
           <TabsTrigger value="workflow" className="flex items-center gap-1.5 py-2.5 relative">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Workflow Unifié</span>
-            {/* Indicator for active workflow */}
-            {metrics.completedSteps < phase.steps.length && (
+            {metrics.completedSteps < (phase.steps?.length || 0) && (
               <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="resources" className="flex items-center gap-1.5 py-2.5">
-            <Package className="h-4 w-4" />
-            <span className="hidden sm:inline">Ressources</span>
-          </TabsTrigger>
           <TabsTrigger value="finances" className="flex items-center gap-1.5 py-2.5 relative">
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Finances</span>
+            <span className="hidden sm:inline">Finances & Décomptes</span>
             {phaseCosts?.isOverBudget && (
               <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-ping"></span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="documents" className="flex items-center gap-1.5 py-2.5">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Documents</span>
+          <TabsTrigger value="resources_docs" className="flex items-center gap-1.5 py-2.5">
+            <Package className="h-4 w-4" />
+            <span className="hidden sm:inline">Ressources & Documents</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1113,51 +1169,25 @@ const PhaseDetailsPage: React.FC = () => {
           </Card>
 
           {/* Unified Workflow Component with Milestone & Stage Integration */}
-          <UnifiedPhaseWorkflow
-            projectId={projectId!}
-            phaseId={phaseId!}
-            phaseName={phase.phase_name || 'Phase'}
-            stages={phase.steps?.map((stage: any, index: number) => ({
-              id: stage.id || `stage-${index}`,
-              name: stage.name || stage.step_name || `Étape ${index + 1}`,
-              description: stage.description || stage.step_description,
-              status: stage.status || 'pending',
-              progress: stage.progress || 0
-            })) || []}
-            phaseProgress={phase.progress || 0}
-            phaseBudget={phase.estimated_cost || 0}
-          />
-
-          {/* Gestion des étapes intégrée */}
-          <Card className="border-0 shadow-lg overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-purple-500/10">
-                    <Layers className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Gestion des Étapes</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      Ajoutez, modifiez ou supprimez des étapes et tâches
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <PhaseStepsManager
-                steps={phase.steps}
-                onAddStep={addStep}
-                onUpdateStep={updateStep}
-                onDeleteStep={deleteStep}
-                onAddTask={addTask}
-                onUpdateTask={updateTask}
-                onDeleteTask={deleteTask}
-                isUpdating={isUpdating}
-              />
-            </CardContent>
-          </Card>
+          {/* New workflow composition: Kanban + Quick Actions + Payment Calculator */}
+          {/** Initialize workflow hook (keeps local state, actions, metrics) */}
+          {projectId && phaseId && (
+            <PhaseWorkflowContainer
+              rawPhaseData={phase}
+              rawSteps={phase?.steps ?? undefined}
+              rawMilestones={milestones}
+              projectId={projectId}
+              phaseId={phaseId}
+              onAddStep={() => setIsEditing(true)}
+              onActionComplete={() => refreshWorkflowAndPhase()}
+              metrics={metrics}
+              workflowMetrics={workflowMetrics}
+              progressMetrics={progressMetrics}
+              phaseCosts={phaseCosts}
+              latestApprovedInspection={latestApprovedInspection}
+              auditEntries={auditEntries}
+            />
+          )}
 
           {/* Sous-sections pour détails (Tâches, Inspections, Paiements, Conformité) */}
           <Card className="border-0 shadow-md overflow-hidden">
@@ -1212,17 +1242,13 @@ const PhaseDetailsPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* Resources Tab */}
-        <TabsContent value="resources" className="animate-in fade-in duration-300">
+        {/* Combined Resources & Documents Tab */}
+        <TabsContent value="resources_docs" className="animate-in fade-in duration-300">
           <div className="space-y-6">
             <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
             <PhaseEmployees phaseId={phaseId!} />
+            <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
           </div>
-        </TabsContent>
-
-        {/* Documents Tab */}
-        <TabsContent value="documents" className="animate-in fade-in duration-300">
-          <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>
 
         {/* Finances Tab - Nouvel onglet */}
@@ -1234,6 +1260,7 @@ const PhaseDetailsPage: React.FC = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Budget vs Réel</CardTitle>
               </CardHeader>
+              {/* Budget Card - Enhanced with Real Costs */}
               <CardContent>
                 {loadingCosts ? (
                   <div className="space-y-3">
@@ -1421,6 +1448,57 @@ const PhaseDetailsPage: React.FC = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+          
+          {/* Compact Quick Actions + Upcoming Milestones Timeline */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-1">
+              <QuickActionsPanel
+                phaseName={phase.phase_name || 'Phase'}
+                phaseProgress={phase.progress || 0}
+                workflowMetrics={workflowMetrics}
+                lastInspectionDate={latestApprovedInspection?.date}
+                lastValidatedPV={latestApprovedInspection?.id}
+                pendingPaymentAmount={workflowMetrics.totalPaid || 0}
+                onScheduleInspection={() => handleScheduleInspection()}
+                onInputProgress={() => { const firstStep = phase?.steps?.find((s: PhaseStepDTO) => s.status !== 'completed'); if (firstStep) handleUpdateProgress(firstStep.id); }}
+                onGeneratePV={() => console.log('générer PV')}
+                onRequestDecompte={() => handleRequestPayment(undefined, true)}
+                onUpdateGuarantee={() => console.log('update guarantee')}
+                formatCurrency={formatCurrency}
+                compact={true}
+              />
+            </div>
+
+            <div className="lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Prochains jalons</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {milestones && milestones.length > 0 ? (
+                    <div className="space-y-3">
+                      {milestones.slice(0,3).map((m: unknown) => {
+                        const mm = m as { id: string; title?: string; name?: string; type?: string; due_date?: string; status?: string };
+                        return (
+                          <div key={mm.id} className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-sm truncate">{mm.title || mm.name}</p>
+                              <p className="text-xs text-muted-foreground">{mm.type || 'Jalon'} • {formatDate(mm.due_date)}</p>
+                            </div>
+                            <Badge variant="outline" className={mm.status === 'completed' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}>
+                              {mm.status === 'completed' ? 'Terminé' : 'À venir'}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucun jalon imminent</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
           {/* Detailed Cost Analysis */}

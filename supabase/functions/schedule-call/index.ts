@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Provide a minimal declaration for the Deno global so TypeScript in this
+// repository (which may not include Deno lib typings) doesn't error.
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":

@@ -20,5 +20,17 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     exclude: ['lucide-react']
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) return 'vendor';
+          if (id.includes('/src/services')) return 'services';
+          if (id.includes('/src/components')) return 'components';
+        }
+      }
+    }
   }
 }))

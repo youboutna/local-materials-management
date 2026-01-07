@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { TenderService } from '@/services/TenderService';
 import { TenderSubmissionService, UploadedDocument } from '@/services/TenderSubmissionService';
-import { DocumentValidationService } from '@/services/DocumentValidationService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calculator,
@@ -27,7 +27,6 @@ import {
   XCircle
 } from 'lucide-react';
 import { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PublicTender {
   id: string;

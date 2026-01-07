@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PhaseStepDTO } from '@/types/phase-dto';
+import { StepItem } from '@/types/unified-workflow';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -47,13 +48,14 @@ interface StepWorkflowStatus {
   inspectionStatus: 'approved' | 'pending' | 'none';
   paymentStatus: 'paid' | 'available' | 'blocked';
   totalPaid: number;
-  latestInspection: any | null;
+  latestInspection: { id: string; date: string } | null;
 }
 
 interface WorkflowKanbanProps {
-  steps: PhaseStepDTO[];
+  // Accept legacy PhaseStepDTO or unified StepItem
+  steps: PhaseStepDTO[] | StepItem[];
   phaseProgress: number;
-  getStepWorkflowStatus: (step: PhaseStepDTO) => StepWorkflowStatus;
+  getStepWorkflowStatus: (step: PhaseStepDTO | StepItem) => StepWorkflowStatus;
   onScheduleInspection: (stepId: string) => void;
   onUpdateProgress: (stepId: string) => void;
   onRequestPayment: (stepId: string, canRequest: boolean) => void;
@@ -74,6 +76,23 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   formatCurrency,
 }) => {
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
+
+  // helpers to safely access optional legacy fields when step may be unified StepItem
+  const getTasks = (step: PhaseStepDTO | StepItem) => {
+    if ('tasks' in step && Array.isArray((step as PhaseStepDTO).tasks)) return (step as PhaseStepDTO).tasks;
+    return [] as Array<unknown>;
+  };
+
+  const getEstimatedDuration = (step: PhaseStepDTO | StepItem) => {
+    if ('estimated_duration_days' in step) return (step as PhaseStepDTO).estimated_duration_days || null;
+    if ('estimatedDuration' in step) return (step as unknown as { estimatedDuration?: number }).estimatedDuration ?? null;
+    return null;
+  };
+
+  const getDescription = (step: PhaseStepDTO | StepItem) => {
+    if ('description' in step) return (step as unknown as { description?: string }).description;
+    return undefined;
+  };
 
   const getStatusIcon = useCallback((status: string) => {
     switch (status) {
@@ -144,7 +163,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
     );
   }, []);
 
-  const getContextualActions = useCallback((step: PhaseStepDTO, workflowStatus: StepWorkflowStatus) => {
+  const getContextualActions = useCallback((step: PhaseStepDTO | StepItem, workflowStatus: StepWorkflowStatus) => {
     const actions: Array<{
       icon: React.ReactNode;
       label: string;
@@ -271,11 +290,18 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-sm truncate">{step.name}</p>
-                        {step.tasks && step.tasks.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
-                          </p>
-                        )}
+                        {(() => {
+                          const tasks = getTasks(step);
+                          if (tasks.length > 0) {
+                            const completed = (tasks as Array<Record<string, unknown>>).filter(t => (t.status as unknown as string) === 'completed').length;
+                            return (
+                              <p className="text-xs text-muted-foreground">
+                                {completed}/{tasks.length} tâches
+                              </p>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
 
@@ -344,23 +370,35 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                     <div className="px-4 py-4 bg-muted/20 border-t space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Description */}
-                        {step.description && (
-                          <div className="md:col-span-2">
-                            <h5 className="text-sm font-medium mb-2">Description</h5>
-                            <p className="text-sm text-muted-foreground">{step.description}</p>
-                          </div>
-                        )}
+                        {(() => {
+                          const desc = getDescription(step);
+                          if (desc) {
+                            return (
+                              <div className="md:col-span-2">
+                                <h5 className="text-sm font-medium mb-2">Description</h5>
+                                <p className="text-sm text-muted-foreground">{desc}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
 
                         {/* Quick Stats */}
                         <div className="space-y-2">
                           <h5 className="text-sm font-medium">Détails</h5>
                           <div className="space-y-1 text-sm">
-                            {step.estimated_duration_days && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Durée estimée:</span>
-                                <span>{step.estimated_duration_days} jours</span>
-                              </div>
-                            )}
+                            {(() => {
+                              const est = getEstimatedDuration(step);
+                              if (est) {
+                                return (
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Durée estimée:</span>
+                                    <span>{est} jours</span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                             {workflowStatus.totalPaid > 0 && (
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Montant payé:</span>

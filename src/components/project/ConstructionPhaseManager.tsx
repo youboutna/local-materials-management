@@ -32,7 +32,8 @@ import { ConstructionPhase, ConstructionStage } from '@/types/project';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { DEV_MODE } from '@/config/constants';
-import { referentialService, ReferentialType } from '@/config/referentials';
+import { ReferentialType } from '@/config/referentials';
+import { referentialService } from '@/services/ReferentialService';
 import { getPhaseGeneratorService, GeneratedPhaseData } from '@/services/PhaseGeneratorService';
 import { getMilestoneGeneratorService, GeneratedMilestoneDTO } from '@/services/MilestoneGeneratorService';
 

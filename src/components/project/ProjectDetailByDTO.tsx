@@ -44,7 +44,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ElectricSpinner } from "../loading-page";
 import { CompactProjectReportGenerator } from "../reports/CompactProjectReportGenerator";
-import { referentialService, ReferentialType } from "@/config/referentials";
+import { ReferentialType } from "@/config/referentials";
+import { referentialService } from '@/services/ReferentialService';
 import {
   Dialog as DialogUI,
   DialogContent as DialogContentUI,

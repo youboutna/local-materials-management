@@ -96,10 +96,10 @@ export const getPhasesForReferential = (referentialCode: ReferentialType, langua
 export { customStandardReferential, distributionRuraleReferential, mauritanianPublicProcurementReferential, pndsReferential, sdauReferential, somelecReferential };
 export type { MultiLanguageLabel, ProjectReferential };
 
-/**
- * Re-export the ReferentialService
- */
-export { ReferentialService, referentialService } from '@/services/ReferentialService';
+// NOTE: Do not re-export `ReferentialService` here to avoid circular
+// dependencies with `src/services/ReferentialService.ts` which imports
+// items from this module. Consumers should import the service directly
+// from '@/services/ReferentialService' when needed.
 
 /**
  * Re-export milestone referential utilities

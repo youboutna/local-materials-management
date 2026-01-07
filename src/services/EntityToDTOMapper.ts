@@ -2,6 +2,7 @@
 import { ProjectEntity, ProjectRiskEntity, TaskAssignmentEntity, InspectionEntity, PaymentEntity, ProjectPhaseEntity, PhaseStepData, PhaseTaskData } from '@/types/entities';
 import { ProjectDTO, ProjectDetailDTO, ProjectSummaryDTO, ProjectListItemDTO, TaskDTO, InspectionDTO, PaymentDTO, RiskDTO } from '@/types/dto';
 import { PhaseDTO, PhaseSummaryDTO, PhaseStepDTO, PhaseTaskDTO, PhaseStatus, PhaseFormDTO } from '@/types/phase-dto';
+import { StepItem } from '@/types/unified-workflow';
 import { ProjectStatus } from '@/types/project';
 
 export class EntityToDTOMapper {
@@ -451,33 +452,56 @@ export class EntityToDTOMapper {
    * Map PhaseDTO back to entity format (for updates)
    */
   static phaseDTOToEntity(dto: PhaseDTO): Partial<ProjectPhaseEntity> {
-    const steps: PhaseStepData[] = dto.steps.map(step => ({
-      id: step.id,
-      name: step.name,
-      description: step.description,
-      status: step.status,
-      progress: step.progress,
-      estimated_duration_days: step.estimated_duration_days,
-      actual_duration_days: step.actual_duration_days,
-      start_date: step.start_date,
-      end_date: step.end_date,
-      order_index: step.order_index,
-      tasks: step.tasks.map(task => ({
-        id: task.id,
-        name: task.name,
-        description: task.description,
-        status: task.status,
-        progress: task.progress,
-        estimated_duration_days: task.estimated_duration_days,
-        actual_duration_days: task.actual_duration_days,
-        start_date: task.start_date,
-        end_date: task.end_date,
-        assigned_to: task.assigned_to,
-        dependencies: task.dependencies,
-        weight: task.weight,
-        order_index: task.order_index
-      }))
-    }));
+    const stepsSource = Array.isArray(dto.steps) ? dto.steps : [];
+    const steps: PhaseStepData[] = stepsSource.map((stepAny: any, idx: number) => {
+      // If already PhaseStepDTO-like (has tasks array), map directly
+      if (stepAny && Array.isArray(stepAny.tasks)) {
+        const step = stepAny as PhaseStepDTO;
+        return {
+          id: step.id,
+          name: step.name,
+          description: step.description,
+          status: step.status,
+          progress: step.progress,
+          estimated_duration_days: step.estimated_duration_days,
+          actual_duration_days: step.actual_duration_days,
+          start_date: step.start_date,
+          end_date: step.end_date,
+          order_index: step.order_index ?? idx,
+          tasks: (step.tasks || []).map(task => ({
+            id: task.id,
+            name: task.name,
+            description: task.description,
+            status: task.status,
+            progress: task.progress,
+            estimated_duration_days: task.estimated_duration_days,
+            actual_duration_days: task.actual_duration_days,
+            start_date: task.start_date,
+            end_date: task.end_date,
+            assigned_to: task.assigned_to,
+            dependencies: task.dependencies,
+            weight: task.weight,
+            order_index: task.order_index
+          }))
+        } as PhaseStepData;
+      }
+
+      // Otherwise assume unified StepItem shape and map minimally
+      const si = stepAny as StepItem;
+      return {
+        id: si?.id || `step-${idx}`,
+        name: si?.name || si?.label || `Étape ${idx + 1}`,
+        description: si?.description || '',
+        status: (si as any)?.status || 'pending',
+        progress: (si as any)?.progress ?? 0,
+        estimated_duration_days: (si as any)?.metadata?.estimated_duration_days ?? null,
+        actual_duration_days: null,
+        start_date: undefined,
+        end_date: undefined,
+        order_index: (si as any)?.order ?? idx,
+        tasks: []
+      } as PhaseStepData;
+    });
 
     return {
       id: dto.id,

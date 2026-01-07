@@ -19,7 +19,7 @@ export class DocumentService {
   /**
    * Create a new document record
    */
-  static async createDocument(document: DocumentCreateDTO): Promise<any> {
+  static async createDocument(document: DocumentCreateDTO): Promise<unknown> {
     const { data, error } = await supabase
       .from('documents')
       .insert(document as any)
@@ -33,7 +33,7 @@ export class DocumentService {
   /**
    * Get documents by project ID
    */
-  static async getProjectDocuments(projectId: string): Promise<any[]> {
+  static async getProjectDocuments(projectId: string): Promise<unknown[]> {
     const { data, error } = await supabase
       .from('documents')
       .select('*')
@@ -47,7 +47,7 @@ export class DocumentService {
   /**
    * Get document by ID
    */
-  static async getDocumentById(id: string): Promise<any | null> {
+  static async getDocumentById(id: string): Promise<unknown | null> {
     const { data, error } = await supabase
       .from('documents')
       .select('*')
@@ -61,7 +61,7 @@ export class DocumentService {
   /**
    * Update document
    */
-  static async updateDocument(id: string, updates: any): Promise<any> {
+  static async updateDocument(id: string, updates: any): Promise<unknown> {
     const { data, error } = await supabase
       .from('documents')
       .update(updates)

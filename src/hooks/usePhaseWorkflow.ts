@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useMemo, useCallback } from 'react';
 import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
+import { StepItem } from '@/types/unified-workflow';
 
 export type WorkflowStage = 
   | 'not_started' 
@@ -363,19 +364,20 @@ export function usePhaseWorkflow(projectId: string, phaseId: string, phase?: Pha
   });
 
   // Get step status with inspection info
-  const getStepWorkflowStatus = useCallback((step: PhaseStepDTO) => {
+  const getStepWorkflowStatus = useCallback((step: PhaseStepDTO | StepItem) => {
+    const stepProgress = (step as any).progress ?? 0;
     const stepInspections = inspections.filter(i => 
       // Match inspection by progress range
-      i.progress_at_inspection >= (step.progress || 0) - 10 &&
-      i.progress_at_inspection <= (step.progress || 0) + 10
+      i.progress_at_inspection >= stepProgress - 10 &&
+      i.progress_at_inspection <= stepProgress + 10
     );
     
     const hasApprovedInspection = stepInspections.some(i => i.status === 'approved');
     const hasPendingInspection = stepInspections.some(i => ['pending', 'scheduled', 'in_progress'].includes(i.status));
     
     const stepPayments = payments.filter(p => 
-      p.progress_at_payment >= (step.progress || 0) - 10 &&
-      p.progress_at_payment <= (step.progress || 0) + 10
+      p.progress_at_payment >= stepProgress - 10 &&
+      p.progress_at_payment <= stepProgress + 10
     );
     const totalStepPayment = stepPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const hasPaid = totalStepPayment > 0;

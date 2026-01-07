@@ -479,6 +479,21 @@ const NotificationsCenterPage = () => {
                                 <p className="text-sm text-muted-foreground mb-2">
                                   {notification.message}
                                 </p>
+                                {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                                  <div className="mb-2 space-y-1">
+                                    {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                                      <a
+                                        key={i}
+                                        href={d.file_url || d.fileUrl || d.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-xs text-blue-600 hover:underline block"
+                                      >
+                                        {d.file_name || d.name || `Document ${i + 1}`}
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
                                   {new Date(notification.created_at).toLocaleString('fr-FR')}
@@ -555,6 +570,21 @@ const NotificationsCenterPage = () => {
                                 <p className="text-sm text-muted-foreground mb-2">
                                   {notification.message}
                                 </p>
+                                  {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                                    <div className="mb-2 space-y-1">
+                                      {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                                        <a
+                                          key={i}
+                                          href={d.file_url || d.fileUrl || d.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-xs text-blue-600 hover:underline block"
+                                        >
+                                          {d.file_name || d.name || `Document ${i + 1}`}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
                                 {notification.metadata?.completion_percentage && (
                                   <div className="mb-2">
                                     <div className="flex items-center justify-between text-sm">
@@ -654,6 +684,21 @@ const NotificationsCenterPage = () => {
                                 <p className="text-sm text-muted-foreground mb-2">
                                   {notification.message}
                                 </p>
+                                  {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                                    <div className="mb-2 space-y-1">
+                                      {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                                        <a
+                                          key={i}
+                                          href={d.file_url || d.fileUrl || d.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-xs text-blue-600 hover:underline block"
+                                        >
+                                          {d.file_name || d.name || `Document ${i + 1}`}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
                                 {notification.metadata?.payment_amount && (
                                   <div className="flex items-center gap-2 mb-2">
                                     <Badge variant="outline" className="text-green-600">
@@ -746,6 +791,21 @@ const NotificationsCenterPage = () => {
                                 <p className="text-sm text-muted-foreground mb-2">
                                   {notification.message}
                                 </p>
+                                  {notification.metadata?.documents && notification.metadata.documents.length > 0 && (
+                                    <div className="mb-2 space-y-1">
+                                      {notification.metadata.documents.slice(0, 3).map((d: any, i: number) => (
+                                        <a
+                                          key={i}
+                                          href={d.file_url || d.fileUrl || d.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-xs text-blue-600 hover:underline block"
+                                        >
+                                          {d.file_name || d.name || `Document ${i + 1}`}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
                                 {notification.metadata?.assignee_name && (
                                   <div className="flex items-center gap-2 mb-2">
                                     <Badge variant="outline">

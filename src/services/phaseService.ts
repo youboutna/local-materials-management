@@ -424,20 +424,45 @@ export class PhaseService {
    * Update phase from DTO
    */
   static async updatePhaseFromDTO(phaseId: string, updates: Partial<PhaseDTO>): Promise<PhaseDTO> {
-    const entityUpdates = updates.steps 
-      ? EntityToDTOMapper.phaseDTOToEntity(updates as PhaseDTO)
+    // If updates.steps contains unified StepItem[], normalize to PhaseStepDTO[] before mapping
+    let normalizedUpdates = { ...updates } as Partial<PhaseDTO>;
+    if (updates.steps && Array.isArray(updates.steps)) {
+      const maybeStep = updates.steps[0] as any;
+      const looksLikeUnified = maybeStep && (
+        maybeStep.type === 'step' ||
+        typeof maybeStep.order !== 'undefined' ||
+        typeof maybeStep.progress !== 'undefined' ||
+        typeof maybeStep.metadata !== 'undefined'
+      );
+
+      if (looksLikeUnified) {
+        // Map unified StepItem -> PhaseStepDTO
+        normalizedUpdates.steps = (updates.steps as any[]).map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description || '',
+          status: (s.status === 'approved' ? 'completed' : s.status) as PhaseStatus,
+          progress: s.progress || 0,
+          order_index: s.order ?? s.order_index ?? 0,
+          tasks: []
+        } as PhaseStepDTO));
+      }
+    }
+
+    const entityUpdates = normalizedUpdates.steps 
+      ? EntityToDTOMapper.phaseDTOToEntity(normalizedUpdates as PhaseDTO)
       : {
-          phase_name: updates.phase_name,
-          description: updates.description,
-          construction_phase: updates.construction_phase,
-          construction_stage: updates.construction_stage,
-          status: updates.status,
-          progress: updates.progress,
-          estimated_cost: updates.estimated_cost,
-          actual_cost: updates.actual_cost,
-          start_date: updates.start_date,
-          end_date: updates.end_date,
-          order_index: updates.order_index
+          phase_name: normalizedUpdates.phase_name,
+          description: normalizedUpdates.description,
+          construction_phase: normalizedUpdates.construction_phase,
+          construction_stage: normalizedUpdates.construction_stage,
+          status: normalizedUpdates.status,
+          progress: normalizedUpdates.progress,
+          estimated_cost: normalizedUpdates.estimated_cost,
+          actual_cost: normalizedUpdates.actual_cost,
+          start_date: normalizedUpdates.start_date,
+          end_date: normalizedUpdates.end_date,
+          order_index: normalizedUpdates.order_index
         };
 
     const { data, error } = await supabase
