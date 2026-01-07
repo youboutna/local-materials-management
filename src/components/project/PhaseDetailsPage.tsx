@@ -42,7 +42,7 @@ import PhaseDocuments from "./PhaseDocuments";
 import PhaseMaterials from "./PhaseMaterials";
 import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
-import { PhaseMilestonesSection } from "./milestones";
+// PhaseMilestonesSection is now integrated in IntegratedWorkflowTimeline
 
 const getStatusIcon = (status: PhaseStatus | string) => {
   switch (status) {
@@ -203,15 +203,7 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="workflow" className="space-y-6">
-          {/* Jalons de la phase - positionnés avant les étapes pour la planification */}
-          <PhaseMilestonesSection
-            projectId={projectId!}
-            phaseId={phaseId!}
-            phaseName={phase.phase_name}
-            constructionPhase={phase.construction_phase}
-            phaseStartDate={phase.start_date}
-          />
-
+          {/* Workflow unifié avec timeline intégrée (étapes + jalons) */}
           <UnifiedCascadeWorkflow
             phase={phase}
             projectProgress={projectProgress}
