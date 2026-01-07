@@ -11,6 +11,22 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Target,
   CheckCircle,
   Clock,
@@ -28,11 +44,19 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { MilestoneService } from '@/services/MilestoneService';
-import { MilestoneSummaryDTO, MilestoneProgressDTO, MilestoneType, MILESTONE_TYPES } from '@/types/milestone-dto';
+import { 
+  MilestoneSummaryDTO, 
+  MilestoneProgressDTO, 
+  MilestoneType, 
+  MilestonePriority,
+  MILESTONE_TYPES,
+  MILESTONE_PRIORITIES 
+} from '@/types/milestone-dto';
 import { PhaseStepDTO } from '@/types/phase-dto';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface IntegratedWorkflowTimelineProps {
   projectId: string;
@@ -43,7 +67,6 @@ interface IntegratedWorkflowTimelineProps {
   phaseEndDate?: string;
   onMilestoneClick?: (milestoneId: string) => void;
   onStepClick?: (step: PhaseStepDTO) => void;
-  onAddMilestone?: () => void;
 }
 
 interface TimelineItem {
@@ -69,11 +92,22 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
   phaseEndDate,
   onMilestoneClick,
   onStepClick,
-  onAddMilestone,
 }) => {
   const [milestones, setMilestones] = useState<MilestoneSummaryDTO[]>([]);
   const [progress, setProgress] = useState<MilestoneProgressDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Dialog state for adding milestones
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    target_date: phaseStartDate || '',
+    weight: 0.2,
+    notes: '',
+    type: 'checkpoint' as MilestoneType,
+    priority: 'normal' as MilestonePriority
+  });
 
   useEffect(() => {
     loadMilestones();
@@ -92,6 +126,38 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       console.error('Error loading milestones:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddMilestone = () => {
+    setFormData({
+      title: '',
+      description: '',
+      target_date: phaseStartDate || new Date().toISOString().split('T')[0],
+      weight: 0.2,
+      notes: '',
+      type: 'checkpoint',
+      priority: 'normal'
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveMilestone = async () => {
+    try {
+      await MilestoneService.createMilestone(projectId, {
+        ...formData,
+        phase_id: phaseId
+      });
+      toast({ title: 'Jalon ajouté avec succès' });
+      setIsDialogOpen(false);
+      loadMilestones();
+    } catch (error) {
+      console.error('Error saving milestone:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer le jalon',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -224,11 +290,9 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                   SPI: {progress.schedule_performance_index}
                 </Badge>
               )}
-              {onAddMilestone && (
-                <Button size="sm" variant="outline" onClick={onAddMilestone}>
-                  <Plus className="h-3 w-3 mr-1" /> Jalon
-                </Button>
-              )}
+              <Button size="sm" variant="outline" onClick={handleAddMilestone}>
+                <Plus className="h-3 w-3 mr-1" /> Jalon
+              </Button>
             </div>
           </div>
 
@@ -374,6 +438,112 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Add Milestone Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nouveau jalon</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="title">Titre</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Titre du jalon"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Description optionnelle"
+              />
+            </div>
+            
+            {/* Type and Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="type">Type</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData({ ...formData, type: value as MilestoneType })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(MILESTONE_TYPES).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value) => setFormData({ ...formData, priority: value as MilestonePriority })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(MILESTONE_PRIORITIES).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="target_date">Date cible</Label>
+                <Input
+                  id="target_date"
+                  type="date"
+                  value={formData.target_date}
+                  onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="weight">Poids (0.1 - 1.0)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notes additionnelles"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveMilestone} disabled={!formData.title || !formData.target_date}>
+                Ajouter
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
