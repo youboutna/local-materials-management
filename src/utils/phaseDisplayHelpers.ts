@@ -58,6 +58,16 @@ export const getFinancialHealthLabel = (health: string): string => {
   }
 };
 
+export const getFinancialHealthIcon = (health: string): string => {
+  switch (health) {
+    case 'excellent': return '✓';
+    case 'good': return '●';
+    case 'warning': return '⚠';
+    case 'critical': return '✕';
+    default: return '○';
+  }
+};
+
 // Date formatting
 export const formatDate = (dateString?: string | null): string => {
   if (!dateString) return "Non définie";
