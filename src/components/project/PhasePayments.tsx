@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, DollarSign, Trash2, Calendar, ExternalLink } from 'lucide-react';
+import { Plus, DollarSign, Trash2, Calendar, ExternalLink, Pencil } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
 
@@ -356,17 +356,10 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
       <CardContent>
         {payments && payments.length > 0 ? (
           <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg flex justify-between items-center">
+            <div className="p-3 bg-muted rounded-lg">
               <p className="text-sm font-medium">
                 Total des paiements: {totalAmount.toLocaleString()} MRU
               </p>
-              <Button 
-                size="sm"
-                onClick={() => navigate('/payment-control?tab=new')}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau paiement
-              </Button>
             </div>
             
             {paginatedPayments.map((payment) => (
@@ -380,11 +373,21 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       {payment.contractor_name} - {payment.contractor_contact}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
+                      onClick={() => navigate(`/payment-control?id=${payment.id}`)}
+                      title="Modifier"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => deletePaymentMutation.mutate(payment.id)}
+                      title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -425,14 +428,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground mb-4">Aucun paiement enregistré pour cette phase.</p>
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/payment-control?tab=new')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Créer un nouveau paiement
-            </Button>
+            <p className="text-sm text-muted-foreground">Aucun paiement enregistré pour cette phase.</p>
           </div>
         )}
       </CardContent>

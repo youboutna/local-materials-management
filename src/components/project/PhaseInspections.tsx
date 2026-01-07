@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload } from 'lucide-react';
+import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pencil } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { ProjectService } from '@/services/ProjectService';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
@@ -358,17 +358,10 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
         {inspections && inspections.length > 0 ? (
           <div className="space-y-4">
             {averageProgress > 0 && (
-              <div className="p-3 bg-muted rounded-lg flex justify-between items-center">
+              <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm font-medium">
                   Progression moyenne observée: {Math.round(averageProgress)}%
                 </p>
-                <Button 
-                  size="sm"
-                  onClick={() => navigate('/inspection-monitoring?tab=new')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle inspection
-                </Button>
               </div>
             )}
             
@@ -384,11 +377,21 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                       <p className="text-sm text-muted-foreground mt-1">{inspection.comments}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
+                      onClick={() => navigate(`/inspection-monitoring?id=${inspection.id}`)}
+                      title="Modifier"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => deleteInspectionMutation.mutate(inspection.id)}
+                      title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -425,14 +428,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground mb-4">Aucune inspection enregistrée pour cette phase.</p>
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/inspection-monitoring?tab=new')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Créer une nouvelle inspection
-            </Button>
+            <p className="text-sm text-muted-foreground">Aucune inspection enregistrée pour cette phase.</p>
           </div>
         )}
       </CardContent>
