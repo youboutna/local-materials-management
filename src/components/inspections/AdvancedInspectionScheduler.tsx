@@ -27,9 +27,20 @@ interface Project {
   contractor_contact?: string;
 }
 
+interface ProjectStep {
+  id: string;
+  name: string;
+  order_index: number;
+  status: string;
+  progress?: number;
+}
+
 interface AdvancedInspectionSchedulerProps {
   projects: Project[];
   onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => Promise<void>;
+  preselectedProjectId?: string;
+  preselectedStepId?: string;
+  preselectedSteps?: ProjectStep[];
 }
 
 const INSPECTION_TYPES = [
@@ -44,7 +55,10 @@ const INSPECTION_TYPES = [
 
 const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = ({
   projects,
-  onScheduleInspection
+  onScheduleInspection,
+  preselectedProjectId,
+  preselectedStepId,
+  preselectedSteps = []
 }) => {
   const [selectedProject, setSelectedProject] = useState<Project | undefined>();
   const [inspectionType, setInspectionType] = useState('');
@@ -57,6 +71,53 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   const [statusFilter, setStatusFilter] = useState('all');
   const [inspectorSearch, setInspectorSearch] = useState('');
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+  const [selectedSteps, setSelectedSteps] = useState<string[]>(preselectedStepId ? [preselectedStepId] : []);
+
+  // Fetch phases (as steps) for the selected project
+  const { data: projectSteps = [] } = useQuery({
+    queryKey: ['project-phases-as-steps', selectedProject?.id],
+    queryFn: async () => {
+      if (!selectedProject?.id) return [];
+      
+      // Get phases for this project (phases act as steps in the workflow)
+      const { data: phases, error } = await supabase
+        .from('project_phases')
+        .select('id, phase_name, order_index, status, progress')
+        .eq('project_id', selectedProject.id)
+        .order('order_index');
+      
+      if (error) throw error;
+      
+      return (phases || []).map(p => ({
+        id: p.id,
+        name: p.phase_name,
+        order_index: p.order_index || 0,
+        status: p.status || 'pending',
+        progress: p.progress || 0
+      }));
+    },
+    enabled: !!selectedProject?.id
+  });
+
+  // Combine preselected steps with fetched steps
+  const availableSteps = preselectedSteps.length > 0 ? preselectedSteps : projectSteps;
+
+  // Pre-select project on mount
+  useEffect(() => {
+    if (preselectedProjectId && projects.length > 0) {
+      const project = projects.find(p => p.id === preselectedProjectId);
+      if (project) {
+        setSelectedProject(project);
+      }
+    }
+  }, [preselectedProjectId, projects]);
+
+  // Pre-select step on mount
+  useEffect(() => {
+    if (preselectedStepId) {
+      setSelectedSteps([preselectedStepId]);
+    }
+  }, [preselectedStepId]);
 
   // Fetch inspectors (employees with inspector position or inspection department)
   const { data: inspectors } = useQuery({
@@ -192,7 +253,9 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
           inspection_type: inspectionType,
           target_progress: targetProgress,
           requirements,
-          contractor_notified: notifyContractor
+          contractor_notified: notifyContractor,
+          phase_ids: selectedSteps,
+          phase_id: selectedSteps[0] || null
         }
       );
 
@@ -217,6 +280,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       setSelectedProject(undefined);
       setInspectionType('');
       setSelectedInspector('');
+      setSelectedSteps([]);
       setInspectionDate('');
       setTargetProgress(0);
       setRequirements('');
@@ -450,6 +514,44 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                 />
               </div>
             </div>
+
+            {/* Phase/Step Selection */}
+            {availableSteps.length > 0 && (
+              <div className="col-span-full">
+                <Label>Phases / Étapes concernées</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2 max-h-48 overflow-y-auto p-2 border rounded-lg bg-muted/20">
+                  {availableSteps.map((step) => (
+                    <div
+                      key={step.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        selectedSteps.includes(step.id)
+                          ? 'border-primary bg-primary/10'
+                          : 'border-dashed hover:border-primary/50'
+                      }`}
+                      onClick={() => {
+                        setSelectedSteps(prev =>
+                          prev.includes(step.id)
+                            ? prev.filter(id => id !== step.id)
+                            : [...prev, step.id]
+                        );
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium line-clamp-1">{step.name}</span>
+                        <Badge variant={step.status === 'completed' ? 'default' : 'outline'} className="text-xs">
+                          {step.progress || 0}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {selectedSteps.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {selectedSteps.length} phase(s) sélectionnée(s)
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <Label>Exigences Spéciales</Label>
