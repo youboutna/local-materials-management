@@ -4,12 +4,15 @@
  */
 
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   X,
   Edit,
@@ -21,9 +24,11 @@ import {
   Play,
   Save,
   ListTodo,
+  CalendarPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PhaseStepDTO } from '@/types/phase-dto';
+import { toast } from 'sonner';
 
 // Import existing components
 import PhaseInspections from '@/components/project/PhaseInspections';
@@ -31,6 +36,7 @@ import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhasePayments from '@/components/project/PhasePayments';
+import AdvancedInspectionScheduler from '@/components/inspections/AdvancedInspectionScheduler';
 
 interface StepDetailPanelProps {
   step: PhaseStepDTO;
@@ -58,10 +64,68 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
   const [activeTab, setActiveTab] = useState('overview');
   const [editProgress, setEditProgress] = useState(step.progress || 0);
   const [isEditingProgress, setIsEditingProgress] = useState(false);
+  const [showInspectionScheduler, setShowInspectionScheduler] = useState(false);
+
+  // Fetch project for the scheduler
+  const { data: project } = useQuery({
+    queryKey: ['project-for-scheduler', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title, location, status, project_reference, budget, progress, main_contractor')
+        .eq('id', projectId)
+        .single();
+      
+      if (error) throw error;
+      return {
+        id: data.id,
+        title: data.title,
+        location: data.location || undefined,
+        status: data.status || undefined,
+        project_reference: data.project_reference,
+        budget: data.budget || undefined,
+        progress: data.progress || undefined,
+        contractor_name: data.main_contractor || undefined,
+        contractor_contact: undefined
+      };
+    },
+    enabled: !!projectId
+  });
 
   const handleSaveProgress = () => {
     onUpdateProgress(step.id, editProgress);
     setIsEditingProgress(false);
+  };
+
+  const handleScheduleInspection = async (
+    projId: string,
+    inspector: string,
+    date: string,
+    additionalData?: any
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('inspections')
+        .insert({
+          project_id: projId,
+          phase_id: additionalData?.phase_id || phaseId,
+          inspector,
+          date: new Date(date).toISOString(),
+          status: 'scheduled',
+          progress_at_inspection: additionalData?.target_progress || 0,
+          comments: additionalData?.requirements || '',
+          payment_type: additionalData?.inspection_type || 'progress'
+        });
+
+      if (error) throw error;
+
+      toast.success('Inspection programmée avec succès');
+      setShowInspectionScheduler(false);
+      onScheduleInspection(step.id);
+    } catch (error) {
+      console.error('Error scheduling inspection:', error);
+      toast.error('Erreur lors de la programmation de l\'inspection');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -156,8 +220,8 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
 
           {/* Quick Actions */}
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => onScheduleInspection(step.id)}>
-              <ClipboardCheck className="h-3 w-3 mr-1" /> Programmer Inspection
+            <Button size="sm" onClick={() => setShowInspectionScheduler(true)}>
+              <CalendarPlus className="h-3 w-3 mr-1" /> Programmer Inspection
             </Button>
             {onGeneratePV && (
               <Button size="sm" variant="outline" onClick={() => onGeneratePV(step.id)}>
@@ -170,6 +234,33 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               </Button>
             )}
           </div>
+
+          {/* Inspection Scheduler Dialog */}
+          <Dialog open={showInspectionScheduler} onOpenChange={setShowInspectionScheduler}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CalendarPlus className="h-5 w-5" />
+                  Programmer une Inspection - {step.name}
+                </DialogTitle>
+              </DialogHeader>
+              {project && (
+                <AdvancedInspectionScheduler
+                  projects={[project]}
+                  onScheduleInspection={handleScheduleInspection}
+                  preselectedProjectId={projectId}
+                  preselectedStepId={phaseId}
+                  preselectedSteps={[{
+                    id: phaseId,
+                    name: step.name,
+                    order_index: step.order_index,
+                    status: step.status,
+                    progress: step.progress
+                  }]}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
