@@ -77,6 +77,8 @@ const PhaseDetailsPage: React.FC = () => {
 
   const {
     workflowMetrics,
+    inspections,
+    payments,
     refetch: refetchWorkflow,
     scheduleInspection,
   } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
@@ -85,6 +87,7 @@ const PhaseDetailsPage: React.FC = () => {
     try { refetchWorkflow?.(); } catch {}
     if (phaseId) {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
     }
   };
 
@@ -203,8 +206,13 @@ const PhaseDetailsPage: React.FC = () => {
             phase={phase}
             projectProgress={projectProgress}
             workflowMetrics={workflowMetrics}
+            steps={phase.steps}
+            inspections={inspections}
+            payments={payments}
             onScheduleInspection={handleScheduleInspection}
             onRequestPayment={() => {}}
+            onStepAction={(action, item) => console.log('Step action:', action, item)}
+            onMilestoneAction={(action, item) => console.log('Milestone action:', action, item)}
             formatCurrency={formatCurrency}
           />
 
