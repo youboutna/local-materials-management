@@ -19,44 +19,14 @@ export interface DecisionNode {
 
 export interface StepItem {
   id: string;
-  name: string;
-  description?: string;
-  status?: WorkflowStatus | string;
-  progress?: number;
-  order?: number;
-  metadata?: Record<string, unknown>;
-}
-
-export const mapMilestoneToDecisionNode = (m: any): DecisionNode => ({
-  id: m.id || m.code || `${m.name || m.title}`,
-  name: m.name || m.title || m.label || 'Jalon',
-  type: (m.type || m.milestoneType || 'other') as MilestoneType,
-  status: m.status || 'not_started',
-  description: m.description || m.summary || m.note,
-  documents: Array.isArray(m.documents) ? m.documents.map((d: any) => ({ id: d.id, title: d.title || d.file_name, file_url: d.file_url || d.url })) : [],
-  suggestedActions: m.suggestedActions || [],
-  metadata: m.metadata || {},
-});
-
-export const mapStepToStepItem = (s: any): StepItem => ({
-  id: s.id,
-  name: s.name || s.step_name || 'Étape',
-  description: s.description,
-  status: s.status || 'not_started',
-  progress: s.progress || 0,
-  order: s.order_index || s.order || 0,
-  metadata: s.metadata || {},
-});
-export type ItemType = 'step' | 'milestone';
-
-export interface StepItem {
-  id: string;
   type: 'step';
   name: string;
   description?: string;
   status: string;
   progress: number;
+  order?: number;
   responsibleId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface MilestoneItem {
@@ -69,6 +39,8 @@ export interface MilestoneItem {
   relatedStepId?: string;
   financialImpact?: number;
 }
+
+export type ItemType = 'step' | 'milestone';
 
 export interface UnifiedWorkflowState {
   workflowItems: Array<StepItem | MilestoneItem>;
@@ -97,3 +69,25 @@ export interface Decompte {
   createdAt?: string;
   metadata?: Record<string, unknown>;
 }
+
+export const mapMilestoneToDecisionNode = (m: any): DecisionNode => ({
+  id: m.id || m.code || `${m.name || m.title}`,
+  name: m.name || m.title || m.label || 'Jalon',
+  type: (m.type || m.milestoneType || 'other') as MilestoneType,
+  status: m.status || 'not_started',
+  description: m.description || m.summary || m.note,
+  documents: Array.isArray(m.documents) ? m.documents.map((d: any) => ({ id: d.id, title: d.title || d.file_name, file_url: d.file_url || d.url })) : [],
+  suggestedActions: m.suggestedActions || [],
+  metadata: m.metadata || {},
+});
+
+export const mapStepToStepItem = (s: any): StepItem => ({
+  id: s.id,
+  type: 'step',
+  name: s.name || s.step_name || 'Étape',
+  description: s.description,
+  status: s.status || 'not_started',
+  progress: s.progress || 0,
+  order: s.order_index || s.order || 0,
+  metadata: s.metadata || {},
+});

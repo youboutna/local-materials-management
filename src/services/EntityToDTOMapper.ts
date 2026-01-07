@@ -490,17 +490,17 @@ export class EntityToDTOMapper {
       const si = stepAny as StepItem;
       return {
         id: si?.id || `step-${idx}`,
-        name: si?.name || si?.label || `Étape ${idx + 1}`,
+        name: si?.name || (si as any)?.label || `Étape ${idx + 1}`,
         description: si?.description || '',
         status: (si as any)?.status || 'pending',
         progress: (si as any)?.progress ?? 0,
-        estimated_duration_days: (si as any)?.metadata?.estimated_duration_days ?? null,
-        actual_duration_days: null,
+        estimated_duration_days: (si as any)?.metadata?.estimated_duration_days ?? undefined,
+        actual_duration_days: undefined,
         start_date: undefined,
         end_date: undefined,
         order_index: (si as any)?.order ?? idx,
         tasks: []
-      } as PhaseStepData;
+      } as unknown as PhaseStepData;
     });
 
     return {

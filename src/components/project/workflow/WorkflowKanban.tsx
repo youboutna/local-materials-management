@@ -189,10 +189,11 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
         onClick: () => onScheduleInspection(step.id),
       });
     } else if (workflowStatus.latestInspection) {
+      const inspectionId = workflowStatus.latestInspection.id;
       actions.push({
         icon: <Eye className="h-4 w-4" />,
         label: 'Voir PV',
-        onClick: () => onViewInspection(workflowStatus.latestInspection.id),
+        onClick: () => onViewInspection(inspectionId),
       });
     }
 

@@ -44,6 +44,7 @@ const PhaseWorkflowOrchestrator: React.FC<PhaseWorkflowOrchestratorProps> = ({
   phaseId,
   onStepAction,
   onMilestoneAction,
+  onAddStep,
   onRetry,
   enableNormalization = true,
   showEmptyState = true,

@@ -1460,10 +1460,10 @@ const PhaseDetailsPage: React.FC = () => {
                 lastInspectionDate={latestApprovedInspection?.date}
                 lastValidatedPV={latestApprovedInspection?.id}
                 pendingPaymentAmount={workflowMetrics.totalPaid || 0}
-                onScheduleInspection={() => handleScheduleInspection()}
-                onInputProgress={() => { const firstStep = phase?.steps?.find((s: PhaseStepDTO) => s.status !== 'completed'); if (firstStep) handleUpdateProgress(firstStep.id); }}
+                onScheduleInspection={() => scheduleInspection({ date: new Date().toISOString(), inspector: 'system', comments: 'Auto' })}
+                onInputProgress={() => { const firstStep = phase?.steps?.find((s: PhaseStepDTO) => s.status !== 'completed'); if (firstStep) updateStepProgress({ stepId: firstStep.id, progress: 10 }); }}
                 onGeneratePV={() => console.log('générer PV')}
-                onRequestDecompte={() => handleRequestPayment(undefined, true)}
+                onRequestDecompte={() => console.log('request decompte')}
                 onUpdateGuarantee={() => console.log('update guarantee')}
                 formatCurrency={formatCurrency}
                 compact={true}

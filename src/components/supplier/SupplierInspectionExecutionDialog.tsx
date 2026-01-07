@@ -106,7 +106,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
           // attach returned document id/url for notifications
           if (docRecord) {
             uploadedDocs.push({
-              id: docRecord.id,
+              id: (docRecord as any).id || '',
               file_name: file.name,
               file_url: publicUrl,
               file_path: destPath,
@@ -162,7 +162,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
               if (pvDocRecord) {
                 uploadedDocs.push({
-                  id: pvDocRecord.id,
+                  id: (pvDocRecord as any).id || '',
                   file_name: pvResult.fileName,
                   file_url: pvUrl,
                   file_path: pvPath,

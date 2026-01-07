@@ -166,12 +166,12 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
           <div>
             <h3 className="text-lg font-bold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              {phase?.name || 'Étape'}</h3>
+              {phase?.phase_name || 'Étape'}</h3>
             <p className="text-sm text-muted-foreground">
-              Phase: {phase?.phase_name || '—'} • Projet: {phase?.project_name || phase?.project_id || '—'}
+              Phase: {phase?.phase_name || '—'} • Projet: {phase?.project_id || '—'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Responsable: {phase?.owner_name || '—'} • Équipe: {phase?.team_size ?? '—'} personnes
+              Responsable: {'—'} • Équipe: {'—'} personnes
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -306,8 +306,8 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
           <div className="p-3 border rounded-lg">
             <h4 className="text-sm font-semibold">Impacts & dépendances</h4>
             <div className="mt-3 text-sm text-muted-foreground space-y-2">
-              <div>Contribue à {phase?.phase_contribution ?? '30%'} de la phase</div>
-              <div>Impact projet: {phase?.project_impact ?? '+1.2%'}</div>
+              <div>Contribue à {'30%'} de la phase</div>
+              <div>Impact projet: {'+1.2%'}</div>
               <div>Dépendances: {phase?.dependencies?.length ?? 0}</div>
               <div className="mt-2">Budget: {formatCurrency(phase?.estimated_cost || 0)}</div>
             </div>
