@@ -352,7 +352,7 @@ const PhaseDetailsPage: React.FC = () => {
         onSave={handleSave}
         isUpdating={isUpdating}
         phaseName={phase.phase_name}
-        completionValidation={{ canComplete: true, blockers: [], warnings: [] }}
+        completionValidation={{ canComplete: true, pendingCheckpoints: [], completedCheckpoints: [], totalCheckpoints: 0, completedCount: 0, message: '', progressMet: true, currentProgress: 100, requiredProgress: 100, progressMessage: '' }}
       />
     </div>
   );
