@@ -109,6 +109,44 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
     priority: 'normal' as MilestonePriority
   });
 
+  // Préconfigurations contextuelles par type de jalon
+  const MILESTONE_PRESETS: Record<MilestoneType, {
+    title: string;
+    description: string;
+    weight: number;
+    priority: MilestonePriority;
+    dateOffset: number; // jours depuis début phase
+  }> = {
+    checkpoint: {
+      title: `Point d'avancement - ${phaseName}`,
+      description: `Vérification de l'avancement des travaux de la phase ${phaseName}. Évaluer la progression, les ressources utilisées et les éventuels blocages.`,
+      weight: 0.15,
+      priority: 'normal',
+      dateOffset: 7,
+    },
+    event: {
+      title: `Démarrage de la phase ${phaseName}`,
+      description: `Événement marquant le lancement officiel de la phase ${phaseName}. Mobilisation des équipes et des ressources.`,
+      weight: 0.1,
+      priority: 'high',
+      dateOffset: 0,
+    },
+    gate: {
+      title: `Validation qualité - ${phaseName}`,
+      description: `Point de contrôle qualité obligatoire avant passage à l'étape suivante. Vérification de la conformité aux normes et spécifications.`,
+      weight: 0.25,
+      priority: 'critical',
+      dateOffset: 14,
+    },
+    deliverable: {
+      title: `Livrable - ${phaseName}`,
+      description: `Livrable attendu pour la phase ${phaseName}. Document, rapport ou élément physique à fournir.`,
+      weight: 0.2,
+      priority: 'high',
+      dateOffset: 21,
+    },
+  };
+
   useEffect(() => {
     loadMilestones();
   }, [projectId, phaseId]);
@@ -129,15 +167,39 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
     }
   };
 
+  // Calcul date cible selon offset
+  const getTargetDate = (offsetDays: number): string => {
+    const baseDate = phaseStartDate ? new Date(phaseStartDate) : new Date();
+    baseDate.setDate(baseDate.getDate() + offsetDays);
+    return baseDate.toISOString().split('T')[0];
+  };
+
+  // Appliquer preset quand le type change
+  const applyPreset = (type: MilestoneType) => {
+    const preset = MILESTONE_PRESETS[type];
+    setFormData(prev => ({
+      ...prev,
+      type,
+      title: preset.title,
+      description: preset.description,
+      weight: preset.weight,
+      priority: preset.priority,
+      target_date: getTargetDate(preset.dateOffset),
+    }));
+  };
+
   const handleAddMilestone = () => {
+    // Par défaut, pré-remplir avec checkpoint
+    const defaultType: MilestoneType = 'checkpoint';
+    const preset = MILESTONE_PRESETS[defaultType];
     setFormData({
-      title: '',
-      description: '',
-      target_date: phaseStartDate || new Date().toISOString().split('T')[0],
-      weight: 0.2,
+      title: preset.title,
+      description: preset.description,
+      target_date: getTargetDate(preset.dateOffset),
+      weight: preset.weight,
       notes: '',
-      type: 'checkpoint',
-      priority: 'normal'
+      type: defaultType,
+      priority: preset.priority,
     });
     setIsDialogOpen(true);
   };
@@ -471,7 +533,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 <Label htmlFor="type">Type</Label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value as MilestoneType })}
+                  onValueChange={(value) => applyPreset(value as MilestoneType)}
                 >
                   <SelectTrigger>
                     <SelectValue />
