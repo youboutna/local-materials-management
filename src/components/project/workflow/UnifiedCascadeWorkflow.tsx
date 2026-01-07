@@ -1,8 +1,8 @@
 /**
- * UnifiedCascadeWorkflow - Vue centrée sur les ÉTAPES avec panels fusionnés
+ * UnifiedCascadeWorkflow - Vue centrée sur les ÉTAPES avec jalons intégrés
  * 
- * Flux: Phase active → Étapes → Actions par étape
- * Les panels Inspections/Paiements sont fusionnés dans le StepDetailPanel
+ * Flux: Phase → Étapes + Jalons (timeline unifiée) → Actions par étape
+ * Les jalons sont positionnés par rapport aux activités (étapes)
  */
 
 import React, { useMemo, useState } from 'react';
@@ -22,11 +22,11 @@ import {
   AlertTriangle,
   Plus,
   FileText,
-  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PhaseDTO, PhaseStepDTO } from '@/types/phase-dto';
 import StepDetailPanel from './StepDetailPanel';
+import IntegratedWorkflowTimeline from './IntegratedWorkflowTimeline';
 
 interface UnifiedCascadeWorkflowProps {
   phase: PhaseDTO;
@@ -155,7 +155,7 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
     );
   }
 
-  // Default view: Steps list + Décompte summary
+  // Default view: Integrated Timeline + Décompte summary
   return (
     <div className="space-y-6">
       {/* Résumé décompte Mauritanie - Compact */}
@@ -231,88 +231,27 @@ const UnifiedCascadeWorkflow: React.FC<UnifiedCascadeWorkflowProps> = ({
         </CardContent>
       </Card>
 
-      {/* Liste des étapes - Full width */}
-      <Card>
-        <CardHeader className="py-4 bg-gradient-to-r from-primary/10 via-transparent to-transparent">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
-              Étapes de la Phase
-            </CardTitle>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="bg-primary/5">
-                {phaseSteps.filter((s: any) => s.status === 'completed').length}/{phaseSteps.length} complétées
-              </Badge>
-              <Button size="sm" onClick={() => onStepAction?.('add')}>
-                <Plus className="h-3 w-3 mr-1" /> Étape
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+      {/* Timeline intégrée Étapes + Jalons */}
+      <IntegratedWorkflowTimeline
+        projectId={phase.project_id}
+        phaseId={phase.id}
+        phaseName={phase.phase_name}
+        steps={phaseSteps}
+        phaseStartDate={phase.start_date}
+        phaseEndDate={phase.end_date}
+        onStepClick={(step) => setSelectedStep(step)}
+        onMilestoneClick={(id) => onMilestoneAction?.('edit', { id })}
+        onAddMilestone={() => onMilestoneAction?.('add')}
+      />
 
-        <CardContent className="pt-4">
-          {phaseSteps.length === 0 ? (
-            <div className="text-center py-12">
-              <Layers className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground mb-4">Aucune étape définie pour cette phase</p>
-              <Button onClick={() => onStepAction?.('add')}>
-                <Plus className="h-4 w-4 mr-2" /> Ajouter la première étape
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {phaseSteps.map((step: PhaseStepDTO, idx: number) => (
-                <div
-                  key={step.id}
-                  onClick={() => setSelectedStep(step)}
-                  className={cn(
-                    "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]",
-                    "border-transparent bg-muted/30 hover:border-primary/50 hover:bg-primary/5"
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          {getStepIcon(step.status)}
-                          <p className="font-semibold">{step.name}</p>
-                        </div>
-                        <Badge className={cn("text-xs mt-1", getStepStatusColor(step.status))}>
-                          {step.status}
-                        </Badge>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Progress value={step.progress || 0} className="flex-1 h-2" />
-                      <span className="text-sm font-medium w-10 text-right">{step.progress || 0}%</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {step.start_date ? new Date(step.start_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'}
-                        {' → '}
-                        {step.end_date ? new Date(step.end_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'}
-                      </span>
-                      <span className="font-medium">{formatCurrency((step as any).estimated_cost || (step as any).budget || 0)}</span>
-                    </div>
-                  </div>
-
-                  {step.description && (
-                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{step.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Quick add step button */}
+      {phaseSteps.length === 0 && (
+        <div className="flex justify-center">
+          <Button onClick={() => onStepAction?.('add')}>
+            <Plus className="h-4 w-4 mr-2" /> Ajouter la première étape
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
