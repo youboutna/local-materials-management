@@ -2,7 +2,7 @@
 import { Alert, EVMData, ProjectData, EscalationRoles, ActionLabels, GanttChartData, PERTAnalysis } from "@/types/project";
 import {
   ProjectManager,
-} from "./ projectManagerWithActions";
+} from "./projectManagerWithActions";
 
 export interface ProjectManagerState {
   alerts: Alert[];
