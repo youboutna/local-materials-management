@@ -49,6 +49,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   onGenerateDecompte,
   onGeneratePV,
   onReorderSteps,
+  onActionComplete,
   formatCurrency = (n: number) => (typeof n === 'number' ? `${n.toLocaleString('fr-FR')} MRU` : ''),
 }) => {
   const nodes: DecisionNode[] = (milestones || []).map(mapMilestoneToDecisionNode);

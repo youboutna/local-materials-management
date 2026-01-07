@@ -63,7 +63,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
       });
       if (created && created.id) {
         // orchestrator / other UI can open dialogs using events or callbacks
-        toast({ title: 'Inspection programmée', description: 'Inspection créée.', variant: 'success' });
+        toast({ title: 'Inspection programmée', description: 'Inspection créée.' });
       }
     } catch (err) {
       console.error('Erreur scheduleInspection', err);
@@ -76,7 +76,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
     try {
       const nextProgress = 10; // caller can implement more advanced UI
       await updateStepProgress({ stepId, progress: nextProgress });
-      toast({ title: 'Progression mise à jour', variant: 'success' });
+      toast({ title: 'Progression mise à jour' });
     } catch (err) {
       console.error('Erreur updateStepProgress', err);
       toast({ title: 'Erreur', description: 'Impossible de mettre à jour la progression', variant: 'destructive' });
@@ -97,7 +97,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
           contractorContact: rawPhaseData?.contractor_contact || '',
         },
       });
-      toast({ title: 'Paiement créé', description: 'Demande de paiement enregistrée.', variant: 'success' });
+      toast({ title: 'Paiement créé', description: 'Demande de paiement enregistrée.' });
       if (onActionComplete) onActionComplete();
     } catch (err) {
       console.error('Erreur createPayment', err);
@@ -157,12 +157,12 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
                 'PV généré',
                 `Un procès-verbal pour la phase ${rawPhaseData.phase_name} a été généré.`,
                 'document',
-                docRecord?.id || null,
-                { documents: docRecord ? [{ id: docRecord.id, file_url: publicUrl }] : [{ file_url: publicUrl }] }
+                (docRecord as any)?.id || null,
+                { documents: docRecord ? [{ id: String((docRecord as any)?.id || ''), file_url: publicUrl }] : [{ file_url: publicUrl }] }
               );
             }
 
-            toast({ title: 'PV généré', description: 'Le PV a été généré et stocké.', variant: 'success' });
+            toast({ title: 'PV généré', description: 'Le PV a été généré et stocké.' });
             if (onActionComplete) onActionComplete();
           } catch (docErr) {
             console.error('Error creating PV document record', docErr);

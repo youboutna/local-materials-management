@@ -3,17 +3,20 @@ import WorkflowKanban from './WorkflowKanban';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MilestoneItem, StepItem, mapMilestoneToDecisionNode } from '@/types/unified-workflow';
 import { DecisionNode } from '@/types/unified-workflow';
+import { PhaseStepDTO } from '@/types/phase-dto';
+
+type StepWorkflowStatus = {
+  inspectionStatus?: string;
+  paymentStatus?: string;
+  totalPaid?: number;
+  latestInspection?: { id: string; date: string } | null;
+};
 
 interface IntegratedWorkflowBoardProps {
-  steps: StepItem[] | Array<Record<string, unknown>>;
-  milestones?: MilestoneItem[] | Array<Record<string, unknown>>;
+  steps: StepItem[] | PhaseStepDTO[];
+  milestones?: MilestoneItem[] | any[];
   phaseProgress: number;
-  getStepWorkflowStatus: (step: StepItem | Record<string, unknown>) => {
-    inspectionStatus?: string;
-    paymentStatus?: string;
-    totalPaid?: number;
-    latestInspection?: Record<string, unknown> | null;
-  };
+  getStepWorkflowStatus: (step: StepItem | PhaseStepDTO) => StepWorkflowStatus;
   onScheduleInspection: (stepId: string) => void;
   onUpdateProgress: (stepId: string) => void;
   onRequestPayment: (stepId: string, canRequest: boolean) => void;
@@ -31,12 +34,13 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
   onUpdateProgress,
   onRequestPayment,
   onReorder,
+  onSelectNode,
   formatCurrency,
 }) => {
-  const [localSteps, setLocalSteps] = React.useState<StepItem[]>(() => (steps as StepItem[]) || []);
+  const [localSteps, setLocalSteps] = React.useState<(StepItem | PhaseStepDTO)[]>(() => steps || []);
 
   React.useEffect(() => {
-    setLocalSteps((steps as StepItem[]) || []);
+    setLocalSteps(steps || []);
   }, [steps]);
 
   // HTML5 Drag & Drop for quick reordering (compact lane)
@@ -71,6 +75,18 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
     }
   };
 
+  const getStepName = (s: StepItem | PhaseStepDTO): string => {
+    return (s as StepItem).name || (s as PhaseStepDTO).name || 'Étape';
+  };
+
+  const getStepStatus = (s: StepItem | PhaseStepDTO): string => {
+    return (s as StepItem).status || (s as PhaseStepDTO).status || 'pending';
+  };
+
+  const getStepProgress = (s: StepItem | PhaseStepDTO): number => {
+    return (s as StepItem).progress ?? (s as PhaseStepDTO).progress ?? 0;
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -80,7 +96,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
         <CardContent>
           <div className="mb-4">
             <div className="flex gap-3 overflow-x-auto">
-              {milestones.map((m: Record<string, unknown>) => {
+              {(milestones as any[]).map((m: any) => {
                 const node = mapMilestoneToDecisionNode(m);
                 return (
                   <div
@@ -120,7 +136,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
           {/* Compact reorder lane */}
           <div className="mb-4">
             <div className="flex gap-2 overflow-x-auto items-start">
-              {localSteps.map((s) => (
+              {localSteps.map((s, idx) => (
                 <div
                   key={s.id}
                   draggable
@@ -131,10 +147,10 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
                 >
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">{s.status} • {s.progress}%</p>
+                      <p className="text-sm font-medium truncate">{getStepName(s)}</p>
+                      <p className="text-xs text-muted-foreground">{getStepStatus(s)} • {getStepProgress(s)}%</p>
                     </div>
-                    <div className="ml-2 text-xs text-muted-foreground">#{localSteps.indexOf(s) + 1}</div>
+                    <div className="ml-2 text-xs text-muted-foreground">#{idx + 1}</div>
                   </div>
                 </div>
               ))}
@@ -142,9 +158,9 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
           </div>
 
           <WorkflowKanban
-            steps={localSteps}
+            steps={localSteps as StepItem[]}
             phaseProgress={phaseProgress}
-            getStepWorkflowStatus={getStepWorkflowStatus}
+            getStepWorkflowStatus={getStepWorkflowStatus as any}
             onScheduleInspection={onScheduleInspection}
             onUpdateProgress={onUpdateProgress}
             onRequestPayment={onRequestPayment}
