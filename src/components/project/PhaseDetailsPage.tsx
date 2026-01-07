@@ -1,38 +1,21 @@
+/**
+ * PhaseDetailsPage - Refactored Version
+ * Main page component for phase details
+ * Max 700 lines following architectural guidelines
+ */
+
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
   ArrowLeft,
-  BarChart,
   Building,
   Calendar,
   CheckCircle,
@@ -46,31 +29,42 @@ import {
   Eye,
   FileText,
   GitBranch,
-  Info,
   Layers,
   ListChecks,
   Package,
-  PieChart,
   RefreshCw,
   Shield,
   Target,
   TrendingUp,
-  Users,
-  Wallet
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Services and hooks
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
 import { MilestoneService } from "@/services/MilestoneService";
+import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
+import { useAuditEntries } from "@/hooks/useAuditEntries";
 
-import { PhaseDTO, PhaseStatus, PhaseStepDTO } from "@/types/phase-dto";
-import { getCompletionBlockReasons, validateCompletionReadiness } from "@/utils/completionValidation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+// Types
+import { PhaseDTO, PhaseStatus } from "@/types/phase-dto";
+import { validateCompletionReadiness } from "@/utils/completionValidation";
+import { ProjectDataCalculations } from "@/utils/projectDataCalculations";
 
-// Import existing components
-import { ProjectDataCalculations } from "../../utils/projectDataCalculations";
+// Phase sub-components
+import {
+  PhaseOverviewMetrics,
+  PhaseEditDialog,
+  PhaseFinancesTab,
+  ResourceUtilizationCard,
+  formatCurrency,
+  formatDate,
+  getStatusColor,
+  getStatusLabel,
+  getFinancialHealthColor,
+  getFinancialHealthLabel,
+} from "./phase";
+
+// Existing components
 import PhaseCompliance from "./PhaseCompliance";
 import PhaseDocuments from "./PhaseDocuments";
 import PhaseEmployees from "./PhaseEmployees";
@@ -78,45 +72,9 @@ import PhaseInspections from "./PhaseInspections";
 import PhaseMaterials from "./PhaseMaterials";
 import PhasePayments from "./PhasePayments";
 import PhaseTasks from "./PhaseTasks";
-// New centralized workflow components
-import PhaseStepsManager from "./phase/PhaseStepsManager";
-import StepDashboard from './StepDashboard';
-import { useAuditEntries } from '@/hooks/useAuditEntries';
-// Workflow extensions
-import { WorkflowKanban, PaymentCalculator, QuickActionsPanel, } from "@/components/project/workflow";
-import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
-import UnifiedPhaseWorkflow from '@/components/project/UnifiedPhaseWorkflow';
-import PhaseWorkflowContainer from '@/components/project/PhaseWorkflowContainer';
-import DecomptePreviewDialog from '@/components/project/DecomptePreviewDialog';
-import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
-import { SupplierInspectionExecutionDialog } from '@/components/supplier/SupplierInspectionExecutionDialog';
-import { PaymentDialog } from '@/components/project/PaymentDialog';
-import { supabase } from '@/integrations/supabase/client';
-import { generatePVPDF } from '@/lib/pvGenerator';
-import { StorageFactory } from '@/services/storage/StorageFactory';
-import { DocumentService, DocumentCreateDTO } from '@/services/DocumentService';
-import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from '@/hooks/useNotifications';
+import PhaseWorkflowContainer from "./PhaseWorkflowContainer";
 
-// Helper functions
-const getStatusColor = (status: PhaseStatus | string) => {
-  switch (status) {
-    case "completed":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "in_progress":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    case "delayed":
-      return "bg-red-100 text-red-800 border-red-200";
-    case "pending":
-    case "on_hold":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "cancelled":
-      return "bg-gray-100 text-gray-800 border-gray-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
-
+// Status Icons
 const getStatusIcon = (status: PhaseStatus | string) => {
   switch (status) {
     case "completed":
@@ -130,37 +88,7 @@ const getStatusIcon = (status: PhaseStatus | string) => {
   }
 };
 
-const getStatusLabel = (status: PhaseStatus | string) => {
-  const labels: Record<string, string> = {
-    completed: "Terminé",
-    in_progress: "En cours",
-    delayed: "En retard",
-    pending: "En attente",
-    cancelled: "Annulé",
-    not_started: "Non commencé",
-  };
-  return labels[status] || status;
-};
-
-const formatDate = (dateString?: string | null) => {
-  if (!dateString) return "Non définie";
-  try {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return "Date invalide";
-  }
-};
-
-const formatCurrency = (amount?: number | null) => {
-  if (!amount) return "0 MRU";
-  return `${amount.toLocaleString("fr-FR")} MRU`;
-};
-
-const calculateRemainingDays = (endDate?: string | null) => {
+const calculateRemainingDays = (endDate?: string | null): number | string => {
   if (!endDate) return "N/A";
   try {
     const end = new Date(endDate);
@@ -173,210 +101,6 @@ const calculateRemainingDays = (endDate?: string | null) => {
   }
 };
 
-const getFinancialHealthColor = (health: string) => {
-  switch (health) {
-    case 'excellent': return 'text-green-600 bg-green-100 border-green-200';
-    case 'good': return 'text-emerald-600 bg-emerald-100 border-emerald-200';
-    case 'warning': return 'text-amber-600 bg-amber-100 border-amber-200';
-    case 'critical': return 'text-red-600 bg-red-100 border-red-200';
-    default: return 'text-gray-600 bg-gray-100 border-gray-200';
-  }
-};
-
-const getFinancialHealthLabel = (health: string) => {
-  switch (health) {
-    case 'excellent': return 'Excellent';
-    case 'good': return 'Bon';
-    case 'warning': return 'Attention';
-    case 'critical': return 'Critique';
-    default: return 'Inconnu';
-  }
-};
-
-const getFinancialHealthIcon = (health: string) => {
-  switch (health) {
-    case 'excellent': return <CheckCircle className="h-4 w-4" />;
-    case 'good': return <TrendingUp className="h-4 w-4" />;
-    case 'warning': return <AlertTriangle className="h-4 w-4" />;
-    case 'critical': return <AlertTriangle className="h-4 w-4" />;
-    default: return <Info className="h-4 w-4" />;
-  }
-};
-
-// Financial Analysis Component
-const FinancialAnalysisCard: React.FC<{ phaseId: string; projectId: string }> = ({ phaseId, projectId }) => {
-  const { data: phaseCosts, isLoading: loadingCosts } = useQuery({
-    queryKey: ['phase-costs', projectId, phaseId],
-    queryFn: () => ProjectDataCalculations.calculatePhaseCosts(projectId, phaseId),
-    enabled: !!projectId && !!phaseId,
-  });
-
-  if (loadingCosts) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-2 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!phaseCosts) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Analyse financière</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Aucune donnée financière disponible
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center justify-between">
-          <span>Analyse financière</span>
-
-          
-          <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
-            {getFinancialHealthIcon(phaseCosts.financialHealth)}
-            <span className="ml-1">{getFinancialHealthLabel(phaseCosts.financialHealth)}</span>
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Budget estimé</span>
-            <span className="font-medium">{formatCurrency(phaseCosts.estimatedCost)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Total dépensé</span>
-            <span className={cn(
-              "font-medium",
-              phaseCosts.isOverBudget ? "text-red-600" : "text-green-600"
-            )}>
-              {formatCurrency(phaseCosts.totalSpent)}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Écart budgétaire</span>
-            <span className={cn(
-              "font-medium",
-              phaseCosts.costVariance > 0 ? "text-red-600" : "text-green-600"
-            )}>
-              {phaseCosts.costVariance > 0 ? "+" : ""}{formatCurrency(phaseCosts.costVariance)}
-            </span>
-          </div>
-        </div>
-        
-        <Progress 
-          value={Math.min(100, phaseCosts.budgetUtilization)} 
-          className={cn(
-            "h-2",
-            phaseCosts.budgetUtilization > 90 
-              ? "bg-red-100 [&>div]:bg-red-600" 
-              : phaseCosts.budgetUtilization > 75
-              ? "bg-amber-100 [&>div]:bg-amber-600"
-              : "bg-green-100 [&>div]:bg-green-600"
-          )}
-        />
-        
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Utilisation: {phaseCosts.budgetUtilization.toFixed(1)}%</span>
-          <span>Restant: {formatCurrency(phaseCosts.remainingBudget)}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Resource Utilization Card
-const ResourceUtilizationCard: React.FC<{ phaseId: string; projectId: string }> = ({ phaseId, projectId }) => {
-  const { data: resources, isLoading } = useQuery({
-    queryKey: ['phase-resources', projectId, phaseId],
-    queryFn: () => ProjectDataCalculations.calculatePhaseResourceUtilization(projectId, phaseId),
-    enabled: !!projectId && !!phaseId,
-  });
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!resources) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Aucune donnée de ressources disponible
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Utilisation ressources</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-purple-600" />
-              <span className="text-sm font-medium">Équipe</span>
-            </div>
-            <p className="text-2xl font-bold">{resources.totalEmployees}</p>
-            <p className="text-xs text-muted-foreground">personnes assignées</p>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-amber-600" />
-              <span className="text-sm font-medium">Matériaux</span>
-            </div>
-            <p className="text-2xl font-bold">{resources.totalMaterials}</p>
-            <p className="text-xs text-muted-foreground">unités utilisées</p>
-          </div>
-        </div>
-        
-        {resources.hasResourceIssues && (
-          <Alert className="py-2 border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-xs text-amber-700">
-              Ressources limitées détectées
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
 // Main Component
 const PhaseDetailsPage: React.FC = () => {
   const { projectId, phaseId } = useParams<{
@@ -384,6 +108,7 @@ const PhaseDetailsPage: React.FC = () => {
     phaseId: string;
   }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditing, setIsEditing] = useState(false);
@@ -398,12 +123,6 @@ const PhaseDetailsPage: React.FC = () => {
     updatePhase,
     isUpdating,
     getReferentialInfo,
-    addStep,
-    updateStep,
-    deleteStep,
-    addTask,
-    updateTask,
-    deleteTask,
   } = usePhaseDetails(phaseId);
 
   // Fetch milestones for completion validation
@@ -434,38 +153,20 @@ const PhaseDetailsPage: React.FC = () => {
     enabled: !!phaseId,
   });
 
-  // Unified workflow hook (manages inspections, payments, decompte calculations)
+  // Unified workflow hook
   const {
-    inspections,
-    payments: workflowPayments,
     latestApprovedInspection,
     workflowMetrics,
-    calculateDecompte,
-    getStepWorkflowStatus,
-    scheduleInspection,
-    updateStepProgress,
-    isLoading: workflowLoading,
     refetch: refetchWorkflow,
   } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
 
-  // Audit entries for this phase/project (shown in StepDashboard)
+  // Audit entries for this phase/project
   const { auditEntries } = useAuditEntries(phaseId, projectId);
-
-  const { mutateAsync: createPayment } = useCreateProjectPayment();
-  // Workflow-specific handlers (scheduling, payments, PV generation, reorder)
-  // have been moved to `PhaseWorkflowContainer` to reduce dispersed logic in this page.
-
-  const { toast } = useToast();
-  const { createNotification } = useNotifications();
-
-  const queryClient = useQueryClient();
 
   const refreshWorkflowAndPhase = () => {
     try {
       if (typeof refetchWorkflow === 'function') refetchWorkflow();
-    } catch (e) {
-      // ignore
-    }
+    } catch { /* ignore */ }
     if (phaseId) {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
       queryClient.invalidateQueries({ queryKey: ['phase-metrics', phaseId] });
@@ -474,11 +175,7 @@ const PhaseDetailsPage: React.FC = () => {
     }
   };
 
-  // PV generation moved into PhaseWorkflowContainer
-
-  // Reorder, dialogs and decompte persistence moved to PhaseWorkflowContainer when applicable
-
-  // Validate if phase can be marked as completed (checkpoints + progress)
+  // Validate if phase can be marked as completed
   const completionValidation = useMemo(() => {
     return validateCompletionReadiness(milestones, phase?.progress ?? 0, { progressThreshold: 100 });
   }, [milestones, phase?.progress]);
@@ -597,9 +294,7 @@ const PhaseDetailsPage: React.FC = () => {
             </Badge>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>
-                {formatDate(phase.start_date)} → {formatDate(phase.end_date)}
-              </span>
+              <span>{formatDate(phase.start_date)} → {formatDate(phase.end_date)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <DollarSign className="h-4 w-4" />
@@ -613,7 +308,6 @@ const PhaseDetailsPage: React.FC = () => {
             )}
             {phaseCosts?.financialHealth && (
               <Badge variant="outline" className={cn(getFinancialHealthColor(phaseCosts.financialHealth), "shrink-0")}>
-                {getFinancialHealthIcon(phaseCosts.financialHealth)}
                 <span className="ml-1">{getFinancialHealthLabel(phaseCosts.financialHealth)}</span>
               </Badge>
             )}
@@ -647,7 +341,7 @@ const PhaseDetailsPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Main Content */}
+      {/* Main Content - Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="overview" className="flex items-center gap-1.5 py-2.5">
@@ -674,158 +368,20 @@ const PhaseDetailsPage: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab - Enhanced Design */}
+        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6 animate-in fade-in duration-300">
-          {/* Key Metrics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Progress Card */}
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-              <div className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-xl bg-primary/10">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                  </div>
-                  <Badge variant="outline" className={getStatusColor(phase.status)}>
-                    {getStatusLabel(phase.status)}
-                  </Badge>
-                </div>
-                <div className="mt-3">
-                  <p className="text-3xl font-bold">{progressMetrics?.overallProgress || phase.progress}%</p>
-                  <p className="text-sm text-muted-foreground">Progression globale</p>
-                </div>
-                <Progress value={progressMetrics?.overallProgress || phase.progress} className="h-1.5 mt-3" />
-                {progressMetrics && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {progressMetrics.completedSteps}/{progressMetrics.totalSteps} étapes • {progressMetrics.completedTasks}/{progressMetrics.totalTasks} tâches
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* Budget Card - Enhanced with Real Costs */}
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-              <div className="p-4 bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-xl bg-green-500/10">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                  </div>
-                  {loadingCosts ? (
-                    <Skeleton className="h-5 w-16" />
-                ) : phaseCosts?.costVariance !== undefined && phaseCosts.costVariance !== 0 && (
-                    <Badge variant={(phaseCosts.costVariance ?? 0) > 0 ? "destructive" : "default"}>
-                      {(phaseCosts.costVariance ?? 0) > 0 ? "+" : ""}
-                      {formatCurrency(phaseCosts.costVariance)}
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-2xl font-bold">{formatCurrency(phase.estimated_cost)}</p>
-                  <p className="text-sm text-muted-foreground">Budget estimé</p>
-                </div>
-                
-                {/* Real Costs Breakdown */}
-                {loadingCosts ? (
-                  <div className="mt-3 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                ) : phaseCosts ? (
-                  <div className="mt-3 pt-3 border-t border-green-200/30 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Payé aux contractants:</span>
-                      <span className="font-medium text-blue-600">
-                        {formatCurrency(phaseCosts.totalPayments)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Dépenses internes:</span>
-                      <span className="font-medium text-orange-600">
-                        {formatCurrency(phaseCosts.totalExpenses)}
-                      </span>
-                    </div>
-                    
-                    <Separator className="my-1" />
-                    
-                    <div className="flex justify-between font-medium">
-                      <span>Total dépensé:</span>
-                      <span className={cn(
-                        "font-bold",
-                        phaseCosts.totalSpent > (phase.estimated_cost || 0) 
-                          ? "text-red-600" 
-                          : "text-green-600"
-                      )}>
-                        {formatCurrency(phaseCosts.totalSpent)}
-                      </span>
-                    </div>
-                    
-                    {phase.estimated_cost && phase.estimated_cost > 0 && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Utilisation budget:</span>
-                        <span className={cn(
-                          "font-medium",
-                          (phaseCosts.totalSpent / phase.estimated_cost) > 1 
-                            ? "text-red-600" 
-                            : "text-green-600"
-                        )}>
-                          {((phaseCosts.totalSpent / phase.estimated_cost) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground mt-3">Aucune donnée financière disponible</p>
-                )}
-              </div>
-            </Card>
-
-            {/* Timeline Card */}
-            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-              <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-xl bg-blue-500/10">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <p className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</p>
-                  <p className="text-sm text-muted-foreground">Jours restants</p>
-                </div>
-                <p className="text-xs text-blue-600 mt-2">
-                  Fin: {formatDate(phase.end_date)}
-                </p>
-              </div>
-            </Card>
-
-            {/* Workflow Card (formerly Steps) */}
-            <Card 
-              className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setActiveTab("workflow")}
-            >
-              <div className="p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-xl bg-purple-500/10">
-                    <Target className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="mt-3">
-                  <p className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</p>
-                  <p className="text-sm text-muted-foreground">Workflow</p>
-                </div>
-                <Progress 
-                  value={metrics.stepsCount > 0 ? (metrics.completedSteps / metrics.stepsCount) * 100 : 0} 
-                  className="h-1.5 mt-3" 
-                />
-              </div>
-            </Card>
-          </div>
+          <PhaseOverviewMetrics
+            phase={phase}
+            phaseCosts={phaseCosts}
+            progressMetrics={progressMetrics}
+            metrics={metrics}
+            loadingCosts={loadingCosts}
+            onWorkflowClick={() => setActiveTab("workflow")}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
+            {/* Left Column - Description and Workflow Preview */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Phase Description */}
               <Card className="border-0 shadow-md">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
@@ -840,7 +396,7 @@ const PhaseDetailsPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Quick Steps Preview - Enhanced */}
+              {/* Quick Steps Preview */}
               {phase.steps.length > 0 && (
                 <Card className="border-0 shadow-md overflow-hidden">
                   <CardHeader className="pb-3 bg-gradient-to-r from-purple-500/5 to-transparent">
@@ -862,7 +418,7 @@ const PhaseDetailsPage: React.FC = () => {
                   </CardHeader>
                   <CardContent className="pt-4">
                     <div className="space-y-3">
-                      {phase.steps.slice(0, 4).map((step, index) => {
+                      {phase.steps.slice(0, 4).map((step) => {
                         const isCompleted = step.status === 'completed';
                         const isInProgress = step.status === 'in_progress';
                         
@@ -879,170 +435,43 @@ const PhaseDetailsPage: React.FC = () => {
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
                                 isCompleted && "bg-green-500 text-white",
                                 isInProgress && "bg-blue-500 text-white",
                                 !isCompleted && !isInProgress && "bg-muted text-muted-foreground"
                               )}>
-                                {isCompleted ? (
-                                  <CheckCircle className="h-4 w-4" />
-                                ) : (
-                                  index + 1
-                                )}
+                                {step.order_index + 1}
                               </div>
                               <div className="min-w-0">
-                                <span className="text-sm font-medium truncate">{step.name}</span>
-                                {step.tasks.length > 0 && (
-                                  <p className="text-xs text-muted-foreground">
-                                    {step.tasks.filter(t => t.status === 'completed').length}/{step.tasks.length} tâches
-                                  </p>
-                                )}
+                                <p className="font-medium truncate">{step.name || `Étape ${step.order_index + 1}`}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {step.tasks?.length || 0} tâches
+                                </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <div className="w-16">
-                                <Progress value={step.progress} className="h-1.5" />
-                              </div>
-                              <span className={cn(
-                                "text-sm font-bold w-10 text-right",
-                                isCompleted && "text-green-600",
-                                isInProgress && "text-blue-600"
-                              )}>
-                                {step.progress}%
-                              </span>
+                            <div className="flex items-center gap-2">
+                              <Progress value={step.progress || 0} className="w-16 h-1.5" />
+                              <span className="text-sm font-medium w-10 text-right">{step.progress || 0}%</span>
                             </div>
                           </div>
                         );
                       })}
+                      {phase.steps.length > 4 && (
+                        <Button
+                          variant="ghost"
+                          className="w-full text-muted-foreground"
+                          onClick={() => setActiveTab("workflow")}
+                        >
+                          +{phase.steps.length - 4} autres étapes
+                        </Button>
+                      )}
                     </div>
-                    {phase.steps.length > 4 && (
-                      <Button
-                        variant="ghost"
-                        className="w-full mt-4"
-                        onClick={() => setActiveTab("workflow")}
-                      >
-                        Voir workflow complet ({phase.steps.length} étapes)
-                      </Button>
-                    )}
                   </CardContent>
                 </Card>
               )}
-
-              {/* Detailed Metrics Section */}
-              <Card className="border-0 shadow-md overflow-hidden">
-                <CardHeader className="pb-3 bg-gradient-to-r from-indigo-500/5 to-transparent">
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart className="h-5 w-5 text-indigo-600" />
-                    Métriques détaillées
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-6">
-                  {/* Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/30 border border-blue-100">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <ListChecks className="h-4 w-4 text-blue-600" />
-                        <span className="text-xs font-medium text-blue-600">Tâches</span>
-                      </div>
-                      <p className="text-2xl font-bold text-blue-700">
-                        {metrics.completedTasks}/{metrics.totalTasks}
-                      </p>
-                      <Progress value={metrics.taskCompletionRate} className="mt-2 h-1.5" />
-                    </div>
-                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100/30 border border-green-100">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <Shield className="h-4 w-4 text-green-600" />
-                        <span className="text-xs font-medium text-green-600">Inspections</span>
-                      </div>
-                      <p className="text-2xl font-bold text-green-700">
-                        {metrics.passedInspections}/{metrics.totalInspections}
-                      </p>
-                      <Progress value={metrics.inspectionPassRate} className="mt-2 h-1.5" />
-                    </div>
-                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/30 border border-amber-100">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <Package className="h-4 w-4 text-amber-600" />
-                        <span className="text-xs font-medium text-amber-600">Matériaux</span>
-                      </div>
-                      <p className="text-2xl font-bold text-amber-700">{phaseResources?.totalMaterials || metrics.totalMaterials}</p>
-                      <p className="text-xs text-amber-600/80 mt-1">
-                        {formatCurrency((phaseResources?.materialMetrics?.estimatedCost) || 0)}
-                      </p>
-                    </div>
-                    <div className="text-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/30 border border-purple-100">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <Users className="h-4 w-4 text-purple-600" />
-                        <span className="text-xs font-medium text-purple-600">Employés</span>
-                      </div>
-                      <p className="text-2xl font-bold text-purple-700">{phaseResources?.totalEmployees || metrics.totalEmployees}</p>
-                      <p className="text-xs text-purple-600/80 mt-1">assignés</p>
-                    </div>
-                  </div>
-
-                  {/* Financial & Progress Summary */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-transparent border border-emerald-100">
-                      <h4 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        Performance financière
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Total des paiements</span>
-                          <span className="font-semibold">{formatCurrency(phaseCosts?.totalPayments || metrics.totalPaymentAmount)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Dépenses internes</span>
-                          <span className="font-semibold">{formatCurrency(phaseCosts?.totalExpenses || 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Documents attachés</span>
-                          <span className="font-semibold">{metrics.totalDocuments}</span>
-                        </div>
-                        {phaseCosts && (
-                          <div className="flex justify-between text-sm pt-2 border-t">
-                            <span className="text-muted-foreground">Transactions</span>
-                            <span className="font-semibold">
-                              {phaseCosts.paymentsCount + phaseCosts.expensesCount} total
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-violet-50 to-transparent border border-violet-100">
-                      <h4 className="text-sm font-semibold text-violet-700 mb-3 flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Progression des étapes
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progression totale</span>
-                          <span className="font-semibold">{phase.progress}%</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Étapes terminées</span>
-                          <span className="font-semibold">{metrics.completedSteps}/{metrics.stepsCount}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progression étapes</span>
-                          <span className="font-semibold">{metrics.milestoneProgress.toFixed(1)}%</span>
-                        </div>
-                        {progressMetrics && (
-                          <div className="flex justify-between text-sm pt-2 border-t">
-                            <span className="text-muted-foreground">Tâches terminées</span>
-                            <span className="font-semibold">
-                              {progressMetrics.completedTasks}/{progressMetrics.totalTasks}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            {/* Right Column - Enhanced Info Cards */}
+            {/* Right Column - Info Cards */}
             <div className="space-y-6">
               {/* Phase Information */}
               <Card className="border-0 shadow-md overflow-hidden">
@@ -1066,23 +495,9 @@ const PhaseDetailsPage: React.FC = () => {
                     <span className="font-medium text-green-600">{formatCurrency(phase.estimated_cost)}</span>
                   </div>
                   {phaseCosts && (
-                    <>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="text-sm text-muted-foreground">Dépensé</span>
-                        <span className="font-medium text-amber-600">{formatCurrency(phaseCosts.totalSpent)}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="text-sm text-muted-foreground">Santé financière</span>
-                        <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
-                          {getFinancialHealthLabel(phaseCosts.financialHealth)}
-                        </Badge>
-                      </div>
-                    </>
-                  )}
-                  {referentialInfo && (
                     <div className="flex items-center justify-between py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Référentiel</span>
-                      <Badge variant="outline">{referentialInfo.referential.name?.fr || referentialInfo.referential.code}</Badge>
+                      <span className="text-sm text-muted-foreground">Dépensé</span>
+                      <span className="font-medium text-amber-600">{formatCurrency(phaseCosts.totalSpent)}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between py-2">
@@ -1092,7 +507,7 @@ const PhaseDetailsPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Timeline Card - Enhanced */}
+              {/* Timeline Card */}
               <Card className="border-0 shadow-md overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-500/5 to-transparent">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -1102,7 +517,6 @@ const PhaseDetailsPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="relative">
-                    {/* Timeline line */}
                     <div className="absolute left-3 top-3 bottom-3 w-0.5 bg-gradient-to-b from-green-500 via-blue-500 to-muted" />
                     
                     <div className="space-y-4">
@@ -1126,16 +540,13 @@ const PhaseDetailsPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Analysis Cards */}
-              <FinancialAnalysisCard phaseId={phaseId!} projectId={projectId!} />
               <ResourceUtilizationCard phaseId={phaseId!} projectId={projectId!} />
             </div>
           </div>
         </TabsContent>
 
-        {/* Unified Workflow Tab - Fusion des Étapes et Suivi */}
+        {/* Unified Workflow Tab */}
         <TabsContent value="workflow" className="space-y-6 animate-in fade-in duration-300">
-          {/* Workflow Summary Header */}
           <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1168,9 +579,6 @@ const PhaseDetailsPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Unified Workflow Component with Milestone & Stage Integration */}
-          {/* New workflow composition: Kanban + Quick Actions + Payment Calculator */}
-          {/** Initialize workflow hook (keeps local state, actions, metrics) */}
           {projectId && phaseId && (
             <PhaseWorkflowContainer
               rawPhaseData={phase}
@@ -1189,60 +597,48 @@ const PhaseDetailsPage: React.FC = () => {
             />
           )}
 
-          {/* Sous-sections pour détails (Tâches, Inspections, Paiements, Conformité) */}
+          {/* Sub-tabs for Tasks, Inspections, Payments, Compliance */}
           <Card className="border-0 shadow-md overflow-hidden">
             <Tabs defaultValue="tasks" className="w-full">
               <TabsList className="grid grid-cols-4 bg-muted/50 p-1 m-2 rounded-lg">
-                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="tasks" className="flex items-center gap-2 py-2">
                   <ListChecks className="h-4 w-4" />
                   <span className="hidden sm:inline">Tâches</span>
                 </TabsTrigger>
-                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="inspections" className="flex items-center gap-2 py-2">
                   <ClipboardCheck className="h-4 w-4" />
                   <span className="hidden sm:inline">Inspections</span>
                 </TabsTrigger>
-                <TabsTrigger value="payments" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="payments" className="flex items-center gap-2 py-2">
                   <CreditCard className="h-4 w-4" />
                   <span className="hidden sm:inline">Paiements</span>
                 </TabsTrigger>
-                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsTrigger value="compliance" className="flex items-center gap-2 py-2">
                   <Shield className="h-4 w-4" />
                   <span className="hidden sm:inline">Conformité</span>
                 </TabsTrigger>
               </TabsList>
               
               <TabsContent value="tasks" className="p-6">
-                <PhaseTasks 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
+                <PhaseTasks phaseId={phaseId!} projectId={projectId!} />
               </TabsContent>
               
               <TabsContent value="inspections" className="p-6">
-                <PhaseInspections 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
+                <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
               </TabsContent>
               
               <TabsContent value="payments" className="p-6">
-                <PhasePayments 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
+                <PhasePayments phaseId={phaseId!} projectId={projectId!} />
               </TabsContent>
               
               <TabsContent value="compliance" className="p-6">
-                <PhaseCompliance 
-                  phaseId={phaseId!} 
-                  projectId={projectId!} 
-                />
+                <PhaseCompliance phaseId={phaseId!} projectId={projectId!} />
               </TabsContent>
             </Tabs>
           </Card>
         </TabsContent>
 
-        {/* Combined Resources & Documents Tab */}
+        {/* Resources & Documents Tab */}
         <TabsContent value="resources_docs" className="animate-in fade-in duration-300">
           <div className="space-y-6">
             <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
@@ -1251,749 +647,31 @@ const PhaseDetailsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* Finances Tab - Nouvel onglet */}
+        {/* Finances Tab */}
         <TabsContent value="finances" className="space-y-6 animate-in fade-in duration-300">
-          {/* Financial Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Estimated vs Actual */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Budget vs Réel</CardTitle>
-              </CardHeader>
-              {/* Budget Card - Enhanced with Real Costs */}
-              <CardContent>
-                {loadingCosts ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ) : phaseCosts ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Estimé:</span>
-                      <span className="font-medium">{formatCurrency(phase.estimated_cost)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Engagé:</span>
-                      <span className="font-medium text-amber-600">
-                        {formatCurrency(phaseCosts.totalSpent)}
-                      </span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-bold">
-                      <span>Écart:</span>
-                      <span className={cn(
-                        phaseCosts.costVariance > 0 
-                          ? "text-red-600" 
-                          : "text-green-600"
-                      )}>
-                        {formatCurrency(phaseCosts.costVariance)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Budget restant:</span>
-                      <span className="font-medium text-green-600">
-                        {formatCurrency(phaseCosts.remainingBudget)}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée financière</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Cost Breakdown */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Répartition coûts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingCosts ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </div>
-                ) : phaseCosts ? (
-                  <div className="space-y-3">
-                    {phaseCosts.totalPayments > 0 && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <span className="text-sm">Contractants</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{formatCurrency(phaseCosts.totalPayments)}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {phaseCosts.totalSpent > 0 
-                                ? `${((phaseCosts.totalPayments / phaseCosts.totalSpent) * 100).toFixed(1)}%`
-                                : '0%'}
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalPayments / phaseCosts.totalSpent) * 100 : 0} 
-                          className="h-1 bg-blue-100 [&>div]:bg-blue-500"
-                        />
-                      </div>
-                    )}
-                    
-                    {phaseCosts.totalExpenses > 0 && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-orange-500" />
-                            <span className="text-sm">Dépenses internes</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{formatCurrency(phaseCosts.totalExpenses)}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {phaseCosts.totalSpent > 0 
-                                ? `${((phaseCosts.totalExpenses / phaseCosts.totalSpent) * 100).toFixed(1)}%`
-                                : '0%'}
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={phaseCosts.totalSpent > 0 ? (phaseCosts.totalExpenses / phaseCosts.totalSpent) * 100 : 0} 
-                          className="h-1 bg-orange-100 [&>div]:bg-orange-500"
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="pt-2 border-t">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Transactions:</span>
-                        <span className="font-medium">
-                          {phaseCosts.paymentsCount + phaseCosts.expensesCount} total
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">Aucune répartition disponible</p>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Financial Health */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Santé financière</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingCosts ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-2 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                ) : phaseCosts ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Utilisation budget:</span>
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "font-medium",
-                          phaseCosts.budgetUtilization > 90 
-                            ? "text-red-600" 
-                            : phaseCosts.budgetUtilization > 75
-                            ? "text-amber-600"
-                            : "text-green-600"
-                        )}>
-                          {phaseCosts.budgetUtilization.toFixed(1)}%
-                        </span>
-                        <Badge variant="outline" className={getFinancialHealthColor(phaseCosts.financialHealth)}>
-                          {getFinancialHealthLabel(phaseCosts.financialHealth)}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <Progress 
-                      value={Math.min(100, phaseCosts.budgetUtilization)}
-                      className={cn(
-                        "h-2",
-                        phaseCosts.budgetUtilization > 90 
-                          ? "bg-red-100 [&>div]:bg-red-600" 
-                          : phaseCosts.budgetUtilization > 75
-                          ? "bg-amber-100 [&>div]:bg-amber-600"
-                          : "bg-green-100 [&>div]:bg-green-600"
-                      )}
-                    />
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Statut:</span>
-                        <span className={cn(
-                          "font-medium",
-                          phaseCosts.isOverBudget ? "text-red-600" : "text-green-600"
-                        )}>
-                          {phaseCosts.isOverBudget ? "Dépassement" : "Dans le budget"}
-                        </span>
-                      </div>
-                      {phaseCosts.remainingBudget > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Disponible:</span>
-                          <span className="font-medium text-green-600">
-                            {formatCurrency(phaseCosts.remainingBudget)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">Aucune analyse disponible</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Compact Quick Actions + Upcoming Milestones Timeline */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              <QuickActionsPanel
-                phaseName={phase.phase_name || 'Phase'}
-                phaseProgress={phase.progress || 0}
-                workflowMetrics={workflowMetrics}
-                lastInspectionDate={latestApprovedInspection?.date}
-                lastValidatedPV={latestApprovedInspection?.id}
-                pendingPaymentAmount={workflowMetrics.totalPaid || 0}
-                onScheduleInspection={() => scheduleInspection({ date: new Date().toISOString(), inspector: 'system', comments: 'Auto' })}
-                onInputProgress={() => { const firstStep = phase?.steps?.find((s: PhaseStepDTO) => s.status !== 'completed'); if (firstStep) updateStepProgress({ stepId: firstStep.id, progress: 10 }); }}
-                onGeneratePV={() => console.log('générer PV')}
-                onRequestDecompte={() => console.log('request decompte')}
-                onUpdateGuarantee={() => console.log('update guarantee')}
-                formatCurrency={formatCurrency}
-                compact={true}
-              />
-            </div>
-
-            <div className="lg:col-span-2 space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Prochains jalons</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {milestones && milestones.length > 0 ? (
-                    <div className="space-y-3">
-                      {milestones.slice(0,3).map((m: unknown) => {
-                        const mm = m as { id: string; title?: string; name?: string; type?: string; due_date?: string; status?: string };
-                        return (
-                          <div key={mm.id} className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-sm truncate">{mm.title || mm.name}</p>
-                              <p className="text-xs text-muted-foreground">{mm.type || 'Jalon'} • {formatDate(mm.due_date)}</p>
-                            </div>
-                            <Badge variant="outline" className={mm.status === 'completed' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}>
-                              {mm.status === 'completed' ? 'Terminé' : 'À venir'}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Aucun jalon imminent</p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-          
-          {/* Detailed Cost Analysis */}
-          {(phaseCosts && (phaseCosts.paymentsCount > 0 || phaseCosts.expensesCount > 0)) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Payment Distribution */}
-              {Object.keys(phaseCosts.paymentDistribution).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-blue-600" />
-                      Distribution par contractant
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {Object.entries(phaseCosts.paymentDistribution)
-                        .sort(([,a], [,b]) => (b as number) - (a as number))
-                        .slice(0, 5)
-                        .map(([contractorId, amount]) => (
-                          <div key={contractorId} className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500" />
-                              <span className="text-sm truncate">Contractant {contractorId.slice(0, 8)}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {(((amount as number) / phaseCosts.totalPayments) * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {/* Expense Distribution */}
-              {Object.keys(phaseCosts.expenseDistribution).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <PieChart className="h-4 w-4 text-orange-600" />
-                      Dépenses par catégorie
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {Object.entries(phaseCosts.expenseDistribution)
-                        .sort(([,a], [,b]) => (b as number) - (a as number))
-                        .slice(0, 5)
-                        .map(([category, amount]) => (
-                          <div key={category} className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-orange-500" />
-                              <span className="text-sm truncate">{category}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {(((amount as number) / phaseCosts.totalExpenses) * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-          
-          {/* Resource Cost Analysis */}
-          {phaseResources && (phaseResources.totalEmployees > 0 || (phaseResources.materialMetrics?.estimatedCost ?? 0) > 0) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Coûts des ressources</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Employees Analysis */}
-                  {phaseResources.totalEmployees > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                        <Users className="h-4 w-4 text-purple-600" />
-                        Équipe ({phaseResources.totalEmployees} personnes)
-                      </h4>
-                      <div className="space-y-2">
-                        {Object.entries(phaseResources.employeesByPosition)
-                          .sort(([,a], [,b]) => (b as number) - (a as number))
-                          .slice(0, 5)
-                          .map(([position, count]) => (
-                            <div key={position} className="flex justify-between items-center">
-                              <span className="text-sm truncate">{position}</span>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{count as number}</Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {(((count as number) / phaseResources.totalEmployees) * 100).toFixed(0)}%
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Materials Analysis */}
-                  {phaseResources.totalMaterials > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                        <Package className="h-4 w-4 text-amber-600" />
-                        Matériaux ({phaseResources.totalMaterials} unités)
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Coût total matériaux</span>
-                          <span className="font-medium text-amber-600">
-                            {formatCurrency(phaseResources.materialMetrics?.estimatedCost ?? 0)}
-                          </span>
-                        </div>
-                        <div className="space-y-2">
-                          {Object.entries(phaseResources.materialsByCategory)
-                            .sort(([,a], [,b]) => (b as number) - (a as number))
-                            .slice(0, 5)
-                            .map(([category, quantity]) => (
-                              <div key={category} className="flex justify-between items-center">
-                                <span className="text-sm truncate">{category}</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{quantity as number}</Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    {(((quantity as number) / phaseResources.totalMaterials) * 100).toFixed(0)}%
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <PhaseFinancesTab
+            phase={phase}
+            projectId={projectId!}
+            phaseId={phaseId!}
+            phaseCosts={phaseCosts}
+            phaseResources={phaseResources}
+            loadingCosts={loadingCosts}
+            loadingResources={loadingResources}
+          />
         </TabsContent>
-
       </Tabs>
 
-      {/* Edit Dialog - Improved Design */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4 border-b">
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Edit className="h-5 w-5 text-primary" />
-              </div>
-              Modifier la phase
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Modifiez les informations de la phase "{phase.phase_name}"
-            </p>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
-            {/* Section: Informations générales */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Building className="h-4 w-4" />
-                Informations générales
-              </div>
-              
-              <div className="grid gap-4 pl-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    Nom de la phase <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={editForm.phase_name || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, phase_name: e.target.value })
-                    }
-                    placeholder="Ex: Fondations et terrassement"
-                    className="h-10"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Description</Label>
-                  <Textarea
-                    value={editForm.description || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, description: e.target.value })
-                    }
-                    placeholder="Décrivez les objectifs et le contenu de cette phase..."
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Section: Planification */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                Planification
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Date de début</Label>
-                  <Input
-                    type="date"
-                    value={editForm.start_date || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, start_date: e.target.value })
-                    }
-                    className="h-10"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Date de fin</Label>
-                  <Input
-                    type="date"
-                    value={editForm.end_date || ""}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, end_date: e.target.value })
-                    }
-                    className="h-10"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-sm font-medium">Durée estimée</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min="1"
-                      value={editForm.estimated_duration_days || ""}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          estimated_duration_days: parseInt(e.target.value) || undefined,
-                        })
-                      }
-                      className="h-10 pr-14"
-                      placeholder="30"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                      jours
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Section: Budget */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <DollarSign className="h-4 w-4" />
-                Budget
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Coût estimé</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min="0"
-                      value={editForm.estimated_cost || ""}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          estimated_cost: parseFloat(e.target.value) || undefined,
-                        })
-                      }
-                      className="h-10 pr-14"
-                      placeholder="0"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                      MRU
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Section: État et progression */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Target className="h-4 w-4" />
-                État et progression
-              </div>
-              
-              {/* Completion Validation Warning */}
-              {!completionValidation.canComplete && (
-                <Alert className="ml-6 border-warning/50 bg-warning/5">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                  <AlertDescription className="text-sm">
-                    <span className="font-medium">Impossible de marquer comme terminé</span>
-                    <ul className="mt-1 space-y-1 text-muted-foreground">
-                      {getCompletionBlockReasons(completionValidation).map((reason, idx) => (
-                        <li key={idx} className="flex items-center gap-1.5">
-                          <span className="h-1 w-1 rounded-full bg-warning" />
-                          {reason}
-                        </li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Statut</Label>
-                  <Select
-                    value={editForm.status || "pending"}
-                    onValueChange={(value) => {
-                      // Prevent selecting 'completed' if validation fails
-                      if (value === 'completed' && !completionValidation.canComplete) {
-                        return;
-                      }
-                      setEditForm({ ...editForm, status: value as PhaseStatus });
-                    }}
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                          En attente
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="in_progress">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500" />
-                          En cours
-                        </div>
-                      </SelectItem>
-                      <SelectItem 
-                        value="completed"
-                        disabled={!completionValidation.canComplete}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-2">
-                                <div className={cn(
-                                  "h-2 w-2 rounded-full",
-                                  !completionValidation.canComplete 
-                                    ? "bg-gray-300" 
-                                    : "bg-green-500"
-                                )} />
-                                Terminé
-                                {!completionValidation.canComplete && (
-                                  <Info className="h-3 w-3 text-muted-foreground" />
-                                )}
-                              </div>
-                            </TooltipTrigger>
-                            {!completionValidation.canComplete && (
-                              <TooltipContent side="right" className="max-w-xs">
-                                <p className="font-medium mb-1">Conditions requises</p>
-                                <ul className="text-xs text-muted-foreground space-y-1">
-                                  {getCompletionBlockReasons(completionValidation).map((reason, idx) => (
-                                    <li key={idx}>• {reason}</li>
-                                  ))}
-                                </ul>
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                      </SelectItem>
-                      <SelectItem value="delayed">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-red-500" />
-                          En retard
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="cancelled">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-gray-500" />
-                          Annulé
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    Progression: {editForm.progress || 0}%
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={editForm.progress || 0}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          progress: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="h-2 flex-1"
-                    />
-                    <span className={cn(
-                      "text-sm font-bold min-w-[3rem] text-right",
-                      (editForm.progress || 0) === 100 && "text-green-600",
-                      (editForm.progress || 0) > 0 && (editForm.progress || 0) < 100 && "text-primary",
-                      (editForm.progress || 0) === 0 && "text-muted-foreground"
-                    )}>
-                      {editForm.progress || 0}%
-                    </span>
-                  </div>
-                  <Progress value={editForm.progress || 0} className="h-2" />
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Classification (optionnel) */}
-            {(phase.construction_phase || phase.construction_stage) && (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Layers className="h-4 w-4" />
-                    Classification
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Code de phase</Label>
-                      <Input
-                        value={editForm.construction_phase || ""}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, construction_phase: e.target.value })
-                        }
-                        placeholder="Ex: PRE_FEASIBILITY"
-                        className="h-10"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Étape</Label>
-                      <Input
-                        value={editForm.construction_stage || ""}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, construction_stage: e.target.value })
-                        }
-                        placeholder="Ex: Étude préliminaire"
-                        className="h-10"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsEditing(false)}
-              className="min-w-[100px]"
-            >
-              Annuler
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              disabled={isUpdating || !editForm.phase_name?.trim()}
-              className="min-w-[120px]"
-            >
-              {isUpdating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Sauvegarde...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Sauvegarder
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Dialog */}
+      <PhaseEditDialog
+        isOpen={isEditing}
+        onOpenChange={setIsEditing}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        onSave={handleSave}
+        isUpdating={isUpdating}
+        phaseName={phase.phase_name}
+        completionValidation={completionValidation}
+      />
     </div>
   );
 };
