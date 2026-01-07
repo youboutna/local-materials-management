@@ -1,7 +1,6 @@
 /**
- * PhaseDetailsPage - Simplified Version
+ * PhaseDetailsPage - Version Simplifiée
  * Focus: Workflow en cascade selon règles Mauritanie
- * 2 tabs: Vue d'ensemble + Workflow Unifié
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -27,27 +26,23 @@ import {
   RefreshCw,
   Target,
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
-// Services and hooks
+// Hooks
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
-import { MilestoneService } from "@/services/MilestoneService";
 import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
 
 // Types
-import { PhaseDTO, PhaseStatus } from "@/types/phase-dto";
-import { ProjectDataCalculations } from "@/utils/projectDataCalculations";
+import { PhaseStatus } from "@/types/phase-dto";
 
 // Components
 import { PhaseEditDialog, formatCurrency, formatDate, getStatusColor, getStatusLabel } from "./phase";
-import CascadeWorkflowView from "./workflow/CascadeWorkflowView";
-import PhaseWorkflowContainer from "./PhaseWorkflowContainer";
+import UnifiedCascadeWorkflow from "./workflow/UnifiedCascadeWorkflow";
 import PhaseDocuments from "./PhaseDocuments";
 import PhaseMaterials from "./PhaseMaterials";
 import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
 
-// Status Icons
 const getStatusIcon = (status: PhaseStatus | string) => {
   switch (status) {
     case "completed": return <CheckCircle className="h-4 w-4" />;
@@ -76,39 +71,23 @@ const PhaseDetailsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState("workflow");
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
+  const [editForm, setEditForm] = useState<any>({});
 
-  // Hooks
   const { phase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
 
-  const { data: milestones = [] } = useQuery({
-    queryKey: ['phase-milestones', projectId, phaseId],
-    queryFn: () => MilestoneService.getPhaseMilestones(projectId!, phaseId!),
-    enabled: !!projectId && !!phaseId,
-  });
-
-  const { data: phaseCosts } = useQuery({
-    queryKey: ['phase-costs', projectId, phaseId],
-    queryFn: () => ProjectDataCalculations.calculatePhaseCosts(projectId!, phaseId!),
-    enabled: !!projectId && !!phaseId,
-  });
-
   const {
-    latestApprovedInspection,
     workflowMetrics,
     refetch: refetchWorkflow,
+    scheduleInspection,
   } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
 
   const refreshAll = () => {
     try { refetchWorkflow?.(); } catch {}
     if (phaseId) {
       queryClient.invalidateQueries({ queryKey: ['phase-dto', phaseId] });
-      queryClient.invalidateQueries({ queryKey: ['workflow-inspections', phaseId] });
-      queryClient.invalidateQueries({ queryKey: ['workflow-payments', phaseId] });
     }
   };
 
-  // Initialize edit form
   useEffect(() => {
     if (phase) {
       setEditForm({
@@ -128,10 +107,20 @@ const PhaseDetailsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  // Calculer progression projet (simplifié)
-  const projectProgress = useMemo(() => {
-    return phase?.progress || 0;
-  }, [phase]);
+  const handleScheduleInspection = async () => {
+    try {
+      await scheduleInspection({
+        date: new Date().toISOString(),
+        inspector: 'system',
+        comments: 'Inspection programmée',
+      });
+      refreshAll();
+    } catch (err) {
+      console.error('Erreur', err);
+    }
+  };
+
+  const projectProgress = useMemo(() => phase?.progress || 0, [phase]);
 
   if (isLoading) {
     return (
@@ -146,13 +135,10 @@ const PhaseDetailsPage: React.FC = () => {
       <div className="container mt-20 mx-auto py-8">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Impossible de charger les détails de la phase.
-          </AlertDescription>
+          <AlertDescription>Impossible de charger les détails.</AlertDescription>
         </Alert>
         <Button onClick={() => navigate(`/projects/${projectId}`)} className="mt-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          <ArrowLeft className="h-4 w-4 mr-2" /> Retour
         </Button>
       </div>
     );
@@ -160,17 +146,12 @@ const PhaseDetailsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto mt-14 py-6 space-y-6">
-      {/* Header simplifié */}
+      {/* Header */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/projects/${projectId}`)}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+            <Button variant="outline" size="sm" onClick={() => navigate(`/projects/${projectId}`)}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Retour
             </Button>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -183,12 +164,10 @@ const PhaseDetailsPage: React.FC = () => {
             </div>
           </div>
           <Button onClick={() => setIsEditing(true)} size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Modifier
+            <Edit className="h-4 w-4 mr-2" /> Modifier
           </Button>
         </div>
 
-        {/* Status Bar */}
         <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
           <Badge className={cn(getStatusColor(phase.status), "flex items-center gap-1")}>
             {getStatusIcon(phase.status)}
@@ -209,141 +188,58 @@ const PhaseDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2 Tabs seulement */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="workflow" className="flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Workflow
+            <Target className="h-4 w-4" /> Workflow
           </TabsTrigger>
           <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            Vue d'ensemble
+            <Eye className="h-4 w-4" /> Vue d'ensemble
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab Workflow - Principal */}
         <TabsContent value="workflow" className="space-y-6">
-          {/* Cascade View */}
-          <CascadeWorkflowView
-            phaseProgress={phase.progress || 0}
-            stepProgress={workflowMetrics.stepProgress}
+          <UnifiedCascadeWorkflow
+            phase={phase}
             projectProgress={projectProgress}
-            lastApprovedProgress={workflowMetrics.lastApprovedProgress}
-            totalPaid={workflowMetrics.totalPaid}
-            contractAmount={phase.estimated_cost || 0}
-            pendingInspections={workflowMetrics.pendingInspections}
-            lowStockMaterials={0}
-            onScheduleInspection={() => {}}
+            workflowMetrics={workflowMetrics}
+            onScheduleInspection={handleScheduleInspection}
             onRequestPayment={() => {}}
             formatCurrency={formatCurrency}
           />
 
-          {/* Workflow Container */}
-          {projectId && phaseId && (
-            <PhaseWorkflowContainer
-              rawPhaseData={phase}
-              rawSteps={phase?.steps ?? undefined}
-              rawMilestones={milestones}
-              projectId={projectId}
-              phaseId={phaseId}
-              onActionComplete={refreshAll}
-              metrics={metrics}
-              workflowMetrics={workflowMetrics}
-              phaseCosts={phaseCosts}
-              latestApprovedInspection={latestApprovedInspection}
-            />
-          )}
-
-          {/* Inspections et Paiements inline */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Inspections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
+              <CardHeader className="py-3"><CardTitle className="text-base">Inspections</CardTitle></CardHeader>
+              <CardContent><PhaseInspections phaseId={phaseId!} projectId={projectId!} /></CardContent>
             </Card>
             <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Paiements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhasePayments phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
+              <CardHeader className="py-3"><CardTitle className="text-base">Paiements</CardTitle></CardHeader>
+              <CardContent><PhasePayments phaseId={phaseId!} projectId={projectId!} /></CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* Tab Vue d'ensemble */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Métriques clés */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-primary">{phase.progress}%</div>
-                <p className="text-sm text-muted-foreground">Progression</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</div>
-                <p className="text-sm text-muted-foreground">Étapes</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="text-2xl font-bold text-green-600">{formatCurrency(workflowMetrics.totalPaid)}</div>
-                <p className="text-sm text-muted-foreground">Payé</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</div>
-                <p className="text-sm text-muted-foreground">Jours restants</p>
-              </CardContent>
-            </Card>
+            <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-primary">{phase.progress}%</div><p className="text-sm text-muted-foreground">Progression</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</div><p className="text-sm text-muted-foreground">Étapes</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-green-600">{formatCurrency(workflowMetrics.totalPaid)}</div><p className="text-sm text-muted-foreground">Payé</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{calculateRemainingDays(phase.end_date)}</div><p className="text-sm text-muted-foreground">Jours restants</p></CardContent></Card>
           </div>
 
-          {/* Description */}
           <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Description
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {phase.description || "Aucune description."}
-              </p>
-            </CardContent>
+            <CardHeader className="py-3"><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" />Description</CardTitle></CardHeader>
+            <CardContent><p className="text-muted-foreground whitespace-pre-line">{phase.description || "Aucune description."}</p></CardContent>
           </Card>
 
-          {/* Matériaux et Documents */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Matériaux</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
-              </CardContent>
-            </Card>
+            <Card><CardHeader className="py-3"><CardTitle className="text-base">Matériaux</CardTitle></CardHeader><CardContent><PhaseMaterials phaseId={phaseId!} projectId={projectId!} /></CardContent></Card>
+            <Card><CardHeader className="py-3"><CardTitle className="text-base">Documents</CardTitle></CardHeader><CardContent><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></CardContent></Card>
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Edit Dialog */}
       <PhaseEditDialog
         isOpen={isEditing}
         onOpenChange={setIsEditing}
