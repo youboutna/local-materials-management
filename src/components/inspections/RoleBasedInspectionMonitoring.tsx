@@ -4,11 +4,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   Bell, 
@@ -26,7 +30,8 @@ import {
   Mail,
   FileText,
   ExternalLink,
-  Search
+  Search,
+  Pencil
 } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { NotificationService } from '@/services/NotificationService';
@@ -61,12 +66,26 @@ interface Project {
 }
 
 const RoleBasedInspectionMonitoring: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const { toast } = useToast();
+  
+  // Edit dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingInspection, setEditingInspection] = useState<Inspection | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    inspector: '',
+    date: '',
+    status: '',
+    progress_at_inspection: 0,
+    comments: ''
+  });
+  const [saving, setSaving] = useState(false);
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -117,6 +136,69 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle edit from URL param
+  useEffect(() => {
+    const inspectionId = searchParams.get('id');
+    if (inspectionId && inspections.length > 0) {
+      const inspection = inspections.find(i => i.id === inspectionId);
+      if (inspection) {
+        openEditDialog(inspection);
+        // Clear the URL param after opening
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, inspections]);
+
+  const openEditDialog = (inspection: Inspection) => {
+    setEditingInspection(inspection);
+    setEditFormData({
+      inspector: inspection.inspector,
+      date: new Date(inspection.date).toISOString().split('T')[0],
+      status: inspection.status,
+      progress_at_inspection: inspection.progress_at_inspection || 0,
+      comments: inspection.comments || ''
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingInspection) return;
+    
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from('inspections')
+        .update({
+          inspector: editFormData.inspector,
+          date: editFormData.date,
+          status: editFormData.status,
+          progress_at_inspection: editFormData.progress_at_inspection,
+          comments: editFormData.comments
+        })
+        .eq('id', editingInspection.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Inspection mise à jour avec succès"
+      });
+      
+      setIsEditDialogOpen(false);
+      setEditingInspection(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating inspection:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour l'inspection",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -711,6 +793,14 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
                                <Button 
                                  size="sm" 
                                  variant="ghost" 
+                                 title="Modifier"
+                                 onClick={() => openEditDialog(inspection)}
+                               >
+                                 <Pencil className="h-4 w-4" />
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
                                  title="Voir les détails"
                                  onClick={() => window.location.href = `/projects/${inspection.project_id}?tab=inspections&inspection=${inspection.id}`}
                                >
@@ -1177,6 +1267,125 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Inspection Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Modifier l'inspection</span>
+              {editingInspection && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/inspections/${editingInspection.id}`}>
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Consulter
+                  </Link>
+                </Button>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-inspector">Inspecteur *</Label>
+              <Input
+                id="edit-inspector"
+                value={editFormData.inspector}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, inspector: e.target.value }))}
+                placeholder="Nom de l'inspecteur"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-date">Date *</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={editFormData.date}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-status">Statut</Label>
+                <Select 
+                  value={editFormData.status} 
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Programmée
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="in_progress">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        En cours
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Terminée
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="approved">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Approuvée
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="failed">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        Échouée
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-progress">Progression (%)</Label>
+              <Input
+                id="edit-progress"
+                type="number"
+                min="0"
+                max="100"
+                value={editFormData.progress_at_inspection}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, progress_at_inspection: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-comments">Commentaires</Label>
+              <Textarea
+                id="edit-comments"
+                value={editFormData.comments}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, comments: e.target.value }))}
+                rows={3}
+                placeholder="Observations, remarques..."
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={saving}>
+                Annuler
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={saving || !editFormData.inspector || !editFormData.date}>
+                {saving ? 'Enregistrement...' : 'Enregistrer'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

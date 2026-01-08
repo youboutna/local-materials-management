@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Clock, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, AlertTriangle, XCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InspectionService } from '@/services/InspectionService';
 import { InspectionDTO, UpdateInspectionDTO } from '@/types/inspection.dto';
@@ -153,8 +153,12 @@ const InspectionEdit = () => {
       </Button>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t('inspection.edit.title')}</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/inspections/${id}`)}>
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Consulter
+          </Button>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
