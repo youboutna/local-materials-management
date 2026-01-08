@@ -385,6 +385,14 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                     <Button
                       size="sm"
                       variant="ghost"
+                      onClick={() => navigate(`/payments/${payment.id}`)}
+                      title="Consulter"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="text-destructive hover:text-destructive"
                       onClick={() => deletePaymentMutation.mutate(payment.id)}
                       title="Supprimer"

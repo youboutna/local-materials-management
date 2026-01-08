@@ -21,12 +21,15 @@ import {
     CreditCard,
     Edit,
     Eye,
+    ExternalLink,
     FileText,
+    Pencil,
     Plus,
     Trash2,
     Upload
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 interface Payment {
   id: string;
@@ -83,6 +86,7 @@ interface PaymentFormData {
 }
 
 const PaymentCrud: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -163,6 +167,19 @@ const PaymentCrud: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Handle edit from URL param
+  React.useEffect(() => {
+    const paymentId = searchParams.get('id');
+    if (paymentId && payments.length > 0) {
+      const payment = payments.find(p => p.id === paymentId);
+      if (payment) {
+        openEditForm(payment);
+        // Clear the URL param after opening
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, payments]);
 
   const handlePaymentAction = async (paymentId: string, actionType: string) => {
     try {
@@ -930,8 +947,16 @@ const PaymentCrud: React.FC = () => {
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {isViewMode ? 'Détails du Paiement' : isEditing ? 'Modifier le Paiement' : 'Nouveau Paiement'}
+              <DialogTitle className="flex items-center justify-between">
+                <span>{isViewMode ? 'Détails du Paiement' : isEditing ? 'Modifier le Paiement' : 'Nouveau Paiement'}</span>
+                {selectedPayment && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/payments/${selectedPayment.id}`}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Consulter
+                    </Link>
+                  </Button>
+                )}
               </DialogTitle>
             </DialogHeader>
             
