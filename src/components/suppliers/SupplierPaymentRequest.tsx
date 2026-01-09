@@ -45,16 +45,30 @@ interface Project {
   status: string;
 }
 
-interface SupplierPaymentRequestProps {
-  supplierId: string;
+interface PrefillData {
+  projectId?: string;
+  amount?: number;
+  description?: string;
+  initiationId?: string;
 }
 
-const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplierId }) => {
+interface SupplierPaymentRequestProps {
+  supplierId: string;
+  prefillData?: PrefillData | null;
+  onPrefillUsed?: () => void;
+}
+
+const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ 
+  supplierId, 
+  prefillData,
+  onPrefillUsed 
+}) => {
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
+  const [initiationId, setInitiationId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Form fields
@@ -64,6 +78,18 @@ const SupplierPaymentRequest: React.FC<SupplierPaymentRequestProps> = ({ supplie
   const [description, setDescription] = useState('');
   const [paymentReason, setPaymentReason] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Handle prefill data from payment initiation
+  useEffect(() => {
+    if (prefillData) {
+      if (prefillData.projectId) setProjectId(prefillData.projectId);
+      if (prefillData.amount) setAmount(prefillData.amount.toString());
+      if (prefillData.description) setDescription(prefillData.description);
+      if (prefillData.initiationId) setInitiationId(prefillData.initiationId);
+      setIsDialogOpen(true);
+      onPrefillUsed?.();
+    }
+  }, [prefillData, onPrefillUsed]);
 
   useEffect(() => {
     fetchPaymentRequests();
