@@ -49,6 +49,18 @@ export class PaymentInitiationService {
       .single();
 
     // Store as a special notification with all data in metadata
+    // Serialize approval_chain to be JSON-compatible
+    const serializedApprovalChain = approvalChain.map(step => ({
+      level: step.level,
+      role: step.role,
+      approver_id: step.approver_id || null,
+      approver_name: step.approver_name || null,
+      status: step.status,
+      action_at: step.action_at || null,
+      comments: step.comments || null,
+      deadline: step.deadline
+    }));
+
     const notificationData = {
       recipient_id: supplier?.user_id || initiatorId,
       title: 'Initiation de paiement',
@@ -57,25 +69,25 @@ export class PaymentInitiationService {
       related_id: dto.project_id,
       metadata: {
         project_id: dto.project_id,
-        phase_id: dto.phase_id,
-        inspection_id: dto.inspection_id,
+        phase_id: dto.phase_id || null,
+        inspection_id: dto.inspection_id || null,
         initiated_by: initiatorId,
         initiator_role: dto.initiator_role,
         supplier_id: dto.supplier_id,
-        supplier_name: supplier?.name,
+        supplier_name: supplier?.name || null,
         estimated_amount: dto.estimated_amount,
         justification: dto.justification,
         attached_documents: dto.attached_documents || [],
         status: initialStatus,
-        approval_chain: approvalChain,
+        approval_chain: serializedApprovalChain,
         current_approval_level: 0,
         supplier_deadline: supplierDeadline
-      }
+      } as Record<string, unknown>
     };
 
     const { data, error } = await supabase
       .from('notifications')
-      .insert([notificationData])
+      .insert([notificationData as any])
       .select()
       .single();
 

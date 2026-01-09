@@ -60,6 +60,7 @@ import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentReques
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
+import SupplierPaymentInitiations from "@/components/supplier/SupplierPaymentInitiations";
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -664,8 +665,9 @@ const UnifiedSupplierPortal = () => {
 
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8 overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-9 overflow-x-auto">
               <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
+              <TabsTrigger value="initiations">Demandes Initiées</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Télécharger</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
@@ -674,6 +676,19 @@ const UnifiedSupplierPortal = () => {
               <TabsTrigger value="inspections">Inspections</TabsTrigger>
               <TabsTrigger value="invoices">Factures</TabsTrigger>
             </TabsList>
+
+            {/* Payment Initiations Tab - NEW */}
+            <TabsContent value="initiations">
+              {supplierProfile?.id ? (
+                <SupplierPaymentInitiations supplierId={supplierProfile.id} />
+              ) : (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Profil fournisseur non trouvé
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
             {/* Documents Tab */}
             <TabsContent value="documents">
