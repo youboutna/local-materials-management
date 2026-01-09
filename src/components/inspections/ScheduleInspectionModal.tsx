@@ -119,6 +119,16 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
     }
   }, [inspectionType]);
 
+  // Auto-select default inspector when inspectors are loaded
+  useEffect(() => {
+    if (inspectors.length > 0 && !selectedInspectorId) {
+      const defaultInspector = inspectors.find(i => i.isDefault);
+      if (defaultInspector) {
+        setSelectedInspectorId(defaultInspector.id);
+      }
+    }
+  }, [inspectors, selectedInspectorId]);
+
   // Check availability when inspector or date changes
   useEffect(() => {
     const checkAvailability = async () => {

@@ -36,10 +36,11 @@ export interface AssignableInspector {
   name: string;
   position?: string;
   department?: string;
-  type: 'employee' | 'supplier';
+  type: 'employee' | 'stakeholder';
   isEngineeringConsultant: boolean;
   isTechnicalManager: boolean;
   isAvailable?: boolean;
+  isDefault?: boolean;
 }
 
 export class InspectionPermissionService {
@@ -116,6 +117,7 @@ export class InspectionPermissionService {
 
   /**
    * Récupère les inspecteurs disponibles selon le contexte
+   * Retourne uniquement l'équipe interne (employés) et les stakeholders du projet (pas tous les suppliers)
    */
   static async getAssignableInspectors(
     context: PermissionContext
@@ -124,24 +126,31 @@ export class InspectionPermissionService {
       const { userRole, projectId } = context;
       const allInspectors: AssignableInspector[] = [];
 
-      // Fetch all employees
+      // Fetch all active employees (équipe interne)
       const { data: employees } = await supabase
         .from('employees')
         .select('id, full_name, position, department')
         .eq('is_active', true)
         .order('full_name');
 
-      // Fetch project stakeholders (suppliers)
+      // Fetch project stakeholders only (pas tous les suppliers)
+      // Stakeholders sont les personnes assignées spécifiquement au projet
       const { data: stakeholders } = await supabase
         .from('project_stakeholders')
         .select(`
+          id,
           supplier_id,
-          role,
+          employee_id,
+          stakeholder_type,
+          role_description,
           suppliers (id, name, contact_person, category)
         `)
         .eq('project_id', projectId);
 
-      // Add employees
+      // Track if we found default inspector
+      let defaultInspectorId: string | null = null;
+
+      // Add employees (équipe interne)
       for (const emp of employees || []) {
         const isEngineeringConsultant = this.isEngineeringConsultantPosition(emp.position);
         const isTechnicalManager = this.isTechnicalManagerPosition(emp.position);
@@ -152,6 +161,13 @@ export class InspectionPermissionService {
           if (!isEngineeringConsultant && !isTechnicalManager && !isInspectorRole) {
             continue;
           }
+        }
+
+        // Determine default inspector: priorité à l'ingénieur conseil
+        if (isEngineeringConsultant && !defaultInspectorId) {
+          defaultInspectorId = emp.id;
+        } else if (isTechnicalManager && !defaultInspectorId) {
+          defaultInspectorId = emp.id;
         }
 
         allInspectors.push({
@@ -165,26 +181,57 @@ export class InspectionPermissionService {
         });
       }
 
-      // Add supplier contacts for project managers
-      if (userRole === 'project_manager' || userRole === 'admin') {
-        for (const stakeholder of stakeholders || []) {
-          const supplier = (stakeholder as any).suppliers;
-          if (supplier) {
-            allInspectors.push({
-              id: supplier.id,
-              name: supplier.contact_person || supplier.name,
-              position: `Responsable - ${supplier.name}`,
-              department: supplier.category,
-              type: 'supplier',
-              isEngineeringConsultant: false,
-              isTechnicalManager: false,
-            });
+      // Add stakeholders du projet (personnes clés assignées, pas tous les suppliers)
+      // Filtrer par rôles pertinents pour inspection
+      const inspectionRoles = ['engineering_consultant', 'technical_manager', 'supervisor', 'inspector', 'quality_control'];
+      
+      for (const stakeholder of stakeholders || []) {
+        const supplier = (stakeholder as any).suppliers;
+        const roleDescription = stakeholder.role_description?.toLowerCase() || '';
+        const stakeholderType = stakeholder.stakeholder_type?.toLowerCase() || '';
+        
+        // Inclure uniquement les stakeholders avec des rôles pertinents pour l'inspection
+        const isRelevantRole = inspectionRoles.some(r => roleDescription.includes(r) || stakeholderType.includes(r)) ||
+                               roleDescription.includes('ingénieur') ||
+                               roleDescription.includes('responsable') ||
+                               roleDescription.includes('contrôle') ||
+                               roleDescription.includes('bureau') ||
+                               stakeholderType.includes('engineering') ||
+                               stakeholderType.includes('technical');
+        
+        if (supplier && isRelevantRole) {
+          const isEngineeringConsultant = this.isEngineeringConsultantRole(stakeholder.role_description || stakeholder.stakeholder_type);
+          const isTechnicalManager = this.isTechnicalManagerRole(stakeholder.role_description || stakeholder.stakeholder_type);
+          
+          // Déterminer l'inspecteur par défaut parmi les stakeholders
+          if (isEngineeringConsultant && !defaultInspectorId) {
+            defaultInspectorId = supplier.id;
+          } else if (isTechnicalManager && !defaultInspectorId) {
+            defaultInspectorId = supplier.id;
           }
+
+          allInspectors.push({
+            id: supplier.id,
+            name: supplier.contact_person || supplier.name,
+            position: stakeholder.role_description || `Stakeholder - ${supplier.name}`,
+            department: supplier.category,
+            type: 'stakeholder',
+            isEngineeringConsultant,
+            isTechnicalManager,
+          });
         }
       }
 
-      // Sort: Engineering consultants first, then technical managers, then others
-      return allInspectors.sort((a, b) => {
+      // Mark default inspector
+      const sortedInspectors = allInspectors.map(inspector => ({
+        ...inspector,
+        isDefault: inspector.id === defaultInspectorId,
+      }));
+
+      // Sort: Default first, then engineering consultants, then technical managers, then others
+      return sortedInspectors.sort((a, b) => {
+        if (a.isDefault && !b.isDefault) return -1;
+        if (!a.isDefault && b.isDefault) return 1;
         if (a.isEngineeringConsultant && !b.isEngineeringConsultant) return -1;
         if (!a.isEngineeringConsultant && b.isEngineeringConsultant) return 1;
         if (a.isTechnicalManager && !b.isTechnicalManager) return -1;
@@ -195,6 +242,29 @@ export class InspectionPermissionService {
       console.error('[InspectionPermissionService] Error getting assignable inspectors:', error);
       return [];
     }
+  }
+
+  /**
+   * Vérifie si un rôle de stakeholder est ingénieur conseil
+   */
+  private static isEngineeringConsultantRole(role?: string | null): boolean {
+    if (!role) return false;
+    const lower = role.toLowerCase();
+    return lower.includes('engineering_consultant') || 
+           lower.includes('ingénieur conseil') ||
+           lower.includes('bureau d\'études') ||
+           lower.includes('consultant');
+  }
+
+  /**
+   * Vérifie si un rôle de stakeholder est responsable technique
+   */
+  private static isTechnicalManagerRole(role?: string | null): boolean {
+    if (!role) return false;
+    const lower = role.toLowerCase();
+    return lower.includes('technical_manager') || 
+           lower.includes('responsable technique') ||
+           lower.includes('chef technique');
   }
 
   /**
