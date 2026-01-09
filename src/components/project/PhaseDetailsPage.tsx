@@ -27,6 +27,8 @@ import {
   Target,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Banknote } from "lucide-react";
+import InitiatePaymentModal from "@/components/payment/InitiatePaymentModal";
 
 // Hooks
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
@@ -76,6 +78,7 @@ const PhaseDetailsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const { phase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
 
@@ -83,6 +86,7 @@ const PhaseDetailsPage: React.FC = () => {
     workflowMetrics,
     inspections,
     payments,
+    latestApprovedInspection,
     refetch: refetchWorkflow,
     scheduleInspection,
   } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
@@ -183,6 +187,12 @@ const PhaseDetailsPage: React.FC = () => {
           <Button onClick={() => setIsEditing(true)} size="sm">
             <Edit className="h-4 w-4 mr-2" /> Modifier
           </Button>
+          {/* Bouton Initier Paiement - visible si inspection validée ou progression >= 100% */}
+          {(phase.progress >= 100 || latestApprovedInspection) && (
+            <Button onClick={() => setShowPaymentModal(true)} size="sm" variant="default" className="bg-green-600 hover:bg-green-700">
+              <Banknote className="h-4 w-4 mr-2" /> Initier Paiement
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 p-4 bg-muted/30 rounded-lg border">
@@ -295,6 +305,21 @@ const PhaseDetailsPage: React.FC = () => {
         phaseId={phaseId}
         phaseName={phase?.phase_name}
         onSuccess={handleInspectionScheduled}
+      />
+
+      {/* Modal d'initiation de paiement */}
+      <InitiatePaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        projectId={projectId || ''}
+        phaseId={phaseId}
+        inspectionId={latestApprovedInspection?.id}
+        suggestedAmount={phase.estimated_cost || 0}
+        initiatorRole="project_manager"
+        onSuccess={() => {
+          refreshAll();
+          setShowPaymentModal(false);
+        }}
       />
     </div>
   );
