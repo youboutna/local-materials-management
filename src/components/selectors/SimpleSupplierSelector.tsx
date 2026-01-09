@@ -87,7 +87,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
         </div>
       ) : (
         <Select 
-          value={value || ''} 
+          value={value || undefined} 
           onValueChange={onChange}
           disabled={disabled}
         >
@@ -106,8 +106,8 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
               )}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent>
-            {suppliers?.map((supplier) => (
+          <SelectContent className="bg-background z-50">
+            {suppliers?.filter(s => s.id && s.id.trim() !== '').map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
@@ -134,6 +134,11 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                 </div>
               </SelectItem>
             ))}
+            {(!suppliers || suppliers.filter(s => s.id && s.id.trim() !== '').length === 0) && (
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                Aucun fournisseur trouvé
+              </div>
+            )}
           </SelectContent>
         </Select>
       )}
