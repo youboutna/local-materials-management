@@ -60,7 +60,7 @@ import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentReques
 import EnhancedSupplierTenderPortal from "@/components/suppliers/EnhancedSupplierTenderPortal";
 import { SupplierInspectionsList } from "@/components/supplier/SupplierInspectionsList";
 import { useSupplierInspections } from "@/hooks/useSupplierInspections";
-import SupplierPaymentInitiations from "@/components/supplier/SupplierPaymentInitiations";
+// Payment initiation data is now handled through notifications tab
 
 const UnifiedSupplierPortal = () => {
   const { t } = useLanguage();
@@ -80,6 +80,13 @@ const UnifiedSupplierPortal = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("documents");
+  const [prefillPaymentData, setPrefillPaymentData] = useState<{
+    projectId?: string;
+    amount?: number;
+    description?: string;
+    initiationId?: string;
+  } | null>(null);
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
@@ -513,6 +520,23 @@ const UnifiedSupplierPortal = () => {
     (p) => p.status === "pending"
   ).length;
   const unreadNotifications = notifications.filter((n) => !n.used_at).length;
+  
+  // Count payment initiation notifications
+  const paymentInitiationsCount = notifications.filter(
+    (n) => n.notification_type === "payment_initiation" && !n.used_at
+  ).length;
+
+  // Handle clicking on a payment initiation notification
+  const handlePaymentInitiationClick = (notification: SupplierNotification) => {
+    const metadata = notification.metadata as any;
+    setPrefillPaymentData({
+      projectId: metadata?.project_id,
+      amount: metadata?.estimated_amount,
+      description: metadata?.justification,
+      initiationId: notification.id,
+    });
+    setActiveTab("payments");
+  };
 
   if (loading) {
     return (
@@ -664,31 +688,25 @@ const UnifiedSupplierPortal = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="documents" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-9 overflow-x-auto">
+          <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-8 overflow-x-auto">
               <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
-              <TabsTrigger value="initiations">Demandes Initiées</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Télécharger</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="notifications">
+                Notifications
+                {paymentInitiationsCount > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 text-xs">
+                    {paymentInitiationsCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="tasks">Tâches</TabsTrigger>
               <TabsTrigger value="inspections">Inspections</TabsTrigger>
               <TabsTrigger value="invoices">Factures</TabsTrigger>
             </TabsList>
 
-            {/* Payment Initiations Tab - NEW */}
-            <TabsContent value="initiations">
-              {supplierProfile?.id ? (
-                <SupplierPaymentInitiations supplierId={supplierProfile.id} />
-              ) : (
-                <Card>
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    Profil fournisseur non trouvé
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
 
             {/* Documents Tab */}
             <TabsContent value="documents">
@@ -927,7 +945,11 @@ const UnifiedSupplierPortal = () => {
             <TabsContent value="payments">
               <div className="space-y-6">
                 {supplierProfile && (
-                  <SupplierPaymentRequest supplierId={supplierProfile.id} />
+                  <SupplierPaymentRequest 
+                    supplierId={supplierProfile.id} 
+                    prefillData={prefillPaymentData}
+                    onPrefillUsed={() => setPrefillPaymentData(null)}
+                  />
                 )}
               </div>
             </TabsContent>
@@ -943,8 +965,69 @@ const UnifiedSupplierPortal = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
+                    {/* Payment Initiation Notifications - Highlighted */}
+                    {notifications
+                      .filter((n) => n.notification_type === "payment_initiation")
+                      .map((notification) => {
+                        const metadata = notification.metadata as any;
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`p-4 rounded-lg border-2 ${
+                              notification.used_at
+                                ? "bg-muted/50 border-muted"
+                                : "bg-green-50 border-green-300"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-5 w-5 text-green-600" />
+                                  <h3 className="font-semibold text-green-800">
+                                    Demande de Paiement Initiée
+                                  </h3>
+                                  {!notification.used_at && (
+                                    <Badge className="bg-green-600">Action requise</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-2">
+                                  {metadata?.justification || "Demande de paiement en attente de complétion"}
+                                </p>
+                                <div className="flex gap-4 mt-2 text-sm">
+                                  <span className="font-medium">
+                                    Montant estimé: {(metadata?.estimated_amount || 0).toLocaleString()} MRU
+                                  </span>
+                                  {metadata?.deadline && (
+                                    <span className="text-orange-600">
+                                      <Clock className="inline h-3 w-3 mr-1" />
+                                      Délai: {new Date(metadata.deadline).toLocaleDateString("fr-FR")}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Reçu le {notification.sent_at
+                                    ? new Date(notification.sent_at).toLocaleDateString("fr-FR")
+                                    : "Date inconnue"}
+                                </p>
+                              </div>
+                              {!notification.used_at && (
+                                <Button 
+                                  onClick={() => handlePaymentInitiationClick(notification)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Compléter la demande
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                    {/* Other Notifications */}
+                    {notifications
+                      .filter((n) => n.notification_type !== "payment_initiation")
+                      .map((notification) => (
                         <div
                           key={notification.id}
                           className={`p-4 rounded-lg border ${
@@ -983,8 +1066,9 @@ const UnifiedSupplierPortal = () => {
                             )}
                           </div>
                         </div>
-                      ))
-                    ) : (
+                      ))}
+
+                    {notifications.length === 0 && (
                       <p className="text-muted-foreground text-center py-8">
                         Aucune notification
                       </p>
