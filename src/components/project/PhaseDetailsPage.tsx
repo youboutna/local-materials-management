@@ -31,6 +31,7 @@ import { useQueryClient } from "@tanstack/react-query";
 // Hooks
 import { usePhaseDetails } from "@/hooks/usePhaseDetails";
 import { usePhaseWorkflow } from "@/hooks/usePhaseWorkflow";
+import { useWorkflowOrchestrator } from "@/hooks/useWorkflowOrchestrator";
 
 // Types
 import { PhaseStatus } from "@/types/phase-dto";
@@ -83,6 +84,21 @@ const PhaseDetailsPage: React.FC = () => {
     refetch: refetchWorkflow,
     scheduleInspection,
   } = usePhaseWorkflow(projectId || '', phaseId || '', phase);
+
+  // Workflow orchestrator for automatic verification and payments
+  const { 
+    state: workflowState,
+    updateProgress,
+    triggerPayment,
+    getStatus,
+  } = useWorkflowOrchestrator(projectId);
+
+  // Get workflow status on mount
+  useEffect(() => {
+    if (phaseId) {
+      getStatus(phaseId);
+    }
+  }, [phaseId, getStatus]);
 
   const refreshAll = () => {
     try { refetchWorkflow?.(); } catch {}
@@ -219,8 +235,14 @@ const PhaseDetailsPage: React.FC = () => {
             inspections={inspections}
             payments={payments}
             onScheduleInspection={handleScheduleInspection}
-            onRequestPayment={() => {}}
-            onStepAction={(action, item) => console.log('Step action:', action, item)}
+            onRequestPayment={() => {
+              if (phaseId && workflowState.pendingPayment > 0) {
+                triggerPayment(phaseId, workflowState.pendingPayment);
+              }
+            }}
+            onStepAction={(action, item) => {
+              console.log('Step action:', action, item);
+            }}
             onMilestoneAction={(action, item) => console.log('Milestone action:', action, item)}
             formatCurrency={formatCurrency}
           />
