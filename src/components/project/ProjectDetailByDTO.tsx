@@ -53,6 +53,7 @@ import {
   DialogTitle as DialogTitleUI,
 } from "@/components/ui/dialog";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
+import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { Label } from "../ui/label";
 import {
   Select,
@@ -941,6 +942,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </CardContent>
             </Card>
           </div>
+
+          {/* Checkpoint & Décompte Dashboard */}
+          <ProjectCheckpointsDashboard
+            projectId={projectId!}
+            compact
+            onPhaseClick={(phaseId) => navigate(`/projects/${projectId}/phases/${phaseId}`)}
+          />
 
           {/* Actionable Project Milestones */}
           <ActionableProjectMilestones
