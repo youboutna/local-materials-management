@@ -44,6 +44,7 @@ import PhaseDocuments from "./PhaseDocuments";
 import PhaseMaterials from "./PhaseMaterials";
 import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
+import ScheduleInspectionModal from "@/components/inspections/ScheduleInspectionModal";
 
 const getStatusIcon = (status: PhaseStatus | string) => {
   switch (status) {
@@ -74,6 +75,7 @@ const PhaseDetailsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("workflow");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   const { phase, isLoading, error, metrics, updatePhase, isUpdating } = usePhaseDetails(phaseId);
 
@@ -127,17 +129,12 @@ const PhaseDetailsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleScheduleInspection = async () => {
-    try {
-      await scheduleInspection({
-        date: new Date().toISOString(),
-        inspector: 'system',
-        comments: 'Inspection programmée',
-      });
-      refreshAll();
-    } catch (err) {
-      console.error('Erreur', err);
-    }
+  const handleScheduleInspection = () => {
+    setShowScheduleModal(true);
+  };
+
+  const handleInspectionScheduled = () => {
+    refreshAll();
   };
 
   const projectProgress = useMemo(() => phase?.progress || 0, [phase]);
@@ -288,6 +285,16 @@ const PhaseDetailsPage: React.FC = () => {
         isUpdating={isUpdating}
         phaseName={phase.phase_name}
         completionValidation={{ canComplete: true, pendingCheckpoints: [], completedCheckpoints: [], totalCheckpoints: 0, completedCount: 0, message: '', progressMet: true, currentProgress: 100, requiredProgress: 100, progressMessage: '' }}
+      />
+
+      {/* Modal de programmation d'inspection */}
+      <ScheduleInspectionModal
+        open={showScheduleModal}
+        onOpenChange={setShowScheduleModal}
+        projectId={projectId || ''}
+        phaseId={phaseId}
+        phaseName={phase?.phase_name}
+        onSuccess={handleInspectionScheduled}
       />
     </div>
   );
