@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,16 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InspectionDTO } from '@/types/inspection.dto';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import FieldInspectionExecutor from '@/components/inspections/FieldInspectionExecutor';
+import InspectionPVGenerator from '@/components/inspections/InspectionPVGenerator';
 
 const InspectionDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasAnyRole } = useCurrentUserRoles();
+  const [activeTab, setActiveTab] = useState('details');
 
-  const { data: inspection, isLoading, error } = useQuery({
+  const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant', 'engineering_consultant']);
+  const canExecute = isInspector;
+
+  const { data: inspection, isLoading, error, refetch } = useQuery({
     queryKey: ['inspection', id],
     queryFn: async () => {
       if (!id) throw new Error('ID d\'inspection manquant');
@@ -83,93 +92,164 @@ const InspectionDetail = () => {
     );
   }
 
+  const projectTitle = inspection.projects?.title || 'Projet non spécifié';
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 pt-20">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="mb-6 flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
-            <Button onClick={() => navigate(`/inspections/${id}/edit`)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
+            <div className="flex gap-2">
+              {canExecute && (inspection.status === 'scheduled' || inspection.status === 'in_progress') && (
+                <Button variant="outline" onClick={() => setActiveTab('execution')}>
+                  <Play className="h-4 w-4 mr-2" />
+                  Exécuter
+                </Button>
+              )}
+              <Button onClick={() => navigate(`/inspections/${id}/edit`)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </Button>
+            </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-2xl mb-2">Détail de l'inspection</CardTitle>
-                  <CardDescription>
-                    {inspection.projects?.title || 'Projet non spécifié'}
-                  </CardDescription>
-                </div>
-                {getStatusBadge(inspection.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Date d'inspection
-                  </div>
-                  <p className="text-lg font-medium">
-                    {format(new Date(inspection.date), 'PPP', { locale: fr })}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <User className="h-4 w-4 mr-2" />
-                    Inspecteur
-                  </div>
-                  <p className="text-lg font-medium">{inspection.inspector}</p>
-                </div>
-
-                {inspection.progress_at_inspection !== null && (
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      Progression lors de l'inspection
-                    </div>
-                    <p className="text-lg font-medium">{inspection.progress_at_inspection}%</p>
-                  </div>
-                )}
-              </div>
-
-              {inspection.comments && (
-                <>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Commentaires
-                    </div>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {inspection.comments}
-                    </p>
-                  </div>
-                </>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="details" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Détails
+              </TabsTrigger>
+              {canExecute && (
+                <TabsTrigger value="execution" className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Exécution Terrain
+                </TabsTrigger>
               )}
+              <TabsTrigger value="pv" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Procès-Verbal
+              </TabsTrigger>
+            </TabsList>
 
-              <Separator />
+            <TabsContent value="details">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-2xl mb-2">Détail de l'inspection</CardTitle>
+                      <CardDescription>{projectTitle}</CardDescription>
+                    </div>
+                    {getStatusBadge(inspection.status)}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Date d'inspection
+                      </div>
+                      <p className="text-lg font-medium">
+                        {format(new Date(inspection.date), 'PPP', { locale: fr })}
+                      </p>
+                    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                <div>
-                  <span className="font-medium">Créé le:</span>{' '}
-                  {format(new Date(inspection.created_at), 'PPP à HH:mm', { locale: fr })}
-                </div>
-                <div>
-                  <span className="font-medium">Modifié le:</span>{' '}
-                  {format(new Date(inspection.updated_at), 'PPP à HH:mm', { locale: fr })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <User className="h-4 w-4 mr-2" />
+                        Inspecteur
+                      </div>
+                      <p className="text-lg font-medium">{inspection.inspector}</p>
+                    </div>
+
+                    {inspection.progress_at_inspection !== null && (
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <TrendingUp className="h-4 w-4 mr-2" />
+                          Progression lors de l'inspection
+                        </div>
+                        <p className="text-lg font-medium">{inspection.progress_at_inspection}%</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {inspection.comments && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Commentaires
+                        </div>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {inspection.comments}
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  <Separator />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                    <div>
+                      <span className="font-medium">Créé le:</span>{' '}
+                      {format(new Date(inspection.created_at), 'PPP à HH:mm', { locale: fr })}
+                    </div>
+                    <div>
+                      <span className="font-medium">Modifié le:</span>{' '}
+                      {format(new Date(inspection.updated_at), 'PPP à HH:mm', { locale: fr })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {canExecute && (
+              <TabsContent value="execution">
+                <FieldInspectionExecutor
+                  inspection={{
+                    id: inspection.id,
+                    project_id: inspection.project_id,
+                    phase_id: inspection.phase_id,
+                    date: inspection.date,
+                    inspector: inspection.inspector,
+                    status: inspection.status,
+                    progress_at_inspection: inspection.progress_at_inspection || 0,
+                    comments: inspection.comments,
+                  }}
+                  projectTitle={projectTitle}
+                  onComplete={() => {
+                    refetch();
+                    setActiveTab('pv');
+                  }}
+                  onSave={() => refetch()}
+                />
+              </TabsContent>
+            )}
+
+            <TabsContent value="pv">
+              <InspectionPVGenerator
+                inspection={{
+                  id: inspection.id,
+                  project_id: inspection.project_id,
+                  phase_id: inspection.phase_id,
+                  date: inspection.date,
+                  inspector: inspection.inspector,
+                  status: inspection.status,
+                  progress_at_inspection: inspection.progress_at_inspection || 0,
+                  comments: inspection.comments,
+                }}
+                projectTitle={projectTitle}
+                onGenerated={(pv, url) => {
+                  console.log('PV generated:', pv.pv_number);
+                }}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
