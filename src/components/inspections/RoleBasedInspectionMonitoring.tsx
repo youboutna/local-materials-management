@@ -38,6 +38,8 @@ import { NotificationService } from '@/services/NotificationService';
 import { createInspectionAction } from '@/services/inspectionActionService';
 import AdvancedInspectionScheduler from './AdvancedInspectionScheduler';
 import InspectionExecutionForm from './InspectionExecutionForm';
+import FieldInspectionExecutor from './FieldInspectionExecutor';
+import InspectionPVGenerator from './InspectionPVGenerator';
 import { useToast, toast } from '@/hooks/use-toast';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { usePagination } from '@/hooks/usePagination';
@@ -78,6 +80,10 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
   // Edit dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingInspection, setEditingInspection] = useState<Inspection | null>(null);
+  
+  // Execution state for field inspection
+  const [selectedExecutionInspection, setSelectedExecutionInspection] = useState<Inspection | null>(null);
+  const [executionSubTab, setExecutionSubTab] = useState<'list' | 'field' | 'pv'>('list');
   const [editFormData, setEditFormData] = useState({
     inspector: '',
     date: '',
@@ -883,41 +889,131 @@ const RoleBasedInspectionMonitoring: React.FC = () => {
         {/* Execution Tab - Inspectors only */}
         {isInspector && (
           <TabsContent value="execution" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Réalisation d'Inspections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Alert className="mb-4">
-                  <UserCheck className="h-4 w-4" />
-                  <AlertDescription>
-                    En tant qu'inspecteur, vous pouvez mettre à jour le statut et la progression des inspections.
-                  </AlertDescription>
-                </Alert>
+            <div className="space-y-6">
+              <Alert className="mb-4">
+                <UserCheck className="h-4 w-4" />
+                <AlertDescription>
+                  Sélectionnez une inspection pour réaliser l'exécution terrain, saisir les observations et générer le PV.
+                </AlertDescription>
+              </Alert>
 
-                <div className="space-y-4">
-                  {inspections
-                    .filter(i => i.status === 'scheduled' || i.status === 'in_progress')
-                    .map((inspection) => (
-                    <InspectionExecutionForm
-                      key={inspection.id}
-                      inspection={inspection}
-                      projectTitle={getProjectTitle(inspection.project_id)}
-                      onUpdate={updateInspectionStatus}
-                    />
-                  ))}
-                  {inspections.filter(i => i.status === 'scheduled' || i.status === 'in_progress').length === 0 && (
-                    <div className="text-center py-8">
+              {/* Liste des inspections à réaliser */}
+              {inspections.filter(i => i.status === 'scheduled' || i.status === 'in_progress').length === 0 ? (
+                <Card>
+                  <CardContent className="py-12">
+                    <div className="text-center">
                       <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                       <h3 className="text-lg font-medium mb-2">Aucune inspection à réaliser</h3>
                       <p className="text-muted-foreground">
                         Toutes les inspections programmées ont été traitées
                       </p>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Tabs defaultValue="list" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="list">📋 Liste</TabsTrigger>
+                    <TabsTrigger value="field">🔍 Exécution Terrain</TabsTrigger>
+                    <TabsTrigger value="pv">📄 Génération PV</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="list">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Inspections à Réaliser</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {inspections
+                          .filter(i => i.status === 'scheduled' || i.status === 'in_progress')
+                          .map((inspection) => (
+                            <Card key={inspection.id} className="border-l-4 border-l-primary">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                  <div>
+                                    <h4 className="font-semibold">{getProjectTitle(inspection.project_id)}</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      📅 {new Date(inspection.date).toLocaleDateString('fr-FR')} • 
+                                      👤 {inspection.inspector} • 
+                                      📊 {inspection.progress_at_inspection}%
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {getStatusBadge(inspection.status)}
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => {
+                                        setSelectedExecutionInspection(inspection);
+                                        setExecutionSubTab('field');
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Exécuter
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="field">
+                    {selectedExecutionInspection ? (
+                      <FieldInspectionExecutor
+                        inspection={selectedExecutionInspection}
+                        projectTitle={getProjectTitle(selectedExecutionInspection.project_id)}
+                        onComplete={() => {
+                          fetchData();
+                          setSelectedExecutionInspection(null);
+                        }}
+                        onSave={fetchData}
+                      />
+                    ) : (
+                      <Card>
+                        <CardContent className="py-12">
+                          <div className="text-center">
+                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">Aucune inspection sélectionnée</h3>
+                            <p className="text-muted-foreground">
+                              Sélectionnez une inspection depuis l'onglet "Liste" pour commencer l'exécution terrain
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="pv">
+                    {selectedExecutionInspection ? (
+                      <InspectionPVGenerator
+                        inspection={selectedExecutionInspection}
+                        projectTitle={getProjectTitle(selectedExecutionInspection.project_id)}
+                        onGenerated={(pv, url) => {
+                          toast({
+                            title: "PV généré",
+                            description: `Le PV ${pv.pv_number} a été créé avec succès`,
+                          });
+                        }}
+                      />
+                    ) : (
+                      <Card>
+                        <CardContent className="py-12">
+                          <div className="text-center">
+                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">Aucune inspection sélectionnée</h3>
+                            <p className="text-muted-foreground">
+                              Sélectionnez une inspection depuis l'onglet "Liste" pour générer le procès-verbal
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </div>
           </TabsContent>
         )}
 

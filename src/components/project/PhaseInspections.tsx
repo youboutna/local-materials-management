@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pencil } from 'lucide-react';
+import { Plus, ClipboardCheck, Trash2, Calendar, User, ExternalLink, Upload, Pencil, Play } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { ProjectService } from '@/services/ProjectService';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
@@ -378,6 +378,17 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                     )}
                   </div>
                   <div className="flex gap-1">
+                    {(inspection.status === 'pending' || inspection.status === 'scheduled' || inspection.status === 'in_progress') && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => navigate(`/inspections/${inspection.id}`)}
+                        title="Exécuter l'inspection"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Exécuter
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
