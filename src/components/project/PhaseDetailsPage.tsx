@@ -38,11 +38,11 @@ import { PhaseStatus } from "@/types/phase-dto";
 // Components
 import { PhaseEditDialog, formatCurrency, formatDate, getStatusColor, getStatusLabel } from "./phase";
 import UnifiedCascadeWorkflow from "./workflow/UnifiedCascadeWorkflow";
+import CheckpointVerificationPanel from "./workflow/CheckpointVerificationPanel";
 import PhaseDocuments from "./PhaseDocuments";
 import PhaseMaterials from "./PhaseMaterials";
 import PhaseInspections from "./PhaseInspections";
 import PhasePayments from "./PhasePayments";
-// PhaseMilestonesSection is now integrated in IntegratedWorkflowTimeline
 
 const getStatusIcon = (status: PhaseStatus | string) => {
   switch (status) {
@@ -203,6 +203,13 @@ const PhaseDetailsPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="workflow" className="space-y-6">
+          {/* Panneau de vérification des checkpoints */}
+          <CheckpointVerificationPanel
+            projectId={projectId!}
+            phaseId={phaseId!}
+            compact
+          />
+
           {/* Workflow unifié avec timeline intégrée (étapes + jalons) */}
           <UnifiedCascadeWorkflow
             phase={phase}
