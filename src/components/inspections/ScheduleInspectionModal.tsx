@@ -381,14 +381,14 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
               <div className="space-y-2">
                 <Label>Inspecteur suppléant</Label>
-                <Select value={backupInspectorId} onValueChange={setBackupInspectorId}>
+                <Select value={backupInspectorId || "none"} onValueChange={(v) => setBackupInspectorId(v === "none" ? "" : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Optionnel..." />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Aucun</SelectItem>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="none">Aucun</SelectItem>
                     {inspectors
-                      .filter(i => i.id !== selectedInspectorId)
+                      .filter(i => i.id && i.id.trim() !== '' && i.id !== selectedInspectorId)
                       .map(inspector => (
                         <SelectItem key={inspector.id} value={inspector.id}>
                           {inspector.name}
