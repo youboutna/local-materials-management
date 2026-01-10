@@ -55,6 +55,7 @@ import {
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { Label } from "../ui/label";
+import { ProjectHeader, ProjectHierarchyView, ProjectMatrixView } from "./hierarchy";
 import {
   Select,
   SelectItem,
@@ -687,160 +688,53 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       });
     }
   };
+  // Calculate phases stats for header
+  const phasesStats = useMemo(() => ({
+    total: computedPhases.length || project.phasesCount || 0,
+    completed: computedPhases.filter((p: any) => p.status === "completed").length || 0,
+    inProgress: computedPhases.filter((p: any) => p.status === "in_progress").length || 0,
+  }), [computedPhases, project.phasesCount]);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/projects")}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour aux projets
+      {/* New Hierarchical Header with KPIs */}
+      <ProjectHeader
+        project={{
+          id: project.id,
+          title: project.title || "Projet sans titre",
+          description: project.description,
+          status: project.status || "en cours",
+          progress: calculatedProgress,
+          budget: project.budget || 0,
+          currency: "MRU",
+          location: project.location,
+          startDate: project.startDate,
+          endDate: project.endDate,
+          teamSize: project.teamSize || resources.length,
+        }}
+        phasesStats={phasesStats}
+        onEdit={onEdit}
+        onDelete={() => handleDelete(project.id)}
+      />
+
+      {/* Report Actions */}
+      <div className="flex flex-wrap gap-2">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <FileDown className="h-4 w-4" />
+              Rapport compact
             </Button>
-          </div>
-          <h1 className="text-3xl font-bold">
-            {project?.title || "Projet sans titre"}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {project?.description || "Aucune description"}
-          </p>
-          <div className="flex items-center gap-4 mt-4">
-            <Badge
-              variant={project?.status === "terminé" ? "default" : "secondary"}
-              className={getStatusColor(project?.status || "en cours")}
-            >
-              {getStatusIcon(project?.status || "en cours")}
-              {project?.status || "En cours"}
-            </Badge>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span className="text-sm">
-                {project?.location || "Localisation non définie"}
-              </span>
+          </DialogTrigger>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
+            <div className="overflow-y-auto pr-1 max-h-[85vh]">
+              {projectDataForReport && (
+                <CompactProjectReportGenerator project={projectDataForReport} />
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="text-sm">{project?.teamSize || 0} membres</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileDown className="h-4 w-4" />
-                Rapport compact
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
-              <div className="overflow-y-auto pr-1 max-h-[85vh]">
-                {projectDataForReport && (
-                  <CompactProjectReportGenerator
-                    project={projectDataForReport}
-                  />
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-          <ReportManager data={{ project }} reportType="project" />
-          {onEdit && (
-            <Button onClick={onEdit} variant="outline">
-              Modifier
-            </Button>
-          )}
-          <Button
-            variant="destructive"
-            onClick={() => handleDelete(project.id)}
-          >
-            Supprimer
-          </Button>
-          {onClose && (
-            <Button onClick={onClose} variant="ghost">
-              Fermer
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Progression
-                </p>
-                <p className="text-2xl font-bold">{calculatedProgress}%</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Calculée: Phases + Tâches + Inspections
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-primary" />
-            </div>
-            <Progress value={calculatedProgress} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Budget
-                </p>
-                <p className="text-2xl font-bold">
-                  {(project.budget || 0).toLocaleString()} MRU
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Budget alloué</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Phases
-                </p>
-                <p className="text-2xl font-bold">
-                  {computedPhases.length || project.phasesCount || 0}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-blue-600" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {computedPhases.filter((p: any) => p.status === "completed")
-                .length || 0}{" "}
-              terminées
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Équipe
-                </p>
-                <p className="text-2xl font-bold">{resources.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-orange-600" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {resources.filter((r) => r.type === "human").length} membres
-            </p>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
+        <ReportManager data={{ project }} reportType="project" />
       </div>
 
       {/* Main Content Tabs */}
