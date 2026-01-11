@@ -625,9 +625,44 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   };
 
+  // Calculate phases stats for header - MUST be before any early returns
+  const phasesStats = useMemo(() => ({
+    total: computedPhases.length || project?.phasesCount || 0,
+    completed: computedPhases.filter((p: any) => p.status === "completed").length || 0,
+    inProgress: computedPhases.filter((p: any) => p.status === "in_progress").length || 0,
+  }), [computedPhases, project?.phasesCount]);
+
+  const handleDelete = async (projectIdToDelete: string) => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir supprimer cette projet  ? Cette action est irréversible.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      if (projectIdToDelete) {
+        await projectService.deleteProject(projectIdToDelete);
+        navigate("/projects");
+      }
+
+      toast({
+        title: "Succès",
+        description: "Le projet est supprimé avec succès",
+      });
+    } catch (error) {
+      console.error("Error deleting projects:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression de projet",
+      });
+    }
+  };
+
   if (projectLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center  ">
+      <div className="flex min-h-screen items-center justify-center">
         <ElectricSpinner />
       </div>
     );
@@ -657,43 +692,6 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       </div>
     );
   }
-  const handleDelete = async (projectId: string) => {
-    if (
-      !confirm(
-        `Êtes-vous sûr de vouloir supprimer cette projet  ? Cette action est irréversible.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      // Implement your  delete API call here
-
-      // Example API call (replace with your actual API):
-      if (projectId) {
-        await projectService.deleteProject(projectId);
-        navigate("/projects");
-      }
-
-      // Show success message
-      toast({
-        title: "Succès",
-        description: "Le projet est supprimé avec succès",
-      });
-    } catch (error) {
-      console.error("Error deleting projects:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la suppression de projet",
-      });
-    }
-  };
-  // Calculate phases stats for header
-  const phasesStats = useMemo(() => ({
-    total: computedPhases.length || project.phasesCount || 0,
-    completed: computedPhases.filter((p: any) => p.status === "completed").length || 0,
-    inProgress: computedPhases.filter((p: any) => p.status === "in_progress").length || 0,
-  }), [computedPhases, project.phasesCount]);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
