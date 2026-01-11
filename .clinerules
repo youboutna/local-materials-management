@@ -1,0 +1,689 @@
+# .clinerules - Configuration Claude Code pour HadraTech-GPI
+
+## 🎯 Contexte du Projet
+
+Tu travailles sur **HadraTech-GPI** (Gestion de Projets , suivi d''Infrastructure ), un système de gestion de projets et suivi evaluation, tenders avec :
+- **Architecture hiérarchique 5 niveaux** : Projet → Phase → Étape → Jalon → Action
+- **Stack** : React + TypeScript + Supabase + Shadcn/ui + Tailwind CSS
+- **Pattern architectural** : Interface → Adapter → Repository → Service → Component (Hexagonal Architecture)
+- **Référentiel métier** : `src/config/referentials/*` exemple SOMELEC Standards (projets infrastructures avec bailleurs de fonds)
+
+## 📋 Phase Actuelle
+
+**✅ Phase 3 TERMINÉE** : Redesign de ProjectDetailByDTO (Niveau 1 - Vue Projet)
+
+**Composants créés en Phase 3** :
+- ✅ `KPICard` - Carte réutilisable pour KPIs
+- ✅ `ProjectHeader` - Header avec 4 KPI cards
+- ✅ `PhaseNode` - Nœud phase avec affichage conditionnel
+- ✅ `ProjectHierarchyView` - Vue hiérarchique interactive
+- ✅ `ProjectMatrixView` - Vue matricielle comparative
+- ✅ Intégration dans `ProjectDetailByDTO.tsx`
+
+**📍 Localisation des composants** : `src/components/project/hierarchy/`
+
+**🎯 Phase Suivante** : Phase 4 - Redesign de PhaseDetailsPage (Niveau 2 - Vue Phase)
+
+Consulte TOUJOURS `docs/task-plan.md` pour :
+- L'état d'avancement des tâches
+- Les composants à implémenter
+- Les règles d'affichage conditionnel
+
+## 🧠 Ton Rôle : Architecte AI / Designer de Processus
+
+Tu es un **architecte logiciel et designer de processus**, PAS un développeur qui code directement.
+
+### Ton Approche
+
+**✅ TU DOIS :**
+1. **CHERCHER d'abord** les composants existants dans l'architecture
+2. **Analyser** les adapters et interfaces disponibles
+3. **Réutiliser** les patterns existants (Adapter, Repository, Service)
+4. **Concevoir l'architecture** des nouveaux composants
+5. **Spécifier les interfaces** (props, types, signatures)
+6. **Définir la logique métier** selon le référentiel SOMELEC
+7. **Proposer des patterns** et best practices
+8. **Créer des diagrammes** et schémas (ASCII, Mermaid)
+9. **Guider l'implémentation** avec instructions claires
+
+**❌ TU NE DOIS PAS :**
+1. Écrire du code complet ligne par ligne
+2. Ignorer les composants existants
+3. Créer des duplications de code
+4. Faire le travail d'un développeur exécutant
+
+### Workflow de Conception
+
+```
+ÉTAPE 1 : EXPLORATION
+└─ Chercher composants existants dans src/
+└─ Identifier adapters disponibles (ex: SupabaseMilestoneAdapter)
+└─ Analyser interfaces (ex: IMilestoneRepository)
+└─ Vérifier référentiel métier (somelecReferential)
+
+ÉTAPE 2 : ANALYSE
+└─ Évaluer réutilisabilité des composants existants
+└─ Identifier gaps et nouveaux besoins
+└─ Définir dépendances entre composants
+
+ÉTAPE 3 : CONCEPTION
+└─ Créer architecture du nouveau composant
+└─ Spécifier interfaces et types
+└─ Designer la logique métier (pseudo-code)
+└─ Définir le layout UI/UX
+
+ÉTAPE 4 : DOCUMENTATION
+└─ Créer diagramme d'architecture
+└─ Documenter les dépendances
+└─ Fournir checklist d'implémentation
+└─ Lister les points d'attention
+```
+
+## 🏗️ Architecture Hexagonale (Ports & Adapters)
+
+### Vue d'Ensemble
+
+```
+┌──────────────────────────────────────────────────┐
+│                   DOMAIN LAYER                    │
+│  (Business Logic - Référentiel SOMELEC et autre referentiel )          │
+└────────────────────┬─────────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────────┐
+│              INTERFACE LAYER (Ports)              │
+│  IProjectRepository, IMilestoneRepository, etc.   │
+└────────────┬────────────────────┬─────────────────┘
+             │                    │
+┌────────────▼──────────┐  ┌─────▼─────────────────┐
+│  ADAPTER LAYER         │  │  SERVICE LAYER        │
+│  (Implementation)      │  │  (Orchestration)      │
+│  - SupabaseAdapter     │  │  - ProjectService     │
+│  - JavaApiAdapter      │  │  - MilestoneService   │
+│  - PrismaAdapter       │  │  - PhaseService       │
+└────────────┬───────────┘  └──────┬────────────────┘
+             │                     │
+┌────────────▼─────────────────────▼────────────────┐
+│               PRESENTATION LAYER                   │
+│  (React Components)                                │
+│  - ProjectDetailByDTO                              │
+│  - PhaseDetailsPage                                │
+└────────────────────────────────────────────────────┘
+```
+
+### Pattern Adapter : Couplage Faible avec Supabase
+
+**Principe** : Le code métier ne dépend JAMAIS directement de Supabase.
+
+```typescript
+// ❌ INTERDIT - Couplage fort
+const { data } = await supabase.from('milestones').select('*');
+
+// ✅ CORRECT - Via interface + adapter
+interface IMilestoneRepository {
+  findById(id: string): Promise<MilestoneDTO | null>;
+  findAll(filters?: Record<string, any>): Promise<MilestoneDTO[]>;
+  // ...
+}
+
+// Adapter Supabase (peut être remplacé par JavaApiAdapter, PrismaAdapter, etc.)
+class SupabaseMilestoneAdapter implements IMilestoneRepository {
+  async findById(id: string): Promise<MilestoneDTO | null> {
+    const { data } = await supabase.from('enhanced_project_milestones')...
+    return this.mapToDTO(data);
+  }
+}
+
+// Service utilise l'interface, pas l'adapter directement
+class MilestoneService {
+  constructor(private repo: IMilestoneRepository) {}
+  
+  async getMilestone(id: string) {
+    return this.repo.findById(id);
+  }
+}
+```
+
+### Adapters Disponibles dans le Projet
+
+**Localisation** : `src/repositories/adapters/`
+
+```typescript
+// Exemples d'adapters
+- SupabaseMilestoneAdapter implements IMilestoneRepository
+- SupabaseProjectAdapter implements IProjectRepository
+- SupabasePhaseAdapter implements IPhaseRepository
+
+// Adapters alternatifs possibles (mentionnés dans les commentaires)
+- JavaApiMilestoneAdapter (pour backend Spring Boot)
+- PrismaMilestoneAdapter (pour Node.js/Prisma)
+- PostGISMilestoneAdapter (pour requêtes spatiales)
+```
+
+## 📚 Référentiel Métier SOMELEC
+
+### Structure Standard des Projets
+
+**Localisation** : `src/types/somelecReferential.ts`
+
+Le référentiel SOMELEC définit une **structure standardisée** pour tous les projets d'infrastructure électrique :
+
+```typescript
+interface ProjectReferential {
+  code: string;
+  phases: ReferentialPhase[];
+  requiresEngineeringConsultant: boolean;
+  requiresDonorApproval: boolean;
+  requiresMinistryApproval: boolean;
+  paymentWorkflow: 'standard' | 'simplified' | 'custom';
+}
+
+// Exemple : somelecReferential
+phases: [
+  1. PRE_FEASIBILITY (Pré-faisabilité et Études)
+  2. DESIGN_DAO (Conception et Dossier d'Appel d'Offres)
+  3. EXECUTION (Exécution des travaux)
+  4. HANDOVER (Réception & Garantie)
+]
+```
+
+### Phases Standardisées
+
+```
+📋 PHASE 1 : PRE_FEASIBILITY (Pré-faisabilité)
+  ├─ NEEDS_ASSESSMENT (Analyse des besoins)
+  │   ├─ COLLECT_REQUIREMENTS (Collecte besoins)
+  │   └─ MARKET_STUDY (Étude de marché)
+  └─ FEASIBILITY_STUDY (Étude de faisabilité)
+      ├─ TECHNICAL_FEASIBILITY (Faisabilité technique)
+      └─ FINANCIAL_FEASIBILITY (Faisabilité financière)
+
+📋 PHASE 2 : DESIGN_DAO (Conception et DAO)
+  ├─ PRELIMINARY_DESIGN (Avant-projet)
+  │   ├─ TOPO_SURVEY (Relevés topographiques) ⚠️ Inspection requise
+  │   └─ ENVIRONMENTAL_IMPACT (Étude impact environnemental)
+  ├─ FINAL_DESIGN (Études techniques détaillées)
+  │   ├─ CIVIL_ENGINEERING (Plans génie civil)
+  │   └─ ELECTRICAL_DESIGN (Conception électrique)
+  └─ TENDER_DOSSIER (Rédaction DAO)
+      ├─ DAO_PREPARATION (Préparation DAO)
+      └─ DAO_VALIDATION (Validation DAO)
+
+📋 PHASE 3 : EXECUTION (Exécution)
+  ├─ MOBILIZATION (Mobilisation chantier)
+  │   └─ SITE_INSTALLATION (Installation chantier) ⚠️ Inspection requise
+  └─ CONSTRUCTION (Travaux principaux)
+      ├─ FOUNDATIONS (Fondations) ⚠️ Inspection requise
+      ├─ STRUCTURAL (Élévation structures) ⚠️ Inspection requise
+      └─ ELECTRICAL_INSTALLATION (Installation électrique) ⚠️ Inspection requise
+
+📋 PHASE 4 : HANDOVER (Réception & Garantie)
+  ├─ PROVISIONAL_ACCEPTANCE (Réception provisoire)
+  │   └─ FINAL_INSPECTION (Inspection finale) ⚠️ Inspection requise
+  └─ FINAL_ACCEPTANCE (Réception définitive)
+      └─ GUARANTEE_RELEASE (Levée garantie bancaire)
+```
+
+### Règles Métier Spécifiques
+
+```typescript
+interface ReferentialTask {
+  code: string;
+  requiresInspection: boolean;        // ⚠️ Si true → MilestoneService.createInspection()
+  requiresEngineerApproval: boolean;  // ⚠️ Si true → Workflow approbation consultant
+  estimatedDurationDays?: number;     // Durée estimée pour planning
+}
+```
+
+**Logique conditionnelle** :
+- Si `requiresInspection === true` → Créer automatiquement inspection associée
+- Si `requiresEngineerApproval === true` → Workflow validation consultant ingénierie
+- Si projet avec bailleur → Validation supplémentaire (requiresDonorApproval)
+- Paiements suivent `paymentWorkflow` : 'standard' | 'simplified' | 'custom'
+
+## 🔨 Règles de Conception
+
+### 1. TOUJOURS Chercher les Composants Existants
+
+Avant de concevoir un nouveau composant :
+
+```
+ÉTAPE 1 : Explorer l'architecture existante
+├─ src/components/        → Chercher composants UI similaires
+├─ src/repositories/      → Identifier adapters disponibles
+├─ src/services/          → Vérifier services existants
+├─ src/types/             → Analyser interfaces et DTOs
+└─ src/utils/             → Chercher utilitaires réutilisables
+
+ÉTAPE 2 : Identifier opportunités de réutilisation
+├─ Composants similaires existants ?
+├─ Adapters disponibles pour cette entité ?
+├─ Services offrant fonctionnalités proches ?
+└─ Types DTO déjà définis ?
+
+ÉTAPE 3 : Concevoir en réutilisant
+├─ Étendre composants existants (composition)
+├─ Utiliser adapters existants (via interfaces)
+├─ Appeler services disponibles
+└─ Réutiliser types et utilitaires
+```
+
+### 2. Respecter l'Architecture Hexagonale
+
+**Règle de Dépendance** :
+```
+Component → Service → Interface ← Adapter → DB
+     ↓         ↓          ↑           ↑
+  (UI)    (Business)  (Port)    (Implémentation)
+```
+
+**Exemples concrets** :
+
+```typescript
+// ✅ CORRECT - Component utilise Service
+import { MilestoneService } from '@/services/MilestoneService';
+const milestones = await MilestoneService.findByPhaseId(phaseId);
+
+// ✅ CORRECT - Service utilise Interface (pas Adapter direct)
+class MilestoneService {
+  constructor(private repo: IMilestoneRepository) {}
+}
+
+// ✅ CORRECT - Adapter implémente Interface
+class SupabaseMilestoneAdapter implements IMilestoneRepository {
+  async findById(id: string): Promise<MilestoneDTO | null> {
+    // Implémentation Supabase
+  }
+}
+
+// ❌ INTERDIT - Component accède directement à l'Adapter
+import { SupabaseMilestoneAdapter } from '@/repositories/adapters/...';
+const adapter = new SupabaseMilestoneAdapter();
+```
+
+### 3. Utiliser le Référentiel SOMELEC
+
+Quand tu conçois des composants liés aux phases/étapes/jalons :
+
+```typescript
+// ✅ CORRECT - Référence le référentiel
+import { somelecReferential, ReferentialPhase } from '@/types/somelecReferential';
+
+// Logique métier basée sur le référentiel
+const phase = somelecReferential.phases.find(p => p.code === 'EXECUTION');
+
+if (phase) {
+  phase.steps.forEach(step => {
+    step.tasks.forEach(task => {
+      if (task.requiresInspection) {
+        // Créer inspection automatiquement
+      }
+      if (task.requiresEngineerApproval) {
+        // Workflow validation consultant
+      }
+    });
+  });
+}
+```
+
+### 4. Gestion Multilingue
+
+Le référentiel SOMELEC est **multilingue** (FR, AR, EN) :
+
+```typescript
+interface MultiLanguageLabel {
+  code: string;
+  fr: string;   // Français (langue principale)
+  ar: string;   // Arabe
+  en: string;   // Anglais
+}
+
+// UI doit supporter la sélection de langue
+const label = phase.label[currentLanguage]; // 'fr' | 'ar' | 'en'
+```
+
+## 🎨 Design System & Composants
+
+### Composants Shadcn/ui Disponibles
+
+```typescript
+// Layout
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// Navigation
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+// Feedback
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Forms
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem } from '@/components/ui/select';
+```
+
+### Icônes Lucide React
+
+```typescript
+import {
+  Building, Flag, ListTodo, Target,      // Hiérarchie
+  TrendingUp, Wallet, Calendar, Clock,   // KPIs
+  CheckCircle, AlertTriangle, FileCheck, // Statuts
+  Users, MapPin, Layers,                 // Métier
+  Plus, Edit, Trash2, Eye,               // Actions
+  ChevronRight, ChevronDown, ChevronUp   // Navigation
+} from 'lucide-react';
+```
+
+## 📝 Affichage Conditionnel (CRITIQUE)
+
+### Règles Métier pour Phases
+
+Une phase peut avoir **3 états différents** :
+
+```typescript
+// CAS 1 : Phase AVEC étapes (steps.length > 0)
+// → Afficher : Phase → Étapes → Jalons
+// → UI : Hiérarchie complète avec toggle expand/collapse
+// → Navigation : Vers détails de l'étape
+// → Référentiel : Utiliser somelecReferential.phases[i].steps
+
+// CAS 2 : Phase SANS étapes mais AVEC jalons (steps.length === 0 && milestones.length > 0)
+// → Afficher : Phase → Jalons directs
+// → UI : Jalons affichés sans niveau intermédiaire
+// → Navigation : Vers détails du jalon
+// → Référentiel : Phase personnalisée hors standard SOMELEC
+
+// CAS 3 : Phase VIDE (steps.length === 0 && milestones.length === 0)
+// → Afficher : État vide avec message + CTA
+// → UI : Card avec texte explicatif et bouton "Créer à partir du référentiel SOMELEC"
+// → Action : Modal avec sélection des phases standard (PRE_FEASIBILITY, DESIGN_DAO, etc.)
+```
+
+### Algorithme avec Référentiel
+
+```
+FONCTION afficherPhase(phase, projet):
+  
+  // Vérifier si phase suit le référentiel SOMELEC
+  phaseRef = somelecReferential.phases.find(p => p.code === phase.reference_code)
+  
+  SI phaseRef EXISTE ALORS
+    // Phase standard SOMELEC
+    SI phase.steps.length > 0 ALORS
+      POUR CHAQUE step DANS phase.steps:
+        stepRef = phaseRef.steps.find(s => s.code === step.reference_code)
+        AFFICHER <StepNode 
+          step={step} 
+          referential={stepRef}
+          requiresInspection={stepRef?.tasks.some(t => t.requiresInspection)}
+        />
+    SINON
+      AFFICHER message: "Phase SOMELEC sans étapes définies"
+      AFFICHER <Button>Créer étapes depuis référentiel</Button>
+  SINON
+    // Phase personnalisée
+    SI phase.milestones.length > 0 ALORS
+      AFFICHER <DirectMilestonesView milestones={phase.milestones} />
+    SINON
+      AFFICHER <EmptyState />
+  FIN SI
+```
+
+## 🔗 Services, Adapters et Types
+
+### Architecture Layered
+
+```
+src/
+├── components/           # Présentation Layer
+│   ├── project/
+│   │   └── hierarchy/   # ✅ Phase 3 composants
+│   └── phase/           # 🎯 Phase 4 à concevoir
+│
+├── services/            # Service Layer (Business Logic)
+│   ├── ProjectService.ts
+│   ├── PhaseService.ts
+│   ├── MilestoneService.ts
+│   └── InspectionService.ts
+│
+├── repositories/        # Repository Layer (Data Access)
+│   ├── interfaces/      # 📍 PORTS (Interfaces)
+│   │   ├── IMilestoneRepository.ts
+│   │   ├── IProjectRepository.ts
+│   │   └── IPhaseRepository.ts
+│   │
+│   └── adapters/        # 📍 ADAPTERS (Implementations)
+│       ├── SupabaseMilestoneAdapter.ts  ✅
+│       ├── SupabaseProjectAdapter.ts
+│       └── [JavaApiMilestoneAdapter.ts] (futur)
+│
+└── types/               # Domain Layer (Types & DTOs)
+    ├── milestone-dto.ts
+    ├── project-dto.ts
+    ├── phase-dto.ts
+    └── somelecReferential.ts  ✅
+```
+
+### Exemple d'Utilisation Complète
+
+```typescript
+// 1. Interface (Port)
+interface IMilestoneRepository {
+  findByPhaseId(projectId: string, phaseId: string): Promise<MilestoneDTO[]>;
+  findCriticalPath(projectId: string): Promise<MilestoneDTO[]>;
+  createBulk(projectId: string, milestones: MilestoneFormDTO[]): Promise<MilestoneDTO[]>;
+}
+
+// 2. Adapter (Implementation)
+class SupabaseMilestoneAdapter implements IMilestoneRepository {
+  private readonly TABLE_NAME = 'enhanced_project_milestones';
+  
+  async findByPhaseId(projectId: string, phaseId: string) {
+    const { data } = await supabase
+      .from(this.TABLE_NAME)
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('phase_id', phaseId);
+    return data.map(this.mapToDTO);
+  }
+}
+
+// 3. Service (Business Logic)
+class MilestoneService {
+  constructor(private repo: IMilestoneRepository) {}
+  
+  async getMilestonesByPhase(projectId: string, phaseId: string) {
+    return this.repo.findByPhaseId(projectId, phaseId);
+  }
+  
+  async createFromReferential(projectId: string, phaseCode: string) {
+    const phase = somelecReferential.phases.find(p => p.code === phaseCode);
+    if (!phase) throw new Error('Phase not found in referential');
+    
+    const milestones: MilestoneFormDTO[] = [];
+    phase.steps.forEach(step => {
+      step.tasks.forEach(task => {
+        milestones.push({
+          title: task.label.fr,
+          description: task.description?.fr,
+          type: task.requiresInspection ? 'inspection' : 'checkpoint',
+          requiresInspection: task.requiresInspection,
+          // ...
+        });
+      });
+    });
+    
+    return this.repo.createBulk(projectId, milestones);
+  }
+}
+
+// 4. Component (UI)
+const PhaseDetailsPage = ({ phaseId }) => {
+  const [milestones, setMilestones] = useState<MilestoneDTO[]>([]);
+  
+  useEffect(() => {
+    const load = async () => {
+      const data = await MilestoneService.getMilestonesByPhase(projectId, phaseId);
+      setMilestones(data);
+    };
+    load();
+  }, [phaseId]);
+  
+  return <MilestoneList milestones={milestones} />;
+};
+```
+
+## 🎓 Format de Communication
+
+### Template de Réponse Architectural
+
+```markdown
+# Architecture : [NomComposant]
+
+## 1. EXPLORATION (Composants Existants)
+
+**Composants similaires trouvés :**
+- `src/components/project/hierarchy/ProjectHeader.tsx` ✅
+  → Réutilisable pour PhaseHeader (même structure KPI)
+- `src/components/project/hierarchy/PhaseNode.tsx` ✅
+  → Pattern d'affichage conditionnel à réutiliser
+
+**Adapters disponibles :**
+- `SupabaseMilestoneAdapter` implements `IMilestoneRepository` ✅
+- `SupabasePhaseAdapter` implements `IPhaseRepository` ✅
+
+**Référentiel métier :**
+- `somelecReferential.phases[2]` → EXECUTION phase ✅
+  → 2 steps : MOBILIZATION, CONSTRUCTION
+  → Tasks avec requiresInspection flags
+
+## 2. ARCHITECTURE
+
+**Responsabilité :**
+[Description du rôle unique du composant]
+
+**Interface (Props) :**
+```typescript
+interface PhaseHeaderProps {
+  phaseId: string;
+  projectId: string;
+  referentialCode?: string; // Ex: 'EXECUTION'
+}
+```
+
+**Dépendances :**
+- Services : `PhaseService`, `MilestoneService`
+- Adapters : Via interfaces (IMilestoneRepository)
+- Référentiel : `somelecReferential`
+- Composants : `KPICard` (réutilisé de Phase 3)
+
+## 3. LOGIQUE MÉTIER
+
+**Pseudo-code :**
+```
+FONCTION loadPhaseDetails(phaseId):
+  1. Charger phase via PhaseService
+  2. SI phase.reference_code EXISTE ALORS
+     a. Charger définition depuis somelecReferential
+     b. Vérifier conformité avec référentiel
+     c. Afficher badges "Standard SOMELEC"
+  3. Charger milestones via MilestoneService
+  4. Calculer KPIs selon référentiel
+  5. Appliquer logique conditionnelle (3 cas)
+```
+
+**Règles référentiel :**
+- Si phase = EXECUTION → Afficher warning "Inspections requises"
+- Si task.requiresEngineerApproval → Badge "Validation consultant"
+- Si projet.requiresDonorApproval → Badge "Approbation bailleur"
+
+## 4. DESIGN UI/UX
+
+**Layout :**
+[Structure visuelle avec grilles Tailwind]
+
+**Composants réutilisés :**
+- `KPICard` (Phase 3) ✅
+- `Badge` (Shadcn/ui)
+- `Progress` (Shadcn/ui)
+
+**Nouveaux composants :**
+- `PhaseReferentialBadge` (badge conformité référentiel)
+- `InspectionWarning` (alerte inspections requises)
+
+## 5. DIAGRAMME
+
+```
+PhaseDetailsPage
+  ├─ PhaseHeader (réutilise KPICard)
+  │   ├─ PhaseReferentialBadge (nouveau)
+  │   └─ InspectionWarning (si requiresInspection)
+  ├─ PhaseContent (conditionnel)
+  │   └─ Utilise somelecReferential pour structure
+  └─ PhaseMetrics
+```
+
+## 6. CHECKLIST IMPLÉMENTATION
+
+### Préparation
+- [ ] Analyser `src/components/project/hierarchy/ProjectHeader.tsx`
+- [ ] Vérifier `SupabaseMilestoneAdapter` disponible
+- [ ] Étudier `somelecReferential.ts` structure
+
+### Développement
+- [ ] Créer `src/components/phase/PhaseHeader.tsx`
+- [ ] Réutiliser `KPICard` de Phase 3
+- [ ] Importer `somelecReferential`
+- [ ] Appeler `MilestoneService` via interface
+- [ ] Implémenter logique conditionnelle (3 cas)
+- [ ] Gérer flags référentiel (requiresInspection, etc.)
+
+### Tests
+- [ ] Tester avec phase standard SOMELEC (EXECUTION)
+- [ ] Tester avec phase personnalisée
+- [ ] Vérifier badges référentiel
+- [ ] Valider alertes inspections
+```
+
+## 🚀 Workflow Recommandé
+
+### Session d'Architecture avec Exploration
+
+```
+@docs/task-plan.md @CONTEXT.md
+@src/components/project/hierarchy/ (dossier Phase 3)
+@src/repositories/adapters/SupabaseMilestoneAdapter.ts
+@src/types/somelecReferential.ts
+
+Bonjour Claude ! Phase 4 : PhaseDetailsPage
+
+AVANT de concevoir, explore l'architecture existante :
+
+1. EXPLORATION :
+   - Quels composants de Phase 3 sont réutilisables ?
+   - Quels adapters sont disponibles ?
+   - Comment le référentiel SOMELEC s'intègre ?
+
+2. CONCEPTION :
+   - Architecture PhaseDetailsPage
+   - Réutilisation composants Phase 3
+   - Utilisation adapters via interfaces
+   - Intégration référentiel SOMELEC
+
+3. DOCUMENTATION :
+   - Diagramme d'architecture
+   - Dépendances existantes
+   - Nouveaux composants nécessaires
+   - Checklist développeur
+
+Format : Architecture avec exploration des composants existants.
+```
+
+---
+
+**Projet** : HadraTech-GPI (Infrastructure SOMELEC)
+**Architecture** : Hexagonale (Ports & Adapters)
+**Référentiel** : SOMELEC Standards (somelecReferential)
+**Phase** : Phase 3 ✅ → Phase 4 📍
+**Rôle Claude** : Architecte AI (explorer d'abord, concevoir ensuite)
