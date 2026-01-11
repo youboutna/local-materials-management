@@ -35,6 +35,9 @@ Fais-moi un résumé de l'état d'avancement :
 ```
 @docs/task-plan.md section "Phase 4: Structure Planifiée"
 @src/components/project/hierarchy/ProjectHeader.tsx
+@src/services/InpectionService.ts
+@src/components/project :
+ScheduleInspectionModal, UsePhaseWorflow, stepDetailPanel
 @CONTEXT.md
 
 Conçois PhaseDetailsPage avec architecture modulaire :
