@@ -124,8 +124,8 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 via-white to-terracotta-50">
-      <main className="flex-grow py-16">
+    <AppLayout pageTitle="Accueil" showBreadcrumb={false}>
+      <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
           {/* Hero Section */}
           <motion.div
@@ -277,7 +277,7 @@ const Home = () => {
           </motion.div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 };
 
