@@ -83,3 +83,10 @@ export type { ComplianceItem } from './useComplianceHex';
 // Milestones
 export { useMilestonesHex } from './useMilestonesHex';
 export type { Milestone } from './useMilestonesHex';
+
+// Stakeholders
+export { useStakeholdersHex } from './useStakeholdersHex';
+
+// Payment Validation
+export { usePaymentValidationHex } from './usePaymentValidationHex';
+export type { PaymentStats } from './usePaymentValidationHex';

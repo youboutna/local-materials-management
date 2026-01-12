@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   Image,
   FileBarChart,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useProjectDocumentsHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -55,8 +55,7 @@ interface ProjectDocumentsProps {
 const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   const { t } = useLanguage();
 
-  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { documents: rawDocuments, loading, refetch: fetchDocuments } = useProjectDocumentsHex(projectId);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -65,6 +64,20 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     document_type: "project_report",
     file: null as File | null,
   });
+
+  // Transform documents to expected format
+  const documents: ProjectDocument[] = (rawDocuments || []).map((doc: any) => ({
+    id: doc.id,
+    description: doc.description || undefined,
+    file_name: doc.file_name || undefined,
+    file_url: doc.file_url || undefined,
+    mime_type: doc.mime_type || undefined,
+    file_size: doc.file_size || undefined,
+    document_type: doc.document_type,
+    status: doc.status || "draft",
+    created_at: doc.created_at || new Date().toISOString(),
+    tags: doc.tags || undefined,
+  }));
 
   const documentTypes = [
     {
@@ -99,48 +112,6 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
       icon: File,
     },
   ];
-
-  const fetchDocuments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const transformedDocuments: ProjectDocument[] = (data || []).map(
-        (doc) => ({
-          id: doc.id,
-          description: doc.description || undefined,
-          file_name: doc.file_name || undefined,
-          file_url: doc.file_url || undefined,
-          mime_type: doc.mime_type || undefined,
-          file_size: doc.file_size || undefined,
-          document_type: doc.document_type,
-          status: doc.status || "draft",
-          created_at: doc.created_at || new Date().toISOString(),
-          tags: doc.tags || undefined,
-        })
-      );
-
-      setDocuments(transformedDocuments);
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-      toast({
-        title: t("error.title"),
-        description: t("error.fetch_documents"),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, [projectId]);
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,18 +164,12 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     if (!confirm(t("confirm.delete_document"))) return;
 
     try {
-      const { error } = await supabase
-        .from("documents")
-        .delete()
-        .eq("id", documentId);
-
-      if (error) throw error;
-
+      const { DocumentService } = await import('@/services/DocumentService');
+      await DocumentService.deleteDocument(documentId);
       toast({
         title: t("success.title"),
         description: t("success.delete_document"),
       });
-
       fetchDocuments();
     } catch (error) {
       console.error("Error deleting document:", error);

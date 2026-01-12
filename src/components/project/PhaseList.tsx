@@ -27,10 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Calendar, Save, Trash2, DollarSign, Eye } from "lucide-react";
+import { Plus, Calendar, Save, Trash2, DollarSign, Eye, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { usePhasesHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { ConstructionPhase, ConstructionStage } from "@/types/project";
 
@@ -84,8 +83,8 @@ const PhaseList: React.FC<PhaseListProps> = ({
   onPhaseUpdate,
 }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [isCreating, setIsCreating] = useState(false);
+  const { createPhase, deletePhase, isCreating, isDeleting, refetch } = usePhasesHex(projectId);
+  const [isCreatingForm, setIsCreatingForm] = useState(false);
   const [formData, setFormData] = useState<PhaseFormData>({
     phase_name: "",
     description: "",
@@ -149,63 +148,6 @@ const PhaseList: React.FC<PhaseListProps> = ({
     return waterfallStages[phase] || [];
   };
 
-  const createPhaseMutation = useMutation({
-    mutationFn: async (phaseData: PhaseFormData) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
-      const { data, error } = await supabase
-        .from("project_phases")
-        .insert({
-          project_id: projectId,
-          phase_name: phaseData.phase_name,
-          description: phaseData.description,
-          construction_phase: phaseData.construction_phase || null,
-          construction_stage: phaseData.construction_stage || null,
-          start_date: phaseData.start_date || null,
-          end_date: phaseData.end_date || null,
-          estimated_cost: phaseData.estimated_cost
-            ? parseFloat(phaseData.estimated_cost)
-            : null,
-          estimated_duration: phaseData.estimated_duration
-            ? parseInt(phaseData.estimated_duration)
-            : 30,
-          status: "not_started",
-          progress: 0,
-          created_by: user.id,
-          phase_type: "construction",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["project-phases", projectId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["enhanced-project-tasks", projectId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["enhanced-project-risks", projectId],
-      });
-      setIsCreating(false);
-      resetForm();
-      toast({ title: "Phase créée avec succès" });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la phase",
-        variant: "destructive",
-      });
-    },
-  });
-
   const resetForm = () => {
     setFormData({
       phase_name: "",
@@ -220,42 +162,35 @@ const PhaseList: React.FC<PhaseListProps> = ({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createPhaseMutation.mutate(formData);
+    try {
+      await createPhase({
+        phase_name: formData.phase_name,
+        description: formData.description,
+        construction_phase: formData.construction_phase || undefined,
+        construction_stage: formData.construction_stage || undefined,
+        start_date: formData.start_date || undefined,
+        end_date: formData.end_date || undefined,
+        estimated_cost: formData.estimated_cost ? parseFloat(formData.estimated_cost) : undefined,
+        estimated_duration: formData.estimated_duration ? parseInt(formData.estimated_duration) : 30,
+      });
+      setIsCreatingForm(false);
+      resetForm();
+      if (onPhaseUpdate) onPhaseUpdate();
+    } catch (error) {
+      console.error('Error creating phase:', error);
+    }
   };
+
   const handleDeletePhase = async (phaseId: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette phase ?")) return;
 
     try {
-      const { error } = await supabase
-        .from("project_phases")
-        .delete()
-        .eq("id", phaseId);
-
-      if (error) throw error;
-
-      // Invalidate queries
-      queryClient.invalidateQueries({
-        queryKey: ["project-phases", projectId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["project-detail", projectId],
-      });
-
+      await deletePhase(phaseId);
       if (onPhaseUpdate) onPhaseUpdate();
-
-      toast({
-        title: "Phase supprimée",
-        description: "La phase a été supprimée avec succès",
-      });
     } catch (error) {
       console.error("Error deleting phase:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la phase",
-        variant: "destructive",
-      });
     }
   };
   const getStatusColor = (status: string) => {
@@ -282,12 +217,12 @@ const PhaseList: React.FC<PhaseListProps> = ({
             size="sm"
             variant="outline"
             onClick={() => {
-              queryClient.invalidateQueries({
-                queryKey: ["project-phases", projectId],
-              });
+              refetch();
               if (onPhaseUpdate) onPhaseUpdate();
             }}
+            disabled={isCreating || isDeleting}
           >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isCreating || isDeleting ? 'animate-spin' : ''}`} />
             Rafraîchir
           </Button>
         </CardTitle>

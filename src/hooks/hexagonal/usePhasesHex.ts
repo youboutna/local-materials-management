@@ -27,6 +27,21 @@ export interface UsePhasesHexResult {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  createPhase: (data: CreatePhaseData) => Promise<Phase | null>;
+  deletePhase: (phaseId: string) => Promise<boolean>;
+  isCreating: boolean;
+  isDeleting: boolean;
+}
+
+export interface CreatePhaseData {
+  phase_name: string;
+  description: string;
+  construction_phase?: string;
+  construction_stage?: string;
+  start_date?: string;
+  end_date?: string;
+  estimated_cost?: number;
+  estimated_duration?: number;
 }
 
 const defaultMetrics: PhaseMetrics = {
@@ -123,12 +138,14 @@ export function usePhaseHex(phaseId: string | undefined): UsePhaseHexResult {
 }
 
 /**
- * Hook for phases list by project
+ * Hook for phases list by project with CRUD operations
  */
 export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult {
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchPhases = useCallback(async () => {
     if (!projectId) {
@@ -153,10 +170,57 @@ export function usePhasesHex(projectId: string | undefined): UsePhasesHexResult 
     fetchPhases();
   }, [fetchPhases]);
 
+  const createPhase = useCallback(async (data: CreatePhaseData): Promise<Phase | null> => {
+    if (!projectId) return null;
+    
+    setIsCreating(true);
+    try {
+      const newPhase = await phaseRepository.create({
+        projectId,
+        name: data.phase_name,
+        description: data.description,
+        constructionPhase: data.construction_phase,
+        constructionStage: data.construction_stage,
+        startDate: data.start_date ? new Date(data.start_date) : undefined,
+        endDate: data.end_date ? new Date(data.end_date) : undefined,
+        estimatedCost: data.estimated_cost,
+        status: 'pending',
+        progress: 0,
+      } as Partial<Phase>);
+      await fetchPhases();
+      return newPhase;
+    } catch (err) {
+      console.error('Failed to create phase:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create phase');
+      return null;
+    } finally {
+      setIsCreating(false);
+    }
+  }, [projectId, fetchPhases]);
+
+  const deletePhase = useCallback(async (phaseId: string): Promise<boolean> => {
+    setIsDeleting(true);
+    try {
+      await phaseRepository.delete(phaseId);
+      await fetchPhases();
+      return true;
+    } catch (err) {
+      console.error('Failed to delete phase:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete phase');
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [fetchPhases]);
+
   return {
     phases,
     loading,
     error,
     refetch: fetchPhases,
+    createPhase,
+    deletePhase,
+    isCreating,
+    isDeleting,
   };
 }
