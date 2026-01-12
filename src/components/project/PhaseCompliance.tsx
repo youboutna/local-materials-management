@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,22 +26,9 @@ import {
   Plus,
   FileText,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
-
-interface ComplianceItem {
-  id: string;
-  category: "regulatory" | "financial" | "technical" | "environmental";
-  title: string;
-  description?: string;
-  status: "compliant" | "pending" | "non_compliant" | "in_review";
-  priority: "low" | "medium" | "high" | "critical";
-  deadline?: string;
-  responsible_person?: string;
-  documents?: string[];
-  notes?: string;
-}
+import { useComplianceHex, ComplianceItem } from "@/hooks/hexagonal";
 
 interface PhaseComplianceProps {
   phaseId: string;
@@ -52,115 +39,58 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
   phaseId,
   projectId,
 }) => {
-  const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
+  const { 
+    complianceItems, 
+    loading, 
+    createComplianceItem, 
+    updateComplianceItem,
+    refetch 
+  } = useComplianceHex(phaseId, projectId);
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ComplianceItem | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    category: "regulatory" as
-      | "regulatory"
-      | "financial"
-      | "technical"
-      | "environmental",
+    category: "regulatory" as ComplianceItem['category'],
     title: "",
     description: "",
-    status: "pending" as
-      | "compliant"
-      | "pending"
-      | "non_compliant"
-      | "in_review",
-    priority: "medium" as "low" | "medium" | "high" | "critical",
+    status: "pending" as ComplianceItem['status'],
+    priority: "medium" as ComplianceItem['priority'],
     deadline: "",
     responsible_person: "",
     notes: "",
   });
 
-  useEffect(() => {
-    loadComplianceItems();
-  }, [phaseId]);
-
-  const loadComplianceItems = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .eq("phase_id", phaseId)
-        .eq("document_type", "project_report")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Transform documents to compliance items
-      const items: ComplianceItem[] = (data || []).map((doc) => {
-        const metadata = (doc.metadata as any) || {};
-        return {
-          id: doc.id,
-          category: metadata.category || "regulatory",
-          title: doc.title,
-          description: doc.description || undefined,
-          status: metadata.status || "pending",
-          priority: metadata.priority || "medium",
-          deadline: doc.deadline_date || undefined,
-          responsible_person: metadata.responsible_person,
-          documents: metadata.documents || [],
-          notes: metadata.notes,
-        };
-      });
-
-      setComplianceItems(items);
-    } catch (error) {
-      console.error("Error loading compliance items:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les éléments de conformité",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     try {
-      const complianceData = {
-        title: formData.title,
-        description: formData.description,
-        document_type: "project_report" as const,
-        phase_id: phaseId,
-        project_id: projectId,
-        deadline_date: formData.deadline || null,
-        metadata: {
+      if (editingItem) {
+        await updateComplianceItem(editingItem.id, {
+          title: formData.title,
+          description: formData.description,
           category: formData.category,
           status: formData.status,
           priority: formData.priority,
-          responsible_person: formData.responsible_person,
+          deadline: formData.deadline || undefined,
+          responsiblePerson: formData.responsible_person,
           notes: formData.notes,
-          documents: [],
-        },
-      };
-
-      let result;
-      if (editingItem) {
-        result = await supabase
-          .from("documents")
-          .update(complianceData)
-          .eq("id", editingItem.id);
+        });
+        toast({ title: "Succès", description: "Élément modifié" });
       } else {
-        result = await supabase.from("documents").insert(complianceData);
+        await createComplianceItem({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          status: formData.status,
+          priority: formData.priority,
+          deadline: formData.deadline || undefined,
+          responsiblePerson: formData.responsible_person,
+          notes: formData.notes,
+        });
+        toast({ title: "Succès", description: "Élément ajouté" });
       }
-
-      if (result.error) throw result.error;
-
-      toast({
-        title: "Succès",
-        description: editingItem ? "Élément modifié" : "Élément ajouté",
-      });
 
       setIsDialogOpen(false);
       resetForm();
-      loadComplianceItems();
     } catch (error) {
       console.error("Error saving compliance item:", error);
       toast({
@@ -180,7 +110,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       status: item.status,
       priority: item.priority,
       deadline: item.deadline ? item.deadline.split("T")[0] : "",
-      responsible_person: item.responsible_person || "",
+      responsible_person: item.responsiblePerson || "",
       notes: item.notes || "",
     });
     setIsDialogOpen(true);
@@ -447,9 +377,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                     </div>
                   </div>
                 </div>
-                {item.responsible_person && (
+                {item.responsiblePerson && (
                   <div className="mt-2 text-sm text-muted-foreground">
-                    Responsable: {item.responsible_person}
+                    Responsable: {item.responsiblePerson}
                   </div>
                 )}
               </div>

@@ -71,3 +71,15 @@ export type { User } from './useUsersHex';
 // Inspections - Phase 5
 export { useInspectionsHex, useInspectionHex } from './useInspectionsHex';
 export type { Inspection } from './useInspectionsHex';
+
+// Alerts - combines multiple sources
+export { useAlertsHex } from './useAlertsHex';
+export type { AlertData, AlertStats } from './useAlertsHex';
+
+// Compliance
+export { useComplianceHex } from './useComplianceHex';
+export type { ComplianceItem } from './useComplianceHex';
+
+// Milestones
+export { useMilestonesHex } from './useMilestonesHex';
+export type { Milestone } from './useMilestonesHex';

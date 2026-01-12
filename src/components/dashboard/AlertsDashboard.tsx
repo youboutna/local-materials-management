@@ -5,9 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { detectProjectDelays } from "@/services/BankGuaranteeService";
-import { DELAY_THRESHOLDS } from "@/types/project";
+import { useAlertsHex, AlertData } from "@/hooks/hexagonal";
 import {
   AlertTriangle,
   Bell,
@@ -16,187 +14,17 @@ import {
   Shield,
   TrendingDown,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-
-interface AlertData {
-  id: string;
-  type: "delay" | "payment" | "inspection" | "guarantee";
-  severity: "low" | "medium" | "high" | "critical";
-  title: string;
-  description: string;
-  projectId?: string;
-  projectName?: string;
-  timestamp: Date;
-  status: "active" | "resolved" | "acknowledged";
-}
+import React from "react";
 
 const AlertsDashboard: React.FC = () => {
-  const [alerts, setAlerts] = useState<AlertData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
-    total: 0,
-  });
-
   const { t } = useLanguage();
-
-  useEffect(() => {
-    loadAlerts();
-    const interval = setInterval(loadAlerts, 300000); // Check every 5 minutes
-    return () => clearInterval(interval);
-  }, [t]);
-
-  const loadAlerts = async () => {
-    try {
-      const allAlerts: AlertData[] = [];
-
-      // Load project delays
-      const delays = await detectProjectDelays();
-      const delayAlerts: AlertData[] = delays
-        .filter((delay) => delay.delayPercentage >= DELAY_THRESHOLDS.WARNING)
-        .map((delay) => ({
-          id: `delay-${delay.projectId}`,
-          type: "delay" as const,
-          severity: getSeverity(delay.delayPercentage),
-          title: `${t('alerts.delay_title')}: ${delay.projectName}`,
-          description: `${t('alerts.delay_desc_prefix')} ${delay.delayPercentage.toFixed(1)}% ${t('alerts.delay_desc_suffix')}`,
-          projectId: delay.projectId,
-          projectName: delay.projectName,
-          timestamp: new Date(),
-          status: "active" as const,
-        }));
-      allAlerts.push(...delayAlerts);
-
-      // Fetch blocked payments
-      const { data: blockedPayments } = await supabase
-        .from("payment_blocks")
-        .select(
-          `
-          id, amount, blocked_at, notes,
-          projects (id, title)
-        `
-        )
-        .is("resolved_at", null);
-
-      if (blockedPayments) {
-        blockedPayments.forEach((block) => {
-            allAlerts.push({
-            id: `payment-block-${block.id}`,
-            type: "payment",
-            severity: "high",
-            title: t('alerts.payment_blocked'),
-            description: `${t('alerts.payment_blocked_desc_prefix')} ${block.amount.toLocaleString()} ${t('alerts.payment_blocked_desc_suffix')} - ${
-              block.notes || t('alerts.validation_required')
-            }`,
-            projectId: (block.projects as any)?.id,
-            projectName: (block.projects as any)?.title,
-            timestamp: new Date(block.blocked_at),
-            status: "active",
-          });
-        });
-      }
-
-      // Fetch overdue inspections
-      const { data: overdueInspections } = await supabase
-        .from("inspections")
-        .select(
-          `
-          id, date, inspector, status,
-          projects (id, title)
-        `
-        )
-        .lt("date", new Date().toISOString())
-        .neq("status", "completed");
-
-      if (overdueInspections) {
-        overdueInspections.forEach((inspection) => {
-          const daysPast = Math.floor(
-            (Date.now() - new Date(inspection.date).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          allAlerts.push({
-            id: `inspection-overdue-${inspection.id}`,
-            type: "inspection",
-            severity: daysPast > 7 ? "high" : "medium",
-            title: t('alerts.inspection_overdue'),
-            description: `${t('alerts.inspection_overdue_desc_prefix')} ${daysPast} ${t('alerts.days')}`,
-            projectId: (inspection.projects as any)?.id,
-            projectName: (inspection.projects as any)?.title,
-            timestamp: new Date(inspection.date),
-            status: "active",
-          });
-        });
-      }
-
-      // Fetch expiring bank guarantees
-      const { data: expiringGuarantees } = await supabase
-        .from("bank_guarantees")
-        .select(
-          `
-          id, bank_name, expiry_date, guarantee_amount,
-          projects (id, title)
-        `
-        )
-        .gte("expiry_date", new Date().toISOString())
-        .lte(
-          "expiry_date",
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        );
-
-      if (expiringGuarantees) {
-        expiringGuarantees.forEach((guarantee) => {
-          const daysLeft = Math.ceil(
-            (new Date(guarantee.expiry_date).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24)
-          );
-          allAlerts.push({
-            id: `guarantee-expiring-${guarantee.id}`,
-            type: "guarantee",
-            severity:
-              daysLeft <= 7 ? "critical" : daysLeft <= 14 ? "high" : "medium",
-            title: t('alerts.guarantee_expiring'),
-            description: `${t('alerts.guarantee_expiring_desc_prefix')} ${guarantee.guarantee_amount.toLocaleString()} ${t('alerts.guarantee_expiring_desc_suffix')} ${daysLeft} ${t('alerts.days')}`,
-            projectId: (guarantee.projects as any)?.id,
-            projectName: (guarantee.projects as any)?.title,
-            timestamp: new Date(),
-            status: "active",
-          });
-        });
-      }
-      setAlerts(allAlerts);
-
-      // Calculate stats
-      const newStats = allAlerts.reduce(
-        (acc, alert) => {
-          acc[alert.severity]++;
-          acc.total++;
-          return acc;
-        },
-        { critical: 0, high: 0, medium: 0, low: 0, total: 0 }
-      );
-
-      setStats(newStats);
-    } catch (error) {
-      console.error("Error loading alerts:", error);
-      toast({
-        title: t('common.error'),
-        description: t('dashboard.management_tabs.alerts.load_error'),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getSeverity = (delayPercentage: number): AlertData["severity"] => {
-    if (delayPercentage >= DELAY_THRESHOLDS.LEGAL_ESCALATION) return "critical";
-    if (delayPercentage >= DELAY_THRESHOLDS.GUARANTEE_TRIGGER) return "high";
-    if (delayPercentage >= DELAY_THRESHOLDS.WARNING) return "medium";
-    return "low";
-  };
+  const { 
+    alerts, 
+    loading, 
+    stats, 
+    acknowledgeAlert, 
+    filterAlertsByType 
+  } = useAlertsHex();
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -228,21 +56,12 @@ const AlertsDashboard: React.FC = () => {
     }
   };
 
-  const acknowledgeAlert = (alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === alertId ? { ...alert, status: "acknowledged" } : alert
-      )
-    );
+  const handleAcknowledge = (alertId: string) => {
+    acknowledgeAlert(alertId);
     toast({
       title: t('dashboard.management_tabs.alerts.acknowledge_success'),
       description: t('dashboard.management_tabs.alerts.acknowledge_description'),
     });
-  };
-
-  const filterAlertsByType = (type: string) => {
-    if (type === "all") return alerts;
-    return alerts.filter((alert) => alert.type === type);
   };
 
   if (loading) {
@@ -327,7 +146,7 @@ const AlertsDashboard: React.FC = () => {
         {["all", "delay", "payment", "inspection", "guarantee"].map((type) => (
           <TabsContent key={type} value={type} className="mt-6">
             <div className="space-y-4">
-                {filterAlertsByType(type).length === 0 ? (
+              {filterAlertsByType(type).length === 0 ? (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground">
@@ -365,7 +184,7 @@ const AlertsDashboard: React.FC = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => acknowledgeAlert(alert.id)}
+                              onClick={() => handleAcknowledge(alert.id)}
                             >
                               {t('dashboard.management_tabs.alerts.acknowledge')}
                             </Button>
