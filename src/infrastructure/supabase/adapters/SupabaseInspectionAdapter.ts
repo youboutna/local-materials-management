@@ -45,7 +45,8 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   async save(inspection: Inspection): Promise<void> {
     const { error } = await supabase
       .from('inspections')
-      .insert({
+      .insert([{
+        id: inspection.id,
         project_id: inspection.projectId,
         phase_id: inspection.phaseId,
         inspector: inspection.inspector,
@@ -53,8 +54,8 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
         status: inspection.status,
         progress_at_inspection: inspection.progressAtInspection,
         comments: inspection.comments,
-        documents: inspection.documents
-      });
+        documents: inspection.documents as any
+      }]);
 
     if (error) throw new Error(`Failed to save inspection: ${error.message}`);
   }
