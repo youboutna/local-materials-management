@@ -230,6 +230,10 @@ const Users = () => {
     // ... existing fetchProfilesWithRoles logic
   };
 
+  // Use hexagonal hook for users
+  // Note: For now, keeping direct Supabase calls as user management requires admin privileges
+  // TODO: Create useUsersAdminHex hook when edge function is available
+
   // Filter profiles based on search query (now including email)
   const filteredProfiles = profiles.filter(
     (profile) =>

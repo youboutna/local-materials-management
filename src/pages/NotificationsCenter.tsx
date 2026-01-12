@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNotificationsHex } from '@/hooks/hexagonal';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
+import { AppLayout } from '@/components/layout';
 import {
     AlertTriangle,
     Bell,
@@ -197,33 +198,26 @@ const NotificationsCenterPage = () => {
   const stats = getNotificationStats();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 pt-20">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">📬 Centre de Notifications</h1>
-                <p className="text-muted-foreground mt-2">
-                  Système de notifications centralisé avec gestion des alertes et notifications par rôle
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <Badge variant="outline" className="text-lg px-3 py-1">
-                  {stats.unread} non lues
-                </Badge>
-                <Button variant="outline" onClick={markAllAsRead}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Marquer tout lu
-                </Button>
-                <Button variant="outline" onClick={fetchAllNotifications}>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Actualiser
-                </Button>
-              </div>
-            </div>
-          </div>
+    <AppLayout
+      pageTitle="📬 Centre de Notifications"
+      pageDescription="Système de notifications centralisé avec gestion des alertes et notifications par rôle"
+      actions={
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="text-lg px-3 py-1">
+            {stats.unread} non lues
+          </Badge>
+          <Button variant="outline" onClick={markAllAsRead}>
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Marquer tout lu
+          </Button>
+          <Button variant="outline" onClick={fetchAllNotifications}>
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Actualiser
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
 
           {/* Statistics Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
@@ -995,8 +989,7 @@ const NotificationsCenterPage = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </div>
+    </AppLayout>
   );
 };
 
