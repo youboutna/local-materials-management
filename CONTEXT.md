@@ -453,7 +453,7 @@ import {
 ### Couleurs Référentiel
 ```typescript
 const referentialColors = {
-  'standard': 'bg-blue-50 text-blue-600 border-blue-200',      // Phase SOMELEC
+  'standard': 'bg-blue-50 text-blue-600 border-blue-200',      // Phase SOMELEC, consturction referentail ...
   'custom': 'bg-purple-50 text-purple-600 border-purple-200',  // Phase personnalisée
   'inspection': 'bg-orange-50 text-orange-600 border-orange-200',
   'approval': 'bg-green-50 text-green-600 border-green-200',
