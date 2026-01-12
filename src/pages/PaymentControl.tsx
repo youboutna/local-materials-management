@@ -36,31 +36,8 @@ interface NotificationData {
 
 // Component to render payment control actions with real data
 const PaymentControlActionsContainer = () => {
-  const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const { data } = useProjectManager();
-
-  useEffect(() => {
-    const loadPendingPayments = async () => {
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: payments } = await supabase
-          .from('payment_blocks')
-          .select(`
-            *,
-            projects(title, responsible_id),
-            profiles(display_name)
-          `)
-          .is('resolved_at', null)
-          .limit(3);
-
-        setPendingPayments(payments || []);
-      } catch (error) {
-        console.error('Error loading pending payments:', error);
-      }
-    };
-
-    loadPendingPayments();
-  }, []);
+  const { blocks: pendingPayments } = usePaymentBlocksHex();
 
   // Get blocking reasons from project manager alerts
   const getBlockingReasons = (paymentId: string) => {
@@ -78,16 +55,16 @@ const PaymentControlActionsContainer = () => {
 
   return (
     <div className="space-y-4">
-      {pendingPayments.map((payment) => (
-        <PaymentControlActions
-          key={payment.id}
-          paymentId={payment.id}
-          projectId={payment.project_id}
-          contractorId={payment.contractor_id || 'unknown'}
-          amount={payment.amount || 0}
-          blockingReasons={getBlockingReasons(payment.id)}
-        />
-      ))}
+        {pendingPayments.filter(p => !p.resolvedAt).slice(0, 3).map((payment) => (
+          <PaymentControlActions
+            key={payment.id}
+            paymentId={payment.id}
+            projectId={payment.projectId}
+            contractorId={payment.contractorId || 'unknown'}
+            amount={payment.amount || 0}
+            blockingReasons={getBlockingReasons(payment.id)}
+          />
+        ))}
       {pendingPayments.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />

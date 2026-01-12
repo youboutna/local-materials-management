@@ -19,7 +19,6 @@ import {
   Users 
 } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { supabase } from '@/integrations/supabase/client';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/services/ProjectManagerService';
@@ -81,6 +80,10 @@ const DashboardContent = () => {
     data: alert
   })) || [];
 
+  // Use hexagonal hooks for data
+  const { projects: hexProjects } = useProjectsHex();
+  const { documents: hexDocuments } = useDocumentsHex();
+
   // Load real data and run project checks
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -90,43 +93,18 @@ const DashboardContent = () => {
         // Run project manager checks to get comprehensive alerts
         await runChecks();
         
-        // Load additional dashboard data
-        const { data: projectsData } = await supabase.from('projects').select('*');
-        const activeProjectsCount = projectsData?.filter(p => p.status === 'en cours').length || 0;
+        // Use hexagonal projects data
+        const activeProjectsCount = hexProjects.filter(p => p.status === 'en cours').length;
         setActiveChantiers(activeProjectsCount);
 
-        // Load recent milestones
-        const { data: milestonesData } = await supabase
-          .from('project_milestones')
-          .select('*')
-          .gte('target_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .lte('target_date', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
-          .order('target_date', { ascending: true })
-          .limit(5);
-
-        if (milestonesData) {
-          setMilestones(milestonesData.map(m => ({
-            id: m.id,
-            title: m.title || 'Jalon sans titre',
-            date: m.target_date ? new Date(m.target_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '',
-            status: m.completion_date ? 'completed' : (m.target_date && new Date(m.target_date) < new Date()) ? 'overdue' : 'pending'
-          })));
-        }
-
-        // Load recent documents
-        const { data: documentsData } = await supabase
-          .from('documents')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        if (documentsData) {
-          setDocuments(documentsData.map(d => ({
+        // Map documents from hexagonal hook
+        if (hexDocuments.length > 0) {
+          setDocuments(hexDocuments.slice(0, 3).map(d => ({
             id: d.id,
-            title: d.title || d.file_name || 'Document sans titre',
-            sharedBy: 'Chef Projet', // You might want to join with users table for actual names
-            date: d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '',
-            type: d.document_type === 'project_report' ? 'report' as const : 'plan' as const
+            title: d.title || 'Document sans titre',
+            sharedBy: 'Chef Projet',
+            date: d.createdAt ? new Date(d.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '',
+            type: 'plan' as const
           })));
         }
 
@@ -160,7 +138,7 @@ const DashboardContent = () => {
     if (user) {
       loadDashboardData();
     }
-  }, [user, toast, runChecks, data]);
+  }, [user, toast, runChecks, data, hexProjects, hexDocuments]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -451,28 +429,34 @@ const DashboardContent = () => {
 const EnhancedDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
+  
+  // Use hexagonal hook for projects
+  const { projects: hexProjects } = useProjectsHex();
 
   useEffect(() => {
-    // Load a default project for monitoring with its hierarchy
+    // Load a default project for monitoring with its hierarchy using hexagonal data
     const loadDefaultProject = async () => {
       try {
-        const { data: projects } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('status', 'en cours')
-          .limit(1);
+        const activeProjects = hexProjects.filter(p => p.status === 'en cours');
         
-        if (projects && projects.length > 0) {
-          const project = projects[0];
+        if (activeProjects.length > 0) {
+          const project = activeProjects[0];
           const projectData = {
-            ...project,
-            startDate: project.start_date || new Date().toISOString(),
-            teamSize: project.team_size || 0
+            id: project.id,
+            title: project.title,
+            status: project.status,
+            progress: project.progress,
+            budget: project.budget,
+            startDate: project.startDate?.toISOString() || new Date().toISOString(),
+            teamSize: project.teamSize || 0,
+            description: project.description,
+            location: project.location,
           } as ProjectData;
           
           setSelectedProject(projectData);
 
-          // Load organizational hierarchy for this project
+          // Load organizational hierarchy for this project (RPC still needs dynamic import)
+          const { supabase } = await import('@/integrations/supabase/client');
           const { data: hierarchy } = await supabase
             .rpc('get_project_hierarchy', { project_id_param: project.id });
           
@@ -483,8 +467,10 @@ const EnhancedDashboard = () => {
       }
     };
 
-    loadDefaultProject();
-  }, []);
+    if (hexProjects.length > 0) {
+      loadDefaultProject();
+    }
+  }, [hexProjects]);
 
   // Build dynamic escalation roles from project hierarchy
   const buildEscalationRoles = (): EscalationRoles => {
