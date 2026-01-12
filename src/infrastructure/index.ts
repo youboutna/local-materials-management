@@ -4,3 +4,4 @@
  */
 
 export * from './supabase/adapters';
+export * from './supabase/RepositoryFactory';
