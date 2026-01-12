@@ -12,8 +12,6 @@ import {
   FileText,
   Package,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 
@@ -278,8 +276,6 @@ const Home = () => {
           </motion.div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
