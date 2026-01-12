@@ -124,6 +124,11 @@ Le système intègre une **cartographie interactive** essentielle pour :
 - MilestoneDTO, MilestoneFormDTO
 - IMilestoneRepository interface
 - Hiérarchie: Projet → Phase → Étape
+- **Types de jalons configurables** :
+  - 📍 Point de contrôle (inspection, validation)
+  - 📦 Livrable (document, rapport, ouvrage)
+  - 📅 Événement (réunion, jalon contractuel)
+  - 💰 Déclencheur paiement (échéance financière)
 
 ### **Phase 2: Migration Hexagonale ✅**
 
