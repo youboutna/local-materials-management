@@ -18,12 +18,14 @@ import {
   Shield, 
   Users 
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { supabase } from '@/integrations/supabase/client';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
+import { AppLayout } from '@/components/layout';
+import { useProjectsHex, useDocumentsHex } from '@/hooks/hexagonal';
 
 interface ProjectAlert {
   id: string;

@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
 import { useMaterialHex, useMaterialsHex } from "@/hooks/hexagonal";
+import { AppLayout } from "@/components/layout";
 
 interface MaterialFormData {
   name: string;
@@ -190,88 +191,77 @@ const MaterialEdit = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow py-16">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/materials")}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {t("materials.back_to_list")}
-              </Button>
-              <h1 className="text-3xl font-bold text-adrar-900 font-serif">
-                {t("materials.edit")} - {material.name}
-              </h1>
-            </div>
+    <AppLayout
+      pageTitle={`${t("materials.edit")} - ${material.name}`}
+      actions={
+        <Button
+          variant="outline"
+          onClick={() => navigate("/materials")}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("materials.back_to_list")}
+        </Button>
+      }
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Save className="h-5 w-5" />
+            {t("materials.edit_details")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EnhancedMaterialForm
+            ref={(formRef) => {
+              if (formRef) {
+                (window as any).materialFormRef = formRef;
+              }
+            }}
+            onSubmit={handleSubmit}
+            initialData={formData}
+            workspaces={transformedWorkspaces}
+            showSubmitButton={false}
+            materialId={id}
+          />
+
+          <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/materials")}
+              disabled={updateMaterial.isPending}
+            >
+              {t("materials.cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                const formRef = (window as any).materialFormRef;
+                if (formRef && formRef.getFormData) {
+                  const latestFormData = formRef.getFormData();
+                  handleSubmit(latestFormData);
+                } else {
+                  handleSubmit(formData);
+                }
+              }}
+              disabled={updateMaterial.isPending}
+              className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700"
+            >
+              {updateMaterial.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t("materials.updating")}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {t("materials.save_changes")}
+                </>
+              )}
+            </Button>
           </div>
-
-          {/* Edit Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Save className="h-5 w-5" />
-                {t("materials.edit_details")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EnhancedMaterialForm
-                ref={(formRef) => {
-                  if (formRef) {
-                    (window as any).materialFormRef = formRef;
-                  }
-                }}
-                onSubmit={handleSubmit}
-                initialData={formData}
-                workspaces={transformedWorkspaces}
-                showSubmitButton={false}
-                materialId={id}
-              />
-
-              <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/materials")}
-                  disabled={updateMaterial.isPending}
-                >
-                  {t("materials.cancel")}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Get the latest form data from the form component
-                    const formRef = (window as any).materialFormRef;
-                    if (formRef && formRef.getFormData) {
-                      const latestFormData = formRef.getFormData();
-                      handleSubmit(latestFormData);
-                    } else {
-                      handleSubmit(formData);
-                    }
-                  }}
-                  disabled={updateMaterial.isPending}
-                  className="bg-gradient-to-r from-terracotta-500 to-adrar-600 hover:from-terracotta-600 hover:to-adrar-700"
-                >
-                  {updateMaterial.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t("materials.updating")}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      {t("materials.save_changes")}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+        </CardContent>
+      </Card>
+    </AppLayout>
   );
 };
 
