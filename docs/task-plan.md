@@ -72,63 +72,56 @@ Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améli
 
 ### **Stratégie de Migration Phase 3**
 
-#### **Étape 3.1: Hooks Monitoring Hexagonaux**
-Créer des hooks dédiés pour encapsuler les logiques monitoring:
+#### **Étape 3.1: Hooks Monitoring Hexagonaux** ✅
+Hooks créés pour encapsuler les logiques monitoring:
 
 ```tsx
 // src/hooks/hexagonal/useMonitoringHex.ts
-export const useBankGuaranteesHex = () => { /* ... */ };
-export const usePaymentBlocksHex = () => { /* ... */ };
-export const useNotificationsHex = () => { /* ... */ };
+export const useBankGuaranteesHex = () => { /* ✅ Créé */ };
+export const usePaymentBlocksHex = () => { /* ✅ Créé */ };
+export const useInsurancesHex = () => { /* ✅ Créé */ };
+export const useNotificationsHex = () => { /* ✅ Créé */ };
 ```
 
-#### **Étape 3.2: Hook Phases Hexagonal**
-Étendre `useProjectsHex` avec support phases:
+#### **Étape 3.2: Hook Phases Hexagonal** ✅
+Hook créé avec support phases:
 
 ```tsx
 // src/hooks/hexagonal/usePhasesHex.ts
-export const usePhasesHex = (projectId?: string) => {
-  const getPhaseDetails = async (phaseId: string) => { /* ... */ };
-  return { phases, loading, getPhaseDetails };
-};
+export const usePhaseHex = (phaseId?: string) => { /* ✅ Créé */ };
+export const usePhasesHex = (projectId?: string) => { /* ✅ Créé */ };
 ```
 
-#### **Étape 3.3: Hook Supplier Hexagonal**
-Refactorer `UnifiedSupplierPortal` vers hooks:
-
-```tsx
-// src/hooks/hexagonal/useSupplierPortalHex.ts
-export const useSupplierPortalHex = () => {
-  const { supplier, documents, notifications } = /* ... */;
-  return { supplier, documents, notifications, uploadDocument };
-};
-```
+#### **Étape 3.3: Pages Migrées** 
+- ✅ `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
+- ✅ `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
 
 ---
 
 ### **Tâches Phase 3**
 
-#### **3.1 Hooks Hexagonaux Monitoring**
-- [ ] Créer `src/hooks/hexagonal/useBankGuaranteesHex.ts`
-- [ ] Créer `src/hooks/hexagonal/usePaymentBlocksHex.ts`
-- [ ] Créer `src/hooks/hexagonal/useInsurancesHex.ts`
-- [ ] Créer `src/hooks/hexagonal/useNotificationsHex.ts`
+#### **3.1 Hooks Hexagonaux Monitoring** ✅
+- [x] Créer `src/hooks/hexagonal/usePhasesHex.ts`
+- [x] Créer `src/hooks/hexagonal/useMonitoringHex.ts`
+  - [x] `useBankGuaranteesHex`
+  - [x] `usePaymentBlocksHex`
+  - [x] `useInsurancesHex`
+  - [x] `useNotificationsHex`
 
-#### **3.2 Hooks Hexagonaux Phases**
-- [ ] Créer `src/hooks/hexagonal/usePhasesHex.ts`
-- [ ] Migrer `PhaseDetailsPage` vers `usePhasesHex()`
-- [ ] Intégrer avec `GetPhaseDetailsUseCase`
+#### **3.2 Pages Monitoring Migration** ✅
+- [x] Migrer `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
+- [x] Migrer `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
 
-#### **3.3 Pages Monitoring Migration**
-- [ ] Migrer `BankGuaranteeMonitorPage` → `useBankGuaranteesHex()`
-- [ ] Migrer `PaymentControlPage` → `usePaymentBlocksHex()`
+#### **3.3 Pages Restantes** (À faire)
 - [ ] Migrer `InspectionMonitoringPage` → hooks existants
 - [ ] Migrer `NotificationsCenterPage` → `useNotificationsHex()`
+- [ ] Migrer `InsuranceManagementPage` → `useInsurancesHex()`
+- [ ] Migrer `Suppliers.tsx` → `useSuppliersHex()`
+- [ ] Migrer `Documents.tsx` → `useDocumentsHex()`
 
-#### **3.4 Portails Fournisseurs (Optionnel Phase 3)**
-- [ ] Créer `src/hooks/hexagonal/useSupplierPortalHex.ts`
-- [ ] Refactorer `UnifiedSupplierPortal` (1312 lignes → composants focalisés)
-- [ ] Utiliser services existants `TenderService`, `TenderSubmissionService`
+#### **3.4 Navigation Hiérarchique** (À faire)
+- [ ] Améliorer `PhaseDetailsPage` avec breadcrumb dynamique
+- [ ] Intégrer `usePhaseHex` dans les composants de workflow
 
 #### **3.5 Navigation Hiérarchique**
 - [ ] Créer `PhaseBreadcrumb` avec navigation projet → phase

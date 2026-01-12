@@ -7,7 +7,6 @@ import {
   Bell, 
   CreditCard, 
   AlertTriangle, 
-  DollarSign, 
   Clock, 
   CheckCircle,
   Eye,
@@ -17,13 +16,13 @@ import EnhancedPaymentBlockingInterface from '@/components/payments/EnhancedPaym
 import PaymentCrud from '@/components/payments/PaymentCrud';
 import PaymentControlActions from '@/components/payments/PaymentControlActions';
 import { useNotifications } from '@/hooks/useNotifications';
-
 import { useToast } from '@/hooks/use-toast';
 import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvider';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { useProjectsHex, usePaymentBlocksHex, useNotificationsHex } from '@/hooks/hexagonal';
 
 interface NotificationData {
   id: string;
@@ -356,41 +355,40 @@ const PaymentControlContent = () => {
 const PaymentControlPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
+  
+  // Use hexagonal hooks
+  const { projects, loading: projectsLoading } = useProjectsHex();
+  const { stats: paymentStats } = usePaymentBlocksHex();
 
   useEffect(() => {
-    // Load a default project for monitoring with its hierarchy
-    const loadDefaultProject = async () => {
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: projects } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('status', 'en cours')
-          .limit(1);
-        
-        if (projects && projects.length > 0) {
-          const project = projects[0];
-          const projectData = {
-            ...project,
-            startDate: project.start_date || new Date().toISOString(),
-            teamSize: project.team_size || 0
-          } as ProjectData;
-          
-          setSelectedProject(projectData);
-
-          // Load organizational hierarchy for this project
-          const { data: hierarchy } = await supabase
-            .rpc('get_project_hierarchy', { project_id_param: project.id });
-          
-          setProjectHierarchy(hierarchy || []);
-        }
-      } catch (error) {
-        console.error('Error loading default project:', error);
-      }
-    };
-
-    loadDefaultProject();
-  }, []);
+    // Select first active project when projects are loaded
+    if (projects.length > 0 && !selectedProject) {
+      const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
+      const projectData = {
+        id: activeProject.id,
+        title: activeProject.title,
+        status: activeProject.status,
+        progress: activeProject.progress,
+        budget: activeProject.budget,
+        startDate: activeProject.startDate?.toISOString() || new Date().toISOString(),
+        endDate: activeProject.endDate?.toISOString(),
+        teamSize: 0,
+        description: activeProject.description,
+        location: activeProject.location,
+      } as unknown as ProjectData;
+      
+      setSelectedProject(projectData);
+      
+      // Load organizational hierarchy for this project (still needs supabase for RPC)
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        supabase
+          .rpc('get_project_hierarchy', { project_id_param: activeProject.id })
+          .then(({ data: hierarchy }) => {
+            setProjectHierarchy(hierarchy || []);
+          });
+      });
+    }
+  }, [projects, selectedProject]);
 
   // Build dynamic escalation roles from project hierarchy
   const buildEscalationRoles = (): EscalationRoles => {

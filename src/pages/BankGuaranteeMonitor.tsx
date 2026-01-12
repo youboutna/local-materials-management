@@ -5,9 +5,9 @@ import { ProjectManagerProvider } from '@/components/project/ProjectManagerProvi
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { actionLabels } from '@/services/ProjectManagerService';
 import { EscalationRoles, ProjectData } from '@/types/project';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useProjectsHex, useBankGuaranteesHex } from '@/hooks/hexagonal';
 
 // Content component that uses ProjectManager
 const BankGuaranteeContent = () => {
@@ -82,40 +82,42 @@ const BankGuaranteeContent = () => {
 const BankGuaranteeMonitorPage = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [projectHierarchy, setProjectHierarchy] = useState<any[]>([]);
+  
+  // Use hexagonal hook for projects
+  const { projects, loading: projectsLoading } = useProjectsHex();
+  
+  // Use hexagonal hook for bank guarantees stats
+  const { stats: guaranteeStats } = useBankGuaranteesHex();
 
   useEffect(() => {
-    // Load a default project for monitoring with its hierarchy
-    const loadDefaultProject = async () => {
-      try {
-        const { data: projects } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('status', 'en cours')
-          .limit(1);
-        
-        if (projects && projects.length > 0) {
-          const project = projects[0];
-          const projectData = {
-            ...project,
-            startDate: project.start_date || new Date().toISOString(),
-            teamSize: project.team_size || 0
-          } as ProjectData;
-          
-          setSelectedProject(projectData);
-
-          // Load organizational hierarchy for this project
-          const { data: hierarchy } = await supabase
-            .rpc('get_project_hierarchy', { project_id_param: project.id });
-          
-          setProjectHierarchy(hierarchy || []);
-        }
-      } catch (error) {
-        console.error('Error loading default project:', error);
-      }
-    };
-
-    loadDefaultProject();
-  }, []);
+    // Select first active project when projects are loaded
+    if (projects.length > 0 && !selectedProject) {
+      const activeProject = projects.find(p => p.status === 'en cours') || projects[0];
+      const projectData = {
+        id: activeProject.id,
+        title: activeProject.title,
+        status: activeProject.status,
+        progress: activeProject.progress,
+        budget: activeProject.budget,
+        startDate: activeProject.startDate?.toISOString() || new Date().toISOString(),
+        endDate: activeProject.endDate?.toISOString(),
+        teamSize: 0,
+        description: activeProject.description,
+        location: activeProject.location,
+      } as unknown as ProjectData;
+      
+      setSelectedProject(projectData);
+      
+      // Load organizational hierarchy for this project (still needs supabase for RPC)
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        supabase
+          .rpc('get_project_hierarchy', { project_id_param: activeProject.id })
+          .then(({ data: hierarchy }) => {
+            setProjectHierarchy(hierarchy || []);
+          });
+      });
+    }
+  }, [projects, selectedProject]);
 
   // Build dynamic escalation roles from project hierarchy
   const buildEscalationRoles = (): EscalationRoles => {

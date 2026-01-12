@@ -26,3 +26,21 @@ export type { UseTendersHexResult, UseTenderHexResult } from './useTendersHex';
 // Dashboard
 export { useDashboardHex } from './useDashboardHex';
 export type { UseDashboardHexResult, DashboardStats } from './useDashboardHex';
+
+// Phases
+export { usePhaseHex, usePhasesHex } from './usePhasesHex';
+export type { UsePhaseHexResult, UsePhasesHexResult } from './usePhasesHex';
+
+// Monitoring
+export { 
+  useBankGuaranteesHex, 
+  usePaymentBlocksHex, 
+  useInsurancesHex, 
+  useNotificationsHex 
+} from './useMonitoringHex';
+export type { 
+  BankGuarantee, 
+  PaymentBlock, 
+  InsuranceCertificate, 
+  Notification 
+} from './useMonitoringHex';
