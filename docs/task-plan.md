@@ -78,17 +78,19 @@ const { workflowMetrics, inspections, payments, latestApprovedInspection } = use
 - [x] `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
 - [x] `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
 
-#### **3.3 Pages Restantes** ✅ EN COURS
+#### **3.3 Pages Restantes** ✅ COMPLÉTÉ
 - [x] **Suppliers.tsx** → `useSuppliersHex()` 
   - Mutations CRUD refactorées via hook hexagonal
   - Suppression appels Supabase directs
   
-- [ ] **Documents.tsx** → `useDocumentsHex()` (prochaine étape)
-  - Intégrer avec DocumentsList
-  - Simplifier le state management
+- [x] **Documents.tsx** → `useProjectsHex()` ✅
+  - Suppression useQuery direct pour projets
+  - Intégration avec hook hexagonal
   
-- [ ] **NotificationsCenterPage** → `useNotificationsHex()` (prochaine étape)
-  - Conserver real-time subscription
+- [x] **NotificationsCenterPage** → `useNotificationsHex()` ✅
+  - Real-time subscription conservée
+  - 6 hooks par type de notification (inspection, projet, paiement, tâche, document, système)
+  - Suppression fetchAllNotifications async
 
 #### **3.4 Navigation Hiérarchique PhaseDetailsPage** ✅ COMPLÉTÉ
 - [x] `PhaseBreadcrumb` amélioré avec titre projet dynamique via `useProjectHex()`
@@ -184,15 +186,15 @@ const { projects } = useProjectsHex();
 - `/bank-guarantee-monitor` - `useBankGuaranteesHex()`
 - `/payment-control` - `usePaymentBlocksHex()`
 
-### **Routes Protégées - À Migrer** ⏳
-- `/suppliers` - Suppliers.tsx
-- `/documents` - Documents.tsx
-- `/notifications-center` - NotificationsCenterPage.tsx
+### **Routes Protégées - À Migrer** ✅ TOUTES MIGRÉES
+- ✅ `/suppliers` - `useSuppliersHex()`
+- ✅ `/documents` - `useProjectsHex()`
+- ✅ `/notifications-center` - `useNotificationsHex()`
 
-### **Routes Protégées - Navigation Hiérarchique** 🔄
-- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage
+### **Routes Protégées - Navigation Hiérarchique** ✅
+- ✅ `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage avec PhaseBreadcrumb amélioré
 
 ---
 
-**Statut actuel** : Phase 3 en cours - 6/8 pages migrées ✅  
-**Prochaine action** : Migrer `Documents.tsx`, `NotificationsCenterPage.tsx`
+**Statut actuel** : Phase 3 COMPLÉTÉE ✅ - 8/8 pages migrées  
+**Prochaine phase** : Phase 4 - Migration workflows inspection/paiement

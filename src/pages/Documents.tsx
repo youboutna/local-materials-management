@@ -33,9 +33,8 @@ import DocumentUpload from "@/components/documents/DocumentUpload";
 import DocumentViewer from "@/components/documents/DocumentViewer";
 import TenderDocuments from "@/components/documents/TenderDocuments";
 import TenderDocumentUploadForm from "@/components/documents/TenderDocumentUploadForm";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProjectsHex } from "@/hooks/hexagonal";
 
 const Documents = () => {
   const { t } = useLanguage();
@@ -45,19 +44,8 @@ const Documents = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Get projects for tender documents
-  const { data: projects } = useQuery({
-    queryKey: ["projects-for-tender"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id, title")
-        .order("title");
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Get projects for tender documents using hexagonal hook
+  const { projects, loading: projectsLoading } = useProjectsHex();
 
   const documentTypes = [
     {
