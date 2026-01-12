@@ -78,24 +78,22 @@ const { workflowMetrics, inspections, payments, latestApprovedInspection } = use
 - [x] `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
 - [x] `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
 
-#### **3.3 Pages Restantes** ← PROCHAINE ÉTAPE
-- [ ] **Suppliers.tsx** → `useSuppliersHex()` (hook existant)
-  - Refactorer les mutations CRUD
-  - Supprimer appels Supabase directs
+#### **3.3 Pages Restantes** ✅ EN COURS
+- [x] **Suppliers.tsx** → `useSuppliersHex()` 
+  - Mutations CRUD refactorées via hook hexagonal
+  - Suppression appels Supabase directs
   
-- [ ] **Documents.tsx** → `useDocumentsHex()` (hook existant)
+- [ ] **Documents.tsx** → `useDocumentsHex()` (prochaine étape)
   - Intégrer avec DocumentsList
   - Simplifier le state management
   
-- [ ] **NotificationsCenterPage** → `useNotificationsHex()`
-  - Conserver real-time subscription (dans le hook)
-  - Simplifier fetchAllNotifications
+- [ ] **NotificationsCenterPage** → `useNotificationsHex()` (prochaine étape)
+  - Conserver real-time subscription
 
-#### **3.4 Navigation Hiérarchique PhaseDetailsPage**
-- [ ] Améliorer `PhaseBreadcrumb` avec titre projet dynamique
-  - Utiliser `useProjectsHex()` pour charger le titre
-- [ ] Ajouter navigation vers phases adjacentes
-- [ ] Intégrer métriques projet dans le header
+#### **3.4 Navigation Hiérarchique PhaseDetailsPage** ✅ COMPLÉTÉ
+- [x] `PhaseBreadcrumb` amélioré avec titre projet dynamique via `useProjectHex()`
+- [x] Navigation vers phases adjacentes ajoutée
+- [x] Skeleton loading pour le titre projet
 
 ---
 
@@ -196,5 +194,5 @@ const { projects } = useProjectsHex();
 
 ---
 
-**Statut actuel** : Phase 3 en cours - 5/8 pages migrées ✅  
-**Prochaine action** : Migrer `Suppliers.tsx`, `Documents.tsx`, améliorer navigation `PhaseDetailsPage`
+**Statut actuel** : Phase 3 en cours - 6/8 pages migrées ✅  
+**Prochaine action** : Migrer `Documents.tsx`, `NotificationsCenterPage.tsx`

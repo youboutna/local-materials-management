@@ -13,7 +13,7 @@ export type { UseMaterialsHexResult, UseMaterialHexResult } from './useMaterials
 
 // Suppliers
 export { useSuppliersHex, useSupplierHex } from './useSuppliersHex';
-export type { UseSuppliersHexResult, UseSupplierHexResult } from './useSuppliersHex';
+export type { UseSuppliersHexResult, UseSupplierHexResult, SupplierFormData } from './useSuppliersHex';
 
 // Documents
 export { useDocumentsHex, useProjectDocumentsHex } from './useDocumentsHex';

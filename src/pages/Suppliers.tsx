@@ -10,28 +10,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { useSuppliersHex, type SupplierFormData } from '@/hooks/hexagonal';
 import { generateSupplierPasswordReset, sendSupplierNotification } from '@/services/supplierNotificationService';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { Database } from '@/integrations/supabase/types';
 
-type Supplier = Database["public"]["Tables"]["suppliers"]["Row"];
-type Document = Database["public"]["Tables"]["documents"]["Row"];
+type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 
 const Suppliers = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
-    null
-  );
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierRow | null>(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] =
-    useState(false);
+  const [enhancedDocumentSharingOpen, setEnhancedDocumentSharingOpen] = useState(false);
   const [documentsOpen, setDocumentsOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SupplierFormData>({
     name: "",
     contact_person: "",
     email: "",
@@ -44,86 +39,18 @@ const Suppliers = () => {
   });
   const { toast } = useToast();
   const { t } = useLanguage();
-  const queryClient = useQueryClient();
 
-  const { data: suppliers, isLoading } = useQuery({
-    queryKey: ["suppliers"],
-    queryFn: async (): Promise<Supplier[]> => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return (data as unknown as Supplier[]) || [];
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (supplierData: typeof formData) => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .insert(supplierData as any)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: t('common.success'), description: "Fournisseur créé avec succès." });
-      resetForm();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('common.error'),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { error } = await supabase
-        .from("suppliers")
-        .update(data as any)
-        .eq("id", id as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
-      resetForm();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('common.error'),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("suppliers")
-        .delete()
-        .eq("id", id as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // Hook hexagonal pour les fournisseurs
+  const { 
+    suppliers, 
+    loading: isLoading, 
+    createSupplier, 
+    updateSupplier, 
+    deleteSupplier,
+    isCreating: isCreatingSupplier,
+    isUpdating,
+    isDeleting
+  } = useSuppliersHex();
 
   const resetForm = () => {
     setFormData({
@@ -141,33 +68,69 @@ const Suppliers = () => {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data: formData });
-    } else {
-      createMutation.mutate(formData);
+    try {
+      if (editingId) {
+        const success = await updateSupplier(editingId, formData);
+        if (success) {
+          toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
+          resetForm();
+        }
+      } else {
+        await createSupplier({
+          name: formData.name,
+          email: formData.email || undefined,
+          phone: formData.phone || undefined,
+          address: formData.address || undefined,
+          nif: formData.nif || undefined,
+          category: (formData.category || 'materials') as any,
+        });
+        toast({ title: t('common.success'), description: "Fournisseur créé avec succès." });
+        resetForm();
+      }
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : "Erreur lors de l'opération",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleEdit = (supplier: Supplier) => {
+  const handleDelete = async (id: string) => {
+    try {
+      const success = await deleteSupplier(id);
+      if (success) {
+        toast({ title: t('common.success'), description: "Fournisseur supprimé avec succès." });
+      }
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: "Erreur lors de la suppression",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (supplier: any) => {
     setFormData({
       name: supplier.name || "",
-      contact_person: supplier.contact_person || "",
+      contact_person: supplier.contactPerson || supplier.contact_person || "",
       email: supplier.email || "",
       phone: supplier.phone || "",
       address: supplier.address || "",
       category: supplier.category || "",
-      rating: supplier.rating || 0,
-      nif: (supplier as any).nif || "",
-      commerce_register_ref: (supplier as any).commerce_register_ref || "",
+      rating: typeof supplier.rating === 'number' ? supplier.rating : 0,
+      nif: supplier.nif || "",
+      commerce_register_ref: supplier.commerceRegisterRef || supplier.commerce_register_ref || "",
     });
     setEditingId(supplier.id);
     setIsCreating(true);
   };
 
   const handleNotifySupplier = async (
-    supplier: Supplier,
+    supplier: any,
     taskTitle: string,
     taskId?: string
   ) => {
@@ -195,7 +158,7 @@ const Suppliers = () => {
     }
   };
 
-  const handlePasswordReset = async (supplier: Supplier) => {
+  const handlePasswordReset = async (supplier: any) => {
     if (!supplier.email) {
       toast({
         title: "Erreur",
@@ -216,13 +179,13 @@ const Suppliers = () => {
     }
   };
 
-  const handleOpenEnhancedDocumentSharing = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
+  const handleOpenEnhancedDocumentSharing = (supplier: any) => {
+    setSelectedSupplier(supplier as any);
     setEnhancedDocumentSharingOpen(true);
   };
 
-  const handleOpenDocuments = (supplier: Supplier) => {
-    setSelectedSupplier(supplier);
+  const handleOpenDocuments = (supplier: any) => {
+    setSelectedSupplier(supplier as any);
     setDocumentsOpen(true);
   };
 
@@ -331,7 +294,7 @@ const Suppliers = () => {
                 <div>
                   <label className="text-sm font-medium">Note (1-5)</label>
                   <Select
-                    value={formData.rating.toString()}
+                    value={(formData.rating || 0).toString()}
                     onValueChange={(value) =>
                       setFormData({ ...formData, rating: parseInt(value) })
                     }
@@ -394,9 +357,7 @@ const Suppliers = () => {
               <div className="flex space-x-2">
                 <Button
                   type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
+                  disabled={isCreatingSupplier || isUpdating}
                 >
                   {editingId ? "Mettre à jour" : "Créer"}
                 </Button>
@@ -425,22 +386,22 @@ const Suppliers = () => {
                     )}
                   </div>
                 </div>
-                <Badge variant={supplier.is_active ? "default" : "secondary"}>
-                  {supplier.is_active ? "Actif" : "Inactif"}
+                <Badge variant={supplier.isActive() ? "default" : "secondary"}>
+                  {supplier.isActive() ? "Actif" : "Inactif"}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                {supplier.contact_person && (
-                  <div>Contact: {supplier.contact_person}</div>
+                {supplier.getPrimaryContact() && (
+                  <div>Contact: {supplier.getPrimaryContact()?.name}</div>
                 )}
                 {supplier.email && <div>Email: {supplier.email}</div>}
                 {supplier.phone && <div>Tél: {supplier.phone}</div>}
                 {supplier.rating && (
                   <div className="flex items-center space-x-1">
                     <span>Note:</span>
-                    <div className="flex">{renderStars(supplier.rating)}</div>
+                    <div className="flex">{renderStars(supplier.getOverallRating())}</div>
                   </div>
                 )}
               </div>
@@ -457,8 +418,8 @@ const Suppliers = () => {
                   size="sm"
                   variant="outline"
                   className="text-red-600 hover:text-red-700"
-                  onClick={() => deleteMutation.mutate(supplier.id)}
-                  disabled={deleteMutation.isPending}
+                  onClick={() => handleDelete(supplier.id)}
+                  disabled={isDeleting}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -473,7 +434,7 @@ const Suppliers = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        setSelectedSupplier(supplier);
+                        setSelectedSupplier(supplier as any);
                         setNotificationOpen(true);
                       }}
                     >
