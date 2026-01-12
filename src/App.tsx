@@ -148,63 +148,18 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
-                        <Route
-                        path="/projects"
-                        element={
-                          <RoleBasedRoute  
-                           allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager","manager",
-                            ]} >
-                            <Projects />
-                          </RoleBasedRoute>
-                        }
-                      />
-
-                      <Route
-                        path="/projects/:id"
-                        element={
-                          <RoleBasedRoute  
-                           allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager","manager",
-                            ]} >
-                            <ProjectDetail />
-                          </RoleBasedRoute>
-                        }
-                      />
-                      <Route
-                        path="/projects/:id/edit"
-                        element={
-                          <RoleBasedRoute  
-                           allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager","manager",
-                            ]} >
-                            <ProjectEdit />
-                          </RoleBasedRoute>
-                        }
-                      />
-                        <Route
-                        path="/projects/create"
-                        element={
-                          <RoleBasedRoute  
-                           allowedRoles={[
-                              "admin",
-                              "director",
-                              "project_manager","manager",
-                            ]} >
-                            <Projects />
-                          </RoleBasedRoute>
-                        }
-                      />
+                      {/* Projects - unified routing with allowedRoles */}
                       <Route
                         path="/projects"
                         element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                            ]}
+                          >
                             <Projects />
                           </RoleBasedRoute>
                         }
@@ -212,7 +167,14 @@ function App() {
                       <Route
                         path="/projects/create"
                         element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                            ]}
+                          >
                             <ProjectCreate />
                           </RoleBasedRoute>
                         }
@@ -220,7 +182,14 @@ function App() {
                       <Route
                         path="/projects/:id"
                         element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                            ]}
+                          >
                             <ProjectDetail />
                           </RoleBasedRoute>
                         }
@@ -228,7 +197,14 @@ function App() {
                       <Route
                         path="/projects/:id/edit"
                         element={
-                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                            ]}
+                          >
                             <ProjectEdit />
                           </RoleBasedRoute>
                         }
