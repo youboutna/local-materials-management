@@ -60,6 +60,14 @@ export type { Employee } from './useEmployeesHex';
 export { useTasksHex, useTaskHex } from './useTasksHex';
 export type { Task } from './useTasksHex';
 
+// Task Assignments
+export { useTaskAssignmentsHex, useTaskAssignmentHex } from './useTaskAssignmentsHex';
+export type { TaskAssignment } from './useTaskAssignmentsHex';
+
+// Users
+export { useUsersHex, useUserHex } from './useUsersHex';
+export type { User } from './useUsersHex';
+
 // Inspections - Phase 5
 export { useInspectionsHex, useInspectionHex } from './useInspectionsHex';
 export type { Inspection } from './useInspectionsHex';
