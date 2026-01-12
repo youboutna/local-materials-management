@@ -1,187 +1,186 @@
-# **Task Plan: Amélioration du Design et Hiérarchie Visuelle des Pages Projet**
+# **Task Plan: Architecture Hexagonale & Navigabilité Améliorée pour Construction Management**
 
 ## **Goal**
 
-Améliorer le design et la hiérarchie visuelle des pages **ProjectDetailByDTO** et **PhaseDetailsPage** en appliquant l'architecture hiérarchique 5 niveaux basée sur la structure de données projet.
+Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améliorée et hiérarchie visuelle des pages projet.
+
+---
 
 ## **Phases**
 
-- [x] Phase 1: Analyse de la structure de données projet existante ✓
-- [x] Phase 2: Conception de l'architecture hiérarchique 5 niveaux ✓
-- [x] Phase 3: Redesign de ProjectDetailByDTO (Niveau 1 - Vue Projet) ✓
-- [ ] Phase 4: Redesign de PhaseDetailsPage (Niveau 2 - Vue Phase) (CURRENT)
-- [ ] Phase 5: Implémentation des règles d'affichage conditionnel
-- [ ] Phase 6: Intégration et tests
-
-## **Decisions Made**
-
-- Architecture hiérarchique : **Projet → Phase → Étape → Jalon → Action**
-- Basé sur la structure de données réelle du workflow
-- Règles d'affichage conditionnel selon présence d'étapes
-- Navigation fluide entre les niveaux hiérarchiques
-
-## **Status**
-
-**Phase 3 COMPLÉTÉE** ✓  
-**Démarrage Phase 4** - Redesign de la page PhaseDetailsPage
+- [x] **Phase 1**: Audit de l'architecture existante et définition de la stratégie ✓
+- [x] **Phase 2**: Migration progressive de la hiérarchie projet ✓
+- [ ] **Phase 3**: Refactoring navigation avec architecture hexagonale (CURRENT)
+- [ ] **Phase 4**: Migration workflows inspection/paiement
+- [ ] **Phase 5**: Système de design et hiérarchie visuelle
+- [ ] **Phase 6**: Tests, validation et déploiement progressif
 
 ---
 
-## **Phase 3: Réalisations**
+## **Phase 1: Audit & Stratégie - COMPLÉTÉE ✓**
 
-### **Composants créés dans `src/components/project/hierarchy/`:**
-1. **`KPICard.tsx`** - Carte d'indicateurs clés avec icônes et tendances
-2. **`ProjectHeader.tsx`** - Header avec breadcrumb et grille KPI
-3. **`PhaseNode.tsx`** - Nœud de phase interactif avec toggle
-4. **`ProjectHierarchyView.tsx`** - Vue hiérarchique complète du projet
-5. **`ProjectMatrixView.tsx`** - Tableau matriciel projet × phases
-6. **`StepNode.tsx`** - Nœud d'étape (prêt pour Phase 4)
-7. **`MilestoneNode.tsx`** - Nœud de jalon (prêt pour Phase 4)
-
-### **Intégration dans ProjectDetailByDTO.tsx:**
-- Implémentation du nouveau header avec KPIs dynamiques
-- Intégration de la vue hiérarchique interactive
-- Navigation visuelle entre les niveaux
-- Design responsive et accessible
+### Réalisations:
+- Analyse de l'architecture existante
+- Identification des patterns à corriger
+- Définition de la stratégie hexagonale
 
 ---
 
-## **Phase 4: Redesign de PhaseDetailsPage (Niveau 2)**
+## **Phase 2: Migration Hexagonale - COMPLÉTÉE ✓**
 
-### **Objectif**
-Créer une page phase qui :
-1. Montre le contexte hiérarchique (projet parent)
-2. Affiche le contenu selon la structure (avec/sans étapes)
-3. Permet la navigation vers les niveaux supérieur/inférieur
-4. Gère les workflows spécifiques à la phase
+### **Architecture Hexagonale Implémentée**
 
-### **Structure Planifiée**
+#### **1. Domain Entities (`src/domain/entities/`)**
+- ✅ `Project.ts` - Entité projet avec logique métier
+- ✅ `Material.ts` - Entité matériau avec propriétés étendues
+- ✅ `Phase.ts` - Entité phase avec steps et tasks
+- ✅ `Supplier.ts` - Entité fournisseur
+- ✅ `Document.ts` - Entité document
+- ✅ `Tender.ts` - Entité appel d'offres
 
+#### **2. Repository Interfaces (`src/domain/repositories/`)**
+- ✅ `IProjectRepository.ts`
+- ✅ `IMaterialRepository.ts`
+- ✅ `IPhaseRepository.ts`
+- ✅ `ISupplierRepository.ts`
+- ✅ `IDocumentRepository.ts`
+- ✅ `ITenderRepository.ts`
+
+#### **3. Use Cases (`src/application/use-cases/`)**
+- ✅ **Project Use Cases:**
+  - `GetProjectsListUseCase`
+  - `GetProjectByIdUseCase`
+  - `CreateProjectUseCase`
+  - `UpdateProjectUseCase`
+  - `DeleteProjectUseCase`
+  - `GetPhaseDetailsUseCase`
+
+- ✅ **Material Use Cases:**
+  - `GetMaterialsListUseCase`
+  - `GetMaterialByIdUseCase`
+  - `CreateMaterialUseCase`
+  - `UpdateMaterialUseCase`
+  - `DeleteMaterialUseCase`
+
+- ✅ **Supplier Use Cases:**
+  - `GetSuppliersListUseCase`
+  - `GetSupplierByIdUseCase`
+  - `CreateSupplierUseCase`
+  - `UpdateSupplierUseCase`
+  - `DeleteSupplierUseCase`
+
+#### **4. Infrastructure Adapters (`src/infrastructure/supabase/adapters/`)**
+- ✅ `SupabaseProjectAdapter.ts`
+- ✅ `SupabaseMaterialAdapter.ts`
+- ✅ `SupabasePhaseAdapter.ts`
+- ✅ `SupabaseSupplierAdapter.ts`
+
+#### **5. Repository Factory (`src/infrastructure/`)**
+- ✅ `RepositoryFactory.ts` - Factory centralisée
+
+#### **6. Hexagonal Hooks (`src/hooks/hexagonal/`)**
+- ✅ `useProjectsHex.ts` - CRUD projets + refetch
+- ✅ `useMaterialsHex.ts` - CRUD matériaux + refetch
+- ✅ `useSuppliersHex.ts` - CRUD fournisseurs
+- ✅ `useDocumentsHex.ts` - Documents par projet
+- ✅ `useTendersHex.ts` - Appels d'offres par projet
+- ✅ `useDashboardHex.ts` - Statistiques dashboard
+
+### **Pages Migrées vers Hexagonal**
+- ✅ `src/pages/Projects.tsx` → `useProjectsHex()`
+- ✅ `src/pages/Materials.tsx` → `useMaterialsHex()`
+- ✅ `src/pages/Dashboard.tsx` → `useDashboardHex()`
+
+### **Exemple Migration**
 ```tsx
-const PhaseDetailsPage = ({ phaseId }) => {
-  const phase = getPhase(phaseId);
-  const project = getProject(phase.project_id);
-  const hasSteps = phase.steps && phase.steps.length > 0;
-  
-  return (
-    <div className="space-y-6">
-      {/* Breadcrumb et contexte */}
-      <PhaseBreadcrumb project={project} phase={phase} />
-      
-      {/* En-tête phase */}
-      <PhaseHeader phase={phase} />
-      
-      {/* Contenu conditionnel */}
-      {hasSteps ? (
-        <PhaseWithStepsView phase={phase} />
-      ) : (
-        <PhaseWithDirectMilestonesView phase={phase} />
-      )}
-      
-      {/* Métriques phase */}
-      <PhaseMetrics phase={phase} />
-      
-      {/* Actions spécifiques */}
-      <PhaseActions phase={phase} />
-    </div>
-  );
-};
+// AVANT (accès direct Supabase)
+const { data } = await supabase.from('projects').select('*');
+
+// APRÈS (architecture hexagonale)
+import { useProjectsHex } from '@/hooks/hexagonal';
+const { projects, loading, createProject, deleteProject } = useProjectsHex();
 ```
 
-### **Tâches Spécifiques Phase 4**
+---
 
-#### **1. Composant PhaseBreadcrumb**
-- Breadcrumb hiérarchique (Projets > [Projet] > [Phase])
-- Navigation retour au projet parent
-- Indication niveau courant
+## **Phase 3: Navigation & Hiérarchie Visuelle (CURRENT)**
 
-#### **2. Composant PhaseHeader**
-- Titre phase + badge statut
-- Dates (début/fin)
-- Budget alloué
-- Progression globale
-- Indicateur structure (avec/sans étapes)
+### **Objectif**
+Améliorer la navigation entre les niveaux hiérarchiques avec composants visuels.
 
-#### **3. Vue PhaseWithStepsView**
-- Pour phases AVEC étapes
-- Liste étapes dépliables
-- Pour chaque étape → affichage jalons associés
-- Navigation vers détail étape
+### **Structure Hiérarchique 5 Niveaux**
+1. 🌐 **PROJET** - Dashboard stratégique global
+2. 🏗️ **PHASE** - Vue opérationnelle par phase  
+3. 📋 **ÉTAPE** - Détails processus (optionnel)
+4. 📍 **JALON** - Points de contrôle critiques
+5. ⚡ **ACTION** - Interactions utilisateur
 
-#### **4. Vue PhaseWithDirectMilestonesView**
-- Pour phases SANS étapes
-- Liste jalons directs
-- Groupement par type (validation, inspection, etc.)
-- Filtres statut et type
+### **Composants Hiérarchiques (`src/components/project/hierarchy/`)**
+- ✅ `KPICard.tsx` - Carte d'indicateurs clés
+- ✅ `ProjectHeader.tsx` - Header avec breadcrumb et KPI
+- ✅ `PhaseNode.tsx` - Nœud de phase interactif
+- ✅ `ProjectHierarchyView.tsx` - Vue hiérarchique complète
+- ✅ `ProjectMatrixView.tsx` - Tableau matriciel
+- ✅ `StepNode.tsx` - Nœud d'étape
+- ✅ `MilestoneNode.tsx` - Nœud de jalon
 
-#### **5. Composant PhaseMetrics**
-- Métriques spécifiques phase
-- Jalons complétés/totaux
-- Inspections réalisées
-- Documents attachés
-- Échéances critiques
-
-#### **6. Composant PhaseActions**
-- Actions contextuelles (basées sur statut phase)
-- Ajouter étape/jalon
-- Générer rapport
-- Modifier configuration
-- Actions métier spécifiques
+### **Tâches Restantes Phase 3**
+- [ ] Migrer `PhaseDetailsPage` vers hooks hexagonaux
+- [ ] Créer `PhaseBreadcrumb` avec navigation hiérarchique
+- [ ] Implémenter `PhaseHeader` avec métriques
+- [ ] Développer `PhaseWithStepsView` et `PhaseWithDirectMilestonesView`
+- [ ] Ajouter `PhaseMetrics` et `PhaseActions`
 
 ---
 
-## **Prochaines Actions Immédiates**
+## **Phase 4: Workflows Inspection/Paiement**
 
-### **Pour Phase 4 (Current):**
-1. **Designer PhaseBreadcrumb** avec navigation hiérarchique
-2. **Créer PhaseHeader** avec statut détaillé et métriques
-3. **Développer PhaseWithStepsView** pour phases avec étapes
-4. **Développer PhaseWithDirectMilestonesView** pour phases sans étapes
-5. **Implémenter PhaseActions** avec actions conditionnelles
+### **Objectif**
+Migrer les workflows métier vers l'architecture hexagonale.
 
-### **Pour Phase 5 (Next):**
-1. **Définir règles d'affichage conditionnel**
-2. **Implémenter logique de détection structure**
-3. **Créer composants conditionnels réutilisables**
-4. **Configurer transitions entre vues**
-
-### **Livrables Attendus Phase 4:**
-- ✅ Page PhaseDetailsPage avec navigation hiérarchique
-- ✅ Affichage conditionnel selon structure phase
-- ✅ Métriques phase pertinentes
-- ✅ Actions contextuelles par statut
-- ✅ Design cohérent avec ProjectDetailByDTO
+### **Use Cases à Créer**
+- [ ] `CreateInspectionUseCase`
+- [ ] `ApprovePaymentUseCase`
+- [ ] `GenerateProgressInvoiceUseCase`
 
 ---
 
-## **Structure de Données (Référence)**
+## **Phase 5: Système de Design**
 
-### **Niveau 1 : 🌐 PROJET**
-- Dashboard stratégique global
-- Vue d'ensemble avec KPI
-- Navigation vers phases
+### **Objectif**
+Tokens design cohérents et thème unifié.
 
-### **Niveau 2 : 🏗️ PHASE**
-- Vue opérationnelle par phase
-- Structure conditionnelle (avec/sans étapes)
-- Métriques spécifiques phase
-
-### **Niveau 3 : 📋 ÉTAPE (Optionnel)**
-- Détails processus (si existants)
-- Jalons regroupés par étape
-- Ressources et documents
-
-### **Niveau 4 : 📍 JALON**
-- Points de contrôle critiques
-- Types : validation, inspection, paiement, livraison
-- Documents et inspections associés
-
-### **Niveau 5 : ⚡ ACTION**
-- Interactions utilisateur
-- Actions disponibles selon contexte
-- Workflows spécifiques
+### **Tâches**
+- [ ] Audit tokens CSS existants
+- [ ] Standardiser couleurs HSL dans `index.css`
+- [ ] Créer variantes de composants shadcn
 
 ---
 
-**Statut actuel** : Phase 3 terminée ✅ - Phase 4 en démarrage 🚀  
-**Prochaine milestone** : Livraison PhaseDetailsPage prototype 
+## **Phase 6: Tests & Déploiement**
+
+### **Objectif**
+Validation complète et déploiement progressif.
+
+### **Tâches**
+- [ ] Tests unitaires use cases
+- [ ] Tests d'intégration hooks
+- [ ] Déploiement feature flags
+
+---
+
+## **Métriques de Progression**
+
+| Domaine | Entités | Repositories | Use Cases | Hooks | Pages |
+|---------|---------|--------------|-----------|-------|-------|
+| Projects | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
+| Materials | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
+| Phases | ✅ | ✅ | ⏳ 1/3 | ⏳ | ⏳ |
+| Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ⏳ |
+| Documents | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
+| Tenders | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
+
+---
+
+**Statut actuel** : Phase 2 terminée ✅ - Phase 3 en cours 🚀  
+**Prochaine milestone** : Migration `PhaseDetailsPage` vers hexagonal
