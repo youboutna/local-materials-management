@@ -60,18 +60,28 @@ interface TenderLot {
 interface TenderLotBuilderProps {
   tenderId: string;
   projectId?: string;
-  lots: TenderLot[];
-  onChange: (lots: TenderLot[]) => void;
+  lots?: TenderLot[];
+  onChange?: (lots: TenderLot[]) => void;
   readOnly?: boolean;
 }
 
 const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   tenderId,
   projectId,
-  lots,
+  lots: externalLots,
   onChange,
   readOnly = false
 }) => {
+  const [internalLots, setInternalLots] = useState<TenderLot[]>([]);
+  const lots = externalLots || internalLots;
+  
+  const handleLotsChange = (newLots: TenderLot[]) => {
+    if (onChange) {
+      onChange(newLots);
+    } else {
+      setInternalLots(newLots);
+    }
+  };
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedLot, setExpandedLot] = useState<string | null>(null);
@@ -126,16 +136,16 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
       requirements: [],
       deliverables: []
     };
-    onChange([...lots, newLot]);
+    handleLotsChange([...lots, newLot]);
     setExpandedLot(newLot.id);
   };
 
   const updateLot = (lotId: string, updates: Partial<TenderLot>) => {
-    onChange(lots.map(lot => lot.id === lotId ? { ...lot, ...updates } : lot));
+    handleLotsChange(lots.map(lot => lot.id === lotId ? { ...lot, ...updates } : lot));
   };
 
   const removeLot = (lotId: string) => {
-    onChange(lots.filter(lot => lot.id !== lotId));
+    handleLotsChange(lots.filter(lot => lot.id !== lotId));
   };
 
   const togglePhaseLink = (lotId: string, phaseId: string) => {

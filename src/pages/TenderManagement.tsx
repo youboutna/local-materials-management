@@ -5,12 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { FileText, Users, Upload, Settings } from "lucide-react";
+import { FileText, Users, Upload, Settings, Layers } from "lucide-react";
 import TenderCrud from "@/components/tenders/TenderCrud";
 import TenderWorkflowSteps from "@/components/tenders/TenderWorkflowSteps";
 import TenderDocumentManager from "@/components/tenders/TenderDocumentManager";
 import TenderEvaluationPanel from "@/components/tenders/TenderEvaluationPanel";
 import PublicProcurementWorkflow from "@/components/tenders/PublicProcurementWorkflow";
+import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
+import TenderWorkflowStepper from "@/components/tenders/TenderWorkflowStepper";
 import { TenderSecurityBadge } from "@/components/tenders/TenderSecurityBadge";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
 import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
@@ -239,9 +241,15 @@ const TenderManagement = () => {
 
                 <Tabs defaultValue="workflow" className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+                    <TabsList className="grid w-full grid-cols-7 max-w-3xl">
                       <TabsTrigger value="workflow" className="text-xs">
                         Workflow
+                      </TabsTrigger>
+                      <TabsTrigger value="stepper" className="text-xs">
+                        Processus
+                      </TabsTrigger>
+                      <TabsTrigger value="lots" className="text-xs">
+                        Lots
                       </TabsTrigger>
                       <TabsTrigger value="timeline" className="text-xs">
                         Chronologie
@@ -263,6 +271,18 @@ const TenderManagement = () => {
                       <PublicProcurementWorkflow
                         selectedTender={selectedTender}
                         onShareWithSuppliers={handleShareWithSuppliers}
+                      />
+                    </TabsContent>
+                    <TabsContent value="stepper" className="mt-0">
+                      <TenderWorkflowStepper 
+                        tenderId={selectedTender.id}
+                        currentStep={selectedTender.status === 'draft' ? 'creation' : selectedTender.status === 'published' ? 'publication' : 'evaluation'}
+                      />
+                    </TabsContent>
+                    <TabsContent value="lots" className="mt-0">
+                      <TenderLotBuilder 
+                        tenderId={selectedTender.id} 
+                        projectId={selectedTender.project_id}
                       />
                     </TabsContent>
                     <TabsContent value="timeline" className="mt-0">
