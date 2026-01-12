@@ -3,7 +3,21 @@
  * Contains business logic and validation rules
  */
 
-export type ProjectStatus = 'en attente' | 'en cours' | 'terminé' | 'en retard' | 'suspendu';
+// Use comprehensive status list to match types/project.ts
+export type ProjectStatus = 
+  | "en cours"
+  | "terminé"
+  | "en attente"
+  | "en inspection"
+  | "suspendu"
+  | "annulé"
+  | "attribué"
+  | "planifié"
+  | "pré-qualification"
+  | "en conception"
+  | "en construction"
+  | "en clôture"
+  | "en retard";
 
 export interface ProjectCoordinates {
   latitude: number;

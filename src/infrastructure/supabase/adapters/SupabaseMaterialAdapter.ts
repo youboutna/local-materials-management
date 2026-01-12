@@ -23,7 +23,14 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         : null,
       data.workspace_id || null,
       data.created_at,
-      data.updated_at
+      data.updated_at,
+      // Extended fields
+      data.origin_location || null,
+      data.adresse || null,
+      data.coordinates_latitude || null,
+      data.coordinates_longitude || null,
+      data.forme || null,
+      data.localisation || null
     );
   }
 

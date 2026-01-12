@@ -27,7 +27,14 @@ export class Material {
     public readonly coordinates: { latitude: number; longitude: number } | null,
     public readonly workspaceId: string | null,
     public readonly createdAt: string,
-    public readonly updatedAt: string
+    public readonly updatedAt: string,
+    // Extended fields for Materials page compatibility
+    public readonly originLocation: string | null = null,
+    public readonly adresse: any = null,
+    public readonly coordinatesLatitude: number | null = null,
+    public readonly coordinatesLongitude: number | null = null,
+    public readonly forme: string | null = null,
+    public readonly localisation: any = null
   ) {}
 
   // Business logic
@@ -69,6 +76,12 @@ export class Material {
     availableQuantity?: number;
     sku?: string;
     workspaceId?: string;
+    originLocation?: string;
+    adresse?: any;
+    coordinatesLatitude?: number;
+    coordinatesLongitude?: number;
+    forme?: string;
+    localisation?: any;
   }): Material {
     return new Material(
       params.id,
@@ -86,7 +99,13 @@ export class Material {
       null,
       params.workspaceId || null,
       new Date().toISOString(),
-      new Date().toISOString()
+      new Date().toISOString(),
+      params.originLocation || null,
+      params.adresse || null,
+      params.coordinatesLatitude || null,
+      params.coordinatesLongitude || null,
+      params.forme || null,
+      params.localisation || null
     );
   }
 }
