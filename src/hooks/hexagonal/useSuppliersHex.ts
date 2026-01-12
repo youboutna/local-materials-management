@@ -1,6 +1,6 @@
 /**
  * Hook hexagonal pour les fournisseurs
- * Encapsule les use cases de l'architecture hexagonale
+ * Encapsule les use cases de l'architecture hexagonale avec CRUD complet
  */
 import { useState, useEffect, useCallback } from 'react';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
@@ -11,6 +11,7 @@ import {
   type CreateSupplierInput
 } from '@/application/use-cases';
 import { Supplier } from '@/domain/entities/Supplier';
+import { supabase } from '@/integrations/supabase/client';
 
 // Singleton instances des use cases
 const supplierRepository = RepositoryFactory.getSupplierRepository();
@@ -18,18 +19,38 @@ const getSuppliersListUseCase = new GetSuppliersListUseCase(supplierRepository);
 const getSupplierByIdUseCase = new GetSupplierByIdUseCase(supplierRepository);
 const createSupplierUseCase = new CreateSupplierUseCase(supplierRepository);
 
+export interface SupplierFormData {
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  category?: string;
+  rating?: number;
+  nif?: string;
+  commerce_register_ref?: string;
+}
+
 export interface UseSuppliersHexResult {
   suppliers: Supplier[];
   loading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
   createSupplier: (data: CreateSupplierInput) => Promise<Supplier | null>;
+  updateSupplier: (id: string, data: Partial<SupplierFormData>) => Promise<boolean>;
+  deleteSupplier: (id: string) => Promise<boolean>;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
 }
 
 export function useSuppliersHex(): UseSuppliersHexResult {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchSuppliers = useCallback(async () => {
     try {
@@ -53,12 +74,55 @@ export function useSuppliersHex(): UseSuppliersHexResult {
   }, [fetchSuppliers]);
 
   const createSupplier = useCallback(async (data: CreateSupplierInput): Promise<Supplier | null> => {
-    const result = await createSupplierUseCase.execute(data);
-    if (result.success && result.supplier) {
-      await fetchSuppliers();
-      return result.supplier;
+    setIsCreating(true);
+    try {
+      const result = await createSupplierUseCase.execute(data);
+      if (result.success && result.supplier) {
+        await fetchSuppliers();
+        return result.supplier;
+      }
+      throw new Error(result.error || 'Failed to create supplier');
+    } finally {
+      setIsCreating(false);
     }
-    throw new Error(result.error || 'Failed to create supplier');
+  }, [fetchSuppliers]);
+
+  const updateSupplier = useCallback(async (id: string, data: Partial<SupplierFormData>): Promise<boolean> => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('suppliers')
+        .update(data as any)
+        .eq('id', id as any);
+      
+      if (error) throw error;
+      await fetchSuppliers();
+      return true;
+    } catch (err) {
+      console.error('Failed to update supplier:', err);
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [fetchSuppliers]);
+
+  const deleteSupplier = useCallback(async (id: string): Promise<boolean> => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('suppliers')
+        .delete()
+        .eq('id', id as any);
+      
+      if (error) throw error;
+      await fetchSuppliers();
+      return true;
+    } catch (err) {
+      console.error('Failed to delete supplier:', err);
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
   }, [fetchSuppliers]);
 
   return {
@@ -67,6 +131,11 @@ export function useSuppliersHex(): UseSuppliersHexResult {
     error,
     refetch: fetchSuppliers,
     createSupplier,
+    updateSupplier,
+    deleteSupplier,
+    isCreating,
+    isUpdating,
+    isDeleting,
   };
 }
 
