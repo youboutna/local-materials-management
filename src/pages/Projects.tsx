@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Map, Grid, Filter } from "lucide-react";
+import { Map, Grid, Filter, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
@@ -21,8 +22,12 @@ import { useBulkSelection } from "@/hooks/projects/useBulkSelection";
 import BulkActions from "@/components/projects/BulkActions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Projects: React.FC = () => {
+  const { t } = useLanguage();
   // Use hexagonal architecture hook
   const { projects: hexProjects, loading: isLoading, error, deleteProject } = useProjectsHex();
   
@@ -219,10 +224,20 @@ const Projects: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8  ">
-      <div className="mt-10 space-y-6">
-        <ProjectsHeader />
-
+    <AppLayout
+      showBreadcrumb
+      pageTitle={t("nav.projects")}
+      pageDescription={`${filteredProjects.length} projets`}
+      actions={
+        <Button asChild>
+          <Link to="/projects/create">
+            <Plus className="h-4 w-4 mr-2" />
+            {t("projects.new")}
+          </Link>
+        </Button>
+      }
+    >
+      <div className="space-y-6">
         <Tabs defaultValue="grid" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="grid" className="flex items-center gap-2">
@@ -474,7 +489,7 @@ const Projects: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -27,10 +27,12 @@ import {
   CheckSquare,
   MapPin,
   Shield,
-  Users
+  Users,
+  RefreshCw
 } from "lucide-react";
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -177,50 +179,49 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen pt-5 bg-background">
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  {t("dashboard.management_title")}
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                  {t("dashboard.management_subtitle")}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="outline" className="text-xs">
-                    {t("dashboard.badges.roles_label")}: {userRoles.join(", ")}
-                  </Badge>
-                  {userRoles.includes("admin") && (
-                    <Badge className="bg-red-500 text-white text-xs">
-                      {t("dashboard.badges.administrator")}
-                    </Badge>
-                  )}
-                  {userRoles.includes("director") && (
-                    <Badge className="bg-blue-500 text-white text-xs">
-                      {t("dashboard.badges.director")}
-                    </Badge>
-                  )}
-                  {userRoles.includes("project_manager") && (
-                    <Badge className="bg-green-500 text-white text-xs">
-                      {t("dashboard.badges.project_manager")}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {DEV_MODE && (
-                <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
-                  🛠️ {t("dashboard.dev_mode")}
-                </div>
-              )}
-            </div>
-          </div>
+  const dashboardActions = (
+    <>
+      {DEV_MODE && (
+        <Badge variant="outline" className="bg-amber-100 text-amber-800">
+          🛠️ DEV MODE
+        </Badge>
+      )}
+      <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+        <RefreshCw className="h-4 w-4 mr-2" />
+        {t("common.refresh") || "Actualiser"}
+      </Button>
+    </>
+  );
 
-          {/* Management Tabs */}
+  return (
+    <AppLayout
+      showBreadcrumb
+      pageTitle={t("dashboard.management_title")}
+      pageDescription={t("dashboard.management_subtitle")}
+      actions={dashboardActions}
+    >
+      <div className="space-y-6">
+        {/* Role Badges */}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            {t("dashboard.badges.roles_label")}: {userRoles.join(", ")}
+          </Badge>
+          {userRoles.includes("admin") && (
+            <Badge className="bg-red-500 text-white text-xs">
+              {t("dashboard.badges.administrator")}
+            </Badge>
+          )}
+          {userRoles.includes("director") && (
+            <Badge className="bg-blue-500 text-white text-xs">
+              {t("dashboard.badges.director")}
+            </Badge>
+          )}
+          {userRoles.includes("project_manager") && (
+            <Badge className="bg-green-500 text-white text-xs">
+              {t("dashboard.badges.project_manager")}
+            </Badge>
+          )}
+        </div>
           <motion.div
             className="mt-8"
             initial={{ opacity: 0, y: 20 }}
@@ -455,9 +456,8 @@ const Dashboard: React.FC = () => {
               </TabsContent>
             </Tabs>
           </motion.div>
-        </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

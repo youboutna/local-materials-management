@@ -15,6 +15,8 @@ import InteractiveMaterialsList from "@/components/materials/InteractiveMaterial
 import EnhancedInteractiveMaterialMap from "@/components/materials/EnhancedInteractiveMaterialMap";
 import { ElectricSpinner } from "@/components/loading-page";
 import { useMaterialsHex } from "@/hooks/hexagonal";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Material {
   id: string;
@@ -38,6 +40,7 @@ interface Material {
 
 const Materials: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Use hexagonal architecture hook
   const { materials: hexMaterials, loading: isLoading, error } = useMaterialsHex();
@@ -228,23 +231,20 @@ const Materials: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8  ">
-      <div className="mt-10 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Matériaux</h1>
-            <p className="text-gray-600 mt-1">
-              Gérez votre inventaire de matériaux de construction
-            </p>
-          </div>
-          <Button asChild className="bg-adrar-600 hover:bg-adrar-700">
-            <Link to="/materials/create">
-              <Plus className="w-4 h-4 mr-2" />
-              Ajouter un matériau
-            </Link>
-          </Button>
-        </div>
+    <AppLayout
+      showBreadcrumb
+      pageTitle={t("nav.materials")}
+      pageDescription={`${filteredMaterials.length} matériaux`}
+      actions={
+        <Button asChild className="bg-adrar-600 hover:bg-adrar-700">
+          <Link to="/materials/create">
+            <Plus className="w-4 h-4 mr-2" />
+            Ajouter un matériau
+          </Link>
+        </Button>
+      }
+    >
+      <div className="space-y-6">
 
         <Tabs defaultValue="grid" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -349,7 +349,7 @@ const Materials: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

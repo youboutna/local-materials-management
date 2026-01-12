@@ -85,7 +85,7 @@ function App() {
               <BrowserRouter>
                 <div className="min-h-screen bg-background">
                   <MergedNavbar />
-                  <main className="pt-5">
+                  <main className="pt-16">
                     <Routes>
                       {/* Public routes - always accessible */}
                       <Route path="/" element={<Index />} />
