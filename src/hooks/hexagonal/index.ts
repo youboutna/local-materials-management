@@ -51,3 +51,15 @@ export type { UseInspectionWorkflowHexResult } from './useInspectionWorkflowHex'
 
 export { usePaymentWorkflowHex } from './usePaymentWorkflowHex';
 export type { UsePaymentWorkflowHexResult } from './usePaymentWorkflowHex';
+
+// Employees - Phase 5
+export { useEmployeesHex, useEmployeeHex } from './useEmployeesHex';
+export type { Employee } from './useEmployeesHex';
+
+// Tasks - Phase 5
+export { useTasksHex, useTaskHex } from './useTasksHex';
+export type { Task } from './useTasksHex';
+
+// Inspections - Phase 5
+export { useInspectionsHex, useInspectionHex } from './useInspectionsHex';
+export type { Inspection } from './useInspectionsHex';
