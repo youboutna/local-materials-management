@@ -4,16 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import EnhancedMaterialForm from "@/components/materials/EnhancedMaterialForm";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import type { Database } from "@/integrations/supabase/types";
-
-type Material = Database["public"]["Tables"]["materials"]["Row"];
-type Workspace = Database["public"]["Tables"]["workspaces"]["Row"];
+import { useMaterialHex, useMaterialsHex } from "@/hooks/hexagonal";
 
 interface MaterialFormData {
   name: string;
@@ -54,53 +47,15 @@ const MaterialEdit = () => {
   const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<MaterialFormData>>({});
 
   if (!id) {
     return <Navigate to="/materials" replace />;
   }
 
-  // Fetch material data
-  const {
-    data: material,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["material", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("materials")
-        .select(
-          `
-          *,
-          workspace:workspaces(
-            id,
-            name,
-            location,
-            status,
-            contact_manager,
-            contact_phone
-          )
-        `
-        )
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch workspaces for the form
-  const { data: workspaces = [] } = useQuery({
-    queryKey: ["workspaces"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("workspaces").select("*");
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Use hexagonal hooks
+  const { material, isLoading, error } = useMaterialHex(id);
+  const { workspaces, updateMaterial } = useMaterialsHex();
 
   // Transform material data to form format
   useEffect(() => {
@@ -110,11 +65,11 @@ const MaterialEdit = () => {
         description: material.description,
         category: material.category,
         unit: material.unit,
-        quantity: Number(material.available_quantity),
+        quantity: Number(material.availableQuantity),
         minQuantity: 0,
-        pricePerUnit: Number(material.price_per_unit),
-        availableQuantity: Number(material.available_quantity),
-        workspaceId: material.workspace_id || "",
+        pricePerUnit: Number(material.pricePerUnit),
+        availableQuantity: Number(material.availableQuantity),
+        workspaceId: material.workspaceId || "",
         image: material.image || "",
         adresse:
           typeof material.adresse === "string"
@@ -124,25 +79,24 @@ const MaterialEdit = () => {
         localisation: Array.isArray(material.localisation)
           ? (material.localisation as any[])
           : [],
-        coordinatesLatitude: material.coordinates_latitude
-          ? Number(material.coordinates_latitude)
+        coordinatesLatitude: material.coordinatesLatitude
+          ? Number(material.coordinatesLatitude)
           : undefined,
-        coordinatesLongitude: material.coordinates_longitude
-          ? Number(material.coordinates_longitude)
+        coordinatesLongitude: material.coordinatesLongitude
+          ? Number(material.coordinatesLongitude)
           : undefined,
-        // New identifier fields
-        gtin: (material as any).gtin || "",
-        sku: (material as any).sku || "",
-        ean: (material as any).ean || "",
-        asin: (material as any).asin || "",
-        multilangLabels: (material as any).multilang_labels || {},
+        gtin: material.gtin || "",
+        sku: material.sku || "",
+        ean: material.ean || "",
+        asin: material.asin || "",
+        multilangLabels: {},
         timeline: {
           start: new Date(),
           end: new Date(),
           estimatedDuration: 7,
         },
         supplier: {
-          name: material.origin_location || "",
+          name: material.originLocation || "",
           contact: "",
           leadTime: 7,
         },
@@ -151,75 +105,60 @@ const MaterialEdit = () => {
     }
   }, [material]);
 
-  // Update material mutation
-  const updateMaterial = useMutation({
-    mutationFn: async (updatedData: Partial<MaterialFormData>) => {
-      const materialUpdate = {
-        name: updatedData.name,
-        description: updatedData.description,
-        category: updatedData.category || updatedData.name,
-        unit: updatedData.unit,
-        price_per_unit: updatedData.pricePerUnit,
-        available_quantity: updatedData.availableQuantity,
-        workspace_id: updatedData.workspaceId,
-        origin_location: updatedData.supplier?.name,
-        image: updatedData.image,
-        adresse: updatedData.adresse,
-        forme: updatedData.forme || null,
-        localisation: updatedData.localisation,
-        coordinates_latitude: updatedData.coordinatesLatitude,
-        coordinates_longitude: updatedData.coordinatesLongitude,
-        // New identifier fields
-        gtin: updatedData.gtin || null,
-        sku: updatedData.sku || null,
-        ean: updatedData.ean || null,
-        asin: updatedData.asin || null,
-        multilang_labels: updatedData.multilangLabels || null,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await supabase
-        .from("materials")
-        .update(materialUpdate)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["materials"] });
-      queryClient.invalidateQueries({ queryKey: ["material", id] });
-      toast({
-        title: t("materials.updated"),
-        description: t("materials.updated_success"),
-      });
-      navigate("/materials");
-    },
-    onError: (error) => {
-      console.error("Error updating material:", error);
-      toast({
-        title: t("materials.error"),
-        description: t("materials.update_error"),
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSubmit = (updatedData: Partial<MaterialFormData>) => {
-    // Get the current form data from the form component
     const currentFormData = formData;
     const mergedData = { ...currentFormData, ...updatedData };
-    updateMaterial.mutate(mergedData);
+    
+    const materialUpdate = {
+      name: mergedData.name,
+      description: mergedData.description,
+      category: mergedData.category || mergedData.name,
+      unit: mergedData.unit,
+      price_per_unit: mergedData.pricePerUnit,
+      available_quantity: mergedData.availableQuantity,
+      workspace_id: mergedData.workspaceId,
+      origin_location: mergedData.supplier?.name,
+      image: mergedData.image,
+      adresse: mergedData.adresse,
+      forme: mergedData.forme || null,
+      localisation: mergedData.localisation,
+      coordinates_latitude: mergedData.coordinatesLatitude,
+      coordinates_longitude: mergedData.coordinatesLongitude,
+      gtin: mergedData.gtin || null,
+      sku: mergedData.sku || null,
+      ean: mergedData.ean || null,
+      asin: mergedData.asin || null,
+      multilang_labels: mergedData.multilangLabels || null,
+    };
+
+    updateMaterial.mutate(
+      { id, data: materialUpdate as any },
+      {
+        onSuccess: () => {
+          toast({
+            title: t("materials.updated"),
+            description: t("materials.updated_success"),
+          });
+          navigate("/materials");
+        },
+        onError: (error) => {
+          console.error("Error updating material:", error);
+          toast({
+            title: t("materials.error"),
+            description: t("materials.update_error"),
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
   // Transform workspaces to match the expected interface
   const transformedWorkspaces = workspaces.map((workspace) => ({
     id: workspace.id,
     name: workspace.name,
-    location: workspace.location,
-    status: workspace.status,
+    location: workspace.location || "",
+    status: workspace.status || "",
   }));
 
   if (isLoading) {

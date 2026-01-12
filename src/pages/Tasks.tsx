@@ -1,7 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import TaskAssignments from "@/components/documents/TaskAssignments";
 import { useLanguage } from "@/contexts/LanguageContext";
 
