@@ -4,3 +4,5 @@
  */
 
 export * from './project';
+export * from './inspection';
+export * from './payment';
