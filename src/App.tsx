@@ -148,6 +148,59 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
+                        <Route
+                        path="/projects"
+                        element={
+                          <RoleBasedRoute  
+                           allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager","manager",
+                            ]} >
+                            <Projects />
+                          </RoleBasedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="/projects/:id"
+                        element={
+                          <RoleBasedRoute  
+                           allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager","manager",
+                            ]} >
+                            <ProjectDetail />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/projects/:id/edit"
+                        element={
+                          <RoleBasedRoute  
+                           allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager","manager",
+                            ]} >
+                            <ProjectEdit />
+                          </RoleBasedRoute>
+                        }
+                      />
+                        <Route
+                        path="/projects/create"
+                        element={
+                          <RoleBasedRoute  
+                           allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager","manager",
+                            ]} >
+                            <Projects />
+                          </RoleBasedRoute>
+                        }
+                      />
                       <Route
                         path="/projects"
                         element={
@@ -352,7 +405,8 @@ function App() {
                             allowedRoles={[
                               "admin",
                               "director",
-                              "project_manager",
+                              "project_manager","manager",
+                              "engineering_consultant",
                             ]}
                           >
                             <BankGuaranteeMonitorPage />
@@ -412,7 +466,7 @@ function App() {
                               "admin",
                               "director",
                               "finance_manager",
-                              "project_manager",
+                              "project_manager","manager"
                             ]}
                           >
                             <PaymentControlPage />
