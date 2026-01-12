@@ -16,6 +16,7 @@ import { Building2, Edit, FileText, Mail, Plus, Send, Share2, Star, Trash2 } fro
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Database } from '@/integrations/supabase/types';
+import { AppLayout } from '@/components/layout';
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 
@@ -209,16 +210,17 @@ const Suppliers = () => {
   }
 
   return (
-    <div className="container mx-auto px-6 py-16 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gestion des Fournisseurs</h1>
+    <AppLayout
+      pageTitle="Gestion des Fournisseurs"
+      actions={
         <Button onClick={() => setIsCreating(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Fournisseur
         </Button>
-      </div>
-
-      {isCreating && (
+      }
+    >
+      <div className="space-y-6">
+        {isCreating && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -558,7 +560,8 @@ const Suppliers = () => {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

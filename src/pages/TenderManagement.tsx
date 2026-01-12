@@ -27,6 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TenderService } from "@/services/TenderService";
 import { SubmissionSecretService } from "@/services/SubmissionSecretService";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/layout";
 
 interface Tender {
   id: string;
@@ -168,40 +169,29 @@ const TenderManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <div className="container mx-auto px-6 py-16 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-foreground">
-                Gestion des Appels d'Offres
-              </h1>
-              <TenderSecurityBadge level="confidential" />
-            </div>
-            <p className="text-muted-foreground">
-              Gérez le cycle complet des appels d'offres selon les standards
-              mauritaniens et la charte d'éthique
-            </p>
+    <AppLayout
+      pageTitle="Gestion des Appels d'Offres"
+      pageDescription="Gérez le cycle complet des appels d'offres selon les standards mauritaniens"
+      actions={
+        selectedTender && (
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="px-3 py-1">
+              <FileText className="h-3 w-3 mr-1" />
+              {selectedTender.status}
+            </Badge>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setSecureSharingOpen(true)}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Partage Sécurisé
+            </Button>
           </div>
-          {selectedTender && (
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="px-3 py-1">
-                <FileText className="h-3 w-3 mr-1" />
-                {selectedTender.status}
-              </Badge>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setSecureSharingOpen(true)}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Partage Sécurisé
-              </Button>
-            </div>
-          )}
-        </div>
-
+        )
+      }
+    >
+      <div className="space-y-6">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Tender CRUD */}
           <div className="xl:col-span-1">
@@ -496,7 +486,7 @@ const TenderManagement = () => {
           />
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

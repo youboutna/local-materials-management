@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import {
   Card,
   CardContent,
@@ -35,6 +33,7 @@ import TenderDocuments from "@/components/documents/TenderDocuments";
 import TenderDocumentUploadForm from "@/components/documents/TenderDocumentUploadForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectsHex } from "@/hooks/hexagonal";
+import { AppLayout } from "@/components/layout";
 
 const Documents = () => {
   const { t } = useLanguage();
@@ -118,22 +117,11 @@ const Documents = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <main className="flex-grow py-16">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-adrar-900 font-serif mb-2">
-              {t("documents.title")}
-            </h1>
-            <p className="text-gray-600">{t("documents.subtitle")}</p>
-          </motion.div>
-
-          <motion.div
+    <AppLayout
+      pageTitle={t("documents.title")}
+      pageDescription={t("documents.subtitle")}
+    >
+      <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -256,11 +244,9 @@ const Documents = () => {
                   <DocumentViewer document={selectedDocument} />
                 </TabsContent>
               )}
-            </Tabs>
-          </motion.div>
-        </div>
-      </main>
-    </div>
+      </Tabs>
+    </motion.div>
+    </AppLayout>
   );
 };
 
