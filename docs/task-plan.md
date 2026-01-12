@@ -11,225 +11,247 @@ Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améli
 - [x] **Phase 1**: Audit de l'architecture existante et définition de la stratégie ✓
 - [x] **Phase 2**: Migration progressive de la hiérarchie projet ✓
 - [x] **Phase 3**: Refactoring navigation avec architecture hexagonale ✓
-- [x] **Phase 4**: Migration workflows inspection/paiement ✓ (CURRENT)
-- [ ] **Phase 5**: Système de design et hiérarchie visuelle
-- [ ] **Phase 6**: Tests, validation et déploiement progressif
+- [x] **Phase 4**: Migration workflows inspection/paiement ✓
+- [ ] **Phase 5**: Migration pages restantes (Users, Employees, Tasks, Profile, Inspections)
+- [ ] **Phase 6**: Système de design et hiérarchie visuelle
+- [ ] **Phase 7**: Tests, validation et déploiement progressif
 
 ---
 
-## **Phase 2: Migration Hexagonale - COMPLÉTÉE ✓**
+## **INVENTAIRE COMPLET DES PAGES (57 Routes)**
 
-### **Pages Migrées**
-- ✅ `src/pages/Projects.tsx` → `useProjectsHex()`
-- ✅ `src/pages/Materials.tsx` → `useMaterialsHex()`
-- ✅ `src/pages/Dashboard.tsx` → `useDashboardHex()`
-- ✅ `src/pages/BankGuaranteeMonitor.tsx` → `useProjectsHex()` + `useBankGuaranteesHex()`
-- ✅ `src/pages/PaymentControl.tsx` → `useProjectsHex()` + `usePaymentBlocksHex()`
+### **Routes Publiques (13 pages)** - Sans authentification
 
----
+| Route | Page/Composant | Statut Migration | Hook Cible |
+|-------|----------------|------------------|------------|
+| `/` | `Index` | ⏳ À analyser | N/A (Landing) |
+| `/auth` | `Auth` | ✅ Pas de migration | N/A (Auth) |
+| `/contact` | `Contact` | ⏳ À analyser | N/A (Static) |
+| `/terms` | `Terms` | ✅ Pas de migration | N/A (Static) |
+| `/policy` | `Policy` | ✅ Pas de migration | N/A (Static) |
+| `/reset-password` | `ResetPassword` | ✅ Pas de migration | N/A (Auth) |
+| `/supplier-portal` | `UnifiedSupplierPortal` | ✅ TenderSharingService | N/A (Service) |
+| `/supplier-tender` | `EnhancedSupplierTenderPortal` | ✅ TenderSharingService | N/A (Service) |
+| `/supplier-submissions` | `SupplierSubmissionDashboard` | ✅ User-specific | N/A (Service) |
+| `/supplier-access` | `SupplierSecureAccessPortal` | ✅ TenderSharingService | N/A (Service) |
+| `/evaluation-access` | `EvaluationAccessPortal` | ✅ SubmissionSecretService | N/A (Service) |
+| `/supplier-password-reset` | `SupplierPasswordReset` | ✅ Pas de migration | N/A (Auth) |
+| `/workflow-test` | `WorkflowTest` | ✅ Test/Dev | N/A (Test) |
 
-## **Phase 3: Navigation & Pages Restantes (CURRENT)**
+### **Routes Protégées - Core Business (20 pages)**
 
-### **Analyse Complète des Pages**
+| Route | Page | Rôles Autorisés | Statut Migration | Hook Cible |
+|-------|------|-----------------|------------------|------------|
+| `/home` | `Home` | !supplier | ⏳ À analyser | `useDashboardHex()` ? |
+| `/dashboard` | `Dashboard` | admin, director | ✅ Migré | `useDashboardHex()` |
+| `/enhanced-dashboard` | `EnhancedDashboard` | admin, director | ⏳ À migrer | `useDashboardHex()` |
+| `/projects` | `Projects` | admin, director, pm, manager | ✅ Migré | `useProjectsHex()` |
+| `/projects/create` | `ProjectCreate` | !supplier | ⏳ À migrer | `useProjectsHex()` |
+| `/projects/import` | `ProjectImport` | !supplier | ⏳ À analyser | `useProjectsHex()` |
+| `/projects/:id` | `ProjectDetail` | admin, director, pm, manager | ✅ Migré | `useProjectHex()` |
+| `/projects/:id/edit` | `ProjectEdit` | admin, director, pm, manager | ⏳ À migrer | `useProjectHex()` |
+| `/projects/:id/edit/phases/detail` | `ProjectPhasesDetail` | !supplier | ⏳ À analyser | `usePhasesHex()` |
+| `/projects/:projectId/phases/:phaseId` | `PhaseDetailsPage` | tous | ✅ Migré | `usePhaseHex()` |
+| `/materials` | `Materials` | !supplier | ✅ Migré | `useMaterialsHex()` |
+| `/materials/create` | `MaterialCreate` | !supplier | ⏳ À migrer | `useMaterialsHex()` |
+| `/materials/:id` | `MaterialDetail` | !supplier | ⏳ À migrer | `useMaterialHex()` |
+| `/materials/:id/edit` | `MaterialEdit` | !supplier | ⏳ À migrer | `useMaterialHex()` |
+| `/documents` | `Documents` | !supplier | ✅ Migré | `useProjectsHex()` |
+| `/suppliers` | `Suppliers` | !supplier | ✅ Migré | `useSuppliersHex()` |
+| `/tender-management` | `TenderManagement` | !supplier | ⏳ À migrer | `useTendersHex()` |
+| `/tender-import` | `TenderImport` | !supplier | ⏳ À analyser | `useTendersHex()` |
 
-#### **Groupe 1: Pages Monitoring/Admin (Priorité Haute)**
+### **Routes Protégées - RH & Organisation (5 pages)**
 
-| Page | Fichier | Composants Clés | Migration |
-|------|---------|-----------------|-----------|
-| Suppliers | `src/pages/Suppliers.tsx` | useQuery direct, CRUD mutations | → `useSuppliersHex()` |
-| Documents | `src/pages/Documents.tsx` | DocumentsList, TenderDocuments | → `useDocumentsHex()` |
-| NotificationsCenter | `src/pages/NotificationsCenter.tsx` | Real-time, RoleBasedNotificationCenter | → `useNotificationsHex()` |
-| InsuranceManagement | `src/pages/InsuranceManagement.tsx` | UnifiedInsuranceManager, ProjectManagerProvider | → `useInsurancesHex()` |
-| InspectionMonitoring | `src/pages/InspectionMonitoring.tsx` | RoleBasedInspectionMonitoring | Déjà encapsulé ✅ |
+| Route | Page | Rôles Autorisés | Statut Migration | Hook Cible |
+|-------|------|-----------------|------------------|------------|
+| `/employees` | `Employees` | !supplier | ⏳ À migrer | `useEmployeesHex()` |
+| `/users` | `Users` | admin, director | ⏳ À migrer | `useUsersHex()` |
+| `/profile` | `Profile` | !supplier | ⏳ À analyser | N/A (Auth profile) |
+| `/user-profile` | `UserProfile` | !supplier | ⏳ À analyser | N/A (Auth profile) |
+| `/settings` | `Settings` | admin, director | ⏳ À analyser | N/A (Config) |
 
-#### **Groupe 2: Portails Fournisseurs (Publics - Pas de migration)**
+### **Routes Protégées - Tâches (2 pages)**
 
-| Page | Fichier | Statut |
-|------|---------|--------|
-| SupplierSecureAccessPortal | `src/components/tenders/SupplierSecureAccessPortal.tsx` | Public, TenderSharingService ✅ |
-| EvaluationAccessPortal | `src/components/tenders/EvaluationAccessPortal.tsx` | Public, SubmissionSecretService ✅ |
-| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | User-specific, bien structuré ✅ |
+| Route | Page | Rôles Autorisés | Statut Migration | Hook Cible |
+|-------|------|-----------------|------------------|------------|
+| `/tasks` | `Tasks` | !supplier | ⏳ À migrer | `useTasksHex()` |
+| `/tasks/:taskId` | `TaskDetail` | tous | ⏳ À migrer | `useTaskHex()` |
 
-#### **Groupe 3: Page PhaseDetailsPage (Navigation Hiérarchique)**
+### **Routes Protégées - Inspections (3 pages)**
 
-| Page | Fichier | Hooks Utilisés | Amélioration |
-|------|---------|----------------|--------------|
-| PhaseDetailsPage | `src/components/project/PhaseDetailsPage.tsx` | usePhaseDetails, usePhaseWorkflow | Navigation hiérarchique |
+| Route | Page | Rôles Autorisés | Statut Migration | Hook Cible |
+|-------|------|-----------------|------------------|------------|
+| `/inspections/create` | `InspectionCreate` | !supplier | ⏳ À migrer | `useInspectionWorkflowHex()` |
+| `/inspections/:id` | `InspectionDetail` | !supplier | ⏳ À migrer | `useInspectionHex()` |
+| `/inspections/:id/edit` | `InspectionEdit` | !supplier | ⏳ À migrer | `useInspectionHex()` |
 
-**Structure actuelle:**
-```tsx
-// Utilise déjà des hooks bien structurés
-const { phase, isLoading, error, metrics, updatePhase } = usePhaseDetails(phaseId);
-const { workflowMetrics, inspections, payments, latestApprovedInspection } = usePhaseWorkflow(projectId, phaseId, phase);
-```
+### **Routes Protégées - Monitoring & Contrôle (5 pages)**
 
----
+| Route | Page | Rôles Autorisés | Statut Migration | Hook Cible |
+|-------|------|-----------------|------------------|------------|
+| `/bank-guarantee-monitor` | `BankGuaranteeMonitorPage` | admin, director, pm, eng | ✅ Migré | `useBankGuaranteesHex()` |
+| `/inspection-monitoring` | `InspectionMonitoringPage` | admin, director, eng, pm | ✅ Encapsulé | RoleBasedComponent |
+| `/notifications-center` | `NotificationsCenterPage` | admin, director, pm, eng | ✅ Migré | `useNotificationsHex()` |
+| `/insurance-management` | `InsuranceManagementPage` | admin, director, pm, legal | ⏳ À migrer | `useInsurancesHex()` |
+| `/payment-control` | `PaymentControlPage` | admin, director, finance, pm | ✅ Migré | `usePaymentBlocksHex()` |
 
-### **Tâches Phase 3 - Mise à Jour**
+### **Route 404**
 
-#### **3.1 Hooks Hexagonaux Monitoring** ✅ COMPLÉTÉ
-- [x] `useBankGuaranteesHex` 
-- [x] `usePaymentBlocksHex`
-- [x] `useInsurancesHex`
-- [x] `useNotificationsHex`
-- [x] `usePhaseHex` / `usePhasesHex`
-
-#### **3.2 Pages Monitoring Migration** ✅ COMPLÉTÉ
-- [x] `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
-- [x] `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
-
-#### **3.3 Pages Restantes** ✅ COMPLÉTÉ
-- [x] **Suppliers.tsx** → `useSuppliersHex()` 
-  - Mutations CRUD refactorées via hook hexagonal
-  - Suppression appels Supabase directs
-  
-- [x] **Documents.tsx** → `useProjectsHex()` ✅
-  - Suppression useQuery direct pour projets
-  - Intégration avec hook hexagonal
-  
-- [x] **NotificationsCenterPage** → `useNotificationsHex()` ✅
-  - Real-time subscription conservée
-  - 6 hooks par type de notification (inspection, projet, paiement, tâche, document, système)
-  - Suppression fetchAllNotifications async
-
-#### **3.4 Navigation Hiérarchique PhaseDetailsPage** ✅ COMPLÉTÉ
-- [x] `PhaseBreadcrumb` amélioré avec titre projet dynamique via `useProjectHex()`
-- [x] Navigation vers phases adjacentes ajoutée
-- [x] Skeleton loading pour le titre projet
-
----
-
-### **Portails Fournisseurs - Pas de Migration Nécessaire**
-
-Ces composants sont bien structurés avec des services dédiés:
-
-1. **SupplierSecureAccessPortal** - Utilise `TenderSharingService`
-2. **EvaluationAccessPortal** - Utilise `SubmissionSecretService`
-3. **SupplierSubmissionDashboard** - Queries autonomes user-specific
-
-**Raison:** Portails publics avec logique d'authentification spéciale (codes secrets), ne nécessitent pas l'architecture hexagonale.
+| Route | Page | Statut |
+|-------|------|--------|
+| `*` | `NotFound` | ✅ N/A |
 
 ---
 
-### **InspectionMonitoringPage - Pas de Changement**
+## **RÉSUMÉ MIGRATION**
 
-```tsx
-// Déjà bien encapsulé via composant
-<RoleBasedInspectionMonitoring />
-```
-
-Le composant gère sa propre logique, pas besoin de migration supplémentaire.
-
----
-
-## **Prochaines Actions Immédiates**
-
-### **Action 1: Migrer Suppliers.tsx**
-```tsx
-// Avant (appels Supabase directs)
-const { data: suppliers } = useQuery({
-  queryFn: async () => {
-    const { data } = await supabase.from('suppliers').select('*');
-    return data;
-  }
-});
-
-// Après (hook hexagonal)
-const { suppliers, isLoading, createSupplier, updateSupplier, deleteSupplier } = useSuppliersHex();
-```
-
-### **Action 2: Migrer Documents.tsx**
-```tsx
-// Utiliser useDocumentsHex() pour charger projets et documents
-const { documents, isLoading } = useDocumentsHex();
-const { projects } = useProjectsHex();
-```
-
-### **Action 3: Améliorer PhaseDetailsPage Navigation**
-```tsx
-// Améliorer PhaseBreadcrumb avec titre projet dynamique
-<PhaseBreadcrumb
-  project={{ id: projectId, title: projectTitle }} // ← Charger depuis useProjectsHex
-  phase={phase}
-  adjacentPhases={adjacentPhases} // ← Permettre navigation
-/>
-```
+| Catégorie | Total | Migrées ✅ | À Migrer ⏳ | N/A |
+|-----------|-------|-----------|-------------|-----|
+| Publiques | 13 | 0 | 2 | 11 |
+| Core Business | 20 | 8 | 12 | 0 |
+| RH & Organisation | 5 | 0 | 3 | 2 |
+| Tâches | 2 | 0 | 2 | 0 |
+| Inspections | 3 | 0 | 3 | 0 |
+| Monitoring | 5 | 4 | 1 | 0 |
+| **TOTAL** | **48** | **12** | **23** | **13** |
 
 ---
 
-## **Phase 4: Workflows Inspection/Paiement - COMPLÉTÉE ✓**
+## **Phase 5: Migration Pages Restantes (CURRENT)**
 
-### **Hooks Workflow Créés**
-- ✅ `useInspectionWorkflowHex` - Workflow complet d'inspection
-  - `createRequest()` - Créer une demande d'inspection
-  - `scheduleInspection()` - Programmer une inspection
-  - `executeInspection()` - Exécuter et valider/rejeter
-  
-- ✅ `usePaymentWorkflowHex` - Workflow complet de paiement
-  - `createRequest()` - Créer une demande de paiement
-  - `validatePayment()` - Valider/approuver/rejeter par rôle
+### **Priorité 1 - Pages CRUD Simples**
 
-### **Use Cases Existants Utilisés**
-- `CreateInspectionRequestUseCase`
-- `ScheduleInspectionUseCase`
-- `ExecuteInspectionUseCase`
-- `CreatePaymentRequestUseCase`
-- `ValidatePaymentUseCase`
+| Page | Fichier | Hook à créer/utiliser |
+|------|---------|----------------------|
+| `MaterialCreate` | `src/pages/MaterialCreate.tsx` | `useMaterialsHex()` |
+| `MaterialDetail` | `src/pages/MaterialDetail.tsx` | `useMaterialHex()` |
+| `MaterialEdit` | `src/pages/MaterialEdit.tsx` | `useMaterialHex()` |
+| `ProjectEdit` | `src/pages/ProjectEdit.tsx` | `useProjectHex()` |
+| `ProjectCreate` | `src/pages/ProjectCreate.tsx` | `useProjectsHex()` |
+
+### **Priorité 2 - Pages RH**
+
+| Page | Fichier | Hook à créer |
+|------|---------|-------------|
+| `Employees` | `src/pages/Employees.tsx` | `useEmployeesHex()` |
+| `Users` | `src/pages/Users.tsx` | `useUsersHex()` |
+
+### **Priorité 3 - Pages Tâches**
+
+| Page | Fichier | Hook à créer |
+|------|---------|-------------|
+| `Tasks` | `src/pages/Tasks.tsx` | `useTasksHex()` |
+| `TaskDetail` | `src/pages/TaskDetail.tsx` | `useTaskHex()` |
+
+### **Priorité 4 - Pages Inspections**
+
+| Page | Fichier | Hook à utiliser |
+|------|---------|----------------|
+| `InspectionCreate` | `src/pages/InspectionCreate.tsx` | `useInspectionWorkflowHex()` |
+| `InspectionDetail` | `src/pages/InspectionDetail.tsx` | `useInspectionHex()` |
+| `InspectionEdit` | `src/pages/InspectionEdit.tsx` | `useInspectionHex()` |
+
+### **Priorité 5 - Pages Tenders**
+
+| Page | Fichier | Hook à créer |
+|------|---------|-------------|
+| `TenderManagement` | `src/pages/TenderManagement.tsx` | `useTendersHex()` |
+| `TenderImport` | `src/pages/TenderImport.tsx` | `useTendersHex()` |
+
+### **Priorité 6 - Pages Diverses**
+
+| Page | Fichier | Hook à utiliser |
+|------|---------|----------------|
+| `InsuranceManagement` | `src/pages/InsuranceManagement.tsx` | `useInsurancesHex()` |
+| `EnhancedDashboard` | `src/pages/EnhancedDashboard.tsx` | `useDashboardHex()` |
+| `Home` | `src/pages/Home.tsx` | `useDashboardHex()` |
+
+---
+
+## **Hooks Hexagonaux - État Actuel**
+
+### **Existants et Fonctionnels** ✅
+
+| Hook | Domaine | Méthodes |
+|------|---------|----------|
+| `useProjectsHex` | Projects | `projects`, `isLoading`, `create`, `update`, `delete` |
+| `useProjectHex` | Project | `project`, `isLoading` |
+| `useMaterialsHex` | Materials | `materials`, `isLoading`, `create`, `update`, `delete` |
+| `useDashboardHex` | Dashboard | `stats`, `trends`, `isLoading` |
+| `useSuppliersHex` | Suppliers | `suppliers`, `isLoading`, `create`, `update`, `delete` |
+| `usePhasesHex` | Phases | `phases`, `isLoading`, `create`, `update` |
+| `usePhaseHex` | Phase | `phase`, `isLoading` |
+| `useBankGuaranteesHex` | Bank Guarantees | `guarantees`, `isLoading` |
+| `usePaymentBlocksHex` | Payment Blocks | `blocks`, `isLoading` |
+| `useNotificationsHex` | Notifications | `notifications`, `isLoading`, `markAsRead` |
+| `useInspectionWorkflowHex` | Inspections | `createRequest`, `schedule`, `execute` |
+| `usePaymentWorkflowHex` | Payments | `createRequest`, `validate` |
+
+### **À Créer** ⏳
+
+| Hook | Domaine | Priorité |
+|------|---------|----------|
+| `useEmployeesHex` | Employees | P2 |
+| `useUsersHex` | Users | P2 |
+| `useTasksHex` | Tasks | P3 |
+| `useTaskHex` | Task | P3 |
+| `useInspectionHex` | Inspection | P4 |
+| `useTendersHex` | Tenders | P5 |
+| `useInsurancesHex` | Insurances | P6 |
 
 ---
 
 ## **Métriques de Progression**
 
-| Domaine | Entités | Repositories | Use Cases | Hooks | Pages |
-|---------|---------|--------------|-----------|-------|-------|
-| Projects | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
-| Materials | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
-| Phases | ✅ | ✅ | ✅ 1/3 | ✅ | ✅ |
-| Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
-| Documents | ✅ | ✅ | ✅ 2/2 | ✅ | ✅ |
-| Tenders | ✅ | ⏳ | ⏳ 2/2 | ✅ | N/A |
-| Monitoring | ✅ | ✅ | ⏳ | ✅ | ✅ |
-| Notifications | ✅ | ⏳ | ⏳ | ✅ | ✅ |
-| Inspections | ✅ | ✅ | ✅ 4/4 | ✅ | N/A |
-| Payments | ✅ | ✅ | ✅ 3/3 | ✅ | N/A |
+| Domaine | Entités | Repositories | Use Cases | Hooks | Pages Migrées |
+|---------|---------|--------------|-----------|-------|---------------|
+| Projects | ✅ | ✅ | ✅ 5/5 | ✅ | 4/7 |
+| Materials | ✅ | ✅ | ✅ 5/5 | ✅ | 1/4 |
+| Phases | ✅ | ✅ | ✅ 1/3 | ✅ | 1/2 |
+| Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | 1/1 |
+| Documents | ✅ | ✅ | ✅ 2/2 | ✅ | 1/1 |
+| Tenders | ✅ | ⏳ | ⏳ 2/2 | ⏳ | 0/2 |
+| Monitoring | ✅ | ✅ | ⏳ | ✅ | 4/5 |
+| Notifications | ✅ | ⏳ | ⏳ | ✅ | 1/1 |
+| Inspections | ✅ | ✅ | ✅ 4/4 | ✅ | 0/3 |
+| Payments | ✅ | ✅ | ✅ 3/3 | ✅ | 1/1 |
+| Employees | ⏳ | ⏳ | ⏳ | ⏳ | 0/1 |
+| Users | ⏳ | ⏳ | ⏳ | ⏳ | 0/1 |
+| Tasks | ⏳ | ⏳ | ⏳ | ⏳ | 0/2 |
 
 ---
 
-## **Routes - État Actuel**
+## **Détection Routes Dupliquées ⚠️**
 
-### **Routes Publiques** (pas de migration)
-- `/supplier-portal`, `/supplier-tender`, `/supplier-access`
-- `/supplier-submissions`, `/evaluation-access`
-- Ces portails utilisent des services dédiés ✅
+Les routes suivantes sont définies DEUX fois avec des règles de rôles différentes:
 
-### **Routes Protégées - Migrées** ✅
-- `/projects` - `useProjectsHex()`
-- `/materials` - `useMaterialsHex()`
-- `/dashboard` - `useDashboardHex()`
-- `/bank-guarantee-monitor` - `useBankGuaranteesHex()`
-- `/payment-control` - `usePaymentBlocksHex()`
-- `/suppliers` - `useSuppliersHex()`
-- `/documents` - `useProjectsHex()`
-- `/notifications-center` - `useNotificationsHex()`
+```
+/projects           → allowedRoles + disallowedRoles (conflit)
+/projects/create    → allowedRoles + disallowedRoles (conflit)  
+/projects/:id       → allowedRoles + disallowedRoles (conflit)
+/projects/:id/edit  → allowedRoles + disallowedRoles (conflit)
+```
 
-### **Routes Protégées - Navigation Hiérarchique** ✅
-- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage avec PhaseBreadcrumb amélioré
-
-### **Workflows Hexagonaux** ✅
-- Inspection: `useInspectionWorkflowHex()`
-- Payment: `usePaymentWorkflowHex()`
+**Action requise**: Nettoyer les routes dupliquées dans `App.tsx`
 
 ---
 
-## **Phase 5: Système de Design (À VENIR)**
+## **Prochaines Actions**
 
-### **Objectifs**
-1. Standardiser les tokens de design (couleurs, espacements, typographie)
-2. Créer des variantes de composants cohérentes
-3. Améliorer la hiérarchie visuelle des pages projet
-4. Documentation des patterns UI
+### **Action Immédiate 1: Nettoyer Routes Dupliquées**
+Supprimer les routes `/projects*` dupliquées dans App.tsx
+
+### **Action 2: Créer Hooks Manquants**
+1. `useEmployeesHex()`
+2. `useTasksHex()` / `useTaskHex()`
+3. `useInspectionHex()`
+
+### **Action 3: Migrer Pages P1**
+- `MaterialCreate`, `MaterialDetail`, `MaterialEdit`
+- `ProjectEdit`, `ProjectCreate`
 
 ---
 
-**Statut actuel** : Phase 4 COMPLÉTÉE ✅ - Workflows hexagonaux créés  
-**Prochaine phase** : Phase 5 - Système de design et hiérarchie visuelle
+**Statut actuel** : Phase 5 EN COURS - 12/48 pages migrées (25%)  
+**Prochaine étape** : Nettoyer routes dupliquées, puis migrer pages CRUD
