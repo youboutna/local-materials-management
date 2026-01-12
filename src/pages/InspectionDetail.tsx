@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,42 +8,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, User, FileText, TrendingUp, Edit, Play, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { InspectionDTO } from '@/types/inspection.dto';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { useInspectionHex } from '@/hooks/hexagonal';
 import FieldInspectionExecutor from '@/components/inspections/FieldInspectionExecutor';
 import InspectionPVGenerator from '@/components/inspections/InspectionPVGenerator';
+import { useQueryClient } from '@tanstack/react-query';
 
 const InspectionDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { hasAnyRole } = useCurrentUserRoles();
   const [activeTab, setActiveTab] = useState('details');
 
   const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant', 'engineering_consultant']);
   const canExecute = isInspector;
 
-  const { data: inspection, isLoading, error, refetch } = useQuery({
-    queryKey: ['inspection', id],
-    queryFn: async () => {
-      if (!id) throw new Error('ID d\'inspection manquant');
-      
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          projects (
-            title,
-            status
-          )
-        `)
-        .eq('id', id)
-        .single();
+  const { inspection, isLoading, error } = useInspectionHex(id);
 
-      if (error) throw error;
-      return data as InspectionDTO;
-    },
-    enabled: !!id,
-  });
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ['inspection-hex', id] });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -92,7 +75,19 @@ const InspectionDetail = () => {
     );
   }
 
-  const projectTitle = inspection.projects?.title || 'Projet non spécifié';
+  const projectTitle = inspection.projectTitle || 'Projet non spécifié';
+
+  // Transform to snake_case for legacy components
+  const inspectionData = {
+    id: inspection.id,
+    project_id: inspection.projectId,
+    phase_id: inspection.phaseId,
+    date: inspection.date,
+    inspector: inspection.inspector,
+    status: inspection.status,
+    progress_at_inspection: inspection.progressAtInspection,
+    comments: inspection.comments,
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,13 +161,13 @@ const InspectionDetail = () => {
                       <p className="text-lg font-medium">{inspection.inspector}</p>
                     </div>
 
-                    {inspection.progress_at_inspection !== null && (
+                    {inspection.progressAtInspection !== null && (
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-muted-foreground">
                           <TrendingUp className="h-4 w-4 mr-2" />
                           Progression lors de l'inspection
                         </div>
-                        <p className="text-lg font-medium">{inspection.progress_at_inspection}%</p>
+                        <p className="text-lg font-medium">{inspection.progressAtInspection}%</p>
                       </div>
                     )}
                   </div>
@@ -197,11 +192,11 @@ const InspectionDetail = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                     <div>
                       <span className="font-medium">Créé le:</span>{' '}
-                      {format(new Date(inspection.created_at), 'PPP à HH:mm', { locale: fr })}
+                      {format(new Date(inspection.createdAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                     <div>
                       <span className="font-medium">Modifié le:</span>{' '}
-                      {format(new Date(inspection.updated_at), 'PPP à HH:mm', { locale: fr })}
+                      {format(new Date(inspection.updatedAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                   </div>
                 </CardContent>
@@ -211,16 +206,7 @@ const InspectionDetail = () => {
             {canExecute && (
               <TabsContent value="execution">
                 <FieldInspectionExecutor
-                  inspection={{
-                    id: inspection.id,
-                    project_id: inspection.project_id,
-                    phase_id: inspection.phase_id,
-                    date: inspection.date,
-                    inspector: inspection.inspector,
-                    status: inspection.status,
-                    progress_at_inspection: inspection.progress_at_inspection || 0,
-                    comments: inspection.comments,
-                  }}
+                  inspection={inspectionData}
                   projectTitle={projectTitle}
                   onComplete={() => {
                     refetch();
@@ -233,16 +219,7 @@ const InspectionDetail = () => {
 
             <TabsContent value="pv">
               <InspectionPVGenerator
-                inspection={{
-                  id: inspection.id,
-                  project_id: inspection.project_id,
-                  phase_id: inspection.phase_id,
-                  date: inspection.date,
-                  inspector: inspection.inspector,
-                  status: inspection.status,
-                  progress_at_inspection: inspection.progress_at_inspection || 0,
-                  comments: inspection.comments,
-                }}
+                inspection={inspectionData}
                 projectTitle={projectTitle}
                 onGenerated={(pv, url) => {
                   console.log('PV generated:', pv.pv_number);

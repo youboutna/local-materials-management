@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useMaterialsHex } from "@/hooks/hexagonal";
 import { ArrowLeft, Package } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 const MaterialCreate = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { createMaterial } = useMaterialsHex();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (materialData: any) => {
@@ -25,37 +26,14 @@ const MaterialCreate = () => {
 
     try {
       setLoading(true);
-
-      const { data, error } = await supabase
-        .from("materials")
-        .insert([
-          {
-            name: materialData.name,
-            description: materialData.description || "",
-            category: materialData.category,
-            unit: materialData.unit || "kg",
-            price_per_unit: materialData.pricePerUnit || 0,
-            available_quantity: materialData.availableQuantity || 0,
-            origin_location: materialData.adresse || null,
-            workspace_id: materialData.workspaceId || null,
-            image: materialData.image || null,
-            adresse: materialData.adresse || null,
-            forme: materialData.forme || null,
-            coordinates_latitude: materialData.coordinatesLatitude || null,
-            coordinates_longitude: materialData.coordinatesLongitude || null,
-            localisation: materialData.localisation || null,
-            // New identifier fields
-            gtin: materialData.gtin || null,
-            sku: materialData.sku || null,
-            ean: materialData.ean || null,
-            asin: materialData.asin || null,
-            multilang_labels: materialData.multilangLabels || null,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
+      await createMaterial({
+        name: materialData.name,
+        description: materialData.description || "",
+        category: materialData.category,
+        unit: materialData.unit || "kg",
+        pricePerUnit: materialData.pricePerUnit || 0,
+        availableQuantity: materialData.availableQuantity || 0,
+      });
 
       toast({
         title: t('common.success'),
