@@ -23,153 +23,137 @@ Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améli
 - ✅ `src/pages/Projects.tsx` → `useProjectsHex()`
 - ✅ `src/pages/Materials.tsx` → `useMaterialsHex()`
 - ✅ `src/pages/Dashboard.tsx` → `useDashboardHex()`
+- ✅ `src/pages/BankGuaranteeMonitor.tsx` → `useProjectsHex()` + `useBankGuaranteesHex()`
+- ✅ `src/pages/PaymentControl.tsx` → `useProjectsHex()` + `usePaymentBlocksHex()`
 
 ---
 
 ## **Phase 3: Navigation & Pages Restantes (CURRENT)**
 
-### **Analyse des Pages à Migrer**
+### **Analyse Complète des Pages**
 
-#### **Groupe 1: Pages Monitoring (Priorité Haute)**
+#### **Groupe 1: Pages Monitoring/Admin (Priorité Haute)**
 
-| Page | Fichier | Dépendances Supabase Directes | Complexité |
-|------|---------|------------------------------|------------|
-| BankGuaranteeMonitor | `src/pages/BankGuaranteeMonitor.tsx` | projects, project_hierarchy RPC | Moyenne |
-| InspectionMonitoring | `src/pages/InspectionMonitoring.tsx` | Via composant RoleBasedInspectionMonitoring | Faible |
-| PaymentControl | `src/pages/PaymentControl.tsx` | payment_blocks, notifications, projects | Haute |
-| NotificationsCenter | `src/pages/NotificationsCenter.tsx` | notifications | Moyenne |
-| InsuranceManagement | `src/pages/InsuranceManagement.tsx` | insurance_certificates | Moyenne |
+| Page | Fichier | Composants Clés | Migration |
+|------|---------|-----------------|-----------|
+| Suppliers | `src/pages/Suppliers.tsx` | useQuery direct, CRUD mutations | → `useSuppliersHex()` |
+| Documents | `src/pages/Documents.tsx` | DocumentsList, TenderDocuments | → `useDocumentsHex()` |
+| NotificationsCenter | `src/pages/NotificationsCenter.tsx` | Real-time, RoleBasedNotificationCenter | → `useNotificationsHex()` |
+| InsuranceManagement | `src/pages/InsuranceManagement.tsx` | UnifiedInsuranceManager, ProjectManagerProvider | → `useInsurancesHex()` |
+| InspectionMonitoring | `src/pages/InspectionMonitoring.tsx` | RoleBasedInspectionMonitoring | Déjà encapsulé ✅ |
 
-**Patterns identifiés:**
-- `ProjectManagerProvider` utilisé pour contexte projet
-- Appels RPC `get_project_hierarchy` pour hiérarchie
-- Real-time subscriptions sur `notifications`
-- Chargement projet par défaut (premier projet "en cours")
+#### **Groupe 2: Portails Fournisseurs (Publics - Pas de migration)**
 
-#### **Groupe 2: Portails Fournisseurs (Priorité Moyenne)**
+| Page | Fichier | Statut |
+|------|---------|--------|
+| SupplierSecureAccessPortal | `src/components/tenders/SupplierSecureAccessPortal.tsx` | Public, TenderSharingService ✅ |
+| EvaluationAccessPortal | `src/components/tenders/EvaluationAccessPortal.tsx` | Public, SubmissionSecretService ✅ |
+| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | User-specific, bien structuré ✅ |
 
-| Page | Fichier | Dépendances Supabase Directes | Complexité |
-|------|---------|------------------------------|------------|
-| UnifiedSupplierPortal | `src/pages/UnifiedSupplierPortal.tsx` | suppliers, documents, notifications, parsed_invoices | Très Haute |
-| EnhancedSupplierTenderPortal | `src/components/suppliers/EnhancedSupplierTenderPortal.tsx` | Via TenderService, TenderSubmissionService | Haute |
-| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | tender_submissions | Moyenne |
+#### **Groupe 3: Page PhaseDetailsPage (Navigation Hiérarchique)**
 
-**Patterns identifiés:**
-- Auth state management avec `supabase.auth.onAuthStateChange`
-- Services existants: `TenderService`, `TenderSubmissionService`
-- React Query pour fetching avec cache
-- Documents uploads via `useDocumentStorage`
+| Page | Fichier | Hooks Utilisés | Amélioration |
+|------|---------|----------------|--------------|
+| PhaseDetailsPage | `src/components/project/PhaseDetailsPage.tsx` | usePhaseDetails, usePhaseWorkflow | Navigation hiérarchique |
 
-#### **Groupe 3: Pages Projets Détail (Priorité Haute)**
-
-| Page | Fichier | Dépendances | Complexité |
-|------|---------|-------------|------------|
-| PhaseDetailsPage | `src/components/project/PhaseDetailsPage.tsx` | IPhaseRepository, GetPhaseDetailsUseCase | Moyenne |
-| ProjectDetail | `src/pages/ProjectDetail.tsx` | projects, phases | Moyenne |
-| ProjectPhasesDetail | `src/pages/ProjectPhasesDetail.tsx` | phases | Faible |
+**Structure actuelle:**
+```tsx
+// Utilise déjà des hooks bien structurés
+const { phase, isLoading, error, metrics, updatePhase } = usePhaseDetails(phaseId);
+const { workflowMetrics, inspections, payments, latestApprovedInspection } = usePhaseWorkflow(projectId, phaseId, phase);
+```
 
 ---
 
-### **Stratégie de Migration Phase 3**
+### **Tâches Phase 3 - Mise à Jour**
 
-#### **Étape 3.1: Hooks Monitoring Hexagonaux** ✅
-Hooks créés pour encapsuler les logiques monitoring:
+#### **3.1 Hooks Hexagonaux Monitoring** ✅ COMPLÉTÉ
+- [x] `useBankGuaranteesHex` 
+- [x] `usePaymentBlocksHex`
+- [x] `useInsurancesHex`
+- [x] `useNotificationsHex`
+- [x] `usePhaseHex` / `usePhasesHex`
+
+#### **3.2 Pages Monitoring Migration** ✅ COMPLÉTÉ
+- [x] `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
+- [x] `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
+
+#### **3.3 Pages Restantes** ← PROCHAINE ÉTAPE
+- [ ] **Suppliers.tsx** → `useSuppliersHex()` (hook existant)
+  - Refactorer les mutations CRUD
+  - Supprimer appels Supabase directs
+  
+- [ ] **Documents.tsx** → `useDocumentsHex()` (hook existant)
+  - Intégrer avec DocumentsList
+  - Simplifier le state management
+  
+- [ ] **NotificationsCenterPage** → `useNotificationsHex()`
+  - Conserver real-time subscription (dans le hook)
+  - Simplifier fetchAllNotifications
+
+#### **3.4 Navigation Hiérarchique PhaseDetailsPage**
+- [ ] Améliorer `PhaseBreadcrumb` avec titre projet dynamique
+  - Utiliser `useProjectsHex()` pour charger le titre
+- [ ] Ajouter navigation vers phases adjacentes
+- [ ] Intégrer métriques projet dans le header
+
+---
+
+### **Portails Fournisseurs - Pas de Migration Nécessaire**
+
+Ces composants sont bien structurés avec des services dédiés:
+
+1. **SupplierSecureAccessPortal** - Utilise `TenderSharingService`
+2. **EvaluationAccessPortal** - Utilise `SubmissionSecretService`
+3. **SupplierSubmissionDashboard** - Queries autonomes user-specific
+
+**Raison:** Portails publics avec logique d'authentification spéciale (codes secrets), ne nécessitent pas l'architecture hexagonale.
+
+---
+
+### **InspectionMonitoringPage - Pas de Changement**
 
 ```tsx
-// src/hooks/hexagonal/useMonitoringHex.ts
-export const useBankGuaranteesHex = () => { /* ✅ Créé */ };
-export const usePaymentBlocksHex = () => { /* ✅ Créé */ };
-export const useInsurancesHex = () => { /* ✅ Créé */ };
-export const useNotificationsHex = () => { /* ✅ Créé */ };
+// Déjà bien encapsulé via composant
+<RoleBasedInspectionMonitoring />
 ```
 
-#### **Étape 3.2: Hook Phases Hexagonal** ✅
-Hook créé avec support phases:
+Le composant gère sa propre logique, pas besoin de migration supplémentaire.
 
+---
+
+## **Prochaines Actions Immédiates**
+
+### **Action 1: Migrer Suppliers.tsx**
 ```tsx
-// src/hooks/hexagonal/usePhasesHex.ts
-export const usePhaseHex = (phaseId?: string) => { /* ✅ Créé */ };
-export const usePhasesHex = (projectId?: string) => { /* ✅ Créé */ };
+// Avant (appels Supabase directs)
+const { data: suppliers } = useQuery({
+  queryFn: async () => {
+    const { data } = await supabase.from('suppliers').select('*');
+    return data;
+  }
+});
+
+// Après (hook hexagonal)
+const { suppliers, isLoading, createSupplier, updateSupplier, deleteSupplier } = useSuppliersHex();
 ```
 
-#### **Étape 3.3: Pages Migrées** 
-- ✅ `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
-- ✅ `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
-
----
-
-### **Tâches Phase 3**
-
-#### **3.1 Hooks Hexagonaux Monitoring** ✅
-- [x] Créer `src/hooks/hexagonal/usePhasesHex.ts`
-- [x] Créer `src/hooks/hexagonal/useMonitoringHex.ts`
-  - [x] `useBankGuaranteesHex`
-  - [x] `usePaymentBlocksHex`
-  - [x] `useInsurancesHex`
-  - [x] `useNotificationsHex`
-
-#### **3.2 Pages Monitoring Migration** ✅
-- [x] Migrer `BankGuaranteeMonitorPage` → `useProjectsHex()` + `useBankGuaranteesHex()`
-- [x] Migrer `PaymentControlPage` → `useProjectsHex()` + `usePaymentBlocksHex()`
-
-#### **3.3 Pages Restantes** (À faire)
-- [ ] Migrer `InspectionMonitoringPage` → hooks existants
-- [ ] Migrer `NotificationsCenterPage` → `useNotificationsHex()`
-- [ ] Migrer `InsuranceManagementPage` → `useInsurancesHex()`
-- [ ] Migrer `Suppliers.tsx` → `useSuppliersHex()`
-- [ ] Migrer `Documents.tsx` → `useDocumentsHex()`
-
-#### **3.4 Navigation Hiérarchique** (À faire)
-- [ ] Améliorer `PhaseDetailsPage` avec breadcrumb dynamique
-- [ ] Intégrer `usePhaseHex` dans les composants de workflow
-
-#### **3.5 Navigation Hiérarchique**
-- [ ] Créer `PhaseBreadcrumb` avec navigation projet → phase
-- [ ] Créer `PhaseHeader` avec métriques
-- [ ] Implémenter `PhaseWithStepsView` / `PhaseWithDirectMilestonesView`
-
----
-
-### **Use Cases à Créer (Phase 3)**
-
-```
-src/application/use-cases/
-├── monitoring/
-│   ├── GetBankGuaranteesUseCase.ts
-│   ├── GetPaymentBlocksUseCase.ts
-│   └── GetInsurancesUseCase.ts
-├── notification/
-│   ├── GetNotificationsUseCase.ts
-│   └── MarkNotificationReadUseCase.ts
-└── phase/
-    ├── GetPhaseByIdUseCase.ts
-    └── UpdatePhaseProgressUseCase.ts
+### **Action 2: Migrer Documents.tsx**
+```tsx
+// Utiliser useDocumentsHex() pour charger projets et documents
+const { documents, isLoading } = useDocumentsHex();
+const { projects } = useProjectsHex();
 ```
 
----
-
-### **Repositories à Créer (Phase 3)**
-
+### **Action 3: Améliorer PhaseDetailsPage Navigation**
+```tsx
+// Améliorer PhaseBreadcrumb avec titre projet dynamique
+<PhaseBreadcrumb
+  project={{ id: projectId, title: projectTitle }} // ← Charger depuis useProjectsHex
+  phase={phase}
+  adjacentPhases={adjacentPhases} // ← Permettre navigation
+/>
 ```
-src/domain/repositories/
-├── IBankGuaranteeRepository.ts
-├── IPaymentBlockRepository.ts
-├── IInsuranceRepository.ts
-└── INotificationRepository.ts
-```
-
----
-
-## **Phase 4: Workflows Inspection/Paiement**
-
-### **Objectif**
-Migrer les workflows métier vers l'architecture hexagonale.
-
-### **Use Cases Prévus**
-- [ ] `CreateInspectionUseCase`
-- [ ] `ApprovePaymentUseCase`
-- [ ] `GenerateProgressInvoiceUseCase`
-- [ ] `BlockPaymentUseCase`
 
 ---
 
@@ -179,41 +163,38 @@ Migrer les workflows métier vers l'architecture hexagonale.
 |---------|---------|--------------|-----------|-------|-------|
 | Projects | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
 | Materials | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
-| Phases | ✅ | ✅ | ⏳ 1/3 | ⏳ | ⏳ |
+| Phases | ✅ | ✅ | ✅ 1/3 | ✅ | ⏳ |
 | Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ⏳ |
-| Documents | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
-| Tenders | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
-| Monitoring | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
-| Notifications | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
+| Documents | ✅ | ✅ | ✅ 2/2 | ✅ | ⏳ |
+| Tenders | ✅ | ⏳ | ⏳ 2/2 | ✅ | N/A |
+| Monitoring | ✅ | ✅ | ⏳ | ✅ | ✅ |
+| Notifications | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
 
 ---
 
-## **Routes à Migrer (Référence)**
+## **Routes - État Actuel**
 
-### **Routes Publiques** (pas de migration nécessaire)
-- `/` - Index
-- `/auth` - Auth
-- `/contact`, `/terms`, `/policy`
+### **Routes Publiques** (pas de migration)
 - `/supplier-portal`, `/supplier-tender`, `/supplier-access`
+- `/supplier-submissions`, `/evaluation-access`
+- Ces portails utilisent des services dédiés ✅
 
-### **Routes Protégées - Priorité Haute**
-- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage ⏳
-- `/bank-guarantee-monitor` - BankGuaranteeMonitorPage ⏳
-- `/payment-control` - PaymentControlPage ⏳
-- `/inspection-monitoring` - InspectionMonitoringPage ⏳
+### **Routes Protégées - Migrées** ✅
+- `/projects` - `useProjectsHex()`
+- `/materials` - `useMaterialsHex()`
+- `/dashboard` - `useDashboardHex()`
+- `/bank-guarantee-monitor` - `useBankGuaranteesHex()`
+- `/payment-control` - `usePaymentBlocksHex()`
 
-### **Routes Protégées - Priorité Moyenne**
-- `/notifications-center` - NotificationsCenterPage ⏳
-- `/insurance-management` - InsuranceManagementPage ⏳
-- `/suppliers` - Suppliers ⏳
-- `/documents` - Documents ⏳
+### **Routes Protégées - À Migrer** ⏳
+- `/suppliers` - Suppliers.tsx
+- `/documents` - Documents.tsx
+- `/notifications-center` - NotificationsCenterPage.tsx
 
-### **Routes Protégées - Déjà Migrées**
-- `/projects` - Projects ✅
-- `/materials` - Materials ✅
-- `/dashboard` - Dashboard ✅
+### **Routes Protégées - Navigation Hiérarchique** 🔄
+- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage
 
 ---
 
-**Statut actuel** : Phase 2 terminée ✅ - Phase 3 planifiée 📋  
-**Prochaine action** : Créer hooks hexagonaux pour monitoring et phases
+**Statut actuel** : Phase 3 en cours - 5/8 pages migrées ✅  
+**Prochaine action** : Migrer `Suppliers.tsx`, `Documents.tsx`, améliorer navigation `PhaseDetailsPage`
