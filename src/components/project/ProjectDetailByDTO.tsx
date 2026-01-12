@@ -10,6 +10,7 @@ import UnifiedGanttChart from "@/components/project/UnifiedGanttChart";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import ActionableProjectMilestones from "@/components/project/monitoring/ActionableProjectMilestones";
 import { ReportManager } from "@/components/reports/ReportManager";
+import { GanttChart, PERTDiagram, KanbanBoard, CriticalPathView, ProjectTimeline } from "@/components/planning";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -741,10 +742,11 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-11">
+        <TabsList className="grid w-full grid-cols-12">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
+          <TabsTrigger value="planning">Planning</TabsTrigger>
           <TabsTrigger value="milestones">Jalons</TabsTrigger>
           <TabsTrigger value="tasks">Tâches</TabsTrigger>
           <TabsTrigger value="risks">Risques</TabsTrigger>
@@ -1012,6 +1014,39 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               />
             </DialogContentUI>
           </DialogUI>
+        </TabsContent>
+
+        {/* New Planning Tab with Gantt, PERT, Kanban, Critical Path */}
+        <TabsContent value="planning" className="mt-6">
+          <Tabs defaultValue="gantt" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="gantt">Gantt</TabsTrigger>
+              <TabsTrigger value="pert">PERT</TabsTrigger>
+              <TabsTrigger value="kanban">Kanban</TabsTrigger>
+              <TabsTrigger value="critical">Chemin Critique</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="gantt">
+              <GanttChart projectId={projectId!} />
+            </TabsContent>
+
+            <TabsContent value="pert">
+              <PERTDiagram projectId={projectId!} />
+            </TabsContent>
+
+            <TabsContent value="kanban">
+              <KanbanBoard projectId={projectId!} />
+            </TabsContent>
+
+            <TabsContent value="critical">
+              <CriticalPathView projectId={projectId!} />
+            </TabsContent>
+
+            <TabsContent value="timeline">
+              <ProjectTimeline projectId={projectId!} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* Unified Milestones Tab with Gantt & PERT */}

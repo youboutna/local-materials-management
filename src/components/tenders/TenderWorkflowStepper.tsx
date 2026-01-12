@@ -45,8 +45,8 @@ interface TenderWorkflowStep {
 
 interface TenderWorkflowStepperProps {
   tenderId: string;
-  currentStep: WorkflowStep;
-  steps: Partial<Record<WorkflowStep, { dueDate?: string; completedAt?: string }>>;
+  currentStep?: WorkflowStep;
+  steps?: Partial<Record<WorkflowStep, { dueDate?: string; completedAt?: string }>>;
   onStepClick?: (step: WorkflowStep) => void;
   onAdvance?: () => void;
   compact?: boolean;
@@ -63,8 +63,8 @@ const WORKFLOW_STEPS: Omit<TenderWorkflowStep, 'status' | 'dueDate' | 'completed
 
 const TenderWorkflowStepper: React.FC<TenderWorkflowStepperProps> = ({
   tenderId,
-  currentStep,
-  steps,
+  currentStep = 'creation',
+  steps = {},
   onStepClick,
   onAdvance,
   compact = false
