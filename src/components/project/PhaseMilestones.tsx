@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,20 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Target, Plus, CheckCircle, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ElectricSpinner } from "../loading-page";
-
-interface Milestone {
-  id: string;
-  title: string;
-  description?: string;
-  target_date: string;
-  completed_date?: string;
-  status: "pending" | "in_progress" | "completed" | "delayed";
-  weight: number;
-  notes?: string;
-}
+import { useMilestonesHex, Milestone } from "@/hooks/hexagonal";
 
 interface PhaseMilestonesProps {
   phaseId: string;
@@ -37,12 +26,17 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
   phaseId,
   projectId,
 }) => {
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const {
+    milestones,
+    loading,
+    progress,
+    createMilestone,
+    updateMilestone,
+    toggleMilestoneStatus,
+  } = useMilestonesHex(projectId, phaseId);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -52,81 +46,33 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     notes: "",
   });
 
-  useEffect(() => {
-    loadMilestones();
-  }, [phaseId, projectId]);
-
-  const loadMilestones = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("enhanced_project_milestones")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("phase_id", phaseId)
-        .order("target_date", { ascending: true });
-
-      if (error) throw error;
-      const transformedData = (data || []).map((milestone) => ({
-        ...milestone,
-        description: milestone.description || undefined,
-        notes: milestone.notes || undefined,
-        completed_date: milestone.completed_date || undefined,
-        status: (milestone.status || "pending") as
-          | "pending"
-          | "in_progress"
-          | "completed"
-          | "delayed",
-        weight: milestone.weight || 0.1,
-      }));
-      setMilestones(transformedData);
-    } catch (error) {
-      console.error("Error loading milestones:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les jalons",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     try {
-      const milestoneData = {
-        project_id: projectId,
-        phase_id: phaseId,
-        title: formData.title,
-        description: formData.description,
-        target_date: formData.target_date,
-        weight: formData.weight,
-        notes: formData.notes,
-        status: "pending",
-      };
-
-      let result;
       if (editingMilestone) {
-        result = await supabase
-          .from("enhanced_project_milestones")
-          .update(milestoneData)
-          .eq("id", editingMilestone.id);
+        await updateMilestone(editingMilestone.id, {
+          title: formData.title,
+          description: formData.description,
+          targetDate: formData.target_date,
+          weight: formData.weight,
+          notes: formData.notes,
+        });
+        toast({ title: "Succès", description: "Jalon modifié" });
       } else {
-        result = await supabase
-          .from("enhanced_project_milestones")
-          .insert(milestoneData);
+        await createMilestone({
+          projectId,
+          phaseId,
+          title: formData.title,
+          description: formData.description,
+          targetDate: formData.target_date,
+          weight: formData.weight,
+          notes: formData.notes,
+          status: 'pending',
+        });
+        toast({ title: "Succès", description: "Jalon ajouté" });
       }
-
-      if (result.error) throw result.error;
-
-      toast({
-        title: "Succès",
-        description: editingMilestone ? "Jalon modifié" : "Jalon ajouté",
-      });
 
       setIsDialogOpen(false);
       resetForm();
-      loadMilestones();
     } catch (error) {
       console.error("Error saving milestone:", error);
       toast({
@@ -142,7 +88,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     setFormData({
       title: milestone.title,
       description: milestone.description || "",
-      target_date: milestone.target_date,
+      target_date: milestone.targetDate,
       weight: milestone.weight,
       notes: milestone.notes || "",
     });
@@ -151,19 +97,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
 
   const handleMarkCompleted = async (milestone: Milestone) => {
     try {
-      const { error } = await supabase
-        .from("enhanced_project_milestones")
-        .update({
-          status: milestone.status === "completed" ? "pending" : "completed",
-          completed_date:
-            milestone.status === "completed"
-              ? null
-              : new Date().toISOString().split("T")[0],
-        })
-        .eq("id", milestone.id);
-
-      if (error) throw error;
-
+      await toggleMilestoneStatus(milestone.id, milestone.status);
       toast({
         title: "Succès",
         description:
@@ -171,8 +105,6 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
             ? "Jalon marqué comme en attente"
             : "Jalon marqué comme terminé",
       });
-
-      loadMilestones();
     } catch (error) {
       console.error("Error updating milestone status:", error);
       toast({
@@ -220,18 +152,9 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     }
   };
 
-  const calculateProgress = () => {
-    if (milestones.length === 0) return 0;
-    const completedWeight = milestones
-      .filter((m) => m.status === "completed")
-      .reduce((sum, m) => sum + m.weight, 0);
-    const totalWeight = milestones.reduce((sum, m) => sum + m.weight, 0);
-    return totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center ">
+      <div className="min-h-screen flex items-center justify-center">
         <ElectricSpinner />
       </div>
     );
@@ -245,7 +168,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           Jalons de la Phase
           {milestones.length > 0 && (
             <Badge variant="outline">
-              {Math.round(calculateProgress())}% complété
+              {Math.round(progress)}% complété
             </Badge>
           )}
         </CardTitle>
@@ -372,14 +295,14 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                       <div className="flex items-center gap-1">
                         <CalendarDays className="h-4 w-4" />
                         Cible:{" "}
-                        {new Date(milestone.target_date).toLocaleDateString()}
+                        {new Date(milestone.targetDate).toLocaleDateString()}
                       </div>
-                      {milestone.completed_date && (
+                      {milestone.completedDate && (
                         <div className="flex items-center gap-1">
                           <CheckCircle className="h-4 w-4" />
                           Terminé:{" "}
                           {new Date(
-                            milestone.completed_date
+                            milestone.completedDate
                           ).toLocaleDateString()}
                         </div>
                       )}
