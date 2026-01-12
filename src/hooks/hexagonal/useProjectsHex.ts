@@ -3,12 +3,14 @@
  * Encapsule les use cases de l'architecture hexagonale
  */
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/supabase/RepositoryFactory';
 import { 
   GetProjectsListUseCase,
   GetProjectByIdUseCase,
   CreateProjectUseCase,
   UpdateProjectUseCase,
+  DeleteProjectUseCase,
   type CreateProjectInput,
   type UpdateProjectInput
 } from '@/application/use-cases';
@@ -20,6 +22,7 @@ const getProjectsListUseCase = new GetProjectsListUseCase(projectRepository);
 const getProjectByIdUseCase = new GetProjectByIdUseCase(projectRepository);
 const createProjectUseCase = new CreateProjectUseCase(projectRepository);
 const updateProjectUseCase = new UpdateProjectUseCase(projectRepository);
+const deleteProjectUseCase = new DeleteProjectUseCase(projectRepository);
 
 export interface UseProjectsHexResult {
   projects: Project[];
@@ -28,6 +31,7 @@ export interface UseProjectsHexResult {
   refetch: () => Promise<void>;
   createProject: (data: CreateProjectInput) => Promise<Project | null>;
   updateProject: (id: string, data: UpdateProjectInput) => Promise<Project | null>;
+  deleteProject: (id: string) => Promise<boolean>;
 }
 
 export function useProjectsHex(): UseProjectsHexResult {
@@ -57,22 +61,70 @@ export function useProjectsHex(): UseProjectsHexResult {
   }, [fetchProjects]);
 
   const createProject = useCallback(async (data: CreateProjectInput): Promise<Project | null> => {
-    const result = await createProjectUseCase.execute(data);
-    if (result.success && result.project) {
-      await fetchProjects();
-      return result.project;
+    try {
+      const result = await createProjectUseCase.execute(data);
+      if (result.success && result.project) {
+        await fetchProjects();
+        toast({
+          title: 'Projet créé',
+          description: `Le projet "${result.project.title}" a été créé avec succès.`,
+        });
+        return result.project;
+      }
+      throw new Error(result.error || 'Failed to create project');
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de créer le projet.',
+        variant: 'destructive',
+      });
+      throw err;
     }
-    throw new Error(result.error || 'Failed to create project');
   }, [fetchProjects]);
 
   const updateProject = useCallback(async (id: string, data: UpdateProjectInput): Promise<Project | null> => {
-    const result = await updateProjectUseCase.execute(id, data);
-    if (result.success && result.project) {
-      await fetchProjects();
-      return result.project;
+    try {
+      const result = await updateProjectUseCase.execute(id, data);
+      if (result.success && result.project) {
+        await fetchProjects();
+        toast({
+          title: 'Projet mis à jour',
+          description: `Le projet "${result.project.title}" a été mis à jour.`,
+        });
+        return result.project;
+      }
+      throw new Error(result.error || 'Failed to update project');
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le projet.',
+        variant: 'destructive',
+      });
+      throw err;
     }
-    throw new Error(result.error || 'Failed to update project');
   }, [fetchProjects]);
+
+  const deleteProject = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      const result = await deleteProjectUseCase.execute(id);
+      if (result.success) {
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+        toast({
+          title: 'Projet supprimé',
+          description: 'Le projet a été supprimé avec succès.',
+        });
+        return true;
+      }
+      throw new Error(result.error || 'Failed to delete project');
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer le projet.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, []);
 
   return {
     projects,
@@ -81,6 +133,7 @@ export function useProjectsHex(): UseProjectsHexResult {
     refetch: fetchProjects,
     createProject,
     updateProject,
+    deleteProject,
   };
 }
 
