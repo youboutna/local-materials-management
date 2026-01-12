@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationsHex } from '@/hooks/hexagonal';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -55,21 +55,73 @@ interface NotificationData {
 
 const NotificationsCenterPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [inspectionNotifications, setInspectionNotifications] = useState<NotificationData[]>([]);
-  const [projectNotifications, setProjectNotifications] = useState<NotificationData[]>([]);
-  const [paymentNotifications, setPaymentNotifications] = useState<NotificationData[]>([]);
-  const [taskNotifications, setTaskNotifications] = useState<NotificationData[]>([]);
-  const [documentNotifications, setDocumentNotifications] = useState<NotificationData[]>([]);
-  const [systemAlerts, setSystemAlerts] = useState<NotificationData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { notifications, unreadCount } = useNotifications();
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const { hasAnyRole } = useCurrentUserRoles();
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  // Fetch current user ID for notifications
   useEffect(() => {
-    fetchAllNotifications();
-    // Set up real-time listener for notifications
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id);
+    };
+    fetchUser();
+  }, []);
+
+  // Use hexagonal hooks for different notification types
+  const inspectionTypes = ['inspection_required', 'inspection_overdue'];
+  const projectTypes = ['project_update', 'project_created', 'project_completed', 'project_milestone', 'delay_warning'];
+  const paymentTypes = ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'];
+  const taskTypes = ['task_assignment', 'task_completed', 'task_overdue'];
+  const documentTypes = ['document_review', 'document_shared', 'document_approved', 'document_rejected', 'document_uploaded'];
+  const systemTypes = ['system', 'bank_guarantee_trigger', 'contractor_penalty', 'compliance_alert', 'escalation_required', 'insurance_expiry', 'insurance_update'];
+
+  const { 
+    notifications: inspectionNotifications, 
+    loading: inspectionsLoading,
+    refetch: refetchInspections 
+  } = useNotificationsHex(undefined, inspectionTypes);
+  
+  const { 
+    notifications: projectNotifications,
+    refetch: refetchProjects 
+  } = useNotificationsHex(undefined, projectTypes);
+  
+  const { 
+    notifications: paymentNotifications,
+    refetch: refetchPayments 
+  } = useNotificationsHex(undefined, paymentTypes);
+  
+  const { 
+    notifications: taskNotifications,
+    refetch: refetchTasks 
+  } = useNotificationsHex(undefined, taskTypes);
+  
+  const { 
+    notifications: documentNotifications,
+    refetch: refetchDocuments 
+  } = useNotificationsHex(undefined, documentTypes);
+  
+  const { 
+    notifications: systemAlerts,
+    refetch: refetchSystem,
+    markAllAsRead: markAllSystemAsRead 
+  } = useNotificationsHex(currentUserId, systemTypes);
+
+  const loading = inspectionsLoading;
+
+  const fetchAllNotifications = () => {
+    refetchInspections();
+    refetchProjects();
+    refetchPayments();
+    refetchTasks();
+    refetchDocuments();
+    refetchSystem();
+  };
+
+  // Set up real-time listener
+  useEffect(() => {
     const channel = supabase
       .channel('notifications-changes')
       .on(
@@ -90,81 +142,6 @@ const NotificationsCenterPage = () => {
     };
   }, []);
 
-  const fetchAllNotifications = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch inspection-related notifications
-      const { data: inspectionData, error: inspectionError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['inspection_required', 'inspection_overdue'])
-        .order('created_at', { ascending: false });
-
-      if (inspectionError) throw inspectionError;
-
-      // Fetch project-related notifications
-      const { data: projectData, error: projectError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['project_update', 'project_created', 'project_completed', 'project_milestone', 'delay_warning'])
-        .order('created_at', { ascending: false });
-
-      if (projectError) throw projectError;
-
-      // Fetch payment-related notifications
-      const { data: paymentData, error: paymentError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['payment_due', 'payment_completed', 'payment_failed', 'payment_pending', 'payment_blocked', 'payment_warning'])
-        .order('created_at', { ascending: false });
-
-      if (paymentError) throw paymentError;
-
-      // Fetch task-related notifications
-      const { data: taskData, error: taskError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['task_assignment', 'task_completed', 'task_overdue'])
-        .order('created_at', { ascending: false });
-
-      if (taskError) throw taskError;
-
-      // Fetch document-related notifications
-      const { data: documentData, error: documentError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['document_review', 'document_shared', 'document_approved', 'document_rejected', 'document_uploaded'])
-        .order('created_at', { ascending: false });
-
-      if (documentError) throw documentError;
-
-      // Fetch system alerts
-      const { data: systemData, error: systemError } = await supabase
-        .from('notifications')
-        .select('*')
-        .in('type', ['system', 'bank_guarantee_trigger', 'contractor_penalty', 'compliance_alert', 'escalation_required', 'insurance_expiry', 'insurance_update'])
-        .order('created_at', { ascending: false });
-
-      if (systemError) throw systemError;
-
-      setInspectionNotifications(inspectionData || []);
-      setProjectNotifications(projectData || []);
-      setPaymentNotifications(paymentData || []);
-      setTaskNotifications(taskData || []);
-      setDocumentNotifications(documentData || []);
-      setSystemAlerts(systemData || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast({
-        title: t('common.error'),
-        description: "Impossible de charger les notifications",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const markAllAsRead = async () => {
     try {
@@ -496,7 +473,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                             </div>
@@ -601,7 +578,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -711,7 +688,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -822,7 +799,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -928,7 +905,7 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -993,7 +970,7 @@ const NotificationsCenterPage = () => {
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.created_at).toLocaleString('fr-FR')}
+                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
                                 </div>
                               </div>
                             </div>
