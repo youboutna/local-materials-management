@@ -8,8 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Clock, CheckCircle, AlertTriangle, XCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { InspectionService } from '@/services/InspectionService';
-import { InspectionDTO, UpdateInspectionDTO } from '@/types/inspection.dto';
+import { useInspectionHex, useInspectionsHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -18,9 +17,10 @@ const InspectionEdit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [inspection, setInspection] = useState<InspectionDTO | null>(null);
+
+  const { inspection, isLoading } = useInspectionHex(id);
+  const { updateInspection } = useInspectionsHex();
 
   const [formData, setFormData] = useState({
     project_id: '',
@@ -39,48 +39,19 @@ const InspectionEdit = () => {
     { value: 'requires_changes', label: t('inspection.status.requires_changes'), icon: AlertTriangle }
   ];
 
+  // Update form when inspection loads
   useEffect(() => {
-    if (id) {
-      loadInspection();
-    }
-  }, [id]);
-
-  const loadInspection = async () => {
-    if (!id) return;
-    
-    try {
-      setLoading(true);
-      const data = await InspectionService.getInspectionById(id);
-      
-      if (data) {
-        setInspection(data);
-        setFormData({
-          project_id: data.project_id,
-          inspector: data.inspector,
-          date: new Date(data.date).toISOString().split('T')[0],
-          status: data.status,
-          progress_at_inspection: data.progress_at_inspection || 0,
-          comments: data.comments || ''
-        });
-      } else {
-        toast({
-          title: t('inspection.common.error'),
-          description: t('inspection.common.not_found'),
-          variant: 'destructive'
-        });
-        navigate('/inspection-monitoring');
-      }
-    } catch (error) {
-      console.error('Error loading inspection:', error);
-      toast({
-        title: t('inspection.common.error'),
-        description: t('inspection.common.load_error'),
-        variant: 'destructive'
+    if (inspection) {
+      setFormData({
+        project_id: inspection.projectId,
+        inspector: inspection.inspector,
+        date: new Date(inspection.date).toISOString().split('T')[0],
+        status: inspection.status,
+        progress_at_inspection: inspection.progressAtInspection || 0,
+        comments: inspection.comments || ''
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [inspection]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,15 +68,14 @@ const InspectionEdit = () => {
     try {
       setSaving(true);
       
-      const updates: UpdateInspectionDTO = {
+      await updateInspection({
+        id,
         inspector: formData.inspector,
         date: formData.date,
         status: formData.status,
-        progress_at_inspection: formData.progress_at_inspection,
+        progressAtInspection: formData.progress_at_inspection,
         comments: formData.comments
-      };
-
-      await InspectionService.updateInspection(id, updates);
+      });
       
       toast({
         title: t('inspection.common.success'),
@@ -129,7 +99,7 @@ const InspectionEdit = () => {
     return <Navigate to="/inspection-monitoring" replace />;
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>

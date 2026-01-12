@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useMaterialHex } from "@/hooks/hexagonal";
 import {
   ArrowLeft,
   Edit,
@@ -16,97 +15,30 @@ import {
   Package,
   Warehouse,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-
-interface MaterialDetail {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  unit: string;
-  price_per_unit: number;
-  available_quantity: number;
-  origin_location?: string;
-  image?: string;
-  coordinates_latitude?: number;
-  coordinates_longitude?: number;
-  adresse?: string;
-  forme?: string;
-  localisation?: any[];
-  workspace_id?: string;
-}
 
 const MaterialDetail = () => {
   const { t } = useLanguage();
   const { id } = useParams();
-  const [material, setMaterial] = useState<MaterialDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { material, loading } = useMaterialHex(id);
   const [warehouseShape, setWarehouseShape] = useState<
     { x: number; y: number }[]
   >([]);
 
+  // Parse warehouse shape when material loads
   useEffect(() => {
-    if (id) {
-      fetchMaterialDetail();
-    }
-  }, [id]);
-
-  const fetchMaterialDetail = async () => {
-    if (!id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("materials")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-
-      // Transform the Supabase data to match our interface
-      const transformedMaterial: MaterialDetail = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        unit: data.unit,
-        price_per_unit: data.price_per_unit,
-        available_quantity: data.available_quantity,
-        origin_location: data.origin_location || undefined,
-        image: data.image || undefined,
-        coordinates_latitude: data.coordinates_latitude || undefined,
-        coordinates_longitude: data.coordinates_longitude || undefined,
-        adresse: typeof data.adresse === "string" ? data.adresse : undefined,
-        forme: data.forme || undefined,
-        localisation: Array.isArray(data.localisation) ? data.localisation : [],
-        workspace_id: data.workspace_id || undefined,
-      };
-
-      setMaterial(transformedMaterial);
-
-      // Parse warehouse shape if it exists in forme field
-      if (transformedMaterial.forme) {
-        try {
-          const shapeData = JSON.parse(transformedMaterial.forme);
-          if (Array.isArray(shapeData)) {
-            setWarehouseShape(shapeData);
-          }
-        } catch (e) {
-          console.log("Could not parse warehouse shape data");
+    if (material?.forme) {
+      try {
+        const shapeData = JSON.parse(material.forme);
+        if (Array.isArray(shapeData)) {
+          setWarehouseShape(shapeData);
         }
+      } catch (e) {
+        console.log("Could not parse warehouse shape data");
       }
-    } catch (error) {
-      console.error("Error fetching material:", error);
-      toast({
-        title: t('common.error'),
-        description: "Impossible de charger les détails du matériau.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [material]);
 
   if (!id) {
     return <Navigate to="/materials" replace />;
@@ -145,6 +77,24 @@ const MaterialDetail = () => {
       </div>
     );
   }
+
+  // Transform material data for components that expect snake_case
+  const materialData = {
+    id: material.id,
+    name: material.name,
+    description: material.description,
+    category: material.category,
+    unit: material.unit,
+    price_per_unit: material.pricePerUnit,
+    available_quantity: material.availableQuantity,
+    origin_location: material.originLocation ?? undefined,
+    image: material.image,
+    coordinates_latitude: material.coordinatesLatitude ?? undefined,
+    coordinates_longitude: material.coordinatesLongitude ?? undefined,
+    adresse: typeof material.adresse === 'string' ? material.adresse : undefined,
+    forme: material.forme,
+    localisation: material.localisation,
+  };
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -195,7 +145,7 @@ const MaterialDetail = () => {
                 <div>
                   <p className="text-sm text-gray-600">Prix unitaire</p>
                   <p className="font-medium">
-                    {material.price_per_unit.toLocaleString("fr-FR")} MRU/
+                    {material.pricePerUnit.toLocaleString("fr-FR")} MRU/
                     {material.unit}
                   </p>
                 </div>
@@ -208,7 +158,7 @@ const MaterialDetail = () => {
           </Card>
 
           {/* Availability Card */}
-          <MaterialAvailabilityCard material={material} />
+          <MaterialAvailabilityCard material={materialData} />
 
           {/* Location Card */}
           <Card>
@@ -222,35 +172,35 @@ const MaterialDetail = () => {
               {material.adresse && (
                 <div>
                   <p className="text-sm text-gray-600">Adresse</p>
-                  <p className="font-medium">{material.adresse}</p>
+                  <p className="font-medium">{typeof material.adresse === 'string' ? material.adresse : ''}</p>
                 </div>
               )}
 
-              {material.origin_location && (
+              {material.originLocation && (
                 <div>
                   <p className="text-sm text-gray-600">Origine</p>
-                  <p className="font-medium">{material.origin_location}</p>
+                  <p className="font-medium">{material.originLocation}</p>
                 </div>
               )}
 
-              {material.coordinates_latitude &&
-                material.coordinates_longitude && (
+              {material.coordinatesLatitude &&
+                material.coordinatesLongitude && (
                   <div>
                     <p className="text-sm text-gray-600">Coordonnées GPS</p>
                     <p className="font-mono text-sm">
-                      {material.coordinates_latitude.toFixed(6)},{" "}
-                      {material.coordinates_longitude.toFixed(6)}
+                      {material.coordinatesLatitude.toFixed(6)},{" "}
+                      {material.coordinatesLongitude.toFixed(6)}
                     </p>
                   </div>
                 )}
 
-              {material.localisation && material.localisation.length > 0 && (
+              {material.localisation && Array.isArray(material.localisation) && material.localisation.length > 0 && (
                 <div>
                   <p className="text-sm text-gray-600">
                     Coordonnées de localisation
                   </p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {material.localisation.map((zone, index) => (
+                    {material.localisation.map((zone: any, index: number) => (
                       <Badge
                         key={index}
                         variant="outline"
@@ -290,7 +240,7 @@ const MaterialDetail = () => {
         {/* Map and Image */}
         <div className="space-y-6">
           {/* Map */}
-          <MaterialLocationMap material={material} height="400px" />
+          <MaterialLocationMap material={materialData} height="400px" />
 
           {/* Material Image */}
           <Card>
