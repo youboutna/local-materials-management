@@ -32,8 +32,8 @@ export class SupabaseTenderAdapter implements ITenderRepository {
 
   async save(tender: Tender): Promise<void> {
     const { error } = await supabase.from('tenders').insert([{
-      id: tender.id, title: tender.title, description: tender.description,
-      tender_number: tender.tenderNumber, project_id: tender.projectId,
+      id: tender.id, title: tender.title, description: tender.description || '',
+      tender_number: tender.tenderNumber || '', project_id: tender.projectId,
       status: tender.status, selection_mode: tender.selectionMode,
       market_type: tender.marketType, deadline_date: tender.deadlineDate,
       budget_min: tender.budgetMin, budget_max: tender.budgetMax,

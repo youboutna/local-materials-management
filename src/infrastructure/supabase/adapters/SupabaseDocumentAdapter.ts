@@ -102,8 +102,11 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   }
 
   async findByStatus(status: DocumentStatus): Promise<Document[]> {
-    const dbStatus = status === 'approved' ? 'validated' : status === 'pending_review' ? 'pending' : status;
-    const { data, error } = await supabase.from('documents').select('*').eq('status', dbStatus);
+    const statusMapToDb: Record<DocumentStatus, string> = {
+      'approved': 'approved', 'pending_review': 'pending_review', 'rejected': 'rejected', 'archived': 'archived', 'draft': 'draft'
+    };
+    const dbStatus = statusMapToDb[status] || status;
+    const { data, error } = await supabase.from('documents').select('*').eq('status', dbStatus as any);
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
   }
@@ -127,7 +130,7 @@ export class SupabaseDocumentAdapter implements IDocumentRepository {
   }
 
   async findOverdue(): Promise<Document[]> {
-    const { data, error } = await supabase.from('documents').select('*').lt('deadline_date', new Date().toISOString()).neq('status', 'validated');
+    const { data, error } = await supabase.from('documents').select('*').lt('deadline_date', new Date().toISOString()).neq('status', 'approved');
     if (error || !data) return [];
     return data.map(d => this.mapToEntity(d));
   }
