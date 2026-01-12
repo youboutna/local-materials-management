@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
+import { AppLayout } from "@/components/layout";
 
 const MaterialDetail = () => {
   const { t } = useLanguage();
@@ -97,30 +98,24 @@ const MaterialDetail = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/materials">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-adrar-900">
-              {material.name}
-            </h1>
-            <p className="text-adrar-600">{material.category}</p>
-          </div>
-        </div>
+    <AppLayout
+      pageTitle={material.name}
+      pageDescription={material.category}
+      actions={
         <Button asChild>
           <Link to={`/materials/${material.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" />
             Modifier
           </Link>
         </Button>
-      </div>
+      }
+    >
+      <Button variant="outline" size="sm" asChild className="mb-6">
+        <Link to="/materials">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour
+        </Link>
+      </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Material Information */}
@@ -269,7 +264,7 @@ const MaterialDetail = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -1,12 +1,9 @@
 import React from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectDetailByDTO from "@/components/project/ProjectDetailByDTO";
 import InspectionPaymentValidation from "@/components/inspections/InspectionPaymentValidation";
+import { AppLayout } from "@/components/layout";
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -29,20 +26,19 @@ const ProjectDetail = () => {
   // If tab is inspections and we have an inspection ID, show validation form
   if (tab === 'inspections' && inspectionId) {
     return (
-      <div className="min-h-screen bg-background">
+      <AppLayout pageTitle={t("nav.projects")}>
         <InspectionPaymentValidation />
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar removed - already in App.tsx */}
-      <div className="container mx-auto px-4 py-8">
-        <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
-      </div>
-      {/* Footer removed - already in App.tsx */}
-    </div>
+    <AppLayout
+      pageTitle={t("nav.projects")}
+      pageDescription="Détail du projet"
+    >
+      <ProjectDetailByDTO projectId={id} onEdit={handleEdit} />
+    </AppLayout>
   );
 };
 

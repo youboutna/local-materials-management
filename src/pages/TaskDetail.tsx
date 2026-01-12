@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,115 +8,38 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { getPriorityColor } from '@/utils/notificationUtils';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-
-interface TaskAssignment {
-  id: string;
-  title: string;
-  description?: string;
-  assigned_to: string;
-  assigned_by: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  due_date?: string;
-  completion_date?: string;
-  notes?: string;
-  project_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { useTaskAssignmentHex, useTaskAssignmentsHex } from '@/hooks/hexagonal';
+import { AppLayout } from '@/components/layout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser, hasAnyRole } = useCurrentUserRoles();
-  const [task, setTask] = useState<TaskAssignment | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { t } = useLanguage();
   const [newNote, setNewNote] = useState('');
+  
+  // Use hexagonal hook
+  const { task, isLoading: loading, refetch, updateTask } = useTaskAssignmentHex(taskId);
+  const { startTask, completeTask, addNote } = useTaskAssignmentsHex();
   const [updating, setUpdating] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
 
-  useEffect(() => {
-    if (taskId && taskId !== 'list' && currentUser) {
-      fetchTask();
-    } else if (!taskId || taskId === 'list') {
-      navigate('/dashboard');
-    }
-  }, [taskId, currentUser]);
-
-  const fetchTask = async () => {
-    if (!taskId || !currentUser) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('id', taskId)
-        .single();
-
-      if (error) throw error;
-
-      // Check if user has access (assigned to them or admin/director)
-      const isAssigned = data.assigned_to === currentUser.id;
-      const isAdmin = hasAnyRole(['admin', 'director']);
-      
-      if (!isAssigned && !isAdmin) {
-        setHasAccess(false);
-        setLoading(false);
-        return;
-      }
-
-      setHasAccess(true);
-      setTask({
-        ...data,
-        description: data.description || undefined,
-        due_date: data.due_date || undefined,
-        completion_date: data.completion_date || undefined,
-        notes: data.notes || undefined,
-        project_id: data.project_id || undefined,
-      } as TaskAssignment);
-    } catch (error: any) {
-      console.error('Error fetching task:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger la tâche',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Check access
+  const isAssigned = task?.assignedTo === user?.id;
+  const isAdmin = hasAnyRole(['admin', 'director']);
+  const hasAccess = isAssigned || isAdmin;
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !task) return;
 
     setUpdating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const timestamp = new Date().toLocaleString('fr-FR');
-      const noteWithMeta = `[${timestamp}] ${user?.email || 'Utilisateur'}: ${newNote}`;
-      
-      const updatedNotes = task.notes 
-        ? `${task.notes}\n\n${noteWithMeta}`
-        : noteWithMeta;
-
-      const { error } = await supabase
-        .from('task_assignments')
-        .update({ 
-          notes: updatedNotes,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', task.id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Note ajoutée',
-        description: 'Votre note a été ajoutée à la tâche',
-      });
-
+      await addNote({ id: task.id, note: newNote });
       setNewNote('');
-      fetchTask();
+      refetch();
     } catch (error: any) {
       toast({
         title: 'Erreur',
@@ -134,44 +56,18 @@ const TaskDetail = () => {
 
     setUpdating(true);
     try {
-      const updateData: any = {
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (newStatus === 'completed') {
-        updateData.completion_date = new Date().toISOString();
+      if (newStatus === 'in_progress') {
+        await startTask(task.id);
+      } else {
+        await completeTask(task.id);
       }
-
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(updateData)
-        .eq('id', task.id);
-
-      if (error) throw error;
-
-      // Create notification for assigner
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: task.assigned_by,
-          title: newStatus === 'completed' ? 'Tâche terminée' : 'Tâche en cours',
-          message: `${user?.email || 'Un utilisateur'} a marqué la tâche "${task.title}" comme ${newStatus === 'completed' ? 'terminée' : 'en cours'}`,
-          type: newStatus === 'completed' ? 'task_completed' : 'task_assignment',
-          related_id: task.id,
-          metadata: {
-            task_id: task.id,
-            task_type: 'general',
-          },
-        });
 
       toast({
         title: 'Statut mis à jour',
         description: `Tâche marquée comme ${newStatus === 'completed' ? 'terminée' : 'en cours'}`,
       });
 
-      fetchTask();
+      refetch();
     } catch (error: any) {
       toast({
         title: 'Erreur',
@@ -185,20 +81,26 @@ const TaskDetail = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <AppLayout pageTitle={t('task.title')}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </AppLayout>
     );
   }
 
-  if (!hasAccess) {
+  if (!hasAccess || !task) {
     return (
-      <div className="container mx-auto p-6">
+      <AppLayout pageTitle={t('task.title')}>
         <Card>
           <CardContent className="p-6 text-center space-y-4">
-            <h2 className="text-xl font-bold text-destructive">Accès refusé</h2>
+            <h2 className="text-xl font-bold text-destructive">
+              {!task ? 'Tâche introuvable' : 'Accès refusé'}
+            </h2>
             <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à cette tâche.
+              {!task 
+                ? 'Cette tâche n\'existe pas ou a été supprimée.'
+                : 'Vous n\'avez pas les permissions nécessaires pour accéder à cette tâche.'}
             </p>
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -206,25 +108,16 @@ const TaskDetail = () => {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  if (!task) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-muted-foreground">Tâche introuvable</p>
-          </CardContent>
-        </Card>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <Button variant="outline" onClick={() => navigate(-1)}>
+    <AppLayout 
+      pageTitle={task.title}
+      pageDescription="Détail de la tâche"
+    >
+      <Button variant="outline" onClick={() => navigate(-1)} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Retour
       </Button>
@@ -253,33 +146,31 @@ const TaskDetail = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Task Info */}
           <div className="grid grid-cols-2 gap-4">
-            {task.due_date && (
+            {task.dueDate && (
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Date limite</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(task.due_date).toLocaleDateString('fr-FR')}
+                    {new Date(task.dueDate).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               </div>
             )}
-            {task.completion_date && (
+            {task.completionDate && (
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium">Date de completion</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(task.completion_date).toLocaleDateString('fr-FR')}
+                    {new Date(task.completionDate).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Notes Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Notes</h3>
             {task.notes && (
@@ -287,7 +178,6 @@ const TaskDetail = () => {
                 {task.notes}
               </div>
             )}
-            
             <div className="space-y-2">
               <Textarea
                 placeholder="Ajouter une note..."
@@ -301,7 +191,6 @@ const TaskDetail = () => {
             </div>
           </div>
 
-          {/* Actions */}
           {task.status !== 'completed' && (
             <div className="flex gap-2 pt-4 border-t">
               {task.status === 'pending' && (
@@ -325,7 +214,7 @@ const TaskDetail = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </AppLayout>
   );
 };
 
