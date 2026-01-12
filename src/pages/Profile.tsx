@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePasswordManagement } from "@/hooks/usePasswordManagement";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/layout";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -56,9 +57,10 @@ const Profile = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-4xl">
-      {/* Profile Information Card */}
-      <Card className="mb-6">
+    <AppLayout pageTitle={t("nav.profile")}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Profile Information Card */}
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -207,9 +209,10 @@ const Profile = () => {
               </div>
             </form>
           )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 };
 

@@ -18,8 +18,6 @@ import {
   AlertTriangle,
   Mail,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import DatabaseSettings from "@/components/admin/DatabaseSettings";
 import KeycloakSettings from "@/components/admin/KeycloakSettings";
 import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
@@ -38,6 +36,7 @@ import DeploymentSettings from "@/components/admin/DeploymentSettings";
 import EscalationThresholdsSettings from "@/components/admin/EscalationThresholdsSettings";
 import AlertsProcessorSettings from "@/components/admin/AlertsProcessorSettings";
 import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
+import { AppLayout } from "@/components/layout";
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -60,12 +59,9 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-grow container mx-auto px-4 py-16">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">{t("settings.title")}</h1>
-
-          {isDevelopmentMode && (
+    <AppLayout pageTitle={t("settings.title")}>
+      <div className="max-w-6xl mx-auto">
+        {isDevelopmentMode && (
             <Card className="mb-8 border-amber-300 bg-amber-50">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -181,10 +177,9 @@ const Settings = () => {
             <TabsContent value="notifications">
               <AdminEmailsSettings />
             </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    </div>
+        </Tabs>
+      </div>
+    </AppLayout>
   );
 };
 

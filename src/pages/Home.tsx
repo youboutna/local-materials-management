@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
+import { AppLayout } from "@/components/layout";
 
 const Home = () => {
   const { t } = useLanguage();

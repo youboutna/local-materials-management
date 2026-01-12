@@ -28,6 +28,7 @@ import { motion } from "framer-motion";
 import { Ban, CheckCircle, Edit, Search, User, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AppLayout } from "@/components/layout";
 
 // Define user profile type with roles array and email
 type UserProfile = {
@@ -250,37 +251,44 @@ const Users = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <AppLayout
+      pageTitle={t("users.title") || "Gestion des Utilisateurs"}
+      actions={
+        canManageUsers && (
+          <Button
+            className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
+            onClick={handleCreateUser}
+          >
+            <UserPlus className="h-4 w-4" />
+            <span>{t("users.new") || "Nouvel Utilisateur"}</span>
+          </Button>
+        )
+      }
+    >
       {isDevelopmentMode && (
         <div className="fixed top-20 right-4 z-50 bg-amber-100 text-amber-800 px-4 py-2 rounded-md shadow-md text-sm">
           🛠️ {t("dev_mode.active") || "Mode développement actif"}
         </div>
       )}
 
-      <main className="flex-grow container mx-auto px-4 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl md:text-3xl font-serif text-adrar-800">
-              {t("users.title") || "Gestion des Utilisateurs"}
-            </h1>
-
-            {canManageUsers && (
-              <Button
-                className="bg-terracotta-500 hover:bg-terracotta-600 text-white flex items-center gap-2"
-                onClick={handleCreateUser}
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>{t("users.new") || "Nouvel Utilisateur"}</span>
-              </Button>
-            )}
-          </div>
-
-          {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6"
+      >
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
+          <Input
+            placeholder={
+              t("users.search_placeholder") || "Rechercher un utilisateur..."
+            }
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
             <Input
@@ -465,8 +473,7 @@ const Users = () => {
               </TableFooter>
             </Table>
           </div>
-        </motion.div>
-      </main>
+      </motion.div>
 
       {/* User Details Sheet */}
       <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
@@ -580,7 +587,7 @@ const Users = () => {
         onUpdate={refreshUserList}
         mode={managementMode}
       />
-    </div>
+    </AppLayout>
   );
 };
 

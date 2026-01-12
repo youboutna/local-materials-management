@@ -1,4 +1,3 @@
-import Navbar from "@/components/Navbar";
 import ProjectCreationWorkflow from "@/components/project/ProjectCreationWorkflow";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AppLayout } from "@/components/layout";
 
 interface SelectedMaterial {
   materialId: string;
@@ -273,43 +273,33 @@ const ProjectCreate = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <main className="flex-grow py-16  ">
-        <div className="container mx-auto px-4">
-          {/* Back button */}
-          <Link to="/projects">
-            <Button variant="ghost" className="mb-6">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("project_create.back_to_projects")}
-            </Button>
-          </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-7xl mx-auto space-y-6"
-          >
-            {/* Enhanced Project Creation Workflow */}
-            <div className="bg-white rounded-xl shadow-elegant p-6">
-              <h1 className="text-3xl font-serif text-adrar-800 mb-2">
-                {t("project_create.title")}
-              </h1>
-              <p className="text-gray-600 mb-8">
-                Suivez ce processus structuré pour créer votre projet de manière
-                optimale
-              </p>
-
-              <ProjectCreationWorkflow
-                onSubmit={handleFormSubmit}
-                selectedMaterials={selectedMaterials}
-                onMaterialsChange={setSelectedMaterials}
-              />
-            </div>
-          </motion.div>
+    <AppLayout
+      pageTitle={t("project_create.title")}
+      pageDescription="Suivez ce processus structuré pour créer votre projet de manière optimale"
+      actions={
+        <Link to="/projects">
+          <Button variant="ghost">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("project_create.back_to_projects")}
+          </Button>
+        </Link>
+      }
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-7xl mx-auto"
+      >
+        <div className="bg-white rounded-xl shadow-elegant p-6">
+          <ProjectCreationWorkflow
+            onSubmit={handleFormSubmit}
+            selectedMaterials={selectedMaterials}
+            onMaterialsChange={setSelectedMaterials}
+          />
         </div>
-      </main>
-    </div>
+      </motion.div>
+    </AppLayout>
   );
 };
 
