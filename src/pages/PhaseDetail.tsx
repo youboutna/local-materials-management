@@ -15,6 +15,9 @@ import PhaseEmployees from '@/components/project/PhaseEmployees';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
 import PhaseInspections from '@/components/project/PhaseInspections';
+import PhaseMilestones from '@/components/project/PhaseMilestones';
+import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -26,7 +29,10 @@ import {
   CheckCircle, 
   Clock,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  BarChart3,
+  Target,
+  Layers
 } from 'lucide-react';
 
 const PhaseDetail: React.FC = () => {
@@ -246,13 +252,39 @@ const PhaseDetail: React.FC = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="materials">Matériaux</TabsTrigger>
-          <TabsTrigger value="team">Équipe</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="tasks">Tâches</TabsTrigger>
-          <TabsTrigger value="monitoring">Suivi</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="overview" className="flex items-center gap-1">
+            <BarChart3 className="h-3 w-3" />
+            <span className="hidden sm:inline">Vue d'ensemble</span>
+          </TabsTrigger>
+          <TabsTrigger value="planning" className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span className="hidden sm:inline">Planning</span>
+          </TabsTrigger>
+          <TabsTrigger value="milestones" className="flex items-center gap-1">
+            <Target className="h-3 w-3" />
+            <span className="hidden sm:inline">Jalons</span>
+          </TabsTrigger>
+          <TabsTrigger value="materials" className="flex items-center gap-1">
+            <Package className="h-3 w-3" />
+            <span className="hidden sm:inline">Matériaux</span>
+          </TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-1">
+            <Users className="h-3 w-3" />
+            <span className="hidden sm:inline">Équipe</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-1">
+            <FileText className="h-3 w-3" />
+            <span className="hidden sm:inline">Documents</span>
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center gap-1">
+            <Layers className="h-3 w-3" />
+            <span className="hidden sm:inline">Tâches</span>
+          </TabsTrigger>
+          <TabsTrigger value="monitoring" className="flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            <span className="hidden sm:inline">Suivi</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -338,6 +370,65 @@ const PhaseDetail: React.FC = () => {
             </Card>
           )}
         </TabsContent>
+
+        {/* Planning Tab with PERT/GANTT Integration */}
+        <TabsContent value="planning" className="space-y-6">
+          <Tabs defaultValue="gantt" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
+              <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
+              <TabsTrigger value="critical">Chemin Critique</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="gantt">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Gantt - Phase {phase.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <GanttChart projectId={projectId!} phaseId={phaseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="pert">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Analyse PERT - Estimation des durées
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PERTDiagram projectId={projectId!} phaseId={phaseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="critical">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Chemin Critique
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CriticalPathView projectId={projectId!} phaseId={phaseId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Milestones Tab */}
+        <TabsContent value="milestones">
+          <PhaseMilestones phaseId={phaseId!} projectId={projectId!} />
+        </TabsContent>
+
         <TabsContent value="materials">
           <PhaseMaterials phaseId={phaseId!} projectId={projectId!} />
         </TabsContent>

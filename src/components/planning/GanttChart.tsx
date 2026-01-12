@@ -31,6 +31,7 @@ type ZoomLevel = 'day' | 'week' | 'month';
 interface GanttChartProps {
   projectId: string;
   projectData?: any;
+  phaseId?: string; // Optional: filter to specific phase
   onPhaseClick?: (phaseId: string) => void;
   onMilestoneClick?: (milestoneId: string) => void;
   compact?: boolean;
@@ -39,6 +40,7 @@ interface GanttChartProps {
 const GanttChart: React.FC<GanttChartProps> = ({
   projectId,
   projectData,
+  phaseId,
   onPhaseClick,
   onMilestoneClick,
   compact = false

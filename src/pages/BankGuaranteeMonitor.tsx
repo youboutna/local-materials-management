@@ -8,9 +8,12 @@ import { EscalationRoles, ProjectData } from '@/types/project';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useProjectsHex, useBankGuaranteesHex } from '@/hooks/hexagonal';
+import { AppLayout } from '@/components/layout';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Content component that uses ProjectManager
 const BankGuaranteeContent = () => {
+  const { t } = useLanguage();
   const { data, acknowledgeAlert } = useProjectManager();
 
   const bankGuaranteeAlerts = data?.alerts?.filter(alert => 
@@ -18,24 +21,18 @@ const BankGuaranteeContent = () => {
   ) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 pt-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">🏦 Surveillance Garanties Bancaires</h1>
-                <p className="text-gray-600 mt-2">
-                  Système automatisé de détection des retards et déclenchement des garanties bancaires
-                </p>
-              </div>
-              {bankGuaranteeAlerts.length > 0 && (
-                <Badge variant="destructive" className="text-lg px-4 py-2">
-                  {bankGuaranteeAlerts.length} Alerte(s) Active(s)
-                </Badge>
-              )}
-            </div>
-          </div>
+    <AppLayout
+      pageTitle="🏦 Surveillance Garanties Bancaires"
+      pageDescription="Système automatisé de détection des retards et déclenchement des garanties bancaires"
+      actions={
+        bankGuaranteeAlerts.length > 0 && (
+          <Badge variant="destructive" className="text-lg px-4 py-2">
+            {bankGuaranteeAlerts.length} Alerte(s) Active(s)
+          </Badge>
+        )
+      }
+    >
+      <div className="space-y-8">
 
           {/* Project Manager Alerts */}
           {bankGuaranteeAlerts.length > 0 && (
@@ -67,14 +64,13 @@ const BankGuaranteeContent = () => {
               </CardContent>
             </Card>
           )}
-          
-          <BankGuaranteeMonitor />
-          <div className="mt-8">
-            <EnhancedBankGuaranteeCrud />
-          </div>
+        
+        <BankGuaranteeMonitor />
+        <div className="mt-8">
+          <EnhancedBankGuaranteeCrud />
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

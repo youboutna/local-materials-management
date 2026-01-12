@@ -13,6 +13,7 @@ import TenderEvaluationPanel from "@/components/tenders/TenderEvaluationPanel";
 import PublicProcurementWorkflow from "@/components/tenders/PublicProcurementWorkflow";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
 import TenderWorkflowStepper from "@/components/tenders/TenderWorkflowStepper";
+import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
 import { TenderSecurityBadge } from "@/components/tenders/TenderSecurityBadge";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
 import { EnhancedDocumentSharing } from "@/components/suppliers/EnhancedDocumentSharing";
@@ -241,9 +242,12 @@ const TenderManagement = () => {
 
                 <Tabs defaultValue="workflow" className="flex-1">
                   <div className="border-b px-6 bg-muted/30">
-                    <TabsList className="grid w-full grid-cols-7 max-w-3xl">
+                    <TabsList className="grid w-full grid-cols-8 max-w-4xl">
                       <TabsTrigger value="workflow" className="text-xs">
                         Workflow
+                      </TabsTrigger>
+                      <TabsTrigger value="phases" className="text-xs">
+                        Phases Projet
                       </TabsTrigger>
                       <TabsTrigger value="stepper" className="text-xs">
                         Processus
@@ -271,6 +275,12 @@ const TenderManagement = () => {
                       <PublicProcurementWorkflow
                         selectedTender={selectedTender}
                         onShareWithSuppliers={handleShareWithSuppliers}
+                      />
+                    </TabsContent>
+                    <TabsContent value="phases" className="mt-0">
+                      <TenderProjectPhases 
+                        tenderId={selectedTender.id}
+                        projectId={selectedTender.project_id}
                       />
                     </TabsContent>
                     <TabsContent value="stepper" className="mt-0">

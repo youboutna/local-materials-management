@@ -25,12 +25,14 @@ import { getGanttPertService, UnifiedPERTData } from '@/services/GanttPertDataSe
 interface PERTDiagramProps {
   projectId: string;
   projectData?: any;
+  phaseId?: string; // Optional: filter to specific phase
   compact?: boolean;
 }
 
 const PERTDiagram: React.FC<PERTDiagramProps> = ({
   projectId,
   projectData,
+  phaseId,
   compact = false
 }) => {
   const [data, setData] = useState<UnifiedPERTData | null>(null);
