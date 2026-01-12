@@ -17,119 +17,153 @@ Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améli
 
 ---
 
-## **Phase 1: Audit & Stratégie - COMPLÉTÉE ✓**
-
-### Réalisations:
-- Analyse de l'architecture existante
-- Identification des patterns à corriger
-- Définition de la stratégie hexagonale
-
----
-
 ## **Phase 2: Migration Hexagonale - COMPLÉTÉE ✓**
 
-### **Architecture Hexagonale Implémentée**
-
-#### **1. Domain Entities (`src/domain/entities/`)**
-- ✅ `Project.ts` - Entité projet avec logique métier
-- ✅ `Material.ts` - Entité matériau avec propriétés étendues
-- ✅ `Phase.ts` - Entité phase avec steps et tasks
-- ✅ `Supplier.ts` - Entité fournisseur
-- ✅ `Document.ts` - Entité document
-- ✅ `Tender.ts` - Entité appel d'offres
-
-#### **2. Repository Interfaces (`src/domain/repositories/`)**
-- ✅ `IProjectRepository.ts`
-- ✅ `IMaterialRepository.ts`
-- ✅ `IPhaseRepository.ts`
-- ✅ `ISupplierRepository.ts`
-- ✅ `IDocumentRepository.ts`
-- ✅ `ITenderRepository.ts`
-
-#### **3. Use Cases (`src/application/use-cases/`)**
-- ✅ **Project Use Cases:**
-  - `GetProjectsListUseCase`
-  - `GetProjectByIdUseCase`
-  - `CreateProjectUseCase`
-  - `UpdateProjectUseCase`
-  - `DeleteProjectUseCase`
-  - `GetPhaseDetailsUseCase`
-
-- ✅ **Material Use Cases:**
-  - `GetMaterialsListUseCase`
-  - `GetMaterialByIdUseCase`
-  - `CreateMaterialUseCase`
-  - `UpdateMaterialUseCase`
-  - `DeleteMaterialUseCase`
-
-- ✅ **Supplier Use Cases:**
-  - `GetSuppliersListUseCase`
-  - `GetSupplierByIdUseCase`
-  - `CreateSupplierUseCase`
-  - `UpdateSupplierUseCase`
-  - `DeleteSupplierUseCase`
-
-#### **4. Infrastructure Adapters (`src/infrastructure/supabase/adapters/`)**
-- ✅ `SupabaseProjectAdapter.ts`
-- ✅ `SupabaseMaterialAdapter.ts`
-- ✅ `SupabasePhaseAdapter.ts`
-- ✅ `SupabaseSupplierAdapter.ts`
-
-#### **5. Repository Factory (`src/infrastructure/`)**
-- ✅ `RepositoryFactory.ts` - Factory centralisée
-
-#### **6. Hexagonal Hooks (`src/hooks/hexagonal/`)**
-- ✅ `useProjectsHex.ts` - CRUD projets + refetch
-- ✅ `useMaterialsHex.ts` - CRUD matériaux + refetch
-- ✅ `useSuppliersHex.ts` - CRUD fournisseurs
-- ✅ `useDocumentsHex.ts` - Documents par projet
-- ✅ `useTendersHex.ts` - Appels d'offres par projet
-- ✅ `useDashboardHex.ts` - Statistiques dashboard
-
-### **Pages Migrées vers Hexagonal**
+### **Pages Migrées**
 - ✅ `src/pages/Projects.tsx` → `useProjectsHex()`
 - ✅ `src/pages/Materials.tsx` → `useMaterialsHex()`
 - ✅ `src/pages/Dashboard.tsx` → `useDashboardHex()`
 
-### **Exemple Migration**
-```tsx
-// AVANT (accès direct Supabase)
-const { data } = await supabase.from('projects').select('*');
+---
 
-// APRÈS (architecture hexagonale)
-import { useProjectsHex } from '@/hooks/hexagonal';
-const { projects, loading, createProject, deleteProject } = useProjectsHex();
+## **Phase 3: Navigation & Pages Restantes (CURRENT)**
+
+### **Analyse des Pages à Migrer**
+
+#### **Groupe 1: Pages Monitoring (Priorité Haute)**
+
+| Page | Fichier | Dépendances Supabase Directes | Complexité |
+|------|---------|------------------------------|------------|
+| BankGuaranteeMonitor | `src/pages/BankGuaranteeMonitor.tsx` | projects, project_hierarchy RPC | Moyenne |
+| InspectionMonitoring | `src/pages/InspectionMonitoring.tsx` | Via composant RoleBasedInspectionMonitoring | Faible |
+| PaymentControl | `src/pages/PaymentControl.tsx` | payment_blocks, notifications, projects | Haute |
+| NotificationsCenter | `src/pages/NotificationsCenter.tsx` | notifications | Moyenne |
+| InsuranceManagement | `src/pages/InsuranceManagement.tsx` | insurance_certificates | Moyenne |
+
+**Patterns identifiés:**
+- `ProjectManagerProvider` utilisé pour contexte projet
+- Appels RPC `get_project_hierarchy` pour hiérarchie
+- Real-time subscriptions sur `notifications`
+- Chargement projet par défaut (premier projet "en cours")
+
+#### **Groupe 2: Portails Fournisseurs (Priorité Moyenne)**
+
+| Page | Fichier | Dépendances Supabase Directes | Complexité |
+|------|---------|------------------------------|------------|
+| UnifiedSupplierPortal | `src/pages/UnifiedSupplierPortal.tsx` | suppliers, documents, notifications, parsed_invoices | Très Haute |
+| EnhancedSupplierTenderPortal | `src/components/suppliers/EnhancedSupplierTenderPortal.tsx` | Via TenderService, TenderSubmissionService | Haute |
+| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | tender_submissions | Moyenne |
+
+**Patterns identifiés:**
+- Auth state management avec `supabase.auth.onAuthStateChange`
+- Services existants: `TenderService`, `TenderSubmissionService`
+- React Query pour fetching avec cache
+- Documents uploads via `useDocumentStorage`
+
+#### **Groupe 3: Pages Projets Détail (Priorité Haute)**
+
+| Page | Fichier | Dépendances | Complexité |
+|------|---------|-------------|------------|
+| PhaseDetailsPage | `src/components/project/PhaseDetailsPage.tsx` | IPhaseRepository, GetPhaseDetailsUseCase | Moyenne |
+| ProjectDetail | `src/pages/ProjectDetail.tsx` | projects, phases | Moyenne |
+| ProjectPhasesDetail | `src/pages/ProjectPhasesDetail.tsx` | phases | Faible |
+
+---
+
+### **Stratégie de Migration Phase 3**
+
+#### **Étape 3.1: Hooks Monitoring Hexagonaux**
+Créer des hooks dédiés pour encapsuler les logiques monitoring:
+
+```tsx
+// src/hooks/hexagonal/useMonitoringHex.ts
+export const useBankGuaranteesHex = () => { /* ... */ };
+export const usePaymentBlocksHex = () => { /* ... */ };
+export const useNotificationsHex = () => { /* ... */ };
+```
+
+#### **Étape 3.2: Hook Phases Hexagonal**
+Étendre `useProjectsHex` avec support phases:
+
+```tsx
+// src/hooks/hexagonal/usePhasesHex.ts
+export const usePhasesHex = (projectId?: string) => {
+  const getPhaseDetails = async (phaseId: string) => { /* ... */ };
+  return { phases, loading, getPhaseDetails };
+};
+```
+
+#### **Étape 3.3: Hook Supplier Hexagonal**
+Refactorer `UnifiedSupplierPortal` vers hooks:
+
+```tsx
+// src/hooks/hexagonal/useSupplierPortalHex.ts
+export const useSupplierPortalHex = () => {
+  const { supplier, documents, notifications } = /* ... */;
+  return { supplier, documents, notifications, uploadDocument };
+};
 ```
 
 ---
 
-## **Phase 3: Navigation & Hiérarchie Visuelle (CURRENT)**
+### **Tâches Phase 3**
 
-### **Objectif**
-Améliorer la navigation entre les niveaux hiérarchiques avec composants visuels.
+#### **3.1 Hooks Hexagonaux Monitoring**
+- [ ] Créer `src/hooks/hexagonal/useBankGuaranteesHex.ts`
+- [ ] Créer `src/hooks/hexagonal/usePaymentBlocksHex.ts`
+- [ ] Créer `src/hooks/hexagonal/useInsurancesHex.ts`
+- [ ] Créer `src/hooks/hexagonal/useNotificationsHex.ts`
 
-### **Structure Hiérarchique 5 Niveaux**
-1. 🌐 **PROJET** - Dashboard stratégique global
-2. 🏗️ **PHASE** - Vue opérationnelle par phase  
-3. 📋 **ÉTAPE** - Détails processus (optionnel)
-4. 📍 **JALON** - Points de contrôle critiques
-5. ⚡ **ACTION** - Interactions utilisateur
+#### **3.2 Hooks Hexagonaux Phases**
+- [ ] Créer `src/hooks/hexagonal/usePhasesHex.ts`
+- [ ] Migrer `PhaseDetailsPage` vers `usePhasesHex()`
+- [ ] Intégrer avec `GetPhaseDetailsUseCase`
 
-### **Composants Hiérarchiques (`src/components/project/hierarchy/`)**
-- ✅ `KPICard.tsx` - Carte d'indicateurs clés
-- ✅ `ProjectHeader.tsx` - Header avec breadcrumb et KPI
-- ✅ `PhaseNode.tsx` - Nœud de phase interactif
-- ✅ `ProjectHierarchyView.tsx` - Vue hiérarchique complète
-- ✅ `ProjectMatrixView.tsx` - Tableau matriciel
-- ✅ `StepNode.tsx` - Nœud d'étape
-- ✅ `MilestoneNode.tsx` - Nœud de jalon
+#### **3.3 Pages Monitoring Migration**
+- [ ] Migrer `BankGuaranteeMonitorPage` → `useBankGuaranteesHex()`
+- [ ] Migrer `PaymentControlPage` → `usePaymentBlocksHex()`
+- [ ] Migrer `InspectionMonitoringPage` → hooks existants
+- [ ] Migrer `NotificationsCenterPage` → `useNotificationsHex()`
 
-### **Tâches Restantes Phase 3**
-- [ ] Migrer `PhaseDetailsPage` vers hooks hexagonaux
-- [ ] Créer `PhaseBreadcrumb` avec navigation hiérarchique
-- [ ] Implémenter `PhaseHeader` avec métriques
-- [ ] Développer `PhaseWithStepsView` et `PhaseWithDirectMilestonesView`
-- [ ] Ajouter `PhaseMetrics` et `PhaseActions`
+#### **3.4 Portails Fournisseurs (Optionnel Phase 3)**
+- [ ] Créer `src/hooks/hexagonal/useSupplierPortalHex.ts`
+- [ ] Refactorer `UnifiedSupplierPortal` (1312 lignes → composants focalisés)
+- [ ] Utiliser services existants `TenderService`, `TenderSubmissionService`
+
+#### **3.5 Navigation Hiérarchique**
+- [ ] Créer `PhaseBreadcrumb` avec navigation projet → phase
+- [ ] Créer `PhaseHeader` avec métriques
+- [ ] Implémenter `PhaseWithStepsView` / `PhaseWithDirectMilestonesView`
+
+---
+
+### **Use Cases à Créer (Phase 3)**
+
+```
+src/application/use-cases/
+├── monitoring/
+│   ├── GetBankGuaranteesUseCase.ts
+│   ├── GetPaymentBlocksUseCase.ts
+│   └── GetInsurancesUseCase.ts
+├── notification/
+│   ├── GetNotificationsUseCase.ts
+│   └── MarkNotificationReadUseCase.ts
+└── phase/
+    ├── GetPhaseByIdUseCase.ts
+    └── UpdatePhaseProgressUseCase.ts
+```
+
+---
+
+### **Repositories à Créer (Phase 3)**
+
+```
+src/domain/repositories/
+├── IBankGuaranteeRepository.ts
+├── IPaymentBlockRepository.ts
+├── IInsuranceRepository.ts
+└── INotificationRepository.ts
+```
 
 ---
 
@@ -138,34 +172,11 @@ Améliorer la navigation entre les niveaux hiérarchiques avec composants visuel
 ### **Objectif**
 Migrer les workflows métier vers l'architecture hexagonale.
 
-### **Use Cases à Créer**
+### **Use Cases Prévus**
 - [ ] `CreateInspectionUseCase`
 - [ ] `ApprovePaymentUseCase`
 - [ ] `GenerateProgressInvoiceUseCase`
-
----
-
-## **Phase 5: Système de Design**
-
-### **Objectif**
-Tokens design cohérents et thème unifié.
-
-### **Tâches**
-- [ ] Audit tokens CSS existants
-- [ ] Standardiser couleurs HSL dans `index.css`
-- [ ] Créer variantes de composants shadcn
-
----
-
-## **Phase 6: Tests & Déploiement**
-
-### **Objectif**
-Validation complète et déploiement progressif.
-
-### **Tâches**
-- [ ] Tests unitaires use cases
-- [ ] Tests d'intégration hooks
-- [ ] Déploiement feature flags
+- [ ] `BlockPaymentUseCase`
 
 ---
 
@@ -179,8 +190,37 @@ Validation complète et déploiement progressif.
 | Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ⏳ |
 | Documents | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
 | Tenders | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
+| Monitoring | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
+| Notifications | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
 
 ---
 
-**Statut actuel** : Phase 2 terminée ✅ - Phase 3 en cours 🚀  
-**Prochaine milestone** : Migration `PhaseDetailsPage` vers hexagonal
+## **Routes à Migrer (Référence)**
+
+### **Routes Publiques** (pas de migration nécessaire)
+- `/` - Index
+- `/auth` - Auth
+- `/contact`, `/terms`, `/policy`
+- `/supplier-portal`, `/supplier-tender`, `/supplier-access`
+
+### **Routes Protégées - Priorité Haute**
+- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage ⏳
+- `/bank-guarantee-monitor` - BankGuaranteeMonitorPage ⏳
+- `/payment-control` - PaymentControlPage ⏳
+- `/inspection-monitoring` - InspectionMonitoringPage ⏳
+
+### **Routes Protégées - Priorité Moyenne**
+- `/notifications-center` - NotificationsCenterPage ⏳
+- `/insurance-management` - InsuranceManagementPage ⏳
+- `/suppliers` - Suppliers ⏳
+- `/documents` - Documents ⏳
+
+### **Routes Protégées - Déjà Migrées**
+- `/projects` - Projects ✅
+- `/materials` - Materials ✅
+- `/dashboard` - Dashboard ✅
+
+---
+
+**Statut actuel** : Phase 2 terminée ✅ - Phase 3 planifiée 📋  
+**Prochaine action** : Créer hooks hexagonaux pour monitoring et phases
