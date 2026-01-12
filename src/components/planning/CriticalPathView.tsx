@@ -25,11 +25,13 @@ import { fr } from 'date-fns/locale';
 
 interface CriticalPathViewProps {
   projectId: string;
+  phaseId?: string; // Optional: filter to specific phase
   compact?: boolean;
 }
 
 const CriticalPathView: React.FC<CriticalPathViewProps> = ({
   projectId,
+  phaseId,
   compact = false
 }) => {
   const [criticalPath, setCriticalPath] = useState<CriticalPathDTO | null>(null);
