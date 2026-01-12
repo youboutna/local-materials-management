@@ -10,8 +10,8 @@ Migrer l'architecture vers un modèle hexagonal propre avec navigabilité améli
 
 - [x] **Phase 1**: Audit de l'architecture existante et définition de la stratégie ✓
 - [x] **Phase 2**: Migration progressive de la hiérarchie projet ✓
-- [ ] **Phase 3**: Refactoring navigation avec architecture hexagonale (CURRENT)
-- [ ] **Phase 4**: Migration workflows inspection/paiement
+- [x] **Phase 3**: Refactoring navigation avec architecture hexagonale ✓
+- [x] **Phase 4**: Migration workflows inspection/paiement ✓ (CURRENT)
 - [ ] **Phase 5**: Système de design et hiérarchie visuelle
 - [ ] **Phase 6**: Tests, validation et déploiement progressif
 
@@ -157,18 +157,41 @@ const { projects } = useProjectsHex();
 
 ---
 
+## **Phase 4: Workflows Inspection/Paiement - COMPLÉTÉE ✓**
+
+### **Hooks Workflow Créés**
+- ✅ `useInspectionWorkflowHex` - Workflow complet d'inspection
+  - `createRequest()` - Créer une demande d'inspection
+  - `scheduleInspection()` - Programmer une inspection
+  - `executeInspection()` - Exécuter et valider/rejeter
+  
+- ✅ `usePaymentWorkflowHex` - Workflow complet de paiement
+  - `createRequest()` - Créer une demande de paiement
+  - `validatePayment()` - Valider/approuver/rejeter par rôle
+
+### **Use Cases Existants Utilisés**
+- `CreateInspectionRequestUseCase`
+- `ScheduleInspectionUseCase`
+- `ExecuteInspectionUseCase`
+- `CreatePaymentRequestUseCase`
+- `ValidatePaymentUseCase`
+
+---
+
 ## **Métriques de Progression**
 
 | Domaine | Entités | Repositories | Use Cases | Hooks | Pages |
 |---------|---------|--------------|-----------|-------|-------|
 | Projects | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
 | Materials | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
-| Phases | ✅ | ✅ | ✅ 1/3 | ✅ | ⏳ |
-| Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ⏳ |
-| Documents | ✅ | ✅ | ✅ 2/2 | ✅ | ⏳ |
+| Phases | ✅ | ✅ | ✅ 1/3 | ✅ | ✅ |
+| Suppliers | ✅ | ✅ | ✅ 5/5 | ✅ | ✅ |
+| Documents | ✅ | ✅ | ✅ 2/2 | ✅ | ✅ |
 | Tenders | ✅ | ⏳ | ⏳ 2/2 | ✅ | N/A |
 | Monitoring | ✅ | ✅ | ⏳ | ✅ | ✅ |
-| Notifications | ✅ | ⏳ | ⏳ | ✅ | ⏳ |
+| Notifications | ✅ | ⏳ | ⏳ | ✅ | ✅ |
+| Inspections | ✅ | ✅ | ✅ 4/4 | ✅ | N/A |
+| Payments | ✅ | ✅ | ✅ 3/3 | ✅ | N/A |
 
 ---
 
@@ -185,16 +208,28 @@ const { projects } = useProjectsHex();
 - `/dashboard` - `useDashboardHex()`
 - `/bank-guarantee-monitor` - `useBankGuaranteesHex()`
 - `/payment-control` - `usePaymentBlocksHex()`
-
-### **Routes Protégées - À Migrer** ✅ TOUTES MIGRÉES
-- ✅ `/suppliers` - `useSuppliersHex()`
-- ✅ `/documents` - `useProjectsHex()`
-- ✅ `/notifications-center` - `useNotificationsHex()`
+- `/suppliers` - `useSuppliersHex()`
+- `/documents` - `useProjectsHex()`
+- `/notifications-center` - `useNotificationsHex()`
 
 ### **Routes Protégées - Navigation Hiérarchique** ✅
-- ✅ `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage avec PhaseBreadcrumb amélioré
+- `/projects/:projectId/phases/:phaseId` - PhaseDetailsPage avec PhaseBreadcrumb amélioré
+
+### **Workflows Hexagonaux** ✅
+- Inspection: `useInspectionWorkflowHex()`
+- Payment: `usePaymentWorkflowHex()`
 
 ---
 
-**Statut actuel** : Phase 3 COMPLÉTÉE ✅ - 8/8 pages migrées  
-**Prochaine phase** : Phase 4 - Migration workflows inspection/paiement
+## **Phase 5: Système de Design (À VENIR)**
+
+### **Objectifs**
+1. Standardiser les tokens de design (couleurs, espacements, typographie)
+2. Créer des variantes de composants cohérentes
+3. Améliorer la hiérarchie visuelle des pages projet
+4. Documentation des patterns UI
+
+---
+
+**Statut actuel** : Phase 4 COMPLÉTÉE ✅ - Workflows hexagonaux créés  
+**Prochaine phase** : Phase 5 - Système de design et hiérarchie visuelle

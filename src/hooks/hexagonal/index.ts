@@ -44,3 +44,10 @@ export type {
   InsuranceCertificate, 
   Notification 
 } from './useMonitoringHex';
+
+// Workflows - Phase 4
+export { useInspectionWorkflowHex } from './useInspectionWorkflowHex';
+export type { UseInspectionWorkflowHexResult } from './useInspectionWorkflowHex';
+
+export { usePaymentWorkflowHex } from './usePaymentWorkflowHex';
+export type { UsePaymentWorkflowHexResult } from './usePaymentWorkflowHex';
