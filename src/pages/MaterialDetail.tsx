@@ -21,7 +21,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 const MaterialDetail = () => {
   const { t } = useLanguage();
   const { id } = useParams();
-  const { material, loading } = useMaterialHex(id);
+  const { material, isLoading: loading } = useMaterialHex(id);
   const [warehouseShape, setWarehouseShape] = useState<
     { x: number; y: number }[]
   >([]);

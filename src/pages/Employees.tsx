@@ -1,6 +1,4 @@
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import EmployeeManagement from "@/components/documents/EmployeeManagement";
 import { useLanguage } from "@/contexts/LanguageContext";
 
