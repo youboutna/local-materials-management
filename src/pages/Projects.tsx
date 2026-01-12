@@ -7,36 +7,46 @@ import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectFilters from "@/components/projects/ProjectFilters";
 import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
-import InteractiveMap from "@/components/map/InteractiveMap";
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import InteractiveMapFilters from "@/components/projects/InteractiveMapFilters";
 import InteractiveProjectsList from "@/components/projects/InteractiveProjectsList";
 import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectsHex } from "@/hooks/hexagonal";
 import { usePagination } from "@/hooks/usePagination";
 import { ProjectData } from "@/types/project";
 import { MapLocation } from "@/components/ProjectMap";
-import Navbar from "@/components/Navbar";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import WaterfallProjectManager from "@/components/project/WaterfallProjectManager";
 import { ElectricSpinner } from "@/components/loading-page";
 import { useBulkSelection } from "@/hooks/projects/useBulkSelection";
 import BulkActions from "@/components/projects/BulkActions";
 import { Button } from "@/components/ui/button";
-import { ProjectService } from "@/services/ProjectService";
 import { toast } from "sonner";
 
 const Projects: React.FC = () => {
-  const { projects, loading: isLoading, error } = useProjects();
-  const [originalMapLocations, setOriginalMapLocations] = useState<
-    MapLocation[]
-  >([]);
-  const [filteredMapLocations, setFilteredMapLocations] = useState<
-    MapLocation[]
-  >([]);
-  const [interactiveFilteredProjects, setInteractiveFilteredProjects] =
-    useState<ProjectData[]>([]);
-  const projectService = new ProjectService();
+  // Use hexagonal architecture hook
+  const { projects: hexProjects, loading: isLoading, error, deleteProject } = useProjectsHex();
+  
+  // Map domain entities to ProjectData for compatibility
+  const projects: ProjectData[] = React.useMemo(() => 
+    hexProjects.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: p.description || '',
+      location: p.location || '',
+      status: p.status as ProjectData['status'],
+      progress: p.progress,
+      budget: p.budget,
+      startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
+      endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
+      thumbnail: p.thumbnail,
+      teamSize: p.teamSize || 0,
+      coordinates: p.coordinates,
+    }))
+  , [hexProjects]);
+  
+  const [originalMapLocations, setOriginalMapLocations] = useState<MapLocation[]>([]);
+  const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
+  const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
 
   // Use the projects filter hook
   const {
@@ -82,7 +92,7 @@ const Projects: React.FC = () => {
     isProjectSelected,
   } = useBulkSelection();
 
-  // Add delete handler
+  // Add delete handler using hexagonal architecture
   const handleBulkDelete = async (projectIds: string[]) => {
     if (
       !confirm(
@@ -93,23 +103,15 @@ const Projects: React.FC = () => {
     }
 
     try {
-      // Implement your bulk delete API call here
-      console.log("Deleting projects:", projectIds);
-
-      // Example API call (replace with your actual API):
+      // Use hexagonal delete via use case
       for (const projectId of projectIds) {
-        await projectService.deleteProject(projectId);
+        await deleteProject(projectId);
       }
-      // After successful deletion, clear selection
       clearSelection();
-
-      // You might want to refetch projects here or update the local state
       handleReset();
-
-      // Show success message
       toast.success(`${projectIds.length} projet(s) supprimé(s) avec succès`);
-    } catch (error) {
-      console.error("Error deleting projects:", error);
+    } catch (err) {
+      console.error("Error deleting projects:", err);
       toast.error("Erreur lors de la suppression des projets");
     }
   };

@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useProjects } from "@/hooks/projects/useProjects";
+import { useDashboardHex, useProjectsHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -29,7 +29,7 @@ import {
   Shield,
   Users
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
@@ -39,7 +39,27 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const { t } = useLanguage();
-  const { projects } = useProjects();
+  
+  // Use hexagonal architecture hooks
+  const { projects: hexProjects } = useProjectsHex();
+  const { stats: dashboardStats, loading: statsLoading } = useDashboardHex();
+  
+  // Map domain entities to projects for compatibility with ProjectData
+  const projects = useMemo(() => 
+    hexProjects.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: p.description || '',
+      location: p.location || '',
+      status: p.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+      progress: p.progress,
+      budget: p.budget,
+      teamSize: p.teamSize || 0,
+      startDate: p.startDate ? new Date(p.startDate).toISOString() : new Date().toISOString(),
+      endDate: p.endDate ? new Date(p.endDate).toISOString() : new Date().toISOString(),
+      coordinates: p.coordinates,
+    }))
+  , [hexProjects]);
 
   // Required roles for dashboard access (moved to constants)
   const allowedRoles = ["admin", "director", "project_manager"];
@@ -97,145 +117,15 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // State for real data
-  const [realStats, setRealStats] = useState<{
-    activeProjects: number;
-    totalBudget: number;
-    teamMembers: number;
-    materials: number;
-    phases: number;
-    milestones: number;
-    completedMilestones: number;
-    statusDistribution: { name: string; value: number; color: string }[];
-    locationDistribution: { name: string; count: number }[];
-  }>({
-    activeProjects: 0,
-    totalBudget: 0,
-    teamMembers: 0,
-    materials: 0,
-    phases: 0,
-    milestones: 0,
-    completedMilestones: 0,
-    statusDistribution: [],
-    locationDistribution: [],
-  });
-
-  // Fetch real data from database
-  useEffect(() => {
-    const fetchRealStats = async () => {
-      try {
-        // Fetch projects data
-        const { data: projectsData } = await supabase
-          .from("projects")
-          .select("*");
-
-        // Fetch phases data
-        const { data: phasesData } = await supabase
-          .from("project_phases")
-          .select("*");
-
-        // Fetch milestones data
-        const { data: milestonesData } = await supabase
-          .from("project_milestones")
-          .select("*");
-
-        // Fetch materials data
-        const { data: materialsData } = await supabase
-          .from("materials")
-          .select("*");
-
-        const activeProjects =
-          projectsData?.filter((p) => p.status === "en cours").length || 0;
-        const totalBudget =
-          projectsData?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0;
-        const teamMembers =
-          projectsData?.reduce((sum, p) => sum + (p.team_size || 0), 0) || 0;
-        const materials = materialsData?.length || 0;
-        const phases = phasesData?.length || 0;
-        const milestones = milestonesData?.length || 0;
-        const completedMilestones =
-          milestonesData?.filter((m) => m.completion_date).length || 0;
-
-        // Status distribution for pie chart
-        const statusCounts =
-          projectsData?.reduce((acc, project) => {
-            acc[project.status] = (acc[project.status] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>) || {};
-
-        // Status colors moved to constants
-        const statusColors = {
-          "en cours": "hsl(var(--primary))",
-          terminé: "hsl(var(--success))",
-          "en attente": "hsl(var(--warning))",
-          "en inspection": "hsl(var(--info))",
-          suspendu: "hsl(var(--secondary))",
-          annulé: "hsl(var(--destructive))",
-        };
-
-        const statusDistribution = Object.entries(statusCounts).map(
-          ([status, count]) => ({
-            name: status,
-            value: count,
-            color:
-              statusColors[status as keyof typeof statusColors] || "#6b7280",
-          })
-        );
-
-        // Location distribution for bar chart
-        const locationCounts =
-          projectsData?.reduce((acc, project) => {
-            acc[project.location] = (acc[project.location] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>) || {};
-
-        const locationDistribution = Object.entries(locationCounts).map(
-          ([location, count]) => ({
-            name: location,
-            count,
-          })
-        );
-
-        setRealStats({
-          activeProjects,
-          totalBudget,
-          teamMembers,
-          materials,
-          phases,
-          milestones,
-          completedMilestones,
-          statusDistribution,
-          locationDistribution,
-        });
-      } catch (error) {
-        console.error("Error fetching real stats:", error);
-      }
-    };
-
-    fetchRealStats();
-  }, []);
-
-  // Calculate statistics from projects data (fallback)
-  const calculateStats = () => {
-    if (!projects || projects.length === 0) {
-      return realStats;
-    }
-
-    const activeProjects = projects.filter(
-      (p) => p.status === "en cours"
-    ).length;
-    const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-    const teamMembers = projects.reduce((sum, p) => sum + p.teamSize, 0);
-
-    return {
-      ...realStats,
-      activeProjects: realStats.activeProjects || activeProjects,
-      totalBudget: realStats.totalBudget || totalBudget,
-      teamMembers: realStats.teamMembers || teamMembers,
-    };
-  };
-
-  const stats = calculateStats();
+  // Use stats from hexagonal dashboard hook
+  const stats = useMemo(() => ({
+    activeProjects: dashboardStats.activeProjects,
+    totalBudget: dashboardStats.totalBudget,
+    teamMembers: dashboardStats.teamMembers,
+    materials: dashboardStats.materials,
+    statusDistribution: dashboardStats.statusDistribution,
+    locationDistribution: dashboardStats.locationDistribution,
+  }), [dashboardStats]);
 
   if (loading) {
     return (

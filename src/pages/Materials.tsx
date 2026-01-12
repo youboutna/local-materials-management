@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus, Map, MapPin, Grid } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import InteractiveMapGIS from "@/components/materials/InteractiveMapGIS";
 import ProjectMap from "@/components/ProjectMap";
 import { MapLocation } from "@/components/ProjectMap";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
 import MaterialFilters from "@/components/materials/MaterialFilters";
 import MaterialGrid from "@/components/materials/MaterialGrid";
 import { usePagination } from "@/hooks/usePagination";
@@ -17,6 +14,7 @@ import InteractiveMaterialFilters from "@/components/materials/InteractiveMateri
 import InteractiveMaterialsList from "@/components/materials/InteractiveMaterialsList";
 import EnhancedInteractiveMaterialMap from "@/components/materials/EnhancedInteractiveMaterialMap";
 import { ElectricSpinner } from "@/components/loading-page";
+import { useMaterialsHex } from "@/hooks/hexagonal";
 
 interface Material {
   id: string;
@@ -40,9 +38,31 @@ interface Material {
 
 const Materials: React.FC = () => {
   const navigate = useNavigate();
-  const [materials, setMaterials] = useState<Material[]>([]);
+  
+  // Use hexagonal architecture hook
+  const { materials: hexMaterials, loading: isLoading, error } = useMaterialsHex();
+  
+  // Map domain entities to local Material interface for compatibility
+  const materials: Material[] = useMemo(() => 
+    hexMaterials.map(m => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      category: m.category,
+      unit: m.unit,
+      price_per_unit: m.pricePerUnit,
+      available_quantity: m.availableQuantity,
+      image: m.image ?? undefined,
+      origin_location: m.originLocation ?? undefined,
+      adresse: m.adresse ?? undefined,
+      coordinates_latitude: m.coordinatesLatitude ?? undefined,
+      coordinates_longitude: m.coordinatesLongitude ?? undefined,
+      forme: m.forme ?? undefined,
+      localisation: m.localisation ?? undefined,
+    }))
+  , [hexMaterials]);
+  
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Use the custom hook for filtering with debouncing
   const {
@@ -87,88 +107,34 @@ const Materials: React.FC = () => {
     return String(adresse);
   };
 
-  // Fetch materials from database
+  // Initialize map locations from hexagonal materials
   useEffect(() => {
-    const fetchMaterials = async () => {
-      try {
-        console.log("Fetching materials from database...");
-        const { data, error } = await supabase
-          .from("materials")
-          .select("*")
-          .order("name");
+    if (materials.length > 0) {
+      const locations: MapLocation[] = materials
+        .filter(
+          (material) =>
+            material.coordinates_latitude && material.coordinates_longitude
+        )
+        .map((material) => {
+          const addressString = getAddressString(material.adresse);
+          const baseLocation: MapLocation = {
+            id: material.id,
+            name: material.name,
+            type: "material" as const,
+            latitude: material.coordinates_latitude!,
+            longitude: material.coordinates_longitude!,
+            region: material.origin_location || "",
+          };
 
-        if (error) throw error;
+          if (addressString && addressString.trim()) {
+            return { ...baseLocation, adresse: addressString.trim() };
+          }
+          return baseLocation;
+        });
 
-        console.log("Raw materials data:", data);
-
-        // Transform the data to match our Material interface
-        const transformedData: Material[] = (data || []).map((item) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          category: item.category,
-          unit: item.unit,
-          price_per_unit: item.price_per_unit,
-          available_quantity: item.available_quantity,
-          image: item.image || undefined,
-          origin_location: item.origin_location || undefined,
-          minimum_quantity: (item as any).minimum_quantity || undefined,
-          local_type: (item as any).local_type || undefined,
-          adresse: item.adresse || undefined,
-          coordinates_latitude: item.coordinates_latitude || undefined,
-          coordinates_longitude: item.coordinates_longitude || undefined,
-          forme: (item as any).forme || undefined,
-          localisation: (item as any).localisation || undefined,
-          is_active:
-            (item as any).is_active !== undefined
-              ? (item as any).is_active
-              : true,
-        }));
-
-        console.log("Transformed materials:", transformedData);
-        setMaterials(transformedData);
-
-        // Convert materials to map locations with proper address handling
-        const locations: MapLocation[] = transformedData
-          .filter(
-            (material) =>
-              material.coordinates_latitude && material.coordinates_longitude
-          )
-          .map((material) => {
-            const addressString = getAddressString(material.adresse);
-            console.log(
-              `Processing material ${material.name} with address:`,
-              addressString
-            );
-
-            const baseLocation: MapLocation = {
-              id: material.id,
-              name: material.name,
-              type: "material" as const,
-              latitude: material.coordinates_latitude!,
-              longitude: material.coordinates_longitude!,
-              region: material.origin_location || "",
-            };
-
-            // Only add adresse if it's a non-empty string
-            if (addressString && addressString.trim()) {
-              return { ...baseLocation, adresse: addressString.trim() };
-            }
-
-            return baseLocation;
-          });
-
-        console.log("Generated map locations:", locations);
-        setMapLocations(locations);
-      } catch (error) {
-        console.error("Error fetching materials:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMaterials();
-  }, []);
+      setMapLocations(locations);
+    }
+  }, [materials]);
 
   // Update map locations when filtered materials change
   useEffect(() => {
