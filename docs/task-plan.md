@@ -40,6 +40,65 @@ PROJET (Niveau Stratégique)
 | **Sous-traitants** | Exécution lots spécifiques |
 | **Bailleurs de fonds** | Financement, suivi décaissements |
 
+### **Cartographie SIG (Système d'Information Géographique)** 🗺️
+Le système intègre une **cartographie interactive** essentielle pour :
+| Fonctionnalité | Description | Composants |
+|----------------|-------------|------------|
+| **Géolocalisation projets** | Positionnement précis sur carte | `InteractiveMapGIS`, Leaflet/OpenStreetMap |
+| **Zones de travaux** | Délimitation parcelles et périmètres | Polygones, mesures superficie |
+| **Suivi terrain** | Visualisation chantiers, équipements | Marqueurs, clusters |
+| **Analyse spatiale** | Distance, contraintes environnementales | Couches thématiques |
+| **Réseaux existants** | Infrastructure électrique, routes, bâti | Overlays GeoJSON |
+
+### **Méthodologies de Planification & Performance** 📊
+
+#### **PERT (Program Evaluation and Review Technique)**
+| Métrique | Calcul | Usage |
+|----------|--------|-------|
+| Durée optimiste (O) | Estimation min | Scénario favorable |
+| Durée probable (M) | Estimation réaliste | Planification |
+| Durée pessimiste (P) | Estimation max | Gestion risques |
+| Durée attendue (TE) | (O + 4M + P) / 6 | Moyenne pondérée |
+| Écart-type (σ) | (P - O) / 6 | Variance |
+| **Chemin critique** | Plus longue séquence | Délai incompressible |
+
+#### **GANTT**
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Timeline interactive | Zoom jour/semaine/mois |
+| Dépendances | Fin-Début, Début-Début, Fin-Fin |
+| Jalons | Diamants sur timeline |
+| Progression | Barre colorée % avancement |
+| Baseline | Comparaison planifié vs réel |
+
+#### **Kanban Board**
+| Colonne | Limite WIP | Actions |
+|---------|------------|---------|
+| Backlog | - | Priorisation |
+| À faire | 10 | Sélection sprint |
+| En cours | 5 | Exécution |
+| En revue | 3 | Validation |
+| Terminé | - | Archivage |
+
+#### **Waterfall (Cascade)**
+| Phase | Gate | Livrable |
+|-------|------|----------|
+| Études | Validation technique | Dossier technique |
+| Approvisionnement | Validation budget | Commandes |
+| Exécution | Inspection | PV conformité |
+| Réception | Validation finale | Attestation |
+
+#### **Indicateurs de Performance (KPIs)**
+| Indicateur | Formule | Interprétation |
+|------------|---------|----------------|
+| **SPI** | EV / PV | >1 = Avance, <1 = Retard |
+| **CPI** | EV / AC | >1 = Économie, <1 = Dépassement |
+| **EV** (Earned Value) | % réel × Budget | Valeur acquise |
+| **PV** (Planned Value) | % planifié × Budget | Valeur planifiée |
+| **AC** (Actual Cost) | Dépenses réelles | Coût réel |
+| **EAC** | AC + (BAC - EV) / CPI | Estimation à l'achèvement |
+| **TCPI** | (BAC - EV) / (BAC - AC) | Performance requise |
+
 ### **Objectifs Workflow**
 - ✅ Suivi et planification des **inspections**
 - ✅ Gestion des **conformités** et certifications
@@ -50,6 +109,8 @@ PROJET (Niveau Stratégique)
 - ✅ **Paiements échéancés** selon progression
 - ✅ Éviter les **pénalités de retard**
 - ✅ **Reporting** et performance multi-parties
+- ✅ **Cartographie SIG** pour géolocalisation
+- ✅ **Planification PERT/GANTT** pour optimisation
 
 ---
 
@@ -175,10 +236,84 @@ PROJET (Niveau Stratégique)
 #### **Pages à Enrichir**
 | Page | Améliorations |
 |------|---------------|
-| `ProjectDetail.tsx` | Vue jalons intégrée, timeline interactive |
-| `PhaseDetail.tsx` | Workflow Étape→Jalons→Actions |
-| `InspectionMonitoring.tsx` | Calendrier inspections, filtres avancés |
-| `PaymentControl.tsx` | Échéancier visuel, alertes pénalités |
+| `ProjectDetail.tsx` | Vue jalons intégrée, timeline interactive, cartographie SIG |
+| `PhaseDetail.tsx` | Workflow Étape→Jalons→Actions, GANTT phase |
+| `InspectionMonitoring.tsx` | Calendrier inspections, filtres avancés, carte sites |
+| `PaymentControl.tsx` | Échéancier visuel, alertes pénalités, courbe S |
+
+### **E. Module Tenders (Appels d'Offres)** 📋
+
+#### **Problèmes Actuels**
+| Problème | Impact |
+|----------|--------|
+| Sélection projet sans affichage phases/étapes | Incohérence données |
+| Tabs non contextuels | Navigation confuse |
+| Processus non guidé | Erreurs soumission |
+| Manque lien projet → tender | Traçabilité faible |
+
+#### **Améliorations Proposées**
+
+##### **1. Cohérence Données Projet ↔ Tender**
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Affichage phases/étapes** | Quand projet sélectionné → afficher structure complète |
+| **Lots par phase** | Possibilité de créer des lots alignés sur phases projet |
+| **Matériaux requis** | Lier matériaux du référentiel projet au tender |
+| **Budget estimatif** | Pré-calcul basé sur phases/étapes projet |
+
+##### **2. Pages & Tabs Tenders**
+| Tab | Contenu | Amélioration |
+|-----|---------|--------------|
+| **Informations** | Détails tender | + Aperçu projet lié |
+| **Structure Projet** | Phases/Étapes/Jalons | **NOUVEAU** - Vue hiérarchique si projet lié |
+| **Lots** | Découpage travaux | + Alignement sur phases |
+| **Documents** | Cahier des charges | + Templates par référentiel |
+| **Soumissions** | Offres reçues | + Scoring automatique |
+| **Évaluation** | Comparatif | + Critères pondérés |
+| **Attribution** | Décision finale | + Workflow validation |
+
+##### **3. Processus Tender Guidé**
+```
+1. CRÉATION
+   └── Choix type (ouvert/restreint/gré à gré)
+   └── Lien projet (optionnel)
+        └── SI projet → Charger phases/étapes/matériaux
+        └── SINON → Saisie manuelle
+
+2. CONFIGURATION
+   └── Définir lots (alignés phases si projet)
+   └── Définir critères évaluation
+   └── Fixer délais (soumission, attribution)
+
+3. PUBLICATION
+   └── Générer avis public
+   └── Notifier fournisseurs qualifiés
+   └── Ouvrir portail soumissions
+
+4. RÉCEPTION
+   └── Validation documents conformité
+   └── Vérification administrative
+   └── Enregistrement horodaté
+
+5. ÉVALUATION
+   └── Scoring technique automatique
+   └── Analyse financière comparative
+   └── Rapport commission
+
+6. ATTRIBUTION
+   └── Notification gagnant
+   └── Lettres de rejet
+   └── Création contrat → LIEN PROJET
+```
+
+##### **4. Interface Tender Améliorée**
+| Composant | Description |
+|-----------|-------------|
+| `TenderProjectPreview` | Aperçu phases/étapes projet lié |
+| `TenderLotBuilder` | Création lots avec mapping phases |
+| `TenderTimeline` | Frise chronologique processus |
+| `TenderScorecard` | Tableau scoring soumissions |
+| `TenderWorkflow` | Stepper état avancement |
 | `TenderManagement.tsx` | Kanban soumissions, scoring visuel |
 | `BankGuaranteeMonitor.tsx` | Timeline expirations, alertes |
 
@@ -221,19 +356,25 @@ PROJET (Niveau Stratégique)
 - [ ] Intégrer jalons dans ProjectDetail et PhaseDetail
 - [ ] Notifications auto sur jalons atteints
 
-### **Sprint 2: Paiements & Pénalités (2 semaines)**
+### **Sprint 2: Module Tenders Cohérent (2 semaines)**
+- [ ] Affichage phases/étapes quand projet sélectionné
+- [ ] Création lots alignés sur phases
+- [ ] Workflow processus tender guidé
+- [ ] Scoring automatique soumissions
+
+### **Sprint 3: Paiements & Pénalités (2 semaines)**
 - [ ] Échéancier visuel paiements
 - [ ] Calcul automatique pénalités retard
 - [ ] Alertes préventives (J-7, J-3, J-1)
 - [ ] Workflow validation paiement
 
-### **Sprint 3: Reporting & Performance (2 semaines)**
-- [ ] Dashboard KPIs temps réel
-- [ ] Rapports PDF bailleurs
+### **Sprint 4: Cartographie & Performance (2 semaines)**
+- [ ] Amélioration InteractiveMapGIS
+- [ ] Dashboard KPIs PERT/GANTT temps réel
 - [ ] Courbe S budget
-- [ ] Scoring fournisseurs
+- [ ] Rapports PDF bailleurs
 
-### **Sprint 4: Portail Fournisseurs (2 semaines)**
+### **Sprint 5: Portail Fournisseurs (2 semaines)**
 - [ ] Layout dédié fournisseurs
 - [ ] Upload documents conformité
 - [ ] Suivi commandes
@@ -250,6 +391,7 @@ PROJET (Niveau Stratégique)
 | Pages avec AppLayout | 13 |
 | Composants navigation créés | 7 |
 | Hooks hexagonaux créés | 17 |
-| Améliorations proposées | 45+ |
+| Améliorations proposées | 60+ |
+| Méthodologies supportées | 4 (PERT, GANTT, Kanban, Waterfall) |
 
-**Statut Global**: ✅ Architecture technique terminée | 🚀 Améliorations UX en attente
+**Statut Global**: ✅ Architecture technique terminée | 🚀 Améliorations UX en attente | 📋 Module Tenders à enrichir
