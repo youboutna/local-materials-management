@@ -22,3 +22,7 @@ export type { UseDocumentsHexResult, UseProjectDocumentsHexResult } from './useD
 // Tenders
 export { useTendersHex, useTenderHex } from './useTendersHex';
 export type { UseTendersHexResult, UseTenderHexResult } from './useTendersHex';
+
+// Dashboard
+export { useDashboardHex } from './useDashboardHex';
+export type { UseDashboardHexResult, DashboardStats } from './useDashboardHex';
