@@ -1,22 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Search, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface Employee {
-  id: string;
-  full_name: string;
-  position?: string | null;
-  department?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  employee_id: string;
-  is_active?: boolean | null;
-}
+import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface EmployeeSelectorProps {
   value?: string;
@@ -41,35 +29,10 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: employees, isLoading } = useQuery({
-    queryKey: ['employees', searchTerm, departmentFilter, positionFilter],
-    queryFn: async (): Promise<Employee[]> => {
-      let query = supabase
-        .from('employees')
-        .select('id, full_name, position, department, email, phone, employee_id, is_active')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true });
-
-      if (searchTerm) {
-        query = query.or(`full_name.ilike.%${searchTerm}%,position.ilike.%${searchTerm}%,department.ilike.%${searchTerm}%,employee_id.ilike.%${searchTerm}%`);
-      }
-
-      if (departmentFilter && departmentFilter.length > 0) {
-        query = query.in('department', departmentFilter);
-      }
-
-      if (positionFilter && positionFilter.length > 0) {
-        query = query.in('position', positionFilter);
-      }
-
-      const { data, error } = await query.limit(50);
-      if (error) {
-        console.error('Error fetching employees:', error);
-        return [];
-      }
-
-      return data || [];
-    },
+  const { data: employees, isLoading } = useEmployeesSelector({
+    searchTerm,
+    departmentFilter,
+    positionFilter
   });
 
   const selectedEmployee = employees?.find(employee => employee.id === value);

@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -8,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface InspectorSelectorProps {
   projectId?: string;
@@ -16,14 +15,6 @@ interface InspectorSelectorProps {
   label?: string;
   placeholder?: string;
   className?: string;
-}
-
-interface Inspector {
-  id: string;
-  name: string;
-  type: 'employee' | 'supplier';
-  position?: string;
-  role?: string;
 }
 
 export function InspectorSelector({
@@ -36,100 +27,7 @@ export function InspectorSelector({
 }: InspectorSelectorProps) {
   const [open, setOpen] = useState(false);
 
-  // Fetch inspectors from project stakeholders if projectId is provided, otherwise fetch all
-  const { data: inspectors = [], isLoading } = useQuery({
-    queryKey: ['inspectors', projectId],
-    queryFn: async () => {
-      const inspectorsList: Inspector[] = [];
-
-      if (projectId) {
-        // Fetch from project stakeholders
-        const { data: stakeholders, error } = await supabase
-          .from('project_stakeholders')
-          .select(`
-            id,
-            stakeholder_type,
-            stakeholder_entity_type,
-            role_description,
-            employee_id,
-            supplier_id,
-            employees:employee_id (
-              id,
-              full_name,
-              position,
-              department
-            ),
-            suppliers:supplier_id (
-              id,
-              name,
-              contact_person,
-              category
-            )
-          `)
-          .eq('project_id', projectId);
-
-        if (error) throw error;
-
-        stakeholders?.forEach((stakeholder: any) => {
-          if (stakeholder.employee_id && stakeholder.employees) {
-            inspectorsList.push({
-              id: stakeholder.employees.id,
-              name: stakeholder.employees.full_name,
-              type: 'employee',
-              position: stakeholder.employees.position,
-              role: stakeholder.role_description || stakeholder.stakeholder_type
-            });
-          } else if (stakeholder.supplier_id && stakeholder.suppliers) {
-            inspectorsList.push({
-              id: stakeholder.suppliers.id,
-              name: stakeholder.suppliers.contact_person || stakeholder.suppliers.name,
-              type: 'supplier',
-              position: `Bureau d'études - ${stakeholder.suppliers.name}`,
-              role: stakeholder.role_description || stakeholder.stakeholder_type
-            });
-          }
-        });
-      } else {
-        // Fetch all employees and suppliers
-        const { data: employees, error: empError } = await supabase
-          .from('employees')
-          .select('id, full_name, position, department')
-          .eq('is_active', true)
-          .order('full_name');
-
-        if (empError) throw empError;
-
-        const { data: suppliers, error: suppError } = await supabase
-          .from('suppliers')
-          .select('id, name, contact_person, category')
-          .eq('is_active', true)
-          .order('name');
-
-        if (suppError) throw suppError;
-
-        employees?.forEach(emp => {
-          inspectorsList.push({
-            id: emp.id,
-            name: emp.full_name,
-            type: 'employee',
-            position: emp.position || undefined
-          });
-        });
-
-        suppliers?.forEach(sup => {
-          inspectorsList.push({
-            id: sup.id,
-            name: sup.contact_person || sup.name,
-            type: 'supplier',
-            position: `Bureau d'études - ${sup.name}`,
-            role: undefined
-          });
-        });
-      }
-
-      return inspectorsList;
-    }
-  });
+  const { data: inspectors = [], isLoading } = useInspectorsSelector(projectId);
 
   const selectedInspector = inspectors.find(i => i.id === value);
 

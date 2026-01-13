@@ -422,22 +422,21 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ## **Phase 8: Audit Complet Appels Supabase Directs** 🔧
 
-### **Statistiques Audit Complet (13/01/2026)**
-| Métrique | Valeur |
-|----------|--------|
-| **Occurrences totales** | 2592 |
-| **Fichiers impactés** | 118 |
-| **Hooks hexagonaux créés** | 33 |
-| **Composants avec hooks intégrés** | 17 |
-| **Composants restants** | 101 |
-| **Migration %** | **14%** (17/118) |
+### **Statistiques Audit (13/01/2026 - Mise à jour)**
+| Métrique | Avant | Après |
+|----------|-------|-------|
+| **Occurrences totales** | 2592 | ~2070 |
+| **Fichiers impactés** | 118 → 105 | 99 |
+| **Hooks hexagonaux créés** | 33 | 35 |
+| **Composants migrés** | 17 | 26 |
+| **Migration %** | 14% | **22%** (26/118) |
 
 ---
 
-### **Terminé ✅** (17 fichiers)
+### **Terminé ✅** (26 fichiers)
 
-| Composant | Hook Créé |
-|-----------|-----------|
+| Composant | Hook Utilisé |
+|-----------|--------------|
 | RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` |
 | PaymentControlActions | `usePaymentActionsHex` |
 | PhaseTasks | `usePhaseTasksHex` |
@@ -455,87 +454,77 @@ Le système intègre une **cartographie interactive** essentielle pour :
 | ProgressInvoiceForm | `useProgressInvoiceHex` |
 | PhaseInspections | `usePhaseInspectionsHex` |
 | EnhancedSupplierTenderPortal | `useSupplierPortalHex` |
+| **UserSelector** ✅ | `useUsersSelector` |
+| **ProjectSelector** ✅ | `useProjectsSelector` |
+| **SupplierSelector** ✅ | `useSuppliersSelector` |
+| **MaterialSelector** ✅ | `useMaterialsSelector` |
+| **EmployeeSelector** ✅ | `useEmployeesSelector` |
+| **SimpleSupplierSelector** ✅ | `useSuppliersSelector` |
+| **InspectorSelector** ✅ | `useInspectorsSelector` |
+| **EnhancedProjectSelector** ✅ | `useProjectsSelector` + `useProjectTenders` |
+| **useSelectorsHex** ✅ | Hook centralisé (7 exports) |
 
 ---
 
-### **Reste à Faire 📋** (101 fichiers par répertoire)
+### **Reste à Faire 📋** (92 fichiers)
 
 | Répertoire | Fichiers | Priorité | Hook Recommandé |
 |------------|----------|----------|-----------------|
-| **selectors/** | UserSelector, ProjectSelector, SupplierSelector | 🔴 Haute | `useSelectorsHex` |
-| **suppliers/** | SupplierSubmissionDashboard, SupplierSelector, +5 | 🔴 Haute | `useSupplierHex` |
-| **insurance/** | InsuranceCrud, InsuranceDashboard | 🔴 Haute | `useInsuranceCertificatesHex` ✅ |
-| **supplier/** | SupplierInspectionExecutionDialog | 🟡 Moyenne | `useSupplierInspectionHex` |
+| **suppliers/** | SupplierSubmissionDashboard, +5 | 🔴 Haute | `useSuppliersHex` |
 | **project/** | ProjectStakeholders, ProjectDocuments, +8 | 🔴 Haute | `useProjectDetailsHex` |
 | **tenders/** | TenderDocumentUploadForm, TenderExcelImporter, +6 | 🟡 Moyenne | `useTenderHex` |
 | **documents/** | DocumentUploader, DocumentList, +4 | 🟡 Moyenne | `useDocumentsHex` |
 | **inspections/** | InspectionExecutionForm, InspectionForm, +3 | 🟡 Moyenne | `useInspectionHex` ✅ |
-| **employees/** | EmployeeForm, EmployeeList | 🟢 Basse | `useEmployeesHex` |
-| **MaterialSelector.tsx** | Root level | 🟡 Moyenne | `useMaterialsHex` ✅ |
-| **auth/** | PasswordResetHandler | 🟢 Basse | `useAuthHex` |
-| **admin/** | UserManagement, RoleManagement | 🟡 Moyenne | `useUserManagementHex` ✅ |
-| **reports/** | InspectionReportGenerator, Exporters | 🟢 Basse | Edge functions |
+| **payments/** | PaymentRequestModal | 🟡 Moyenne | `usePaymentActionsHex` ✅ |
+| **admin/** | EscalationThresholdsSettings | 🟢 Basse | Nouveau hook |
+| **reports/** | InspectionReportGenerator | 🟢 Basse | Edge functions |
 
 ---
 
-### **Hooks Existants Réutilisables**
+### **Hooks useSelectorsHex Exports**
 
-| Hook | Composants à Migrer |
-|------|---------------------|
-| `useMaterialsHex` | MaterialSelector |
-| `useInsuranceCertificatesHex` | InsuranceCrud, InsuranceDashboard |
-| `useSuppliersHex` | SupplierSelector, SupplierForm |
-| `useProjectsHex` | ProjectSelector, ProjectStakeholders |
-| `useInspectionHex` | InspectionExecutionForm, InspectionForm |
-| `useDocumentsHex` | DocumentUploader, DocumentList |
-| `useStorageHex` | Tous uploads fichiers |
-
----
-
-### **Recommandations 💡**
-
-#### **Stratégie Migration**
-1. **Phase A** (🔴 Haute): selectors/, suppliers/, project/ → Impact UI maximal
-2. **Phase B** (🟡 Moyenne): tenders/, documents/, inspections/
-3. **Phase C** (🟢 Basse): employees/, auth/, reports/
-
-#### **Patterns à Appliquer**
 ```typescript
-// ❌ AVANT (violation)
-import { supabase } from '@/integrations/supabase/client';
-const { data } = await supabase.from('table').select('*');
+// Exports disponibles
+export { 
+  useUsersSelector,      // profiles + suppliers
+  useProjectsSelector,   // projects (secure mode option)
+  useSuppliersSelector,  // suppliers actifs
+  useMaterialsSelector,  // materials avec filtre catégorie
+  useEmployeesSelector,  // employees avec filtres
+  useInspectorsSelector, // employees + suppliers (stakeholders)
+  useProjectTenders      // parsed_invoices par project
+} from '@/hooks/hexagonal/useSelectorsHex';
 
-// ✅ APRÈS (hexagonal)
-import { useTableHex } from '@/hooks/hexagonal';
-const { data, isLoading } = useTableHex().query;
+// Types exportés
+export type {
+  UserProfile,
+  ProjectOption,
+  SupplierOption,
+  MaterialOption,
+  EmployeeOption,
+  Inspector,
+  TenderOption
+} from '@/hooks/hexagonal/useSelectorsHex';
 ```
 
-#### **Actions Immédiates**
-1. Créer `useSelectorsHex` pour centraliser selectors/
-2. Intégrer hooks existants dans composants (pas juste création)
-3. Supprimer imports `supabase` après migration
+---
+
+### **Prochaines Actions**
+1. ~~Phase A selectors/~~ ✅ **TERMINÉ**
+2. Phase A suppliers/ (5 fichiers restants)
+3. Phase A project/ (8 fichiers)
+4. Phase B tenders/ + documents/
 
 ---
 
-### **Problèmes UX Corrigés ✅**
-
-| Problème | Solution |
-|----------|----------|
-| Tab Monitoring Dashboard | Routes valides ajoutées |
-| Route /monitoring | Ajoutée dans App.tsx |
-| Lien Garanties Bancaires | /bank-guarantee-monitor |
-| Lien Assurances | /insurance-management |
-
----
-
-## **Résumé Global**
+### **Résumé Global**
 
 | Catégorie | Valeur |
 |-----------|--------|
-| Fichiers avec violations | 118 |
-| Hooks créés | 33 |
-| **Composants migrés** | **17** |
-| **Migration réelle** | **14%** |
-| Prochain objectif | 30% (36 fichiers) |
+| Fichiers avec violations | 99 (était 118) |
+| Hooks créés | 35 |
+| **Composants migrés** | **26** |
+| **Migration réelle** | **22%** |
+| Prochain objectif | 35% (41 fichiers) |
 
-**Statut**: ⚠️ Hooks créés mais intégration partielle | Priorité: selectors/ suppliers/ project/
+**Statut**: ✅ Phase A selectors/ terminée | En cours: suppliers/ project/
