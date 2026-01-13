@@ -482,7 +482,7 @@ const Dashboard: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <Button variant="outline" className="h-24 flex-col" asChild>
                         <Link to="/monitoring">
                           <Shield className="h-8 w-8 mb-2" />
@@ -490,7 +490,7 @@ const Dashboard: React.FC = () => {
                         </Link>
                       </Button>
                       <Button variant="outline" className="h-24 flex-col" asChild>
-                        <Link to="/bank-guarantees">
+                        <Link to="/bank-guarantee-monitor">
                           <BarChart3 className="h-8 w-8 mb-2" />
                           <span>Garanties Bancaires</span>
                         </Link>
@@ -499,6 +499,12 @@ const Dashboard: React.FC = () => {
                         <Link to="/payment-control">
                           <Calendar className="h-8 w-8 mb-2" />
                           <span>Contrôle Paiements</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-24 flex-col" asChild>
+                        <Link to="/insurance-management">
+                          <Shield className="h-8 w-8 mb-2" />
+                          <span>Assurances</span>
                         </Link>
                       </Button>
                     </div>
