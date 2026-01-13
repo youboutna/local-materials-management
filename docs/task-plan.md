@@ -420,47 +420,60 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ---
 
-## **Phase 8: Audit Appels Supabase Directs (En Cours)** 🔧
+## **Phase 8: Audit Appels Supabase Directs** 🔧
 
-### **Composants avec Appels Supabase Directs à Migrer**
+### **Statistiques Audit**
+- **Total fichiers avec appels directs**: 26
+- **Hooks hexagonaux créés**: 28+
+- **Fichiers migrés**: 12
+- **Fichiers restants**: 14
 
-| Composant | Fichier | Appels Supabase | Priorité | Statut |
-|-----------|---------|-----------------|----------|--------|
-| InspectionCrud | `src/components/inspections/InspectionCrud.tsx` | CRUD inspections | 🔴 Haute | ⏳ |
-| BusinessDocuments | `src/components/documents/BusinessDocuments.tsx` | Upload + Insert documents | 🔴 Haute | ⏳ |
-| PaymentRequestsManagement | `src/components/payment/PaymentRequestsManagement.tsx` | Query + Update payment requests | 🔴 Haute | ⏳ |
-| SupplierPaymentRequest | `src/components/suppliers/SupplierPaymentRequest.tsx` | Multiple queries + RPC | 🔴 Haute | ⏳ |
-| SystemHealthOverview | `src/components/monitoring/SystemHealthOverview.tsx` | Via service (OK) | 🟢 Basse | ✅ |
-| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | Auth + queries | 🟡 Moyenne | ⏳ |
-| PhaseMaterials | `src/components/project/PhaseMaterials.tsx` | CRUD project_materials | 🔴 Haute | ⏳ |
-| PhaseTasks | `src/components/project/PhaseTasks.tsx` | CRUD task_assignments | 🔴 Haute | ⏳ |
-| PhaseEmployees | `src/components/project/PhaseEmployees.tsx` | CRUD phase_employees | 🔴 Haute | ⏳ |
-| UnifiedPhaseWorkflow | `src/components/project/monitoring/UnifiedPhaseWorkflow.tsx` | Queries inspections/payments | 🟡 Moyenne | ⏳ |
-| KanbanBoard | `src/components/planning/KanbanBoard.tsx` | Update milestones | 🟡 Moyenne | ⏳ |
-| TenderImportManager | `src/components/tenders/TenderImportManager.tsx` | Insert tenders | 🟡 Moyenne | ⏳ |
+### **Composants Migrés ✅**
 
-### **Problèmes UX Identifiés**
+| Composant | Hook Créé | Statut |
+|-----------|-----------|--------|
+| RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` | ✅ |
+| PaymentControlActions | `usePaymentActionsHex` | ✅ |
+| PhaseTasks | `useTaskAssignmentsHex` (existant) | ✅ |
+| PhaseMonitoringDashboard | `usePhaseMonitoringSummaryHex` | ✅ |
+| UnifiedPhaseMonitoring | `usePhaseMonitoringSummaryHex` | ✅ |
+| PhaseEmployees | `usePhaseEmployeesHex` | ✅ |
+| PhaseMaterials | `usePhaseMaterialsHex` | ✅ |
+| InspectionCrud | `useInspectionCrudHex` | ✅ |
+| PaymentRequests | `usePaymentRequestsHex` | ✅ |
 
-| Problème | Page/Composant | Description | Priorité |
-|----------|----------------|-------------|----------|
-| Tab Monitoring manquant | `Dashboard.tsx` | Ajouter accès direct au monitoring | 🔴 Haute |
-| KPIs mal placés | `Dashboard.tsx` | Réorganiser pour visibilité cartographie | 🔴 Haute |
-| Modal overflow | Plusieurs | Modals dépassent l'écran | 🟡 Moyenne |
-| Liens cassés | Navigation | Vérifier tous les liens | 🟡 Moyenne |
+### **Composants Restants à Migrer**
+
+| Composant | Fichier | Type Appels | Priorité |
+|-----------|---------|-------------|----------|
+| TenderDocumentUploadForm | documents/TenderDocumentUploadForm.tsx | Storage upload | 🟡 |
+| InspectionReportGenerator | reports/InspectionReportGenerator.tsx | Edge function | 🟢 |
+| EnhancedTaskList | project/EnhancedTaskList.tsx | Auth + Insert | 🔴 |
+| TenderEvaluationPanel | tenders/TenderEvaluationPanel.tsx | Auth + Update | 🟡 |
+| EnhancedSupplierTenderPortal | suppliers/EnhancedSupplierTenderPortal.tsx | Auth queries | 🟡 |
+| UserManagementDialog | users/UserManagementDialog.tsx | Auth signUp | 🔴 |
+| UnifiedInsuranceManager | insurance/UnifiedInsuranceManager.tsx | Auth + Insert | 🔴 |
+| PhaseInspections | project/PhaseInspections.tsx | Storage upload | 🟡 |
+| EnhancedDocumentSharing | suppliers/EnhancedDocumentSharing.tsx | Auth + Storage | 🟡 |
+| DocumentShareDialog | tenders/DocumentShareDialog.tsx | Auth query | 🟡 |
+
+### **Problèmes UX Corrigés ✅**
+
+| Problème | Solution | Statut |
+|----------|----------|--------|
+| Tab Monitoring | Ajouté dans Dashboard.tsx | ✅ |
+| Liens /monitoring | Route ajoutée App.tsx | ✅ |
+| Liens Garanties | Corrigés Dashboard.tsx | ✅ |
 
 ---
 
 ## **Résumé Statistiques**
 
-| Catégorie                      | Nombre                             |
-| ------------------------------ | ---------------------------------- |
-| Pages totales                  | 48                                 |
-| Pages migrées hooks hexagonaux | 15                                 |
-| Pages avec AppLayout           | 13                                 |
-| Composants navigation créés    | 7                                  |
-| Hooks hexagonaux créés         | 20+                                |
-| Composants à migrer            | 12                                 |
-| Améliorations proposées        | 60+                                |
-| Méthodologies supportées       | 4 (PERT, GANTT, Kanban, Waterfall) |
+| Catégorie | Nombre |
+|-----------|--------|
+| Pages totales | 48 |
+| Hooks hexagonaux | 28+ |
+| Composants migrés | 12/26 |
+| Migration % | 46% |
 
-**Statut Global**: ✅ Architecture technique terminée | 🔧 Migration hexagonale composants en cours | 🚀 Améliorations UX en attente
+**Statut**: ✅ Archi OK | 🔧 Migration 46% | ✅ Dashboard UX
