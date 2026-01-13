@@ -1,23 +1,10 @@
-
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface Supplier {
-  id: string;
-  name: string;
-  contact_person?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  category?: string | null;
-  rating?: number | null;
-  is_active: boolean | null;
-}
+import { useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface SupplierSelectorProps {
   value?: {
@@ -50,24 +37,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
     leadTime: value?.leadTime || 7
   });
 
-  const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers', searchTerm],
-    queryFn: async (): Promise<Supplier[]> => {
-      let query = supabase
-        .from('suppliers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (searchTerm) {
-        query = query.ilike('name', `%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  const { data: suppliers, isLoading } = useSuppliersSelector(searchTerm);
 
   const handleSupplierSelect = (supplierId: string) => {
     if (supplierId === 'custom') {
@@ -87,13 +57,13 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
         id: supplier.id,
         name: supplier.name,
         contact: supplier.contact_person || supplier.phone || supplier.email || '',
-        leadTime: 7 // Default lead time
+        leadTime: 7
       });
     }
   };
 
-  const handleCustomSupplierChange = (field: string, value: any) => {
-    const updated = { ...customSupplier, [field]: value };
+  const handleCustomSupplierChange = (field: string, val: any) => {
+    const updated = { ...customSupplier, [field]: val };
     setCustomSupplier(updated);
     onChange({
       name: updated.name,
@@ -104,12 +74,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
-        className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-      >
-        ★
-      </span>
+      <span key={i} className={`text-xs ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
     ));
   };
 
@@ -155,15 +120,9 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     {supplier.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {supplier.category}
-                      </Badge>
+                      <Badge variant="outline" className="text-xs">{supplier.category}</Badge>
                     )}
-                    {supplier.rating && (
-                      <div className="flex">
-                        {renderStars(supplier.rating)}
-                      </div>
-                    )}
+                    {supplier.rating && <div className="flex">{renderStars(supplier.rating)}</div>}
                   </div>
                 </div>
               </SelectItem>
@@ -191,7 +150,6 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
               placeholder="Nom du fournisseur"
             />
           </div>
-          
           <div>
             <Label htmlFor="supplierContact">Contact</Label>
             <Input
@@ -201,7 +159,6 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
               placeholder="Téléphone ou email"
             />
           </div>
-          
           <div>
             <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
             <Input

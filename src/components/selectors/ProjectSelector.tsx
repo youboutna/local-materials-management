@@ -1,31 +1,19 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface Project {
-  id: string;
-  title: string;
-  location?: string | null;
-  status?: string | null;
-  budget?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  project_reference?: string | null;
-}
+import { useProjectsSelector, ProjectOption } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface ProjectSelectorProps {
   value?: string;
-  onChange: (projectId: string | undefined, project?: Project) => void;
+  onChange: (projectId: string | undefined, project?: ProjectOption) => void;
   placeholder?: string;
   label?: string;
   required?: boolean;
   disabled?: boolean;
-  secureMode?: boolean; // For supplier portal - only shows title and reference
+  secureMode?: boolean;
 }
 
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
@@ -39,32 +27,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects', searchTerm, secureMode],
-    queryFn: async (): Promise<Project[]> => {
-      if (secureMode) {
-        // Use secure function for supplier portal
-        const { data, error } = await supabase
-          .rpc('search_projects_autocomplete', { search_term: searchTerm || '' });
-        if (error) throw error;
-        return data || [];
-      } else {
-        // Full project data for admin users
-        let query = supabase
-          .from('projects')
-          .select('id, title, location, status, budget, start_date, end_date, project_reference')
-          .order('title');
-
-        if (searchTerm) {
-          query = query.or(`title.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,project_reference.ilike.%${searchTerm}%`);
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
-      }
-    },
-  });
+  const { data: projects, isLoading } = useProjectsSelector({ searchTerm, secureMode });
 
   const selectedProject = projects?.find(p => p.id === value);
 
