@@ -182,11 +182,56 @@ export {
   useUsersSelector, 
   useProjectsSelector, 
   useSuppliersSelector, 
-  useMaterialsSelector 
+  useMaterialsSelector,
+  useEmployeesSelector,
+  useInspectorsSelector,
+  useProjectTenders
 } from './useSelectorsHex';
 export type { 
   UserProfile, 
   ProjectOption, 
   SupplierOption, 
-  MaterialOption 
+  MaterialOption,
+  EmployeeOption,
+  Inspector,
+  TenderOption
 } from './useSelectorsHex';
+
+// Payments (PaymentScheduleTimeline, PaymentControlActions)
+export { usePaymentSchedule, useEscalationTargets } from './usePaymentsHex';
+export type { PaymentMilestone, PaymentScheduleData } from './usePaymentsHex';
+
+// Tender Submissions & Evaluation (SubmissionEvaluationPanel, TenderProjectPhases, TenderLotBuilder)
+export { 
+  useTenderSubmission, 
+  useSubmissionDocuments, 
+  useSaveSubmissionEvaluation, 
+  useProjectPhasesForTender, 
+  useProjectPhasesForLots 
+} from './useTendersHex';
+export type { 
+  TenderSubmission, 
+  TenderSubmissionDocument, 
+  ProjectPhaseForTender, 
+  ProjectStepForTender 
+} from './useTendersHex';
+
+// Task Assignments (TaskAssignments component)
+export { 
+  useTaskAssignments, 
+  useProjectsForTaskAssignments, 
+  useAssigneeDetails, 
+  useCreateTaskAssignment, 
+  useUpdateTaskAssignment, 
+  useDeleteTaskAssignment 
+} from './useTasksHex';
+export type { TaskAssignmentFilters, TaskAssignmentFormData } from './useTasksHex';
+
+// Suppliers Management (SuppliersManagement component)
+export { 
+  useSuppliersList, 
+  useCreateSupplier, 
+  useUpdateSupplier, 
+  useDeleteSupplier 
+} from './useSuppliersManagementHex';
+export type { SupplierFormData as SupplierMgmtFormData } from './useSuppliersManagementHex';

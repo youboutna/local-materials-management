@@ -1,7 +1,9 @@
+/**
+ * SuppliersManagement - CRUD for suppliers
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,14 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star } from 'lucide-react';
-import type { Database } from '@/integrations/supabase/types';
-
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
+import { 
+  useSuppliersList, 
+  useCreateSupplier, 
+  useUpdateSupplier, 
+  useDeleteSupplier,
+  SupplierMgmtFormData
+} from '@/hooks/hexagonal';
 
 const SuppliersManagement = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SupplierMgmtFormData>({
     name: '',
     contact_person: '',
     email: '',
@@ -27,86 +33,12 @@ const SuppliersManagement = () => {
     rating: 0
   });
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: async (): Promise<Supplier[]> => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      return (data as unknown as Supplier[]) || [];
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (supplierData: typeof formData) => {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .insert(supplierData as any)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur créé avec succès." });
-      resetForm();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      const { error } = await supabase
-        .from('suppliers')
-        .update(data as any)
-        .eq('id', id as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur mis à jour avec succès." });
-      resetForm();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('suppliers')
-        .delete()
-        .eq('id', id as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      toast({ title: "Succès", description: "Fournisseur supprimé avec succès." });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
+  // Hexagonal hooks
+  const { data: suppliers, isLoading } = useSuppliersList();
+  const createMutation = useCreateSupplier();
+  const updateMutation = useUpdateSupplier();
+  const deleteMutation = useDeleteSupplier();
 
   const resetForm = () => {
     setFormData({
@@ -122,16 +54,27 @@ const SuppliersManagement = () => {
     setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data: formData });
-    } else {
-      createMutation.mutate(formData);
+    try {
+      if (editingId) {
+        await updateMutation.mutateAsync({ id: editingId, data: formData });
+        toast({ title: "Succès", description: "Fournisseur mis à jour avec succès." });
+      } else {
+        await createMutation.mutateAsync(formData);
+        toast({ title: "Succès", description: "Fournisseur créé avec succès." });
+      }
+      resetForm();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
-  const handleEdit = (supplier: Supplier) => {
+  const handleEdit = (supplier: any) => {
     setFormData({
       name: supplier.name || '',
       contact_person: supplier.contact_person || '',
@@ -143,6 +86,19 @@ const SuppliersManagement = () => {
     });
     setEditingId(supplier.id);
     setIsCreating(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({ title: "Succès", description: "Fournisseur supprimé avec succès." });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -326,7 +282,7 @@ const SuppliersManagement = () => {
                   size="sm"
                   variant="outline"
                   className="text-red-600 hover:text-red-700"
-                  onClick={() => deleteMutation.mutate(supplier.id)}
+                  onClick={() => handleDelete(supplier.id)}
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="h-4 w-4" />
