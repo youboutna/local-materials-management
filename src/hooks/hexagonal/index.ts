@@ -107,3 +107,11 @@ export type { ActionItem } from './useManagementActionsHex';
 // Monitoring Stats
 export { useMonitoringStatsHex } from './useMonitoringStatsHex';
 export type { MonitoringStats } from './useMonitoringStatsHex';
+
+// Project Materials
+export { useProjectMaterialsHex } from './useProjectMaterialsHex';
+export type { ProjectMaterial, SelectedMaterial } from './useProjectMaterialsHex';
+
+// Project Edit
+export { useProjectEditHex } from './useProjectEditHex';
+export type { ProjectEditData } from './useProjectEditHex';
