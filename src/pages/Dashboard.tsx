@@ -243,10 +243,14 @@ const Dashboard: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.5 }}
         >
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('dashboard.management_tabs.overview')}</span>
+              </TabsTrigger>
+              <TabsTrigger value="monitoring" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Monitoring</span>
               </TabsTrigger>
               <TabsTrigger value="actions" className="flex items-center gap-2">
                 <ListTodo className="h-4 w-4" />
@@ -466,6 +470,42 @@ const Dashboard: React.FC = () => {
                   </Card>
                 </div>
               </motion.div>
+            </TabsContent>
+
+            <TabsContent value="monitoring" className="mt-6">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Centre de Surveillance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Button variant="outline" className="h-24 flex-col" asChild>
+                        <Link to="/monitoring">
+                          <Shield className="h-8 w-8 mb-2" />
+                          <span>Vue Complète</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-24 flex-col" asChild>
+                        <Link to="/bank-guarantees">
+                          <BarChart3 className="h-8 w-8 mb-2" />
+                          <span>Garanties Bancaires</span>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="h-24 flex-col" asChild>
+                        <Link to="/payment-control">
+                          <Calendar className="h-8 w-8 mb-2" />
+                          <span>Contrôle Paiements</span>
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                <KPIDashboardWidget />
+              </div>
             </TabsContent>
 
             <TabsContent value="actions" className="mt-6">

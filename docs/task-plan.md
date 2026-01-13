@@ -420,6 +420,36 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ---
 
+## **Phase 8: Audit Appels Supabase Directs (En Cours)** 🔧
+
+### **Composants avec Appels Supabase Directs à Migrer**
+
+| Composant | Fichier | Appels Supabase | Priorité | Statut |
+|-----------|---------|-----------------|----------|--------|
+| InspectionCrud | `src/components/inspections/InspectionCrud.tsx` | CRUD inspections | 🔴 Haute | ⏳ |
+| BusinessDocuments | `src/components/documents/BusinessDocuments.tsx` | Upload + Insert documents | 🔴 Haute | ⏳ |
+| PaymentRequestsManagement | `src/components/payment/PaymentRequestsManagement.tsx` | Query + Update payment requests | 🔴 Haute | ⏳ |
+| SupplierPaymentRequest | `src/components/suppliers/SupplierPaymentRequest.tsx` | Multiple queries + RPC | 🔴 Haute | ⏳ |
+| SystemHealthOverview | `src/components/monitoring/SystemHealthOverview.tsx` | Via service (OK) | 🟢 Basse | ✅ |
+| SupplierSubmissionDashboard | `src/components/suppliers/SupplierSubmissionDashboard.tsx` | Auth + queries | 🟡 Moyenne | ⏳ |
+| PhaseMaterials | `src/components/project/PhaseMaterials.tsx` | CRUD project_materials | 🔴 Haute | ⏳ |
+| PhaseTasks | `src/components/project/PhaseTasks.tsx` | CRUD task_assignments | 🔴 Haute | ⏳ |
+| PhaseEmployees | `src/components/project/PhaseEmployees.tsx` | CRUD phase_employees | 🔴 Haute | ⏳ |
+| UnifiedPhaseWorkflow | `src/components/project/monitoring/UnifiedPhaseWorkflow.tsx` | Queries inspections/payments | 🟡 Moyenne | ⏳ |
+| KanbanBoard | `src/components/planning/KanbanBoard.tsx` | Update milestones | 🟡 Moyenne | ⏳ |
+| TenderImportManager | `src/components/tenders/TenderImportManager.tsx` | Insert tenders | 🟡 Moyenne | ⏳ |
+
+### **Problèmes UX Identifiés**
+
+| Problème | Page/Composant | Description | Priorité |
+|----------|----------------|-------------|----------|
+| Tab Monitoring manquant | `Dashboard.tsx` | Ajouter accès direct au monitoring | 🔴 Haute |
+| KPIs mal placés | `Dashboard.tsx` | Réorganiser pour visibilité cartographie | 🔴 Haute |
+| Modal overflow | Plusieurs | Modals dépassent l'écran | 🟡 Moyenne |
+| Liens cassés | Navigation | Vérifier tous les liens | 🟡 Moyenne |
+
+---
+
 ## **Résumé Statistiques**
 
 | Catégorie                      | Nombre                             |
@@ -428,8 +458,9 @@ Le système intègre une **cartographie interactive** essentielle pour :
 | Pages migrées hooks hexagonaux | 15                                 |
 | Pages avec AppLayout           | 13                                 |
 | Composants navigation créés    | 7                                  |
-| Hooks hexagonaux créés         | 17                                 |
+| Hooks hexagonaux créés         | 20+                                |
+| Composants à migrer            | 12                                 |
 | Améliorations proposées        | 60+                                |
 | Méthodologies supportées       | 4 (PERT, GANTT, Kanban, Waterfall) |
 
-**Statut Global**: ✅ Architecture technique terminée | 🚀 Améliorations UX en attente | 📋 Module Tenders à enrichir
+**Statut Global**: ✅ Architecture technique terminée | 🔧 Migration hexagonale composants en cours | 🚀 Améliorations UX en attente
