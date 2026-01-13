@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,11 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDocumentsList } from '@/hooks/hexagonal/useDocumentsHex';
 import type { Database } from '@/integrations/supabase/types';
 
 type Document = Database['public']['Tables']['documents']['Row'];
-type DocumentType = Database['public']['Enums']['document_type'];
-type DocumentStatus = Database['public']['Enums']['document_status'];
 
 interface DocumentsListProps {
   onDocumentSelect?: (document: Document) => void;
@@ -27,7 +24,6 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
 
-  // Read URL search parameters and set initial filter
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const typeParam = searchParams.get('type');
@@ -36,30 +32,10 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
     }
   }, [location.search]);
 
-  const { data: documents, isLoading, error } = useQuery({
-    queryKey: ['documents', searchTerm, filterType, filterStatus],
-    queryFn: async (): Promise<Document[]> => {
-      let query = supabase
-        .from('documents')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-
-      if (filterType !== 'all') {
-        query = query.eq('document_type' as any, filterType as any);
-      }
-
-      if (filterStatus !== 'all') {
-        query = query.eq('status' as any, filterStatus as any);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data as unknown as Document[]) || [];
-    },
+  const { data: documents, isLoading, error } = useDocumentsList({
+    searchTerm,
+    filterType,
+    filterStatus
   });
 
   const getDocumentTypeLabel = (type: string) => {

@@ -422,23 +422,23 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ## **Phase 8: Audit Complet Appels Supabase Directs** 🔧
 
-### **Statistiques Audit (13/01/2026 - Mise à jour)**
+### **Statistiques Audit (13/01/2026 - Final)**
 | Métrique | Avant | Après |
 |----------|-------|-------|
-| **Occurrences totales** | 2592 | ~2070 |
-| **Fichiers impactés** | 118 → 105 | 99 |
-| **Hooks hexagonaux créés** | 33 | 35 |
-| **Composants migrés** | 17 | 26 |
-| **Migration %** | 14% | **22%** (26/118) |
+| **Fichiers impactés** | 118 | ~95 |
+| **Hooks hexagonaux** | 33 | 37 |
+| **Composants migrés** | 17 | 32 |
+| **Migration %** | 14% | **27%** (32/118) |
 
 ---
 
-### **Terminé ✅** (26 fichiers)
+### **Terminé ✅** (32 fichiers)
 
-| Composant | Hook Utilisé |
-|-----------|--------------|
-| RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` |
-| PaymentControlActions | `usePaymentActionsHex` |
+| Phase | Composants Migrés |
+|-------|-------------------|
+| **Selectors** ✅ | UserSelector, ProjectSelector, SupplierSelector, MaterialSelector, EmployeeSelector, SimpleSupplierSelector, InspectorSelector, EnhancedProjectSelector |
+| **Documents** ✅ | SupplierDocumentsList, DocumentsList, TenderDocuments, PhaseDocuments |
+| **Précédents** | 17 composants (inspections, payments, phases, etc.) |
 | PhaseTasks | `usePhaseTasksHex` |
 | PhaseMonitoringDashboard | `usePhaseMonitoringSummaryHex` |
 | UnifiedPhaseMonitoring | `usePhaseMonitoringSummaryHex` |
