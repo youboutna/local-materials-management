@@ -1,6 +1,7 @@
+/**
+ * EnhancedTaskList - MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,45 +12,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter } from 'lucide-react';
+import {
+  useProjectPhasesForTasks,
+  useProjectTasks,
+  useCreateProjectTask,
+  useUpdateProjectTask,
+  useDeleteProjectTask,
+  ProjectTaskFormData,
+  ProjectTask,
+  ProjectPhase
+} from '@/hooks/hexagonal';
 
 interface EnhancedTaskListProps {
   projectId: string;
-}
-
-interface TaskAssignment {
-  id: string;
-  title: string | null;
-  description: string | null;
-  project_id: string | null;
-  phase_id: string | null;
-  assigned_to: string | null;
-  assigned_by: string | null;
-  due_date: string | null;
-  priority: string | null;
-  status: string | null;
-  completion_date: string | null;
-  completion_token: string | null;
-  completion_url: string | null;
-  notes: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-interface ProjectPhase {
-  id: string;
-  phase_name: string;
-  status: string;
-}
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  phase_id: string;
-  assigned_to: string;
-  due_date: string;
-  priority: string;
-  status: string;
-  notes: string;
 }
 
 const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
@@ -57,7 +32,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [formData, setFormData] = useState<TaskFormData>({
+  const [formData, setFormData] = useState<ProjectTaskFormData>({
     title: '',
     description: '',
     phase_id: '',
@@ -67,38 +42,13 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     status: 'pending',
     notes: '',
   });
-  
-  const queryClient = useQueryClient();
 
-  // Fetch project phases
-  const { data: phases } = useQuery({
-    queryKey: ['project-phases', projectId],
-    queryFn: async (): Promise<ProjectPhase[]> => {
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select('id, phase_name, status')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch tasks for the project with phase information
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['project-tasks', projectId],
-    queryFn: async (): Promise<TaskAssignment[]> => {
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Hexagonal hooks
+  const { data: phases } = useProjectPhasesForTasks(projectId);
+  const { data: tasks, isLoading } = useProjectTasks(projectId);
+  const createMutation = useCreateProjectTask(projectId);
+  const updateMutation = useUpdateProjectTask(projectId);
+  const deleteMutation = useDeleteProjectTask(projectId);
 
   // Filter tasks based on selected phase and status
   const filteredTasks = tasks?.filter(task => {
@@ -106,71 +56,6 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     const statusMatch = selectedStatus === 'all' || task.status === selectedStatus;
     return phaseMatch && statusMatch;
   }) || [];
-
-  const createTaskMutation = useMutation({
-    mutationFn: async (taskData: TaskFormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('task_assignments')
-        .insert({
-          title: taskData.title,
-          description: taskData.description,
-          project_id: projectId,
-          phase_id: taskData.phase_id || null,
-          assigned_to: taskData.assigned_to || null,
-          assigned_by: user.id,
-          due_date: taskData.due_date || null,
-          priority: taskData.priority,
-          status: taskData.status,
-          notes: taskData.notes,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
-      setIsCreating(false);
-      resetForm();
-      toast({ title: 'Tâche créée avec succès' });
-    },
-  });
-
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<TaskFormData> }) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .update(data)
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
-      setEditingId(null);
-      resetForm();
-      toast({ title: 'Tâche mise à jour avec succès' });
-    },
-  });
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('task_assignments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-tasks', projectId] });
-      toast({ title: 'Tâche supprimée avec succès' });
-    },
-  });
 
   const resetForm = () => {
     setFormData({
@@ -185,16 +70,25 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateTaskMutation.mutate({ id: editingId, data: formData });
-    } else {
-      createTaskMutation.mutate(formData);
+    try {
+      if (editingId) {
+        await updateMutation.mutateAsync({ id: editingId, data: formData });
+        toast({ title: 'Tâche mise à jour avec succès' });
+      } else {
+        await createMutation.mutateAsync(formData);
+        toast({ title: 'Tâche créée avec succès' });
+      }
+      setIsCreating(false);
+      setEditingId(null);
+      resetForm();
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Une erreur est survenue', variant: 'destructive' });
     }
   };
 
-  const startEdit = (task: TaskAssignment) => {
+  const startEdit = (task: ProjectTask) => {
     setFormData({
       title: task.title || '',
       description: task.description || '',
@@ -207,6 +101,15 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     });
     setEditingId(task.id);
     setIsCreating(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({ title: 'Tâche supprimée avec succès' });
+    } catch (error) {
+      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' });
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -394,7 +297,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                     <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
                       Annuler
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                       {editingId ? 'Mettre à jour' : 'Créer'}
                     </Button>
                   </div>
@@ -457,19 +360,21 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       
                       {task.notes && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          Notes: {task.notes}
+                          <span className="font-medium">Notes:</span> {task.notes}
                         </p>
                       )}
                     </div>
                     
-                    <div className="flex gap-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => startEdit(task)}>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => startEdit(task)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => deleteTaskMutation.mutate(task.id)}
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDelete(task.id)}
+                        className="text-red-600 hover:text-red-700"
+                        disabled={deleteMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -480,10 +385,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
             })}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Aucune tâche assignée pour ce projet.
-            {selectedPhase !== 'all' || selectedStatus !== 'all' ? ' Essayez de changer les filtres.' : ''}
-          </p>
+          <div className="text-center py-8 text-muted-foreground">
+            Aucune tâche trouvée
+          </div>
         )}
       </CardContent>
     </Card>

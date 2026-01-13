@@ -1,3 +1,6 @@
+/**
+ * InspectionCrud - MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,34 +13,18 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
-
-interface Inspection {
-  id: string;
-  project_id: string;
-  inspector: string;
-  date: string;
-  status: string;
-  progress_at_inspection: number;
-  comments?: string;
-  documents?: any;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface InspectionFormData {
-  project_id: string;
-  inspector: string;
-  date: string;
-  status: string;
-  progress_at_inspection: number;
-  comments: string;
-}
+import {
+  useInspectionsListCrud,
+  useCreateInspection,
+  useUpdateInspection,
+  useDeleteInspection,
+  InspectionFormData,
+  InspectionRow
+} from '@/hooks/hexagonal';
 
 const InspectionCrud: React.FC = () => {
-  const [inspections, setInspections] = useState<Inspection[]>([]);
-  const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
+  const [selectedInspection, setSelectedInspection] = useState<InspectionRow | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -51,6 +38,12 @@ const InspectionCrud: React.FC = () => {
     progress_at_inspection: 0,
     comments: ''
   });
+
+  // Hexagonal hooks
+  const { data: inspections = [], isLoading } = useInspectionsListCrud();
+  const createMutation = useCreateInspection();
+  const updateMutation = useUpdateInspection();
+  const deleteMutation = useDeleteInspection();
 
   const statusOptions = [
     { value: 'scheduled', label: 'Programmée', color: 'bg-blue-100 text-blue-800', icon: Clock },
@@ -78,11 +71,11 @@ const InspectionCrud: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const openEditForm = (inspection: Inspection) => {
+  const openEditForm = (inspection: InspectionRow) => {
     setFormData({
       project_id: inspection.project_id,
       inspector: inspection.inspector,
-      date: inspection.date.split('T')[0], // Convert to date input format
+      date: inspection.date.split('T')[0],
       status: inspection.status,
       progress_at_inspection: inspection.progress_at_inspection,
       comments: inspection.comments || ''
@@ -93,7 +86,7 @@ const InspectionCrud: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const openViewForm = (inspection: Inspection) => {
+  const openViewForm = (inspection: InspectionRow) => {
     setFormData({
       project_id: inspection.project_id,
       inspector: inspection.inspector,
@@ -121,59 +114,11 @@ const InspectionCrud: React.FC = () => {
 
     try {
       if (isEditing && selectedInspection) {
-        // Update inspection in database
-        const { error } = await supabase
-          .from('inspections')
-          .update({
-            project_id: formData.project_id,
-            inspector: formData.inspector,
-            date: new Date(formData.date).toISOString(),
-            status: formData.status,
-            progress_at_inspection: formData.progress_at_inspection,
-            comments: formData.comments,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedInspection.id);
-
-        if (error) throw error;
-
-        // Update local state
-        const updatedInspection = { 
-          ...selectedInspection, 
-          ...formData,
-          date: new Date(formData.date).toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setInspections(prev => prev.map(i => i.id === selectedInspection.id ? updatedInspection : i));
-        
-        toast({
-          title: "Succès",
-          description: "Inspection mise à jour avec succès",
-        });
+        await updateMutation.mutateAsync({ id: selectedInspection.id, data: formData });
+        toast({ title: "Succès", description: "Inspection mise à jour avec succès" });
       } else {
-        // Create new inspection in database
-        const { data, error } = await supabase
-          .from('inspections')
-          .insert({
-            project_id: formData.project_id,
-            inspector: formData.inspector,
-            date: new Date(formData.date).toISOString(),
-            status: formData.status,
-            progress_at_inspection: formData.progress_at_inspection,
-            comments: formData.comments
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        // Add to local state
-        setInspections(prev => [...prev, data as any]);
-        
-        toast({
-          title: "Succès",
-          description: "Inspection créée avec succès",
-        });
+        await createMutation.mutateAsync(formData);
+        toast({ title: "Succès", description: "Inspection créée avec succès" });
       }
       
       setIsFormOpen(false);
@@ -189,11 +134,16 @@ const InspectionCrud: React.FC = () => {
 
   const handleDelete = async (inspectionId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) {
-      setInspections(prev => prev.filter(i => i.id !== inspectionId));
-      toast({
-        title: "Succès",
-        description: "Inspection supprimée avec succès",
-      });
+      try {
+        await deleteMutation.mutateAsync(inspectionId);
+        toast({ title: "Succès", description: "Inspection supprimée avec succès" });
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -204,6 +154,14 @@ const InspectionCrud: React.FC = () => {
   const handleProjectChange = (projectId: string | undefined) => {
     setFormData(prev => ({ ...prev, project_id: projectId || '' }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -313,7 +271,7 @@ const InspectionCrud: React.FC = () => {
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                     {isEditing ? 'Mettre à jour' : 'Créer'}
                   </Button>
                 </div>
@@ -347,7 +305,7 @@ const InspectionCrud: React.FC = () => {
                 return (
                   <TableRow key={inspection.id}>
                     <TableCell className="font-medium">
-                      {inspection.project_id}
+                      {inspection.project_id.slice(0, 8)}...
                     </TableCell>
                     <TableCell>{inspection.inspector}</TableCell>
                     <TableCell>
@@ -374,18 +332,10 @@ const InspectionCrud: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openViewForm(inspection)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => openViewForm(inspection)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openEditForm(inspection)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => openEditForm(inspection)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -393,6 +343,7 @@ const InspectionCrud: React.FC = () => {
                           variant="ghost"
                           onClick={() => handleDelete(inspection.id)}
                           className="text-red-600 hover:text-red-700"
+                          disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

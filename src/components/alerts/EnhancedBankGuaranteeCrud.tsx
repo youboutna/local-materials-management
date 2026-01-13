@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * EnhancedBankGuaranteeCrud - MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,53 +13,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText, Upload, ExternalLink, Download } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, AlertTriangle, FileText } from 'lucide-react';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import DocumentSelector from '@/components/selectors/DocumentSelector';
-import DocumentUpload from '@/components/documents/DocumentUpload';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
-import UserSelector from '@/components/selectors/UserSelector';
-import DocumentViewer from '@/components/documents/DocumentViewer';
-import DocumentSection from '@/components/common/DocumentSection';
 import { format } from 'date-fns';
-
-interface BankGuarantee {
-  id: string;
-  project_id: string;
-  contractor_id: string;
-  contractor_name: string;
-  bank_name: string;
-  guarantee_amount: number;
-  guarantee_type: string;
-  issue_date: string;
-  expiry_date: string;
-  status: string;
-  supporting_documents?: string[];
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface BankGuaranteeFormData {
-  project_id: string;
-  contractor_id: string;
-  contractor_name: string;
-  bank_name: string;
-  guarantee_amount: number;
-  guarantee_type: string;
-  issue_date: string;
-  expiry_date: string;
-  status: string;
-  supporting_documents: string[];
-  notes: string;
-}
+import {
+  useBankGuaranteesList,
+  useCreateBankGuarantee,
+  useUpdateBankGuarantee,
+  useDeleteBankGuarantee,
+  BankGuaranteeFormData,
+  BankGuaranteeRow
+} from '@/hooks/hexagonal';
 
 const EnhancedBankGuaranteeCrud = () => {
-  const [guarantees, setGuarantees] = useState<BankGuarantee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuarantee | null>(null);
+  const [selectedGuarantee, setSelectedGuarantee] = useState<BankGuaranteeRow | null>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
@@ -76,6 +50,12 @@ const EnhancedBankGuaranteeCrud = () => {
   
   const { t } = useLanguage();
 
+  // Hexagonal hooks
+  const { data: guarantees = [], isLoading, refetch } = useBankGuaranteesList();
+  const createMutation = useCreateBankGuarantee();
+  const updateMutation = useUpdateBankGuarantee();
+  const deleteMutation = useDeleteBankGuarantee();
+
   const guaranteeTypes = [
     { value: 'performance', label: 'Garantie de Bonne Exécution' },
     { value: 'advance', label: 'Garantie d\'Avance' },
@@ -91,49 +71,6 @@ const EnhancedBankGuaranteeCrud = () => {
     { value: 'released', label: 'Libérée', color: 'bg-blue-100 text-blue-800' },
     { value: 'suspended', label: 'Suspendue', color: 'bg-gray-100 text-gray-800' }
   ];
-
-  useEffect(() => {
-    loadGuarantees();
-  }, []);
-
-  const loadGuarantees = async () => {
-    try {
-      console.log('Loading bank guarantees...');
-      
-      const { data, error } = await supabase
-        .from('bank_guarantees')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Raw guarantees data:', data);
-      
-      const transformedGuarantees: BankGuarantee[] = (data || []).map(guarantee => ({
-        ...guarantee,
-        contractor_name: (guarantee as any).contractor_name || 'N/A'
-      }));
-      
-      console.log('Transformed guarantees:', transformedGuarantees);
-      setGuarantees(transformedGuarantees);
-      
-      toast({
-        title: t('common.success'),
-        description: `${transformedGuarantees.length} garantie(s) chargée(s)`,
-      });
-      
-    } catch (error: any) {
-      console.error('Error loading bank guarantees:', error);
-      toast({
-        title: t('common.error'),
-        description: `Impossible de charger les garanties bancaires: ${error?.message || 'Erreur inconnue'}`,
-        variant: 'destructive'
-      });
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -159,11 +96,11 @@ const EnhancedBankGuaranteeCrud = () => {
     setIsFormOpen(true);
   };
 
-  const openEditForm = (guarantee: BankGuarantee) => {
+  const openEditForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
       project_id: guarantee.project_id,
       contractor_id: guarantee.contractor_id,
-      contractor_name: guarantee.contractor_name,
+      contractor_name: guarantee.contractor_name || '',
       bank_name: guarantee.bank_name,
       guarantee_amount: guarantee.guarantee_amount,
       guarantee_type: guarantee.guarantee_type,
@@ -179,11 +116,11 @@ const EnhancedBankGuaranteeCrud = () => {
     setIsFormOpen(true);
   };
 
-  const openViewForm = (guarantee: BankGuarantee) => {
+  const openViewForm = (guarantee: BankGuaranteeRow) => {
     setFormData({
       project_id: guarantee.project_id,
       contractor_id: guarantee.contractor_id,
-      contractor_name: guarantee.contractor_name,
+      contractor_name: guarantee.contractor_name || '',
       bank_name: guarantee.bank_name,
       guarantee_amount: guarantee.guarantee_amount,
       guarantee_type: guarantee.guarantee_type,
@@ -212,51 +149,11 @@ const EnhancedBankGuaranteeCrud = () => {
 
     try {
       if (isEditing && selectedGuarantee) {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('bank_guarantees')
-          .update({
-            project_id: formData.project_id,
-            contractor_id: formData.contractor_id,
-            bank_name: formData.bank_name,
-            guarantee_amount: formData.guarantee_amount,
-            guarantee_type: formData.guarantee_type,
-            issue_date: formData.issue_date,
-            expiry_date: formData.expiry_date,
-            status: formData.status,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedGuarantee.id);
-
-        if (error) throw error;
-
-        await loadGuarantees();
-        toast({
-          title: t('common.success'),
-          description: "Garantie bancaire mise à jour avec succès",
-        });
+        await updateMutation.mutateAsync({ id: selectedGuarantee.id, data: formData });
+        toast({ title: t('common.success'), description: "Garantie bancaire mise à jour avec succès" });
       } else {
-        // Insert in Supabase
-        const { error } = await supabase
-          .from('bank_guarantees')
-          .insert({
-            project_id: formData.project_id,
-            contractor_id: formData.contractor_id,
-            bank_name: formData.bank_name,
-            guarantee_amount: formData.guarantee_amount,
-            guarantee_type: formData.guarantee_type,
-            issue_date: formData.issue_date,
-            expiry_date: formData.expiry_date,
-            status: formData.status
-          });
-
-        if (error) throw error;
-
-        await loadGuarantees();
-        toast({
-          title: t('common.success'),
-          description: "Garantie bancaire créée avec succès",
-        });
+        await createMutation.mutateAsync(formData);
+        toast({ title: t('common.success'), description: "Garantie bancaire créée avec succès" });
       }
       
       setIsFormOpen(false);
@@ -274,18 +171,8 @@ const EnhancedBankGuaranteeCrud = () => {
   const handleDelete = async (guaranteeId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
       try {
-        const { error } = await supabase
-          .from('bank_guarantees')
-          .delete()
-          .eq('id', guaranteeId);
-
-        if (error) throw error;
-
-        await loadGuarantees();
-        toast({
-          title: t('common.success'),
-          description: "Garantie bancaire supprimée avec succès",
-        });
+        await deleteMutation.mutateAsync(guaranteeId);
+        toast({ title: t('common.success'), description: "Garantie bancaire supprimée avec succès" });
       } catch (error) {
         console.error('Error deleting guarantee:', error);
         toast({
@@ -313,10 +200,6 @@ const EnhancedBankGuaranteeCrud = () => {
     setFormData(prev => ({ ...prev, project_id: projectId || '' }));
   };
 
-  const handleDocumentSelect = (documents: any[]) => {
-    setUploadedDocuments(documents);
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -324,6 +207,14 @@ const EnhancedBankGuaranteeCrud = () => {
       minimumFractionDigits: 0
     }).format(amount);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -479,33 +370,6 @@ const EnhancedBankGuaranteeCrud = () => {
                       documentType="contract"
                       disabled={isViewMode}
                     />
-                    <div className="mt-2 p-3 border-2 border-dashed rounded-lg">
-                      <p className="text-sm text-muted-foreground text-center">
-                        Glisser-déposer un fichier ici ou utiliser le sélecteur ci-dessus
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {uploadedDocuments.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground mb-2">Documents ajoutés:</p>
-                    <div className="space-y-1">
-                      {uploadedDocuments.map((doc, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
-                          <span>{doc.title || doc.file_name}</span>
-                          {!isViewMode && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setUploadedDocuments(prev => prev.filter((_, i) => i !== index))}
-                            >
-                              ×
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>
@@ -514,30 +378,19 @@ const EnhancedBankGuaranteeCrud = () => {
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes}
+                  value={formData.notes || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   disabled={isViewMode}
                   rows={3}
                 />
               </div>
               
-              {/* Document Visualization Section for View Mode */}
-              {isViewMode && selectedGuarantee && (
-                <div className="mt-6 pt-6 border-t">
-                  <DocumentSection 
-                    relatedId={selectedGuarantee.id} 
-                    relatedType="bank_guarantee"
-                    title="Documents de la Garantie Bancaire"
-                  />
-                </div>
-              )}
-              
               {!isViewMode && (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
                     Annuler
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                     {isEditing ? 'Mettre à jour' : 'Créer'}
                   </Button>
                 </div>
@@ -548,75 +401,70 @@ const EnhancedBankGuaranteeCrud = () => {
       </CardHeader>
       
       <CardContent>
-        {guarantees.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucune garantie bancaire trouvée
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Banque</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Expiration</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Projet</TableHead>
+              <TableHead>Banque</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Montant</TableHead>
+              <TableHead>Expiration</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {guarantees.map((guarantee) => (
+              <TableRow key={guarantee.id}>
+                <TableCell className="font-medium">{guarantee.project_id.slice(0, 8)}...</TableCell>
+                <TableCell>{guarantee.bank_name}</TableCell>
+                <TableCell>
+                  {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label || guarantee.guarantee_type}
+                </TableCell>
+                <TableCell>{formatCurrency(guarantee.guarantee_amount)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {new Date(guarantee.expiry_date).toLocaleDateString('fr-FR')}
+                    {isExpiringSoon(guarantee.expiry_date) && (
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(guarantee.status)}>
+                    {statusOptions.find(s => s.value === guarantee.status)?.label || guarantee.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => handleDelete(guarantee.id)}
+                      className="text-red-600 hover:text-red-700"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {guarantees.map((guarantee) => (
-                <TableRow key={guarantee.id}>
-                  <TableCell className="font-medium">{guarantee.project_id}</TableCell>
-                  <TableCell>{guarantee.bank_name}</TableCell>
-                  <TableCell>
-                    {guaranteeTypes.find(t => t.value === guarantee.guarantee_type)?.label}
-                  </TableCell>
-                  <TableCell>{formatCurrency(guarantee.guarantee_amount)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {format(new Date(guarantee.expiry_date), 'dd/MM/yyyy')}
-                      {isExpiringSoon(guarantee.expiry_date) && (
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(guarantee.status)}>
-                      {statusOptions.find(s => s.value === guarantee.status)?.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openViewForm(guarantee)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditForm(guarantee)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(guarantee.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+            ))}
+            {guarantees.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Aucune garantie bancaire trouvée
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
