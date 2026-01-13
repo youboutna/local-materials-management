@@ -420,93 +420,122 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ---
 
-## **Phase 8: Audit Appels Supabase Directs** 🔧
+## **Phase 8: Audit Complet Appels Supabase Directs** 🔧
 
-### **Statistiques Audit**
-- **Total fichiers avec appels directs**: 26
-- **Hooks hexagonaux créés**: 33
-- **Fichiers migrés**: 17
-- **Fichiers restants**: 9
-- **Migration %**: 65%
-
----
-
-### **Terminé ✅**
-
-| Composant | Hook Créé | Date |
-|-----------|-----------|------|
-| RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` | ✅ |
-| PaymentControlActions | `usePaymentActionsHex` | ✅ |
-| PhaseTasks | `usePhaseTasksHex` | ✅ |
-| PhaseMonitoringDashboard | `usePhaseMonitoringSummaryHex` | ✅ |
-| UnifiedPhaseMonitoring | `usePhaseMonitoringSummaryHex` | ✅ |
-| PhaseEmployees | `usePhaseEmployeesHex` | ✅ |
-| PhaseMaterials | `usePhaseMaterialsHex` | ✅ |
-| InspectionCrud | `useInspectionCrudHex` | ✅ |
-| PaymentRequests | `usePaymentRequestsHex` | ✅ |
-| UnifiedInsuranceManager | `useInsuranceCertificatesHex` | ✅ |
-| UserManagementDialog | `useUserManagementHex` | ✅ |
-| Storage (générique) | `useStorageHex` | ✅ |
-| **EnhancedTaskList** | `useTaskListHex` | ✅ NEW |
-| **TenderEvaluationPanel** | `useTenderEvaluationHex` | ✅ NEW |
-| **ProgressInvoiceForm** | `useProgressInvoiceHex` | ✅ NEW |
-| **PhaseInspections** | `usePhaseInspectionsHex` | ✅ NEW |
-| **EnhancedSupplierTenderPortal** | `useSupplierPortalHex` | ✅ NEW |
+### **Statistiques Audit Complet (13/01/2026)**
+| Métrique | Valeur |
+|----------|--------|
+| **Occurrences totales** | 2592 |
+| **Fichiers impactés** | 118 |
+| **Hooks hexagonaux créés** | 33 |
+| **Composants avec hooks intégrés** | 17 |
+| **Composants restants** | 101 |
+| **Migration %** | **14%** (17/118) |
 
 ---
 
-### **En Cours 🔧**
+### **Terminé ✅** (17 fichiers)
 
-| Composant | Hook Prévu | Priorité |
-|-----------|------------|----------|
-| - | - | - |
+| Composant | Hook Créé |
+|-----------|-----------|
+| RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` |
+| PaymentControlActions | `usePaymentActionsHex` |
+| PhaseTasks | `usePhaseTasksHex` |
+| PhaseMonitoringDashboard | `usePhaseMonitoringSummaryHex` |
+| UnifiedPhaseMonitoring | `usePhaseMonitoringSummaryHex` |
+| PhaseEmployees | `usePhaseEmployeesHex` |
+| PhaseMaterials | `usePhaseMaterialsHex` |
+| InspectionCrud | `useInspectionCrudHex` |
+| PaymentRequests | `usePaymentRequestsHex` |
+| UnifiedInsuranceManager | `useInsuranceCertificatesHex` |
+| UserManagementDialog | `useUserManagementHex` |
+| Storage (générique) | `useStorageHex` |
+| EnhancedTaskList | `useTaskListHex` |
+| TenderEvaluationPanel | `useTenderEvaluationHex` |
+| ProgressInvoiceForm | `useProgressInvoiceHex` |
+| PhaseInspections | `usePhaseInspectionsHex` |
+| EnhancedSupplierTenderPortal | `useSupplierPortalHex` |
 
 ---
 
-### **Reste à Faire 📋**
+### **Reste à Faire 📋** (101 fichiers par répertoire)
 
-| Composant | Fichier | Type Appels | Priorité |
-|-----------|---------|-------------|----------|
-| TenderDocumentUploadForm | tenders/ | Storage upload | 🟡 |
-| EnhancedDocumentSharing | suppliers/ | Auth + Storage | 🟡 |
-| DocumentShareDialog | tenders/ | Auth query | 🟡 |
-| TenderExcelImporter | tenders/ | Auth check | 🟢 |
-| InspectionReportGenerator | reports/ | Edge function | 🟢 |
-| QuantitativeEstimateExporter | reports/ | Edge function | 🟢 |
-| InspectionExecutionForm | inspections/ | Storage upload | 🟡 |
-| SupplierPaymentRequest | suppliers/ | Auth + Storage | 🟡 |
-| PasswordResetHandler | auth/ | Auth operations | 🟢 |
+| Répertoire | Fichiers | Priorité | Hook Recommandé |
+|------------|----------|----------|-----------------|
+| **selectors/** | UserSelector, ProjectSelector, SupplierSelector | 🔴 Haute | `useSelectorsHex` |
+| **suppliers/** | SupplierSubmissionDashboard, SupplierSelector, +5 | 🔴 Haute | `useSupplierHex` |
+| **insurance/** | InsuranceCrud, InsuranceDashboard | 🔴 Haute | `useInsuranceCertificatesHex` ✅ |
+| **supplier/** | SupplierInspectionExecutionDialog | 🟡 Moyenne | `useSupplierInspectionHex` |
+| **project/** | ProjectStakeholders, ProjectDocuments, +8 | 🔴 Haute | `useProjectDetailsHex` |
+| **tenders/** | TenderDocumentUploadForm, TenderExcelImporter, +6 | 🟡 Moyenne | `useTenderHex` |
+| **documents/** | DocumentUploader, DocumentList, +4 | 🟡 Moyenne | `useDocumentsHex` |
+| **inspections/** | InspectionExecutionForm, InspectionForm, +3 | 🟡 Moyenne | `useInspectionHex` ✅ |
+| **employees/** | EmployeeForm, EmployeeList | 🟢 Basse | `useEmployeesHex` |
+| **MaterialSelector.tsx** | Root level | 🟡 Moyenne | `useMaterialsHex` ✅ |
+| **auth/** | PasswordResetHandler | 🟢 Basse | `useAuthHex` |
+| **admin/** | UserManagement, RoleManagement | 🟡 Moyenne | `useUserManagementHex` ✅ |
+| **reports/** | InspectionReportGenerator, Exporters | 🟢 Basse | Edge functions |
+
+---
+
+### **Hooks Existants Réutilisables**
+
+| Hook | Composants à Migrer |
+|------|---------------------|
+| `useMaterialsHex` | MaterialSelector |
+| `useInsuranceCertificatesHex` | InsuranceCrud, InsuranceDashboard |
+| `useSuppliersHex` | SupplierSelector, SupplierForm |
+| `useProjectsHex` | ProjectSelector, ProjectStakeholders |
+| `useInspectionHex` | InspectionExecutionForm, InspectionForm |
+| `useDocumentsHex` | DocumentUploader, DocumentList |
+| `useStorageHex` | Tous uploads fichiers |
 
 ---
 
 ### **Recommandations 💡**
 
-1. **Priorité Haute**: Intégrer les hooks dans les composants pour compléter la migration
-2. **Storage**: Utiliser `useStorageHex` pour tous les uploads
-3. **Auth**: Utiliser `useUserManagementHex` pour les opérations utilisateur
-4. **Refactoring**: Supprimer les imports `supabase` directs des composants migrés
+#### **Stratégie Migration**
+1. **Phase A** (🔴 Haute): selectors/, suppliers/, project/ → Impact UI maximal
+2. **Phase B** (🟡 Moyenne): tenders/, documents/, inspections/
+3. **Phase C** (🟢 Basse): employees/, auth/, reports/
+
+#### **Patterns à Appliquer**
+```typescript
+// ❌ AVANT (violation)
+import { supabase } from '@/integrations/supabase/client';
+const { data } = await supabase.from('table').select('*');
+
+// ✅ APRÈS (hexagonal)
+import { useTableHex } from '@/hooks/hexagonal';
+const { data, isLoading } = useTableHex().query;
+```
+
+#### **Actions Immédiates**
+1. Créer `useSelectorsHex` pour centraliser selectors/
+2. Intégrer hooks existants dans composants (pas juste création)
+3. Supprimer imports `supabase` après migration
 
 ---
 
 ### **Problèmes UX Corrigés ✅**
 
-| Problème | Solution | Statut |
-|----------|----------|--------|
-| Tab Monitoring Dashboard | Ajouté avec liens valides | ✅ |
-| Route /monitoring | Ajoutée dans App.tsx | ✅ |
-| Lien Garanties Bancaires | Corrigé vers /bank-guarantee-monitor | ✅ |
-| Lien Assurances | Ajouté /insurance-management | ✅ |
+| Problème | Solution |
+|----------|----------|
+| Tab Monitoring Dashboard | Routes valides ajoutées |
+| Route /monitoring | Ajoutée dans App.tsx |
+| Lien Garanties Bancaires | /bank-guarantee-monitor |
+| Lien Assurances | /insurance-management |
 
 ---
 
-## **Résumé Statistiques**
+## **Résumé Global**
 
-| Catégorie | Nombre |
+| Catégorie | Valeur |
 |-----------|--------|
-| Pages totales | 48 |
-| Hooks hexagonaux créés | 33 |
-| Composants avec hooks | 17/26 |
-| **Migration %** | **65%** |
-| Fichiers restants | 9 |
+| Fichiers avec violations | 118 |
+| Hooks créés | 33 |
+| **Composants migrés** | **17** |
+| **Migration réelle** | **14%** |
+| Prochain objectif | 30% (36 fichiers) |
 
-**Statut Global**: ✅ Architecture OK | 🔧 Migration 65% | ✅ Dashboard UX corrigé
+**Statut**: ⚠️ Hooks créés mais intégration partielle | Priorité: selectors/ suppliers/ project/
