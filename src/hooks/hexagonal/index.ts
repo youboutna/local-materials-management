@@ -95,3 +95,15 @@ export { useBankGuaranteeForProjectHex } from './useBankGuaranteeForProjectHex';
 // Payment Validation
 export { usePaymentValidationHex } from './usePaymentValidationHex';
 export type { PaymentStats } from './usePaymentValidationHex';
+
+// KPI Metrics
+export { useKPIMetricsHex } from './useKPIMetricsHex';
+export type { KPIMetrics, CriticalAlert } from './useKPIMetricsHex';
+
+// Management Actions
+export { useManagementActionsHex } from './useManagementActionsHex';
+export type { ActionItem } from './useManagementActionsHex';
+
+// Monitoring Stats
+export { useMonitoringStatsHex } from './useMonitoringStatsHex';
+export type { MonitoringStats } from './useMonitoringStatsHex';
