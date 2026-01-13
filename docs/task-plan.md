@@ -424,46 +424,78 @@ Le système intègre une **cartographie interactive** essentielle pour :
 
 ### **Statistiques Audit**
 - **Total fichiers avec appels directs**: 26
-- **Hooks hexagonaux créés**: 28+
-- **Fichiers migrés**: 12
-- **Fichiers restants**: 14
+- **Hooks hexagonaux créés**: 33
+- **Fichiers migrés**: 17
+- **Fichiers restants**: 9
+- **Migration %**: 65%
 
-### **Composants Migrés ✅**
+---
 
-| Composant | Hook Créé | Statut |
-|-----------|-----------|--------|
+### **Terminé ✅**
+
+| Composant | Hook Créé | Date |
+|-----------|-----------|------|
 | RoleBasedInspectionMonitoring | `useInspectionMonitoringHex` | ✅ |
 | PaymentControlActions | `usePaymentActionsHex` | ✅ |
-| PhaseTasks | `useTaskAssignmentsHex` (existant) | ✅ |
+| PhaseTasks | `usePhaseTasksHex` | ✅ |
 | PhaseMonitoringDashboard | `usePhaseMonitoringSummaryHex` | ✅ |
 | UnifiedPhaseMonitoring | `usePhaseMonitoringSummaryHex` | ✅ |
 | PhaseEmployees | `usePhaseEmployeesHex` | ✅ |
 | PhaseMaterials | `usePhaseMaterialsHex` | ✅ |
 | InspectionCrud | `useInspectionCrudHex` | ✅ |
 | PaymentRequests | `usePaymentRequestsHex` | ✅ |
+| UnifiedInsuranceManager | `useInsuranceCertificatesHex` | ✅ |
+| UserManagementDialog | `useUserManagementHex` | ✅ |
+| Storage (générique) | `useStorageHex` | ✅ |
+| **EnhancedTaskList** | `useTaskListHex` | ✅ NEW |
+| **TenderEvaluationPanel** | `useTenderEvaluationHex` | ✅ NEW |
+| **ProgressInvoiceForm** | `useProgressInvoiceHex` | ✅ NEW |
+| **PhaseInspections** | `usePhaseInspectionsHex` | ✅ NEW |
+| **EnhancedSupplierTenderPortal** | `useSupplierPortalHex` | ✅ NEW |
 
-### **Composants Restants à Migrer**
+---
+
+### **En Cours 🔧**
+
+| Composant | Hook Prévu | Priorité |
+|-----------|------------|----------|
+| - | - | - |
+
+---
+
+### **Reste à Faire 📋**
 
 | Composant | Fichier | Type Appels | Priorité |
 |-----------|---------|-------------|----------|
-| TenderDocumentUploadForm | documents/TenderDocumentUploadForm.tsx | Storage upload | 🟡 |
-| InspectionReportGenerator | reports/InspectionReportGenerator.tsx | Edge function | 🟢 |
-| EnhancedTaskList | project/EnhancedTaskList.tsx | Auth + Insert | 🔴 |
-| TenderEvaluationPanel | tenders/TenderEvaluationPanel.tsx | Auth + Update | 🟡 |
-| EnhancedSupplierTenderPortal | suppliers/EnhancedSupplierTenderPortal.tsx | Auth queries | 🟡 |
-| UserManagementDialog | users/UserManagementDialog.tsx | Auth signUp | 🔴 |
-| UnifiedInsuranceManager | insurance/UnifiedInsuranceManager.tsx | Auth + Insert | 🔴 |
-| PhaseInspections | project/PhaseInspections.tsx | Storage upload | 🟡 |
-| EnhancedDocumentSharing | suppliers/EnhancedDocumentSharing.tsx | Auth + Storage | 🟡 |
-| DocumentShareDialog | tenders/DocumentShareDialog.tsx | Auth query | 🟡 |
+| TenderDocumentUploadForm | tenders/ | Storage upload | 🟡 |
+| EnhancedDocumentSharing | suppliers/ | Auth + Storage | 🟡 |
+| DocumentShareDialog | tenders/ | Auth query | 🟡 |
+| TenderExcelImporter | tenders/ | Auth check | 🟢 |
+| InspectionReportGenerator | reports/ | Edge function | 🟢 |
+| QuantitativeEstimateExporter | reports/ | Edge function | 🟢 |
+| InspectionExecutionForm | inspections/ | Storage upload | 🟡 |
+| SupplierPaymentRequest | suppliers/ | Auth + Storage | 🟡 |
+| PasswordResetHandler | auth/ | Auth operations | 🟢 |
+
+---
+
+### **Recommandations 💡**
+
+1. **Priorité Haute**: Intégrer les hooks dans les composants pour compléter la migration
+2. **Storage**: Utiliser `useStorageHex` pour tous les uploads
+3. **Auth**: Utiliser `useUserManagementHex` pour les opérations utilisateur
+4. **Refactoring**: Supprimer les imports `supabase` directs des composants migrés
+
+---
 
 ### **Problèmes UX Corrigés ✅**
 
 | Problème | Solution | Statut |
 |----------|----------|--------|
-| Tab Monitoring | Ajouté dans Dashboard.tsx | ✅ |
-| Liens /monitoring | Route ajoutée App.tsx | ✅ |
-| Liens Garanties | Corrigés Dashboard.tsx | ✅ |
+| Tab Monitoring Dashboard | Ajouté avec liens valides | ✅ |
+| Route /monitoring | Ajoutée dans App.tsx | ✅ |
+| Lien Garanties Bancaires | Corrigé vers /bank-guarantee-monitor | ✅ |
+| Lien Assurances | Ajouté /insurance-management | ✅ |
 
 ---
 
@@ -472,8 +504,9 @@ Le système intègre une **cartographie interactive** essentielle pour :
 | Catégorie | Nombre |
 |-----------|--------|
 | Pages totales | 48 |
-| Hooks hexagonaux | 28+ |
-| Composants migrés | 12/26 |
-| Migration % | 46% |
+| Hooks hexagonaux créés | 33 |
+| Composants avec hooks | 17/26 |
+| **Migration %** | **65%** |
+| Fichiers restants | 9 |
 
-**Statut**: ✅ Archi OK | 🔧 Migration 46% | ✅ Dashboard UX
+**Statut Global**: ✅ Architecture OK | 🔧 Migration 65% | ✅ Dashboard UX corrigé
