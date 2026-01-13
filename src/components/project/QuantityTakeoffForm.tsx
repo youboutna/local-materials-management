@@ -1,3 +1,7 @@
+/**
+ * QuantityTakeoffForm - Quantity calculation form
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { calculateQuantity, CreateQuantityTakeoffData } from '@/types/quantityTakeoff';
+import { useMaterialsForTakeoff, useCreateQuantityTakeoff } from '@/hooks/hexagonal';
 
 interface QuantityTakeoffFormProps {
   projectId: string;
@@ -27,21 +30,10 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
     note: ''
   });
   const [calculatedQuantity, setCalculatedQuantity] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch available materials
-  const { data: materials } = useQuery({
-    queryKey: ['materials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, unit, category')
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Use hexagonal hooks
+  const { data: materials } = useMaterialsForTakeoff();
+  const createMutation = useCreateQuantityTakeoff(projectId);
 
   useEffect(() => {
     const quantity = calculateQuantity(
@@ -64,19 +56,11 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const submitData = {
+      await createMutation.mutateAsync({
         ...formData,
-        project_id: projectId,
         quantity: calculatedQuantity
-      };
-
-      const { error } = await supabase
-        .from('quantity_takeoffs')
-        .insert(submitData);
-
-      if (error) throw error;
+      });
 
       toast({
         title: "Métré créé",
@@ -102,8 +86,6 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
         description: "Impossible de créer le métré. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -217,8 +199,8 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
             </div>
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Création...' : 'Créer Métré'}
+          <Button type="submit" disabled={createMutation.isPending} className="w-full">
+            {createMutation.isPending ? 'Création...' : 'Créer Métré'}
           </Button>
         </form>
       </CardContent>
