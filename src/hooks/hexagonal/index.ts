@@ -144,3 +144,20 @@ export type {
   PaymentsSummary, 
   PhaseMonitoringSummary 
 } from './usePhaseMonitoringSummaryHex';
+
+// Inspection Monitoring
+export { useInspectionMonitoringHex } from './useInspectionMonitoringHex';
+export type { MonitoringInspection, MonitoringProject } from './useInspectionMonitoringHex';
+
+// Payment Actions
+export { usePaymentActionsHex } from './usePaymentActionsHex';
+
+// Insurance Certificates
+export { useInsuranceCertificatesHex } from './useInsuranceCertificatesHex';
+export type { InsuranceCertificateData } from './useInsuranceCertificatesHex';
+
+// User Management
+export { useUserManagementHex } from './useUserManagementHex';
+
+// Storage Operations
+export { useStorageHex } from './useStorageHex';
