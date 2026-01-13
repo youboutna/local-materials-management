@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * SubmissionEvaluationPanel - Evaluate tender submissions
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +24,11 @@ import {
   Send
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  useTenderSubmission, 
+  useSubmissionDocuments, 
+  useSaveSubmissionEvaluation 
+} from '@/hooks/hexagonal';
 
 interface SubmissionEvaluationPanelProps {
   submissionId: string;
@@ -40,7 +48,6 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
   tenderId
 }) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   const [scores, setScores] = useState<EvaluationScores>({
     administrative_score: 0,
@@ -50,76 +57,36 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
     recommendations: ''
   });
 
-  // Fetch submission details
-  const { data: submission, isLoading: submissionLoading } = useQuery({
-    queryKey: ['submission-evaluation', submissionId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('id', submissionId)
-        .single();
+  // Use hexagonal hooks
+  const { data: submission, isLoading: submissionLoading } = useTenderSubmission(submissionId);
+  const { data: documents, isLoading: documentsLoading } = useSubmissionDocuments(submissionId);
+  const saveEvaluationMutation = useSaveSubmissionEvaluation(submissionId);
 
-      if (error) throw error;
-      
-      // Initialize scores if they exist
-      if (data) {
-        setScores({
-          administrative_score: data.administrative_score || 0,
-          technical_score: data.technical_score || 0,
-          financial_score: data.financial_score || 0,
-          notes: '',
-          recommendations: ''
-        });
-      }
-      
-      return data;
-    },
-    enabled: !!submissionId
-  });
+  // Initialize scores when submission loads
+  useEffect(() => {
+    if (submission) {
+      setScores(prev => ({
+        ...prev,
+        administrative_score: submission.administrative_score || 0,
+        technical_score: submission.technical_score || 0,
+        financial_score: submission.financial_score || 0,
+      }));
+    }
+  }, [submission]);
 
-  // Fetch submission documents
-  const { data: documents, isLoading: documentsLoading } = useQuery({
-    queryKey: ['submission-documents', submissionId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_submission_documents')
-        .select(`
-          *,
-          document:documents(*)
-        `)
-        .eq('submission_id', submissionId);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!submissionId
-  });
-
-  // Save evaluation mutation
-  const saveEvaluationMutation = useMutation({
-    mutationFn: async (finalSubmit: boolean = false) => {
-      const totalScore = (
-        scores.administrative_score * 0.3 +
-        scores.technical_score * 0.4 +
-        scores.financial_score * 0.3
-      );
-
-      const { error } = await supabase
-        .from('tender_submissions')
-        .update({
+  const handleSaveEvaluation = async (finalSubmit: boolean = false) => {
+    try {
+      await saveEvaluationMutation.mutateAsync({
+        scores: {
           administrative_score: scores.administrative_score,
           technical_score: scores.technical_score,
-          financial_score: scores.financial_score,
-          total_score: totalScore,
-          status: finalSubmit ? 'under_review' : submission?.status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', submissionId);
+          financial_score: scores.financial_score
+        },
+        finalSubmit,
+        currentStatus: submission?.status
+      });
 
-      if (error) throw error;
-
-      // Log the evaluation action using SubmissionSecretService
+      // Log the evaluation action
       try {
         await SubmissionSecretService.logAccess({
           submission_id: submissionId,
@@ -132,26 +99,22 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
         });
       } catch (logError) {
         console.error('Error logging access:', logError);
-        // Don't fail the evaluation if logging fails
       }
-    },
-    onSuccess: (_, finalSubmit) => {
-      queryClient.invalidateQueries({ queryKey: ['submission-evaluation', submissionId] });
+
       toast({
         title: finalSubmit ? "Évaluation soumise" : "Évaluation sauvegardée",
         description: finalSubmit 
           ? "L'évaluation a été soumise avec succès."
           : "Vos modifications ont été sauvegardées.",
       });
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de sauvegarder l'évaluation.",
         variant: "destructive",
       });
     }
-  });
+  };
 
   const groupedDocuments = documents?.reduce((acc: any, doc: any) => {
     const category = doc.category || 'other';
@@ -383,14 +346,14 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
               <div className="flex gap-3 pt-4 border-t">
                 <Button
                   variant="outline"
-                  onClick={() => saveEvaluationMutation.mutate(false)}
+                  onClick={() => handleSaveEvaluation(false)}
                   disabled={saveEvaluationMutation.isPending}
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Sauvegarder
                 </Button>
                 <Button
-                  onClick={() => saveEvaluationMutation.mutate(true)}
+                  onClick={() => handleSaveEvaluation(true)}
                   disabled={saveEvaluationMutation.isPending}
                 >
                   <Send className="h-4 w-4 mr-2" />
@@ -469,3 +432,5 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
     </div>
   );
 };
+
+export default SubmissionEvaluationPanel;
