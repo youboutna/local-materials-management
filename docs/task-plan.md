@@ -425,10 +425,28 @@ Le système intègre une **cartographie interactive** essentielle pour :
 ### **Statistiques Audit (13/01/2026 - Final)**
 | Métrique | Avant | Après |
 |----------|-------|-------|
-| **Fichiers impactés** | 118 | ~95 |
-| **Hooks hexagonaux** | 33 | 37 |
-| **Composants migrés** | 17 | 32 |
-| **Migration %** | 14% | **27%** (32/118) |
+| **Fichiers impactés** | 118 | ~85 |
+| **Hooks hexagonaux** | 33 | 42 |
+| **Composants migrés** | 17 | 40 |
+| **Migration %** | 14% | **34%** (40/118) ✅ |
+
+### **Session Parallèle - Composants Migrés**
+| Composant | Hook Utilisé |
+|-----------|--------------|
+| `PaymentScheduleTimeline.tsx` | `usePaymentSchedule` |
+| `TenderProjectPhases.tsx` | `useProjectPhasesForTender` |
+| `TenderLotBuilder.tsx` | `useProjectPhasesForLots` |
+| `SuppliersManagement.tsx` | `useSuppliersList`, CRUD hooks |
+| `TaskAssignments.tsx` ✅ | `useTaskAssignments`, `useAssigneeDetails` |
+| `SubmissionEvaluationPanel.tsx` ✅ | `useTenderSubmission`, `useSubmissionDocuments` |
+
+### **Composants Non Migrés (Architecture Différente)**
+| Composant | Raison |
+|-----------|--------|
+| `PaymentControlActions.tsx` | Utilise edge functions (SMS, email) |
+| `SystemHealthOverview.tsx` | Service dédié `comprehensiveMonitoringService` |
+| `PerformanceMetrics.tsx` | Services spécialisés (HTTP collector) |
+| `BankGuaranteeMonitor.tsx` | ✅ Déjà migré |
 
 ---
 
