@@ -7,7 +7,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
-import { supabase } from "@/integrations/supabase/client";
+import { useBankGuaranteeForProjectHex, useAuthUserHex } from "@/hooks/hexagonal";
 import { createBankGuaranteeAction } from "@/services/bankGuaranteeActionService";
 import { BankGuaranteeService, detectProjectDelays, triggerBankGuaranteeNotification } from "@/services/BankGuaranteeService";
 import {
@@ -27,6 +27,7 @@ const BankGuaranteeMonitor: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { userId } = useAuthUserHex();
 
   const {
     currentData: paginatedDelays,
@@ -69,23 +70,18 @@ const BankGuaranteeMonitor: React.FC = () => {
   const handleTriggerBankNotification = async (delay: any) => {
     setProcessing(delay.projectId);
     try {
-      // Get real bank guarantee data from database
-      const { data: guarantee, error: guaranteeError } = await supabase
-        .from("bank_guarantees")
-        .select("*")
-        .eq("project_id", delay.projectId)
-        .eq("status", "active")
-        .single();
+      // Get real bank guarantee data from service
+      const guarantee = await BankGuaranteeService.getActiveGuaranteeForProject(delay.projectId);
 
-        if (guaranteeError) {
-          console.error("Error fetching bank guarantee:", guaranteeError);
-          toast({
-            title: t('common.error'),
-            description: t('bank_guarantee.not_found_for_project'),
-            variant: "destructive",
-          });
-          return;
-        }
+      if (!guarantee) {
+        console.error("Bank guarantee not found for project");
+        toast({
+          title: t('common.error'),
+          description: t('bank_guarantee.not_found_for_project'),
+          variant: "destructive",
+        });
+        return;
+      }
 
       const bankGuaranteeData = {
         projectId: delay.projectId,
@@ -137,11 +133,8 @@ const BankGuaranteeMonitor: React.FC = () => {
         return;
       }
 
-      // Get current user or use a fallback
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const currentUserId = user?.id || "system-user";
+      // Use userId from hexagonal hook
+      const currentUserId = userId || "system-user";
 
       let title = "";
       let message = "";

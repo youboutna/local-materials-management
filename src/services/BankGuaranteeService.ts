@@ -210,6 +210,28 @@ export class BankGuaranteeService {
       throw error;
     }
   }
+
+
+  /**
+   * Get active bank guarantee for a project
+   */
+  static async getActiveGuaranteeForProject(projectId: string) {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase
+        .from('bank_guarantees')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('status', 'active')
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      ErrorLogger.log(error as Error, 'BankGuaranteeService.getActiveGuaranteeForProject');
+      return null;
+    }
+  }
 }
 
 // Legacy exports for backward compatibility

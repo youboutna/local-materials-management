@@ -64,17 +64,17 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePagination } from "@/hooks/usePagination";
+import { usePaymentStatsHex, useAuthUserHex } from "@/hooks/hexagonal";
 import {
   validatePaymentEligibility,
   attemptPayment,
   getPaymentBlockHistory,
   PaymentValidationResult,
 } from "@/services/paymentBlockingService";
-import { BankGuaranteeService, detectProjectDelays } from "@/services/BankGuaranteeService";
+import { BankGuaranteeService } from "@/services/BankGuaranteeService";
 import { createPaymentControlAction } from "@/services/paymentControlActionService";
 import ProjectSelector from "@/components/selectors/ProjectSelector";
 import SupplierSelector from "@/components/suppliers/SupplierSelector";
@@ -114,14 +114,13 @@ const EnhancedPaymentBlockingInterface = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<string[]>([]);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [stats, setStats] = useState({
-    blockedPayments: 0,
-    expiredInsurances: 0,
-    delayedProjects: 0,
-    missingDocuments: 0,
-  });
   const { toast } = useToast();
   const { t } = useLanguage();
+  
+  // Use hexagonal hooks for stats and auth
+  const { stats } = usePaymentStatsHex();
+  const { userId } = useAuthUserHex();
+
 
   const [recentPaymentBlocks, setRecentPaymentBlocks] = useState<any[]>([]);
 
@@ -136,61 +135,6 @@ const EnhancedPaymentBlockingInterface = () => {
     data: recentPaymentBlocks,
     itemsPerPage: 10,
   });
-
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      // Count blocked payments this month
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const { data: blockedPaymentsCount } = await supabase
-        .from("payment_blocks")
-        .select("id", { count: "exact" })
-        .is("resolved_at", null)
-        .gte("blocked_at", startOfMonth.toISOString());
-
-      // Count expired insurances
-      const { data: expiredInsurancesData } = await supabase
-        .from("insurance_certificates")
-        .select("contractor_id", { count: "exact" })
-        .lt("valid_until", new Date().toISOString());
-
-      // Count delayed projects (using threshold from our escalation service)
-      const delayedProjects = await detectProjectDelays();
-      const { data: thresholdData } = await supabase
-        .from("escalation_thresholds")
-        .select("threshold_value")
-        .eq("threshold_type", "project_delay")
-        .eq("threshold_name", "bank_notification")
-        .single();
-
-      const threshold = thresholdData?.threshold_value || 20;
-      const criticallyDelayed = delayedProjects.filter(
-        (p) => p.delayPercentage >= threshold
-      );
-
-      // Count missing documents (payments pending due to missing docs)
-      const { data: missingDocsCount } = await supabase
-        .from("documents")
-        .select("project_id", { count: "exact" })
-        .eq("status", "draft")
-        .eq("document_type", "contract");
-
-      setStats({
-        blockedPayments: blockedPaymentsCount?.length || 0,
-        expiredInsurances: expiredInsurancesData?.length || 0,
-        delayedProjects: criticallyDelayed.length,
-        missingDocuments: missingDocsCount?.length || 0,
-      });
-    } catch (error) {
-      console.error("Error loading stats:", error);
-    }
-  };
 
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -345,11 +289,8 @@ const EnhancedPaymentBlockingInterface = () => {
         return;
       }
 
-      // Get current user or use a fallback
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const currentUserId = user?.id || "system-user";
+      // Use userId from hexagonal hook
+      const currentUserId = userId || "system-user";
 
       let title = "";
       let message = "";

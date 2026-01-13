@@ -64,7 +64,7 @@ import {
   SelectValue,
   SelectContent,
 } from "../ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { useProjectPhasesHex } from "@/hooks/hexagonal";
 
 interface ProjectDetailByDTOProps {
   projectId?: string;
@@ -505,19 +505,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         cumulativeStartDays += phaseDuration;
       }
 
-      // Save all phases to database
-      const { data: savedPhases, error } = await supabase
-        .from("project_phases")
-        .insert(phasesToSave as any) // Cast to any to bypass type issues
-        .select();
-
-      if (error) throw error;
-
-      // Refetch phases and project detail
-      await refetchPhases();
-      await queryClient.invalidateQueries({
-        queryKey: ["project-detail", projectId],
-      });
+      // Save all phases using hexagonal hook
+      await createPhases(phasesToSave);
 
       toast({
         title: "Phases générées avec succès",
@@ -533,28 +522,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     }
   };
 
-  const { data: projectPhases, refetch: refetchPhases } = useQuery({
-    queryKey: ["project-phases", projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-
-      try {
-        // Try to fetch phases from the project_phases table
-        const { data: phasesData, error } = await supabase
-          .from("project_phases")
-          .select("*")
-          .eq("project_id", projectId)
-          .order("created_at", { ascending: true });
-
-        if (error) throw error;
-        return phasesData || [];
-      } catch (error) {
-        console.error("Error fetching phases:", error);
-        return [];
-      }
-    },
-    enabled: !!projectId,
-  });
+  // Use hexagonal hook for phases
+  const { 
+    phases: projectPhases, 
+    refetch: refetchPhases, 
+    createPhases,
+    isLoading: phasesLoading 
+  } = useProjectPhasesHex(projectId);
 
   // Normalized phases for UI
   const computedPhases = useMemo(() => {

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useStakeholdersHex } from "@/hooks/hexagonal";
 import {
   Briefcase,
   Building2,
@@ -67,52 +67,29 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   );
   const [newTeamMember, setNewTeamMember] = useState<Partial<TeamMember>>({});
 
-  // Use database data from baseData or local state
+  // Use hexagonal hook for employees and suppliers
+  const { employees: hexEmployees, suppliers: hexSuppliers, isLoading: stakeholdersLoading } = useStakeholdersHex();
+
+  // Use database data from baseData or hexagonal hooks
   const [employees, setEmployees] = useState<any[]>(baseData.employees || []);
   const [suppliers, setSuppliers] = useState<any[]>(baseData.suppliers || []);
 
-  // Update local state when baseData changes
+  // Update local state when baseData or hex data changes
   useEffect(() => {
-    if (baseData.employees) setEmployees(baseData.employees);
-    if (baseData.suppliers) setSuppliers(baseData.suppliers);
-  }, [baseData]);
+    if (baseData.employees) {
+      setEmployees(baseData.employees);
+    } else if (hexEmployees.length > 0) {
+      setEmployees(hexEmployees);
+    }
+  }, [baseData.employees, hexEmployees]);
 
   useEffect(() => {
-    if (!baseData.employees || !baseData.suppliers) {
-      loadEmployees();
-      loadSuppliers();
+    if (baseData.suppliers) {
+      setSuppliers(baseData.suppliers);
+    } else if (hexSuppliers.length > 0) {
+      setSuppliers(hexSuppliers);
     }
-  }, [baseData]);
-
-  const loadEmployees = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .eq("is_active", true)
-        .order("full_name");
-
-      if (error) throw error;
-      setEmployees(data || []);
-    } catch (error) {
-      console.error("Error loading employees:", error);
-    }
-  };
-
-  const loadSuppliers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .eq("is_active", true)
-        .order("name");
-
-      if (error) throw error;
-      setSuppliers(data || []);
-    } catch (error) {
-      console.error("Error loading suppliers:", error);
-    }
-  };
+  }, [baseData.suppliers, hexSuppliers]);
 
   // Predefined roles and positions
   const internalStakeholderRoles = [
