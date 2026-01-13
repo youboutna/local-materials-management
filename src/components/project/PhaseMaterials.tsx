@@ -1,6 +1,9 @@
+/**
+ * PhaseMaterials - Phase material assignments
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,24 +13,11 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Package, Edit2, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal/usePhaseMaterialsHex';
 
 interface PhaseMaterialsProps {
   phaseId: string;
   projectId: string;
-}
-
-interface MaterialAssignment {
-  id: string;
-  quantity: number;
-  material: {
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    unit: string;
-    price_per_unit: number;
-    origin_location?: string;
-  };
 }
 
 const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) => {
@@ -36,103 +26,19 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
   const [quantity, setQuantity] = useState('');
   
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: phaseMaterials, isLoading } = useQuery({
-    queryKey: ['phase-materials', phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_materials')
-        .select(`
-          id,
-          quantity,
-          material:materials(
-            id,
-            name,
-            description,
-            category,
-            unit,
-            price_per_unit,
-            origin_location
-          )
-        `)
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as MaterialAssignment[];
-    },
-  });
+  // Use hexagonal hooks
+  const { 
+    phaseMaterials, 
+    isLoading, 
+    addMaterial, 
+    updateQuantity: updateMaterialQuantity, 
+    removeMaterial 
+  } = usePhaseMaterialsHex(phaseId, projectId);
+  
+  const { data: availableMaterials } = useAvailableMaterials();
 
-  const { data: availableMaterials } = useQuery({
-    queryKey: ['available-materials'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('id, name, category, unit, price_per_unit')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const addMaterialMutation = useMutation({
-    mutationFn: async ({ materialId, qty }: { materialId: string; qty: number }) => {
-      const { data, error } = await supabase
-        .from('project_materials')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          material_id: materialId,
-          quantity: qty,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-materials', phaseId] });
-      setIsAdding(false);
-      setSelectedMaterialId('');
-      setQuantity('');
-      toast({ title: 'Matériau ajouté avec succès' });
-    },
-  });
-
-  const updateQuantityMutation = useMutation({
-    mutationFn: async ({ id, newQuantity }: { id: string; newQuantity: number }) => {
-      const { error } = await supabase
-        .from('project_materials')
-        .update({ quantity: newQuantity })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-materials', phaseId] });
-      toast({ title: 'Quantité mise à jour avec succès' });
-    },
-  });
-
-  const removeMaterialMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('project_materials')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-materials', phaseId] });
-      toast({ title: 'Matériau retiré avec succès' });
-    },
-  });
-
-  const handleAddMaterial = (e: React.FormEvent) => {
+  const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMaterialId || !quantity) {
       toast({ 
@@ -153,16 +59,50 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
       return;
     }
 
-    addMaterialMutation.mutate({ materialId: selectedMaterialId, qty });
+    try {
+      await addMaterial({ materialId: selectedMaterialId, qty });
+      setIsAdding(false);
+      setSelectedMaterialId('');
+      setQuantity('');
+      toast({ title: 'Matériau ajouté avec succès' });
+    } catch (error) {
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible d\'ajouter le matériau',
+        variant: 'destructive' 
+      });
+    }
   };
 
-  const updateQuantity = (id: string, currentQuantity: number) => {
+  const handleUpdateQuantity = async (id: string, currentQuantity: number) => {
     const newQuantity = prompt('Nouvelle quantité:', currentQuantity.toString());
     if (newQuantity && !isNaN(parseFloat(newQuantity))) {
       const qty = parseFloat(newQuantity);
       if (qty > 0) {
-        updateQuantityMutation.mutate({ id, newQuantity: qty });
+        try {
+          await updateMaterialQuantity({ id, newQuantity: qty });
+          toast({ title: 'Quantité mise à jour avec succès' });
+        } catch (error) {
+          toast({ 
+            title: 'Erreur', 
+            description: 'Impossible de mettre à jour la quantité',
+            variant: 'destructive' 
+          });
+        }
       }
+    }
+  };
+
+  const handleRemoveMaterial = async (id: string) => {
+    try {
+      await removeMaterial(id);
+      toast({ title: 'Matériau retiré avec succès' });
+    } catch (error) {
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de retirer le matériau',
+        variant: 'destructive' 
+      });
     }
   };
 
@@ -268,14 +208,14 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => updateQuantity(pm.id, pm.quantity)}
+                    onClick={() => handleUpdateQuantity(pm.id, pm.quantity)}
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => removeMaterialMutation.mutate(pm.id)}
+                    onClick={() => handleRemoveMaterial(pm.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

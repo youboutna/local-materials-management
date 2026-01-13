@@ -1,8 +1,9 @@
 /**
  * KanbanBoard - Visual task management with WIP limits
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +12,8 @@ import { Progress } from '@/components/ui/progress';
 import {
   LayoutGrid,
   Plus,
-  MoreHorizontal,
   Clock,
   AlertTriangle,
-  CheckCircle,
   User,
   Calendar,
   Flag
@@ -22,20 +21,7 @@ import {
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-
-interface KanbanTask {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  assignee?: string;
-  dueDate?: string;
-  progress?: number;
-  phase?: string;
-  tags?: string[];
-}
+import { useKanbanTasks, KanbanTask } from '@/hooks/hexagonal';
 
 interface KanbanColumn {
   id: string;
@@ -66,86 +52,17 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onTaskClick,
   onAddTask
 }) => {
-  const [tasks, setTasks] = useState<KanbanTask[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [draggedTask, setDraggedTask] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadTasks();
-  }, [projectId, phaseId]);
-
-  const loadTasks = async () => {
-    try {
-      setLoading(true);
-      
-      // Use enhanced_project_milestones as task source (type = task)
-      let query = supabase
-        .from('enhanced_project_milestones')
-        .select('*')
-        .eq('project_id', projectId);
-      
-      if (phaseId) {
-        query = query.eq('phase_id', phaseId);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setTasks((data || []).map((t: any) => {
-        const deps = t.dependencies as any;
-        return {
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          status: t.status || 'backlog',
-          priority: deps?.priority || 'medium',
-          assignee: deps?.assigned_to,
-          dueDate: t.target_date,
-          progress: deps?.progress || 0,
-          phase: deps?.phase_name,
-          tags: deps?.tags || []
-        };
-      }));
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getTasksByStatus = (status: string) => {
-    return tasks.filter(t => t.status === status);
-  };
-
-  const handleDragStart = (taskId: string) => {
-    setDraggedTask(taskId);
-  };
+  // Use hexagonal hook
+  const {
+    loading,
+    draggedTask,
+    getTasksByStatus,
+    handleDragStart,
+    handleDrop
+  } = useKanbanTasks(projectId, phaseId);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-  };
-
-  const handleDrop = async (targetStatus: string) => {
-    if (!draggedTask) return;
-    
-    // Update locally first
-    setTasks(prev => prev.map(t => 
-      t.id === draggedTask ? { ...t, status: targetStatus } : t
-    ));
-    
-    // Update in database
-    try {
-      await supabase
-        .from('enhanced_project_milestones')
-        .update({ status: targetStatus })
-        .eq('id', draggedTask);
-    } catch (error) {
-      console.error('Error updating task:', error);
-      loadTasks(); // Reload on error
-    }
-    
-    setDraggedTask(null);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -246,7 +163,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   "bg-muted/30 p-2 rounded-b-lg min-h-[400px] space-y-2",
                   isOverLimit && "border-2 border-destructive/30"
                 )}>
-                  {columnTasks.map(task => {
+                  {columnTasks.map((task: KanbanTask) => {
                     const daysRemaining = task.dueDate ? getDaysRemaining(task.dueDate) : null;
                     const isOverdue = daysRemaining !== null && daysRemaining < 0;
                     const isDueSoon = daysRemaining !== null && daysRemaining <= 3 && daysRemaining >= 0;

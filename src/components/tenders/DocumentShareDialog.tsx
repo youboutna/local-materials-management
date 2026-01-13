@@ -1,6 +1,9 @@
+/**
+ * DocumentShareDialog - Share documents with suppliers
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,21 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Share2, FileText, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProcurementPhase } from './PublicProcurementWorkflow';
-
-interface Document {
-  id: string;
-  title: string;
-  description?: string;
-  file_url: string;
-  file_name?: string;
-  document_type: string;
-  created_at: string;
-  is_shared_with_suppliers: boolean;
-  metadata?: {
-    tender_id?: string;
-    phase?: string;
-  };
-}
+import { useTenderDocumentsForShare, useShareDocuments } from '@/hooks/hexagonal';
 
 interface DocumentShareDialogProps {
   isOpen: boolean;
@@ -35,73 +24,10 @@ interface DocumentShareDialogProps {
 const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: DocumentShareDialogProps) => {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch available documents for the tender
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['tender-documents', tenderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('document_type', 'tender')
-        .or(`metadata->tender_id.eq.${tenderId},metadata.is.null`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data || []) as Document[];
-    },
-    enabled: isOpen && !!tenderId
-  });
-
-  // Share documents mutation
-  const shareDocumentsMutation = useMutation({
-    mutationFn: async () => {
-      if (selectedDocuments.length === 0) {
-        throw new Error('Aucun document sélectionné');
-      }
-
-      const { data: user } = await supabase.auth.getUser();
-      
-      // Update each document individually
-      for (const docId of selectedDocuments) {
-        const { error } = await supabase
-          .from('documents')
-          .update({
-            is_shared_with_suppliers: true,
-            shared_date: new Date().toISOString(),
-            metadata: {
-              tender_id: tenderId,
-              phase: phase,
-              shared_by: user.user?.id
-            }
-          })
-          .eq('id', docId);
-
-        if (error) throw error;
-      }
-
-      return selectedDocuments;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-documents'] });
-      queryClient.invalidateQueries({ queryKey: ['shared-documents'] });
-      toast({
-        title: 'Documents partagés',
-        description: `${selectedDocuments.length} document(s) partagé(s) avec les fournisseurs pour la phase ${phaseTitle}`,
-      });
-      setSelectedDocuments([]);
-      onClose();
-    },
-    onError: (error) => {
-      console.error('Share documents error:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Échec du partage des documents',
-        variant: 'destructive',
-      });
-    }
-  });
+  // Use hexagonal hooks
+  const { data: documents, isLoading } = useTenderDocumentsForShare(tenderId, isOpen);
+  const shareDocumentsMutation = useShareDocuments(tenderId);
 
   const toggleDocumentSelection = (docId: string) => {
     setSelectedDocuments(prev => 
@@ -111,8 +37,26 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
     );
   };
 
-  const handleShare = () => {
-    shareDocumentsMutation.mutate();
+  const handleShare = async () => {
+    try {
+      await shareDocumentsMutation.mutateAsync({ 
+        documentIds: selectedDocuments, 
+        phase 
+      });
+      toast({
+        title: 'Documents partagés',
+        description: `${selectedDocuments.length} document(s) partagé(s) avec les fournisseurs pour la phase ${phaseTitle}`,
+      });
+      setSelectedDocuments([]);
+      onClose();
+    } catch (error) {
+      console.error('Share documents error:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Échec du partage des documents',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (!isOpen) return null;

@@ -288,3 +288,42 @@ export {
   useSubmissionActivityLogs
 } from './useSupplierSubmissionsHex';
 export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierSubmissionsHex';
+
+// Phase Payments
+export {
+  usePhasePayments,
+  useAddPhasePayment,
+  useDeletePhasePayment,
+  useSupplierInfo
+} from './usePhasePaymentsHex';
+export type { PhasePaymentFormData } from './usePhasePaymentsHex';
+
+// Kanban Board
+export { useKanbanTasks } from './useKanbanBoardHex';
+export type { KanbanTask } from './useKanbanBoardHex';
+
+// Tender CRUD
+export {
+  useTenders,
+  useProjectsForTenders,
+  useTenderMutation,
+  useDeleteTender
+} from './useTenderCrudHex';
+export type { Tender, TenderFormData } from './useTenderCrudHex';
+
+// Payment CRUD
+export { usePaymentCrud } from './usePaymentCrudHex';
+export type { Payment, PaymentFormData as PaymentCrudFormData } from './usePaymentCrudHex';
+
+// Document Share
+export {
+  useTenderDocumentsForShare,
+  useShareDocuments
+} from './useDocumentShareHex';
+export type { SharedDocument } from './useDocumentShareHex';
+
+// Quantity Takeoff
+export {
+  useMaterialsForTakeoff,
+  useCreateQuantityTakeoff
+} from './useQuantityTakeoffHex';

@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+/**
+ * PhasePayments - Phase payment management
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,27 +16,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, DollarSign, Trash2, Calendar, ExternalLink, Pencil } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
+import { 
+  usePhasePayments, 
+  useAddPhasePayment, 
+  useDeletePhasePayment,
+  useSupplierInfo,
+  PhasePaymentFormData
+} from '@/hooks/hexagonal';
 
 interface PhasePaymentsProps {
   phaseId: string;
   projectId: string;
 }
 
-interface PaymentFormData {
-  amount: string;
-  payment_method: string;
-  payment_date: string;
-  progress_at_payment: string;
-  contractor_name: string;
-  contractor_contact: string;
-  transaction_id: string;
-  supplier_id: string;
-}
-
 const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => {
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState<PaymentFormData>({
+  const [formData, setFormData] = useState<PhasePaymentFormData>({
     amount: '',
     payment_method: 'bank_transfer',
     payment_date: new Date().toISOString().split('T')[0],
@@ -45,67 +44,25 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
   });
   
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  const { data: payments, isLoading } = useQuery({
-    queryKey: ['phase-payments', phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('payment_date', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Use hexagonal hooks
+  const { data: payments, isLoading } = usePhasePayments(phaseId);
+  const addPaymentMutation = useAddPhasePayment(phaseId, projectId);
+  const deletePaymentMutation = useDeletePhasePayment(phaseId);
+  const { data: supplierInfo } = useSupplierInfo(formData.supplier_id || null);
 
-  const addPaymentMutation = useMutation({
-    mutationFn: async (paymentData: PaymentFormData) => {
-      const { data, error } = await supabase
-        .from('payments')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          amount: parseFloat(paymentData.amount),
-          payment_method: paymentData.payment_method,
-          payment_date: paymentData.payment_date,
-          progress_at_payment: parseInt(paymentData.progress_at_payment) || 0,
-          contractor_name: paymentData.contractor_name,
-          contractor_contact: paymentData.contractor_contact,
-          transaction_id: paymentData.transaction_id,
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-payments', phaseId] });
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Paiement ajouté avec succès' });
-    },
-  });
-
-  const deletePaymentMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('payments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-payments', phaseId] });
-      toast({ title: 'Paiement supprimé avec succès' });
-    },
-  });
+  // Auto-fill contractor info when supplier changes
+  useEffect(() => {
+    if (supplierInfo) {
+      setFormData(prev => ({
+        ...prev,
+        contractor_name: supplierInfo.name,
+        contractor_contact: supplierInfo.contact_person || supplierInfo.email || supplierInfo.phone || '',
+      }));
+    }
+  }, [supplierInfo]);
 
   const resetForm = () => {
     setFormData({
@@ -120,10 +77,9 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast({
         title: 'Erreur de validation',
@@ -169,7 +125,31 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
       return;
     }
     
-    addPaymentMutation.mutate(formData);
+    try {
+      await addPaymentMutation.mutateAsync(formData);
+      setIsAdding(false);
+      resetForm();
+      toast({ title: 'Paiement ajouté avec succès' });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter le paiement',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePaymentMutation.mutateAsync(id);
+      toast({ title: 'Paiement supprimé avec succès' });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer le paiement',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getPaymentMethodLabel = (method: string) => {
@@ -223,24 +203,8 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                 <div>
                   <SimpleSupplierSelector
                     value={formData.supplier_id}
-                    onChange={async (supplierId) => {
-                      setFormData({ ...formData, supplier_id: supplierId });
-                      
-                      // Auto-fill contractor info from supplier
-                      const { data } = await supabase
-                        .from('suppliers')
-                        .select('name, contact_person, phone, email')
-                        .eq('id', supplierId)
-                        .single();
-                      
-                      if (data) {
-                        setFormData(prev => ({
-                          ...prev,
-                          supplier_id: supplierId,
-                          contractor_name: data.name,
-                          contractor_contact: data.contact_person || data.email || data.phone || '',
-                        }));
-                      }
+                    onChange={(supplierId) => {
+                      setFormData(prev => ({ ...prev, supplier_id: supplierId }));
                     }}
                     label="Fournisseur/Contractant *"
                     placeholder="Sélectionner un fournisseur"
@@ -394,7 +358,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                       size="sm"
                       variant="ghost"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => deletePaymentMutation.mutate(payment.id)}
+                      onClick={() => handleDelete(payment.id)}
                       title="Supprimer"
                     >
                       <Trash2 className="h-4 w-4" />
