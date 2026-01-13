@@ -115,3 +115,18 @@ export type { ProjectMaterial, SelectedMaterial } from './useProjectMaterialsHex
 // Project Edit
 export { useProjectEditHex } from './useProjectEditHex';
 export type { ProjectEditData } from './useProjectEditHex';
+
+// Inspection CRUD
+export { useInspectionCrudHex } from './useInspectionCrudHex';
+
+// Payment Requests
+export { usePaymentRequestsHex } from './usePaymentRequestsHex';
+
+// Phase Materials
+export { usePhaseMaterialsHex } from './usePhaseMaterialsHex';
+
+// Phase Tasks
+export { usePhaseTasksHex } from './usePhaseTasksHex';
+
+// Phase Employees
+export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
