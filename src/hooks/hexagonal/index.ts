@@ -132,12 +132,27 @@ export { usePhaseTasksHex } from './usePhaseTasksHex';
 export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
 
 // Phase Monitoring Summary
-export { 
+export {
   usePhaseMonitoringSummaryHex,
   useTasksSummaryHex,
   useInspectionsSummaryHex,
-  usePaymentsSummaryHex 
+  usePaymentsSummaryHex
 } from './usePhaseMonitoringSummaryHex';
+
+// Task List
+export { useTaskListHex } from './useTaskListHex';
+
+// Tender Evaluation
+export { useTenderEvaluationHex } from './useTenderEvaluationHex';
+
+// Progress Invoice
+export { useProgressInvoiceHex } from './useProgressInvoiceHex';
+
+// Phase Inspections
+export { usePhaseInspectionsHex } from './usePhaseInspectionsHex';
+
+// Supplier Portal
+export { useSupplierPortalHex } from './useSupplierPortalHex';
 export type { 
   TasksSummary, 
   InspectionsSummary, 
