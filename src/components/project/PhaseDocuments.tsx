@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import PhaseDocumentUpload from './phases/PhaseDocumentUpload';
+import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal/useDocumentsHex';
 
 interface PhaseDocumentsProps {
   phaseId: string;
@@ -21,34 +21,19 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['phase-documents', phaseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: documents, isLoading } = usePhaseDocuments(phaseId);
+  const deleteDocumentMutation = useDocumentDelete();
 
-  const deleteDocumentMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['phase-documents', phaseId] });
-      toast({ title: 'Document supprimé avec succès' });
-    },
-  });
+  const handleDelete = (id: string) => {
+    deleteDocumentMutation.mutate(
+      { id, phaseId },
+      {
+        onSuccess: () => {
+          toast({ title: 'Document supprimé avec succès' });
+        }
+      }
+    );
+  };
 
   const handleDocumentUploaded = () => {
     queryClient.invalidateQueries({ queryKey: ['phase-documents', phaseId] });
@@ -149,7 +134,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => deleteDocumentMutation.mutate(doc.id)}
+                      onClick={() => handleDelete(doc.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

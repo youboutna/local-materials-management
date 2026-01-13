@@ -1,14 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Eye, Trash2 } from 'lucide-react';
+import { FileText, Download, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Database } from '@/integrations/supabase/types';
+import { useSupplierDocuments } from '@/hooks/hexagonal/useDocumentsHex';
 import type { Supplier } from '@/types/supplier';
+import type { Database } from '@/integrations/supabase/types';
 
-type Document = Database['public']['Tables']['documents']['Row'];
+type DocumentRow = Database['public']['Tables']['documents']['Row'];
 
 interface SupplierDocumentsListProps {
   supplier: Supplier;
@@ -16,20 +15,7 @@ interface SupplierDocumentsListProps {
 
 const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
   const { toast } = useToast();
-
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['supplier-documents', supplier.id],
-    queryFn: async (): Promise<Document[]> => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('supplier_id', supplier.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return (data as unknown as Document[]) || [];
-    },
-  });
+  const { data: documents, isLoading } = useSupplierDocuments(supplier.id);
 
   const getDocumentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -48,7 +34,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleDownload = async (doc: Document) => {
+  const handleDownload = async (doc: DocumentRow) => {
     if (!doc.file_url) {
       toast({
         title: "Erreur",
@@ -62,14 +48,14 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
       const response = await fetch(doc.file_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
+      const a = globalThis.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
       a.download = doc.file_name || 'document';
-      window.document.body.appendChild(a);
+      globalThis.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      window.document.body.removeChild(a);
+      globalThis.document.body.removeChild(a);
     } catch (error) {
       toast({
         title: "Erreur",

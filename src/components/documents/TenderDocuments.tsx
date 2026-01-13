@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
-import { TenderDocumentWithDetails, TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/types/tender';
+import { TenderDocumentCategory, TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/types/tender';
 import { toast } from '@/hooks/use-toast';
+import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal/useDocumentsHex';
 
 interface TenderDocumentsProps {
   projectId: string;
@@ -17,84 +16,11 @@ interface TenderDocumentsProps {
 const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) => {
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
 
-  // Fetch tender documents
-  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useQuery({
-    queryKey: ['tender-documents', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tender_documents')
-        .select(`
-          *,
-          document:documents(
-            id,
-            title,
-            description,
-            file_url,
-            file_name,
-            mime_type,
-            file_size
-          )
-        `)
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return (data || []) as TenderDocumentWithDetails[];
-    },
-    enabled: !!projectId,
-  });
-
-  // Fetch workflow step documents
-  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useQuery({
-    queryKey: ['workflow-step-documents', projectId],
-    queryFn: async () => {
-      // First get all steps for this tender
-      const { data: steps, error: stepsError } = await supabase
-        .from('tender_steps')
-        .select('id, title, step_number')
-        .eq('tender_id', projectId);
-      
-      if (stepsError) throw stepsError;
-      if (!steps?.length) return [];
-
-      // Get all documents for these steps
-      const stepIds = steps.map(s => s.id);
-      const { data: stepDocs, error: docsError } = await supabase
-        .from('tender_step_documents')
-        .select(`
-          *,
-          document:documents(*),
-          step:tender_steps(title, step_number)
-        `)
-        .in('step_id', stepIds);
-
-      if (docsError) throw docsError;
-
-      // Transform to match TenderDocumentWithDetails format
-      return (stepDocs || []).map(doc => ({
-        id: doc.id,
-        project_id: projectId,
-        document_id: doc.document_id,
-        category: doc.document_type as TenderDocumentCategory || 'administrative',
-        subcategory: 'workflow_step' as any,
-        is_required: doc.is_required,
-        reviewer_notes: doc.reviewer_notes,
-        status: doc.status as any,
-        created_at: doc.created_at,
-        updated_at: doc.created_at, // Use created_at since updated_at doesn't exist in the query
-        document: doc.document,
-        step_info: {
-          step_title: doc.step?.title,
-          step_number: doc.step?.step_number
-        }
-      }));
-    },
-    enabled: !!projectId,
-  });
+  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useTenderDocuments(projectId);
+  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useWorkflowStepDocuments(projectId);
 
   const isLoading = isTenderDocsLoading || isWorkflowDocsLoading;
   
-  // Combine all documents
   const allDocuments = [
     ...(tenderDocuments || []),
     ...(workflowStepDocuments || [])
@@ -226,10 +152,10 @@ const TenderDocuments = ({ projectId, onDocumentSelect }: TenderDocumentsProps) 
                                 Requis
                               </Badge>
                             )}
-                            <Badge className={getStatusColor(tenderDoc.status)}>
+                            <Badge className={getStatusColor(tenderDoc.status || 'pending')}>
                               <div className="flex items-center gap-1">
-                                {getStatusIcon(tenderDoc.status)}
-                                {getStatusLabel(tenderDoc.status)}
+                                {getStatusIcon(tenderDoc.status || 'pending')}
+                                {getStatusLabel(tenderDoc.status || 'pending')}
                               </div>
                             </Badge>
                           </div>
