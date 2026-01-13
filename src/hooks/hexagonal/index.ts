@@ -176,3 +176,17 @@ export { useUserManagementHex } from './useUserManagementHex';
 
 // Storage Operations
 export { useStorageHex } from './useStorageHex';
+
+// Selectors (UserSelector, ProjectSelector, SupplierSelector, MaterialSelector)
+export { 
+  useUsersSelector, 
+  useProjectsSelector, 
+  useSuppliersSelector, 
+  useMaterialsSelector 
+} from './useSelectorsHex';
+export type { 
+  UserProfile, 
+  ProjectOption, 
+  SupplierOption, 
+  MaterialOption 
+} from './useSelectorsHex';
