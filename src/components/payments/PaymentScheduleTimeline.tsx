@@ -1,42 +1,27 @@
 /**
  * PaymentScheduleTimeline - Visual payment schedule with penalty alerts
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Calendar,
   DollarSign,
   AlertTriangle,
   CheckCircle,
   Clock,
-  TrendingUp,
   TrendingDown,
   Bell,
   FileText
 } from 'lucide-react';
-import { format, differenceInDays, parseISO, addDays, isBefore } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-
-interface PaymentMilestone {
-  id: string;
-  title: string;
-  amount: number;
-  dueDate: string;
-  status: 'pending' | 'approved' | 'paid' | 'overdue' | 'blocked';
-  progressRequired: number;
-  currentProgress: number;
-  phaseId?: string;
-  phaseName?: string;
-  penaltyRate?: number;
-  penaltyAccrued?: number;
-}
+import { usePaymentSchedule, PaymentMilestone } from '@/hooks/hexagonal';
 
 interface PaymentScheduleTimelineProps {
   projectId: string;
@@ -51,84 +36,13 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
   onPaymentClick,
   onInitiatePayment
 }) => {
-  const [payments, setPayments] = useState<PaymentMilestone[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = usePaymentSchedule(projectId, projectBudget);
 
-  useEffect(() => {
-    loadPaymentSchedule();
-  }, [projectId]);
-
-  const loadPaymentSchedule = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch payment milestones from enhanced_project_milestones
-      const { data: milestonesData, error: mError } = await supabase
-        .from('enhanced_project_milestones')
-        .select(`
-          *,
-          project_phases (id, phase_name, progress)
-        `)
-        .eq('project_id', projectId)
-        .order('target_date', { ascending: true });
-
-      if (mError) throw mError;
-
-      // Fetch payments
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('project_id', projectId);
-
-      const paymentMap = new Map((paymentsData || []).map((p: any) => [p.milestone_id, p]));
-
-      // Filter milestones that are payment triggers
-      const paymentMilestones: PaymentMilestone[] = (milestonesData || [])
-        .filter((m: any) => {
-          const deps = m.dependencies as any;
-          return deps?.type === 'payment' || deps?.is_payment_trigger;
-        })
-        .map((m: any) => {
-          const deps = m.dependencies as any;
-          const existingPayment = paymentMap.get(m.id);
-          const today = new Date();
-          const dueDate = parseISO(m.target_date);
-          const daysOverdue = Math.max(0, differenceInDays(today, dueDate));
-          
-          let status: PaymentMilestone['status'] = 'pending';
-          if (existingPayment?.status === 'paid') status = 'paid';
-          else if (existingPayment?.status === 'approved') status = 'approved';
-          else if (isBefore(dueDate, today)) status = 'overdue';
-          else if (existingPayment?.status === 'blocked') status = 'blocked';
-
-          // Calculate penalty (0.1% per day of delay, typical construction)
-          const penaltyRate = deps?.penalty_rate || 0.001;
-          const penaltyAccrued = status === 'overdue' 
-            ? (deps?.payment_amount || 0) * penaltyRate * daysOverdue 
-            : 0;
-
-          return {
-            id: m.id,
-            title: m.title,
-            amount: deps?.payment_amount || (projectBudget * (m.weight || 0.1)),
-            dueDate: m.target_date,
-            status,
-            progressRequired: deps?.progress_required || ((m.weight || 0.1) * 100),
-            currentProgress: m.project_phases?.progress || 0,
-            phaseId: m.phase_id,
-            phaseName: m.project_phases?.phase_name,
-            penaltyRate,
-            penaltyAccrued
-          };
-        });
-
-      setPayments(paymentMilestones);
-    } catch (error) {
-      console.error('Error loading payment schedule:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const payments = data?.payments || [];
+  const totalAmount = data?.totalAmount || 0;
+  const paidAmount = data?.paidAmount || 0;
+  const overdueAmount = data?.overdueAmount || 0;
+  const totalPenalties = data?.totalPenalties || 0;
 
   const getStatusInfo = (payment: PaymentMilestone) => {
     switch (payment.status) {
@@ -149,13 +63,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
     return differenceInDays(parseISO(dueDate), new Date());
   };
 
-  // Calculate totals
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
-  const paidAmount = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
-  const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
-  const totalPenalties = payments.reduce((sum, p) => sum + (p.penaltyAccrued || 0), 0);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -246,7 +154,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
           <div className="space-y-4">
-            {payments.map((payment, idx) => {
+            {payments.map((payment) => {
               const status = getStatusInfo(payment);
               const StatusIcon = status.icon;
               const daysUntil = getDaysUntil(payment.dueDate);

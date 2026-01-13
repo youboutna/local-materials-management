@@ -1,14 +1,13 @@
 /**
  * TenderProjectPhases - Display project phases/steps linked to a tender
- * Enables visualization of project workflow within tender context
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Layers,
@@ -24,30 +23,10 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-
-interface ProjectPhase {
-  id: string;
-  name: string;
-  description?: string;
-  status: string;
-  progress: number;
-  startDate?: string;
-  endDate?: string;
-  budget?: number;
-  teamSize?: number;
-  steps: ProjectStep[];
-}
-
-interface ProjectStep {
-  id: string;
-  name: string;
-  order: number;
-  status: string;
-}
+import { useProjectPhasesForTender } from '@/hooks/hexagonal';
 
 interface TenderProjectPhasesProps {
   tenderId: string;
@@ -63,85 +42,11 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
   onPhaseClick
 }) => {
   const navigate = useNavigate();
-  const [phases, setPhases] = useState<ProjectPhase[]>([]);
-  const [projectInfo, setProjectInfo] = useState<{ id: string; title: string } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    loadProjectPhases();
-  }, [tenderId, projectId]);
-
-  const loadProjectPhases = async () => {
-    try {
-      setLoading(true);
-      
-      let targetProjectId = projectId;
-      
-      // If no projectId provided, try to get it from tender
-      if (!targetProjectId) {
-        const { data: tenderData, error: tenderError } = await supabase
-          .from('tenders')
-          .select('project_id, title')
-          .eq('id', tenderId)
-          .single();
-        
-        if (tenderError || !tenderData?.project_id) {
-          setPhases([]);
-          return;
-        }
-        targetProjectId = tenderData.project_id;
-      }
-
-      // Get project info
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .select('id, title')
-        .eq('id', targetProjectId)
-        .single();
-
-      if (projectError) throw projectError;
-      setProjectInfo(project);
-
-      // Get phases with steps
-      const { data: phasesData, error: phasesError } = await supabase
-        .from('project_phases')
-        .select(`
-          *,
-          phase_steps (*)
-        `)
-        .eq('project_id', targetProjectId)
-        .order('phase_order', { ascending: true });
-
-      if (phasesError) throw phasesError;
-
-      const mappedPhases: ProjectPhase[] = (phasesData || []).map((p: any) => ({
-        id: p.id,
-        name: p.phase_name || 'Phase sans nom',
-        description: p.description,
-        status: p.status || 'pending',
-        progress: p.progress || 0,
-        startDate: p.start_date,
-        endDate: p.end_date,
-        budget: p.budget_allocated,
-        teamSize: p.team_size,
-        steps: (p.phase_steps || [])
-          .sort((a: any, b: any) => (a.step_order || 0) - (b.step_order || 0))
-          .map((s: any) => ({
-            id: s.id,
-            name: s.step_name || s.name || 'Étape',
-            order: s.step_order || 0,
-            status: s.status || 'pending'
-          }))
-      }));
-
-      setPhases(mappedPhases);
-    } catch (error) {
-      console.error('Error loading project phases:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading } = useProjectPhasesForTender(projectId, tenderId);
+  const projectInfo = data?.projectInfo || null;
+  const phases = data?.phases || [];
 
   const togglePhase = (phaseId: string) => {
     setExpandedPhases(prev => {
@@ -181,7 +86,7 @@ const TenderProjectPhases: React.FC<TenderProjectPhasesProps> = ({
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className={cn(compact && "border-0 shadow-none")}>
         <CardContent className="p-6">

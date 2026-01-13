@@ -1,8 +1,9 @@
 /**
  * TenderLotBuilder - Create tender lots aligned with project phases
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Accordion,
   AccordionContent,
@@ -29,7 +29,7 @@ import {
   GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { useProjectPhasesForLots } from '@/hooks/hexagonal';
 
 interface Phase {
   id: string;
@@ -82,49 +82,12 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
       setInternalLots(newLots);
     }
   };
-  const [phases, setPhases] = useState<Phase[]>([]);
-  const [loading, setLoading] = useState(false);
+
   const [expandedLot, setExpandedLot] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (projectId) {
-      loadProjectPhases();
-    }
-  }, [projectId]);
-
-  const loadProjectPhases = async () => {
-    if (!projectId) return;
-    
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('project_phases')
-        .select(`
-          *,
-          phase_steps (*)
-        `)
-        .eq('project_id', projectId)
-        .order('phase_order', { ascending: true });
-
-      if (error) throw error;
-
-      setPhases((data || []).map((p: any) => ({
-        id: p.id,
-        name: p.phase_name || p.name,
-        description: p.description,
-        budget: p.budget_allocated,
-        steps: (p.phase_steps || []).map((s: any) => ({
-          id: s.id,
-          name: s.step_name || s.name,
-          order: s.step_order || 0
-        }))
-      })));
-    } catch (error) {
-      console.error('Error loading phases:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use hexagonal hook instead of direct Supabase call
+  const { data: phasesData, isLoading } = useProjectPhasesForLots(projectId);
+  const phases: Phase[] = phasesData || [];
 
   const addLot = () => {
     const newLot: TenderLot = {
@@ -184,10 +147,6 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
     return lot.linkedPhaseIds.length;
   };
 
-  const getLinkedStepsCount = (lot: TenderLot) => {
-    return lot.linkedStepIds.length;
-  };
-
   const totalEstimated = lots.reduce((sum, lot) => sum + (lot.estimatedAmount || 0), 0);
 
   return (
@@ -235,7 +194,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
             value={expandedLot || undefined}
             onValueChange={(val) => setExpandedLot(val)}
           >
-            {lots.map((lot, index) => (
+            {lots.map((lot) => (
               <AccordionItem
                 key={lot.id}
                 value={lot.id}

@@ -236,3 +236,222 @@ export function useTaskHex(id: string | undefined) {
 
   return { task, isLoading, error };
 }
+
+// ============= Task Assignments hooks for TaskAssignments component =============
+
+import type { Database } from '@/integrations/supabase/types';
+type TaskAssignment = Database['public']['Tables']['task_assignments']['Row'];
+
+export interface TaskAssignmentFilters {
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+  assignee?: string;
+}
+
+export interface TaskAssignmentFormData {
+  title: string;
+  description: string;
+  project_id: string;
+  assigned_to: string;
+  assignee_type: 'supplier' | 'employee' | 'user' | '';
+  assignee_name: string;
+  assignee_email: string;
+  due_date: string;
+  priority: string;
+  status: string;
+  notes: string;
+}
+
+// Hook: Fetch task assignments with filters
+export function useTaskAssignments(filters: TaskAssignmentFilters = {}) {
+  return useQuery({
+    queryKey: ['task_assignments', filters.searchTerm, filters.status, filters.priority, filters.assignee],
+    queryFn: async (): Promise<TaskAssignment[]> => {
+      let query = supabase
+        .from('task_assignments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (filters.searchTerm) {
+        query = query.or(
+          `title.ilike.%${filters.searchTerm}%,description.ilike.%${filters.searchTerm}%,assignee_name.ilike.%${filters.searchTerm}%`
+        );
+      }
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters.priority && filters.priority !== 'all') {
+        query = query.eq('priority', filters.priority);
+      }
+      if (filters.assignee && filters.assignee !== 'all') {
+        query = query.eq('assigned_to', filters.assignee);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data as unknown as TaskAssignment[]) || [];
+    }
+  });
+}
+
+// Hook: Fetch projects for task assignment
+export function useProjectsForTaskAssignments() {
+  return useQuery({
+    queryKey: ['projects_for_tasks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title')
+        .order('title');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+}
+
+// Hook: Fetch assignee details
+export function useAssigneeDetails(assigneeId: string | null) {
+  return useQuery({
+    queryKey: ['assignee-details', assigneeId],
+    queryFn: async () => {
+      if (!assigneeId) return null;
+
+      // Try employees first
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('full_name, email')
+        .eq('id', assigneeId)
+        .maybeSingle();
+
+      if (employeeData) {
+        return {
+          type: 'employee' as const,
+          name: employeeData.full_name,
+          email: employeeData.email || ''
+        };
+      }
+
+      // Try suppliers
+      const { data: supplierData } = await supabase
+        .from('suppliers')
+        .select('name, email, contact_person')
+        .eq('id', assigneeId)
+        .maybeSingle();
+
+      if (supplierData) {
+        return {
+          type: 'supplier' as const,
+          name: supplierData.contact_person || supplierData.name,
+          email: supplierData.email || ''
+        };
+      }
+
+      // Try profiles
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', assigneeId)
+        .maybeSingle();
+
+      if (profileData) {
+        return {
+          type: 'user' as const,
+          name: profileData.full_name || 'Utilisateur',
+          email: ''
+        };
+      }
+
+      return null;
+    },
+    enabled: !!assigneeId
+  });
+}
+
+// Hook: Create task assignment mutation
+export function useCreateTaskAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskData, userId }: { taskData: TaskAssignmentFormData; userId?: string }) => {
+      const insertData: any = {
+        title: taskData.title,
+        description: taskData.description,
+        project_id: taskData.project_id || null,
+        assignee_type: taskData.assignee_type || null,
+        assignee_name: taskData.assignee_name || null,
+        assignee_email: taskData.assignee_email || null,
+        assigned_to: taskData.assigned_to || null,
+        assigned_by: userId || null,
+        due_date: taskData.due_date || null,
+        priority: taskData.priority,
+        status: taskData.status,
+        notes: taskData.notes || null
+      };
+
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+    }
+  });
+}
+
+// Hook: Update task assignment mutation
+export function useUpdateTaskAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TaskAssignmentFormData }) => {
+      const updateData: any = {
+        title: data.title,
+        description: data.description,
+        project_id: data.project_id || null,
+        assignee_type: data.assignee_type || null,
+        assignee_name: data.assignee_name || null,
+        assignee_email: data.assignee_email || null,
+        assigned_to: data.assigned_to || null,
+        due_date: data.due_date || null,
+        priority: data.priority,
+        status: data.status,
+        notes: data.notes || null
+      };
+
+      const { error } = await supabase
+        .from('task_assignments')
+        .update(updateData)
+        .eq('id', id as any);
+
+      if (error) throw error;
+      return { id, status: data.status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+    }
+  });
+}
+
+// Hook: Delete task assignment mutation
+export function useDeleteTaskAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('task_assignments')
+        .delete()
+        .eq('id', id as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task_assignments'] });
+    }
+  });
+}
