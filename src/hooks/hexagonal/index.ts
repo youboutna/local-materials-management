@@ -235,3 +235,56 @@ export {
   useDeleteSupplier 
 } from './useSuppliersManagementHex';
 export type { SupplierFormData as SupplierMgmtFormData } from './useSuppliersManagementHex';
+
+// Bank Guarantees CRUD
+export {
+  useBankGuaranteesList,
+  useCreateBankGuarantee,
+  useUpdateBankGuarantee,
+  useDeleteBankGuarantee
+} from './useBankGuaranteesHex';
+export type { BankGuaranteeFormData, BankGuaranteeRow } from './useBankGuaranteesHex';
+
+// Inspections CRUD
+export {
+  useInspectionsList as useInspectionsListCrud,
+  useCreateInspection,
+  useUpdateInspection,
+  useDeleteInspection
+} from './useInspectionsCrudHex';
+export type { InspectionFormData, InspectionRow } from './useInspectionsCrudHex';
+
+// Enhanced Tasks (project-scoped)
+export {
+  useProjectPhasesForTasks,
+  useProjectTasks,
+  useCreateProjectTask,
+  useUpdateProjectTask,
+  useDeleteProjectTask
+} from './useEnhancedTasksHex';
+export type { ProjectTaskFormData, ProjectTask, ProjectPhase } from './useEnhancedTasksHex';
+
+// Employee Management CRUD
+export {
+  useEmployeesList,
+  useCreateEmployee,
+  useUpdateEmployee,
+  useDeleteEmployee
+} from './useEmployeeManagementHex';
+export type { EmployeeFormData } from './useEmployeeManagementHex';
+
+// Tender Documents
+export {
+  useTenderDocumentsList,
+  useWorkflowStepDocumentsList,
+  useUploadTenderDocument
+} from './useTenderDocumentsHex';
+
+// Supplier Submissions Dashboard
+export {
+  useCurrentAuthUser,
+  useSupplierSubmissions,
+  useSubmissionDocumentsList,
+  useSubmissionActivityLogs
+} from './useSupplierSubmissionsHex';
+export type { Submission, SubmissionDocument, ActivityLog } from './useSupplierSubmissionsHex';
