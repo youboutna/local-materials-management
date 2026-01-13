@@ -10,14 +10,10 @@ import { cn } from "../../lib/utils";
 import {
   Building,
   Users,
-  UserCheck,
   Layers,
   MapPin,
-  Package,
   Clock,
-  DollarSign,
   CheckCircle,
-  Target,
   Edit2,
   Save,
   AlertTriangle,
@@ -30,6 +26,9 @@ import {
   ProjectFormData,
   SaveContext,
 } from "../../services/ProjectFormService";
+
+// Import hexagonal hooks
+import { useProjectMaterialsHex } from "@/hooks/hexagonal";
 
 // Import step components
 import ProjectInfoStep from "./steps/ProjectInfoStep";
@@ -59,11 +58,15 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoadedData, setHasLoadedData] = useState(false);
-  const [selectedMaterials, setSelectedMaterials] = useState<
-    Array<{ materialId: string; quantity: number }>
-  >([]);
   const [baseData, setBaseData] = useState<any>({});
   const [phasesData, setPhasesData] = useState<any[]>([]);
+
+  // Use hexagonal hook for materials
+  const { 
+    selectedMaterials, 
+    updateMaterials, 
+    isLoading: isLoadingMaterials 
+  } = useProjectMaterialsHex(projectId);
 
   // Initialize ProjectFormService
   const formService = new ProjectFormService();
@@ -196,20 +199,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
         setFormData(formattedData);
         setPhasesData(projectDetail.plannedPhases || []);
 
-        // Load materials separately from Supabase
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data: materialsData } = await supabase
-          .from("project_materials")
-          .select("material_id, quantity")
-          .eq("project_id", projectId);
-
-        if (materialsData) {
-          const materials = materialsData.map((item) => ({
-            materialId: item.material_id,
-            quantity: item.quantity,
-          }));
-          setSelectedMaterials(materials);
-        }
+        // Materials are now loaded via useProjectMaterialsHex hook
 
         setHasLoadedData(true);
       }
@@ -274,10 +264,7 @@ const EnhancedProjectEditForm: React.FC<EnhancedProjectEditFormProps> = ({
       };
       setFormData(processedData);
 
-      // Extract materials and phases if provided
-      if (initialData.materials) {
-        setSelectedMaterials(initialData.materials);
-      }
+      // Extract phases if provided (materials are handled by hexagonal hook)
       if (initialData.phases) {
         setPhasesData(initialData.phases);
       }
