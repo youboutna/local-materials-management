@@ -1,35 +1,15 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search, Calendar, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDebounce } from '@/hooks/useDebounce';
-
-interface Project {
-  id: string;
-  title: string;
-  location?: string | null;
-  status?: string | null;
-  budget?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
-  project_reference?: string | null;
-}
-
-interface Tender {
-  id: string;
-  title: string;
-  reference: string;
-  project_id: string;
-  status?: string;
-}
+import { useProjectsSelector, useProjectTenders, type ProjectOption } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface EnhancedProjectSelectorProps {
   value?: string;
-  onChange: (projectId: string | undefined, project?: Project) => void;
+  onChange: (projectId: string | undefined, project?: ProjectOption) => void;
   placeholder?: string;
   label?: string;
   required?: boolean;
@@ -55,59 +35,12 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const { data: projects, isLoading } = useQuery({
-    queryKey: ['enhanced-projects', debouncedSearchTerm, secureMode],
-    queryFn: async (): Promise<Project[]> => {
-      if (secureMode) {
-        const { data, error } = await supabase
-          .rpc('search_projects_autocomplete', { search_term: debouncedSearchTerm || '' });
-        if (error) throw error;
-        return data || [];
-      } else {
-        let query = supabase
-          .from('projects')
-          .select('id, title, location, status, budget, start_date, end_date, project_reference')
-          .order('title');
-
-        if (debouncedSearchTerm) {
-          query = query.or(`title.ilike.%${debouncedSearchTerm}%,location.ilike.%${debouncedSearchTerm}%,project_reference.ilike.%${debouncedSearchTerm}%`);
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
-      }
-    },
+  const { data: projects, isLoading } = useProjectsSelector({
+    searchTerm: debouncedSearchTerm,
+    secureMode
   });
 
-  const { data: tenders } = useQuery({
-    queryKey: ['project-tenders', value],
-    queryFn: async (): Promise<Tender[]> => {
-      if (!value) return [];
-      
-      // Check if parsed_invoices table has tender info
-      const { data, error } = await supabase
-        .from('parsed_invoices')
-        .select('id, file_name, tender_id')
-        .eq('tender_id', value)
-        .limit(10);
-      
-      if (error) {
-        console.warn('No tender documents found:', error);
-        return [];
-      }
-      
-      // Transform to tender format
-      return (data || []).map((item, index) => ({
-        id: item.id,
-        title: item.file_name || `Appel d'offres ${index + 1}`,
-        reference: `AO-${item.tender_id}-${index + 1}`,
-        project_id: value,
-        status: 'active'
-      }));
-    },
-    enabled: !!value && showTenderReference,
-  });
+  const { data: tenders } = useProjectTenders(showTenderReference ? value : undefined);
 
   const selectedProject = projects?.find(p => p.id === value);
 

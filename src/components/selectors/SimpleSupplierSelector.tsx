@@ -1,22 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface Supplier {
-  id: string;
-  name: string;
-  contact_person?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  category?: string | null;
-  rating?: number | null;
-  is_active: boolean | null;
-}
+import { useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
 
 interface SimpleSupplierSelectorProps {
   value?: string;
@@ -35,24 +23,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: suppliers, isLoading } = useQuery({
-    queryKey: ['suppliers', searchTerm],
-    queryFn: async (): Promise<Supplier[]> => {
-      let query = supabase
-        .from('suppliers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (searchTerm) {
-        query = query.ilike('name', `%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  const { data: suppliers, isLoading } = useSuppliersSelector(searchTerm);
 
   const selectedSupplier = suppliers?.find(s => s.id === value);
 
