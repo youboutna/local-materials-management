@@ -51,6 +51,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { getDefaultPhaseMilestones, getDefaultProjectMilestones } from '@/config/referentials/milestones.referential';
+import { usePhaseMonitoringSummaryHex } from '@/hooks/hexagonal';
 
 // Import existing components for detailed views
 import PhaseTasks from '@/components/project/PhaseTasks';
@@ -122,61 +123,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     enabled: !!projectId && !!phaseId,
   });
 
-  // Fetch summaries
-  const { data: tasksSummary } = useQuery({
-    queryKey: ['phase-tasks-summary', phaseId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data } = await supabase
-        .from('task_assignments')
-        .select('status')
-        .eq('phase_id', phaseId);
-      
-      const total = data?.length || 0;
-      const completed = data?.filter(t => t.status === 'completed').length || 0;
-      const inProgress = data?.filter(t => t.status === 'in_progress').length || 0;
-      const pending = data?.filter(t => t.status === 'pending').length || 0;
-      
-      return { total, completed, inProgress, pending };
-    },
-  });
-
-  const { data: inspectionsSummary } = useQuery({
-    queryKey: ['phase-inspections-summary', phaseId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data } = await supabase
-        .from('inspections')
-        .select('status, progress_at_inspection')
-        .eq('phase_id', phaseId);
-      
-      const total = data?.length || 0;
-      const approved = data?.filter(i => i.status === 'approved').length || 0;
-      const pending = data?.filter(i => i.status === 'pending' || i.status === 'scheduled').length || 0;
-      const rejected = data?.filter(i => i.status === 'rejected').length || 0;
-      const avgProgress = total > 0 
-        ? Math.round(data!.reduce((sum, i) => sum + (i.progress_at_inspection || 0), 0) / total) 
-        : 0;
-      
-      return { total, approved, pending, rejected, avgProgress };
-    },
-  });
-
-  const { data: paymentsSummary } = useQuery({
-    queryKey: ['phase-payments-summary', phaseId],
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('phase_id', phaseId);
-      
-      const total = data?.length || 0;
-      const totalAmount = data?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      
-      return { total, totalAmount };
-    },
-  });
+  // Use hexagonal hooks for summaries (replace direct Supabase calls)
+  const { tasksSummary, inspectionsSummary, paymentsSummary } = usePhaseMonitoringSummaryHex(phaseId);
 
   // Status helper
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {

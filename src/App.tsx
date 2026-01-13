@@ -55,6 +55,7 @@ import InspectionMonitoringPage from "./pages/InspectionMonitoring";
 import NotificationsCenterPage from "./pages/NotificationsCenter";
 import InsuranceManagementPage from "./pages/InsuranceManagement";
 import PaymentControlPage from "./pages/PaymentControl";
+import ComprehensiveMonitoringPage from "./pages/ComprehensiveMonitoring";
 import EnhancedSupplierTenderPortal from "./components/suppliers/EnhancedSupplierTenderPortal";
 import { SupplierSecureAccessPortal } from "./components/tenders/SupplierSecureAccessPortal";
 import { EvaluationAccessPortal } from "./components/tenders/EvaluationAccessPortal";
@@ -446,6 +447,22 @@ function App() {
                             ]}
                           >
                             <PaymentControlPage />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/monitoring"
+                        element={
+                          <RoleBasedRoute
+                            allowedRoles={[
+                              "admin",
+                              "director",
+                              "project_manager",
+                              "manager",
+                              "engineering_consultant",
+                            ]}
+                          >
+                            <ComprehensiveMonitoringPage />
                           </RoleBasedRoute>
                         }
                       />

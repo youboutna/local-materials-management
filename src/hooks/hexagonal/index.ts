@@ -130,3 +130,17 @@ export { usePhaseTasksHex } from './usePhaseTasksHex';
 
 // Phase Employees
 export { usePhaseEmployeesHex } from './usePhaseEmployeesHex';
+
+// Phase Monitoring Summary
+export { 
+  usePhaseMonitoringSummaryHex,
+  useTasksSummaryHex,
+  useInspectionsSummaryHex,
+  usePaymentsSummaryHex 
+} from './usePhaseMonitoringSummaryHex';
+export type { 
+  TasksSummary, 
+  InspectionsSummary, 
+  PaymentsSummary, 
+  PhaseMonitoringSummary 
+} from './usePhaseMonitoringSummaryHex';
