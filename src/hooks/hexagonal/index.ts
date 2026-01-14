@@ -374,3 +374,44 @@ export type { ProjectDetails, Phase as ProjectPhaseDetails, Step as PhaseStep } 
 // Tender Document Upload
 export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
 export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';
+
+// Auth (Login/Register/Logout)
+export { useLoginHex, useRegisterHex, useLogoutHex } from './useAuthHex';
+export type { LoginData, RegisterData } from './useAuthHex';
+
+// Contact Form
+export { useSubmitContactFormHex } from './useContactFormHex';
+export type { ContactFormData } from './useContactFormHex';
+
+// Dashboard Access Control
+export { useDashboardAccessHex, useCheckAuthHex } from './useDashboardAccessHex';
+export type { DashboardAccess } from './useDashboardAccessHex';
+
+// Supplier Dashboard
+export {
+  useSupplierAuthHex,
+  useSupplierProfileHex,
+  useSupplierNotificationsHex,
+  useSupplierPaymentsHex,
+  useSupplierDocumentsHex
+} from './useSupplierDashboardHex';
+
+// Users Admin
+export { useUserProfilesHex, useToggleUserStatusHex } from './useUsersAdminHex';
+export type { UserProfile as AdminUserProfile } from './useUsersAdminHex';
+
+// Unified Supplier Portal
+export {
+  useSupplierPortalAuthHex,
+  useFetchSupplierProfileHex,
+  useSupplierLoginHex,
+  useSupplierSignUpHex,
+  useSupplierLogoutHex,
+  useSupplierPortalNotificationsHex,
+  useSupplierPortalPaymentRequestsHex,
+  useSupplierPortalDocumentsHex,
+  useUploadSupplierDocumentHex,
+  useAddSupplierTaskCommentHex,
+  useMarkTaskCompletedHex
+} from './useUnifiedSupplierPortalHex';
+export type { Supplier as SupplierPortal } from './useUnifiedSupplierPortalHex';

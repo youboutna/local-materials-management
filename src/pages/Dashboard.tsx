@@ -16,9 +16,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE } from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDashboardHex, useProjectsHex, useAuthUserHex } from "@/hooks/hexagonal";
+import { useDashboardHex, useProjectsHex, useAuthUserHex, useDashboardAccessHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -39,15 +38,15 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
   const { t } = useLanguage();
   
   // Use hexagonal architecture hooks
   const { user } = useAuthUserHex();
   const { projects: hexProjects } = useProjectsHex();
   const { stats: dashboardStats, loading: statsLoading } = useDashboardHex();
+  
+  // Use hexagonal hook for access control
+  const { hasAccess, userRoles, loading, allowedRoles } = useDashboardAccessHex(user?.id);
   
   // Map domain entities to projects for compatibility with ProjectData
   const projects = useMemo(() => 
@@ -65,66 +64,6 @@ const Dashboard: React.FC = () => {
       coordinates: p.coordinates,
     }))
   , [hexProjects]);
-
-  // Required roles for dashboard access
-  const allowedRoles = ["admin", "director", "project_manager"];
-
-  useEffect(() => {
-    checkUserAccess();
-  }, [user]);
-
-  const checkUserAccess = async () => {
-    try {
-      if (!user) {
-        // Wait a bit for auth to load
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) {
-          navigate("/auth");
-          return;
-        }
-      }
-
-      const userId = user?.id;
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-
-      // Get user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("role_name")
-        .eq("user_id", userId);
-
-      if (rolesError) {
-        console.error("Error fetching user roles:", rolesError);
-        setHasAccess(false);
-        return;
-      }
-
-      const userRoleNames = roles?.map((r) => r.role_name) || [];
-      setUserRoles(userRoleNames);
-
-      // Check if user has required role
-      const hasRequiredRole = userRoleNames.some((role) =>
-        allowedRoles.includes(role)
-      );
-      setHasAccess(hasRequiredRole);
-
-      if (!hasRequiredRole) {
-        toast({
-          title: t('dashboard.access_denied_title'),
-          description: t('dashboard.access_restricted'),
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
-      console.error("Error checking user access:", error);
-      setHasAccess(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Use stats from hexagonal dashboard hook
   const stats = useMemo(() => ({
