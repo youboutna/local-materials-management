@@ -1,8 +1,12 @@
+/**
+ * InspectionsList - Display project inspections
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { useInspectionsListHex } from '@/hooks/hexagonal';
 import { Calendar, FileText, MessageSquare, User } from 'lucide-react';
 import StatusBadge, { StatusType } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
@@ -10,27 +14,19 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
-
-interface InspectionData {
-  id: string;
-  date: string;
-  status: StatusType;
-  inspector: string;
-  progress_at_inspection: number;
-  comments?: string | null;
-  documents?: { name: string; url: string }[];
-}
+import type { InspectionData } from '@/hooks/hexagonal';
 
 interface InspectionsListProps {
   projectId: string;
 }
 
 export const InspectionsList = ({ projectId }: InspectionsListProps) => {
-  const [inspections, setInspections] = useState<InspectionData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedInspection, setSelectedInspection] = useState<InspectionData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const { toast } = useToast();
+
+  // Use hexagonal hook
+  const { data: inspections = [], isLoading: loading } = useInspectionsListHex(projectId);
 
   const {
     currentData: paginatedInspections,
@@ -43,46 +39,6 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
     data: inspections,
     itemsPerPage: 10
   });
-
-  useEffect(() => {
-    const fetchInspections = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('inspections')
-          .select('*')
-          .eq('project_id', projectId as any)
-          .order('date', { ascending: false });
-
-        if (error) {
-          throw error;
-        }
-
-        // Transform data to match InspectionData type
-        const formattedData: InspectionData[] = (data || []).map((item: any) => ({
-          id: item.id,
-          date: item.date,
-          status: item.status as StatusType,
-          inspector: item.inspector,
-          progress_at_inspection: item.progress_at_inspection,
-          comments: item.comments,
-          documents: item.documents as { name: string; url: string }[] | undefined
-        }));
-
-        setInspections(formattedData);
-      } catch (error) {
-        console.error('Error fetching inspections:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les inspections.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInspections();
-  }, [projectId, toast]);
 
   const handleViewDetails = (inspection: InspectionData) => {
     setSelectedInspection(inspection);
