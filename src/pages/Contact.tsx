@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useSubmitContactFormHex } from "@/hooks/hexagonal";
 import { useToast } from "@/hooks/use-toast";
 
 const Contact = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitMutation = useSubmitContactFormHex();
 
   const [formData, setFormData] = useState({
     applicant_type: "",
@@ -42,67 +42,23 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      if (
-        !formData.applicant_type ||
-        !formData.email ||
-        !formData.phone_number ||
-        !formData.request_type
-      ) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez remplir les champs obligatoires.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
+    if (
+      !formData.applicant_type ||
+      !formData.email ||
+      !formData.phone_number ||
+      !formData.request_type
+    ) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      const insertData: any = {
-        applicant_type: formData.applicant_type,
-        email: formData.email,
-        national_id: formData.national_id,
-        phone_number: formData.phone_number,
-        request_type: formData.request_type,
-        company_address: formData.company_address,
-        status: "draft",
-      };
-
-      // Add optional fields only if they have values
-      if (formData.individual_first_name)
-        insertData.individual_first_name = formData.individual_first_name;
-      if (formData.individual_last_name)
-        insertData.individual_last_name = formData.individual_last_name;
-      if (formData.address) insertData.address = formData.address;
-      if (formData.description) insertData.description = formData.description;
-
-      if (formData.applicant_type === "company") {
-        if (formData.company_name)
-          insertData.company_name = formData.company_name;
-        if (formData.company_nif) insertData.company_nif = formData.company_nif;
-      }
-
-      const { data, error } = await supabase
-        .from("authorization_requests")
-        .insert(insertData);
-
-      if (error) {
-        console.error("Error submitting authorization request:", error);
-        toast({
-          title: "Erreur",
-          description:
-            "Une erreur s'est produite lors de l'envoi de votre demande.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Demande envoyée",
-          description:
-            "Votre demande d'autorisation a été envoyée avec succès.",
-        });
-
+    submitMutation.mutate(formData, {
+      onSuccess: () => {
         // Reset form
         setFormData({
           applicant_type: "",
@@ -118,18 +74,11 @@ const Contact = () => {
           company_address: "",
           description: "",
         });
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur inattendue s'est produite.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+    });
   };
+
+  const isSubmitting = submitMutation.isPending;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

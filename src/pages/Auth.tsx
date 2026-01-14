@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { useLoginHex, useRegisterHex } from "@/hooks/hexagonal";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
 import {
   Eye,
   EyeOff,
@@ -28,7 +27,6 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [nationalId, setNationalId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
 
   const navigate = useNavigate();
@@ -52,95 +50,46 @@ const Auth = () => {
     }
   }, [user, navigate, location]);
 
+  // Use hexagonal hooks
+  const loginMutation = useLoginHex();
+  const registerMutation = useRegisterHex();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Connexion réussie",
-        description: "Vous êtes maintenant connecté.",
-      });
-
-      // Redirect based on user role
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
-      navigate(from);
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast({
-        title: "Erreur de connexion",
-        description:
-          error.message === "Invalid login credentials"
-            ? "Email ou mot de passe incorrect."
-            : error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    
+    loginMutation.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          const from = (location.state as any)?.from?.pathname || "/dashboard";
+          navigate(from);
+        },
+      }
+    );
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
+    
+    registerMutation.mutate(
+      {
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone: phone,
-            national_id: nationalId,
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+        fullName,
+        phone,
+        nationalId,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.user && data.user.email_confirmed_at) {
+            navigate("/dashboard");
+          }
         },
-      });
-
-      if (error) throw error;
-
-      if (data.user && !data.user.email_confirmed_at) {
-        toast({
-          title: "Inscription réussie",
-          description:
-            "Veuillez vérifier votre email pour confirmer votre compte.",
-        });
-      } else {
-        toast({
-          title: "Inscription réussie",
-          description: "Votre compte a été créé avec succès.",
-        });
-        navigate("/dashboard");
       }
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      let errorMessage = error.message;
-
-      if (error.message.includes("User already registered")) {
-        errorMessage = "Un compte existe déjà avec cette adresse email.";
-      } else if (
-        error.message.includes("Password should be at least 6 characters")
-      ) {
-        errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
-      }
-
-      toast({
-        title: "Erreur d'inscription",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    );
   };
+
+  const loading = loginMutation.isPending || registerMutation.isPending;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-adrar-50 to-terracotta-50">
