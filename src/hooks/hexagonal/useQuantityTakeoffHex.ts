@@ -31,13 +31,20 @@ export function useCreateQuantityTakeoff(projectId: string) {
       element_type: string;
       unit: string;
       length: number;
-      width: number;
-      height: number;
-      note: string;
+      width?: number;
+      height?: number;
+      note?: string;
       quantity: number;
     }) => {
       const submitData = {
-        ...data,
+        material_id: data.material_id,
+        element_type: data.element_type,
+        unit: data.unit,
+        length: data.length,
+        width: data.width ?? 0,
+        height: data.height ?? 0,
+        note: data.note ?? '',
+        quantity: data.quantity,
         project_id: projectId
       };
 

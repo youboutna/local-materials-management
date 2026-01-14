@@ -4,18 +4,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+export interface MaterialDetails {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  unit: string;
+  price_per_unit: number;
+  origin_location?: string;
+}
+
 export interface PhaseMaterial {
   id: string;
   phase_id: string;
   material_id: string;
   quantity: number;
-  materials?: {
-    id: string;
-    name: string;
-    category: string;
-    unit: string;
-    price_per_unit: number;
-  };
+  material: MaterialDetails;
 }
 
 export interface AvailableMaterial {
@@ -26,7 +30,7 @@ export interface AvailableMaterial {
   price_per_unit: number;
 }
 
-export const usePhaseMaterialsHex = (phaseId: string) => {
+export const usePhaseMaterialsHex = (phaseId: string, projectId?: string) => {
   const queryClient = useQueryClient();
 
   // Fetch phase materials
@@ -48,15 +52,25 @@ export const usePhaseMaterialsHex = (phaseId: string) => {
           materials (
             id,
             name,
+            description,
             category,
             unit,
-            price_per_unit
+            price_per_unit,
+            origin_location
           )
         `)
         .eq('phase_id', phaseId);
 
       if (error) throw error;
-      return data as PhaseMaterial[];
+      
+      // Transform data to match expected interface
+      return (data || []).map(item => ({
+        id: item.id,
+        phase_id: item.phase_id,
+        material_id: item.material_id,
+        quantity: item.quantity,
+        material: item.materials as unknown as MaterialDetails
+      })) as PhaseMaterial[];
     },
     enabled: !!phaseId
   });
@@ -78,9 +92,11 @@ export const usePhaseMaterialsHex = (phaseId: string) => {
     }
   });
 
-  // Add material to phase - need project_id which is required
+  // Add material to phase
   const addMaterialMutation = useMutation({
-    mutationFn: async ({ materialId, quantity, projectId }: { materialId: string; quantity: number; projectId: string }) => {
+    mutationFn: async ({ materialId, quantity }: { materialId: string; quantity: number }) => {
+      if (!projectId) throw new Error('Project ID is required');
+      
       const { data, error } = await supabase
         .from('project_materials')
         .insert({
@@ -165,7 +181,7 @@ export const usePhaseMaterialsHex = (phaseId: string) => {
 
   // Calculate total cost
   const totalCost = phaseMaterials.reduce((sum, pm) => {
-    const price = pm.materials?.price_per_unit || 0;
+    const price = pm.material?.price_per_unit || 0;
     return sum + (pm.quantity * price);
   }, 0);
 
@@ -184,3 +200,19 @@ export const usePhaseMaterialsHex = (phaseId: string) => {
     isRemoving: removeMaterialMutation.isPending
   };
 };
+
+// Separate hook for available materials
+export function useAvailableMaterials() {
+  return useQuery({
+    queryKey: ['available-materials-hex'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('materials')
+        .select('id, name, category, unit, price_per_unit')
+        .order('name');
+
+      if (error) throw error;
+      return data as AvailableMaterial[];
+    }
+  });
+}

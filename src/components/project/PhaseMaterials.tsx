@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Package, Edit2, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal/usePhaseMaterialsHex';
+import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 
 interface PhaseMaterialsProps {
   phaseId: string;
@@ -60,7 +60,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
     }
 
     try {
-      await addMaterial({ materialId: selectedMaterialId, qty });
+      await addMaterial({ materialId: selectedMaterialId, quantity: qty });
       setIsAdding(false);
       setSelectedMaterialId('');
       setQuantity('');

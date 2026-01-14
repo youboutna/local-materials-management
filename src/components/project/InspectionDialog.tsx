@@ -1,3 +1,8 @@
+/**
+ * InspectionDialog - Create new inspections
+ * MIGRATED TO HEXAGONAL ARCHITECTURE
+ */
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,7 +16,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useCreateInspectionHex, useUpdateProjectStatusHex } from '@/hooks/hexagonal';
 import { ProjectWithPayments, InspectionStatus } from '@/types/project';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
@@ -32,6 +37,10 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
   const [progress, setProgress] = useState(project.progress);
   const { toast } = useToast();
   const { t } = useLanguage();
+  
+  // Hexagonal hooks
+  const createInspectionMutation = useCreateInspectionHex();
+  const updateProjectStatusMutation = useUpdateProjectStatusHex();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,26 +57,21 @@ export function InspectionDialog({ project, onInspectionCreated }: InspectionDia
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
-        .from('inspections')
-        .insert({
-          project_id: project.id,
-          date: format(date, 'yyyy-MM-dd'),
-          status,
-          inspector: inspectorName,
-          progress_at_inspection: progress,
-          comments: comments || null,
-        } as any)
-        .select();
-
-      if (error) throw error;
+      await createInspectionMutation.mutateAsync({
+        project_id: project.id,
+        date: format(date, 'yyyy-MM-dd'),
+        status,
+        inspector: inspectorName,
+        progress_at_inspection: progress,
+        comments: comments || null,
+      });
 
       // Update project status if needed
       if (status === 'approved' && project.status !== 'terminé') {
-        await supabase
-          .from('projects')
-          .update({ status: 'en inspection' } as any)
-          .eq('id', project.id as any);
+        await updateProjectStatusMutation.mutateAsync({
+          projectId: project.id,
+          status: 'en inspection'
+        });
       }
 
       toast({

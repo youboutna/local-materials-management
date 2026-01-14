@@ -123,7 +123,8 @@ export { useInspectionCrudHex } from './useInspectionCrudHex';
 export { usePaymentRequestsHex } from './usePaymentRequestsHex';
 
 // Phase Materials
-export { usePhaseMaterialsHex } from './usePhaseMaterialsHex';
+export { usePhaseMaterialsHex, useAvailableMaterials } from './usePhaseMaterialsHex';
+export type { PhaseMaterial, MaterialDetails, AvailableMaterial } from './usePhaseMaterialsHex';
 
 // Phase Tasks
 export { usePhaseTasksHex } from './usePhaseTasksHex';
@@ -327,3 +328,49 @@ export {
   useMaterialsForTakeoff,
   useCreateQuantityTakeoff
 } from './useQuantityTakeoffHex';
+
+// Inspection Dialog
+export {
+  useCreateInspectionHex,
+  useUpdateProjectStatusHex
+} from './useInspectionDialogHex';
+export type { CreateInspectionData } from './useInspectionDialogHex';
+
+// Inspections List
+export { useInspectionsListHex } from './useInspectionsListHex';
+export type { InspectionData } from './useInspectionsListHex';
+
+// Project Importer
+export { useImportProjectsHex } from './useProjectImporterHex';
+export type { ProjectImportData } from './useProjectImporterHex';
+
+// User Management Dialog
+export {
+  useCreateUserHex,
+  useUpdateUserProfileHex
+} from './useUserManagementDialogHex';
+export type { CreateUserData, UpdateUserData } from './useUserManagementDialogHex';
+
+// Alerts Processor
+export { useRunAlertsProcessorHex } from './useAlertsProcessorHex';
+export type { ProcessorResult } from './useAlertsProcessorHex';
+
+// Tender Estimate
+export {
+  useTenderEstimatesHex,
+  useEstimateItemsHex,
+  useMaterialsForEstimateHex,
+  useParsedInvoicesHex,
+  useCreateTenderEstimateHex,
+  useAddEstimateItemHex,
+  useCreateInvoiceHex
+} from './useTenderEstimateHex';
+export type { TenderEstimate, EstimateItem } from './useTenderEstimateHex';
+
+// Project Structure
+export { useProjectStructureHex } from './useProjectStructureHex';
+export type { ProjectDetails, Phase as ProjectPhaseDetails, Step as PhaseStep } from './useProjectStructureHex';
+
+// Tender Document Upload
+export { useUploadTenderDocumentHex } from './useTenderDocumentUploadHex';
+export type { TenderDocumentUploadData, TenderCategory, TenderSubcategory } from './useTenderDocumentUploadHex';
